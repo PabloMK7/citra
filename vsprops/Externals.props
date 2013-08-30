@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <ExternalsDir>$(SolutionDir)externals\</ExternalsDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_PropertySheetDisplayName>Externals</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ExternalsDir)glew-1.10.0\include;$(ExternalsDir)glfw-3.0.2\include;$(ExternalsDir)qhexedit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+      </PreprocessorDefinitions>
+    </ClCompile>
+    <Lib />
+    <Link>
+      <AdditionalLibraryDirectories>$(ExternalsDir)glew-1.6.0\lib$(PlatformArchitecture);$(ExternalsDir)glfw-3.0\lib$(PlatformArchitecture)\$(Configuration);$(ExternalsDir)libjpeg;$(ExternalsDir)sdl-2.0.0\lib\$(PlatformName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libjpeg.lib;glfw3.lib;opengl32.lib;glew32.lib;glu32.lib;SDL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+    <ProjectReference />
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="ExternalsDir">
+      <Value>$(ExternalsDir)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

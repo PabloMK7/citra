@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\crc.cpp" />
+    <ClCompile Include="src\log.cpp" />
+    <ClCompile Include="src\timer.cpp" />
+    <ClCompile Include="src\xml.cpp" />
+    <ClCompile Include="src\config.cpp" />
+    <ClCompile Include="src\misc_utils.cpp" />
+    <ClCompile Include="src\hash.cpp" />
+    <ClCompile Include="src\x86_utils.cpp" />
+    <ClCompile Include="src\file_utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\crc.h" />
+    <ClInclude Include="src\platform.h" />
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\types.h" />
+    <ClInclude Include="src\log.h" />
+    <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\x86_utils.h" />
+    <ClInclude Include="src\config.h" />
+    <ClInclude Include="src\xml.h" />
+    <ClInclude Include="src\misc_utils.h" />
+    <ClInclude Include="src\atomic.h" />
+    <ClInclude Include="src\atomic_win32.h" />
+    <ClInclude Include="src\atomic_gcc.h" />
+    <ClInclude Include="src\std_condition_variable.h" />
+    <ClInclude Include="src\std_mutex.h" />
+    <ClInclude Include="src\std_thread.h" />
+    <ClInclude Include="src\hash_container.h" />
+    <ClInclude Include="src\hash.h" />
+    <ClInclude Include="src\file_utils.h" />
+  </ItemGroup>
+</Project>
