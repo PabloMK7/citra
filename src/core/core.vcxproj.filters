@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\core.cpp" />
+    <ClCompile Include="src\arm\disassembler\arm_disasm.cpp">
+      <Filter>arm\disassembler</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="arm">
+      <UniqueIdentifier>{b84ab55c-588b-45f0-a5ba-f9ebb0442f13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arm\disassembler">
+      <UniqueIdentifier>{61100188-a726-4024-ab16-95ee242b446e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\arm\disassembler\arm_disasm.h">
+      <Filter>arm\disassembler</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
