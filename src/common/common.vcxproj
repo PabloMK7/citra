@@ -154,6 +154,7 @@
     <ClInclude Include="src\console_listener.h" />
     <ClInclude Include="src\cpu_detect.h" />
     <ClInclude Include="src\debug_interface.h" />
+    <ClInclude Include="src\emu_window.h" />
     <ClInclude Include="src\extended_trace.h" />
     <ClInclude Include="src\fifo_queue.h" />
     <ClInclude Include="src\file_search.h" />

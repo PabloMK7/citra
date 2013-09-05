@@ -52,6 +52,7 @@
     <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\atomic_gcc.h" />
     <ClInclude Include="src\atomic_win32.h" />
+    <ClInclude Include="src\emu_window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
