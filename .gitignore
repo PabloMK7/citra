@@ -12,11 +12,12 @@
 *.la
 *.a
 
-# MSVS temporary files
+# MSVS generated files
 *.suo
 *.user
 *.sdf
 *.opensdf
 
-# Build temporary files
+# Build generated files
 build/
+bin/
