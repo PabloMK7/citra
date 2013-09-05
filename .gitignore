@@ -11,3 +11,9 @@
 *.lai
 *.la
 *.a
+
+# MSVS temporary files
+*.suo
+*.user
+*.sdf
+*.opensdf
