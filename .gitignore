@@ -17,3 +17,6 @@
 *.user
 *.sdf
 *.opensdf
+
+# Build temporary files
+build/
