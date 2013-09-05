@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugFast|Win32">
+      <Configuration>DebugFast</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFast|x64">
+      <Configuration>DebugFast</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -20,102 +28,82 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DFE335FC-755D-4BAA-8452-94434F8A1EDB}</ProjectGuid>
-    <RootNamespace>common</RootNamespace>
+    <RootNamespace>Common</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Debug.props" />
-    <Import Project="..\..\vsprops\Optimization_Debug.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_debug.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Debug.props" />
-    <Import Project="..\..\vsprops\Optimization_Debug.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_debug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Release.props" />
-    <Import Project="..\..\vsprops\Optimization_Release.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_release.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Release.props" />
-    <Import Project="..\..\vsprops\Optimization_Release.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_release.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <CustomBuildBeforeTargets />
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <CustomBuildBeforeTargets />
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile />
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <CustomBuildStep>
-      <Command>
-      </Command>
-      <Message>
-      </Message>
-      <Outputs>
-      </Outputs>
-    </CustomBuildStep>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile />
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <CustomBuildStep>
-      <Command>
-      </Command>
-      <Message>
-      </Message>
-      <Outputs>
-      </Outputs>
-    </CustomBuildStep>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile />
@@ -124,15 +112,16 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <CustomBuildStep>
-      <Command>
-      </Command>
-      <Message>
-      </Message>
-      <Outputs>
-      </Outputs>
-    </CustomBuildStep>
+    <Lib />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|Win32'">
     <ClCompile />
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile />
@@ -141,46 +130,72 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <CustomBuildStep>
-      <Command>
-      </Command>
-      <Message>
-      </Message>
-      <Outputs>
-      </Outputs>
-    </CustomBuildStep>
+    <Lib />
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="src\config.cpp" />
-    <ClCompile Include="src\crc.cpp" />
-    <ClCompile Include="src\file_utils.cpp" />
-    <ClCompile Include="src\hash.cpp" />
-    <ClCompile Include="src\log.cpp" />
-    <ClCompile Include="src\misc_utils.cpp" />
-    <ClCompile Include="src\timer.cpp" />
-    <ClCompile Include="src\x86_utils.cpp" />
-    <ClCompile Include="src\xml.cpp" />
-  </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFast|x64'">
+    <ClCompile />
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib />
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\atomic.h" />
     <ClInclude Include="src\atomic_gcc.h" />
     <ClInclude Include="src\atomic_win32.h" />
+    <ClInclude Include="src\break_points.h" />
+    <ClInclude Include="src\chunk_file.h" />
     <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\config.h" />
-    <ClInclude Include="src\crc.h" />
-    <ClInclude Include="src\file_utils.h" />
+    <ClInclude Include="src\common_funcs.h" />
+    <ClInclude Include="src\common_paths.h" />
+    <ClInclude Include="src\common_types.h" />
+    <ClInclude Include="src\console_listener.h" />
+    <ClInclude Include="src\cpu_detect.h" />
+    <ClInclude Include="src\debug_interface.h" />
+    <ClInclude Include="src\extended_trace.h" />
+    <ClInclude Include="src\fifo_queue.h" />
+    <ClInclude Include="src\file_search.h" />
+    <ClInclude Include="src\file_util.h" />
+    <ClInclude Include="src\fixed_size_queue.h" />
     <ClInclude Include="src\hash.h" />
-    <ClInclude Include="src\hash_container.h" />
+    <ClInclude Include="src\linear_disk_cache.h" />
     <ClInclude Include="src\log.h" />
-    <ClInclude Include="src\misc_utils.h" />
-    <ClInclude Include="src\platform.h" />
+    <ClInclude Include="src\log_manager.h" />
+    <ClInclude Include="src\math_util.h" />
+    <ClInclude Include="src\memory_util.h" />
+    <ClInclude Include="src\mem_arena.h" />
+    <ClInclude Include="src\msg_handler.h" />
+    <ClInclude Include="src\scm_rev.h" />
     <ClInclude Include="src\std_condition_variable.h" />
     <ClInclude Include="src\std_mutex.h" />
     <ClInclude Include="src\std_thread.h" />
+    <ClInclude Include="src\string_util.h" />
+    <ClInclude Include="src\thread.h" />
+    <ClInclude Include="src\thunk.h" />
     <ClInclude Include="src\timer.h" />
-    <ClInclude Include="src\types.h" />
-    <ClInclude Include="src\x86_utils.h" />
-    <ClInclude Include="src\xml.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\break_points.cpp" />
+    <ClCompile Include="src\console_listener.cpp" />
+    <ClCompile Include="src\extended_trace.cpp" />
+    <ClCompile Include="src\file_search.cpp" />
+    <ClCompile Include="src\file_util.cpp" />
+    <ClCompile Include="src\hash.cpp" />
+    <ClCompile Include="src\log_manager.cpp" />
+    <ClCompile Include="src\math_util.cpp" />
+    <ClCompile Include="src\memory_util.cpp" />
+    <ClCompile Include="src\mem_arena.cpp" />
+    <ClCompile Include="src\misc.cpp" />
+    <ClCompile Include="src\msg_handler.cpp" />
+    <ClCompile Include="src\string_util.cpp" />
+    <ClCompile Include="src\thread.cpp" />
+    <ClCompile Include="src\timer.cpp" />
+    <ClCompile Include="src\version.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

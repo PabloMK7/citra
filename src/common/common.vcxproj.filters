@@ -1,35 +1,59 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\crc.cpp" />
-    <ClCompile Include="src\log.cpp" />
-    <ClCompile Include="src\timer.cpp" />
-    <ClCompile Include="src\xml.cpp" />
-    <ClCompile Include="src\config.cpp" />
-    <ClCompile Include="src\misc_utils.cpp" />
+    <ClCompile Include="src\break_points.cpp" />
+    <ClCompile Include="src\console_listener.cpp" />
+    <ClCompile Include="src\extended_trace.cpp" />
+    <ClCompile Include="src\file_search.cpp" />
+    <ClCompile Include="src\file_util.cpp" />
     <ClCompile Include="src\hash.cpp" />
-    <ClCompile Include="src\x86_utils.cpp" />
-    <ClCompile Include="src\file_utils.cpp" />
+    <ClCompile Include="src\log_manager.cpp" />
+    <ClCompile Include="src\math_util.cpp" />
+    <ClCompile Include="src\memory_util.cpp" />
+    <ClCompile Include="src\mem_arena.cpp" />
+    <ClCompile Include="src\misc.cpp" />
+    <ClCompile Include="src\msg_handler.cpp" />
+    <ClCompile Include="src\string_util.cpp" />
+    <ClCompile Include="src\thread.cpp" />
+    <ClCompile Include="src\timer.cpp" />
+    <ClCompile Include="src\version.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\crc.h" />
-    <ClInclude Include="src\platform.h" />
-    <ClInclude Include="src\common.h" />
-    <ClInclude Include="src\types.h" />
-    <ClInclude Include="src\log.h" />
-    <ClInclude Include="src\timer.h" />
-    <ClInclude Include="src\x86_utils.h" />
-    <ClInclude Include="src\config.h" />
-    <ClInclude Include="src\xml.h" />
-    <ClInclude Include="src\misc_utils.h" />
     <ClInclude Include="src\atomic.h" />
-    <ClInclude Include="src\atomic_win32.h" />
-    <ClInclude Include="src\atomic_gcc.h" />
+    <ClInclude Include="src\break_points.h" />
+    <ClInclude Include="src\chunk_file.h" />
+    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\common_funcs.h" />
+    <ClInclude Include="src\common_paths.h" />
+    <ClInclude Include="src\common_types.h" />
+    <ClInclude Include="src\console_listener.h" />
+    <ClInclude Include="src\cpu_detect.h" />
+    <ClInclude Include="src\debug_interface.h" />
+    <ClInclude Include="src\extended_trace.h" />
+    <ClInclude Include="src\fifo_queue.h" />
+    <ClInclude Include="src\file_search.h" />
+    <ClInclude Include="src\file_util.h" />
+    <ClInclude Include="src\fixed_size_queue.h" />
+    <ClInclude Include="src\hash.h" />
+    <ClInclude Include="src\linear_disk_cache.h" />
+    <ClInclude Include="src\log.h" />
+    <ClInclude Include="src\log_manager.h" />
+    <ClInclude Include="src\math_util.h" />
+    <ClInclude Include="src\memory_util.h" />
+    <ClInclude Include="src\mem_arena.h" />
+    <ClInclude Include="src\msg_handler.h" />
+    <ClInclude Include="src\scm_rev.h" />
     <ClInclude Include="src\std_condition_variable.h" />
     <ClInclude Include="src\std_mutex.h" />
     <ClInclude Include="src\std_thread.h" />
-    <ClInclude Include="src\hash_container.h" />
-    <ClInclude Include="src\hash.h" />
-    <ClInclude Include="src\file_utils.h" />
+    <ClInclude Include="src\string_util.h" />
+    <ClInclude Include="src\thread.h" />
+    <ClInclude Include="src\thunk.h" />
+    <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\atomic_gcc.h" />
+    <ClInclude Include="src\atomic_win32.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>
