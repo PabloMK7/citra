@@ -1,11 +1,18 @@
-set(SRCS    src/config.cpp
-            src/crc.cpp
-            src/file_utils.cpp
-            src/hash.cpp
-            src/log.cpp
-            src/misc_utils.cpp
-            src/timer.cpp
-            src/x86_utils.cpp
-            src/xml.cpp)
+set(SRCS	src/break_points.cpp
+			src/console_listener.cpp
+			src/extended_trace.cpp
+			src/file_search.cpp
+			src/file_util.cpp
+			src/hash.cpp
+			src/log_manager.cpp
+			src/math_util.cpp
+			src/mem_arena.cpp
+			src/memory_util.cpp
+			src/misc.cpp
+			src/msg_handler.cpp
+			src/string_util.cpp
+			src/thread.cpp
+			src/timer.cpp
+			src/version.cpp)
 
 add_library(common STATIC ${SRCS})
