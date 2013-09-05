@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2013 Akiru Emulator
  *
- * @file    akiru.cpp
+ * @file    mem_map.cpp
  * @author  ShizZy <shizzy247@gmail.com>
- * @date    2013-09-04
- * @brief   Main entry point
+ * @date    2013-09-05
+ * @brief   Memory map - handles virtual to physical memory access
  *
  * @section LICENSE
  * This program is free software; you can redistribute it and/or
@@ -22,14 +22,31 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef AKIRU_AKIRU_H_
-#define AKIRU_AKIRU_H_
+#include "mem_map.h"
 
-#include "version.h"
+namespace Memory {
 
-#define APP_NAME        "akiru"
-#define APP_VERSION     "0.31-" VERSION
-#define APP_TITLE       APP_NAME " " APP_VERSION
-#define	COPYRIGHT       "Copyright (C) 2005-2012 Akiru Team"
+u8 Read8(const u32 addr) {
+	return 0xDE;
+}
 
-#endif // AKIRU_AKIRU_H_
+u16 Read16(const u32 addr) {
+	return 0xDEAD;
+}
+
+u32 Read32(const u32 addr) {
+	return 0xDEADBEEF;
+}
+
+void Write8(const u32 addr, const u32 data) {
+}
+
+void Write16(const u32 addr, const u32 data) {
+}
+
+void Write32(const u32 addr, const u32 data) {
+}
+
+
+
+} // namespace

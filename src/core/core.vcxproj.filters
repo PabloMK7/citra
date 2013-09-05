@@ -5,6 +5,7 @@
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp">
       <Filter>arm\disassembler</Filter>
     </ClCompile>
+    <ClCompile Include="src\mem_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -18,5 +19,7 @@
     <ClInclude Include="src\arm\disassembler\arm_disasm.h">
       <Filter>arm\disassembler</Filter>
     </ClInclude>
+    <ClInclude Include="src\mem_map.h" />
+    <ClInclude Include="src\core.h" />
   </ItemGroup>
 </Project>

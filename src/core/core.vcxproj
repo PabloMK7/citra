@@ -183,9 +183,12 @@
   <ItemGroup>
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="src\core.cpp" />
+    <ClCompile Include="src\mem_map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arm\disassembler\arm_disasm.h" />
+    <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\mem_map.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
