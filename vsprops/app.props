@@ -2,22 +2,22 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <GekkoBinDir>$(SolutionDir)bin\$(PlatformName)\</GekkoBinDir>
+    <AkiruBinDir>$(SolutionDir)bin\$(PlatformName)\</AkiruBinDir>
   </PropertyGroup>
   <PropertyGroup>
-    <OutDir>$(GekkoBinDir)</OutDir>
+    <OutDir>$(AkiruBinDir)</OutDir>
     <TargetName>$(ProjectName)$(Configuration)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)data" "$(GekkoBinDir)" /Y /S /D
-xcopy "$(ExternalsDir)glew-1.6.0\bin$(PlatformArchitecture)\glew32.dll" "$(GekkoBinDir)" /Y /S /D
-xcopy "$(ExternalsDir)sdl-2.0.0\lib\$(PlatformName)\SDL.dll" "$(GekkoBinDir)" /Y /S /D</Command>
+      <Command>xcopy "$(SolutionDir)data" "$(AkiruBinDir)" /Y /S /D
+xcopy "$(ExternalsDir)glew-1.10.0\bin\Release\$(PlatformName)\glew32.dll" "$(AkiruBinDir)" /Y /S /D
+xcopy "$(ExternalsDir)glfw-3.0.2\lib-msvc100\glfw3.dll" "$(AkiruBinDir)" /Y /S /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <BuildMacro Include="GekkoBinDir">
-      <Value>$(GekkoBinDir)</Value>
+    <BuildMacro Include="AkiruBinDir">
+      <Value>$(AkiruBinDir)</Value>
     </BuildMacro>
   </ItemGroup>
 </Project>

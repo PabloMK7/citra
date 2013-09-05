@@ -1,7 +1,7 @@
 /**
  * Copyright (C) 2005-2012 Gekko Emulator
  *
- * @file    emuwindow.h
+ * @file    emu_window.h
  * @author  Neobrain
  * @date    2012-06-01
  * @brief   Interface for implementing an emulator window manager
@@ -26,12 +26,11 @@
 #define CORE_EMUWINDOW_H_
 
 #include "common.h"
-#include "config.h"
 
-namespace input_common
-{
-class KeyboardInput;
-}
+//namespace input_common
+//{
+//class KeyboardInput;
+//}
 
 // Abstraction class used to provide an interface between emulation code and the frontend (e.g. SDL, 
 //  QGLWidget, GLFW, etc...)
@@ -62,10 +61,10 @@ public:
      * @brief Called from KeyboardInput constructor to notify EmuWindow about its presence
      * @param controller_interface Pointer to a running KeyboardInput interface
      */
-    void set_controller_interface(input_common::KeyboardInput* controller_interface) { 
-        controller_interface_ = controller_interface;
-    }
-    input_common::KeyboardInput* controller_interface() { return controller_interface_; }
+    //void set_controller_interface(input_common::KeyboardInput* controller_interface) { 
+    //    controller_interface_ = controller_interface;
+    //}
+    //input_common::KeyboardInput* controller_interface() { return controller_interface_; }
 
     Config config() { return config_; }
     void set_config(Config val) { config_ = val; }
@@ -80,11 +79,11 @@ public:
     void set_window_title(std::string val) { window_title_ = val; }
 
 protected:
-    EmuWindow() : controller_interface_(NULL), client_area_width_(640), client_area_height_(480) {
+    EmuWindow() : client_area_width_(640), client_area_height_(480) {
         char window_title[255];
-        sprintf(window_title, "gekko [%s|%s] - %s", 
-            common::g_config->CPUCoreTypeToString(common::g_config->powerpc_core()).c_str(), 
-            common::g_config->RenderTypeToString(common::g_config->current_renderer()).c_str(), 
+        sprintf(window_title, "akiru [%s|%s] - %s", 
+            "null-cpu", 
+            "null-renderer", 
             __DATE__);
         window_title_ = window_title;
     }
@@ -98,9 +97,6 @@ protected:
 private:
     Config config_;         ///< Internal configuration
 
-    input_common::KeyboardInput* controller_interface_;
-
-    DISALLOW_COPY_AND_ASSIGN(EmuWindow);
 };
 
 #endif // CORE_EMUWINDOW_H_

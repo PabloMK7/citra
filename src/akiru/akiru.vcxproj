@@ -46,35 +46,35 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Debug.props" />
-    <Import Project="..\..\vsprops\App.props" />
-    <Import Project="..\..\vsprops\Optimization_Debug.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_debug.props" />
+    <Import Project="..\..\vsprops\app.props" />
+    <Import Project="..\..\vsprops\optimization_debug.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Debug.props" />
-    <Import Project="..\..\vsprops\App.props" />
-    <Import Project="..\..\vsprops\Optimization_Debug.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_debug.props" />
+    <Import Project="..\..\vsprops\app.props" />
+    <Import Project="..\..\vsprops\optimization_debug.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Release.props" />
-    <Import Project="..\..\vsprops\App.props" />
-    <Import Project="..\..\vsprops\Optimization_Release.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_release.props" />
+    <Import Project="..\..\vsprops\app.props" />
+    <Import Project="..\..\vsprops\optimization_release.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\Base.props" />
-    <Import Project="..\..\vsprops\CodeGen_Release.props" />
-    <Import Project="..\..\vsprops\App.props" />
-    <Import Project="..\..\vsprops\Optimization_Release.props" />
-    <Import Project="..\..\vsprops\Externals.props" />
+    <Import Project="..\..\vsprops\base.props" />
+    <Import Project="..\..\vsprops\code_generation_release.props" />
+    <Import Project="..\..\vsprops\app.props" />
+    <Import Project="..\..\vsprops\optimization_release.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
@@ -190,13 +190,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\emuwindow\emuwindow_glfw.cpp" />
     <ClCompile Include="src\akiru.cpp" />
+    <ClCompile Include="src\emu_window\emu_window_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\emuwindow\emuwindow_glfw.h" />
     <ClInclude Include="src\akiru.h" />
+    <ClInclude Include="src\emu_window\emu_window_glfw.h" />
     <ClInclude Include="src\version.h" />
   </ItemGroup>
   <ItemGroup>

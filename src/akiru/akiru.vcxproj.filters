@@ -2,32 +2,23 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\akiru.cpp" />
-    <ClCompile Include="src\emuwindow\emuwindow_glfw.cpp">
-      <Filter>emuwindow</Filter>
-    </ClCompile>
-    <ClCompile Include="src\emuwindow\emuwindow_sdl.cpp">
-      <Filter>emuwindow</Filter>
+    <ClCompile Include="src\emu_window\emu_window_glfw.cpp">
+      <Filter>emu_window</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\version.h" />
-    <ClInclude Include="src\emuwindow\emuwindow_glfw.h">
-      <Filter>emuwindow</Filter>
-    </ClInclude>
     <ClInclude Include="src\akiru.h" />
-    <ClInclude Include="src\emuwindow\emuwindow_sdl.h">
-      <Filter>emuwindow</Filter>
+    <ClInclude Include="src\emu_window\emu_window_glfw.h">
+      <Filter>emu_window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="akiru.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\icon3_48x48.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="emuwindow">
+    <Filter Include="emu_window">
       <UniqueIdentifier>{e3161526-9f53-4670-8dae-2be81ff01bc2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
