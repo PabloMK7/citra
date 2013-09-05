@@ -13,6 +13,7 @@
 *.a
 
 # MSVS generated files
+ipch/
 *.suo
 *.user
 *.sdf
