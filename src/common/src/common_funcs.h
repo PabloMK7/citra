@@ -22,6 +22,8 @@ template<> struct CompileTimeAssert<true> {};
 #define b32(x)  (b16(x) | (b16(x) >>16) )
 #define ROUND_UP_POW2(x)	(b32(x - 1) + 1)
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
 #if defined __GNUC__ && !defined __SSSE3__ && !defined _M_GENERIC
 #include <emmintrin.h>
 static __inline __m128i __attribute__((__always_inline__))
