@@ -23,6 +23,7 @@
  */
 
 #include "common.h"
+#include "file_util.h"
 
 //#if EMU_PLATFORM == PLATFORM_LINUX
 //#include <unistd.h>
@@ -40,18 +41,9 @@ int __cdecl main(int argc, char **argv) {
 
     printf("akiru starting...\n");
 
-    //char program_dir[MAX_PATH];
-    //_getcwd(program_dir, MAX_PATH-1);
-    //size_t cwd_len = strlen(program_dir);
-    //program_dir[cwd_len] = '/';
-    //program_dir[cwd_len+1] = '\0';
+	std::string program_dir = File::GetCurrentDir();
 
-    //common::ConfigManager config_manager;
-    //config_manager.set_program_dir(program_dir, MAX_PATH);
-    //config_manager.ReloadConfig(NULL);
-    //core::SetConfigManager(&config_manager);
-
-    EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
+    //EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
     //if (E_OK != core::Init(emu_window)) {
     //    LOG_ERROR(TMASTER, "core initialization failed, exiting...");
@@ -89,7 +81,7 @@ int __cdecl main(int argc, char **argv) {
 	while (1) {
 	}
 
-    delete emu_window;
+    //delete emu_window;
 
 	return 0;
 }

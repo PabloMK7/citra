@@ -23,6 +23,7 @@
  */
 
 #include "core.h"
+#include "mem_map.h"
 
 namespace Core {
 
@@ -40,6 +41,7 @@ void Stop() {
 
 /// Initialize the core
 int Init(EmuWindow* emu_window) {
+	Memory::Init();
 	return 0;
 }
 

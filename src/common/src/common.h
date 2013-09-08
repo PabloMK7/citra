@@ -47,6 +47,7 @@ private:
 #include "common_types.h"
 #include "msg_handler.h"
 #include "common_funcs.h"
+#include "common_paths.h"
 
 #ifdef __APPLE__
 // The Darwin ABI requires that stack frames be aligned to 16-byte boundaries.

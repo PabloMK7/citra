@@ -12,17 +12,19 @@
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'
 
+#define MAX_PATH	255
+
 // The user data dir
 #define ROOT_DIR "."
 #ifdef _WIN32
 	#define USERDATA_DIR "user"
-	#define DOLPHIN_DATA_DIR "akiru"
+	#define EMU_DATA_DIR "emu"
 #else
 	#define USERDATA_DIR "user"
 	#ifdef USER_DIR
-		#define DOLPHIN_DATA_DIR USER_DIR
+		#define EMU_DATA_DIR USER_DIR
 	#else
-		#define DOLPHIN_DATA_DIR ".akiru"
+		#define EMU_DATA_DIR ".akiru"
 	#endif
 #endif
 
@@ -61,7 +63,7 @@
 
 // Filenames
 // Files in the directory returned by GetUserPath(D_CONFIG_IDX)
-#define AKIRU_CONFIG	"akiru.ini"
+#define EMU_CONFIG		"emu.ini"
 #define DEBUGGER_CONFIG	"debugger.ini"
 #define LOGGER_CONFIG	"logger.ini"
 
