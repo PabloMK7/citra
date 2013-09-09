@@ -18,9 +18,7 @@
 // User directory indices for GetUserPath
 enum {
 	D_USER_IDX,
-	D_GCUSER_IDX,
-	D_WIIROOT_IDX,
-	D_WIIUSER_IDX,
+	D_ROOT_IDX,
 	D_CONFIG_IDX,
 	D_GAMECONFIG_IDX,
 	D_MAPS_IDX,
@@ -29,7 +27,6 @@ enum {
 	D_SHADERS_IDX,
 	D_STATESAVES_IDX,
 	D_SCREENSHOTS_IDX,
-	D_OPENCL_IDX,
 	D_HIRESTEXTURES_IDX,
 	D_DUMP_IDX,
 	D_DUMPFRAMES_IDX,
@@ -37,19 +34,14 @@ enum {
 	D_DUMPTEXTURES_IDX,
 	D_DUMPDSP_IDX,
 	D_LOGS_IDX,
-	D_MAILLOGS_IDX,
-	D_WIISYSCONF_IDX,
-	D_WIIWC24_IDX,
-	D_THEMES_IDX,
-	F_DOLPHINCONFIG_IDX,
+	D_SYSCONF_IDX,
+	F_EMUCONFIG_IDX,
 	F_DEBUGGERCONFIG_IDX,
 	F_LOGGERCONFIG_IDX,
 	F_MAINLOG_IDX,
-	F_WIISYSCONF_IDX,
 	F_RAMDUMP_IDX,
 	F_ARAMDUMP_IDX,
-	F_FAKEVMEMDUMP_IDX,
-	F_GCSRAM_IDX,
+	F_SYSCONF_IDX,
 	NUM_PATH_INDICES
 };
 
@@ -124,7 +116,7 @@ bool SetCurrentDir(const std::string &directory);
 const std::string& GetUserPath(const unsigned int DirIDX, const std::string &newPath="");
 
 // probably doesn't belong here
-std::string GetThemeDir(const std::string& theme_name);
+//std::string GetThemeDir(const std::string& theme_name);
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();

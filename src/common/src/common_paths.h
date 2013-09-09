@@ -12,7 +12,9 @@
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'
 
-#define MAX_PATH	255
+#ifndef MAX_PATH
+#define MAX_PATH	260
+#endif
 
 // The user data dir
 #define ROOT_DIR "."
@@ -60,6 +62,7 @@
 #define DUMP_AUDIO_DIR		"audio"
 #define LOGS_DIR			"logs"
 #define SHADERS_DIR 		"shaders"
+#define SYSCONF_DIR 		"sysconf"
 
 // Filenames
 // Files in the directory returned by GetUserPath(D_CONFIG_IDX)
@@ -68,6 +71,9 @@
 #define LOGGER_CONFIG	"logger.ini"
 
 // Files in the directory returned by GetUserPath(D_LOGS_IDX)
-#define MAIN_LOG	"akiru.log"
+#define MAIN_LOG	"emu.log"
+
+// Files in the directory returned by GetUserPath(D_SYSCONF_IDX)
+#define SYSCONF	"SYSCONF"
 
 #endif // _COMMON_PATHS_H_
