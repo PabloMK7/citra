@@ -37,7 +37,7 @@
 
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
-    u32 tight_loop;
+    //u32 tight_loop;
 
     printf("akiru starting...\n");
 

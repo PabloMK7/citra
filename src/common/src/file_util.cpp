@@ -781,7 +781,7 @@ bool ReadFileToString(bool text_file, const char *filename, std::string &str)
 	if (!f)
 		return false;
 
-	str.resize(GetSize(f));
+	str.resize(static_cast<u32>(GetSize(f)));
 	return file.ReadArray(&str[0], str.size());
 }
 
