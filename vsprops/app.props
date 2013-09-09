@@ -14,6 +14,9 @@
 xcopy "$(ExternalsDir)glew-1.10.0\bin\Release\$(PlatformName)\glew32.dll" "$(AkiruBinDir)" /Y /S /D
 xcopy "$(ExternalsDir)glfw-3.0.2\lib-msvc100\glfw3.dll" "$(AkiruBinDir)" /Y /S /D</Command>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>comctl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="AkiruBinDir">
