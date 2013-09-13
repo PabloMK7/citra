@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Akiru Emulator
+ * Copyright (C) 2013 Citrus Emulator
  *
  * @file    core.cpp
  * @author  ShizZy <shizzy247@gmail.com>

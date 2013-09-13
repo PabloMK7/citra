@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(akiru)
+project(citrus)
 
 # silence some spam
 add_definitions(-Wno-attributes)
@@ -39,8 +39,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 # internal includes
 include_directories(src/common/src)
 include_directories(src/core/src)
-include_directories(src/akiru/src)
-include_directories(src/akiru_qt/src)
+include_directories(src/citrus/src)
 
 # process subdirectories
 if(QT4_FOUND AND QT_QTCORE_FOUND AND QT_QTGUI_FOUND AND QT_QTOPENGL_FOUND AND NOT DISABLE_QT4)

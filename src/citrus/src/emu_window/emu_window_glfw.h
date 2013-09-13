@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Akiru Emulator
+ * Copyright (C) 2013 Citrus Emulator
  *
  * @file    emu_window_glfw.h
  * @author  ShizZy <shizzy@6bit.net>
@@ -22,8 +22,8 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef AKIRU_EMUWINDOW_GLFW_
-#define AKIRU_EMUWINDOW_GLFW_
+#ifndef CITRUS_EMUWINDOW_GLFW_
+#define CITRUS_EMUWINDOW_GLFW_
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -53,4 +53,4 @@ private:
 
 };
 
-#endif // AKIRU_EMUWINDOW_GLFW_
+#endif // CITRUS_EMUWINDOW_GLFW_

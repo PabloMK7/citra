@@ -1,7 +1,7 @@
 add_subdirectory(common)
 add_subdirectory(core)
-add_subdirectory(akiru)
+add_subdirectory(citrus)
 
 if(QT4_FOUND AND QT_QTCORE_FOUND AND QT_QTGUI_FOUND AND QT_QTOPENGL_FOUND AND NOT DISABLE_QT4)
-    add_subdirectory(akiru_qt)
+    #add_subdirectory(citrus_qt)
 endif()

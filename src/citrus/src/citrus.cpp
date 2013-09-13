@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2013 Akiru Emulator
+ * Copyright (C) 2013 Citrus Emulator
  *
- * @file    akiru.cpp
+ * @file    citrus.cpp
  * @author  ShizZy <shizzy247@gmail.com>
  * @date    2013-09-04
  * @brief   Main entry point
@@ -31,7 +31,7 @@
 
 #include "emu_window/emu_window_glfw.h"
 
-#include "akiru.h"
+#include "citrus.h"
 
 //#define PLAY_FIFO_RECORDING
 
@@ -39,7 +39,7 @@
 int __cdecl main(int argc, char **argv) {
     //u32 tight_loop;
 
-    printf("akiru starting...\n");
+    printf("citrus starting...\n");
 
 	std::string program_dir = File::GetCurrentDir();
 

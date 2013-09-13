@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="src\akiru.cpp" />
+    <ClCompile Include="src\citrus.cpp" />
     <ClCompile Include="src\emu_window\emu_window_glfw.cpp">
       <Filter>emu_window</Filter>
     </ClCompile>
@@ -9,13 +9,13 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\version.h" />
-    <ClInclude Include="src\akiru.h" />
+    <ClInclude Include="src\citrus.h" />
     <ClInclude Include="src\emu_window\emu_window_glfw.h">
       <Filter>emu_window</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="akiru.rc" />
+    <ResourceCompile Include="citrus.rc" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="emu_window">

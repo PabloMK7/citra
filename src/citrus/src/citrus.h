@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2013 Akiru Emulator
+ * Copyright (C) 2013 Citrus Emulator
  *
- * @file    akiru.cpp
+ * @file    citrus.h
  * @author  ShizZy <shizzy247@gmail.com>
  * @date    2013-09-04
  * @brief   Main entry point
@@ -22,14 +22,14 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef AKIRU_AKIRU_H_
-#define AKIRU_AKIRU_H_
+#ifndef CITRUS_CITRUS_H_
+#define CITRUS_CITRUS_H_
 
 #include "version.h"
 
-#define APP_NAME        "akiru"
-#define APP_VERSION     "0.31-" VERSION
+#define APP_NAME        "citrus"
+#define APP_VERSION     "0.01-" VERSION
 #define APP_TITLE       APP_NAME " " APP_VERSION
-#define	COPYRIGHT       "Copyright (C) 2005-2012 Akiru Team"
+#define	COPYRIGHT       "Copyright (C) 2013 Citrus Team"
 
-#endif // AKIRU_AKIRU_H_
+#endif // CITRUS_CITRUS_H_

@@ -26,7 +26,7 @@
 	#ifdef USER_DIR
 		#define EMU_DATA_DIR USER_DIR
 	#else
-		#define EMU_DATA_DIR ".akiru"
+		#define EMU_DATA_DIR ".citrus"
 	#endif
 #endif
 
