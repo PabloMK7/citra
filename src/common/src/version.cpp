@@ -13,7 +13,7 @@
 	#define BUILD_TYPE_STR ""
 #endif
 
-const char *scm_rev_str = "Dolphin "
+const char *scm_rev_str = "Akiru "
 #if !SCM_IS_MASTER
 	"[" SCM_BRANCH_STR "] "
 #endif

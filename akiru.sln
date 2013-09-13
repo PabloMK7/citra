@@ -1,10 +1,21 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "src\common\common.vcxproj", "{DFE335FC-755D-4BAA-8452-94434F8A1EDB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{69F00340-5C3D-449F-9A80-958435C6CF06} = {69F00340-5C3D-449F-9A80-958435C6CF06}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "akiru", "src\akiru\akiru.vcxproj", "{CE7D2C07-21CE-4590-81AB-2ADA88A2B85F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{69F00340-5C3D-449F-9A80-958435C6CF06} = {69F00340-5C3D-449F-9A80-958435C6CF06}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "core", "src\core\core.vcxproj", "{8AEA7F29-3466-4786-A10D-6A4BD0610977}"
+	ProjectSection(ProjectDependencies) = postProject
+		{69F00340-5C3D-449F-9A80-958435C6CF06} = {69F00340-5C3D-449F-9A80-958435C6CF06}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scm_rev_gen", "src\common\scm_rev_gen.vcxproj", "{69F00340-5C3D-449F-9A80-958435C6CF06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +49,14 @@ Global
 		{8AEA7F29-3466-4786-A10D-6A4BD0610977}.Release|Win32.Build.0 = Release|Win32
 		{8AEA7F29-3466-4786-A10D-6A4BD0610977}.Release|x64.ActiveCfg = Release|x64
 		{8AEA7F29-3466-4786-A10D-6A4BD0610977}.Release|x64.Build.0 = Release|x64
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Debug|Win32.ActiveCfg = Debug|Win32
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Debug|Win32.Build.0 = Debug|Win32
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Debug|x64.ActiveCfg = Release|x64
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Debug|x64.Build.0 = Release|x64
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Release|Win32.ActiveCfg = Release|Win32
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Release|Win32.Build.0 = Release|Win32
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Release|x64.ActiveCfg = Release|x64
+		{69F00340-5C3D-449F-9A80-958435C6CF06}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

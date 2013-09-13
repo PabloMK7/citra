@@ -1,4 +1,4 @@
-#define SCM_REV_STR "7d11f8cedd7c135d96880f19ecbd3ff87a60a11f"
-#define SCM_DESC_STR "3.5-254-dirty"
+#define SCM_REV_STR "bfa6493324336066a1ef9d04f336faacae57d9f3"
+#define SCM_DESC_STR "bfa6493"
 #define SCM_BRANCH_STR "master"
 #define SCM_IS_MASTER 1
