@@ -166,6 +166,7 @@
     <ClInclude Include="src\memory_util.h" />
     <ClInclude Include="src\mem_arena.h" />
     <ClInclude Include="src\msg_handler.h" />
+    <ClInclude Include="src\platform.h" />
     <ClInclude Include="src\scm_rev.h" />
     <ClInclude Include="src\std_condition_variable.h" />
     <ClInclude Include="src\std_mutex.h" />
