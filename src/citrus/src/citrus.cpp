@@ -23,6 +23,7 @@
  */
 
 #include "common.h"
+#include "log_manager.h"
 #include "file_util.h"
 
 //#if EMU_PLATFORM == PLATFORM_LINUX
@@ -42,6 +43,10 @@ int __cdecl main(int argc, char **argv) {
     printf("citrus starting...\n");
 
 	std::string program_dir = File::GetCurrentDir();
+
+	LogManager::Init();
+
+	NOTICE_LOG(ARM11, "Test\n");
 
     //EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
