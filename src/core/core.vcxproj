@@ -133,12 +133,26 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\arm\armemu.cpp" />
+    <ClCompile Include="src\arm\arminit.cpp" />
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\mem_map.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\arm\armcpu.h" />
+    <ClInclude Include="src\arm\armdefs.h" />
+    <ClInclude Include="src\arm\armemu.h" />
+    <ClInclude Include="src\arm\armmmu.h" />
+    <ClInclude Include="src\arm\armos.h" />
+    <ClInclude Include="src\arm\arm_regformat.h" />
     <ClInclude Include="src\arm\disassembler\arm_disasm.h" />
+    <ClInclude Include="src\arm\mmu\arm1176jzf_s_mmu.h" />
+    <ClInclude Include="src\arm\mmu\cache.h" />
+    <ClInclude Include="src\arm\mmu\rb.h" />
+    <ClInclude Include="src\arm\mmu\tlb.h" />
+    <ClInclude Include="src\arm\mmu\wb.h" />
+    <ClInclude Include="src\arm\skyeye_defs.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\mem_map.h" />
   </ItemGroup>
