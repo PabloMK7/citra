@@ -49,7 +49,7 @@ LogManager::LogManager()
 	m_Log[LogTypes::EXPANSIONINTERFACE]	= new LogContainer("EXI",			"ExpansionInt");
 	m_Log[LogTypes::GDB_STUB]			= new LogContainer("GDB_STUB",		"GDB Stub");
 	m_Log[LogTypes::AUDIO_INTERFACE]	= new LogContainer("AI",			"AudioInt");
-	m_Log[LogTypes::POWERPC]			= new LogContainer("PowerPC",		"IBM CPU");
+	m_Log[LogTypes::ARM11]				= new LogContainer("ARM11",			"ARM11");
 	m_Log[LogTypes::OSHLE]				= new LogContainer("HLE",			"HLE");
 	m_Log[LogTypes::DSPHLE]				= new LogContainer("DSPHLE",		"DSP HLE");
 	m_Log[LogTypes::DSPLLE]				= new LogContainer("DSPLLE",		"DSP LLE");
@@ -130,6 +130,7 @@ void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type,
 #ifdef ANDROID
 	Host_SysMessage(msg);	
 #endif
+	printf(msg); // TODO(ShizZy): RemoveMe when I no longer need this
 	log->Trigger(level, msg);
 }
 
