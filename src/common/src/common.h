@@ -50,6 +50,10 @@ private:
 #include "common_paths.h"
 #include "platform.h"
 
+#if EMU_PLATFORM == PLATFORM_WINDOWS
+#include <windows.h>
+#endif
+
 #ifdef __APPLE__
 // The Darwin ABI requires that stack frames be aligned to 16-byte boundaries.
 // This is only needed on i386 gcc - x86_64 already aligns to 16 bytes.
