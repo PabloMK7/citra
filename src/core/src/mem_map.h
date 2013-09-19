@@ -58,7 +58,7 @@ extern u8 *g_base;
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
 // 32-bit: Same as the corresponding physical/virtual pointers.
-extern u8* g_ram;			///< Main memory
+extern u8* g_fcram;			///< Main memory
 extern u8* g_vram;			///< Video memory (VRAM)
 
 void Init();

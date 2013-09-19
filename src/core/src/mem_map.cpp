@@ -33,29 +33,47 @@
 namespace Memory {
 
 	
-u8*	g_mem_base			= NULL;		///< The base pointer to the auto-mirrored arena.
+u8*	g_base			= NULL;		///< The base pointer to the auto-mirrored arena.
 
-MemArena g_mem_arena;				///< The MemArena class
+MemArena g_arena;				///< The MemArena class
 
+u8* g_bootrom			= NULL;		///< Bootrom memory (super secret code/data @ 0x8000) pointer
 u8* g_fcram				= NULL;		///< Main memory (FCRAM) pointer
 u8* g_vram				= NULL;		///< Video memory (VRAM) pointer
+
+u8* g_physical_bootrom	= NULL;		///< Bootrom physical memory (super secret code/data @ 0x8000)
+u8* g_uncached_bootrom	= NULL;
 
 u8* g_physical_fcram	= NULL;		///< Main physical memory (FCRAM)
 u8* g_physical_vram		= NULL;		///< Video physical memory (VRAM)
 
 // We don't declare the IO region in here since its handled by other means.
-static MemoryView g_mem_views[] =
+static MemoryView g_views[] =
 {
-	{NULL,		NULL,				0x00000000, MEM_BOOTROM_SIZE,		0},
-	{NULL,		NULL,				0x00010000, MEM_BOOTROM_SIZE,		MV_MIRROR_PREVIOUS},
-	{NULL,      NULL,				0x17E00000, MEM_MPCORE_PRIV_SIZE,	0},
-	{&g_vram,   &g_physical_vram,	0x18000000, MEM_VRAM_SIZE,			0},
-	{NULL,      NULL,				0x1FF00000, MEM_DSP_SIZE,			0},
-	{NULL,      NULL,				0x1FF80000, MEM_AXI_WRAM_SIZE,		0},
-	{&g_ram,    &g_physical_fcram,	0x20000000, MEM_FCRAM_SIZE,			MV_IS_PRIMARY_RAM},
+	{&g_bootrom,	&g_physical_bootrom,	0x00000000, MEM_BOOTROM_SIZE,		0},
+	{NULL,			&g_uncached_bootrom,	0x00010000, MEM_BOOTROM_SIZE,		MV_MIRROR_PREVIOUS},
+//	//{NULL,				NULL,					0x17E00000, MEM_MPCORE_PRIV_SIZE,	0},
+	{&g_vram,		&g_physical_vram,		0x18000000, MEM_VRAM_SIZE,			0},
+//	//{NULL,				NULL,					0x1FF00000, MEM_DSP_SIZE,			0},
+//	//{NULL,				NULL,					0x1FF80000, MEM_AXI_WRAM_SIZE,		0},
+	{&g_fcram,		&g_physical_fcram,		0x20000000, MEM_FCRAM_SIZE,			MV_IS_PRIMARY_RAM},
 };
 
-static const int kNumMemViews = sizeof(g_mem_views) / sizeof(MemoryView);	///< Number of mem views
+/*static MemoryView views[] =
+{
+	{&m_pScratchPad, &m_pPhysicalScratchPad,  0x00010000, SCRATCHPAD_SIZE, 0},
+	{NULL,           &m_pUncachedScratchPad,  0x40010000, SCRATCHPAD_SIZE, MV_MIRROR_PREVIOUS},
+	{&m_pVRAM,       &m_pPhysicalVRAM,        0x04000000, 0x00800000, 0},
+	{NULL,           &m_pUncachedVRAM,        0x44000000, 0x00800000, MV_MIRROR_PREVIOUS},
+	{&m_pRAM,        &m_pPhysicalRAM,         0x08000000, g_MemorySize, MV_IS_PRIMARY_RAM},	// only from 0x08800000 is it usable (last 24 megs)
+	{NULL,           &m_pUncachedRAM,         0x48000000, g_MemorySize, MV_MIRROR_PREVIOUS | MV_IS_PRIMARY_RAM},
+	{NULL,           &m_pKernelRAM,           0x88000000, g_MemorySize, MV_MIRROR_PREVIOUS | MV_IS_PRIMARY_RAM},
+
+	// TODO: There are a few swizzled mirrors of VRAM, not sure about the best way to
+	// implement those.
+};*/
+
+static const int kNumMemViews = sizeof(g_views) / sizeof(MemoryView);	///< Number of mem views
 
 u8 Read8(const u32 addr) {
 	return 0xDE;
@@ -81,11 +99,10 @@ void Write32(const u32 addr, const u32 data) {
 void Init() {
 	int flags = 0;
 
-	for (size_t i = 0; i < ARRAY_SIZE(g_mem_views); i++) {
-		if (g_mem_views[i].flags & MV_IS_PRIMARY_RAM)
-			g_mem_views[i].size = MEMORY_SIZE;
+	for (size_t i = 0; i < ARRAY_SIZE(g_views); i++) {
+		if (g_views[i].flags & MV_IS_PRIMARY_RAM)
+			g_views[i].size = MEMORY_SIZE;
 	}
-	g_base = MemoryMap_Setup(g_mem_views, kNumMemViews, flags, &g_mem_arena);
 
 	INFO_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 
 		g_physical_fcram);
@@ -93,9 +110,9 @@ void Init() {
 
 void Shutdown() {
 	u32 flags = 0;
-	MemoryMap_Shutdown(g_mem_views, kNumMemViews, flags, &g_mem_arena);
-	g_mem_arena.ReleaseSpace();
-	g_mem_base = NULL;
+	MemoryMap_Shutdown(g_views, kNumMemViews, flags, &g_arena);
+	g_arena.ReleaseSpace();
+	g_base = NULL;
 	INFO_LOG(MEMMAP, "Memory system shut down.");
 }
 
