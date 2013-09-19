@@ -95,6 +95,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib />
+    <ClCompile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile />
@@ -172,6 +175,7 @@
     <ClInclude Include="src\std_mutex.h" />
     <ClInclude Include="src\std_thread.h" />
     <ClInclude Include="src\string_util.h" />
+    <ClInclude Include="src\swap.h" />
     <ClInclude Include="src\thread.h" />
     <ClInclude Include="src\thunk.h" />
     <ClInclude Include="src\timer.h" />
@@ -196,6 +200,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

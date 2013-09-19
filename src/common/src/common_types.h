@@ -45,4 +45,6 @@ typedef signed long long s64;
 
 #endif // _WIN32
 
+#include "swap.h"
+
 #endif // _COMMONTYPES_H_

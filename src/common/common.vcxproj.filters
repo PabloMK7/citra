@@ -54,6 +54,7 @@
     <ClInclude Include="src\atomic_win32.h" />
     <ClInclude Include="src\emu_window.h" />
     <ClInclude Include="src\platform.h" />
+    <ClInclude Include="src\swap.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
