@@ -26,9 +26,7 @@
 #include "log_manager.h"
 #include "file_util.h"
 
-//#if EMU_PLATFORM == PLATFORM_LINUX
-//#include <unistd.h>
-//#endif
+#include "core.h"
 
 #include "emu_window/emu_window_glfw.h"
 
@@ -46,9 +44,9 @@ int __cdecl main(int argc, char **argv) {
 
 	LogManager::Init();
 
-	NOTICE_LOG(ARM11, "Test\n");
+    EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
-    //EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
+	Core::Init(emu_window);
 
     //if (E_OK != core::Init(emu_window)) {
     //    LOG_ERROR(TMASTER, "core initialization failed, exiting...");
