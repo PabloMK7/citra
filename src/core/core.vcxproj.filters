@@ -12,6 +12,7 @@
     <ClCompile Include="src\arm\armemu.cpp">
       <Filter>arm</Filter>
     </ClCompile>
+    <ClCompile Include="src\mem_map_funcs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

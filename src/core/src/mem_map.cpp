@@ -101,7 +101,7 @@ void Init() {
 
 	for (size_t i = 0; i < ARRAY_SIZE(g_views); i++) {
 		if (g_views[i].flags & MV_IS_PRIMARY_RAM)
-			g_views[i].size = MEMORY_SIZE;
+			g_views[i].size = MEM_FCRAM_SIZE;
 	}
 
 	INFO_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 

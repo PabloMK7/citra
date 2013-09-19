@@ -39,8 +39,7 @@
 #define MEM_AXI_WRAM_SIZE		0x00080000	///< AXI WRAM size
 #define MEM_FCRAM_SIZE			0x08000000	///< FCRAM size
 
-#define MEMORY_SIZE				MEM_FCRAM_SIZE
-#define MEMORY_MASK				(MEM_FCRAM_SIZE - 1)	///< Main memory mask
+#define MEM_FCRAM_MASK			(MEM_FCRAM_SIZE - 1)	///< FCRAm mask
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

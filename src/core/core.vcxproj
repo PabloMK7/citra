@@ -138,6 +138,7 @@
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\mem_map.cpp" />
+    <ClCompile Include="src\mem_map_funcs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arm\armcpu.h" />
