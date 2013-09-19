@@ -42,6 +42,8 @@ void Stop() {
 /// Initialize the core
 int Init(EmuWindow* emu_window) {
 	Memory::Init();
+
+	NOTICE_LOG(MASTER_LOG, "Core initialized OK");
 	return 0;
 }
 
