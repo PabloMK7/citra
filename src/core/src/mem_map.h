@@ -67,6 +67,9 @@ u8 Read8(const u32 addr);
 u16 Read16(const u32 addr);
 u32 Read32(const u32 addr);
 
+u32 Read8_ZX(const u32 addr);
+u32 Read16_ZX(const u32 addr);
+
 void Write8(const u32 addr, const u32 data);
 void Write16(const u32 addr, const u32 data);
 void Write32(const u32 addr, const u32 data);

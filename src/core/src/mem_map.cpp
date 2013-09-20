@@ -75,27 +75,6 @@ static MemoryView g_views[] =
 
 static const int kNumMemViews = sizeof(g_views) / sizeof(MemoryView);	///< Number of mem views
 
-u8 Read8(const u32 addr) {
-	return 0xDE;
-}
-
-u16 Read16(const u32 addr) {
-	return 0xDEAD;
-}
-
-u32 Read32(const u32 addr) {
-	return 0xDEADBEEF;
-}
-
-void Write8(const u32 addr, const u32 data) {
-}
-
-void Write16(const u32 addr, const u32 data) {
-}
-
-void Write32(const u32 addr, const u32 data) {
-}
-
 void Init() {
 	int flags = 0;
 
@@ -104,7 +83,7 @@ void Init() {
 			g_views[i].size = MEM_FCRAM_SIZE;
 	}
 
-	INFO_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 
+	NOTICE_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 
 		g_physical_fcram);
 }
 
@@ -113,7 +92,7 @@ void Shutdown() {
 	MemoryMap_Shutdown(g_views, kNumMemViews, flags, &g_arena);
 	g_arena.ReleaseSpace();
 	g_base = NULL;
-	INFO_LOG(MEMMAP, "Memory system shut down.");
+	NOTICE_LOG(MEMMAP, "Memory system shut down.");
 }
 
 
