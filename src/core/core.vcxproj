@@ -137,6 +137,7 @@
     <ClCompile Include="src\arm\arminit.cpp" />
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="src\core.cpp" />
+    <ClCompile Include="src\loader.cpp" />
     <ClCompile Include="src\mem_map.cpp" />
     <ClCompile Include="src\mem_map_funcs.cpp" />
   </ItemGroup>
@@ -155,6 +156,7 @@
     <ClInclude Include="src\arm\mmu\wb.h" />
     <ClInclude Include="src\arm\skyeye_defs.h" />
     <ClInclude Include="src\core.h" />
+    <ClInclude Include="src\loader.h" />
     <ClInclude Include="src\mem_map.h" />
   </ItemGroup>
   <ItemGroup>

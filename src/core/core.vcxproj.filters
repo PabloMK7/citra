@@ -13,6 +13,7 @@
       <Filter>arm</Filter>
     </ClCompile>
     <ClCompile Include="src\mem_map_funcs.cpp" />
+    <ClCompile Include="src\loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -67,6 +68,7 @@
     <ClInclude Include="src\arm\mmu\wb.h">
       <Filter>arm\mmu</Filter>
     </ClInclude>
+    <ClInclude Include="src\loader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
