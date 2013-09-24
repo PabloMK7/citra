@@ -526,8 +526,8 @@ size_t DirectoryFileSystem::SeekFile(u32 handle, s32 position, FileMove type) {
 	}
 }
 
-PSPFileInfo DirectoryFileSystem::GetFileInfo(std::string filename) {
-	PSPFileInfo x;
+FileInfo DirectoryFileSystem::GetFileInfo(std::string filename) {
+	FileInfo x;
 	x.name = filename;
 
 	std::string fullName = GetLocalPath(filename);
@@ -584,8 +584,8 @@ static void tmFromFiletime(tm &dest, FILETIME &src)
 }
 #endif
 
-std::vector<PSPFileInfo> DirectoryFileSystem::GetDirListing(std::string path) {
-	std::vector<PSPFileInfo> myVector;
+std::vector<FileInfo> DirectoryFileSystem::GetDirListing(std::string path) {
+	std::vector<FileInfo> myVector;
 #ifdef _WIN32
 	WIN32_FIND_DATA findData;
 	HANDLE hFind;
@@ -599,7 +599,7 @@ std::vector<PSPFileInfo> DirectoryFileSystem::GetDirListing(std::string path) {
 	}
 
 	while (true) {
-		PSPFileInfo entry;
+		FileInfo entry;
 		if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			entry.type = FILETYPE_DIRECTORY;
 		else
@@ -642,7 +642,7 @@ std::vector<PSPFileInfo> DirectoryFileSystem::GetDirListing(std::string path) {
 	}
 
 	while ((dirp = readdir(dp)) != NULL) {
-		PSPFileInfo entry;
+		FileInfo entry;
 		struct stat s;
 		std::string fullName = GetLocalPath(path) + "/"+dirp->d_name;
 		stat(fullName.c_str(), &s);
@@ -734,8 +734,8 @@ u32 VFSFileSystem::OpenFile(std::string filename, FileAccess access, const char 
 	return newHandle;
 }
 
-PSPFileInfo VFSFileSystem::GetFileInfo(std::string filename) {
-	PSPFileInfo x;
+FileInfo VFSFileSystem::GetFileInfo(std::string filename) {
+	FileInfo x;
 	x.name = filename;
 
 	std::string fullName = GetLocalPath(filename);
@@ -809,8 +809,8 @@ bool VFSFileSystem::GetHostPath(const std::string &inpath, std::string &outpath)
 	return false;
 }
 
-std::vector<PSPFileInfo> VFSFileSystem::GetDirListing(std::string path) {
-	std::vector<PSPFileInfo> myVector;
+std::vector<FileInfo> VFSFileSystem::GetDirListing(std::string path) {
+	std::vector<FileInfo> myVector;
 	// TODO
 	return myVector;
 }
