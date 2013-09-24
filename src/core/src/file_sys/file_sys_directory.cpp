@@ -21,9 +21,9 @@
 //#include "ISOFileSystem.h"
 //#include "Core/HLE/sceKernel.h"
 //#include "file/zip_read.h"
-//#include "util/text/utf8.h"
+#include "utf8.h"
 
-#ifdef _WIN32
+#if EMU_PLATFORM == PLATFORM_WINDOWS
 //#include "Common/CommonWindows.h"
 #include <sys/stat.h>
 #else
@@ -31,6 +31,106 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <ctype.h>
+#endif
+
+#if HOST_IS_CASE_SENSITIVE
+static bool FixFilenameCase(const std::string &path, std::string &filename)
+{
+	// Are we lucky?
+	if (File::Exists(path + filename))
+		return true;
+
+	size_t filenameSize = filename.size();  // size in bytes, not characters
+	for (size_t i = 0; i < filenameSize; i++)
+	{
+		filename[i] = tolower(filename[i]);
+	}
+
+	//TODO: lookup filename in cache for "path"
+
+	struct dirent_large { struct dirent entry; char padding[FILENAME_MAX+1]; } diren;
+	struct dirent_large;
+	struct dirent *result = NULL;
+
+	DIR *dirp = opendir(path.c_str());
+	if (!dirp)
+		return false;
+
+	bool retValue = false;
+
+	while (!readdir_r(dirp, (dirent*) &diren, &result) && result)
+	{
+		if (strlen(result->d_name) != filenameSize)
+			continue;
+
+		size_t i;
+		for (i = 0; i < filenameSize; i++)
+		{
+			if (filename[i] != tolower(result->d_name[i]))
+				break;
+		}
+
+		if (i < filenameSize)
+			continue;
+
+		filename = result->d_name;
+		retValue = true;
+	}
+
+	closedir(dirp);
+
+	return retValue;
+}
+
+bool FixPathCase(std::string& basePath, std::string &path, FixPathCaseBehavior behavior)
+{
+	size_t len = path.size();
+
+	if (len == 0)
+		return true;
+
+	if (path[len - 1] == '/')
+	{
+		len--;
+
+		if (len == 0)
+			return true;
+	}
+
+	std::string fullPath;
+	fullPath.reserve(basePath.size() + len + 1);
+	fullPath.append(basePath); 
+
+	size_t start = 0;
+	while (start < len)
+	{
+		size_t i = path.find('/', start);
+		if (i == std::string::npos)
+			i = len;
+
+		if (i > start)
+		{
+			std::string component = path.substr(start, i - start);
+
+			// Fix case and stop on nonexistant path component
+			if (FixFilenameCase(fullPath, component) == false) {
+				// Still counts as success if partial matches allowed or if this
+				// is the last component and only the ones before it are required
+				return (behavior == FPC_PARTIAL_ALLOWED || (behavior == FPC_PATH_MUST_EXIST && i >= len));
+			}
+
+			path.replace(start, i - start, component);
+
+			fullPath.append(component);
+			fullPath.append(1, '/');
+		}
+
+		start = i + 1;
+	}
+
+	return true;
+}
+
 #endif
 
 std::string DirectoryFileHandle::GetLocalPath(std::string& basePath, std::string localpath)
@@ -50,9 +150,20 @@ std::string DirectoryFileHandle::GetLocalPath(std::string& basePath, std::string
 	return basePath + localpath;
 }
 
-bool DirectoryFileHandle::Open(std::string& basePath, std::string& fileName, FileAccess access) {
+bool DirectoryFileHandle::Open(std::string& basePath, std::string& fileName, FileAccess access)
+{
+#if HOST_IS_CASE_SENSITIVE
+	if (access & (FILEACCESS_APPEND|FILEACCESS_CREATE|FILEACCESS_WRITE))
+	{
+		DEBUG_LOG(FILESYS, "Checking case for path %s", fileName.c_str());
+		if ( ! FixPathCase(basePath, fileName, FPC_PATH_MUST_EXIST) )
+			return false;  // or go on and attempt (for a better error code than just 0?)
+	}
+	// else we try fopen first (in case we're lucky) before simulating case insensitivity
+#endif
+
 	std::string fullName = GetLocalPath(basePath,fileName);
-	INFO_LOG(FILESYS, "Actually opening %s", fullName.c_str());
+	INFO_LOG(FILESYS,"Actually opening %s", fullName.c_str());
 
 	//TODO: tests, should append seek to end of file? seeking in a file opened for append?
 #ifdef _WIN32
@@ -74,7 +185,7 @@ bool DirectoryFileHandle::Open(std::string& basePath, std::string& fileName, Fil
 		openmode = OPEN_EXISTING;
 	}
 	//Let's do it!
-	hFile = CreateFile(fullName.c_str(), desired, sharemode, 0, openmode, 0, 0);
+	hFile = CreateFile(ConvertUTF8ToWString(fullName).c_str(), desired, sharemode, 0, openmode, 0, 0);
 	bool success = hFile != INVALID_HANDLE_VALUE;
 #else
 	// Convert flags in access parameter to fopen access mode
@@ -268,7 +379,7 @@ int DirectoryFileSystem::RenameFile(const std::string &from, const std::string &
 
 	// At this point, we should check if the paths match and give an already exists error.
 	if (from == fullTo)
-		return SCE_KERNEL_ERROR_ERRNO_FILE_ALREADY_EXISTS;
+		return -1;//SCE_KERNEL_ERROR_ERRNO_FILE_ALREADY_EXISTS;
 
 	std::string fullFrom = GetLocalPath(from);
 
@@ -282,7 +393,7 @@ int DirectoryFileSystem::RenameFile(const std::string &from, const std::string &
 	const char * fullToC = fullTo.c_str();
 
 #ifdef _WIN32
-	bool retValue = (MoveFile(fullFrom.c_str(), fullToC) == TRUE);
+	bool retValue = (MoveFile(ConvertUTF8ToWString(fullFrom).c_str(), ConvertUTF8ToWString(fullToC).c_str()) == TRUE);
 #else
 	bool retValue = (0 == rename(fullFrom.c_str(), fullToC));
 #endif
@@ -305,7 +416,7 @@ int DirectoryFileSystem::RenameFile(const std::string &from, const std::string &
 #endif
 
 	// TODO: Better error codes.
-	return retValue ? 0 : SCE_KERNEL_ERROR_ERRNO_FILE_ALREADY_EXISTS;
+	return retValue ? 0 : -1;//SCE_KERNEL_ERROR_ERRNO_FILE_ALREADY_EXISTS;
 }
 
 bool DirectoryFileSystem::RemoveFile(const std::string &filename) {
@@ -439,7 +550,7 @@ PSPFileInfo DirectoryFileSystem::GetFileInfo(std::string filename) {
 	{
 #ifdef _WIN32
 		struct _stat64i32 s;
-		_wstat64i32(fullName.c_str(), &s);
+		_wstat64i32(ConvertUTF8ToWString(fullName).c_str(), &s);
 #else
 		struct stat s;
 		stat(fullName.c_str(), &s);
@@ -559,7 +670,7 @@ void DirectoryFileSystem::DoState(PointerWrap &p) {
 	}
 }
 
-
+/*
 
 VFSFileSystem::VFSFileSystem(IHandleAllocator *_hAlloc, std::string _basePath) : basePath(_basePath) {
 	INFO_LOG(FILESYS, "Creating VFS file system");
@@ -710,3 +821,5 @@ void VFSFileSystem::DoState(PointerWrap &p) {
 		ERROR_LOG(FILESYS, "FIXME: Open files during savestate, could go badly.");
 	}
 }
+
+*/

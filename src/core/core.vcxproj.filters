@@ -14,6 +14,9 @@
     </ClCompile>
     <ClCompile Include="src\mem_map_funcs.cpp" />
     <ClCompile Include="src\loader.cpp" />
+    <ClCompile Include="src\file_sys\file_sys_directory.cpp">
+      <Filter>file_sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -24,6 +27,9 @@
     </Filter>
     <Filter Include="arm\mmu">
       <UniqueIdentifier>{a64d3c8a-747a-491b-b782-6e2622bedf24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="file_sys">
+      <UniqueIdentifier>{d19a3be3-56c3-4b0b-877c-c68388904bb2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +75,12 @@
       <Filter>arm\mmu</Filter>
     </ClInclude>
     <ClInclude Include="src\loader.h" />
+    <ClInclude Include="src\file_sys\file_sys.h">
+      <Filter>file_sys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\file_sys\file_sys_directory.h">
+      <Filter>file_sys</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
