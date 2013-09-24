@@ -70,8 +70,16 @@
 
 #if EMU_PLATFORM == PLATFORM_WINDOWS
 
+#include <time.h>
+
 #define NOMINMAX
 #define EMU_FASTCALL __fastcall
+
+inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
+	if (localtime_s(result, clock) == 0)
+		return result;
+	return NULL;
+}
 
 #else
 
