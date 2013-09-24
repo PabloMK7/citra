@@ -179,6 +179,7 @@
     <ClInclude Include="src\thread.h" />
     <ClInclude Include="src\thunk.h" />
     <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\utf8.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\break_points.cpp" />
@@ -196,6 +197,7 @@
     <ClCompile Include="src\string_util.cpp" />
     <ClCompile Include="src\thread.cpp" />
     <ClCompile Include="src\timer.cpp" />
+    <ClCompile Include="src\utf8.cpp" />
     <ClCompile Include="src\version.cpp" />
   </ItemGroup>
   <ItemGroup>

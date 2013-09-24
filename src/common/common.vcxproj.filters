@@ -17,6 +17,7 @@
     <ClCompile Include="src\thread.cpp" />
     <ClCompile Include="src\timer.cpp" />
     <ClCompile Include="src\version.cpp" />
+    <ClCompile Include="src\utf8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\atomic.h" />
@@ -55,6 +56,7 @@
     <ClInclude Include="src\emu_window.h" />
     <ClInclude Include="src\platform.h" />
     <ClInclude Include="src\swap.h" />
+    <ClInclude Include="src\utf8.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
