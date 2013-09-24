@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#if EMU_PLATFORM == PLATFORM_WINDOWS
+#include <windows.h>
+#endif
+
 //teawater add for arm2x86 2005.02.14-------------------------------------------
 // koodailar remove it for mingw 2005.12.18----------------
 //anthonylee modify it for portable 2007.01.30

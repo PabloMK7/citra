@@ -24,7 +24,7 @@
 #include "utf8.h"
 
 #if EMU_PLATFORM == PLATFORM_WINDOWS
-//#include "Common/CommonWindows.h"
+#include <windows.h>
 #include <sys/stat.h>
 #else
 #include <dirent.h>
