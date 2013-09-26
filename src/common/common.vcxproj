@@ -159,8 +159,6 @@
     <ClInclude Include="src\extended_trace.h" />
     <ClInclude Include="src\fifo_queue.h" />
     <ClInclude Include="src\file_search.h" />
-    <ClInclude Include="src\file_sys.h" />
-    <ClInclude Include="src\file_sys_directory.h" />
     <ClInclude Include="src\file_util.h" />
     <ClInclude Include="src\fixed_size_queue.h" />
     <ClInclude Include="src\hash.h" />
@@ -188,7 +186,6 @@
     <ClCompile Include="src\console_listener.cpp" />
     <ClCompile Include="src\extended_trace.cpp" />
     <ClCompile Include="src\file_search.cpp" />
-    <ClCompile Include="src\file_sys_directory.cpp" />
     <ClCompile Include="src\file_util.cpp" />
     <ClCompile Include="src\hash.cpp" />
     <ClCompile Include="src\log_manager.cpp" />
