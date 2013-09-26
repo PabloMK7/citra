@@ -17,6 +17,9 @@
     <ClCompile Include="src\file_sys\directory_file_system.cpp">
       <Filter>file_sys</Filter>
     </ClCompile>
+    <ClCompile Include="src\file_sys\meta_file_system.cpp">
+      <Filter>file_sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -79,6 +82,9 @@
       <Filter>file_sys</Filter>
     </ClInclude>
     <ClInclude Include="src\file_sys\directory_file_system.h">
+      <Filter>file_sys</Filter>
+    </ClInclude>
+    <ClInclude Include="src\file_sys\meta_file_system.h">
       <Filter>file_sys</Filter>
     </ClInclude>
   </ItemGroup>
