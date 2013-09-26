@@ -14,7 +14,7 @@
     </ClCompile>
     <ClCompile Include="src\mem_map_funcs.cpp" />
     <ClCompile Include="src\loader.cpp" />
-    <ClCompile Include="src\file_sys\file_sys_directory.cpp">
+    <ClCompile Include="src\file_sys\directory_file_system.cpp">
       <Filter>file_sys</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,7 +78,7 @@
     <ClInclude Include="src\file_sys\file_sys.h">
       <Filter>file_sys</Filter>
     </ClInclude>
-    <ClInclude Include="src\file_sys\file_sys_directory.h">
+    <ClInclude Include="src\file_sys\directory_file_system.h">
       <Filter>file_sys</Filter>
     </ClInclude>
   </ItemGroup>
