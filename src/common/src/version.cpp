@@ -13,7 +13,7 @@
 	#define BUILD_TYPE_STR ""
 #endif
 
-const char *scm_rev_str = "citrus "
+const char *scm_rev_str = "emu "
 #if !SCM_IS_MASTER
 	"[" SCM_BRANCH_STR "] "
 #endif

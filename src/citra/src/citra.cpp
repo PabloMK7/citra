@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2013 citra Emulator
  *
- * @file    citrus.cpp
+ * @file    citra.cpp
  * @author  ShizZy <shizzy247@gmail.com>
  * @date    2013-09-04
  * @brief   Main entry point
@@ -30,7 +30,7 @@
 
 #include "emu_window/emu_window_glfw.h"
 
-#include "citrus.h"
+#include "citra.h"
 
 //#define PLAY_FIFO_RECORDING
 
@@ -38,7 +38,7 @@
 int __cdecl main(int argc, char **argv) {
     //u32 tight_loop;
 
-    printf("citrus starting...\n");
+    printf("citra starting...\n");
 
 	std::string program_dir = File::GetCurrentDir();
 

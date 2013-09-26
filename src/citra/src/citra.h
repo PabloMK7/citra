@@ -1,7 +1,7 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2013 Citra Emulator
  *
- * @file    citrus.h
+ * @file    citra.h
  * @author  ShizZy <shizzy247@gmail.com>
  * @date    2013-09-04
  * @brief   Main entry point
@@ -22,14 +22,14 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef CITRUS_CITRUS_H_
-#define CITRUS_CITRUS_H_
+#ifndef CITRA_CITRA_H
+#define CITRA_CITRA_H
 
 #include "version.h"
 
-#define APP_NAME        "citrus"
+#define APP_NAME        "citra"
 #define APP_VERSION     "0.01-" VERSION
 #define APP_TITLE       APP_NAME " " APP_VERSION
-#define	COPYRIGHT       "Copyright (C) 2013 Citrus Team"
+#define	COPYRIGHT       "Copyright (C) 2013 Citra Emulator"
 
-#endif // CITRUS_CITRUS_H_
+#endif // CITRA_CITRA_H

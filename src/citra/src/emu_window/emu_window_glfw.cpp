@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2013 Citra Emulator
  *
  * @file    emu_window_glfw.cpp
  * @author  ShizZy <shizzy@6bit.net>
@@ -54,7 +54,7 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    render_window_ = glfwCreateWindow(640, 480, "citrus", NULL, NULL);
+    render_window_ = glfwCreateWindow(640, 480, "citra", NULL, NULL);
 
     // Setup callbacks
     glfwSetWindowUserPointer(render_window_, this);
