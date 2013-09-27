@@ -29,14 +29,26 @@ namespace Core {
 
 /// Start the core
 void Start() {
+	// TODO(ShizZy): ImplementMe
+}
+
+/// Run the core CPU loop
+void RunLoop() {
+	// TODO(ShizZy): ImplementMe
+}
+
+/// Step the CPU one instruction
+void SingleStep() {
+}
+
+/// Halt the core
+void Halt() {
+	// TODO(ShizZy): ImplementMe
 }
 
 /// Kill the core
-void Kill() {
-}
-
-/// Stop the core
 void Stop() {
+	// TODO(ShizZy): ImplementMe
 }
 
 /// Initialize the core

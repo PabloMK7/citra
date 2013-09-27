@@ -1,10 +1,10 @@
 /**
  * Copyright (C) 2013 Citrus Emulator
  *
- * @file    core.h
+ * @file    system.h
  * @author  ShizZy <shizzy247@gmail.com>
- * @date    2013-09-04
- * @brief   Core of emulator
+ * @date    2013-09-26
+ * @brief   Emulation of main system
  *
  * @section LICENSE
  * This program is free software; you can redistribute it and/or
@@ -22,39 +22,40 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef CORE_CORE_H_
-#define CORE_CORE_H_
+#ifndef CORE_SYSTEM_H_
+#define CORE_SYSTEM_H_
+
+#include "file_sys/meta_file_system.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "common.h"
+namespace System {
+
+extern MetaFileSystem g_ctr_file_system;
+
+// State of the full emulator
+typedef enum {
+	STATE_NULL = 0,	///< System is in null state, nothing initialized
+	STATE_IDLE,		///< System is in an initialized state, but not running
+	STATE_RUNNING,	///< System is running
+	STATE_LOADING,	///< System is loading a ROM
+	STATE_HALTED,	///< System is halted (error)
+	STATE_STALLED,	///< System is stalled (unused)
+	STATE_DEBUG,	///< System is in a special debug mode (unused)
+	STATE_DIE		///< System is shutting down
+} State;
+
+extern volatile State g_state;
+
+void UpdateState(State state);
+void Init();
+void RunLoopFor(int cycles);
+void RunLoopUntil(u64 global_cycles);
+void Shutdown();
+
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class EmuWindow;
-
-namespace Core {
-
-/// Start the core
-void Start();
-
-/// Run the core CPU loop
-void RunLoop();
-
-/// Step the CPU one instruction
-void SingleStep();
-
-/// Halt the core
-void Halt();
-
-/// Kill the core
-void Stop();
-
-/// Initialize the core
-int Init(EmuWindow* emu_window);
-
-} // namespace
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#endif // CORE_CORE_H_
+#endif // CORE_SYSTEM_H_
+ 

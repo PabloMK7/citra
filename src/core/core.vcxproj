@@ -163,6 +163,7 @@
     <ClInclude Include="src\file_sys\meta_file_system.h" />
     <ClInclude Include="src\loader.h" />
     <ClInclude Include="src\mem_map.h" />
+    <ClInclude Include="src\system.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
