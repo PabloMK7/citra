@@ -22,4 +22,7 @@
       <UniqueIdentifier>{e3161526-9f53-4670-8dae-2be81ff01bc2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
 </Project>
