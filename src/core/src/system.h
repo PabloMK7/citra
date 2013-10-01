@@ -31,8 +31,6 @@
 
 namespace System {
 
-extern MetaFileSystem g_ctr_file_system;
-
 // State of the full emulator
 typedef enum {
 	STATE_NULL = 0,	///< System is in null state, nothing initialized
@@ -46,6 +44,7 @@ typedef enum {
 } State;
 
 extern volatile State g_state;
+extern MetaFileSystem g_ctr_file_system;
 
 void UpdateState(State state);
 void Init();

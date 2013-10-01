@@ -20,6 +20,8 @@
     <ClCompile Include="src\file_sys\meta_file_system.cpp">
       <Filter>file_sys</Filter>
     </ClCompile>
+    <ClCompile Include="src\system.cpp" />
+    <ClCompile Include="src\core_timing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -88,6 +90,7 @@
       <Filter>file_sys</Filter>
     </ClInclude>
     <ClInclude Include="src\system.h" />
+    <ClInclude Include="src\core_timing.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
