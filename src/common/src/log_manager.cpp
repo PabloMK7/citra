@@ -59,7 +59,7 @@ LogManager::LogManager()
 	m_Log[LogTypes::DYNA_REC]			= new LogContainer("JIT",			"Dynamic Recompiler");
 	m_Log[LogTypes::CONSOLE]			= new LogContainer("CONSOLE",		"Dolphin Console");
 	m_Log[LogTypes::OSREPORT]			= new LogContainer("OSREPORT",		"OSReport");
-	m_Log[LogTypes::WIIMOTE]			= new LogContainer("Wiimote",		"Wiimote");
+	m_Log[LogTypes::TIME]				= new LogContainer("Time",			"Core Timing");
 	m_Log[LogTypes::LOADER]				= new LogContainer("Loader",		"Loader");
 	m_Log[LogTypes::FILESYS]			= new LogContainer("FileSys",		"File System");
 	m_Log[LogTypes::WII_IPC_HID]		= new LogContainer("WII_IPC_HID",	"WII IPC HID");
