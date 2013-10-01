@@ -24,18 +24,37 @@
 
 #include "file_util.h"
 #include "loader.h"
+#include "system.h"
+#include "file_sys/directory_file_system.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool _Load_BIN(std::string &filename) {
-	File::IOFile f(filename, "rb");
-	if (f.IsOpen()) {
+bool LoadDirectory(std::string &filename) {
+	std::string full_path = filename;
+	std::string path, file, extension;
+	SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
+#if EMU_PLATFORM == PLATFORM_WINDOWS
+	path = ReplaceAll(path, "/", "\\");
+#endif
+	DirectoryFileSystem *fs = new DirectoryFileSystem(&System::g_ctr_file_system, path);
+	System::g_ctr_file_system.Mount("fs:", fs);
+
+	std::string final_name = "fs:/" + file + extension;
+	//File::IOFile f(filename, "rb");
+
+	//if (f.IsOpen()) {
 		// TODO(ShizZy): read here to memory....
-	}
+	//}
+	ERROR_LOG(TIME, "Unimplemented function!");
 	return true;
 }
 
 namespace Loader {
+
+bool IsBootableDirectory() {
+	ERROR_LOG(TIME, "Unimplemented function!");
+	return true;
+}
 
 /**
  * Identifies the type of a bootable file
@@ -51,9 +70,11 @@ FileType IdentifyFile(std::string &filename) {
 	std::string extension = filename.size() >= 5 ? filename.substr(filename.size() - 4) : "";
 	
 	if (File::IsDirectory(filename)) {
-		return FILETYPE_NORMAL_DIRECTORY;
-	} else if (!strcasecmp(extension.c_str(),".bin")) {
-		return FILETYPE_3DS_BIN;
+		if (IsBootableDirectory()) {
+			return FILETYPE_CTR_DIRECTORY;
+		} else {
+			return FILETYPE_NORMAL_DIRECTORY;
+		}
 	} else if (!strcasecmp(extension.c_str(),".zip")) {
 		return FILETYPE_ARCHIVE_ZIP;
 	} else if (!strcasecmp(extension.c_str(),".rar")) {
@@ -77,10 +98,10 @@ bool LoadFile(std::string &filename, std::string *error_string) {
 	// Note that this can modify filename!
 	switch (IdentifyFile(filename)) {
 	
-	case FILETYPE_3DS_BIN:
+	case FILETYPE_CTR_DIRECTORY:
 		{
 			INFO_LOG(LOADER,"File is a BIN !");
-			return _Load_BIN(filename);
+			return LoadDirectory(filename);
 		}
 
 	case FILETYPE_ERROR:
