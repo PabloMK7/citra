@@ -42,7 +42,7 @@ void SingleStep() {
 }
 
 /// Halt the core
-void Halt() {
+void Halt(const char *msg) {
 	// TODO(ShizZy): ImplementMe
 }
 

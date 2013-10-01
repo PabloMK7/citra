@@ -45,7 +45,7 @@ void RunLoop();
 void SingleStep();
 
 /// Halt the core
-void Halt();
+void Halt(const char *msg);
 
 /// Kill the core
 void Stop();
