@@ -26,7 +26,7 @@
 #include "log_manager.h"
 #include "file_util.h"
 
-#include "core.h"
+#include "system.h"
 
 #include "emu_window/emu_window_glfw.h"
 
@@ -46,7 +46,7 @@ int __cdecl main(int argc, char **argv) {
 
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
-	Core::Init(emu_window);
+	System::Init(emu_window);
 
     //if (E_OK != core::Init(emu_window)) {
     //    LOG_ERROR(TMASTER, "core initialization failed, exiting...");

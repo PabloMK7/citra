@@ -22,8 +22,8 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
+#include "log.h"
 #include "core.h"
-#include "mem_map.h"
 
 namespace Core {
 
@@ -52,9 +52,7 @@ void Stop() {
 }
 
 /// Initialize the core
-int Init(EmuWindow* emu_window) {
-	Memory::Init();
-
+int Init() {
 	NOTICE_LOG(MASTER_LOG, "Core initialized OK");
 	return 0;
 }

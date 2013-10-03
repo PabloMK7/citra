@@ -22,7 +22,9 @@
 * http://code.google.com/p/gekko-gc-emu/
 */
 
+#include "core.h"
 #include "core_timing.h"
+#include "mem_map.h"
 #include "system.h"
 
 namespace System {
@@ -33,7 +35,10 @@ extern MetaFileSystem g_ctr_file_system;
 void UpdateState(State state) {
 }
 
-void Init() {
+void Init(EmuWindow* emu_window) {
+	Core::Init();
+	Memory::Init();
+	CoreTiming::Init();
 }
 
 void RunLoopFor(int cycles) {

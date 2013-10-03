@@ -25,6 +25,7 @@
 #ifndef CORE_SYSTEM_H_
 #define CORE_SYSTEM_H_
 
+#include "emu_window.h"
 #include "file_sys/meta_file_system.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +48,7 @@ extern volatile State g_state;
 extern MetaFileSystem g_ctr_file_system;
 
 void UpdateState(State state);
-void Init();
+void Init(EmuWindow* emu_window);
 void RunLoopFor(int cycles);
 void RunLoopUntil(u64 global_cycles);
 void Shutdown();
