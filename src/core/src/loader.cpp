@@ -29,7 +29,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool LoadDirectory(std::string &filename) {
+/// Loads an extracted CXI from a directory
+bool LoadDirectory_CXI(std::string &filename) {
 	std::string full_path = filename;
 	std::string path, file, extension;
 	SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
@@ -40,11 +41,11 @@ bool LoadDirectory(std::string &filename) {
 	System::g_ctr_file_system.Mount("fs:", fs);
 
 	std::string final_name = "fs:/" + file + extension;
-	//File::IOFile f(filename, "rb");
+	File::IOFile f(filename, "rb");
 
-	//if (f.IsOpen()) {
+	if (f.IsOpen()) {
 		// TODO(ShizZy): read here to memory....
-	//}
+	}
 	ERROR_LOG(TIME, "Unimplemented function!");
 	return true;
 }
@@ -71,7 +72,7 @@ FileType IdentifyFile(std::string &filename) {
 	
 	if (File::IsDirectory(filename)) {
 		if (IsBootableDirectory()) {
-			return FILETYPE_CTR_DIRECTORY;
+			return FILETYPE_DIRECTORY_CXI;
 		} else {
 			return FILETYPE_NORMAL_DIRECTORY;
 		}
@@ -97,12 +98,9 @@ bool LoadFile(std::string &filename, std::string *error_string) {
 	INFO_LOG(LOADER,"Identifying file...");
 	// Note that this can modify filename!
 	switch (IdentifyFile(filename)) {
-	
-	case FILETYPE_CTR_DIRECTORY:
-		{
-			INFO_LOG(LOADER,"File is a BIN !");
-			return LoadDirectory(filename);
-		}
+
+	case FILETYPE_DIRECTORY_CXI:
+		return LoadDirectory_CXI(filename);
 
 	case FILETYPE_ERROR:
 		ERROR_LOG(LOADER, "Could not read file");
