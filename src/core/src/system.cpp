@@ -29,8 +29,8 @@
 
 namespace System {
 
-extern volatile State g_state;
-extern MetaFileSystem g_ctr_file_system;
+volatile State g_state;
+MetaFileSystem g_ctr_file_system;
 
 void UpdateState(State state) {
 }
