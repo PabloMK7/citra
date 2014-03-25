@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2014 Citra Emulator
  *
  * @file    mem_map_funcs.cpp
  * @author  ShizZy <shizzy247@gmail.com>
@@ -27,33 +27,6 @@
 #include "mem_map.h"
 
 namespace Memory {
-
-/*
-u8 *GetPointer(const u32 addr)
-{
-	if ((addr & 0x3E000000) == 0x08000000) {
-		return g_fcram + (addr & MEM_FCRAM_MASK);
-	}
-	else if ((addr & 0x3F800000) == 0x04000000) {
-		return m_pVRAM + (addr & VRAM_MASK);
-	}
-	else if ((addr & 0x3F000000) >= 0x08000000 && (addr & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		return m_pRAM + (addr & g_MemoryMask);
-	}
-	else {
-		ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-		static bool reported = false;
-		if (!reported) {
-			Reporting::ReportMessage("Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-			reported = true;
-		}
-		if (!g_Config.bIgnoreBadMemAccess) {
-			Core_EnableStepping(true);
-			host->SetDebugMode(true);
-		}
-		return 0;
-	}
-}*/
 
 template <typename T>
 inline void ReadFromHardware(T &var, const u32 addr)
@@ -122,6 +95,33 @@ bool IsValidAddress(const u32 addr) {
 		return true;
 	} else {
 		return false;
+	}
+}
+
+u8 *GetPointer(const u32 addr) {
+	// TODO(bunnei): Just a stub for now... ImplementMe!
+	if ((addr & 0x3E000000) == 0x08000000) {
+		return g_fcram + (addr & MEM_FCRAM_MASK);
+	}
+	//else if ((addr & 0x3F800000) == 0x04000000) {
+	//	return g_vram + (addr & MEM_VRAM_MASK);
+	//}
+	//else if ((addr & 0x3F000000) >= 0x08000000 && (addr & 0x3F000000) < 0x08000000 + g_MemorySize) {
+	//	return m_pRAM + (addr & g_MemoryMask);
+	//}
+	else {
+		//ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
+		ERROR_LOG(MEMMAP, "Unknown GetPointer %08x", addr);
+		static bool reported = false;
+		//if (!reported) {
+		//	Reporting::ReportMessage("Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
+		//	reported = true;
+		//}
+		//if (!g_Config.bIgnoreBadMemAccess) {
+		//	Core_EnableStepping(true);
+		//	host->SetDebugMode(true);
+		//}
+		return 0;
 	}
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2014 Citra Emulator
  *
  * @file    mem_map.cpp
  * @author  ShizZy <shizzy247@gmail.com>

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 Citrus Emulator
+ * Copyright (C) 2014 Citra Emulator
  *
  * @file    mem_map.h
  * @author  ShizZy <shizzy247@gmail.com>
@@ -39,6 +39,7 @@
 #define MEM_AXI_WRAM_SIZE		0x00080000	///< AXI WRAM size
 #define MEM_FCRAM_SIZE			0x08000000	///< FCRAM size
 
+#define MEM_VRAM_MASK			0x007FFFFF
 #define MEM_FCRAM_MASK			(MEM_FCRAM_SIZE - 1)	///< FCRAm mask
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,6 +74,8 @@ u32 Read16_ZX(const u32 addr);
 void Write8(const u32 addr, const u32 data);
 void Write16(const u32 addr, const u32 data);
 void Write32(const u32 addr, const u32 data);
+
+u8* GetPointer(const u32 Address);
 
 } // namespace
 
