@@ -165,6 +165,7 @@
     <ClInclude Include="src\arm\skyeye_defs.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\core_timing.h" />
+    <ClInclude Include="src\elf\elf.h" />
     <ClInclude Include="src\file_sys\directory_file_system.h" />
     <ClInclude Include="src\file_sys\file_sys.h" />
     <ClInclude Include="src\file_sys\meta_file_system.h" />

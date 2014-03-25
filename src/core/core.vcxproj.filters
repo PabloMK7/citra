@@ -36,6 +36,9 @@
     <Filter Include="file_sys">
       <UniqueIdentifier>{7f618562-73d1-4f55-9628-887497c27654}</UniqueIdentifier>
     </Filter>
+    <Filter Include="elf">
+      <UniqueIdentifier>{671d3218-3771-4218-b142-1f9a1cc24a51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arm\disassembler\arm_disasm.h">
@@ -91,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="src\system.h" />
     <ClInclude Include="src\core_timing.h" />
+    <ClInclude Include="src\elf\elf.h">
+      <Filter>elf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="CMakeLists.txt" />
