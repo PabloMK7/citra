@@ -73,6 +73,7 @@ extern ARMword isize;
 #define ASSIGNT(res) state->TFlag = res
 #define INSN_SIZE (TFLAG ? 2 : 4)
 #else
+#define TBIT (1L << 5)
 #define INSN_SIZE 4
 #define TFLAG 0
 #endif
@@ -229,12 +230,12 @@ extern ARMword isize;
     }									\
   while (0)
 
-#ifndef MODE32
+//#ifndef MODE32
 #define VECTORS 0x20
 #define LEGALADDR 0x03ffffff
 #define VECTORACCESS(address) (address < VECTORS && ARMul_MODE26BIT && state->prog32Sig)
 #define ADDREXCEPT(address)   (address > LEGALADDR && !state->data32Sig)
-#endif
+//#endif
 
 #define INTERNALABORT(address)			\
   do						\
@@ -409,10 +410,12 @@ extern ARMword isize;
      || (! (STATE)->is_XScale)				\
      || (read_cp15_reg (15, 0, 1) & (1 << (CP))))
 */
-#define CP_ACCESS_ALLOWED(STATE, CP)			\
-    (   ((CP) >= 14)					\
-     || (! (STATE)->is_XScale)				\
-     || (xscale_cp15_cp_access_allowed(STATE,15,CP)))
+//#define CP_ACCESS_ALLOWED(STATE, CP)			\
+//	(((CP) >= 14)					\
+//	|| (!(STATE)->is_XScale)				\
+//	|| (xscale_cp15_cp_access_allowed(STATE, 15, CP)))
+
+#define CP_ACCESS_ALLOWED(STATE, CP) false // Disabled coprocessor shit /bunnei
 
 /* Macro to rotate n right by b bits.  */
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))

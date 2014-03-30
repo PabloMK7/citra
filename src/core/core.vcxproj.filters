@@ -22,6 +22,21 @@
     </ClCompile>
     <ClCompile Include="src\system.cpp" />
     <ClCompile Include="src\core_timing.cpp" />
+    <ClCompile Include="src\elf\elf_reader.cpp">
+      <Filter>elf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\armsupp.cpp">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\armvirt.cpp">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\armmmu.cpp">
+      <Filter>arm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\armos.cpp">
+      <Filter>arm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -94,7 +109,10 @@
     </ClInclude>
     <ClInclude Include="src\system.h" />
     <ClInclude Include="src\core_timing.h" />
-    <ClInclude Include="src\elf\elf.h">
+    <ClInclude Include="src\elf\elf_reader.h">
+      <Filter>elf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\elf\elf_types.h">
       <Filter>elf</Filter>
     </ClInclude>
   </ItemGroup>

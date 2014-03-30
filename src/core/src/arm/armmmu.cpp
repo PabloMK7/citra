@@ -45,55 +45,51 @@ mmu_init (ARMul_State * state)
 	state->mmu.process_id = 0;
 
 	switch (state->cpu->cpu_val & state->cpu->cpu_mask) {
-	case SA1100:
-	case SA1110:
-		SKYEYE_INFO("SKYEYE: use sa11xx mmu ops\n");
-		state->mmu.ops = sa_mmu_ops;
-		break;
-	case PXA250:
-	case PXA270:		//xscale
-		SKYEYE_INFO ("SKYEYE: use xscale mmu ops\n");
-		state->mmu.ops = xscale_mmu_ops;
-		break;
-	case 0x41807200:	//arm720t
-	case 0x41007700:	//arm7tdmi
-	case 0x41007100:	//arm7100
-		SKYEYE_INFO ( "SKYEYE: use arm7100 mmu ops\n");
-		state->mmu.ops = arm7100_mmu_ops;
-		break;
-	case 0x41009200:
-		SKYEYE_INFO ("SKYEYE: use arm920t mmu ops\n");
-		state->mmu.ops = arm920t_mmu_ops;
-		break;
-	case 0x41069260:
-		SKYEYE_INFO ("SKYEYE: use arm926ejs mmu ops\n");
-		state->mmu.ops = arm926ejs_mmu_ops;
-		break;
+	//case SA1100:
+	//case SA1110:
+	//	NOTICE_LOG(ARM11, "SKYEYE: use sa11xx mmu ops\n");
+	//	state->mmu.ops = sa_mmu_ops;
+	//	break;
+	//case PXA250:
+	//case PXA270:		//xscale
+	//	NOTICE_LOG(ARM11, "SKYEYE: use xscale mmu ops\n");
+	//	state->mmu.ops = xscale_mmu_ops;
+	//	break;
+	//case 0x41807200:	//arm720t
+	//case 0x41007700:	//arm7tdmi
+	//case 0x41007100:	//arm7100
+	//	NOTICE_LOG(ARM11,  "SKYEYE: use arm7100 mmu ops\n");
+	//	state->mmu.ops = arm7100_mmu_ops;
+	//	break;
+	//case 0x41009200:
+	//	NOTICE_LOG(ARM11, "SKYEYE: use arm920t mmu ops\n");
+	//	state->mmu.ops = arm920t_mmu_ops;
+	//	break;
+	//case 0x41069260:
+	//	NOTICE_LOG(ARM11, "SKYEYE: use arm926ejs mmu ops\n");
+	//	state->mmu.ops = arm926ejs_mmu_ops;
+	//	break;
 	/* case 0x560f5810: */
 	case 0x0007b000:
-		SKYEYE_INFO ("SKYEYE: use arm11jzf-s mmu ops\n");
-		state->mmu.ops = arm1176jzf_s_mmu_ops;
+		NOTICE_LOG(ARM11, "SKYEYE: use arm11jzf-s mmu ops\n");
+		//state->mmu.ops = arm1176jzf_s_mmu_ops;
+		_dbg_assert_msg_(ARM11, false, "ImplementMe: arm1176jzf_s_mmu_ops!");
 		break;
 
-	case 0xc090:
-		SKYEYE_INFO ("SKYEYE: use cortex_a9 mmu ops\n");
-		state->mmu.ops = cortex_a9_mmu_ops;
-		break;
 	default:
-		fprintf (stderr,
+		ERROR_LOG (ARM11,
 			 "SKYEYE: armmmu.c : mmu_init: unknown cpu_val&cpu_mask 0x%x\n",
 			 state->cpu->cpu_val & state->cpu->cpu_mask);
-		skyeye_exit (-1);
 		break;
 
 	};
 	ret = state->mmu.ops.init (state);
 	state->mmu_inited = (ret == 0);
 	/* initialize mmu_read and mmu_write for disassemble */
-	skyeye_config_t *config  = get_current_config();
-	generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
-	arch_instance->mmu_read = arm_mmu_read;
-	arch_instance->mmu_write = arm_mmu_write;
+	//skyeye_config_t *config  = get_current_config();
+	//generic_arch_t *arch_instance = get_arch_instance(config->arch->arch_name);
+	//arch_instance->mmu_read = arm_mmu_read;
+	//arch_instance->mmu_write = arm_mmu_write;
 
 	return ret;
 }
@@ -201,41 +197,43 @@ mmu_v2p_dbct (ARMul_State * state, ARMword virt_addr, ARMword * phys_addr)
 	return (MMU_OPS.v2p_dbct (state, virt_addr, phys_addr));
 }
 
-/* dis_mmu_read for disassemble */
-exception_t arm_mmu_read(short size, generic_address_t addr, uint32_t * value)
-{
-	ARMul_State *state;
-	ARM_CPU_State *cpu = get_current_cpu();
-	state = &cpu->core[0];
-	switch(size){
-	case 8:
-		MMU_OPS.read_byte (state, addr, value);
-		break;
-	case 16:
-	case 32:
-		break;
-	default:
-		printf("In %s error size %d Line %d\n", __func__, size, __LINE__);
-		break;
-	}
-	return No_exp;
-}
-/* dis_mmu_write for disassemble */
-exception_t arm_mmu_write(short size, generic_address_t addr, uint32_t *value)
-{
-	ARMul_State *state;
-	ARM_CPU_State *cpu = get_current_cpu();
-		state = &cpu->core[0];
-	switch(size){
-	case 8:
-		MMU_OPS.write_byte (state, addr, value);
-		break;
-	case 16:
-	case 32:
-		break;
-	default:
-		printf("In %s error size %d Line %d\n", __func__, size, __LINE__);
-		break;
-	}
-	return No_exp;
-}
+//
+//
+///* dis_mmu_read for disassemble */
+//exception_t arm_mmu_read(short size, uint32_t addr, uint32_t * value)
+//{
+//	ARMul_State *state;
+//	ARM_CPU_State *cpu = get_current_cpu();
+//	state = &cpu->core[0];
+//	switch(size){
+//	case 8:
+//		MMU_OPS.read_byte (state, addr, value);
+//		break;
+//	case 16:
+//	case 32:
+//		break;
+//	default:
+//		ERROR_LOG(ARM11, "Error size %d", size);
+//		break;
+//	}
+//	return No_exp;
+//}
+///* dis_mmu_write for disassemble */
+//exception_t arm_mmu_write(short size, uint32_t addr, uint32_t *value)
+//{
+//	ARMul_State *state;
+//	ARM_CPU_State *cpu = get_current_cpu();
+//		state = &cpu->core[0];
+//	switch(size){
+//	case 8:
+//		MMU_OPS.write_byte (state, addr, value);
+//		break;
+//	case 16:
+//	case 32:
+//		break;
+//	default:
+//		printf("In %s error size %d Line %d\n", __func__, size, __LINE__);
+//		break;
+//	}
+//	return No_exp;
+//}

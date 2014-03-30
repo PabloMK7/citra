@@ -139,9 +139,14 @@
   <ItemGroup>
     <ClCompile Include="src\arm\armemu.cpp" />
     <ClCompile Include="src\arm\arminit.cpp" />
+    <ClCompile Include="src\arm\armmmu.cpp" />
+    <ClCompile Include="src\arm\armos.cpp" />
+    <ClCompile Include="src\arm\armsupp.cpp" />
+    <ClCompile Include="src\arm\armvirt.cpp" />
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\core_timing.cpp" />
+    <ClCompile Include="src\elf\elf_reader.cpp" />
     <ClCompile Include="src\file_sys\directory_file_system.cpp" />
     <ClCompile Include="src\file_sys\meta_file_system.cpp" />
     <ClCompile Include="src\loader.cpp" />
@@ -165,7 +170,8 @@
     <ClInclude Include="src\arm\skyeye_defs.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\core_timing.h" />
-    <ClInclude Include="src\elf\elf.h" />
+    <ClInclude Include="src\elf\elf_reader.h" />
+    <ClInclude Include="src\elf\elf_types.h" />
     <ClInclude Include="src\file_sys\directory_file_system.h" />
     <ClInclude Include="src\file_sys\file_sys.h" />
     <ClInclude Include="src\file_sys\meta_file_system.h" />

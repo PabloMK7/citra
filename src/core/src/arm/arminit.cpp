@@ -271,7 +271,7 @@ below line sould be in skyeye_mach_XXX.c 's XXX_mach_init function
 
 	/* Only initialse the coprocessor support once we
 	   know what kind of chip we are dealing with.  */
-	ARMul_CoProInit (state);
+	//ARMul_CoProInit (state); Commented out /bunnei
 
 }
 
@@ -318,7 +318,7 @@ ARMul_Reset (ARMul_State * state)
 	state->NumFcycles = 0;
 
 	//fprintf(stderr,"armul_reset 3: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);  
-	mmu_reset (state);
+	//mmu_reset (state); Commented out /bunnei
 	//fprintf(stderr,"armul_reset 4: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);  
 
 	//mem_reset (state); /* move to memory/ram.c */
@@ -436,7 +436,8 @@ ARMul_DoProg (ARMul_State * state)
 		}
 
 		else {
-			pc = ARMul_Emulate26 (state);
+			//pc = ARMul_Emulate26 (state); Commented out /bunnei
+			ERROR_LOG(ARM11, "Unsupported ARM 26-bit Mode!");
 		}
 		//chy 2006-02-22, should test debugmode first
 		//chy 2006-04-14, put below codes in ARMul_Emulate
@@ -489,8 +490,10 @@ ARMul_DoInstr (ARMul_State * state)
 #endif
 	}
 
-	else
-		pc = ARMul_Emulate26 (state);
+	else {
+		//pc = ARMul_Emulate26 (state); Commented out /bunnei
+		ERROR_LOG(ARM11, "Unsupported ARM 26-bit Mode!");
+	}
 
 	return (pc);
 }
@@ -501,78 +504,78 @@ ARMul_DoInstr (ARMul_State * state)
 * appropriate vector's memory address (0,4,8 ....)                          *
 \***************************************************************************/
 
-//void
-//ARMul_Abort (ARMul_State * state, ARMword vector)
-//{
-//	ARMword temp;
-//	int isize = INSN_SIZE;
-//	int esize = (TFLAG ? 0 : 4);
-//	int e2size = (TFLAG ? -4 : 0);
-//
-//	state->Aborted = FALSE;
-//
-//	if (state->prog32Sig)
-//		if (ARMul_MODE26BIT)
-//			temp = R15PC;
-//		else
-//			temp = state->Reg[15];
-//	else
-//		temp = R15PC | ECC | ER15INT | EMODE;
-//
-//	switch (vector) {
-//	case ARMul_ResetV:	/* RESET */
-//		SETABORT (INTBITS, state->prog32Sig ? SVC32MODE : SVC26MODE,
-//			  0);
-//		break;
-//	case ARMul_UndefinedInstrV:	/* Undefined Instruction */
-//		SETABORT (IBIT, state->prog32Sig ? UNDEF32MODE : SVC26MODE,
-//			  isize);
-//		break;
-//	case ARMul_SWIV:	/* Software Interrupt */
-//		SETABORT (IBIT, state->prog32Sig ? SVC32MODE : SVC26MODE,
-//			  isize);
-//		break;
-//	case ARMul_PrefetchAbortV:	/* Prefetch Abort */
-//		state->AbortAddr = 1;
-//		SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
-//			  esize);
-//		break;
-//	case ARMul_DataAbortV:	/* Data Abort */
-//		SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
-//			  e2size);
-//		break;
-//	case ARMul_AddrExceptnV:	/* Address Exception */
-//		SETABORT (IBIT, SVC26MODE, isize);
-//		break;
-//	case ARMul_IRQV:	/* IRQ */
-//		//chy 2003-09-02 the if sentence seems no use
-//#if 0
-//		if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
-//		    || (temp & ARMul_CP13_R0_IRQ))
-//#endif
-//			SETABORT (IBIT,
-//				  state->prog32Sig ? IRQ32MODE : IRQ26MODE,
-//				  esize);
-//		break;
-//	case ARMul_FIQV:	/* FIQ */
-//		//chy 2003-09-02 the if sentence seems no use
-//#if 0
-//		if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
-//		    || (temp & ARMul_CP13_R0_FIQ))
-//#endif
-//			SETABORT (INTBITS,
-//				  state->prog32Sig ? FIQ32MODE : FIQ26MODE,
-//				  esize);
-//		break;
-//	}
-//
-//	if (ARMul_MODE32BIT) {
-//		if (state->mmu.control & CONTROL_VECTOR)
-//			vector += 0xffff0000;	//for v4 high exception  address
-//		if (state->vector_remap_flag)
-//			vector += state->vector_remap_addr; /* support some remap function in LPC processor */
-//		ARMul_SetR15 (state, vector);
-//	}
-//	else
-//		ARMul_SetR15 (state, R15CCINTMODE | vector);
-//}
+void
+ARMul_Abort (ARMul_State * state, ARMword vector)
+{
+	ARMword temp;
+	int isize = INSN_SIZE;
+	int esize = (TFLAG ? 0 : 4);
+	int e2size = (TFLAG ? -4 : 0);
+
+	state->Aborted = FALSE;
+
+	if (state->prog32Sig)
+		if (ARMul_MODE26BIT)
+			temp = R15PC;
+		else
+			temp = state->Reg[15];
+	else
+		temp = R15PC | ECC | ER15INT | EMODE;
+
+	switch (vector) {
+	case ARMul_ResetV:	/* RESET */
+		SETABORT (INTBITS, state->prog32Sig ? SVC32MODE : SVC26MODE,
+			  0);
+		break;
+	case ARMul_UndefinedInstrV:	/* Undefined Instruction */
+		SETABORT (IBIT, state->prog32Sig ? UNDEF32MODE : SVC26MODE,
+			  isize);
+		break;
+	case ARMul_SWIV:	/* Software Interrupt */
+		SETABORT (IBIT, state->prog32Sig ? SVC32MODE : SVC26MODE,
+			  isize);
+		break;
+	case ARMul_PrefetchAbortV:	/* Prefetch Abort */
+		state->AbortAddr = 1;
+		SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
+			  esize);
+		break;
+	case ARMul_DataAbortV:	/* Data Abort */
+		SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
+			  e2size);
+		break;
+	case ARMul_AddrExceptnV:	/* Address Exception */
+		SETABORT (IBIT, SVC26MODE, isize);
+		break;
+	case ARMul_IRQV:	/* IRQ */
+		//chy 2003-09-02 the if sentence seems no use
+#if 0
+		if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
+		    || (temp & ARMul_CP13_R0_IRQ))
+#endif
+			SETABORT (IBIT,
+				  state->prog32Sig ? IRQ32MODE : IRQ26MODE,
+				  esize);
+		break;
+	case ARMul_FIQV:	/* FIQ */
+		//chy 2003-09-02 the if sentence seems no use
+#if 0
+		if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
+		    || (temp & ARMul_CP13_R0_FIQ))
+#endif
+			SETABORT (INTBITS,
+				  state->prog32Sig ? FIQ32MODE : FIQ26MODE,
+				  esize);
+		break;
+	}
+
+	if (ARMul_MODE32BIT) {
+		if (state->mmu.control & CONTROL_VECTOR)
+			vector += 0xffff0000;	//for v4 high exception  address
+		if (state->vector_remap_flag)
+			vector += state->vector_remap_addr; /* support some remap function in LPC processor */
+		ARMul_SetR15 (state, vector);
+	}
+	else
+		ARMul_SetR15 (state, R15CCINTMODE | vector);
+}
