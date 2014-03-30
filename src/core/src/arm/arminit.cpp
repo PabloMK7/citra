@@ -436,8 +436,7 @@ ARMul_DoProg (ARMul_State * state)
 		}
 
 		else {
-			//pc = ARMul_Emulate26 (state); Commented out /bunnei
-			ERROR_LOG(ARM11, "Unsupported ARM 26-bit Mode!");
+			_dbg_assert_msg_(ARM11, false, "Unsupported ARM 26-bit Mode!");
 		}
 		//chy 2006-02-22, should test debugmode first
 		//chy 2006-04-14, put below codes in ARMul_Emulate
@@ -491,8 +490,7 @@ ARMul_DoInstr (ARMul_State * state)
 	}
 
 	else {
-		//pc = ARMul_Emulate26 (state); Commented out /bunnei
-		ERROR_LOG(ARM11, "Unsupported ARM 26-bit Mode!");
+		_dbg_assert_msg_(ARM11, false, "Unsupported ARM 26-bit Mode!");
 	}
 
 	return (pc);
