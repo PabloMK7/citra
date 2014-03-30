@@ -37,6 +37,9 @@
     <ClCompile Include="src\arm\armos.cpp">
       <Filter>arm</Filter>
     </ClCompile>
+    <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp">
+      <Filter>arm\mmu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">

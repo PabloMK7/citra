@@ -144,6 +144,7 @@
     <ClCompile Include="src\arm\armsupp.cpp" />
     <ClCompile Include="src\arm\armvirt.cpp" />
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
+    <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\core_timing.cpp" />
     <ClCompile Include="src\elf\elf_reader.cpp" />

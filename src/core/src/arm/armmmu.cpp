@@ -72,7 +72,7 @@ mmu_init (ARMul_State * state)
 	/* case 0x560f5810: */
 	case 0x0007b000:
 		NOTICE_LOG(ARM11, "SKYEYE: use arm11jzf-s mmu ops\n");
-		//state->mmu.ops = arm1176jzf_s_mmu_ops;
+		state->mmu.ops = arm1176jzf_s_mmu_ops;
 		_dbg_assert_msg_(ARM11, false, "ImplementMe: arm1176jzf_s_mmu_ops!");
 		break;
 

@@ -104,15 +104,15 @@ typedef enum mmu_regnum_t
 
 /*virt_addr exchange according to CP15.R13(process id virtul mapping)*/
 #define PID_VA_MAP_MASK	0xfe000000
-#define mmu_pid_va_map(va) ({\
-	ARMword ret; \
-	if ((va) & PID_VA_MAP_MASK)\
-		ret = (va); \
-	else \
-		ret = ((va) | (state->mmu.process_id & PID_VA_MAP_MASK));\
-	ret;\
-})
-
+//#define mmu_pid_va_map(va) ({\
+//	ARMword ret; \
+//	if ((va) & PID_VA_MAP_MASK)\
+//		ret = (va); \
+//	else \
+//		ret = ((va) | (state->mmu.process_id & PID_VA_MAP_MASK));\
+//	ret;\
+//})
+#define mmu_pid_va_map(va) ((va) & PID_VA_MAP_MASK) ? (va) : ((va) | (state->mmu.process_id & PID_VA_MAP_MASK))
 
 /* FS[3:0] in the fault status register: */
 

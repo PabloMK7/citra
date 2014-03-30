@@ -21,10 +21,13 @@
 #include <assert.h>
 #include <string.h>
 #include <stdint.h>
-#include <skyeye_ram.h>
 
-#include "armdefs.h"
-#include "bank_defs.h"
+#include "mem_map.h"
+
+#include "arm/skyeye_defs.h"
+
+#include "arm/armdefs.h"
+//#include "bank_defs.h"
 #if 0
 #define TLB_SIZE 1024 * 1024
 #define ASID 255
@@ -59,44 +62,10 @@ static inline void insert_tlb(ARMul_State* state, ARMword va, ARMword pa){
 #endif
 #define BANK0_START 0x50000000
 static void* mem_ptr = NULL;
-//static void mem_read_raw(uint32_t offset, uint32_t &value, int size)
-static void mem_read_raw(int size, uint32_t offset, uint32_t *value)
-{
-#if 0
-	if(mem_ptr == NULL)
-		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
-	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
-	if(offset >= 0x50000000 && offset < 0x70000000){
-		mem_read(size, offset, value);	
-	}	
-	else{
-		bus_read(size, offset, value);
-	}
-#endif
-	bus_read(size, offset, value);
-}
-
-//static void mem_write_raw(uint32_t offset, uint32_t value, int size)
-static void mem_write_raw(int size, uint32_t offset, uint32_t value)
-{
-#if 0
-	if(mem_ptr == NULL)
-		mem_ptr = (uint8_t*)get_dma_addr(BANK0_START);
-	//printf("In %s, offset=0x%x, mem_ptr=0x%llx\n", __FUNCTION__, offset, mem_ptr);
-	if(offset >= 0x50000000 && offset < 0x70000000){
-		mem_write(size, offset, value);
-	}
-	else{
-		bus_write(size, offset, value);
-	}
-#endif
-	bus_write(size, offset, value);
-}
 
 static int exclusive_detect(ARMul_State* state, ARMword addr){
-	int i;
 	#if 0
-	for(i = 0; i < 128; i++){
+	for(int i = 0; i < 128; i++){
 		if(state->exclusive_tag_array[i] == addr)
 			return 0;
 	}
@@ -108,9 +77,8 @@ static int exclusive_detect(ARMul_State* state, ARMword addr){
 }
 
 static void add_exclusive_addr(ARMul_State* state, ARMword addr){
-	int i;
 	#if 0
-	for(i = 0; i < 128; i++){
+	for(int i = 0; i < 128; i++){
 		if(state->exclusive_tag_array[i] == 0xffffffff){
 			state->exclusive_tag_array[i] = addr;
 			//printf("In %s, add  addr 0x%x\n", __func__, addr);
@@ -262,10 +230,11 @@ mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *a
 		}
 
 		/* l1desc = mem_read_word (state, l1addr); */
-		if(state->space.conf_obj != NULL)
-			state->space.read(state->space.conf_obj, l1addr, &l1desc, 4);
-		else
-			mem_read_raw(32, l1addr, &l1desc);
+        if (state->space.conf_obj != NULL)
+            state->space.read(state->space.conf_obj, l1addr, &l1desc, 4);
+        else
+            l1desc = Memory::Read32(l1addr); //mem_read_raw(32, l1addr, &l1desc);
+
         #if 0
         if (virt_addr == 0xc000d2bc) {
                 printf("mmu_control is %x\n", state->mmu.translation_table_ctrl);
@@ -298,7 +267,8 @@ mmu_translate (ARMul_State *state, ARMword virt_addr, ARMword *phys_addr, int *a
 				if(state->space.conf_obj != NULL)
 					state->space.read(state->space.conf_obj, l2addr, &l2desc, 4);
 				else
-					mem_read_raw(32, l2addr, &l2desc);
+                    l2desc = Memory::Read32(l2addr); //mem_read_raw(32, l2addr, &l2desc);
+                    
 				/* chy 2003-09-02 for xscale */
 				*ap = (l2desc >> 4) & 0x3;
 				*sop = 1;	/* page */
@@ -385,7 +355,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 
 	static int debug_count = 0;	/* used for debug */
 
-	d_msg ("va = %x\n", va);
+	DEBUG_LOG(ARM11, "va = %x\n", va);
 
 	va = mmu_pid_va_map (va);
 	if (MMU_Enabled) {
@@ -393,7 +363,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 //            sleep(1);
             /* align check */
 		if ((va & (WORD_SIZE - 1)) && MMU_Aligned) {
-			d_msg ("align\n");
+			DEBUG_LOG(ARM11, "align\n");
 			return ALIGNMENT_FAULT;
 		} else
 			va &= ~(WORD_SIZE - 1);
@@ -401,7 +371,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 		/* translate tlb */
 		fault = mmu_translate (state, va, &pa, &ap, &sop);
 		if (fault) {
-			d_msg ("translate\n");
+			DEBUG_LOG(ARM11, "translate\n");
 			printf("va=0x%x, icounter=%lld, fault=%d\n", va, state->NumInstrs, fault);
 			return fault;
 		}
@@ -420,7 +390,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 		/*check access */
 		fault = check_access (state, va, tlb, 1);
 		if (fault) {
-			d_msg ("check_fault\n");
+			DEBUG_LOG(ARM11, "check_fault\n");
 			return fault;
 		}
 #endif
@@ -435,9 +405,9 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 	if(state->space.conf_obj == NULL)
 		state->space.read(state->space.conf_obj, pa, instr, 4);
 	else
-		mem_read_raw(32, pa, instr);
+        *instr = Memory::Read32(pa); //mem_read_raw(32, pa, instr);
 
-	return 0;
+	return NO_FAULT;
 }
 
 static fault_t
@@ -474,7 +444,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	ARMword perm;		/* physical addr access permissions */
 	int ap, sop;
 
-	d_msg ("va = %x\n", va);
+	DEBUG_LOG(ARM11, "va = %x\n", va);
 
 	va = mmu_pid_va_map (va);
 	real_va = va;
@@ -489,25 +459,24 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 1);
 			else
-				mem_read_raw(8, va, data);
+                *data = Memory::Read8(va); //mem_read_raw(8, va, data);
 		else if (datatype == ARM_HALFWORD_TYPE)
 			/* *data = mem_read_halfword (state, va); */
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 2);
 			else
-				mem_read_raw(16, va, data);
+                *data = Memory::Read16(va); //mem_read_raw(16, va, data);
 		else if (datatype == ARM_WORD_TYPE)
 			/* *data = mem_read_word (state, va); */
 			if(state->space.conf_obj != NULL)
 				state->space.read(state->space.conf_obj, va, data, 4);
 			else
-				mem_read_raw(32, va, data);
+                *data = Memory::Read32(va); //mem_read_raw(32, va, data);
 		else {
-			printf ("SKYEYE:1 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
-			skyeye_exit (-1);
+			ERROR_LOG(ARM11, "SKYEYE:1 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
 		}
 
-		return 0;
+		return NO_FAULT;
 	}
 //    printf("MMU enabled.\n");
 //    sleep(1);
@@ -515,7 +484,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
 	/* align check */
 	if (((va & 3) && (datatype == ARM_WORD_TYPE) && MMU_Aligned) ||
 	    ((va & 1) && (datatype == ARM_HALFWORD_TYPE) && MMU_Aligned)) {
-		d_msg ("align\n");
+		DEBUG_LOG(ARM11, "align\n");
 		return ALIGNMENT_FAULT;
 	}
 
@@ -544,7 +513,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
         }
 #endif
 	if (fault) {
-		d_msg ("translate\n");
+		DEBUG_LOG(ARM11, "translate\n");
 		//printf("mmu read fault at %x\n", va);
 		//printf("fault is %d\n", fault);
 		return fault;
@@ -574,24 +543,23 @@ skip_translation:
 		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, pa | (real_va & 3), data, 1);
 		else
-			mem_read_raw(8, pa | (real_va & 3), data);
+            *data = Memory::Read8(pa | (real_va & 3)); //mem_read_raw(8, pa | (real_va & 3), data);
 		/* mem_read_raw(32, pa | (real_va & 3), data); */
 	} else if (datatype == ARM_HALFWORD_TYPE) {
 		/* *data = mem_read_halfword (state, pa | (real_va & 2)); */
 		if(state->space.conf_obj != NULL)
 			state->space.read(state->space.conf_obj, pa | (real_va & 3), data, 2);
 		else
-			mem_read_raw(16, pa | (real_va & 3), data);
+            *data = Memory::Read16(pa | (real_va & 3)); //mem_read_raw(16, pa | (real_va & 3), data);
 		/* mem_read_raw(32, pa | (real_va & 2), data); */
 	} else if (datatype == ARM_WORD_TYPE)
 		/* *data = mem_read_word (state, pa); */
 		if(state->space.conf_obj != NULL)	
 			state->space.read(state->space.conf_obj, pa , data, 4);
 		else
-			mem_read_raw(32, pa, data);
+            *data = Memory::Read32(pa); //mem_read_raw(32, pa, data);
 	else {
-		printf ("SKYEYE:2 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
-		skyeye_exit (-1);
+		ERROR_LOG(ARM11, "SKYEYE:2 arm1176jzf_s_mmu_read error: unknown data type %d\n", datatype);
 	}
 	if(0 && (va == 0x2869c)){
             	printf("In %s, pa is %x va=0x%x, value is %x pc %x, instr=0x%x\n", __FUNCTION__, pa, va, *data, state->Reg[15], state->CurrInstr);
@@ -614,7 +582,7 @@ skip_translation:
     }
 #endif
 
-	return 0;
+	return NO_FAULT;
 }
 
 
@@ -661,7 +629,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 	}
 #endif
 
-	d_msg ("va = %x, val = %x\n", va, data);
+	DEBUG_LOG(ARM11, "va = %x, val = %x\n", va, data);
 	va = mmu_pid_va_map (va);
 	real_va = va;
 
@@ -672,22 +640,21 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 1);
 			else
-				mem_write_raw(8, va, data);
+				Memory::Write8(va, data);
 		else if (datatype == ARM_HALFWORD_TYPE)
 			/* mem_write_halfword (state, va, data); */
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 2);
 			else
-				mem_write_raw(16, va, data);
+				Memory::Write16(va, data);
 		else if (datatype == ARM_WORD_TYPE)
 			/* mem_write_word (state, va, data); */
 			if(state->space.conf_obj != NULL)
 				state->space.write(state->space.conf_obj, va, &data, 4);
 			else
-				mem_write_raw(32, va, data);
+				Memory::Write32(va, data);
 		else {
-			printf ("SKYEYE:1 arm1176jzf_s_mmu_write error: unknown data type %d\n", datatype);
-			skyeye_exit (-1);
+			ERROR_LOG (ARM11, "SKYEYE:1 arm1176jzf_s_mmu_write error: unknown data type %d\n", datatype);
 		}
 		goto finished_write;
 		//return 0;
@@ -696,7 +663,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 	/* if ((va & (WORD_SIZE - 1)) && MMU_Aligned){ */
 	if (((va & 3) && (datatype == ARM_WORD_TYPE) && MMU_Aligned) ||
 	    ((va & 1) && (datatype == ARM_HALFWORD_TYPE) && MMU_Aligned)) {
-		d_msg ("align\n");
+		DEBUG_LOG(ARM11, "align\n");
 		return ALIGNMENT_FAULT;
 	}
 	va &= ~(WORD_SIZE - 1);
@@ -721,7 +688,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
         }
 #endif
 	if (fault) {
-		d_msg ("translate\n");
+		DEBUG_LOG(ARM11, "translate\n");
 		//printf("mmu write fault at %x\n", va);
 		return fault;
 	}
@@ -740,7 +707,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
 	/* tlb check access */
 	fault = check_access (state, va, tlb, 0);
 	if (fault) {
-		d_msg ("check_access\n");
+		DEBUG_LOG(ARM11, "check_access\n");
 		return fault;
 	}
 #endif
@@ -771,7 +738,7 @@ skip_translation:
 		else{
 			state->Reg[dest_reg] = 1;
 			//printf("In %s, try to strex a monitored address 0x%x\n", __FUNCTION__, pa);
-			return 0;
+            return NO_FAULT;
 		}
 	}
 
@@ -783,7 +750,7 @@ skip_translation:
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, (pa | (real_va & 3)), &data, 1);
 		else
-			mem_write_raw(8, (pa | (real_va & 3)), data);
+			Memory::Write8((pa | (real_va & 3)), data);
 
 	} else if (datatype == ARM_HALFWORD_TYPE)
 		/* mem_write_halfword (state,
@@ -794,13 +761,13 @@ skip_translation:
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, (pa | (real_va & 3)), &data, 2);
 		else
-			mem_write_raw(16, (pa | (real_va & 3)), data);
+			Memory::Write16((pa | (real_va & 3)), data);
 	else if (datatype == ARM_WORD_TYPE)
 		/* mem_write_word (state, pa, data); */
 		if(state->space.conf_obj != NULL)
 			state->space.write(state->space.conf_obj, pa, &data, 4);
 		else
-			mem_write_raw(32, pa, data);
+			Memory::Write32(pa, data);
 #if 0
     if (state->NumInstrs > 236403) {
             printf("write memory\n");
@@ -829,13 +796,13 @@ finished_write:
 	}
 #endif
 
-	return 0;
+    return NO_FAULT;
 }
 
 ARMword
 arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 {
-	mmu_regnum_t creg = BITS (16, 19) & 0xf;
+	int creg = BITS (16, 19) & 0xf;
 	int OPC_1 = BITS (21, 23) & 0x7;
 	int OPC_2 = BITS (5, 7) & 0x7;
 	ARMword data;
@@ -921,8 +888,8 @@ arm1176jzf_s_mmu_mrc (ARMul_State *state, ARMword instr, ARMword *value)
 static ARMword
 arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 {
-	mmu_regnum_t creg = BITS (16, 19) & 0xf;
-	mmu_regnum_t CRm = BITS (0, 3) & 0xf;
+	int creg = BITS (16, 19) & 0xf;
+	int CRm = BITS (0, 3) & 0xf;
 	int OPC_1 = BITS (21, 23) & 0x7;
 	int OPC_2 = BITS (5, 7) & 0x7;
 	if (!strncmp (state->cpu->cpu_arch_name, "armv6", 5)) {
@@ -1093,56 +1060,56 @@ arm1176jzf_s_mmu_mcr (ARMul_State *state, ARMword instr, ARMword value)
 	return No_exp;
 }
 
-/* teawater add for arm2x86 2005.06.19------------------------------------------- */
-static int
-arm1176jzf_s_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
-		      ARMword *phys_addr)
-{
-	fault_t fault;
-	int ap, sop;
-
-	ARMword perm;		/* physical addr access permissions */
-	virt_addr = mmu_pid_va_map (virt_addr);
-	if (MMU_Enabled) {
-
-		/*align check */
-		if ((virt_addr & (WORD_SIZE - 1)) && MMU_Aligned) {
-			d_msg ("align\n");
-			return ALIGNMENT_FAULT;
-		} else
-			virt_addr &= ~(WORD_SIZE - 1);
-
-		/*translate tlb */
-		fault = mmu_translate (state, virt_addr, phys_addr, &ap, &sop);
-		if (fault) {
-			d_msg ("translate\n");
-			return fault;
-		}
-
-		/* permission check */
-		if (!check_perms(state, ap, 1)) {
-			if (sop == 0) {
-				return SECTION_PERMISSION_FAULT;
-			} else {
-				return SUBPAGE_PERMISSION_FAULT;
-			}
-		}
-#if 0
-		/*check access */
-		fault = check_access (state, virt_addr, tlb, 1);
-		if (fault) {
-			d_msg ("check_fault\n");
-			return fault;
-		}
-#endif
-	}
-
-	if (MMU_Disabled) {
-		*phys_addr = virt_addr;
-	}
-
-	return 0;
-}
+///* teawater add for arm2x86 2005.06.19------------------------------------------- */
+//static int
+//arm1176jzf_s_mmu_v2p_dbct (ARMul_State *state, ARMword virt_addr,
+//		      ARMword *phys_addr)
+//{
+//	fault_t fault;
+//	int ap, sop;
+//
+//	ARMword perm;		/* physical addr access permissions */
+//	virt_addr = mmu_pid_va_map (virt_addr);
+//	if (MMU_Enabled) {
+//
+//		/*align check */
+//		if ((virt_addr & (WORD_SIZE - 1)) && MMU_Aligned) {
+//			DEBUG_LOG(ARM11, "align\n");
+//			return ALIGNMENT_FAULT;
+//		} else
+//			virt_addr &= ~(WORD_SIZE - 1);
+//
+//		/*translate tlb */
+//		fault = mmu_translate (state, virt_addr, phys_addr, &ap, &sop);
+//		if (fault) {
+//			DEBUG_LOG(ARM11, "translate\n");
+//			return fault;
+//		}
+//
+//		/* permission check */
+//		if (!check_perms(state, ap, 1)) {
+//			if (sop == 0) {
+//				return SECTION_PERMISSION_FAULT;
+//			} else {
+//				return SUBPAGE_PERMISSION_FAULT;
+//			}
+//		}
+//#if 0
+//		/*check access */
+//		fault = check_access (state, virt_addr, tlb, 1);
+//		if (fault) {
+//			DEBUG_LOG(ARM11, "check_fault\n");
+//			return fault;
+//		}
+//#endif
+//	}
+//
+//	if (MMU_Disabled) {
+//		*phys_addr = virt_addr;
+//	}
+//
+//	return 0;
+//}
 
 /* AJ2D-------------------------------------------------------------------------- */
 
