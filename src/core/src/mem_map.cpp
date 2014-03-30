@@ -83,6 +83,8 @@ void Init() {
 			g_views[i].size = MEM_FCRAM_SIZE;
 	}
 
+	g_base = MemoryMap_Setup(g_views, kNumMemViews, flags, &g_arena);
+
 	NOTICE_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 
 		g_physical_fcram);
 }
