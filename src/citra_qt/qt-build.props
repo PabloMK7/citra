@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(UICBeforeTargets)' == '' and '$(UICAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <UICBeforeTargets>Midl</UICBeforeTargets>
+    <UICAfterTargets>CustomBuild</UICAfterTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <UIC>
+      <QtUicExt>.hpp</QtUicExt>
+      <QtUicPrefix>ui_</QtUicPrefix>
+      <CommandLineTemplate>%QTDIR%\bin\uic.exe [inputs] -o "[QtUicPrefix]%(FileName)[QtUicExt]"</CommandLineTemplate>
+      <Outputs>[QtUicPrefix]%(FileName)[QtUicExt]</Outputs>
+      <ExecutionDescription>%(FileName).ui</ExecutionDescription>
+    </UIC>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(MOCBeforeTargets)' == '' and '$(MOCAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <MOCBeforeTargets>Midl</MOCBeforeTargets>
+    <MOCAfterTargets>CustomBuild</MOCAfterTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <MOC>
+      <QtShared>true</QtShared>
+      <QtThread>true</QtThread>
+      <QtUnicode>true</QtUnicode>
+      <QtLargeFile>true</QtLargeFile>
+      <QtKeywords>true</QtKeywords>
+      <QtNoDebug>true</QtNoDebug>
+      <QtGuiLib>true</QtGuiLib>
+      <QtCoreLib>true</QtCoreLib>
+      <QtOpenGLLib>False</QtOpenGLLib>
+      <QtMocNoWarnings>False</QtMocNoWarnings>
+      <QtMocPfx>_moc</QtMocPfx>
+      <QtMocFilename>%(FileName)%(QtMocPfx)</QtMocFilename>
+      <CommandLineTemplate>%QTDIR%\bin\moc.exe [QtMocNoWarnings] [QtCoreLib] [QtShared] [QtThread] [QtUnicode] [QtLargeFile] [QtKeywords] [QtOpenGLLib] [QtNoDebug] [QtGuiLib] -DWIN32 -D_MSC_VER=1500 -DWIN32 [Inputs] -o$(IntDir)%(QtMocFilename).cpp &amp;&amp; cl.exe $(IntDir)%(QtMocFilename).cpp [QtCommandLine] /c /Fo"$(IntDir)%(QtMocFilename).obj"</CommandLineTemplate>
+      <Outputs>$(IntDir)%(QtMocFilename).obj</Outputs>
+      <ExecutionDescription>%(FileName).hxx</ExecutionDescription>
+      <ShowOnlyRuleProperties>true</ShowOnlyRuleProperties>
+    </MOC>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(QRCBeforeTargets)' == '' and '$(QRCAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <QRCBeforeTargets>Midl</QRCBeforeTargets>
+    <QRCAfterTargets>CustomBuild</QRCAfterTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <QRC>
+      <QtQrcPfx>_qrc</QtQrcPfx>
+      <QtQrcFileName>%(FileName)%(QtQrcPfx)</QtQrcFileName>
+      <CommandLineTemplate>%QTDIR%\bin\rcc.exe [inputs] -o $(IntDir)%(QtQrcFileName).cpp &amp;&amp; cl.exe $(IntDir)%(QtQrcFileName).cpp /c /Fo"$(IntDir)%(QtQrcFileName)" [QtCommandLine]</CommandLineTemplate>
+      <Outputs>$(IntDir)%(QtQrcFileName).obj</Outputs>
+      <ExecutionDescription>%(FileName).qrc</ExecutionDescription>
+    </QRC>
+  </ItemDefinitionGroup>
+</Project>

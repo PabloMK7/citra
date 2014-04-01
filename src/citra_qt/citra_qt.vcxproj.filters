@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="debugger">
+      <UniqueIdentifier>{1b8f77c1-61e8-4a9f-95f8-8d1c53015ad8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="qhexedit">
+      <UniqueIdentifier>{dede739c-939b-4147-9e72-4a326b97d237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{80178741-d3ab-4031-892c-ec58490ea8bf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\disasm.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu_regs.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bootmanager.cpp" />
+    <ClCompile Include="src\callstack.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ramview.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\qhexedit\commands.cpp">
+      <Filter>qhexedit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\qhexedit\qhexedit.cpp">
+      <Filter>qhexedit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\qhexedit\qhexedit_p.cpp">
+      <Filter>qhexedit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\externals\qhexedit\xbytearray.cpp">
+      <Filter>qhexedit</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hotkeys.cpp" />
+    <ClCompile Include="src\config\controller_config.cpp">
+      <Filter>config</Filter>
+    </ClCompile>
+    <ClCompile Include="src\config\controller_config_util.cpp">
+      <Filter>config</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MOC Include="src\main.hxx" />
+    <MOC Include="src\cpu_regs.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="src\callstack.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="..\..\externals\qhexedit\commands.h">
+      <Filter>qhexedit</Filter>
+    </MOC>
+    <MOC Include="..\..\externals\qhexedit\xbytearray.h">
+      <Filter>qhexedit</Filter>
+    </MOC>
+    <MOC Include="..\..\externals\qhexedit\qhexedit_p.h">
+      <Filter>qhexedit</Filter>
+    </MOC>
+    <MOC Include="..\..\externals\qhexedit\qhexedit.h">
+      <Filter>qhexedit</Filter>
+    </MOC>
+    <MOC Include="src\ramview.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="src\disasm.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="src\bootmanager.hxx" />
+    <MOC Include="src\hotkeys.hxx" />
+    <MOC Include="src\config\controller_config.hxx">
+      <Filter>config</Filter>
+    </MOC>
+    <MOC Include="src\config\controller_config_util.hxx">
+      <Filter>config</Filter>
+    </MOC>
+  </ItemGroup>
+  <ItemGroup>
+    <UIC Include="src\main.ui" />
+    <UIC Include="src\cpu_regs.ui">
+      <Filter>debugger</Filter>
+    </UIC>
+    <UIC Include="src\disasm.ui">
+      <Filter>debugger</Filter>
+    </UIC>
+    <UIC Include="src\callstack.ui">
+      <Filter>debugger</Filter>
+    </UIC>
+    <UIC Include="src\hotkeys.ui" />
+    <UIC Include="src\config\controller_config.ui">
+      <Filter>config</Filter>
+    </UIC>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\version.h" />
+  </ItemGroup>
+</Project>

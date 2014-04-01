@@ -1,0 +1,242 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="UIC">
+      <Targets>_UIC</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="MOC">
+      <Targets>_MOC</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="QRC">
+      <Targets>_QRC</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="UIC"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="MOC"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="QRC"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="_UIC"
+    BeforeTargets="$(UICBeforeTargets)"
+    AfterTargets="$(UICAfterTargets)"
+    Condition="'@(UIC)' != ''"
+    DependsOnTargets="_SelectedFiles;ComputeUICOutput"
+    Outputs="%(UIC.Outputs)"
+    Inputs="%(UIC.Identity);%(UIC.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <UIC
+        Remove="@(UIC)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <UIC_tlog
+        Include="%(UIC.Outputs)"
+        Condition="'%(UIC.Outputs)' != '' and '%(UIC.ExcludedFromBuild)' != 'true'">
+        <Source>@(UIC, '|')</Source>
+      </UIC_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(UIC.ExecutionDescription)" />
+    <WriteLinesToFile
+      File="$(IntDir)$(ProjectName).write.1.tlog"
+      Lines="^%(UIC_tlog.Source);@(UIC_tlog-&gt;'%(Fullpath)')" />
+    <UIC
+      Condition="'%(UIC.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(UIC.CommandLineTemplate)"
+      QtUicExt="%(UIC.QtUicExt)"
+      QtUicPrefix="%(UIC.QtUicPrefix)"
+      AdditionalOptions="%(UIC.AdditionalOptions)"
+      Inputs="%(UIC.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeUICOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeUICOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeUICOutput"
+    Condition="'@(UIC)' != ''">
+    <ItemGroup>
+      <UICDirsToMake
+        Condition="'@(UIC)' != ''"
+        Include="%(UIC.Outputs)" />
+      <Link
+        Include="%(UICDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(UICDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(UICDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(UICDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_MOC"
+    BeforeTargets="$(MOCBeforeTargets)"
+    AfterTargets="$(MOCAfterTargets)"
+    Condition="'@(MOC)' != ''"
+    DependsOnTargets="_SelectedFiles;ComputeMOCOutput"
+    Outputs="%(MOC.Outputs)"
+    Inputs="%(MOC.Identity);%(MOC.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <MOC
+        Remove="@(MOC)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <MOC_tlog
+        Include="%(MOC.Outputs)"
+        Condition="'%(MOC.Outputs)' != '' and '%(MOC.ExcludedFromBuild)' != 'true'">
+        <Source>@(MOC, '|')</Source>
+      </MOC_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(MOC.ExecutionDescription)" />
+    <WriteLinesToFile
+      File="$(IntDir)$(ProjectName).write.1.tlog"
+      Lines="^%(MOC_tlog.Source);@(MOC_tlog-&gt;'%(Fullpath)')" />
+    <MOC
+      Condition="'%(MOC.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(MOC.CommandLineTemplate)"
+      QtShared="%(MOC.QtShared)"
+      QtThread="%(MOC.QtThread)"
+      QtUnicode="%(MOC.QtUnicode)"
+      QtLargeFile="%(MOC.QtLargeFile)"
+      QtKeywords="%(MOC.QtKeywords)"
+      QtNoDebug="%(MOC.QtNoDebug)"
+      QtGuiLib="%(MOC.QtGuiLib)"
+      QtCoreLib="%(MOC.QtCoreLib)"
+      QtOpenGLLib="%(MOC.QtOpenGLLib)"
+      QtMocNoWarnings="%(MOC.QtMocNoWarnings)"
+      QtMocPfx="%(MOC.QtMocPfx)"
+      QtCommandLine="%(MOC.QtCommandLine)"
+      AdditionalOptions="%(MOC.AdditionalOptions)"
+      Inputs="%(MOC.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeMOCOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeMOCOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeMOCOutput"
+    Condition="'@(MOC)' != ''">
+    <ItemGroup>
+      <MOCDirsToMake
+        Condition="'@(MOC)' != ''"
+        Include="%(MOC.Outputs)" />
+      <Link
+        Include="%(MOCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(MOCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(MOCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(MOCDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_QRC"
+    BeforeTargets="$(QRCBeforeTargets)"
+    AfterTargets="$(QRCAfterTargets)"
+    Condition="'@(QRC)' != ''"
+    DependsOnTargets="_SelectedFiles;ComputeQRCOutput"
+    Outputs="%(QRC.Outputs)"
+    Inputs="%(QRC.Identity);%(QRC.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <QRC
+        Remove="@(QRC)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <QRC_tlog
+        Include="%(QRC.Outputs)"
+        Condition="'%(QRC.Outputs)' != '' and '%(QRC.ExcludedFromBuild)' != 'true'">
+        <Source>@(QRC, '|')</Source>
+      </QRC_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(QRC.ExecutionDescription)" />
+    <WriteLinesToFile
+      File="$(IntDir)$(ProjectName).write.1.tlog"
+      Lines="^%(QRC_tlog.Source);@(QRC_tlog-&gt;'%(Fullpath)')" />
+    <QRC
+      Condition="'%(QRC.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(QRC.CommandLineTemplate)"
+      QtCommandLine="%(QRC.QtCommandLine)"
+      QtQrcPfx="%(QRC.QtQrcPfx)"
+      AdditionalOptions="%(QRC.AdditionalOptions)"
+      Inputs="%(QRC.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeQRCOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeQRCOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeQRCOutput"
+    Condition="'@(QRC)' != ''">
+    <ItemGroup>
+      <QRCDirsToMake
+        Condition="'@(QRC)' != ''"
+        Include="%(QRC.Outputs)" />
+      <Link
+        Include="%(QRCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(QRCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(QRCDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(QRCDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+</Project>
