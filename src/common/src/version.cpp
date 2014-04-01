@@ -6,22 +6,22 @@
 #include "scm_rev.h"
 
 #ifdef _DEBUG
-	#define BUILD_TYPE_STR "Debug "
+    #define BUILD_TYPE_STR "Debug "
 #elif defined DEBUGFAST
-	#define BUILD_TYPE_STR "DebugFast "
+    #define BUILD_TYPE_STR "DebugFast "
 #else
-	#define BUILD_TYPE_STR ""
+    #define BUILD_TYPE_STR ""
 #endif
 
 const char *scm_rev_str = "emu "
 #if !SCM_IS_MASTER
-	"[" SCM_BRANCH_STR "] "
+    "[" SCM_BRANCH_STR "] "
 #endif
 
 #ifdef __INTEL_COMPILER
-	BUILD_TYPE_STR SCM_DESC_STR "-ICC";
+    BUILD_TYPE_STR SCM_DESC_STR "-ICC";
 #else
-	BUILD_TYPE_STR SCM_DESC_STR;
+    BUILD_TYPE_STR SCM_DESC_STR;
 #endif
 
 #ifdef _M_X64
@@ -29,7 +29,7 @@ const char *scm_rev_str = "emu "
 #else
 #ifdef _M_ARM
 #define NP_ARCH "ARM"
-#else	
+#else    
 #define NP_ARCH "x86"
 #endif
 #endif

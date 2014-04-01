@@ -25,29 +25,29 @@ int u8_strlen(const char *s);
 
 class UTF8 {
 public:
-	static const u32 INVALID = (u32)-1;
-	UTF8(const char *c) : c_(c), index_(0) {}
-	bool end() const { return c_[index_] == 0; }
-	u32 next() {
-		return u8_nextchar(c_, &index_);
-	}
-	u32 peek() {
-		int tempIndex = index_;
-		return u8_nextchar(c_, &tempIndex);
-	}
-	int length() const {
-		return u8_strlen(c_);
-	}
-	int byteIndex() const {
-		return index_;
-	}
-	static int encode(char *dest, u32 ch) {
-		return u8_wc_toutf8(dest, ch);
-	}
+    static const u32 INVALID = (u32)-1;
+    UTF8(const char *c) : c_(c), index_(0) {}
+    bool end() const { return c_[index_] == 0; }
+    u32 next() {
+        return u8_nextchar(c_, &index_);
+    }
+    u32 peek() {
+        int tempIndex = index_;
+        return u8_nextchar(c_, &tempIndex);
+    }
+    int length() const {
+        return u8_strlen(c_);
+    }
+    int byteIndex() const {
+        return index_;
+    }
+    static int encode(char *dest, u32 ch) {
+        return u8_wc_toutf8(dest, ch);
+    }
 
 private:
-	const char *c_;
-	int index_;
+    const char *c_;
+    int index_;
 };
 
 int UTF8StringNonASCIICount(const char *utf8string);

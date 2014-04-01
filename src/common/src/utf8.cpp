@@ -31,7 +31,7 @@
 
 // is start of UTF sequence
 inline bool isutf(char c) {
-	return (c & 0xC0) != 0x80;
+    return (c & 0xC0) != 0x80;
 }
 
 static const u32 offsetsFromUTF8[6] = {
@@ -47,7 +47,7 @@ static const u8 trailingBytesForUTF8[256] = {
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5,
+        2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,4,4,4,4,5,5,5,5,
 };
 
 /* returns length of next utf-8 sequence */
@@ -405,59 +405,59 @@ int u8_is_locale_utf8(const char *locale)
 }
 
 int UTF8StringNonASCIICount(const char *utf8string) {
-	UTF8 utf(utf8string);
-	int count = 0;
-	while (!utf.end()) {
-		int c = utf.next();
-		if (c > 127)
-			++count;
-	}
-	return count;
+    UTF8 utf(utf8string);
+    int count = 0;
+    while (!utf.end()) {
+        int c = utf.next();
+        if (c > 127)
+            ++count;
+    }
+    return count;
 }
 
 bool UTF8StringHasNonASCII(const char *utf8string) {
-	return UTF8StringNonASCIICount(utf8string) > 0;
+    return UTF8StringNonASCIICount(utf8string) > 0;
 }
 
 #ifdef _WIN32
 
 std::string ConvertWStringToUTF8(const wchar_t *wstr) {
-	int len = (int)wcslen(wstr);
-	int size = (int)WideCharToMultiByte(CP_UTF8, 0, wstr, len, 0, 0, NULL, NULL);
-	std::string s;
-	s.resize(size);
-	if (size > 0) {
-		WideCharToMultiByte(CP_UTF8, 0, wstr, len, &s[0], size, NULL, NULL);
-	}
-	return s;
+    int len = (int)wcslen(wstr);
+    int size = (int)WideCharToMultiByte(CP_UTF8, 0, wstr, len, 0, 0, NULL, NULL);
+    std::string s;
+    s.resize(size);
+    if (size > 0) {
+        WideCharToMultiByte(CP_UTF8, 0, wstr, len, &s[0], size, NULL, NULL);
+    }
+    return s;
 }
 
 std::string ConvertWStringToUTF8(const std::wstring &wstr) {
-	int len = (int)wstr.size();
-	int size = (int)WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), len, 0, 0, NULL, NULL);
-	std::string s;
-	s.resize(size);
-	if (size > 0) {
-		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), len, &s[0], size, NULL, NULL);
-	}
-	return s;
+    int len = (int)wstr.size();
+    int size = (int)WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), len, 0, 0, NULL, NULL);
+    std::string s;
+    s.resize(size);
+    if (size > 0) {
+        WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), len, &s[0], size, NULL, NULL);
+    }
+    return s;
 }
 
 void ConvertUTF8ToWString(wchar_t *dest, size_t destSize, const std::string &source) {
-	int len = (int)source.size();
-	int size = (int)MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, NULL, 0);
-	MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, dest, std::min((int)destSize, size));
+    int len = (int)source.size();
+    int size = (int)MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, NULL, 0);
+    MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, dest, std::min((int)destSize, size));
 }
 
 std::wstring ConvertUTF8ToWString(const std::string &source) {
-	int len = (int)source.size();
-	int size = (int)MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, NULL, 0);
-	std::wstring str;
-	str.resize(size);
-	if (size > 0) {
-		MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, &str[0], size);
-	}
-	return str;
+    int len = (int)source.size();
+    int size = (int)MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, NULL, 0);
+    std::wstring str;
+    str.resize(size);
+    if (size > 0) {
+        MultiByteToWideChar(CP_UTF8, 0, source.c_str(), len, &str[0], size);
+    }
+    return str;
 }
 
 #endif

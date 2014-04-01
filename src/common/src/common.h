@@ -34,12 +34,12 @@ extern const char *netplay_dolphin_ver;
 class NonCopyable
 {
 protected:
-	NonCopyable() {}
-	NonCopyable(const NonCopyable&&) {}
-	void operator=(const NonCopyable&&) {}
+    NonCopyable() {}
+    NonCopyable(const NonCopyable&&) {}
+    void operator=(const NonCopyable&&) {}
 private:
-	NonCopyable(NonCopyable&);
-	NonCopyable& operator=(NonCopyable& other);
+    NonCopyable(NonCopyable&);
+    NonCopyable& operator=(NonCopyable& other);
 };
 #endif
 
@@ -61,40 +61,40 @@ private:
 #elif defined _WIN32
 
 // Check MSC ver
-	#if !defined _MSC_VER || _MSC_VER <= 1000
-		#error needs at least version 1000 of MSC
-	#endif
+    #if !defined _MSC_VER || _MSC_VER <= 1000
+        #error needs at least version 1000 of MSC
+    #endif
 
-	#define NOMINMAX
+    #define NOMINMAX
 
 // Memory leak checks
-	#define CHECK_HEAP_INTEGRITY()
+    #define CHECK_HEAP_INTEGRITY()
 
 // Alignment
-	#define MEMORY_ALIGNED16(x) __declspec(align(16)) x
-	#define MEMORY_ALIGNED32(x) __declspec(align(32)) x
-	#define MEMORY_ALIGNED64(x) __declspec(align(64)) x
-	#define MEMORY_ALIGNED128(x) __declspec(align(128)) x
-	#define MEMORY_ALIGNED16_DECL(x) __declspec(align(16)) x
-	#define MEMORY_ALIGNED64_DECL(x) __declspec(align(64)) x
+    #define MEMORY_ALIGNED16(x) __declspec(align(16)) x
+    #define MEMORY_ALIGNED32(x) __declspec(align(32)) x
+    #define MEMORY_ALIGNED64(x) __declspec(align(64)) x
+    #define MEMORY_ALIGNED128(x) __declspec(align(128)) x
+    #define MEMORY_ALIGNED16_DECL(x) __declspec(align(16)) x
+    #define MEMORY_ALIGNED64_DECL(x) __declspec(align(64)) x
 
 // Since they are always around on windows
-	#define HAVE_WX 1
-	#define HAVE_OPENAL 1
+    #define HAVE_WX 1
+    #define HAVE_OPENAL 1
 
-	#define HAVE_PORTAUDIO 1
+    #define HAVE_PORTAUDIO 1
 
 // Debug definitions
-	#if defined(_DEBUG)
-		#include <crtdbg.h>
-		#undef CHECK_HEAP_INTEGRITY
-		#define CHECK_HEAP_INTEGRITY() {if (!_CrtCheckMemory()) PanicAlert("memory corruption detected. see log.");}
-		// If you want to see how much a pain in the ass singletons are, for example:
-		// {614} normal block at 0x030C5310, 188 bytes long.
-		// Data: <Master Log      > 4D 61 73 74 65 72 20 4C 6F 67 00 00 00 00 00 00
-		struct CrtDebugBreak { CrtDebugBreak(int spot) { _CrtSetBreakAlloc(spot); } };
-		//CrtDebugBreak breakAt(614);
-	#endif // end DEBUG/FAST
+    #if defined(_DEBUG)
+        #include <crtdbg.h>
+        #undef CHECK_HEAP_INTEGRITY
+        #define CHECK_HEAP_INTEGRITY() {if (!_CrtCheckMemory()) PanicAlert("memory corruption detected. see log.");}
+        // If you want to see how much a pain in the ass singletons are, for example:
+        // {614} normal block at 0x030C5310, 188 bytes long.
+        // Data: <Master Log      > 4D 61 73 74 65 72 20 4C 6F 67 00 00 00 00 00 00
+        struct CrtDebugBreak { CrtDebugBreak(int spot) { _CrtSetBreakAlloc(spot); } };
+        //CrtDebugBreak breakAt(614);
+    #endif // end DEBUG/FAST
 
 #endif
 
@@ -149,18 +149,18 @@ private:
 // Host communication.
 enum HOST_COMM
 {
-	// Begin at 10 in case there is already messages with wParam = 0, 1, 2 and so on
-	WM_USER_STOP = 10,
-	WM_USER_CREATE,
-	WM_USER_SETCURSOR,
+    // Begin at 10 in case there is already messages with wParam = 0, 1, 2 and so on
+    WM_USER_STOP = 10,
+    WM_USER_CREATE,
+    WM_USER_SETCURSOR,
 };
 
 // Used for notification on emulation state
 enum EMUSTATE_CHANGE
 {
-	EMUSTATE_CHANGE_PLAY = 1,
-	EMUSTATE_CHANGE_PAUSE,
-	EMUSTATE_CHANGE_STOP
+    EMUSTATE_CHANGE_PLAY = 1,
+    EMUSTATE_CHANGE_PAUSE,
+    EMUSTATE_CHANGE_STOP
 };
 
 #endif // _COMMON_H_

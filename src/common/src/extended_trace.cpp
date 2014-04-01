@@ -30,18 +30,18 @@ using namespace std;
 void PCSTR2LPTSTR( PCSTR lpszIn, LPTSTR lpszOut )
 {
 #if defined(UNICODE)||defined(_UNICODE)
-	ULONG index = 0; 
-	PCSTR lpAct = lpszIn;
+    ULONG index = 0; 
+    PCSTR lpAct = lpszIn;
 
-	for( ; ; lpAct++ )
-	{
-		lpszOut[index++] = (TCHAR)(*lpAct);
-		if ( *lpAct == 0 )
-			break;
-	} 
+    for( ; ; lpAct++ )
+    {
+        lpszOut[index++] = (TCHAR)(*lpAct);
+        if ( *lpAct == 0 )
+            break;
+    } 
 #else
-	// This is trivial :)
-	strcpy( lpszOut, lpszIn );
+    // This is trivial :)
+    strcpy( lpszOut, lpszIn );
 #endif
 }
 
@@ -50,184 +50,184 @@ void PCSTR2LPTSTR( PCSTR lpszIn, LPTSTR lpszOut )
 // Note: There is no size check for lpszSymbolPath!
 static void InitSymbolPath( PSTR lpszSymbolPath, PCSTR lpszIniPath )
 {
-	CHAR lpszPath[BUFFERSIZE];
+    CHAR lpszPath[BUFFERSIZE];
 
-	// Creating the default path
-	// ".;%_NT_SYMBOL_PATH%;%_NT_ALTERNATE_SYMBOL_PATH%;%SYSTEMROOT%;%SYSTEMROOT%\System32;"
-	strcpy( lpszSymbolPath, "." );
+    // Creating the default path
+    // ".;%_NT_SYMBOL_PATH%;%_NT_ALTERNATE_SYMBOL_PATH%;%SYSTEMROOT%;%SYSTEMROOT%\System32;"
+    strcpy( lpszSymbolPath, "." );
 
-	// environment variable _NT_SYMBOL_PATH
-	if ( GetEnvironmentVariableA( "_NT_SYMBOL_PATH", lpszPath, BUFFERSIZE ) )
-	{
-		strcat( lpszSymbolPath, ";" );
-		strcat( lpszSymbolPath, lpszPath );
-	}
+    // environment variable _NT_SYMBOL_PATH
+    if ( GetEnvironmentVariableA( "_NT_SYMBOL_PATH", lpszPath, BUFFERSIZE ) )
+    {
+        strcat( lpszSymbolPath, ";" );
+        strcat( lpszSymbolPath, lpszPath );
+    }
 
-	// environment variable _NT_ALTERNATE_SYMBOL_PATH
-	if ( GetEnvironmentVariableA( "_NT_ALTERNATE_SYMBOL_PATH", lpszPath, BUFFERSIZE ) )
-	{
-		strcat( lpszSymbolPath, ";" );
-		strcat( lpszSymbolPath, lpszPath );
-	}
+    // environment variable _NT_ALTERNATE_SYMBOL_PATH
+    if ( GetEnvironmentVariableA( "_NT_ALTERNATE_SYMBOL_PATH", lpszPath, BUFFERSIZE ) )
+    {
+        strcat( lpszSymbolPath, ";" );
+        strcat( lpszSymbolPath, lpszPath );
+    }
 
-	// environment variable SYSTEMROOT
-	if ( GetEnvironmentVariableA( "SYSTEMROOT", lpszPath, BUFFERSIZE ) )
-	{
-		strcat( lpszSymbolPath, ";" );
-		strcat( lpszSymbolPath, lpszPath );
-		strcat( lpszSymbolPath, ";" );
+    // environment variable SYSTEMROOT
+    if ( GetEnvironmentVariableA( "SYSTEMROOT", lpszPath, BUFFERSIZE ) )
+    {
+        strcat( lpszSymbolPath, ";" );
+        strcat( lpszSymbolPath, lpszPath );
+        strcat( lpszSymbolPath, ";" );
 
-		// SYSTEMROOT\System32
-		strcat( lpszSymbolPath, lpszPath );
-		strcat( lpszSymbolPath, "\\System32" );
-	}
+        // SYSTEMROOT\System32
+        strcat( lpszSymbolPath, lpszPath );
+        strcat( lpszSymbolPath, "\\System32" );
+    }
 
-	// Add user defined path
-	if ( lpszIniPath != NULL )
-		if ( lpszIniPath[0] != '\0' )
-		{
-			strcat( lpszSymbolPath, ";" );
-			strcat( lpszSymbolPath, lpszIniPath );
-		}
+    // Add user defined path
+    if ( lpszIniPath != NULL )
+        if ( lpszIniPath[0] != '\0' )
+        {
+            strcat( lpszSymbolPath, ";" );
+            strcat( lpszSymbolPath, lpszIniPath );
+        }
 }
 
 // Uninitialize the loaded symbol files
 BOOL UninitSymInfo() {
-	return SymCleanup( GetCurrentProcess() );
+    return SymCleanup( GetCurrentProcess() );
 }
 
 // Initializes the symbol files
 BOOL InitSymInfo( PCSTR lpszInitialSymbolPath )
 {
-	CHAR     lpszSymbolPath[BUFFERSIZE];
-	DWORD    symOptions = SymGetOptions();
+    CHAR     lpszSymbolPath[BUFFERSIZE];
+    DWORD    symOptions = SymGetOptions();
 
-	symOptions |= SYMOPT_LOAD_LINES; 
-	symOptions &= ~SYMOPT_UNDNAME;
-	SymSetOptions( symOptions );
-	InitSymbolPath( lpszSymbolPath, lpszInitialSymbolPath );
+    symOptions |= SYMOPT_LOAD_LINES; 
+    symOptions &= ~SYMOPT_UNDNAME;
+    SymSetOptions( symOptions );
+    InitSymbolPath( lpszSymbolPath, lpszInitialSymbolPath );
 
-	return SymInitialize( GetCurrentProcess(), lpszSymbolPath, TRUE);
+    return SymInitialize( GetCurrentProcess(), lpszSymbolPath, TRUE);
 }
 
 // Get the module name from a given address
 static BOOL GetModuleNameFromAddress( UINT address, LPTSTR lpszModule )
 {
-	BOOL              ret = FALSE;
-	IMAGEHLP_MODULE   moduleInfo;
+    BOOL              ret = FALSE;
+    IMAGEHLP_MODULE   moduleInfo;
 
-	::ZeroMemory( &moduleInfo, sizeof(moduleInfo) );
-	moduleInfo.SizeOfStruct = sizeof(moduleInfo);
+    ::ZeroMemory( &moduleInfo, sizeof(moduleInfo) );
+    moduleInfo.SizeOfStruct = sizeof(moduleInfo);
 
-	if ( SymGetModuleInfo( GetCurrentProcess(), (DWORD)address, &moduleInfo ) )
-	{
-		// Got it!
-		PCSTR2LPTSTR( moduleInfo.ModuleName, lpszModule );
-		ret = TRUE;
-	}
-	else
-		// Not found :(
-		_tcscpy( lpszModule, _T("?") );
+    if ( SymGetModuleInfo( GetCurrentProcess(), (DWORD)address, &moduleInfo ) )
+    {
+        // Got it!
+        PCSTR2LPTSTR( moduleInfo.ModuleName, lpszModule );
+        ret = TRUE;
+    }
+    else
+        // Not found :(
+        _tcscpy( lpszModule, _T("?") );
 
-	return ret;
+    return ret;
 }
 
 // Get function prototype and parameter info from ip address and stack address
 static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, LPTSTR lpszSymbol )
 {
-	BOOL              ret = FALSE;
-	DWORD             dwSymSize = 10000;
-	TCHAR             lpszUnDSymbol[BUFFERSIZE]=_T("?");
-	CHAR              lpszNonUnicodeUnDSymbol[BUFFERSIZE]="?";
-	LPTSTR            lpszParamSep = NULL;
-	LPTSTR            lpszParsed = lpszUnDSymbol;
-	PIMAGEHLP_SYMBOL  pSym = (PIMAGEHLP_SYMBOL)GlobalAlloc( GMEM_FIXED, dwSymSize );
+    BOOL              ret = FALSE;
+    DWORD             dwSymSize = 10000;
+    TCHAR             lpszUnDSymbol[BUFFERSIZE]=_T("?");
+    CHAR              lpszNonUnicodeUnDSymbol[BUFFERSIZE]="?";
+    LPTSTR            lpszParamSep = NULL;
+    LPTSTR            lpszParsed = lpszUnDSymbol;
+    PIMAGEHLP_SYMBOL  pSym = (PIMAGEHLP_SYMBOL)GlobalAlloc( GMEM_FIXED, dwSymSize );
 
-	::ZeroMemory( pSym, dwSymSize );
-	pSym->SizeOfStruct = dwSymSize;
-	pSym->MaxNameLength = dwSymSize - sizeof(IMAGEHLP_SYMBOL);
+    ::ZeroMemory( pSym, dwSymSize );
+    pSym->SizeOfStruct = dwSymSize;
+    pSym->MaxNameLength = dwSymSize - sizeof(IMAGEHLP_SYMBOL);
 
-	// Set the default to unknown
-	_tcscpy( lpszSymbol, _T("?") );
+    // Set the default to unknown
+    _tcscpy( lpszSymbol, _T("?") );
 
-	// Get symbol info for IP
+    // Get symbol info for IP
 #ifndef _M_X64
-	DWORD             dwDisp = 0;
-	if ( SymGetSymFromAddr( GetCurrentProcess(), (ULONG)fnAddress, &dwDisp, pSym ) )
+    DWORD             dwDisp = 0;
+    if ( SymGetSymFromAddr( GetCurrentProcess(), (ULONG)fnAddress, &dwDisp, pSym ) )
 #else 
-	//makes it compile but hell im not sure if this works...
-	DWORD64           dwDisp = 0;
-	if ( SymGetSymFromAddr( GetCurrentProcess(), (ULONG)fnAddress, (PDWORD64)&dwDisp, pSym ) )
+    //makes it compile but hell im not sure if this works...
+    DWORD64           dwDisp = 0;
+    if ( SymGetSymFromAddr( GetCurrentProcess(), (ULONG)fnAddress, (PDWORD64)&dwDisp, pSym ) )
 #endif
-	{
-		// Make the symbol readable for humans
-		UnDecorateSymbolName( pSym->Name, lpszNonUnicodeUnDSymbol, BUFFERSIZE, 
-			UNDNAME_COMPLETE | 
-			UNDNAME_NO_THISTYPE |
-			UNDNAME_NO_SPECIAL_SYMS |
-			UNDNAME_NO_MEMBER_TYPE |
-			UNDNAME_NO_MS_KEYWORDS |
-			UNDNAME_NO_ACCESS_SPECIFIERS );
+    {
+        // Make the symbol readable for humans
+        UnDecorateSymbolName( pSym->Name, lpszNonUnicodeUnDSymbol, BUFFERSIZE, 
+            UNDNAME_COMPLETE | 
+            UNDNAME_NO_THISTYPE |
+            UNDNAME_NO_SPECIAL_SYMS |
+            UNDNAME_NO_MEMBER_TYPE |
+            UNDNAME_NO_MS_KEYWORDS |
+            UNDNAME_NO_ACCESS_SPECIFIERS );
 
-		// Symbol information is ANSI string
-		PCSTR2LPTSTR( lpszNonUnicodeUnDSymbol, lpszUnDSymbol );
+        // Symbol information is ANSI string
+        PCSTR2LPTSTR( lpszNonUnicodeUnDSymbol, lpszUnDSymbol );
 
-		// I am just smarter than the symbol file :)
-		if ( _tcscmp(lpszUnDSymbol, _T("_WinMain@16")) == 0 )
-			_tcscpy(lpszUnDSymbol, _T("WinMain(HINSTANCE,HINSTANCE,LPCTSTR,int)"));
-		else
-			if ( _tcscmp(lpszUnDSymbol, _T("_main")) == 0 )
-				_tcscpy(lpszUnDSymbol, _T("main(int,TCHAR * *)"));
-			else
-				if ( _tcscmp(lpszUnDSymbol, _T("_mainCRTStartup")) == 0 )
-					_tcscpy(lpszUnDSymbol, _T("mainCRTStartup()"));
-				else
-					if ( _tcscmp(lpszUnDSymbol, _T("_wmain")) == 0 )
-						_tcscpy(lpszUnDSymbol, _T("wmain(int,TCHAR * *,TCHAR * *)"));
-					else
-						if ( _tcscmp(lpszUnDSymbol, _T("_wmainCRTStartup")) == 0 )
-							_tcscpy(lpszUnDSymbol, _T("wmainCRTStartup()"));
+        // I am just smarter than the symbol file :)
+        if ( _tcscmp(lpszUnDSymbol, _T("_WinMain@16")) == 0 )
+            _tcscpy(lpszUnDSymbol, _T("WinMain(HINSTANCE,HINSTANCE,LPCTSTR,int)"));
+        else
+            if ( _tcscmp(lpszUnDSymbol, _T("_main")) == 0 )
+                _tcscpy(lpszUnDSymbol, _T("main(int,TCHAR * *)"));
+            else
+                if ( _tcscmp(lpszUnDSymbol, _T("_mainCRTStartup")) == 0 )
+                    _tcscpy(lpszUnDSymbol, _T("mainCRTStartup()"));
+                else
+                    if ( _tcscmp(lpszUnDSymbol, _T("_wmain")) == 0 )
+                        _tcscpy(lpszUnDSymbol, _T("wmain(int,TCHAR * *,TCHAR * *)"));
+                    else
+                        if ( _tcscmp(lpszUnDSymbol, _T("_wmainCRTStartup")) == 0 )
+                            _tcscpy(lpszUnDSymbol, _T("wmainCRTStartup()"));
 
-		lpszSymbol[0] = _T('\0');
+        lpszSymbol[0] = _T('\0');
 
-		// Let's go through the stack, and modify the function prototype, and insert the actual
-		// parameter values from the stack
-		if ( _tcsstr( lpszUnDSymbol, _T("(void)") ) == NULL && _tcsstr( lpszUnDSymbol, _T("()") ) == NULL)
-		{
-			ULONG index = 0;
-			for( ; ; index++ )
-			{
-				lpszParamSep = _tcschr( lpszParsed, _T(',') );
-				if ( lpszParamSep == NULL )
-					break;
+        // Let's go through the stack, and modify the function prototype, and insert the actual
+        // parameter values from the stack
+        if ( _tcsstr( lpszUnDSymbol, _T("(void)") ) == NULL && _tcsstr( lpszUnDSymbol, _T("()") ) == NULL)
+        {
+            ULONG index = 0;
+            for( ; ; index++ )
+            {
+                lpszParamSep = _tcschr( lpszParsed, _T(',') );
+                if ( lpszParamSep == NULL )
+                    break;
 
-				*lpszParamSep = _T('\0');
+                *lpszParamSep = _T('\0');
 
-				_tcscat( lpszSymbol, lpszParsed );
-				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X,"), *((ULONG*)(stackAddress) + 2 + index) );
+                _tcscat( lpszSymbol, lpszParsed );
+                _stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X,"), *((ULONG*)(stackAddress) + 2 + index) );
 
-				lpszParsed = lpszParamSep + 1;
-			}
+                lpszParsed = lpszParamSep + 1;
+            }
 
-			lpszParamSep = _tcschr( lpszParsed, _T(')') );
-			if ( lpszParamSep != NULL )
-			{
-				*lpszParamSep = _T('\0');
+            lpszParamSep = _tcschr( lpszParsed, _T(')') );
+            if ( lpszParamSep != NULL )
+            {
+                *lpszParamSep = _T('\0');
 
-				_tcscat( lpszSymbol, lpszParsed );
-				_stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X)"), *((ULONG*)(stackAddress) + 2 + index) );
+                _tcscat( lpszSymbol, lpszParsed );
+                _stprintf( lpszSymbol + _tcslen(lpszSymbol), _T("=0x%08X)"), *((ULONG*)(stackAddress) + 2 + index) );
 
-				lpszParsed = lpszParamSep + 1;
-			}
-		}
+                lpszParsed = lpszParamSep + 1;
+            }
+        }
 
-		_tcscat( lpszSymbol, lpszParsed );
+        _tcscat( lpszSymbol, lpszParsed );
 
-		ret = TRUE;
-	} 
-	GlobalFree( pSym );
+        ret = TRUE;
+    } 
+    GlobalFree( pSym );
 
-	return ret;
+    return ret;
 }
 
 // Get source file name and line number from IP address
@@ -236,198 +236,198 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
 //                       "address"
 static BOOL GetSourceInfoFromAddress( UINT address, LPTSTR lpszSourceInfo )
 {
-	BOOL           ret = FALSE;
-	IMAGEHLP_LINE  lineInfo;
-	DWORD          dwDisp;
-	TCHAR          lpszFileName[BUFFERSIZE] = _T("");
-	TCHAR          lpModuleInfo[BUFFERSIZE] = _T("");
+    BOOL           ret = FALSE;
+    IMAGEHLP_LINE  lineInfo;
+    DWORD          dwDisp;
+    TCHAR          lpszFileName[BUFFERSIZE] = _T("");
+    TCHAR          lpModuleInfo[BUFFERSIZE] = _T("");
 
-	_tcscpy( lpszSourceInfo, _T("?(?)") );
+    _tcscpy( lpszSourceInfo, _T("?(?)") );
 
-	::ZeroMemory( &lineInfo, sizeof( lineInfo ) );
-	lineInfo.SizeOfStruct = sizeof( lineInfo );
+    ::ZeroMemory( &lineInfo, sizeof( lineInfo ) );
+    lineInfo.SizeOfStruct = sizeof( lineInfo );
 
-	if ( SymGetLineFromAddr( GetCurrentProcess(), address, &dwDisp, &lineInfo ) )
-	{
-		// Got it. Let's use "sourcefile(linenumber)" format
-		PCSTR2LPTSTR( lineInfo.FileName, lpszFileName );
-		TCHAR fname[_MAX_FNAME];
-		TCHAR ext[_MAX_EXT];
-		_tsplitpath(lpszFileName, NULL, NULL, fname, ext);
-		_stprintf( lpszSourceInfo, _T("%s%s(%d)"), fname, ext, lineInfo.LineNumber );
-		ret = TRUE;
-	}
-	else
-	{
-		// There is no source file information. :(
-		// Let's use the "modulename!address" format
-		GetModuleNameFromAddress( address, lpModuleInfo );
+    if ( SymGetLineFromAddr( GetCurrentProcess(), address, &dwDisp, &lineInfo ) )
+    {
+        // Got it. Let's use "sourcefile(linenumber)" format
+        PCSTR2LPTSTR( lineInfo.FileName, lpszFileName );
+        TCHAR fname[_MAX_FNAME];
+        TCHAR ext[_MAX_EXT];
+        _tsplitpath(lpszFileName, NULL, NULL, fname, ext);
+        _stprintf( lpszSourceInfo, _T("%s%s(%d)"), fname, ext, lineInfo.LineNumber );
+        ret = TRUE;
+    }
+    else
+    {
+        // There is no source file information. :(
+        // Let's use the "modulename!address" format
+        GetModuleNameFromAddress( address, lpModuleInfo );
 
-		if ( lpModuleInfo[0] == _T('?') || lpModuleInfo[0] == _T('\0'))
-			// There is no modulename information. :((
-			// Let's use the "address" format
-			_stprintf( lpszSourceInfo, _T("0x%08X"), address );
-		else
-			_stprintf( lpszSourceInfo, _T("%s!0x%08X"), lpModuleInfo, address );
+        if ( lpModuleInfo[0] == _T('?') || lpModuleInfo[0] == _T('\0'))
+            // There is no modulename information. :((
+            // Let's use the "address" format
+            _stprintf( lpszSourceInfo, _T("0x%08X"), address );
+        else
+            _stprintf( lpszSourceInfo, _T("%s!0x%08X"), lpModuleInfo, address );
 
-		ret = FALSE;
-	}
+        ret = FALSE;
+    }
 
-	return ret;
+    return ret;
 }
 
 void PrintFunctionAndSourceInfo(FILE* file, const STACKFRAME& callstack)
 {
-	TCHAR symInfo[BUFFERSIZE] = _T("?");
-	TCHAR srcInfo[BUFFERSIZE] = _T("?");
+    TCHAR symInfo[BUFFERSIZE] = _T("?");
+    TCHAR srcInfo[BUFFERSIZE] = _T("?");
 
-	GetFunctionInfoFromAddresses((ULONG)callstack.AddrPC.Offset, (ULONG)callstack.AddrFrame.Offset, symInfo);
-	GetSourceInfoFromAddress((ULONG)callstack.AddrPC.Offset, srcInfo);
-	etfprint(file, "     " + TStrToUTF8(srcInfo) + " : " + TStrToUTF8(symInfo) + "\n");
+    GetFunctionInfoFromAddresses((ULONG)callstack.AddrPC.Offset, (ULONG)callstack.AddrFrame.Offset, symInfo);
+    GetSourceInfoFromAddress((ULONG)callstack.AddrPC.Offset, srcInfo);
+    etfprint(file, "     " + TStrToUTF8(srcInfo) + " : " + TStrToUTF8(symInfo) + "\n");
 }
 
 void StackTrace( HANDLE hThread, const char* lpszMessage, FILE *file )
 {
-	STACKFRAME     callStack;
-	BOOL           bResult;
-	CONTEXT        context;
-	HANDLE         hProcess = GetCurrentProcess();
+    STACKFRAME     callStack;
+    BOOL           bResult;
+    CONTEXT        context;
+    HANDLE         hProcess = GetCurrentProcess();
 
-	// If it's not this thread, let's suspend it, and resume it at the end
-	if ( hThread != GetCurrentThread() )
-		if ( SuspendThread( hThread ) == -1 )
-		{
-			// whaaat ?!
-			etfprint(file, "Call stack info failed\n");
-			return;
-		}
+    // If it's not this thread, let's suspend it, and resume it at the end
+    if ( hThread != GetCurrentThread() )
+        if ( SuspendThread( hThread ) == -1 )
+        {
+            // whaaat ?!
+            etfprint(file, "Call stack info failed\n");
+            return;
+        }
 
-		::ZeroMemory( &context, sizeof(context) );
-		context.ContextFlags = CONTEXT_FULL;
+        ::ZeroMemory( &context, sizeof(context) );
+        context.ContextFlags = CONTEXT_FULL;
 
-		if ( !GetThreadContext( hThread, &context ) )
-		{
-			etfprint(file, "Call stack info failed\n");
-			return;
-		}
+        if ( !GetThreadContext( hThread, &context ) )
+        {
+            etfprint(file, "Call stack info failed\n");
+            return;
+        }
 
-		::ZeroMemory( &callStack, sizeof(callStack) );
+        ::ZeroMemory( &callStack, sizeof(callStack) );
 #ifndef _M_X64
-		callStack.AddrPC.Offset    = context.Eip;
-		callStack.AddrStack.Offset = context.Esp;
-		callStack.AddrFrame.Offset = context.Ebp;
+        callStack.AddrPC.Offset    = context.Eip;
+        callStack.AddrStack.Offset = context.Esp;
+        callStack.AddrFrame.Offset = context.Ebp;
 #else
-		callStack.AddrPC.Offset    = context.Rip;
-		callStack.AddrStack.Offset = context.Rsp;
-		callStack.AddrFrame.Offset = context.Rbp;
+        callStack.AddrPC.Offset    = context.Rip;
+        callStack.AddrStack.Offset = context.Rsp;
+        callStack.AddrFrame.Offset = context.Rbp;
 #endif
-		callStack.AddrPC.Mode      = AddrModeFlat;
-		callStack.AddrStack.Mode   = AddrModeFlat;
-		callStack.AddrFrame.Mode   = AddrModeFlat;
+        callStack.AddrPC.Mode      = AddrModeFlat;
+        callStack.AddrStack.Mode   = AddrModeFlat;
+        callStack.AddrFrame.Mode   = AddrModeFlat;
 
-		etfprint(file, "Call stack info: \n");
-		etfprint(file, lpszMessage);
+        etfprint(file, "Call stack info: \n");
+        etfprint(file, lpszMessage);
 
-		PrintFunctionAndSourceInfo(file, callStack);
+        PrintFunctionAndSourceInfo(file, callStack);
 
-		for( ULONG index = 0; ; index++ ) 
-		{
-			bResult = StackWalk(
-				IMAGE_FILE_MACHINE_I386,
-				hProcess,
-				hThread,
-				&callStack,
-				NULL, 
-				NULL,
-				SymFunctionTableAccess,
-				SymGetModuleBase,
-				NULL);
+        for( ULONG index = 0; ; index++ ) 
+        {
+            bResult = StackWalk(
+                IMAGE_FILE_MACHINE_I386,
+                hProcess,
+                hThread,
+                &callStack,
+                NULL, 
+                NULL,
+                SymFunctionTableAccess,
+                SymGetModuleBase,
+                NULL);
 
-			if ( index == 0 )
-				continue;
+            if ( index == 0 )
+                continue;
 
-			if( !bResult || callStack.AddrFrame.Offset == 0 ) 
-				break;
+            if( !bResult || callStack.AddrFrame.Offset == 0 ) 
+                break;
 
-			PrintFunctionAndSourceInfo(file, callStack);
+            PrintFunctionAndSourceInfo(file, callStack);
 
-		}
+        }
 
-		if ( hThread != GetCurrentThread() )
-			ResumeThread( hThread );
+        if ( hThread != GetCurrentThread() )
+            ResumeThread( hThread );
 }
 
 void StackTrace(HANDLE hThread, const char* lpszMessage, FILE *file, DWORD eip, DWORD esp, DWORD ebp )
 {
-	STACKFRAME     callStack;
-	BOOL           bResult;
-	TCHAR          symInfo[BUFFERSIZE] = _T("?");
-	TCHAR          srcInfo[BUFFERSIZE] = _T("?");
-	HANDLE         hProcess = GetCurrentProcess();
+    STACKFRAME     callStack;
+    BOOL           bResult;
+    TCHAR          symInfo[BUFFERSIZE] = _T("?");
+    TCHAR          srcInfo[BUFFERSIZE] = _T("?");
+    HANDLE         hProcess = GetCurrentProcess();
 
-	// If it's not this thread, let's suspend it, and resume it at the end
-	if ( hThread != GetCurrentThread() )
-		if ( SuspendThread( hThread ) == -1 )
-		{
-			// whaaat ?!
-			etfprint(file, "Call stack info failed\n");
-			return;
-		}
+    // If it's not this thread, let's suspend it, and resume it at the end
+    if ( hThread != GetCurrentThread() )
+        if ( SuspendThread( hThread ) == -1 )
+        {
+            // whaaat ?!
+            etfprint(file, "Call stack info failed\n");
+            return;
+        }
 
-		::ZeroMemory( &callStack, sizeof(callStack) );
-		callStack.AddrPC.Offset    = eip;
-		callStack.AddrStack.Offset = esp;
-		callStack.AddrFrame.Offset = ebp;
-		callStack.AddrPC.Mode      = AddrModeFlat;
-		callStack.AddrStack.Mode   = AddrModeFlat;
-		callStack.AddrFrame.Mode   = AddrModeFlat;
+        ::ZeroMemory( &callStack, sizeof(callStack) );
+        callStack.AddrPC.Offset    = eip;
+        callStack.AddrStack.Offset = esp;
+        callStack.AddrFrame.Offset = ebp;
+        callStack.AddrPC.Mode      = AddrModeFlat;
+        callStack.AddrStack.Mode   = AddrModeFlat;
+        callStack.AddrFrame.Mode   = AddrModeFlat;
 
-		etfprint(file, "Call stack info: \n");
-		etfprint(file, lpszMessage);
+        etfprint(file, "Call stack info: \n");
+        etfprint(file, lpszMessage);
 
-		PrintFunctionAndSourceInfo(file, callStack);
+        PrintFunctionAndSourceInfo(file, callStack);
 
-		for( ULONG index = 0; ; index++ ) 
-		{
-			bResult = StackWalk(
-				IMAGE_FILE_MACHINE_I386,
-				hProcess,
-				hThread,
-				&callStack,
-				NULL, 
-				NULL,
-				SymFunctionTableAccess,
-				SymGetModuleBase,
-				NULL);
+        for( ULONG index = 0; ; index++ ) 
+        {
+            bResult = StackWalk(
+                IMAGE_FILE_MACHINE_I386,
+                hProcess,
+                hThread,
+                &callStack,
+                NULL, 
+                NULL,
+                SymFunctionTableAccess,
+                SymGetModuleBase,
+                NULL);
 
-			if ( index == 0 )
-				continue;
+            if ( index == 0 )
+                continue;
 
-			if( !bResult || callStack.AddrFrame.Offset == 0 ) 
-				break;
+            if( !bResult || callStack.AddrFrame.Offset == 0 ) 
+                break;
 
-			PrintFunctionAndSourceInfo(file, callStack);
-		}
+            PrintFunctionAndSourceInfo(file, callStack);
+        }
 
-		if ( hThread != GetCurrentThread() )
-			ResumeThread( hThread );
+        if ( hThread != GetCurrentThread() )
+            ResumeThread( hThread );
 }
 
 char g_uefbuf[2048];
 
 void etfprintf(FILE *file, const char *format, ...)
 {
-	va_list ap;
-	va_start(ap, format);
-	int len = vsprintf(g_uefbuf, format, ap);
-	fwrite(g_uefbuf, 1, len, file);
-	va_end(ap);
+    va_list ap;
+    va_start(ap, format);
+    int len = vsprintf(g_uefbuf, format, ap);
+    fwrite(g_uefbuf, 1, len, file);
+    va_end(ap);
 }
 
 void etfprint(FILE *file, const std::string &text)
 {
-	size_t len = text.length();
-	fwrite(text.data(), 1, len, file);
+    size_t len = text.length();
+    fwrite(text.data(), 1, len, file);
 }
 
 #endif //WIN32

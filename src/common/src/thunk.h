@@ -24,23 +24,23 @@
 
 class ThunkManager : public Gen::XCodeBlock
 {
-	std::map<void *, const u8 *> thunks;
+    std::map<void *, const u8 *> thunks;
 
-	const u8 *save_regs;
-	const u8 *load_regs;
+    const u8 *save_regs;
+    const u8 *load_regs;
 
 public:
-	ThunkManager() {
-		Init();
-	}
-	~ThunkManager() {
-		Shutdown();
-	}
-	void *ProtectFunction(void *function, int num_params);
+    ThunkManager() {
+        Init();
+    }
+    ~ThunkManager() {
+        Shutdown();
+    }
+    void *ProtectFunction(void *function, int num_params);
 private:
-	void Init();
-	void Shutdown();
-	void Reset();
+    void Init();
+    void Shutdown();
+    void Reset();
 };
 
 #endif // _THUNK_H_

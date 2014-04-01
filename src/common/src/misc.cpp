@@ -18,20 +18,20 @@
 // This function might change the error code.
 const char* GetLastErrorMsg()
 {
-	static const size_t buff_size = 255;
+    static const size_t buff_size = 255;
 
 #ifdef _WIN32
-	static __declspec(thread) char err_str[buff_size] = {};
+    static __declspec(thread) char err_str[buff_size] = {};
 
-	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		err_str, buff_size, NULL);
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        err_str, buff_size, NULL);
 #else
-	static __thread char err_str[buff_size] = {};
+    static __thread char err_str[buff_size] = {};
 
-	// Thread safe (XSI-compliant)
-	strerror_r(errno, err_str, buff_size);
+    // Thread safe (XSI-compliant)
+    strerror_r(errno, err_str, buff_size);
 #endif
 
-	return err_str;
+    return err_str;
 }
