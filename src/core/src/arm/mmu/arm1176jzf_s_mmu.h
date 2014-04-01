@@ -22,12 +22,12 @@
 #if 0
 typedef struct arm1176jzf-s_mmu_s
 {
-	tlb_t i_tlb;
-	cache_t i_cache;
+    tlb_t i_tlb;
+    cache_t i_cache;
 
-	tlb_t d_tlb;
-	cache_t d_cache;
-	wb_t wb_t;
+    tlb_t d_tlb;
+    cache_t d_cache;
+    wb_t wb_t;
 } arm1176jzf-s_mmu_t;
 #endif
 extern mmu_ops_t arm1176jzf_s_mmu_ops;
