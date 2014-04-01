@@ -27,10 +27,14 @@
 #include "file_util.h"
 
 #include "system.h"
+#include "core.h"
+#include "loader.h"
 
 #include "emu_window/emu_window_glfw.h"
 
 #include "citra.h"
+
+#define E_ERR -1
 
 //#define PLAY_FIFO_RECORDING
 
@@ -48,7 +52,7 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    //if (E_OK != core::Init(emu_window)) {
+    //if (E_OK != Core::Init(emu_window)) {
     //    LOG_ERROR(TMASTER, "core initialization failed, exiting...");
     //    core::Kill();
     //    exit(1);
@@ -81,10 +85,19 @@ int __cdecl main(int argc, char **argv) {
     //}
     //core::Kill();
 
-	while (1) {
-	}
+    std::string boot_filename = "homebrew.elf";
+    std::string error_str;
+    
+    bool res = Loader::LoadFile(boot_filename, &error_str);
 
-    //delete emu_window;
+    if (!res) {
+        ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
+    }
+    for (int tight_loop = 0; tight_loop < 10000; ++tight_loop) {
+        Core::SingleStep();
+    }
+
+    delete emu_window;
 
 	return 0;
 }
