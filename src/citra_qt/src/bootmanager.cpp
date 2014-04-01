@@ -5,6 +5,7 @@
 #include "bootmanager.hxx"
 
 #include "core.h"
+#include "loader.h"
 
 #include "version.h"
 
@@ -35,20 +36,19 @@ void EmuThread::run()
     }
 
 	// Load a game or die...
-	Core::Start(); //autoboot for now
-	/*
-    if (E_OK == dvd::LoadBootableFile(filename)) {
-        if (common::g_config->enable_auto_boot()) {
-            core::Start();
-        } else {
-            LOG_ERROR(TMASTER, "Autoboot required in no-GUI mode... Exiting!\n");
-        }
-    } else {
-        LOG_ERROR(TMASTER, "Failed to load a bootable file... Exiting!\n");
-        exit(E_ERR);
-    }
-	*/
+	std::string boot_filename = filename;
+	std::string error_str;
+	bool res = Loader::LoadFile(boot_filename, &error_str);
 
+	if (!res) {
+		ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
+	}
+
+	Core::Start(); //autoboot for now
+
+	for (int tight_loop = 0; tight_loop < 10000; ++tight_loop) {
+		Core::SingleStep();
+	}
 	/*
     while(core::SYS_DIE != core::g_state) 
 	{
