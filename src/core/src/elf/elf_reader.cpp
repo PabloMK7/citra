@@ -70,15 +70,15 @@ ElfReader::ElfReader(void *ptr)
 	segments = (Elf32_Phdr *)(base + header->e_phoff);
 	sections = (Elf32_Shdr *)(base + header->e_shoff);
 
-	for (int i = 0; i < GetNumSegments(); i++)
-	{
-		byteswapSegment(segments[i]);
-	}
+	//for (int i = 0; i < GetNumSegments(); i++)
+	//{
+	//	byteswapSegment(segments[i]);
+	//}
 
-	for (int i = 0; i < GetNumSections(); i++)
-	{
-		byteswapSection(sections[i]);
-	}
+	//for (int i = 0; i < GetNumSections(); i++)
+	//{
+	//	byteswapSection(sections[i]);
+	//}
 	entryPoint = header->e_entry;
 }
 
@@ -122,6 +122,7 @@ bool ElfReader::LoadInto(u32 vaddr)
 	u32 segmentVAddr[32];
 
 	u32 baseAddress = bRelocate?vaddr:0;
+
 	for (int i = 0; i < header->e_phnum; i++)
 	{
 		Elf32_Phdr *p = segments + i;
