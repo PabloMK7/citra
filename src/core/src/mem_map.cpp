@@ -37,26 +37,32 @@ u8*	g_base			= NULL;		///< The base pointer to the auto-mirrored arena.
 
 MemArena g_arena;				///< The MemArena class
 
-u8* g_bootrom			= NULL;		///< Bootrom memory (super secret code/data @ 0x8000) pointer
-u8* g_fcram				= NULL;		///< Main memory (FCRAM) pointer
-u8* g_vram				= NULL;		///< Video memory (VRAM) pointer
+u8* g_bootrom			    = NULL;     ///< Bootrom memory (super secret code/data @ 0x8000) pointer
+u8* g_fcram				    = NULL;	    ///< Main memory (FCRAM) pointer
+u8* g_vram				    = NULL;	    ///< Video memory (VRAM) pointer
+u8* g_scratchpad            = NULL;     ///< [Hack] Seperate mem for stack space because I don't know where this goes
 
-u8* g_physical_bootrom	= NULL;		///< Bootrom physical memory (super secret code/data @ 0x8000)
-u8* g_uncached_bootrom	= NULL;
+u8* g_physical_bootrom	    = NULL;	    ///< Bootrom physical memory (super secret code/data @ 0x8000)
+u8* g_uncached_bootrom	    = NULL;
 
-u8* g_physical_fcram	= NULL;		///< Main physical memory (FCRAM)
-u8* g_physical_vram		= NULL;		///< Video physical memory (VRAM)
+u8* g_physical_fcram	    = NULL;	    ///< Main physical memory (FCRAM)
+u8* g_physical_vram		    = NULL;	    ///< Video physical memory (VRAM)
+u8* g_physical_scratchpad   = NULL;     ///< Scratchpad memory used for main thread stack
+
 
 // We don't declare the IO region in here since its handled by other means.
 static MemoryView g_views[] =
 {
-	{&g_bootrom,	&g_physical_bootrom,	0x00000000, MEM_BOOTROM_SIZE,		0},
-	{NULL,			&g_uncached_bootrom,	0x00010000, MEM_BOOTROM_SIZE,		MV_MIRROR_PREVIOUS},
-//	//{NULL,				NULL,					0x17E00000, MEM_MPCORE_PRIV_SIZE,	0},
-	{&g_vram,		&g_physical_vram,		0x18000000, MEM_VRAM_SIZE,			0},
-//	//{NULL,				NULL,					0x1FF00000, MEM_DSP_SIZE,			0},
-//	//{NULL,				NULL,					0x1FF80000, MEM_AXI_WRAM_SIZE,		0},
-	{&g_fcram,		&g_physical_fcram,		0x20000000, MEM_FCRAM_SIZE,			MV_IS_PRIMARY_RAM},
+    {&g_scratchpad, &g_physical_scratchpad, 0x00000000,             MEM_SCRATCHPAD_SIZE,    0 },
+//  {&g_bootrom,	&g_physical_bootrom,	0x00000000,             MEM_BOOTROM_SIZE,		0},
+//  {NULL,			&g_uncached_bootrom,	0x00010000,             MEM_BOOTROM_SIZE,		MV_MIRROR_PREVIOUS},
+//	{NULL,				NULL,					0x17E00000, MEM_MPCORE_PRIV_SIZE,	0},
+	{&g_vram,		&g_physical_vram,		MEM_VRAM_VADDR,          MEM_VRAM_SIZE,			MV_IS_PRIMARY_RAM},
+//	{NULL,				NULL,					0x1FF00000, MEM_DSP_SIZE,			0},
+//	{NULL,				NULL,					0x1FF80000, MEM_AXI_WRAM_SIZE,		0},
+   
+	{&g_fcram,		&g_physical_fcram,		MEM_FCRAM_VADDR,        MEM_FCRAM_SIZE,			MV_IS_PRIMARY_RAM},
+    
 };
 
 /*static MemoryView views[] =

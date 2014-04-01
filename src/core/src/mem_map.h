@@ -37,10 +37,17 @@
 #define MEM_VRAM_SIZE			0x00600000	///< VRAM size
 #define MEM_DSP_SIZE			0x00080000	///< DSP memory size
 #define MEM_AXI_WRAM_SIZE		0x00080000	///< AXI WRAM size
-#define MEM_FCRAM_SIZE			0x08000000	///< FCRAM size
+#define MEM_FCRAM_SIZE			0x08000000	///< FCRAM size... Really 0x07E00000, but power of 2
+                                            //      works much better
+#define MEM_SCRATCHPAD_SIZE     0x00004000  ///< Typical stack size - TODO: Read from exheader
 
 #define MEM_VRAM_MASK			0x007FFFFF
-#define MEM_FCRAM_MASK			(MEM_FCRAM_SIZE - 1)	///< FCRAm mask
+#define MEM_FCRAM_MASK			(MEM_FCRAM_SIZE - 1)	            ///< FCRAM mask
+#define MEM_SCRATCHPAD_MASK     (MEM_SCRATCHPAD_SIZE - 1)           ///< Scratchpad memory mask
+
+#define MEM_FCRAM_VADDR         0x08000000
+#define MEM_VRAM_VADDR          0x1F000000
+#define MEM_SCRATCHPAD_VADDR    (0x10000000 - MEM_SCRATCHPAD_SIZE)  ///< Scratchpad virtual address
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +67,7 @@ extern u8 *g_base;
 // 32-bit: Same as the corresponding physical/virtual pointers.
 extern u8* g_fcram;			///< Main memory
 extern u8* g_vram;			///< Video memory (VRAM)
+extern u8* g_scratchpad;    ///< Stack memory
 
 void Init();
 void Shutdown();

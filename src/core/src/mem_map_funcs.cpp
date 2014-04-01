@@ -38,7 +38,11 @@ inline void ReadFromHardware(T &var, const u32 addr)
 
 	if ((addr & 0x3E000000) == 0x08000000) {
 		var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
-	}
+
+	// Scratchpad memory
+    } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
+        var = *((const T*)&g_scratchpad[addr & MEM_SCRATCHPAD_MASK]);
+    }
 	/*else if ((addr & 0x3F800000) == 0x04000000) {
 		var = *((const T*)&m_pVRAM[addr & VRAM_MASK]);
 	}*/
@@ -61,6 +65,11 @@ inline void WriteToHardware(u32 addr, const T data) {
 		// exheader "special memory" flag is set, however this address can be arbitrary.
 		*(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
 		NOTICE_LOG(MEMMAP, "Test2");
+
+    // Scratchpad memory
+    } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
+        *(T*)&g_scratchpad[addr & MEM_SCRATCHPAD_MASK] = data;
+
 	// Heap mapped by ControlMemory:
 	} else if ((addr & 0x3E000000) == 0x08000000) {
 		// TODO(ShizZy): Writes to this virtual address should be put in physical memory at FCRAM + GSP
