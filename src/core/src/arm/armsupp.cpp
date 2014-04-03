@@ -140,7 +140,7 @@ ARMul_SetCPSR (ARMul_State * state, ARMword value)
 
 void
 ARMul_FixCPSR (ARMul_State * state, ARMword instr, ARMword rhs)
-{
+{  
 	state->Cpsr = ARMul_GetCPSR (state);
 	//chy 2006-02-16 , should not consider system mode, don't conside 26bit mode
 	if (state->Mode != USER26MODE && state->Mode != USER32MODE ) {

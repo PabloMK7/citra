@@ -4,6 +4,7 @@
 #include "common.h"
 
 #define MODE32
+#define MODET
 
 typedef struct
 {

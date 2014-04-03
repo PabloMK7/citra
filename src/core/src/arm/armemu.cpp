@@ -936,10 +936,10 @@ ARMul_Emulate26 (ARMul_State * state)
            pipelined PC value is used when executing Thumb code, and also for
            dealing with the BL instruction.  */
         if (TFLAG) {
-            ARMword new;
+            ARMword new_instr;
 
             /* Check if in Thumb mode.  */
-            switch (ARMul_ThumbDecode (state, pc, instr, &new)) {
+            switch (ARMul_ThumbDecode(state, pc, instr, &new_instr)) {
             case t_undefined:
                 /* This is a Thumb instruction.  */
                 ARMul_UndefInstr (state, instr);
@@ -952,7 +952,7 @@ ARMul_Emulate26 (ARMul_State * state)
             case t_decoded:
                 /* ARM instruction available.  */
                 //printf("t decode %04lx -> %08lx\n", instr & 0xffff, new);
-                instr = new;
+                instr = new_instr;
                 /* So continue instruction decoding.  */
                 break;
             default:
