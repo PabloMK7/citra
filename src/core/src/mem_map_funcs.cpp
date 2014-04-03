@@ -53,7 +53,6 @@ inline void ReadFromHardware(T &var, const u32 addr) {
 
 template <typename T>
 inline void WriteToHardware(u32 addr, const T data) {
-    NOTICE_LOG(MEMMAP, "Test1 %08X", addr);
     // ExeFS:/.code is loaded here:
     if ((addr & 0xFFF00000) == 0x00100000) {
         // TODO(ShizZy): This is dumb... handle correctly. From 3DBrew:
@@ -63,7 +62,6 @@ inline void WriteToHardware(u32 addr, const T data) {
         // applies when this flag is clear. Executables are usually loaded to 0x14000000 when the 
         // exheader "special memory" flag is set, however this address can be arbitrary.
         *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
-        NOTICE_LOG(MEMMAP, "Test2");
 
     // Scratchpad memory
     } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
