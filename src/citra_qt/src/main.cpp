@@ -19,6 +19,8 @@
 #include "callstack.hxx"
 #include "ramview.hxx"
 
+#include "system.h"
+#include "loader.h"
 #include "core.h"
 #include "version.h"
 
@@ -31,11 +33,11 @@ GMainWindow::GMainWindow()
     render_window = new GRenderWindow;
     render_window->hide();
 
-    GDisAsmView* disasm = new GDisAsmView(this, render_window->GetEmuThread());
+    disasm = new GDisAsmView(this, render_window->GetEmuThread());
     addDockWidget(Qt::BottomDockWidgetArea, disasm);
     disasm->hide();
 
-    GARM11RegsView* arm_regs = new GARM11RegsView(this);
+    arm_regs = new GARM11RegsView(this);
     addDockWidget(Qt::RightDockWidgetArea, arm_regs);
     arm_regs->hide();
 
@@ -75,8 +77,6 @@ GMainWindow::GMainWindow()
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
     connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), disasm, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
     connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), arm_regs, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
-	//connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), ram_edit, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
-	//connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), callstack, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load Image", QKeySequence::Open);
@@ -87,6 +87,8 @@ GMainWindow::GMainWindow()
     connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this, SLOT(OnStartGame()));
 
     show();
+
+    System::Init(render_window);
 }
 
 GMainWindow::~GMainWindow()
@@ -100,6 +102,27 @@ void GMainWindow::BootGame(const char* filename)
 {
     render_window->DoneCurrent(); // make sure EmuThread can access GL context
     render_window->GetEmuThread().SetFilename(filename);
+    
+    NOTICE_LOG(MASTER_LOG, "citra starting...\n");
+
+    if (Core::Init(/*render_window*/)) {
+        ERROR_LOG(MASTER_LOG, "core initialization failed, exiting...");
+        Core::Stop();
+        exit(1);
+    }
+
+    // Load a game or die...
+    std::string boot_filename = filename;
+    std::string error_str;
+    bool res = Loader::LoadFile(boot_filename, &error_str);
+
+    if (!res) {
+        ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
+    }
+
+    disasm->Init();
+    arm_regs->OnCPUStepped();
+
     render_window->GetEmuThread().start();
 
     SetupEmuWindowMode();
@@ -115,14 +138,30 @@ void GMainWindow::OnMenuLoadELF()
 
 void GMainWindow::OnStartGame()
 {
+    render_window->show();
+    render_window->GetEmuThread().SetCpuRunning(true);
+
+    ui.action_Start->setEnabled(false);
+    ui.action_Pause->setEnabled(true);
+    ui.action_Stop->setEnabled(true);
 }
 
 void GMainWindow::OnPauseGame()
 {
+    render_window->GetEmuThread().SetCpuRunning(false);
+
+    ui.action_Start->setEnabled(true);
+    ui.action_Pause->setEnabled(false);
+    ui.action_Stop->setEnabled(true);
 }
 
 void GMainWindow::OnStopGame()
 {
+    render_window->GetEmuThread().SetCpuRunning(false);
+
+    ui.action_Start->setEnabled(true);
+    ui.action_Pause->setEnabled(false);
+    ui.action_Stop->setEnabled(false);
 }
 
 void GMainWindow::OnOpenHotkeysDialog()
@@ -134,8 +173,8 @@ void GMainWindow::OnOpenHotkeysDialog()
 
 void GMainWindow::SetupEmuWindowMode()
 {
-    if (!render_window->GetEmuThread().isRunning())
-        return;
+    //if (!render_window->GetEmuThread().isRunning())
+    //    return;
 
     bool enable = ui.action_Single_Window_Mode->isChecked();
     if (enable && render_window->parent() == NULL) // switch to single window mode

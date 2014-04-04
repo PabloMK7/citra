@@ -40,6 +40,14 @@ public:
      */
     void SetCpuRunning(bool running) { cpu_running = running; }
 
+    /**
+    * Allow the CPU to continue processing instructions without interruption
+    *
+    * @note This function is thread-safe
+    */
+    bool IsCpuRunning() { return cpu_running; }
+
+
 public slots:
     /**
      * Stop emulation and wait for the thread to finish.

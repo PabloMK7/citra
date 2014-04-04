@@ -87,14 +87,6 @@
     <string>&amp;Start</string>
    </property>
   </action>
-  <action name="action_Stop">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Stop</string>
-   </property>
-  </action>
   <action name="action_Pause">
    <property name="enabled">
     <bool>false</bool>
@@ -102,11 +94,16 @@
    <property name="text">
     <string>&amp;Pause</string>
    </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
   </action>
-  <action name="action_About">
+   <action name="action_Stop">
+     <property name="enabled">
+       <bool>false</bool>
+     </property>
+     <property name="text">
+       <string>&amp;Stop</string>
+     </property>
+   </action>
+   <action name="action_About">
    <property name="text">
     <string>About Citra</string>
    </property>

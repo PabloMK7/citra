@@ -15,11 +15,15 @@ class GDisAsmView : public QDockWidget
 public:
     GDisAsmView(QWidget* parent, EmuThread& emu_thread);
 
+    void Init();
+
 public slots:
     void OnSetBreakpoint();
-    void OnStep();
-    void OnPause();
     void OnContinue();
+    void OnStep();
+    void OnStepInto();
+    void OnPause();
+    void OnToggleStartStop();
 
     void OnCPUStepped();
 

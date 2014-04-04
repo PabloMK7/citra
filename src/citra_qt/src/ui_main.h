@@ -29,8 +29,8 @@ public:
     QAction *action_load_elf;
     QAction *action_Exit;
     QAction *action_Start;
-    QAction *action_Stop;
     QAction *action_Pause;
+    QAction *action_Stop;
     QAction *action_About;
     QAction *action_Single_Window_Mode;
     QAction *action_Hotkeys;
@@ -60,13 +60,12 @@ public:
         action_Exit->setObjectName(QString::fromUtf8("action_Exit"));
         action_Start = new QAction(MainWindow);
         action_Start->setObjectName(QString::fromUtf8("action_Start"));
-        action_Stop = new QAction(MainWindow);
-        action_Stop->setObjectName(QString::fromUtf8("action_Stop"));
-        action_Stop->setEnabled(false);
         action_Pause = new QAction(MainWindow);
         action_Pause->setObjectName(QString::fromUtf8("action_Pause"));
         action_Pause->setEnabled(false);
-        action_Pause->setVisible(false);
+        action_Stop = new QAction(MainWindow);
+        action_Stop->setObjectName(QString::fromUtf8("action_Stop"));
+        action_Stop->setEnabled(false);
         action_About = new QAction(MainWindow);
         action_About->setObjectName(QString::fromUtf8("action_About"));
         action_Single_Window_Mode = new QAction(MainWindow);
@@ -126,8 +125,8 @@ public:
         action_load_elf->setText(QApplication::translate("MainWindow", "Load ELF ...", 0, QApplication::UnicodeUTF8));
         action_Exit->setText(QApplication::translate("MainWindow", "E&xit", 0, QApplication::UnicodeUTF8));
         action_Start->setText(QApplication::translate("MainWindow", "&Start", 0, QApplication::UnicodeUTF8));
-        action_Stop->setText(QApplication::translate("MainWindow", "&Stop", 0, QApplication::UnicodeUTF8));
         action_Pause->setText(QApplication::translate("MainWindow", "&Pause", 0, QApplication::UnicodeUTF8));
+        action_Stop->setText(QApplication::translate("MainWindow", "&Stop", 0, QApplication::UnicodeUTF8));
         action_About->setText(QApplication::translate("MainWindow", "About Citra", 0, QApplication::UnicodeUTF8));
         action_Single_Window_Mode->setText(QApplication::translate("MainWindow", "Single Window Mode", 0, QApplication::UnicodeUTF8));
         action_Hotkeys->setText(QApplication::translate("MainWindow", "Configure &Hotkeys ...", 0, QApplication::UnicodeUTF8));

@@ -14,7 +14,7 @@
 #define APP_TITLE       APP_NAME " " APP_VERSION
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
-EmuThread::EmuThread(GRenderWindow* render_window) : exec_cpu_step(false), cpu_running(true), render_window(render_window)
+EmuThread::EmuThread(GRenderWindow* render_window) : exec_cpu_step(false), cpu_running(false), render_window(render_window)
 {
 }
 
@@ -25,61 +25,23 @@ void EmuThread::SetFilename(const char* filename)
 
 void EmuThread::run()
 {
-	//u32 tight_loop;
-
-    NOTICE_LOG(MASTER_LOG, APP_NAME " starting...\n");
-
-    if (Core::Init(/*render_window*/)) {
-		ERROR_LOG(MASTER_LOG, "core initialization failed, exiting...");
-        Core::Stop();
-        exit(1);
-    }
-
-	// Load a game or die...
-	std::string boot_filename = filename;
-	std::string error_str;
-	bool res = Loader::LoadFile(boot_filename, &error_str);
-
-	if (!res) {
-		ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
-	}
-
 	Core::Start(); //autoboot for now
 
-	for (int tight_loop = 0; tight_loop < 10000; ++tight_loop) {
-		Core::SingleStep();
-	}
-	/*
-    while(core::SYS_DIE != core::g_state) 
-	{
-        if (core::SYS_RUNNING == core::g_state) 
-		{
-            if(!cpu->is_on) 
-			{
-				cpu->Start(); // Initialize and start CPU.
-            } 
-			else 
-			{
-                for(tight_loop = 0; tight_loop < 10000; ++tight_loop) 
-				{
-                    if (!cpu_running)
-                    {
-                        emit CPUStepped();
-                        exec_cpu_step = false;
-                        cpu->step = true;
-                        while (!exec_cpu_step && !cpu_running && core::SYS_DIE != core::g_state);
-                    }
-                    cpu->execStep();
-                    cpu->step = false;
-                }
+    while (true)
+    {
+        for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)
+        {
+            if (cpu_running || exec_cpu_step)
+            {
+                if (exec_cpu_step)
+                    exec_cpu_step = false;
+
+                Core::SingleStep();
+                emit CPUStepped();
             }
-        } 
-		else if (core::SYS_HALTED == core::g_state) 
-		{
-            core::Stop();
         }
     }
-	*/
+
     Core::Stop();
 }
 

@@ -7,6 +7,8 @@
 
 class GImageInfo;
 class GRenderWindow;
+class GDisAsmView;
+class GARM11RegsView;
 
 class GMainWindow : public QMainWindow
 {
@@ -42,6 +44,8 @@ private:
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
+    GDisAsmView* disasm;
+    GARM11RegsView* arm_regs;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_
