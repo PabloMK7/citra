@@ -41,11 +41,19 @@ inline void ReadFromHardware(T &var, const u32 addr) {
     // Scratchpad memory
     } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
         var = *((const T*)&g_scratchpad[addr & MEM_SCRATCHPAD_MASK]);
-    }
+ 
     /*else if ((addr & 0x3F800000) == 0x04000000) {
         var = *((const T*)&m_pVRAM[addr & VRAM_MASK]);
     }*/
-    else {
+
+    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
+    // Until we progress far enough along, we'll accept all physical address reads here. I think 
+    // that this is typically a corner-case from usermode software unless they are trying to do 
+    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
+    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
+        var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
+
+    } else {
         _assert_msg_(MEMMAP, false, "unknown hardware read");
         // WARN_LOG(MEMMAP, "ReadFromHardware: Invalid addr %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
     }
@@ -73,6 +81,7 @@ inline void WriteToHardware(u32 addr, const T data) {
         // heap size... the following is writing to FCRAM + 0, which is actually supposed to be the 
         // application's GSP heap
         *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
+
     } else if ((addr & 0xFF000000) == 0x14000000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to GSP heap");
     } else if ((addr & 0xFFF00000) == 0x1EC00000) {
@@ -85,6 +94,15 @@ inline void WriteToHardware(u32 addr, const T data) {
         _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
     } else if ((addr & 0xFFFFF000) == 0x1FF81000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
+    
+    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
+    // Until we progress far enough along, we'll accept all physical address writes here. I think 
+    // that this is typically a corner-case from usermode software unless they are trying to do 
+    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
+    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
+        *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
+
+    // Error out...
     } else {
         _assert_msg_(MEMMAP, false, "unknown hardware write");
     }
