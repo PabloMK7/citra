@@ -26,6 +26,7 @@
 #include "core.h"
 #include "mem_map.h"
 #include "arm/armdefs.h"
+#include "arm/armemu.h"
 #include "arm/disassembler/arm_disasm.h"
 
 namespace Core {
@@ -54,31 +55,13 @@ void RunLoop() {
 
 /// Step the CPU one instruction
 void SingleStep() {
-    //arm11_core_t* core = (arm11_core_t*)opaque->obj;
     ARMul_State *state = core->state;
-    //if (state->space.conf_obj == NULL){
-    //    state->space.conf_obj = core->space->conf_obj;
-    //    state->space.read = core->space->read;
-    //    state->space.write = core->space->write;
-    //}
-
-    char next_instr[255];
-
-    disasm->disasm(state->pc, Memory::Read32(state->pc), next_instr);
-
-    NOTICE_LOG(ARM11, "0x%08X : %s", state->pc, next_instr);
-
-
-    for (int i = 0; i < 15; i++) {
-        NOTICE_LOG(ARM11, "Reg[%02d] = 0x%08X", i, state->Reg[i]);
-    }
-
 
     state->step++;
     state->cycle++;
     state->EndCondition = 0;
     state->stop_simulator = 0;
-    //state->NextInstr = RESUME;      /* treat as PC change */
+    state->NextInstr = RESUME;      /* treat as PC change */
     state->last_pc = state->Reg[15];
     state->Reg[15] = ARMul_DoInstr(state);
     state->Cpsr = (state->Cpsr & 0x0fffffdf) | \
@@ -88,7 +71,7 @@ void SingleStep() {
         (state->VFlag << 28);// | \
         //(state->TFlag << 5);
 
-    //FLUSHPIPE;
+    FLUSHPIPE;
 }
 
 /// Halt the core
