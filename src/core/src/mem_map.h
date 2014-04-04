@@ -32,22 +32,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MEM_BOOTROM_SIZE		0x00010000	///< Bootrom (super secret code/data @ 0x8000) size
-#define MEM_MPCORE_PRIV_SIZE	0x00002000	///< MPCore private memory region size
-#define MEM_VRAM_SIZE			0x00600000	///< VRAM size
-#define MEM_DSP_SIZE			0x00080000	///< DSP memory size
-#define MEM_AXI_WRAM_SIZE		0x00080000	///< AXI WRAM size
-#define MEM_FCRAM_SIZE			0x08000000	///< FCRAM size... Really 0x07E00000, but power of 2
+enum {
+    MEM_BOOTROM_SIZE        = 0x00010000,	///< Bootrom (super secret code/data @ 0x8000) size
+    MEM_MPCORE_PRIV_SIZE    = 0x00002000,	///< MPCore private memory region size
+    MEM_VRAM_SIZE           = 0x00600000,	///< VRAM size
+    MEM_DSP_SIZE            = 0x00080000,	///< DSP memory size
+    MEM_AXI_WRAM_SIZE       = 0x00080000,	///< AXI WRAM size
+    MEM_FCRAM_SIZE          = 0x08000000,	///< FCRAM size... Really 0x07E00000, but power of 2
                                             //      works much better
-#define MEM_SCRATCHPAD_SIZE     0x00004000  ///< Typical stack size - TODO: Read from exheader
+    MEM_SCRATCHPAD_SIZE     = 0x00004000,  ///< Typical stack size - TODO: Read from exheader
+                            
+    MEM_VRAM_MASK           = 0x007FFFFF,
+    MEM_FCRAM_MASK          = (MEM_FCRAM_SIZE - 1),	            ///< FCRAM mask
+    MEM_SCRATCHPAD_MASK     = (MEM_SCRATCHPAD_SIZE - 1),           ///< Scratchpad memory mask
+                            
+    MEM_FCRAM_PADDR     = 0x20000000,                           ///< FCRAM physical address
+    MEM_FCRAM_PADDR_END = (MEM_FCRAM_PADDR + MEM_FCRAM_SIZE),   ///< FCRAM end of physical space
+    MEM_FCRAM_VADDR     = 0x08000000,                           ///< FCRAM virtual address
+    MEM_FCRAM_VADDR_END = (MEM_FCRAM_VADDR + MEM_FCRAM_SIZE),   ///< FCRAM end of virtual space
 
-#define MEM_VRAM_MASK			0x007FFFFF
-#define MEM_FCRAM_MASK			(MEM_FCRAM_SIZE - 1)	            ///< FCRAM mask
-#define MEM_SCRATCHPAD_MASK     (MEM_SCRATCHPAD_SIZE - 1)           ///< Scratchpad memory mask
-
-#define MEM_FCRAM_VADDR         0x08000000
-#define MEM_VRAM_VADDR          0x1F000000
-#define MEM_SCRATCHPAD_VADDR    (0x10000000 - MEM_SCRATCHPAD_SIZE)  ///< Scratchpad virtual address
+    MEM_VRAM_VADDR          = 0x1F000000,
+    MEM_SCRATCHPAD_VADDR    = (0x10000000 - MEM_SCRATCHPAD_SIZE),  ///< Scratchpad virtual address
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
