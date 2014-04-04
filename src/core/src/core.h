@@ -25,6 +25,8 @@
 #ifndef CORE_CORE_H_
 #define CORE_CORE_H_
 
+#include "arm/armdefs.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace Core {
@@ -46,6 +48,8 @@ void Stop();
 
 /// Initialize the core
 int Init();
+
+ARMul_State* GetState();
 
 } // namespace
 

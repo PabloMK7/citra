@@ -143,6 +143,11 @@ int Init() {
     return 0;
 }
 
+ARMul_State* GetState()
+{
+    return core->state;
+}
+
 void Shutdown() {
     //delete g_arm_state;
     //g_arm_state = NULL;
