@@ -29,7 +29,7 @@
 namespace Memory {
 
 template <typename T>
-inline void ReadFromHardware(T &var, const u32 addr) {
+inline void _Read(T &var, const u32 addr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
 
@@ -55,12 +55,12 @@ inline void ReadFromHardware(T &var, const u32 addr) {
 
     } else {
         _assert_msg_(MEMMAP, false, "unknown hardware read");
-        // WARN_LOG(MEMMAP, "ReadFromHardware: Invalid addr %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
+        // WARN_LOG(MEMMAP, "_Read: Invalid addr %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
     }
 }
 
 template <typename T>
-inline void WriteToHardware(u32 addr, const T data) {
+inline void _Write(u32 addr, const T data) {
     // ExeFS:/.code is loaded here:
     if ((addr & 0xFFF00000) == 0x00100000) {
         // TODO(ShizZy): This is dumb... handle correctly. From 3DBrew:
@@ -151,25 +151,25 @@ u8 *GetPointer(const u32 addr) {
 
 u8 Read8(const u32 addr) {
     u8 _var = 0;
-    ReadFromHardware<u8>(_var, addr);
+    _Read<u8>(_var, addr);
     return (u8)_var;
 }
 
 u16 Read16(const u32 addr) {
     u16_le _var = 0;
-    ReadFromHardware<u16_le>(_var, addr);
+    _Read<u16_le>(_var, addr);
     return (u16)_var;
 }
 
 u32 Read32(const u32 addr) {
     u32_le _var = 0;
-    ReadFromHardware<u32_le>(_var, addr);
+    _Read<u32_le>(_var, addr);
     return _var;
 }
 
 u64 Read64(const u32 addr) {
     u64_le _var = 0;
-    ReadFromHardware<u64_le>(_var, addr);
+    _Read<u64_le>(_var, addr);
     return _var;
 }
 
@@ -182,19 +182,19 @@ u32 Read16_ZX(const u32 addr) {
 }
 
 void Write8(const u32 addr, const u8 data) {
-    WriteToHardware<u8>(addr, data);
+    _Write<u8>(addr, data);
 }
 
 void Write16(const u32 addr, const u16 data) {
-    WriteToHardware<u16_le>(addr, data);
+    _Write<u16_le>(addr, data);
 }
 
 void Write32(const u32 addr, const u32 data) {
-    WriteToHardware<u32_le>(addr, data);
+    _Write<u32_le>(addr, data);
 }
 
 void Write64(const u32 addr, const u64 data) {
-    WriteToHardware<u64_le>(addr, data);
+    _Write<u64_le>(addr, data);
 }
 
 } // namespace
