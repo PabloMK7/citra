@@ -25,6 +25,7 @@
 #include "log.h"
 #include "core.h"
 #include "mem_map.h"
+#include "hw/hw.h"
 #include "arm/disassembler/arm_disasm.h"
 #include "arm/interpreter/arm_interpreter.h"
 
@@ -41,7 +42,8 @@ void RunLoop() {
 
 /// Step the CPU one instruction
 void SingleStep() {
-    g_app_core->ExecuteInstruction();
+    g_app_core->Step();
+    HW::Update();
 }
 
 /// Halt the core
@@ -69,6 +71,8 @@ void Shutdown() {
     delete g_disasm;
     delete g_app_core;
     delete g_sys_core;
+
+    NOTICE_LOG(MASTER_LOG, "Core shutdown OK");
 }
 
 } // namespace
