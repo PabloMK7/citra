@@ -54,8 +54,7 @@ inline void _Read(T &var, const u32 addr) {
         var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
 
     } else {
-        _assert_msg_(MEMMAP, false, "unknown hardware read");
-        // WARN_LOG(MEMMAP, "_Read: Invalid addr %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
+        _assert_msg_(MEMMAP, false, "unknown memory read");
     }
 }
 
@@ -104,7 +103,7 @@ inline void _Write(u32 addr, const T data) {
 
     // Error out...
     } else {
-        _assert_msg_(MEMMAP, false, "unknown hardware write");
+        _assert_msg_(MEMMAP, false, "unknown memory write");
     }
 }
 
