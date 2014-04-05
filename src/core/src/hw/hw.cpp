@@ -24,6 +24,7 @@
 
 #include "log.h"
 #include "hw/hw.h"
+#include "hw/hw_lcd.h"
 
 namespace HW {
 
@@ -49,8 +50,14 @@ template void Write<const u32>(u32 addr, const u32 data);
 template void Write<const u16>(u32 addr, const u16 data);
 template void Write<const u8>(u32 addr, const u8 data);
 
+/// Update hardware
+void Update() {
+    LCD::Update();
+}
+
 /// Initialize hardware
 void Init() {
+    LCD::Init();
     NOTICE_LOG(HW, "Hardware initialized OK");
 }
 

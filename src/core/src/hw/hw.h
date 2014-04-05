@@ -32,6 +32,9 @@ inline void Read(T &var, const u32 addr);
 template <typename T>
 inline void Write(u32 addr, const T data);
 
+/// Update hardware
+void Update();
+
 /// Initialize hardware
 void Init();
 
