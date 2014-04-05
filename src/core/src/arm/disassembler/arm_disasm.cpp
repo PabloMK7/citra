@@ -134,7 +134,7 @@ static const char* cond_to_str(int cond) {
     return cond_names[cond];
 }
 
-char *Arm::disasm(uint32_t addr, uint32_t insn, char *result)
+char *ARM_Disasm::disasm(uint32_t addr, uint32_t insn, char *result)
 {
     static char   buf[80];
     char          *ptr;
@@ -233,7 +233,7 @@ char *Arm::disasm(uint32_t addr, uint32_t insn, char *result)
     return NULL;
 }
 
-char *Arm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
 {
     static const uint8_t kNoOperand1 = 1;
     static const uint8_t kNoDest = 2;
@@ -325,7 +325,7 @@ char *Arm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_branch(uint32_t addr, Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_branch(uint32_t addr, Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint32_t offset = insn & 0xffffff;
@@ -342,7 +342,7 @@ char *Arm::disasm_branch(uint32_t addr, Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_bx(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_bx(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rn = insn & 0xf;
@@ -350,14 +350,14 @@ char *Arm::disasm_bx(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_bkpt(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_bkpt(uint32_t insn, char *ptr)
 {
     uint32_t immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
     sprintf(ptr, "bkpt\t#%d", immed);
     return ptr;
 }
 
-char *Arm::disasm_clz(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_clz(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 12) & 0xf;
@@ -366,7 +366,7 @@ char *Arm::disasm_clz(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
 {
     char tmp_reg[10], tmp_list[80];
 
@@ -418,7 +418,7 @@ char *Arm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_mem(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_mem(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t is_reg = (insn >> 25) & 0x1;
@@ -516,7 +516,7 @@ char *Arm::disasm_mem(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_memhalf(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_memhalf(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t is_load = (insn >> 20) & 0x1;
@@ -574,7 +574,7 @@ char *Arm::disasm_memhalf(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_mcr(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_mcr(Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t crn = (insn >> 16) & 0xf;
@@ -589,7 +589,7 @@ char *Arm::disasm_mcr(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_mla(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_mla(Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 16) & 0xf;
@@ -604,7 +604,7 @@ char *Arm::disasm_mla(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_umlal(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_umlal(Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rdhi = (insn >> 16) & 0xf;
@@ -619,7 +619,7 @@ char *Arm::disasm_umlal(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_mul(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_mul(Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 16) & 0xf;
@@ -633,7 +633,7 @@ char *Arm::disasm_mul(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_mrs(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_mrs(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 12) & 0xf;
@@ -643,7 +643,7 @@ char *Arm::disasm_mrs(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_msr(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_msr(uint32_t insn, char *ptr)
 {
     char flags[8];
     int flag_index = 0;
@@ -679,7 +679,7 @@ char *Arm::disasm_msr(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_pld(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_pld(uint32_t insn, char *ptr)
 {
     uint8_t is_reg = (insn >> 25) & 0x1;
     uint8_t is_up = (insn >> 23) & 0x1;
@@ -704,7 +704,7 @@ char *Arm::disasm_pld(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_swi(uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_swi(uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint32_t sysnum = insn & 0x00ffffff;
@@ -713,7 +713,7 @@ char *Arm::disasm_swi(uint32_t insn, char *ptr)
     return ptr;
 }
 
-char *Arm::disasm_swp(Opcode opcode, uint32_t insn, char *ptr)
+char *ARM_Disasm::disasm_swp(Opcode opcode, uint32_t insn, char *ptr)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rn = (insn >> 16) & 0xf;
@@ -725,7 +725,7 @@ char *Arm::disasm_swp(Opcode opcode, uint32_t insn, char *ptr)
     return ptr;
 }
 
-Opcode Arm::decode(uint32_t insn) {
+Opcode ARM_Disasm::decode(uint32_t insn) {
     uint32_t bits27_26 = (insn >> 26) & 0x3;
     switch (bits27_26) {
         case 0x0:
@@ -740,7 +740,7 @@ Opcode Arm::decode(uint32_t insn) {
     return OP_INVALID;
 }
 
-Opcode Arm::decode00(uint32_t insn) {
+Opcode ARM_Disasm::decode00(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     uint8_t bit4 = (insn >> 4) & 0x1;
     if (bit25 == 0 && bit4 == 1) {
@@ -780,7 +780,7 @@ Opcode Arm::decode00(uint32_t insn) {
     return decode_alu(insn);
 }
 
-Opcode Arm::decode01(uint32_t insn) {
+Opcode ARM_Disasm::decode01(uint32_t insn) {
     uint8_t is_reg = (insn >> 25) & 0x1;
     uint8_t bit4 = (insn >> 4) & 0x1;
     if (is_reg == 1 && bit4 == 1)
@@ -807,7 +807,7 @@ Opcode Arm::decode01(uint32_t insn) {
     return OP_STR;
 }
 
-Opcode Arm::decode10(uint32_t insn) {
+Opcode ARM_Disasm::decode10(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDM/STM
@@ -832,7 +832,7 @@ Opcode Arm::decode10(uint32_t insn) {
     return OP_BL;
 }
 
-Opcode Arm::decode11(uint32_t insn) {
+Opcode ARM_Disasm::decode11(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDC, SDC
@@ -881,7 +881,7 @@ Opcode Arm::decode11(uint32_t insn) {
     return OP_MCR;
 }
 
-Opcode Arm::decode_mul(uint32_t insn) {
+Opcode ARM_Disasm::decode_mul(uint32_t insn) {
     uint8_t bit24 = (insn >> 24) & 0x1;
     if (bit24 != 0) {
         // This is an unexpected bit pattern.  Create an undefined
@@ -915,7 +915,7 @@ Opcode Arm::decode_mul(uint32_t insn) {
     return OP_SMLAL;
 }
 
-Opcode Arm::decode_ldrh(uint32_t insn) {
+Opcode ARM_Disasm::decode_ldrh(uint32_t insn) {
     uint8_t is_load = (insn >> 20) & 0x1;
     uint8_t bits_65 = (insn >> 5) & 0x3;
     if (is_load) {
@@ -945,7 +945,7 @@ Opcode Arm::decode_ldrh(uint32_t insn) {
     return OP_STRH;
 }
 
-Opcode Arm::decode_alu(uint32_t insn) {
+Opcode ARM_Disasm::decode_alu(uint32_t insn) {
     uint8_t is_immed = (insn >> 25) & 0x1;
     uint8_t opcode = (insn >> 21) & 0xf;
     uint8_t bit_s = (insn >> 20) & 1;

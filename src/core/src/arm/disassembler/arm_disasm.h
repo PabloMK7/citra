@@ -107,7 +107,7 @@ enum Opcode {
     OP_END                // must be last
 };
 
-class Arm {
+class ARM_Disasm {
  public:
   static char *disasm(uint32_t addr, uint32_t insn, char *buffer);
   static Opcode decode(uint32_t insn);
