@@ -49,6 +49,9 @@
     <ClCompile Include="src\hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
+    <ClCompile Include="src\hw\hw_lcd.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -143,6 +146,9 @@
       <Filter>arm\interpreter</Filter>
     </ClInclude>
     <ClInclude Include="src\hw\hw.h">
+      <Filter>hw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hw\hw_lcd.h">
       <Filter>hw</Filter>
     </ClInclude>
   </ItemGroup>
