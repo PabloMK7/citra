@@ -25,8 +25,6 @@ void EmuThread::SetFilename(const char* filename)
 
 void EmuThread::run()
 {
-	Core::Start(); //autoboot for now
-
     while (true)
     {
         for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)

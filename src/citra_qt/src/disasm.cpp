@@ -10,7 +10,7 @@
 
 #include "core.h"
 #include "break_points.h"
-#include "arm/armdefs.h"
+#include "arm/interpreter/armdefs.h"
 #include "arm/disassembler/arm_disasm.h"
 
 GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
@@ -41,10 +41,9 @@ GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(p
 
 void GDisAsmView::Init()
 {
-    ARMul_State* state = Core::GetState();
-    Arm* disasm = new Arm();
+    ARM_Disasm* disasm = new ARM_Disasm();
 
-    base_addr = state->pc;
+    base_addr = Core::g_app_core->PC();
     unsigned int curInstAddr = base_addr;
     char result[255];
 
@@ -113,7 +112,7 @@ void GDisAsmView::OnToggleStartStop()
 
 void GDisAsmView::OnCPUStepped()
 {
-    ARMword next_instr = Core::GetState()->pc;
+    ARMword next_instr = Core::g_app_core->PC();
 
     if (breakpoints->IsAddressBreakPoint(next_instr))
     {
