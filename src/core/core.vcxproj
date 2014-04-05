@@ -144,6 +144,7 @@
     <ClCompile Include="src\arm\interpreter\armos.cpp" />
     <ClCompile Include="src\arm\interpreter\armsupp.cpp" />
     <ClCompile Include="src\arm\interpreter\armvirt.cpp" />
+    <ClCompile Include="src\arm\interpreter\arm_interpreter.cpp" />
     <ClCompile Include="src\arm\interpreter\thumbemu.cpp" />
     <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp" />
     <ClCompile Include="src\core.cpp" />
@@ -157,12 +158,14 @@
     <ClCompile Include="src\system.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\arm\arm_interface.h" />
     <ClInclude Include="src\arm\disassembler\arm_disasm.h" />
     <ClInclude Include="src\arm\interpreter\armcpu.h" />
     <ClInclude Include="src\arm\interpreter\armdefs.h" />
     <ClInclude Include="src\arm\interpreter\armemu.h" />
     <ClInclude Include="src\arm\interpreter\armmmu.h" />
     <ClInclude Include="src\arm\interpreter\armos.h" />
+    <ClInclude Include="src\arm\interpreter\arm_interpreter.h" />
     <ClInclude Include="src\arm\interpreter\arm_regformat.h" />
     <ClInclude Include="src\arm\interpreter\skyeye_defs.h" />
     <ClInclude Include="src\arm\mmu\arm1176jzf_s_mmu.h" />

@@ -25,11 +25,17 @@
 #ifndef CORE_CORE_H_
 #define CORE_CORE_H_
 
-#include "arm/armdefs.h"
+#include "arm/arm_interface.h"
+#include "arm/interpreter/armdefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace Core {
+
+extern ARM_Interface*   g_app_core;     ///< ARM11 application core
+extern ARM_Interface*   g_sys_core;     ///< ARM11 system (OS) core
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Start the core
 void Start();

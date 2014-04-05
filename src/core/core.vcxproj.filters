@@ -43,6 +43,9 @@
     <ClCompile Include="src\arm\interpreter\thumbemu.cpp">
       <Filter>arm\interpreter</Filter>
     </ClCompile>
+    <ClCompile Include="src\arm\interpreter\arm_interpreter.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -125,6 +128,12 @@
       <Filter>arm\interpreter</Filter>
     </ClInclude>
     <ClInclude Include="src\arm\interpreter\skyeye_defs.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\arm_interface.h">
+      <Filter>arm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\arm_interpreter.h">
       <Filter>arm\interpreter</Filter>
     </ClInclude>
   </ItemGroup>
