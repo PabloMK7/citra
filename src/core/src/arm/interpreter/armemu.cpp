@@ -5826,7 +5826,7 @@ LoadMult (ARMul_State * state, ARMword instr, ARMword address, ARMword WBBase)
 
     if (BIT (15) && !state->Aborted)
         /* PC is in the reg list.  */
-        WriteR15Branch (state, PC);
+        WriteR15Branch(state, (state->Reg[15] & PCMASK));
 
     /* To write back the final register.  */
 /*  ARMul_Icycles (state, 1, 0L);*/
@@ -5959,7 +5959,7 @@ LoadSMult (ARMul_State * state,
             ARMul_CPSRAltered (state);
         }
 
-        WriteR15 (state, PC);
+        WriteR15 (state, (state->Reg[15] & PCMASK));
 #else
             //chy 2006-02-16 , should not consider system mode, don't conside 26bit mode
         if (state->Mode == USER26MODE || state->Mode == USER32MODE ) {

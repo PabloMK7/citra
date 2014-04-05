@@ -166,7 +166,6 @@ extern ARMword isize;
 #define PCWRAP(pc) ((pc) & R15PCBITS)
 #endif
 
-#define PC (state->Reg[15] & PCMASK)
 #define R15CCINTMODE (state->Reg[15] & (CCBITS | R15INTBITS | R15MODEBITS))
 #define R15INT (state->Reg[15] & R15INTBITS)
 #define R15INTPC (state->Reg[15] & (R15INTBITS | R15PCBITS))
@@ -181,11 +180,11 @@ extern ARMword isize;
 #define ER15INT (IFFLAGS << 26)
 #define EMODE (state->Mode)
 
-#ifdef MODET
-#define CPSR (ECC | EINT | EMODE | (TFLAG << 5))
-#else
-#define CPSR (ECC | EINT | EMODE)
-#endif
+//#ifdef MODET
+//#define CPSR (ECC | EINT | EMODE | (TFLAG << 5))
+//#else
+//#define CPSR (ECC | EINT | EMODE)
+//#endif
 
 #ifdef MODE32
 #define PATCHR15

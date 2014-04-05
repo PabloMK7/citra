@@ -123,7 +123,8 @@ ARMul_GetCPSR (ARMul_State * state)
 {
 	//chy 2003-08-20: below is from gdb20030716, maybe isn't suitable for system simulator
 	//return (CPSR | state->Cpsr); for gdb20030716
-	return (CPSR);		//had be tested in old skyeye with gdb5.0-5.3
+    // NOTE(bunnei): Changed this from [now] commented out macro "CPSR"
+    return ((ECC | EINT | EMODE | (TFLAG << 5)));	//had be tested in old skyeye with gdb5.0-5.3
 }
 
 /* This routine sets the value of the CPSR.  */
