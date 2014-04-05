@@ -25,6 +25,7 @@
 #include "file_util.h"
 #include "loader.h"
 #include "system.h"
+#include "core.h"
 #include "file_sys/directory_file_system.h"
 #include "elf/elf_reader.h"
 
@@ -71,10 +72,11 @@ bool Load_ELF(std::string &filename) {
         elf_reader = new ElfReader(buffer);
         elf_reader->LoadInto(0x00100000);
 
+        Core::g_app_core->SetPC(elf_reader->GetEntryPoint());
+
         delete[] buffer;
         delete elf_reader;
-    }
-    else {
+    } else {
         return false;
     }
     f.Close();
