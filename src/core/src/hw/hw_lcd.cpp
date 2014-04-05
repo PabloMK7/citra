@@ -28,7 +28,7 @@
 
 namespace LCD {
 
-static const u32 kFrameTicks = 268123480 / 30; // 268MHz / 30 frames per second
+static const u32 kFrameTicks = 268123480 / 60;  ///< 268MHz / 60 frames per second
 
 u64 g_last_ticks = 0; ///< Last CPU ticks
 
@@ -42,7 +42,7 @@ inline void Write(u32 addr, const T data) {
 
 /// Update hardware
 void Update() {
-    u64 current_ticks = Core::g_app_core->ticks();
+    u64 current_ticks = Core::g_app_core->GetTicks();
 
     if ((current_ticks - g_last_ticks) >= kFrameTicks) {
         g_last_ticks = current_ticks;
@@ -52,7 +52,7 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
-    g_last_ticks = Core::g_app_core->ticks();
+    g_last_ticks = Core::g_app_core->GetTicks();
 
     NOTICE_LOG(LCD, "LCD initialized OK");
 }
