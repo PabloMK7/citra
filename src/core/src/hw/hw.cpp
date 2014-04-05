@@ -29,42 +29,34 @@ namespace HW {
 
 template <typename T>
 inline void Read(T &var, const u32 addr) {
-    // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
-    // TODO: Make sure this represents the mirrors in a correct way.
-
-    // Could just do a base-relative read, too.... TODO
-
-    //if ((addr & 0x3E000000) == 0x08000000) {
-    //    var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
-
-    //} else {
-    //    _assert_msg_(HW, false, "unknown hardware read");
-    //}
+    NOTICE_LOG(HW, "Hardware read from address %08X", addr);
 }
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    //// ExeFS:/.code is loaded here:
-    //if ((addr & 0xFFF00000) == 0x00100000) {
-    //    // TODO(ShizZy): This is dumb... handle correctly. From 3DBrew:
-    //    // http://3dbrew.org/wiki/Memory_layout#ARM11_User-land_memory_regions
-    //    // The ExeFS:/.code is loaded here, executables must be loaded to the 0x00100000 region when
-    //    // the exheader "special memory" flag is clear. The 0x03F00000-byte size restriction only 
-    //    // applies when this flag is clear. Executables are usually loaded to 0x14000000 when the 
-    //    // exheader "special memory" flag is set, however this address can be arbitrary.
-    //    *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
-
-    //// Error out...
-    //} else {
-    //    _assert_msg_(HW, false, "unknown hardware write");
-    //}
+    NOTICE_LOG(HW, "Hardware write to address %08X", addr);
 }
 
+// Explicitly instantiate template functions because we aren't defining this in the header:
 
+template void Read<u64>(u64 &var, const u32 addr);
+template void Read<u32>(u32 &var, const u32 addr);
+template void Read<u16>(u16 &var, const u32 addr);
+template void Read<u8>(u8 &var, const u32 addr);
+
+template void Write<const u64>(u32 addr, const u64 data);
+template void Write<const u32>(u32 addr, const u32 data);
+template void Write<const u16>(u32 addr, const u16 data);
+template void Write<const u8>(u32 addr, const u8 data);
+
+/// Initialize hardware
 void Init() {
+    NOTICE_LOG(HW, "Hardware initialized OK");
 }
 
+/// Shutdown hardware
 void Shutdown() {
+    NOTICE_LOG(HW, "Hardware shutdown OK");
 }
 
 }

@@ -25,6 +25,7 @@
 #include "common.h"
 
 #include "mem_map.h"
+#include "hw/hw.h"
 
 namespace Memory {
 
@@ -32,10 +33,15 @@ template <typename T>
 inline void _Read(T &var, const u32 addr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
-
     // Could just do a base-relative read, too.... TODO
 
-    if ((addr & 0x3E000000) == 0x08000000) {
+    // Hardware I/O register reads
+    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
+    if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
+        HW::Read<T>(var, addr);
+
+    // FCRAM virtual address reads
+    } else if ((addr & 0x3E000000) == 0x08000000) {
         var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
 
     // Scratchpad memory
@@ -60,8 +66,14 @@ inline void _Read(T &var, const u32 addr) {
 
 template <typename T>
 inline void _Write(u32 addr, const T data) {
+    
+    // Hardware I/O register writes
+    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
+    if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
+        HW::Write<const T>(addr, data);
+    
     // ExeFS:/.code is loaded here:
-    if ((addr & 0xFFF00000) == 0x00100000) {
+    } else if ((addr & 0xFFF00000) == 0x00100000) {
         // TODO(ShizZy): This is dumb... handle correctly. From 3DBrew:
         // http://3dbrew.org/wiki/Memory_layout#ARM11_User-land_memory_regions
         // The ExeFS:/.code is loaded here, executables must be loaded to the 0x00100000 region when

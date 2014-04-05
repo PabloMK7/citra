@@ -55,6 +55,9 @@ void Stop();
 /// Initialize the core
 int Init();
 
+/// Shutdown the core
+void Shutdown();
+
 ARMul_State* GetState();
 
 } // namespace

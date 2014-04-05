@@ -46,7 +46,7 @@
     <ClCompile Include="src\arm\interpreter\arm_interpreter.cpp">
       <Filter>arm\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="src\hw\hardware.cpp">
+    <ClCompile Include="src\hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
   </ItemGroup>

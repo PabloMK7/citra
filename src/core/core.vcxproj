@@ -152,7 +152,7 @@
     <ClCompile Include="src\elf\elf_reader.cpp" />
     <ClCompile Include="src\file_sys\directory_file_system.cpp" />
     <ClCompile Include="src\file_sys\meta_file_system.cpp" />
-    <ClCompile Include="src\hw\hardware.cpp" />
+    <ClCompile Include="src\hw\hw.cpp" />
     <ClCompile Include="src\loader.cpp" />
     <ClCompile Include="src\mem_map.cpp" />
     <ClCompile Include="src\mem_map_funcs.cpp" />

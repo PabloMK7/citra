@@ -23,6 +23,7 @@
 */
 
 #include "core.h"
+#include "hw/hw.h"
 #include "core_timing.h"
 #include "mem_map.h"
 #include "system.h"
@@ -38,6 +39,7 @@ void UpdateState(State state) {
 void Init(EmuWindow* emu_window) {
 	Core::Init();
 	Memory::Init();
+    HW::Init();
 	CoreTiming::Init();
 }
 
@@ -49,6 +51,8 @@ void RunLoopUntil(u64 global_cycles) {
 }
 
 void Shutdown() {
+    Core::Shutdown();
+    HW::Shutdown();
 	g_ctr_file_system.Shutdown();
 }
 
