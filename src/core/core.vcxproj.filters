@@ -6,12 +6,6 @@
       <Filter>arm\disassembler</Filter>
     </ClCompile>
     <ClCompile Include="src\mem_map.cpp" />
-    <ClCompile Include="src\arm\arminit.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\arm\armemu.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
     <ClCompile Include="src\mem_map_funcs.cpp" />
     <ClCompile Include="src\loader.cpp" />
     <ClCompile Include="src\file_sys\directory_file_system.cpp">
@@ -25,23 +19,29 @@
     <ClCompile Include="src\elf\elf_reader.cpp">
       <Filter>elf</Filter>
     </ClCompile>
-    <ClCompile Include="src\arm\armsupp.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\arm\armvirt.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\arm\armmmu.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\arm\armos.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
     <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp">
       <Filter>arm\mmu</Filter>
     </ClCompile>
-    <ClCompile Include="src\arm\thumbemu.cpp">
-      <Filter>arm</Filter>
+    <ClCompile Include="src\arm\interpreter\armemu.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\arminit.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\armmmu.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\armos.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\armsupp.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\armvirt.cpp">
+      <Filter>arm\interpreter</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arm\interpreter\thumbemu.cpp">
+      <Filter>arm\interpreter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,6 +60,12 @@
     <Filter Include="elf">
       <UniqueIdentifier>{671d3218-3771-4218-b142-1f9a1cc24a51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hle">
+      <UniqueIdentifier>{794616f8-739f-4643-9c3f-869e50831d4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arm\interpreter">
+      <UniqueIdentifier>{cca8b763-8a80-4478-9bcc-3c979293c357}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arm\disassembler\arm_disasm.h">
@@ -67,27 +73,6 @@
     </ClInclude>
     <ClInclude Include="src\mem_map.h" />
     <ClInclude Include="src\core.h" />
-    <ClInclude Include="src\arm\armdefs.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\armemu.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\skyeye_defs.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\arm_regformat.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\armos.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\armmmu.h">
-      <Filter>arm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\arm\armcpu.h">
-      <Filter>arm</Filter>
-    </ClInclude>
     <ClInclude Include="src\arm\mmu\arm1176jzf_s_mmu.h">
       <Filter>arm\mmu</Filter>
     </ClInclude>
@@ -120,6 +105,27 @@
     </ClInclude>
     <ClInclude Include="src\elf\elf_types.h">
       <Filter>elf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\arm_regformat.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\armcpu.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\armdefs.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\armemu.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\armmmu.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\armos.h">
+      <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arm\interpreter\skyeye_defs.h">
+      <Filter>arm\interpreter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

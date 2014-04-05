@@ -24,9 +24,9 @@
 
 #include "mem_map.h"
 
-#include "arm/skyeye_defs.h"
+#include "arm/interpreter/skyeye_defs.h"
 
-#include "arm/armdefs.h"
+#include "arm/interpreter/armdefs.h"
 //#include "bank_defs.h"
 #if 0
 #define TLB_SIZE 1024 * 1024

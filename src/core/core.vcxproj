@@ -137,15 +137,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\arm\armemu.cpp" />
-    <ClCompile Include="src\arm\arminit.cpp" />
-    <ClCompile Include="src\arm\armmmu.cpp" />
-    <ClCompile Include="src\arm\armos.cpp" />
-    <ClCompile Include="src\arm\armsupp.cpp" />
-    <ClCompile Include="src\arm\armvirt.cpp" />
     <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
+    <ClCompile Include="src\arm\interpreter\armemu.cpp" />
+    <ClCompile Include="src\arm\interpreter\arminit.cpp" />
+    <ClCompile Include="src\arm\interpreter\armmmu.cpp" />
+    <ClCompile Include="src\arm\interpreter\armos.cpp" />
+    <ClCompile Include="src\arm\interpreter\armsupp.cpp" />
+    <ClCompile Include="src\arm\interpreter\armvirt.cpp" />
+    <ClCompile Include="src\arm\interpreter\thumbemu.cpp" />
     <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp" />
-    <ClCompile Include="src\arm\thumbemu.cpp" />
     <ClCompile Include="src\core.cpp" />
     <ClCompile Include="src\core_timing.cpp" />
     <ClCompile Include="src\elf\elf_reader.cpp" />
@@ -157,19 +157,19 @@
     <ClCompile Include="src\system.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\arm\armcpu.h" />
-    <ClInclude Include="src\arm\armdefs.h" />
-    <ClInclude Include="src\arm\armemu.h" />
-    <ClInclude Include="src\arm\armmmu.h" />
-    <ClInclude Include="src\arm\armos.h" />
-    <ClInclude Include="src\arm\arm_regformat.h" />
     <ClInclude Include="src\arm\disassembler\arm_disasm.h" />
+    <ClInclude Include="src\arm\interpreter\armcpu.h" />
+    <ClInclude Include="src\arm\interpreter\armdefs.h" />
+    <ClInclude Include="src\arm\interpreter\armemu.h" />
+    <ClInclude Include="src\arm\interpreter\armmmu.h" />
+    <ClInclude Include="src\arm\interpreter\armos.h" />
+    <ClInclude Include="src\arm\interpreter\arm_regformat.h" />
+    <ClInclude Include="src\arm\interpreter\skyeye_defs.h" />
     <ClInclude Include="src\arm\mmu\arm1176jzf_s_mmu.h" />
     <ClInclude Include="src\arm\mmu\cache.h" />
     <ClInclude Include="src\arm\mmu\rb.h" />
     <ClInclude Include="src\arm\mmu\tlb.h" />
     <ClInclude Include="src\arm\mmu\wb.h" />
-    <ClInclude Include="src\arm\skyeye_defs.h" />
     <ClInclude Include="src\core.h" />
     <ClInclude Include="src\core_timing.h" />
     <ClInclude Include="src\elf\elf_reader.h" />
