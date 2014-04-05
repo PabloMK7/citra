@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
+# Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "src\common\common.vcxproj", "{DFE335FC-755D-4BAA-8452-94434F8A1EDB}"
@@ -20,6 +20,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scm_rev_gen", "src\common\scm_rev_gen.vcxproj", "{69F00340-5C3D-449F-9A80-958435C6CF06}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "citra_qt", "src\citra_qt\citra_qt.vcxproj", "{A587F714-490F-407A-9E36-7AB7FA0D7BAB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "video_core", "src\video_core\video_core.vcxproj", "{6678D1A3-33A6-48A9-878B-48E5D2903D27}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,14 @@ Global
 		{A587F714-490F-407A-9E36-7AB7FA0D7BAB}.Release|Win32.Build.0 = Release|Win32
 		{A587F714-490F-407A-9E36-7AB7FA0D7BAB}.Release|x64.ActiveCfg = Release|x64
 		{A587F714-490F-407A-9E36-7AB7FA0D7BAB}.Release|x64.Build.0 = Release|x64
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Debug|Win32.Build.0 = Debug|Win32
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Debug|x64.ActiveCfg = Debug|x64
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Debug|x64.Build.0 = Debug|x64
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Release|Win32.ActiveCfg = Release|Win32
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Release|Win32.Build.0 = Release|Win32
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Release|x64.ActiveCfg = Release|x64
+		{6678D1A3-33A6-48A9-878B-48E5D2903D27}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
