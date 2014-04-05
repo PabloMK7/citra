@@ -59,7 +59,7 @@ enum LOG_TYPE {
     WII_IPC_SSL,
     WII_IPC_SD,
     WII_IPC_STM,
-    WII_IPC_WIIMOTE,
+    HW,
     TIME,
     NETPLAY,
 
