@@ -35,13 +35,21 @@ public:
     ~ARM_Interface() {
     }
 
-    virtual void ExecuteInstruction() = 0;
+    void Step() {
+        ExecuteInstruction();
+        ticks_++;
+    }
     
     virtual void SetPC(u32 pc) = 0;
-
     virtual u32 PC() = 0;
-
     virtual u32 Reg(int index) = 0;
+    virtual u32 CPSR() = 0;  
 
-    virtual u32 CPSR() = 0;
+    u64 ticks() { return ticks_; }
+
+private:
+    
+    virtual void ExecuteInstruction() = 0;
+
+    u64 ticks_;
 };
