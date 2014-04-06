@@ -27,6 +27,7 @@
 #include "core_timing.h"
 #include "mem_map.h"
 #include "system.h"
+#include "video_core.h"
 
 namespace System {
 
@@ -41,6 +42,7 @@ void Init(EmuWindow* emu_window) {
 	Memory::Init();
     HW::Init();
 	CoreTiming::Init();
+    VideoCore::Init(emu_window);
 }
 
 void RunLoopFor(int cycles) {
@@ -53,9 +55,8 @@ void RunLoopUntil(u64 global_cycles) {
 void Shutdown() {
     Core::Shutdown();
     HW::Shutdown();
+    VideoCore::Shutdown();
 	g_ctr_file_system.Shutdown();
 }
-
-
 
 } // namespace
