@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\renderer_opengl\renderer_opengl.cpp" />
     <ClCompile Include="src\utils.cpp" />
     <ClCompile Include="src\video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer_base.h" />
+    <ClInclude Include="src\renderer_opengl\renderer_opengl.h" />
     <ClInclude Include="src\utils.h" />
     <ClInclude Include="src\video_core.h" />
   </ItemGroup>

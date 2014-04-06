@@ -12,7 +12,7 @@
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(SolutionDir)src\common\src;$(SolutionDir)src\core\src;$(SolutionDir)src\citra\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)src\common\src;$(SolutionDir)src\core\src;$(SolutionDir)src\video_core\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>

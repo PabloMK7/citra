@@ -27,7 +27,10 @@
 #include "log.h"
 
 #include "core.h"
+
 #include "video_core.h"
+#include "renderer_base.h"
+#include "renderer_opengl/renderer_opengl.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Video Core namespace
@@ -67,16 +70,10 @@ void Start() {
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
     g_emu_window = emu_window;
-    //g_renderer = new RendererGL3();
-    //g_renderer->SetWindow(g_emu_window);
-    //g_renderer->Init();
-
-    //gp::Fifo_Init();
-    //gp::VertexManager_Init();
-    //gp::VertexLoader_Init();
-    //gp::BP_Init();
-    //gp::CP_Init();
-    //gp::XF_Init();
+    g_emu_window->MakeCurrent();
+    g_renderer = new RendererOpenGL();
+    g_renderer->SetWindow(g_emu_window);
+    g_renderer->Init();
 
     g_current_frame = 0;
 
@@ -85,7 +82,7 @@ void Init(EmuWindow* emu_window) {
 
 /// Shutdown the video core
 void Shutdown() {
-    //delete g_renderer;
+    delete g_renderer;
 }
 
 } // namespace

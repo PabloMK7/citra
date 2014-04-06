@@ -3,13 +3,24 @@
   <ItemGroup>
     <ClCompile Include="src\video_core.cpp" />
     <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\renderer_opengl\renderer_opengl.cpp">
+      <Filter>renderer_opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer_base.h" />
     <ClInclude Include="src\video_core.h" />
     <ClInclude Include="src\utils.h" />
+    <ClInclude Include="src\renderer_opengl\renderer_opengl.h">
+      <Filter>renderer_opengl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="renderer_opengl">
+      <UniqueIdentifier>{e0245557-dbd4-423e-9399-513d5e99f1e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
