@@ -23,6 +23,7 @@
  */
 
 #include "common.h"
+#include "video_core.h"
 #include "emu_window_glfw.h"
 
 static void OnKeyEvent(GLFWwindow* win, int key, int action) {
@@ -54,7 +55,8 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    render_window_ = glfwCreateWindow(640, 480, "citra", NULL, NULL);
+    render_window_ = glfwCreateWindow(VideoCore::kScreenTopWidth, 
+        (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), "citra", NULL, NULL);
 
     // Setup callbacks
     glfwSetWindowUserPointer(render_window_, this);
