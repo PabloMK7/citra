@@ -25,6 +25,7 @@
 #include "log.h"
 #include "core.h"
 #include "hw_lcd.h"
+#include "video_core.h"
 
 namespace LCD {
 
@@ -47,6 +48,7 @@ void Update() {
     if ((current_ticks - g_last_ticks) >= kFrameTicks) {
         g_last_ticks = current_ticks;
         NOTICE_LOG(LCD, "Update frame");
+        VideoCore::g_renderer->SwapBuffers();
     }
 }
 
