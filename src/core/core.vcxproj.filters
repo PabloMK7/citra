@@ -46,6 +46,12 @@
     <ClCompile Include="src\arm\interpreter\arm_interpreter.cpp">
       <Filter>arm\interpreter</Filter>
     </ClCompile>
+    <ClCompile Include="src\hw\hw.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hw\hw_lcd.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
@@ -68,6 +74,9 @@
     </Filter>
     <Filter Include="arm\interpreter">
       <UniqueIdentifier>{cca8b763-8a80-4478-9bcc-3c979293c357}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hw">
+      <UniqueIdentifier>{d1158fc4-3e0f-431f-9d3b-f30bbfeb4ad5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +144,12 @@
     </ClInclude>
     <ClInclude Include="src\arm\interpreter\arm_interpreter.h">
       <Filter>arm\interpreter</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hw\hw.h">
+      <Filter>hw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hw\hw_lcd.h">
+      <Filter>hw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

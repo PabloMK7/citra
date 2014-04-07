@@ -81,7 +81,7 @@ public:
 protected:
     EmuWindow() : client_area_width_(640), client_area_height_(480) {
         char window_title[255];
-        sprintf(window_title, "emu [%s|%s] - %s", 
+        sprintf(window_title, "citra [%s|%s] - %s", 
             "null-cpu", 
             "null-renderer", 
             __DATE__);

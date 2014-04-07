@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "common.h"
 #include "common_types.h"
 #include "arm/arm_interface.h"
 
@@ -45,6 +46,12 @@ public:
 
     u32 CPSR();
 
+    u64 GetTicks() {
+        return ARMul_Time(state);
+    }
+
 private:
     ARMul_State* state;
+
+    DISALLOW_COPY_AND_ASSIGN(ARM_Interpreter);
 };

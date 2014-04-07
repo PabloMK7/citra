@@ -18,9 +18,24 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\renderer_opengl\renderer_opengl.cpp" />
+    <ClCompile Include="src\utils.cpp" />
+    <ClCompile Include="src\video_core.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\renderer_base.h" />
+    <ClInclude Include="src\renderer_opengl\renderer_opengl.h" />
+    <ClInclude Include="src\utils.h" />
+    <ClInclude Include="src\video_core.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{8AEA7F29-3466-4786-A10D-6A4BD0610977}</ProjectGuid>
-    <RootNamespace>core</RootNamespace>
+    <ProjectGuid>{6678D1A3-33A6-48A9-878B-48E5D2903D27}</ProjectGuid>
+    <RootNamespace>input_common</RootNamespace>
+    <ProjectName>video_core</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -48,64 +63,48 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\base.props" />
-    <Import Project="..\..\vsprops\externals.props" />
+    <Import Project="..\..\vsprops\Base.props" />
     <Import Project="..\..\vsprops\code_generation_debug.props" />
     <Import Project="..\..\vsprops\optimization_debug.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\base.props" />
-    <Import Project="..\..\vsprops\externals.props" />
+    <Import Project="..\..\vsprops\Base.props" />
     <Import Project="..\..\vsprops\code_generation_debug.props" />
     <Import Project="..\..\vsprops\optimization_debug.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\base.props" />
-    <Import Project="..\..\vsprops\externals.props" />
+    <Import Project="..\..\vsprops\Base.props" />
     <Import Project="..\..\vsprops\code_generation_release.props" />
     <Import Project="..\..\vsprops\optimization_release.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\vsprops\base.props" />
-    <Import Project="..\..\vsprops\externals.props" />
+    <Import Project="..\..\vsprops\Base.props" />
     <Import Project="..\..\vsprops\code_generation_release.props" />
     <Import Project="..\..\vsprops\optimization_release.props" />
+    <Import Project="..\..\vsprops\externals.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <CustomBuildBeforeTargets />
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <CustomBuildBeforeTargets />
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile />
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ClCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile />
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <ClCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile />
@@ -116,11 +115,7 @@
     </Link>
     <ClCompile />
     <ClCompile />
-    <ClCompile>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
+    <ClCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile />
@@ -129,68 +124,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <ClCompile />
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\common\common.vcxproj">
-      <Project>{dfe335fc-755d-4baa-8452-94434f8a1edb}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\arm\disassembler\arm_disasm.cpp" />
-    <ClCompile Include="src\arm\interpreter\armemu.cpp" />
-    <ClCompile Include="src\arm\interpreter\arminit.cpp" />
-    <ClCompile Include="src\arm\interpreter\armmmu.cpp" />
-    <ClCompile Include="src\arm\interpreter\armos.cpp" />
-    <ClCompile Include="src\arm\interpreter\armsupp.cpp" />
-    <ClCompile Include="src\arm\interpreter\armvirt.cpp" />
-    <ClCompile Include="src\arm\interpreter\arm_interpreter.cpp" />
-    <ClCompile Include="src\arm\interpreter\thumbemu.cpp" />
-    <ClCompile Include="src\arm\mmu\arm1176jzf_s_mmu.cpp" />
-    <ClCompile Include="src\core.cpp" />
-    <ClCompile Include="src\core_timing.cpp" />
-    <ClCompile Include="src\elf\elf_reader.cpp" />
-    <ClCompile Include="src\file_sys\directory_file_system.cpp" />
-    <ClCompile Include="src\file_sys\meta_file_system.cpp" />
-    <ClCompile Include="src\hw\hw.cpp" />
-    <ClCompile Include="src\hw\hw_lcd.cpp" />
-    <ClCompile Include="src\loader.cpp" />
-    <ClCompile Include="src\mem_map.cpp" />
-    <ClCompile Include="src\mem_map_funcs.cpp" />
-    <ClCompile Include="src\system.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\arm\arm_interface.h" />
-    <ClInclude Include="src\arm\disassembler\arm_disasm.h" />
-    <ClInclude Include="src\arm\interpreter\armcpu.h" />
-    <ClInclude Include="src\arm\interpreter\armdefs.h" />
-    <ClInclude Include="src\arm\interpreter\armemu.h" />
-    <ClInclude Include="src\arm\interpreter\armmmu.h" />
-    <ClInclude Include="src\arm\interpreter\armos.h" />
-    <ClInclude Include="src\arm\interpreter\arm_interpreter.h" />
-    <ClInclude Include="src\arm\interpreter\arm_regformat.h" />
-    <ClInclude Include="src\arm\interpreter\skyeye_defs.h" />
-    <ClInclude Include="src\arm\mmu\arm1176jzf_s_mmu.h" />
-    <ClInclude Include="src\arm\mmu\cache.h" />
-    <ClInclude Include="src\arm\mmu\rb.h" />
-    <ClInclude Include="src\arm\mmu\tlb.h" />
-    <ClInclude Include="src\arm\mmu\wb.h" />
-    <ClInclude Include="src\core.h" />
-    <ClInclude Include="src\core_timing.h" />
-    <ClInclude Include="src\elf\elf_reader.h" />
-    <ClInclude Include="src\elf\elf_types.h" />
-    <ClInclude Include="src\file_sys\directory_file_system.h" />
-    <ClInclude Include="src\file_sys\file_sys.h" />
-    <ClInclude Include="src\file_sys\meta_file_system.h" />
-    <ClInclude Include="src\hw\hw.h" />
-    <ClInclude Include="src\hw\hw_lcd.h" />
-    <ClInclude Include="src\loader.h" />
-    <ClInclude Include="src\mem_map.h" />
-    <ClInclude Include="src\system.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="CMakeLists.txt" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

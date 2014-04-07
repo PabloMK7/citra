@@ -22,8 +22,7 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef CITRA_EMUWINDOW_GLFW_
-#define CITRA_EMUWINDOW_GLFW_
+#pragma once
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -52,5 +51,3 @@ public:
 private:
 
 };
-
-#endif // CITRA_EMUWINDOW_GLFW_
