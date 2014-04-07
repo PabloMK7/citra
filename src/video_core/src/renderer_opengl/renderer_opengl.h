@@ -45,10 +45,16 @@ public:
     void SwapBuffers();
 
     /** 
+     * Renders external framebuffer (XFB)
+     * @param src_rect Source rectangle in XFB to copy
+     * @param dst_rect Destination rectangle in output framebuffer to copy to
+     */
+    void RenderXFB(const Rect& src_rect, const Rect& dst_rect);
+
+    /** 
      * Blits the EFB to the external framebuffer (XFB)
      * @param src_rect Source rectangle in EFB to copy
      * @param dst_rect Destination rectangle in EFB to copy to
-     * @param dest_height Destination height in pixels
      */
     void CopyToXFB(const Rect& src_rect, const Rect& dst_rect);
 

@@ -22,8 +22,30 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
+#include "mem_map.h"
 #include "video_core.h"
 #include "renderer_opengl/renderer_opengl.h"
+
+/**
+ * Helper function to flip framebuffer from left-to-right to top-to-bottom
+ * @param addr Address of framebuffer in RAM
+ * @param out Pointer to output buffer with flipped framebuffer
+ * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
+ */
+inline void _flip_framebuffer(u32 addr, u8* out) {
+    u8* in = Memory::GetPointer(addr);
+    for (int y = 0; y < VideoCore::kScreenTopHeight; y++) {
+        for (int x = 0; x < VideoCore::kScreenTopWidth; x++) {
+            int in_coord = (VideoCore::kScreenTopHeight * 3 * x) + (VideoCore::kScreenTopHeight * 3)
+                - (3 * y + 3);
+            int out_coord = (VideoCore::kScreenTopWidth * y * 3) + (x * 3);
+
+            out[out_coord + 0] = in[in_coord + 0];
+            out[out_coord + 1] = in[in_coord + 1];
+            out[out_coord + 2] = in[in_coord + 2];
+        }
+    }
+}
 
 /// RendererOpenGL constructor
 RendererOpenGL::RendererOpenGL() {
@@ -33,27 +55,28 @@ RendererOpenGL::RendererOpenGL() {
 
     resolution_width_ = max(VideoCore::kScreenTopWidth, VideoCore::kScreenBottomWidth);
     resolution_height_ = VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight;
+
+    xfb_texture_top_ = 0;
+    xfb_texture_bottom_ = 0;
+
+    xfb_top_ = 0;
+    xfb_bottom_ = 0;
 }
 
 /// RendererOpenGL destructor
 RendererOpenGL::~RendererOpenGL() {
 }
 
-
 /// Swap buffers (render frame)
 void RendererOpenGL::SwapBuffers() {
-
-    glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     ResetRenderState();
 
     // EFB->XFB copy
     // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some 
     // register write We're also treating both framebuffers as a single one in OpenGL.
-    Rect framebuffer_size(0, 0, VideoCore::kScreenTopWidth, 
-        VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
-    CopyToXFB(framebuffer_size, framebuffer_size);
+    Rect framebuffer_size(0, 0, resolution_width_, resolution_height_);
+    RenderXFB(framebuffer_size, framebuffer_size);
 
     // XFB->Window copy
     RenderFramebuffer();
@@ -69,20 +92,34 @@ void RendererOpenGL::SwapBuffers() {
 }
 
 /** 
- * Blits the EFB to the external framebuffer (XFB)
- * @param src_rect Source rectangle in EFB to copy
- * @param dst_rect Destination rectangle in EFB to copy to
- * @param dest_height Destination height in pixels
+ * Renders external framebuffer (XFB)
+ * @param src_rect Source rectangle in XFB to copy
+ * @param dst_rect Destination rectangle in output framebuffer to copy to
  */
-void RendererOpenGL::CopyToXFB(const Rect& src_rect, const Rect& dst_rect) {
+void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {
+    static u8 xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth *3]; 
+    static u8 xfb_bottom_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth *3];     
+
+    _flip_framebuffer(0x20282160, xfb_top_flipped);
+    _flip_framebuffer(0x202118E0, xfb_bottom_flipped);
+
     ResetRenderState();
+
+    // Blit the top framebuffer
+    // ------------------------
+
+    // Update textures with contents of XFB in RAM - top
+    glBindTexture(GL_TEXTURE_2D, xfb_texture_top_);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
+        GL_RGB, GL_UNSIGNED_BYTE, xfb_top_flipped);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     // Render target is destination framebuffer
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_[kFramebuffer_VirtualXFB]);
-    glViewport(0, 0, resolution_width_, resolution_height_);
+    glViewport(0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight);
 
     // Render source is our EFB
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_[kFramebuffer_EFB]);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, xfb_top_);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     // Blit
@@ -92,7 +129,60 @@ void RendererOpenGL::CopyToXFB(const Rect& src_rect, const Rect& dst_rect) {
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
+    // Blit the bottom framebuffer
+    // ---------------------------
+
+    // Update textures with contents of XFB in RAM - bottom
+    glBindTexture(GL_TEXTURE_2D, xfb_texture_bottom_);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
+        GL_RGB, GL_UNSIGNED_BYTE, xfb_bottom_flipped);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Render target is destination framebuffer
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_[kFramebuffer_VirtualXFB]);
+    glViewport(0, 0,
+        VideoCore::kScreenBottomWidth, VideoCore::kScreenBottomHeight);
+
+    // Render source is our EFB
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, xfb_bottom_);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+    // Blit
+    int offset = (VideoCore::kScreenTopWidth - VideoCore::kScreenBottomWidth) / 2;
+    glBlitFramebuffer(0,0, VideoCore::kScreenBottomWidth, VideoCore::kScreenBottomHeight, 
+                      offset, VideoCore::kScreenBottomHeight, VideoCore::kScreenBottomWidth + offset, 0,
+                      GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
     RestoreRenderState();
+}
+
+/** 
+ * Blits the EFB to the external framebuffer (XFB)
+ * @param src_rect Source rectangle in EFB to copy
+ * @param dst_rect Destination rectangle in EFB to copy to
+ */
+void RendererOpenGL::CopyToXFB(const Rect& src_rect, const Rect& dst_rect) {
+    ERROR_LOG(RENDER, "CopyToXFB not implemented! No EFB support yet!");
+    //ResetRenderState();
+
+    //// Render target is destination framebuffer
+    //glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_[kFramebuffer_VirtualXFB]);
+    //glViewport(0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight);
+
+    //// Render source is our EFB
+    //glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_[kFramebuffer_EFB]);
+    //glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+    //// Blit
+    //glBlitFramebuffer(src_rect.x0_, src_rect.y0_, src_rect.x1_, src_rect.y1_, 
+    //                  dst_rect.x0_, dst_rect.y1_, dst_rect.x1_, dst_rect.y0_,
+    //                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+    //glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+    //RestoreRenderState();
 }
 
 /**
@@ -234,12 +324,13 @@ void RendererOpenGL::InitFramebuffer() {
     for (int i = 0; i < kMaxFramebuffers; i++) {
         // Generate color buffer storage
         glBindRenderbuffer(GL_RENDERBUFFER, fbo_rbo_[i]);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, resolution_width_, resolution_height_);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, VideoCore::kScreenTopWidth, 
+            VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
 
         // Generate depth buffer storage
         glBindRenderbuffer(GL_RENDERBUFFER, fbo_depth_buffers_[i]);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, resolution_width_, 
-            resolution_height_);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, VideoCore::kScreenTopWidth, 
+            VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
 
         // Attach the buffers
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_[i]);
@@ -257,6 +348,37 @@ void RendererOpenGL::InitFramebuffer() {
         } 
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind our frame buffer(s)
+
+    // Initialize framebuffer textures
+    // -------------------------------
+
+    // Create XFB textures
+    glGenTextures(1, &xfb_texture_top_);  
+    glGenTextures(1, &xfb_texture_bottom_);  
+
+    // Alocate video memorry for XFB textures
+    glBindTexture(GL_TEXTURE_2D, xfb_texture_top_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
+        0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glBindTexture(GL_TEXTURE_2D, xfb_texture_bottom_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
+        0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Create the FBO and attach color/depth textures
+    glGenFramebuffers(1, &xfb_top_); // Generate framebuffer
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, xfb_top_);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+        xfb_texture_top_, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &xfb_bottom_); // Generate framebuffer
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, xfb_bottom_);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+        xfb_texture_bottom_, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 /// Blit the FBO to the OpenGL default framebuffer
@@ -272,8 +394,7 @@ void RendererOpenGL::RenderFramebuffer() {
 
     // Blit
     glBlitFramebuffer(0, 0, resolution_width_, resolution_height_, 0, 0, 
-        render_window_->client_area_width(), render_window_->client_area_height(), 
-        GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        resolution_width_, resolution_height_, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
     // Update the FPS count
     UpdateFramerate();
