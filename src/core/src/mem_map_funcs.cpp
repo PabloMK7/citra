@@ -137,14 +137,21 @@ u8 *GetPointer(const u32 addr) {
     // TODO(bunnei): Just a stub for now... ImplementMe!
     if ((addr & 0x3E000000) == 0x08000000) {
         return g_fcram + (addr & MEM_FCRAM_MASK);
-    }
+
+    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
+    // Until we progress far enough along, we'll accept all physical address reads here. I think 
+    // that this is typically a corner-case from usermode software unless they are trying to do 
+    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
+    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
+        return g_fcram + (addr & MEM_FCRAM_MASK);
+
     //else if ((addr & 0x3F800000) == 0x04000000) {
     //    return g_vram + (addr & MEM_VRAM_MASK);
     //}
     //else if ((addr & 0x3F000000) >= 0x08000000 && (addr & 0x3F000000) < 0x08000000 + g_MemorySize) {
     //    return m_pRAM + (addr & g_MemoryMask);
     //}
-    else {
+    } else {
         //ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
         ERROR_LOG(MEMMAP, "Unknown GetPointer %08x", addr);
         static bool reported = false;
