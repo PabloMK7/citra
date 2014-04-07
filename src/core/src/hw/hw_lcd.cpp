@@ -47,7 +47,6 @@ void Update() {
 
     if ((current_ticks - g_last_ticks) >= kFrameTicks) {
         g_last_ticks = current_ticks;
-        NOTICE_LOG(LCD, "Update frame");
         VideoCore::g_renderer->SwapBuffers();
     }
 }
@@ -55,7 +54,6 @@ void Update() {
 /// Initialize hardware
 void Init() {
     g_last_ticks = Core::g_app_core->GetTicks();
-
     NOTICE_LOG(LCD, "LCD initialized OK");
 }
 
