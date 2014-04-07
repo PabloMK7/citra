@@ -52,39 +52,6 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    //if (E_OK != Core::Init(emu_window)) {
-    //    LOG_ERROR(TMASTER, "core initialization failed, exiting...");
-    //    core::Kill();
-    //    exit(1);
-    //}
-
-    //// Load a game or die...
-    //if (E_OK == dvd::LoadBootableFile(common::g_config->default_boot_file())) {
-    //    if (common::g_config->enable_auto_boot()) {
-    //        core::Start();
-    //    } else {
-    //        LOG_ERROR(TMASTER, "Autoboot required in no-GUI mode... Exiting!\n");
-    //    }
-    //} else {
-    //    LOG_ERROR(TMASTER, "Failed to load a bootable file... Exiting!\n");
-    //    exit(E_ERR);
-    //}
-    //// run the game
-    //while(core::SYS_DIE != core::g_state) {
-    //    if (core::SYS_RUNNING == core::g_state) {
-    //        if(!(cpu->is_on)) {
-    //            cpu->Start(); // Initialize and start CPU.
-    //        } else {
-    //            for(tight_loop = 0; tight_loop < 10000; ++tight_loop) {
-    //                cpu->execStep();
-    //            }
-    //        }
-    //    } else if (core::SYS_HALTED == core::g_state) {
-    //        core::Stop();
-    //    }
-    //}
-    //core::Kill();
-
     std::string boot_filename = "homebrew.elf";
     std::string error_str;
     
@@ -93,7 +60,8 @@ int __cdecl main(int argc, char **argv) {
     if (!res) {
         ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
     }
-    for (int tight_loop = 0; tight_loop < 10000; ++tight_loop) {
+
+    for (;;) {
         Core::SingleStep();
     }
 
