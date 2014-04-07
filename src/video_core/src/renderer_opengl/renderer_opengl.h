@@ -128,11 +128,20 @@ private:
     int resolution_width_;
     int resolution_height_;
 
-    // Framebuffer object(s)
-    // ---------------------
+    // Render buffers
+    // --------------
 
     GLuint fbo_rbo_[kMaxFramebuffers];              ///< Render buffer objects
     GLuint fbo_depth_buffers_[kMaxFramebuffers];    ///< Depth buffers objects
+
+    // External framebuffers
+    // ---------------------
+
+    GLuint xfb_texture_top_;                         ///< GL handle to top framebuffer texture
+    GLuint xfb_texture_bottom_;                      ///< GL handle to bottom framebuffer texture
+
+    GLuint xfb_top_;
+    GLuint xfb_bottom_;
 
     DISALLOW_COPY_AND_ASSIGN(RendererOpenGL);
 };
