@@ -52,55 +52,6 @@ public:
     void RenderXFB(const Rect& src_rect, const Rect& dst_rect);
 
     /** 
-     * Blits the EFB to the external framebuffer (XFB)
-     * @param src_rect Source rectangle in EFB to copy
-     * @param dst_rect Destination rectangle in EFB to copy to
-     */
-    void CopyToXFB(const Rect& src_rect, const Rect& dst_rect);
-
-    /**
-     * Clear the screen
-     * @param rect Screen rectangle to clear
-     * @param enable_color Enable color clearing
-     * @param enable_alpha Enable alpha clearing
-     * @param enable_z Enable depth clearing
-     * @param color Clear color
-     * @param z Clear depth
-     */
-    void Clear(const Rect& rect, bool enable_color, bool enable_alpha, bool enable_z, 
-        u32 color, u32 z);
-
-    /// Sets the renderer viewport location, width, and height
-    void SetViewport(int x, int y, int width, int height);
-
-    /// Sets the renderer depthrange, znear and zfar
-    void SetDepthRange(double znear, double zfar);
-
-    /* Sets the scissor box
-     * @param rect Renderer rectangle to set scissor box to
-     */
-    void SetScissorBox(const Rect& rect);
-
-    /**
-     * Sets the line and point size
-     * @param line_width Line width to use
-     * @param point_size Point size to use
-     */
-    void SetLinePointSize(f32 line_width, f32 point_size);
-
-    /**
-     * Set a specific render mode
-     * @param flag Render flags mode to enable
-     */
-    void SetMode(kRenderMode flags);
-
-    /// Reset the full renderer API to the NULL state
-    void ResetRenderState();
-
-    /// Restore the full renderer API state - As the game set it
-    void RestoreRenderState();
-
-    /** 
      * Set the emulator window to use for renderer
      * @param window EmuWindow handle to emulator window to use for rendering
      */
@@ -111,11 +62,6 @@ public:
 
     /// Shutdown the renderer
     void ShutDown();
-
-    // Framebuffer object(s)
-    // ---------------------
-
-    GLuint fbo_[kMaxFramebuffers];  ///< Framebuffer objects
 
 private:
 
@@ -128,26 +74,39 @@ private:
     /// Updates the framerate
     void UpdateFramerate();
 
-    EmuWindow*  render_window_;
-    u32         last_mode_;                         ///< Last render mode
+    /**
+     * Helper function to flip framebuffer from left-to-right to top-to-bottom
+     * @param addr Address of framebuffer in RAM
+     * @param out Pointer to output buffer with flipped framebuffer
+     * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
+     */
+    void RendererOpenGL::FlipFramebuffer(u32 addr, u8* out);
 
-    int resolution_width_;
-    int resolution_height_;
 
-    // Render buffers
-    // --------------
+    EmuWindow*  m_render_window;                    ///< Handle to render window
+    u32         m_last_mode;                        ///< Last render mode
 
-    GLuint fbo_rbo_[kMaxFramebuffers];              ///< Render buffer objects
-    GLuint fbo_depth_buffers_[kMaxFramebuffers];    ///< Depth buffers objects
+    int m_resolution_width;                         ///< Current resolution width
+    int m_resolution_height;                        ///< Current resolution height
 
-    // External framebuffers
-    // ---------------------
+    // Framebuffers
+    // ------------
 
-    GLuint xfb_texture_top_;                         ///< GL handle to top framebuffer texture
-    GLuint xfb_texture_bottom_;                      ///< GL handle to bottom framebuffer texture
+    GLuint m_fbo[kMaxFramebuffers];                 ///< Framebuffer objects
+    GLuint m_fbo_rbo[kMaxFramebuffers];             ///< Render buffer objects
+    GLuint m_fbo_depth_buffers[kMaxFramebuffers];   ///< Depth buffers objects
 
-    GLuint xfb_top_;
-    GLuint xfb_bottom_;
+    GLuint m_xfb_texture_top;                       ///< GL handle to top framebuffer texture
+    GLuint m_xfb_texture_bottom;                    ///< GL handle to bottom framebuffer texture
+           
+    GLuint m_xfb_top;                               ///< GL handle to top framebuffer
+    GLuint m_xfb_bottom;                            ///< GL handle to bottom framebuffer
+
+    // "Flipped" framebuffers translate scanlines from native 3DS left-to-right to top-to-bottom
+    // as OpenGL expects them in a texture. There probably is a more efficient way of doing this:
+
+    u8 m_xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4]; 
+    u8 m_xfb_bottom_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4];   
 
     DISALLOW_COPY_AND_ASSIGN(RendererOpenGL);
 };

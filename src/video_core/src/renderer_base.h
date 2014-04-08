@@ -37,15 +37,7 @@ public:
         kFramebuffer_Texture
     };
 
-    /// Used for referencing the render modes
-    enum kRenderMode {
-        kRenderMode_None = 0,
-        kRenderMode_Multipass = 1,
-        kRenderMode_ZComp = 2,
-        kRenderMode_UseDstAlpha = 4
-    };
-
-    RendererBase() : current_fps_(0), current_frame_(0) {
+    RendererBase() : m_current_fps(0), m_current_frame(0) {
     }
 
     ~RendererBase() {
@@ -53,56 +45,6 @@ public:
 
     /// Swap buffers (render frame)
     virtual void SwapBuffers() = 0;
-
-    /** 
-     * Blits the EFB to the external framebuffer (XFB)
-     * @param src_rect Source rectangle in EFB to copy
-     * @param dst_rect Destination rectangle in EFB to copy to
-     * @param dest_height Destination height in pixels
-     */
-    virtual void CopyToXFB(const Rect& src_rect, const Rect& dst_rect) = 0;
-
-    /**
-     * Clear the screen
-     * @param rect Screen rectangle to clear
-     * @param enable_color Enable color clearing
-     * @param enable_alpha Enable alpha clearing
-     * @param enable_z Enable depth clearing
-     * @param color Clear color
-     * @param z Clear depth
-     */
-    virtual void Clear(const Rect& rect, bool enable_color, bool enable_alpha, bool enable_z, 
-        u32 color, u32 z) = 0;
-
-    /// Sets the renderer viewport location, width, and height
-    virtual void SetViewport(int x, int y, int width, int height) = 0;
-
-    /// Sets the renderer depthrange, znear and zfar
-    virtual void SetDepthRange(double znear, double zfar) = 0;
-
-    /* Sets the scissor box
-     * @param rect Renderer rectangle to set scissor box to
-     */
-    virtual void SetScissorBox(const Rect& rect) = 0;
-
-    /**
-     * Sets the line and point size
-     * @param line_width Line width to use
-     * @param point_size Point size to use
-     */
-    virtual void SetLinePointSize(f32 line_width, f32 point_size) = 0;
-
-    /**
-     * Set a specific render mode
-     * @param flag Render flags mode to enable
-     */
-    virtual void SetMode(kRenderMode flags) = 0;
-
-    /// Reset the full renderer API to the NULL state
-    virtual void ResetRenderState() = 0;
-
-    /// Restore the full renderer API state - As the game set it
-    virtual void RestoreRenderState() = 0;
 
     /** 
      * Set the emulator window to use for renderer
@@ -119,13 +61,17 @@ public:
     // Getter/setter functions:
     // ------------------------
 
-    f32 current_fps() const { return current_fps_; }
+    f32 GetCurrentframe() const {
+        return m_current_fps;
+    }
 
-    int current_frame() const { return current_frame_; }
+    int current_frame() const {
+        return m_current_frame;
+    }
 
 protected:
-    f32 current_fps_;                       ///< Current framerate, should be set by the renderer
-    int current_frame_;                     ///< Current frame, should be set by the renderer
+    f32 m_current_fps;              ///< Current framerate, should be set by the renderer
+    int m_current_frame;            ///< Current frame, should be set by the renderer
 
 private:
     DISALLOW_COPY_AND_ASSIGN(RendererBase);
