@@ -1,22 +1,8 @@
-// Copyright (c) 2012- PPSSPP Project / Dolphin Project.
+// Copyright 2013 Dolphin Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 2.0 or later versions.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License 2.0 for more details.
-
-// A copy of the GPL 2.0 should have been included with the program.
-// If not, see http://www.gnu.org/licenses/
-
-// Official git repository and contact information can be found at
-// https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
-
-#ifndef CORE_CORE_TIMING_H_
-#define CORE_CORE_TIMING_H_
+#pragma once
 
 // This is a system to schedule events into the emulated machine's future. Time is measured
 // in main CPU clock cycles.
@@ -38,88 +24,86 @@ class PointerWrap;
 extern int g_clock_rate_arm11;
 
 inline s64 msToCycles(int ms) {
-	return g_clock_rate_arm11 / 1000 * ms;
+    return g_clock_rate_arm11 / 1000 * ms;
 }
 
 inline s64 msToCycles(float ms) {
-	return (s64)(g_clock_rate_arm11 * ms * (0.001f));
+    return (s64)(g_clock_rate_arm11 * ms * (0.001f));
 }
 
 inline s64 msToCycles(double ms) {
-	return (s64)(g_clock_rate_arm11 * ms * (0.001));
+    return (s64)(g_clock_rate_arm11 * ms * (0.001));
 }
 
 inline s64 usToCycles(float us) {
-	return (s64)(g_clock_rate_arm11 * us * (0.000001f));
+    return (s64)(g_clock_rate_arm11 * us * (0.000001f));
 }
 
 inline s64 usToCycles(int us) {
-	return (g_clock_rate_arm11 / 1000000 * (s64)us);
+    return (g_clock_rate_arm11 / 1000000 * (s64)us);
 }
 
 inline s64 usToCycles(s64 us) {
-	return (g_clock_rate_arm11 / 1000000 * us);
+    return (g_clock_rate_arm11 / 1000000 * us);
 }
 
 inline s64 usToCycles(u64 us) {
-	return (s64)(g_clock_rate_arm11 / 1000000 * us);
+    return (s64)(g_clock_rate_arm11 / 1000000 * us);
 }
 
 inline s64 cyclesToUs(s64 cycles) {
-	return cycles / (g_clock_rate_arm11 / 1000000);
+    return cycles / (g_clock_rate_arm11 / 1000000);
 }
 
-namespace CoreTiming
-{
-	void Init();
-	void Shutdown();
+namespace CoreTiming {
 
-	typedef void (*TimedCallback)(u64 userdata, int cyclesLate);
+void Init();
+void Shutdown();
 
-	u64 GetTicks();
-	u64 GetIdleTicks();
+typedef void(*TimedCallback)(u64 userdata, int cyclesLate);
 
-	// Returns the event_type identifier.
-	int RegisterEvent(const char *name, TimedCallback callback);
-	// For save states.
-	void RestoreRegisterEvent(int event_type, const char *name, TimedCallback callback);
-	void UnregisterAllEvents();
+u64 GetTicks();
+u64 GetIdleTicks();
 
-	// userdata MAY NOT CONTAIN POINTERS. userdata might get written and reloaded from disk,
-	// when we implement state saves.
-	void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata=0);
-	void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata=0);
-	void ScheduleEvent_Threadsafe_Immediate(int event_type, u64 userdata=0);
-	s64 UnscheduleEvent(int event_type, u64 userdata);
-	s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata);
+// Returns the event_type identifier.
+int RegisterEvent(const char *name, TimedCallback callback);
+// For save states.
+void RestoreRegisterEvent(int event_type, const char *name, TimedCallback callback);
+void UnregisterAllEvents();
 
-	void RemoveEvent(int event_type);
-	void RemoveThreadsafeEvent(int event_type);
-	void RemoveAllEvents(int event_type);
-	bool IsScheduled(int event_type);
-	void Advance();
-	void MoveEvents();
-	void ProcessFifoWaitEvents();
+// userdata MAY NOT CONTAIN POINTERS. userdata might get written and reloaded from disk,
+// when we implement state saves.
+void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata = 0);
+void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata = 0);
+void ScheduleEvent_Threadsafe_Immediate(int event_type, u64 userdata = 0);
+s64 UnscheduleEvent(int event_type, u64 userdata);
+s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata);
 
-	// Pretend that the main CPU has executed enough cycles to reach the next event.
-	void Idle(int maxIdle = 0);
+void RemoveEvent(int event_type);
+void RemoveThreadsafeEvent(int event_type);
+void RemoveAllEvents(int event_type);
+bool IsScheduled(int event_type);
+void Advance();
+void MoveEvents();
+void ProcessFifoWaitEvents();
 
-	// Clear all pending events. This should ONLY be done on exit or state load.
-	void ClearPendingEvents();
+// Pretend that the main CPU has executed enough cycles to reach the next event.
+void Idle(int maxIdle = 0);
 
-	void LogPendingEvents();
+// Clear all pending events. This should ONLY be done on exit or state load.
+void ClearPendingEvents();
 
-	// Warning: not included in save states.
-	void RegisterAdvanceCallback(void (*callback)(int cyclesExecuted));
+void LogPendingEvents();
 
-	std::string GetScheduledEventsSummary();
+// Warning: not included in save states.
+void RegisterAdvanceCallback(void(*callback)(int cyclesExecuted));
 
-	void DoState(PointerWrap &p);
+std::string GetScheduledEventsSummary();
 
-	void SetClockFrequencyMHz(int cpuMhz);
-	int GetClockFrequencyMHz();
-	extern int slicelength;
+void DoState(PointerWrap &p);
+
+void SetClockFrequencyMHz(int cpuMhz);
+int GetClockFrequencyMHz();
+extern int slicelength;
 
 }; // namespace
-
-#endif // CORE_CORE_TIMING_H_
