@@ -1,7 +1,7 @@
 var wshShell		= new ActiveXObject("WScript.Shell")
 var oFS				= new ActiveXObject("Scripting.FileSystemObject");
 
-var outfile			= "./src/scm_rev.h";
+var outfile			= "scm_rev.h";
 var cmd_revision	= " rev-parse HEAD";
 var cmd_describe	= " describe --always --long --dirty";
 var cmd_branch		= " rev-parse --abbrev-ref HEAD";
