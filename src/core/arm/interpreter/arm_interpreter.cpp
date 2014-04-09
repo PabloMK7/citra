@@ -1,26 +1,6 @@
-/**
- * Copyright (C) 2013 Citrus Emulator
- *
- * @file    arm_interpreter.h
- * @author  bunnei
- * @date    2014-04-04
- * @brief   ARM interface instance for SkyEye interprerer
- *
- * @section LICENSE
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
- *
- * Official project repository can be found at:
- * http://code.google.com/p/gekko-gc-emu/
- */
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.  
 
 #include "arm_interpreter.h"
 
@@ -29,58 +9,61 @@ const static cpu_config_t s_arm11_cpu_info = {
 };
 
 ARM_Interpreter::ARM_Interpreter()  {
-
-    state = new ARMul_State;
+    m_state = new ARMul_State;
 
     ARMul_EmulateInit();
-    ARMul_NewState(state);
+    ARMul_NewState(m_state);
 
-    state->abort_model = 0;
-    state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
-    state->bigendSig = LOW;
+    m_state->abort_model = 0;
+    m_state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
+    m_state->bigendSig = LOW;
 
-    ARMul_SelectProcessor(state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
-    state->lateabtSig = LOW;
-    mmu_init(state);
+    ARMul_SelectProcessor(m_state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
+    m_state->lateabtSig = LOW;
+    mmu_init(m_state);
 
     // Reset the core to initial state
-    ARMul_Reset(state);
-    state->NextInstr = 0;
-    state->Emulate = 3;
+    ARMul_Reset(m_state);
+    m_state->NextInstr = 0;
+    m_state->Emulate = 3;
 
-    state->pc = state->Reg[15] = 0x00000000;
-    state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
+    m_state->pc = m_state->Reg[15] = 0x00000000;
+    m_state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
 }
 
 void ARM_Interpreter::SetPC(u32 pc) {
-    state->pc = state->Reg[15] = pc;
+    m_state->pc = m_state->Reg[15] = pc;
 }
 
-u32 ARM_Interpreter::PC() {
-    return state->pc;
+u32 ARM_Interpreter::GetPC() const {
+    return m_state->pc;
 }
 
-u32 ARM_Interpreter::Reg(int index){
-    return state->Reg[index];
+u32 ARM_Interpreter::GetReg(int index) const {
+    return m_state->Reg[index];
 }
 
-u32 ARM_Interpreter::CPSR() {
-    return state->Cpsr;
+u32 ARM_Interpreter::GetCPSR() const {
+    return m_state->Cpsr;
+}
+
+u64 ARM_Interpreter::GetTicks() const {
+    return ARMul_Time(m_state);
 }
 
 ARM_Interpreter::~ARM_Interpreter() {
-    delete state;
+    delete m_state;
 }
 
 void ARM_Interpreter::ExecuteInstruction() {
-    state->step++;
-    state->cycle++;
-    state->EndCondition = 0;
-    state->stop_simulator = 0;
-    state->NextInstr = RESUME;
-    state->last_pc = state->Reg[15];
-    state->Reg[15] = ARMul_DoInstr(state);
-    state->Cpsr = ((state->Cpsr & 0x0fffffdf) | (state->NFlag << 31) | (state->ZFlag << 30) | 
-                   (state->CFlag << 29) | (state->VFlag << 28) | (state->TFlag << 5));
-    FLUSHPIPE;
+    m_state->step++;
+    m_state->cycle++;
+    m_state->EndCondition = 0;
+    m_state->stop_simulator = 0;
+    m_state->NextInstr = RESUME;
+    m_state->last_pc = m_state->Reg[15];
+    m_state->Reg[15] = ARMul_DoInstr(m_state);
+    m_state->Cpsr = ((m_state->Cpsr & 0x0fffffdf) | (m_state->NFlag << 31) | (m_state->ZFlag << 30) | 
+                   (m_state->CFlag << 29) | (m_state->VFlag << 28) | (m_state->TFlag << 5));
+    m_state->NextInstr |= PRIMEPIPE; // Flush pipe
 }

@@ -11,7 +11,7 @@
 class ARM_Interface {
 public:
     ARM_Interface() {
-        num_instructions_ = 0;
+        m_num_instructions = 0;
     }
 
     ~ARM_Interface() {
@@ -20,7 +20,7 @@ public:
     /// Step CPU by one instruction
     void Step() {
         ExecuteInstruction();
-        num_instructions_++;
+        m_num_instructions++;
     }
  
     /**
@@ -33,36 +33,38 @@ public:
      * Get the current Program Counter
      * @return Returns current PC
      */
-    virtual u32 PC() = 0;
+    virtual u32 GetPC() const = 0;
 
     /**
      * Get an ARM register
      * @param index Register index (0-15)
      * @return Returns the value in the register
      */
-    virtual u32 Reg(int index) = 0;
+    virtual u32 GetReg(int index) const = 0;
 
     /**
      * Get the current CPSR register
      * @return Returns the value of the CPSR register
      */
-    virtual u32 CPSR() = 0;  
+    virtual u32 GetCPSR() const = 0;  
 
     /**
      * Returns the number of clock ticks since the last rese
      * @return Returns number of clock ticks
      */
-    virtual u64 GetTicks() = 0;
+    virtual u64 GetTicks() const = 0;
 
-    /// Getter for num_instructions_
-    u64 num_instructions() { return num_instructions_; }
+    /// Getter for m_num_instructions
+    u64 GetNumInstructions() {
+        return m_num_instructions;
+    }
 
 private:
     
     /// Execture next instruction
     virtual void ExecuteInstruction() = 0;
 
-    u64 num_instructions_;  ///< Number of instructions executed
+    u64 m_num_instructions;                     ///< Number of instructions executed
 
     DISALLOW_COPY_AND_ASSIGN(ARM_Interface);
 };
