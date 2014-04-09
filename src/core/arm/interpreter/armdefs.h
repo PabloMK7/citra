@@ -32,7 +32,7 @@
 //#include "portable/mman.h"
 
 #include "arm_regformat.h"
-#include "platform.h"
+#include "common/platform.h"
 #include "skyeye_defs.h"
 
 //AJ2D--------------------------------------------------------------------------
@@ -82,7 +82,7 @@
 //teawater add DBCT_TEST_SPEED 2005.10.04---------------------------------------
 #include <signal.h>
 
-#include "platform.h"
+#include "common/platform.h"
 
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <sys/time.h>

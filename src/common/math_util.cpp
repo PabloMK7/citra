@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 
-#include "common.h"
-#include "math_util.h"
+#include "common/common.h"
+#include "common/math_util.h"
 
 #include <cmath>
 #include <numeric>

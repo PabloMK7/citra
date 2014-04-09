@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "common.h"
-#include "common_types.h"
+#include "common/common.h"
+#include "common/common_types.h"
 
 /// Generic ARM11 CPU interface
 class ARM_Interface {

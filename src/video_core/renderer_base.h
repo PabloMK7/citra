@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "common.h"
-#include "hash.h"
+#include "common/common.h"
 
 class RendererBase {
 public:

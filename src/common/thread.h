@@ -5,12 +5,12 @@
 #ifndef _THREAD_H_
 #define _THREAD_H_
 
-#include "std_condition_variable.h"
-#include "std_mutex.h"
-#include "std_thread.h"
+#include "common/std_condition_variable.h"
+#include "common/std_mutex.h"
+#include "common/std_thread.h"
 
 // Don't include common.h here as it will break LogManager
-#include "common_types.h"
+#include "common/common_types.h"
 #include <stdio.h>
 #include <string.h>
 

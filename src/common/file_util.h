@@ -12,8 +12,8 @@
 #include <vector>
 #include <string.h>
 
-#include "common.h"
-#include "string_util.h"
+#include "common/common.h"
+#include "common/string_util.h"
 
 // User directory indices for GetUserPath
 enum {

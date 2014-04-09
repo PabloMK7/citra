@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "common_types.h"
+#include "common/common_types.h"
 #include <string>
 
 u32 u8_nextchar(const char *s, int *i);

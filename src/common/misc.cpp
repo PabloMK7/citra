@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common.h"
+#include "common/common.h"
 
 #ifdef _WIN32
 #include <windows.h>

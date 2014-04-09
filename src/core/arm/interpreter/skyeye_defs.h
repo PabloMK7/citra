@@ -1,7 +1,7 @@
 #ifndef CORE_ARM_SKYEYE_DEFS_H_
 #define CORE_ARM_SKYEYE_DEFS_H_
 
-#include "common.h"
+#include "common/common.h"
 
 #define MODE32
 #define MODET

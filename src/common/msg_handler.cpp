@@ -4,8 +4,8 @@
 
 #include <stdio.h> // System
 
-#include "common.h" // Local
-#include "string_util.h"
+#include "common/common.h" // Local
+#include "common/string_util.h"
 
 bool DefaultMsgHandler(const char* caption, const char* text, bool yes_no, int Style);
 static MsgAlertHandler msg_handler = DefaultMsgHandler;

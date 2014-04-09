@@ -2,12 +2,13 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "core.h"
-#include "hw/hw.h"
-#include "core_timing.h"
-#include "mem_map.h"
-#include "system.h"
-#include "video_core.h"
+#include "core/core.h"
+#include "core/core_timing.h"
+#include "core/mem_map.h"
+#include "core/system.h"
+#include "core/hw/hw.h"
+
+#include "video_core/video_core.h"
 
 namespace System {
 

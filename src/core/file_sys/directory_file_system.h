@@ -15,14 +15,13 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#ifndef CORE_FILE_SYS_DIRECTORY_H_
-#define CORE_FILE_SYS_DIRECTORY_H_
+#pragma once
 
 // TODO: Remove the Windows-specific code, FILE is fine there too.
 
 #include <map>
 
-#include "file_sys.h"
+#include "core/file_sys/file_sys.h"
 
 #ifdef _WIN32
 typedef void * HANDLE;
@@ -154,5 +153,3 @@ private:
 
 	std::string GetLocalPath(std::string localpath);
 };
-
-#endif // CORE_FILE_SYS_DIRECTORY_H_

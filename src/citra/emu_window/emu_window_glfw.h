@@ -27,7 +27,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "emu_window.h"
+#include "common/emu_window.h"
 
 class EmuWindow_GLFW : public EmuWindow {
 public:

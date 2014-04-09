@@ -5,12 +5,13 @@
 #include <vector>
 #include <cstdio>
 
-#include "msg_handler.h"
-#include "std_mutex.h"
-#include "atomic.h"
-#include "core_timing.h"
-#include "core.h"
-#include "chunk_file.h"
+#include "common/msg_handler.h"
+#include "common/std_mutex.h"
+#include "common/atomic.h"
+#include "common/chunk_file.h"
+
+#include "core/core_timing.h"
+#include "core/core.h"
 
 int g_clock_rate_arm11 = 268123480;
 

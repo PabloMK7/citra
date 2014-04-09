@@ -22,9 +22,9 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#include "common.h"
-#include "video_core.h"
-#include "emu_window_glfw.h"
+#include "common/common.h"
+#include "video_core/video_core.h"
+#include "citra/emu_window/emu_window_glfw.h"
 
 static void OnKeyEvent(GLFWwindow* win, int key, int action) {
  //   EmuWindow_GLFW* emuwin = (EmuWindow_GLFW*)glfwGetWindowUserPointer(win);

@@ -62,7 +62,7 @@ typedef signed long long    s64;    ///< 64-bit signed int
 typedef float   f32;    ///< 32-bit floating point
 typedef double  f64;    ///< 64-bit floating point
 
-#include "swap.h"
+#include "common/swap.h"
 
 /// Union for fast 16-bit type casting
 union t16 {

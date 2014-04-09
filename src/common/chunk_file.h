@@ -41,8 +41,8 @@
 #endif
 #endif
 
-#include "common.h"
-#include "file_util.h"
+#include "common/common.h"
+#include "common/file_util.h"
 //#include "../ext/snappy/snappy-c.h"
 
 #if defined(IOS) || defined(MACGNUSTD)

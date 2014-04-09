@@ -2,15 +2,15 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common.h"
-#include "emu_window.h"
-#include "log.h"
+#include "common/common.h"
+#include "common/emu_window.h"
+#include "common/log.h"
 
-#include "core.h"
+#include "core/core.h"
 
-#include "video_core.h"
-#include "renderer_base.h"
-#include "renderer_opengl/renderer_opengl.h"
+#include "video_core/video_core.h"
+#include "video_core/renderer_base.h"
+#include "video_core/renderer_opengl/renderer_opengl.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Video Core namespace

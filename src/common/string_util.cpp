@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <algorithm>
 
-#include "common.h"
-#include "common_paths.h"
-#include "string_util.h"
+#include "common/common.h"
+#include "common/common_paths.h"
+#include "common/string_util.h"
 
 #ifdef _WIN32
     #include <Windows.h>

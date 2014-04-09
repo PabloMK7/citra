@@ -17,10 +17,9 @@
 
 #include <set>
 #include <algorithm>
-#include "string_util.h"
-#include "file_sys/meta_file_system.h"
-//#include "Core/HLE/sceKernelThread.h"
-//#include "Core/Reporting.h"
+
+#include "common/string_util.h"
+#include "core/file_sys/meta_file_system.h"
 
 static bool ApplyPathStringToComponentsVector(std::vector<std::string> &vector, const std::string &pathString)
 {

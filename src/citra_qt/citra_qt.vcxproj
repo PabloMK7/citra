@@ -127,43 +127,21 @@
     <ClCompile Include="..\..\externals\qhexedit\qhexedit.cpp" />
     <ClCompile Include="..\..\externals\qhexedit\qhexedit_p.cpp" />
     <ClCompile Include="..\..\externals\qhexedit\xbytearray.cpp" />
-    <ClCompile Include="src\bootmanager.cpp" />
-    <ClCompile Include="src\callstack.cpp" />
-    <ClCompile Include="src\config\controller_config.cpp" />
-    <ClCompile Include="src\config\controller_config_util.cpp" />
-    <ClCompile Include="src\disasm.cpp" />
-    <ClCompile Include="src\cpu_regs.cpp" />
-    <ClCompile Include="src\hotkeys.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\ramview.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <MOC Include="src\bootmanager.hxx" />
-    <MOC Include="src\callstack.hxx" />
-    <MOC Include="src\config\controller_config.hxx" />
-    <MOC Include="src\config\controller_config_util.hxx" />
-    <MOC Include="src\disasm.hxx" />
-    <MOC Include="src\cpu_regs.hxx" />
-    <MOC Include="src\hotkeys.hxx" />
-    <MOC Include="src\main.hxx" />
-    <MOC Include="src\ramview.hxx" />
-  </ItemGroup>
-  <ItemGroup>
-    <UIC Include="src\callstack.ui" />
-    <UIC Include="src\config\controller_config.ui">
-      <QtUicPrefix>src/config/ui_</QtUicPrefix>
-    </UIC>
-    <UIC Include="src\disasm.ui" />
-    <UIC Include="src\cpu_regs.ui" />
-    <UIC Include="src\hotkeys.ui" />
-    <UIC Include="src\main.ui" />
+    <ClCompile Include="bootmanager.cpp" />
+    <ClCompile Include="callstack.cpp" />
+    <ClCompile Include="config\controller_config.cpp" />
+    <ClCompile Include="config\controller_config_util.cpp" />
+    <ClCompile Include="cpu_regs.cpp" />
+    <ClCompile Include="disasm.cpp" />
+    <ClCompile Include="hotkeys.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ramview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MOC Include="..\..\externals\qhexedit\commands.h" />
     <MOC Include="..\..\externals\qhexedit\qhexedit.h" />
     <MOC Include="..\..\externals\qhexedit\qhexedit_p.h" />
     <MOC Include="..\..\externals\qhexedit\xbytearray.h" />
-    <ClInclude Include="src\version.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
@@ -172,6 +150,38 @@
     <ProjectReference Include="..\core\core.vcxproj">
       <Project>{8aea7f29-3466-4786-a10d-6a4bd0610977}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bootmanager.hxx" />
+    <ClInclude Include="callstack.hxx" />
+    <ClInclude Include="config\controller_config.hxx" />
+    <ClInclude Include="config\controller_config_util.hxx" />
+    <ClInclude Include="config\ui_controller_config.h" />
+    <ClInclude Include="cpu_regs.hxx" />
+    <ClInclude Include="disasm.hxx" />
+    <ClInclude Include="hotkeys.hxx" />
+    <ClInclude Include="main.hxx" />
+    <ClInclude Include="ramview.hxx" />
+    <ClInclude Include="ui_callstack.h" />
+    <ClInclude Include="ui_cpu_regs.h" />
+    <ClInclude Include="ui_disasm.h" />
+    <ClInclude Include="ui_gfx_fifo_player.h" />
+    <ClInclude Include="ui_hotkeys.h" />
+    <ClInclude Include="ui_image_info.h" />
+    <ClInclude Include="ui_main.h" />
+    <ClInclude Include="ui_welcome_wizard.h" />
+    <ClInclude Include="version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <UIC Include="callstack.ui" />
+    <UIC Include="config\controller_config.ui" />
+    <UIC Include="cpu_regs.ui" />
+    <UIC Include="disasm.ui" />
+    <UIC Include="hotkeys.ui" />
+    <UIC Include="main.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

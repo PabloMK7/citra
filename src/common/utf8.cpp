@@ -26,8 +26,8 @@
 #include <algorithm>
 #include <string>
 
-#include "common_types.h"
-#include "utf8.h"
+#include "common/common_types.h"
+#include "common/utf8.h"
 
 // is start of UTF sequence
 inline bool isutf(char c) {

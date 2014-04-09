@@ -26,7 +26,7 @@
 #include <e32std.h>
 #endif
 
-#include "common.h"
+#include "common/common.h"
 
 // This class lets you create a block of anonymous RAM, and then arbitrarily map views into it.
 // Multiple views can mirror the same section of the block, which makes it very convient for emulating

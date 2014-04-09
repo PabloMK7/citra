@@ -12,20 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\disasm.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="src\cpu_regs.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="src\bootmanager.cpp" />
-    <ClCompile Include="src\callstack.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ramview.cpp">
-      <Filter>debugger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\externals\qhexedit\commands.cpp">
       <Filter>qhexedit</Filter>
     </ClCompile>
@@ -38,22 +24,29 @@
     <ClCompile Include="..\..\externals\qhexedit\xbytearray.cpp">
       <Filter>qhexedit</Filter>
     </ClCompile>
-    <ClCompile Include="src\hotkeys.cpp" />
-    <ClCompile Include="src\config\controller_config.cpp">
+    <ClCompile Include="bootmanager.cpp" />
+    <ClCompile Include="hotkeys.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="config\controller_config.cpp">
       <Filter>config</Filter>
     </ClCompile>
-    <ClCompile Include="src\config\controller_config_util.cpp">
+    <ClCompile Include="config\controller_config_util.cpp">
       <Filter>config</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu_regs.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="disasm.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="ramview.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="callstack.cpp">
+      <Filter>debugger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <MOC Include="src\main.hxx" />
-    <MOC Include="src\cpu_regs.hxx">
-      <Filter>debugger</Filter>
-    </MOC>
-    <MOC Include="src\callstack.hxx">
-      <Filter>debugger</Filter>
-    </MOC>
     <MOC Include="..\..\externals\qhexedit\commands.h">
       <Filter>qhexedit</Filter>
     </MOC>
@@ -66,38 +59,67 @@
     <MOC Include="..\..\externals\qhexedit\qhexedit.h">
       <Filter>qhexedit</Filter>
     </MOC>
-    <MOC Include="src\ramview.hxx">
-      <Filter>debugger</Filter>
-    </MOC>
-    <MOC Include="src\disasm.hxx">
-      <Filter>debugger</Filter>
-    </MOC>
-    <MOC Include="src\bootmanager.hxx" />
-    <MOC Include="src\hotkeys.hxx" />
-    <MOC Include="src\config\controller_config.hxx">
-      <Filter>config</Filter>
-    </MOC>
-    <MOC Include="src\config\controller_config_util.hxx">
-      <Filter>config</Filter>
-    </MOC>
   </ItemGroup>
   <ItemGroup>
-    <UIC Include="src\main.ui" />
-    <UIC Include="src\cpu_regs.ui">
-      <Filter>debugger</Filter>
-    </UIC>
-    <UIC Include="src\disasm.ui">
-      <Filter>debugger</Filter>
-    </UIC>
-    <UIC Include="src\callstack.ui">
-      <Filter>debugger</Filter>
-    </UIC>
-    <UIC Include="src\hotkeys.ui" />
-    <UIC Include="src\config\controller_config.ui">
+    <ClInclude Include="bootmanager.hxx" />
+    <ClInclude Include="hotkeys.hxx" />
+    <ClInclude Include="main.hxx" />
+    <ClInclude Include="ui_hotkeys.h" />
+    <ClInclude Include="ui_image_info.h" />
+    <ClInclude Include="ui_main.h" />
+    <ClInclude Include="ui_welcome_wizard.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="config\controller_config.hxx">
       <Filter>config</Filter>
+    </ClInclude>
+    <ClInclude Include="config\controller_config_util.hxx">
+      <Filter>config</Filter>
+    </ClInclude>
+    <ClInclude Include="config\ui_controller_config.h">
+      <Filter>config</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu_regs.hxx">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="disasm.hxx">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ramview.hxx">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_callstack.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_cpu_regs.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_disasm.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_gfx_fifo_player.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="callstack.hxx">
+      <Filter>debugger</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <UIC Include="hotkeys.ui" />
+    <UIC Include="main.ui" />
+    <UIC Include="config\controller_config.ui">
+      <Filter>config</Filter>
+    </UIC>
+    <UIC Include="callstack.ui">
+      <Filter>debugger</Filter>
+    </UIC>
+    <UIC Include="cpu_regs.ui">
+      <Filter>debugger</Filter>
+    </UIC>
+    <UIC Include="disasm.ui">
+      <Filter>debugger</Filter>
     </UIC>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\version.h" />
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

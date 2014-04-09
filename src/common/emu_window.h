@@ -25,7 +25,7 @@
 #ifndef CORE_EMUWINDOW_H_
 #define CORE_EMUWINDOW_H_
 
-#include "common.h"
+#include "common/common.h"
 
 //namespace input_common
 //{

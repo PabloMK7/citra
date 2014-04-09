@@ -12,9 +12,9 @@
 #include <sys/time.h>
 #endif
 
-#include "common.h"
-#include "timer.h"
-#include "string_util.h"
+#include "common/common.h"
+#include "common/timer.h"
+#include "common/string_util.h"
 
 namespace Common
 {

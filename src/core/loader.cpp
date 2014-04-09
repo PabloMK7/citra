@@ -2,12 +2,14 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "file_util.h"
-#include "loader.h"
-#include "system.h"
-#include "core.h"
-#include "file_sys/directory_file_system.h"
-#include "elf/elf_reader.h"
+#include "common/common_types.h"
+#include "common/file_util.h"
+
+#include "core/loader.h"
+#include "core/system.h"
+#include "core/core.h"
+#include "core/file_sys/directory_file_system.h"
+#include "core/elf/elf_reader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

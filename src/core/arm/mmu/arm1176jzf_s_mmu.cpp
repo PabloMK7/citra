@@ -22,11 +22,11 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "mem_map.h"
+#include "core/mem_map.h"
 
-#include "arm/interpreter/skyeye_defs.h"
+#include "core/arm/interpreter/skyeye_defs.h"
 
-#include "arm/interpreter/armdefs.h"
+#include "core/arm/interpreter/armdefs.h"
 //#include "bank_defs.h"
 #if 0
 #define TLB_SIZE 1024 * 1024

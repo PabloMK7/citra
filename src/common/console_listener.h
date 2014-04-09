@@ -5,7 +5,7 @@
 #ifndef _CONSOLELISTENER_H
 #define _CONSOLELISTENER_H
 
-#include "log_manager.h"
+#include "common/log_manager.h"
 
 #ifdef _WIN32
 #include <windows.h>

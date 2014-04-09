@@ -2,8 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "thread.h"
-#include "common.h"
+#include "common/thread.h"
+#include "common/common.h"
 
 #ifdef __APPLE__
 #include <mach/mach.h>

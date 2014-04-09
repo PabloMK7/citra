@@ -16,8 +16,8 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include "extended_trace.h"
-#include "string_util.h"
+#include "common/extended_trace.h"
+#include "common/string_util.h"
 using namespace std;
 
 #include <tchar.h>

@@ -7,8 +7,7 @@
 
 #include <map>
 
-#include "common.h"
-#include "x64Emitter.h"
+#include "common/common.h"
 
 // This simple class creates a wrapper around a C/C++ function that saves all fp state
 // before entering it, and restores it upon exit. This is required to be able to selectively

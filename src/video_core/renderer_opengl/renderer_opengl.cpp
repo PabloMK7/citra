@@ -2,9 +2,10 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "mem_map.h"
-#include "video_core.h"
-#include "renderer_opengl/renderer_opengl.h"
+#include "video_core/video_core.h"
+#include "video_core/renderer_opengl/renderer_opengl.h"
+
+#include "core/mem_map.h"
 
 
 /// RendererOpenGL constructor

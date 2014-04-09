@@ -16,7 +16,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
 
-#include "platform.h"
+#include "common/platform.h"
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <unistd.h>
 #endif

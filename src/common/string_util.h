@@ -12,7 +12,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "common.h"
+#include "common/common.h"
 
 std::string StringFromFormat(const char* format, ...);
 // Cheap!

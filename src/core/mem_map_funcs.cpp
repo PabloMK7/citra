@@ -2,10 +2,10 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common.h"
+#include "common/common.h"
 
-#include "mem_map.h"
-#include "hw/hw.h"
+#include "core/mem_map.h"
+#include "core/hw/hw.h"
 
 namespace Memory {
 

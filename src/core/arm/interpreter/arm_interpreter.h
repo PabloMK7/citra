@@ -24,12 +24,11 @@
 
 #pragma once
 
-#include "common.h"
-#include "common_types.h"
-#include "arm/arm_interface.h"
+#include "common/common.h"
 
-#include "arm/interpreter/armdefs.h"
-#include "arm/interpreter/armemu.h"
+#include "core/arm/arm_interface.h"
+#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/interpreter/armemu.h"
 
 class ARM_Interpreter : virtual public ARM_Interface {
 public:

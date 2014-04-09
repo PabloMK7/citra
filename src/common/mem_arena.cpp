@@ -17,12 +17,10 @@
 
 #include <string>
 
-#include "memory_util.h"
-#include "mem_arena.h"
+#include "common/memory_util.h"
+#include "common/mem_arena.h"
 
-#ifdef _WIN32
-//#include "CommonWindows.h"
-#else
+#ifndef _WIN32
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>

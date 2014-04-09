@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "thread.h"
+#include "common/thread.h"
 
 
 typedef struct ARM_CPU_State_s {

@@ -2,11 +2,11 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common.h"
-#include "mem_arena.h"
+#include "common/common.h"
+#include "common/mem_arena.h"
 
-#include "mem_map.h"
-#include "core.h"
+#include "core/mem_map.h"
+#include "core/core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

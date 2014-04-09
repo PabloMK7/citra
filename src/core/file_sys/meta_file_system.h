@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include "std_mutex.h"
-#include "file_sys.h"
+#include "common/std_mutex.h"
+
+#include "core/file_sys/file_sys.h"
 
 class MetaFileSystem : public IHandleAllocator, public IFileSystem
 {

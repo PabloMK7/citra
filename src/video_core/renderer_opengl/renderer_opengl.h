@@ -6,10 +6,10 @@
 
 #include <GL/glew.h>
 
-#include "common.h"
-#include "emu_window.h"
+#include "common/common.h"
+#include "common/emu_window.h"
 
-#include "renderer_base.h"
+#include "video_core/renderer_base.h"
 
 
 class RendererOpenGL : virtual public RendererBase {

@@ -199,20 +199,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\citra.cpp" />
-    <ClCompile Include="src\emu_window\emu_window_glfw.cpp" />
+    <ClCompile Include="citra.cpp" />
+    <ClCompile Include="emu_window\emu_window_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="citra.h" />
+    <ClInclude Include="emu_window\emu_window_glfw.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="src\citra.h" />
-    <ClInclude Include="src\emu_window\emu_window_glfw.h" />
-    <ClInclude Include="src\version.h" />
+    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="citra.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="CMakeLists.txt" />
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,10 +3,10 @@
 // Refer to the license.txt file included.
 
 
-#include "common.h"
-#include "common_paths.h"
-#include "file_util.h"
-#include "string_util.h"
+#include "common/common.h"
+#include "common/common_paths.h"
+#include "common/file_util.h"
+#include "common/string_util.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 
-#include "string_util.h"
+#include "common/string_util.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)

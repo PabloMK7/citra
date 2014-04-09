@@ -6,7 +6,7 @@
 #define _COMMON_PATHS_H_
 
 // Make sure we pick up USER_DIR if set in config.h
-#include "common.h"
+#include "common/common.h"
 
 // Directory seperators, do we need this?
 #define DIR_SEP "/"

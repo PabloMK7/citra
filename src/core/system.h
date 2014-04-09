@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "emu_window.h"
-#include "file_sys/meta_file_system.h"
+#include "common/emu_window.h"
+#include "core/file_sys/meta_file_system.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

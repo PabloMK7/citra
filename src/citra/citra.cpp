@@ -22,17 +22,17 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#include "common.h"
-#include "log_manager.h"
-#include "file_util.h"
+#include "common/common.h"
+#include "common/log_manager.h"
+#include "common/file_util.h"
 
-#include "system.h"
-#include "core.h"
-#include "loader.h"
+#include "core/system.h"
+#include "core/core.h"
+#include "core/loader.h"
 
-#include "emu_window/emu_window_glfw.h"
+#include "citra/emu_window/emu_window_glfw.h"
 
-#include "citra.h"
+#include "citra/citra.h"
 
 #define E_ERR -1
 
@@ -52,7 +52,7 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    std::string boot_filename = "homebrew.elf";
+    std::string boot_filename = "C:\\Users\\eric\\Desktop\\3ds\\homebrew\\Mandelbrot3DS.elf";
     std::string error_str;
     
     bool res = Loader::LoadFile(boot_filename, &error_str);

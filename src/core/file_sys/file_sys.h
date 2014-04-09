@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "common.h"
-#include "chunk_file.h"
+#include "common/common.h"
+#include "common/chunk_file.h"
 
 enum FileAccess {
 	FILEACCESS_NONE=0,

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "utils.h"
+#include "video_core/utils.h"
 
 namespace VideoCore {
 

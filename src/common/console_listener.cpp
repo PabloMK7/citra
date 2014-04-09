@@ -13,9 +13,9 @@
 #include <stdarg.h>
 #endif
 
-#include "common.h"
-#include "log_manager.h" // Common
-#include "console_listener.h" // Common
+#include "common/common.h"
+#include "common/log_manager.h" // Common
+#include "common/console_listener.h" // Common
 
 ConsoleListener::ConsoleListener()
 {

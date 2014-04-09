@@ -25,7 +25,7 @@
 #ifndef COMMON_PLATFORM_H_
 #define COMMON_PLATFORM_H_
 
-#include "common_types.h"
+#include "common/common_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Platform definitions

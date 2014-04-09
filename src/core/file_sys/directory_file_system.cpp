@@ -15,13 +15,11 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "chunk_file.h"
-#include "file_util.h"
-#include "directory_file_system.h"
-//#include "ISOFileSystem.h"
-//#include "Core/HLE/sceKernel.h"
-//#include "file/zip_read.h"
-#include "utf8.h"
+#include "common/chunk_file.h"
+#include "common/file_util.h"
+#include "common/utf8.h"
+
+#include "core/file_sys/directory_file_system.h"
 
 #if EMU_PLATFORM == PLATFORM_WINDOWS
 #include <windows.h>

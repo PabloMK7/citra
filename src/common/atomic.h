@@ -7,12 +7,12 @@
 
 #ifdef _WIN32
 
-#include "atomic_win32.h"
+#include "common/atomic_win32.h"
 
 #else
 
 // GCC-compatible compiler assumed!
-#include "atomic_gcc.h"
+#include "common/atomic_gcc.h"
 
 #endif
 

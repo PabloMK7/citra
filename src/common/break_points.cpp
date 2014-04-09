@@ -2,9 +2,9 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common.h"
-#include "debug_interface.h"
-#include "break_points.h"
+#include "common/common.h"
+#include "common/debug_interface.h"
+#include "common/break_points.h"
 
 #include <sstream>
 #include <algorithm>

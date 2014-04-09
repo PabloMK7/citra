@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 
-#include "common.h"
-#include "memory_util.h"
-#include "string_util.h"
+#include "common/common.h"
+#include "common/memory_util.h"
+#include "common/string_util.h"
 
 #ifdef _WIN32
 #include <windows.h>

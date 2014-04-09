@@ -5,10 +5,10 @@
 #ifndef _LOGMANAGER_H_
 #define _LOGMANAGER_H_
 
-#include "log.h"
-#include "string_util.h"
-#include "thread.h"
-#include "file_util.h"
+#include "common/log.h"
+#include "common/string_util.h"
+#include "common/thread.h"
+#include "common/file_util.h"
 
 #include <set>
 #include <string.h>

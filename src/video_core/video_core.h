@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "common.h"
-#include "emu_window.h"
+#include "common/common.h"
+#include "common/emu_window.h"
+
 #include "renderer_base.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

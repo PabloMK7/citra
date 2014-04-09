@@ -19,12 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="scm_rev_gen.js">
-    </None>
+    <ClInclude Include="force_rebuild.h" />
+    <ClInclude Include="scm_rev.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="force_rebuild.h" />
-    <ClInclude Include="src\scm_rev.h" />
+    <None Include="scm_rev_gen.js" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{69F00340-5C3D-449F-9A80-958435C6CF06}</ProjectGuid>

@@ -4,10 +4,11 @@
 
 #include <string>
 
-#include "common.h"
-#include "mem_map.h"
+#include "common/common.h"
 
-#include "elf/elf_reader.h"
+#include "core/mem_map.h"
+#include "core/elf/elf_reader.h"
+
 //#include "Core/Debugger/Debugger_SymbolMap.h"
 //#include "Core/HW/Memmap.h"
 //#include "Core/PowerPC/PPCSymbolDB.h"

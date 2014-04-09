@@ -17,7 +17,7 @@
 #ifndef __ARMEMU_H__
 #define __ARMEMU_H__
 
-#include "common.h"
+#include "common/common.h"
 #include "armdefs.h"
 //#include "skyeye.h"
 

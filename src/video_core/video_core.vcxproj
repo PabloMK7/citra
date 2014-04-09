@@ -19,15 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\renderer_opengl\renderer_opengl.cpp" />
-    <ClCompile Include="src\utils.cpp" />
-    <ClCompile Include="src\video_core.cpp" />
+    <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\renderer_base.h" />
-    <ClInclude Include="src\renderer_opengl\renderer_opengl.h" />
-    <ClInclude Include="src\utils.h" />
-    <ClInclude Include="src\video_core.h" />
+    <ClInclude Include="renderer_base.h" />
+    <ClInclude Include="renderer_opengl\renderer_opengl.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="video_core.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 
-#include "hash.h"
+#include "common/hash.h"
 #if _M_SSE >= 0x402
-#include "cpu_detect.h"
+#include "common/cpu_detect.h"
 #include <nmmintrin.h>
 #endif
 
