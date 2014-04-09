@@ -13,7 +13,7 @@
     #define BUILD_TYPE_STR ""
 #endif
 
-const char *scm_rev_str = "emu "
+const char *g_scm_rev_str = 
 #if !SCM_IS_MASTER
     "[" SCM_BRANCH_STR "] "
 #endif
@@ -35,11 +35,11 @@ const char *scm_rev_str = "emu "
 #endif
 
 #ifdef _WIN32
-const char *netplay_dolphin_ver = SCM_DESC_STR " W" NP_ARCH;
-#elif __APPLE__
-const char *netplay_dolphin_ver = SCM_DESC_STR " M" NP_ARCH;
-#else
-const char *netplay_dolphin_ver = SCM_DESC_STR " L" NP_ARCH;
+const char *g_netplay_citra_ver = SCM_DESC_STR " W" NP_ARCH;
+#elif __APPLE__     
+const char *g_netplay_citra_ver = SCM_DESC_STR " M" NP_ARCH;
+#else               
+const char *g_netplay_citra_ver = SCM_DESC_STR " L" NP_ARCH;
 #endif
 
 const char *scm_rev_git_str = SCM_REV_STR;

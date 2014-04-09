@@ -1,36 +1,10 @@
-/**
- * Copyright (C) 2005-2012 Gekko Emulator
- *
- * @file    emu_window.h
- * @author  Neobrain
- * @date    2012-06-01
- * @brief   Interface for implementing an emulator window manager
- *
- * @section LICENSE
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
- *
- * Official project repository can be found at:
- * http://code.google.com/p/gekko-gc-emu/
- */
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
 
-#ifndef CORE_EMUWINDOW_H_
-#define CORE_EMUWINDOW_H_
+#pragma once
 
 #include "common/common.h"
-
-//namespace input_common
-//{
-//class KeyboardInput;
-//}
 
 // Abstraction class used to provide an interface between emulation code and the frontend (e.g. SDL, 
 //  QGLWidget, GLFW, etc...)
@@ -57,46 +31,52 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     virtual void DoneCurrent() = 0;
 
-    /**
-     * @brief Called from KeyboardInput constructor to notify EmuWindow about its presence
-     * @param controller_interface Pointer to a running KeyboardInput interface
-     */
-    //void set_controller_interface(input_common::KeyboardInput* controller_interface) { 
-    //    controller_interface_ = controller_interface;
-    //}
-    //input_common::KeyboardInput* controller_interface() { return controller_interface_; }
+    Config GetConfig() const { 
+        return m_config;
+    }
 
-    Config config() { return config_; }
-    void set_config(Config val) { config_ = val; }
+    void SetConfig(const Config& val) {
+        m_config = val;
+    }
     
-    int client_area_width() { return client_area_width_; }
-    void set_client_area_width(int val) { client_area_width_ = val; }
+    int GetClientAreaWidth() const { 
+        return m_client_area_width;
+    }
 
-    int client_area_height() { return client_area_height_; }
-    void set_client_area_height(int val) { client_area_height_ = val; }
+    void SetClientAreaWidth(const int val) {
+        m_client_area_width = val;
+    }
 
-    std::string window_title() { return window_title_; }
-    void set_window_title(std::string val) { window_title_ = val; }
+    int GetClientAreaHeight() const {
+        return m_client_area_height;
+    }
+
+    void SetClientAreaHeight(const int val) {
+        m_client_area_height = val;
+    }
+
+    std::string GetWindowTitle() { 
+        return m_window_title;
+    }
+    
+    void SetWindowTitle(std::string val) {
+        m_window_title = val;
+    }
 
 protected:
-    EmuWindow() : client_area_width_(640), client_area_height_(480) {
+    EmuWindow() : m_client_area_width(640), m_client_area_height(480) {
         char window_title[255];
-        sprintf(window_title, "citra [%s|%s] - %s", 
-            "null-cpu", 
-            "null-renderer", 
-            __DATE__);
-        window_title_ = window_title;
+        sprintf(window_title, "citra-%s", g_scm_rev_str);
+        m_window_title = window_title;
     }
     virtual ~EmuWindow() {}
 
-    std::string window_title_;          ///< Current window title, should be used by window impl.
+    std::string m_window_title;     ///< Current window title, should be used by window impl.
 
-    int client_area_width_;             ///< Current client width, should be set by window impl.
-    int client_area_height_;            ///< Current client height, should be set by window impl.
+    int m_client_area_width;        ///< Current client width, should be set by window impl.
+    int m_client_area_height;       ///< Current client height, should be set by window impl.
 
 private:
-    Config config_;         ///< Internal configuration
+    Config m_config;                ///< Internal configuration
 
 };
-
-#endif // CORE_EMUWINDOW_H_

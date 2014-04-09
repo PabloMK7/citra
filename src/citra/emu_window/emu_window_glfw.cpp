@@ -3,7 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/common.h"
+
 #include "video_core/video_core.h"
+
+#include "citra/citra.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
 static void OnKeyEvent(GLFWwindow* win, int key, int action) {
@@ -11,9 +14,9 @@ static void OnKeyEvent(GLFWwindow* win, int key, int action) {
 }
 
 static void OnWindowSizeEvent(GLFWwindow* win, int width, int height) {
-    EmuWindow_GLFW* emuwin = (EmuWindow_GLFW*)glfwGetWindowUserPointer(win);
-    emuwin->set_client_area_width(width);
-    emuwin->set_client_area_height(height);
+    EmuWindow_GLFW* emu_window = (EmuWindow_GLFW*)glfwGetWindowUserPointer(win);
+    emu_window->SetClientAreaWidth(width);
+    emu_window->SetClientAreaHeight(height);
 }
 
 /// EmuWindow_GLFW constructor
@@ -25,13 +28,14 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    render_window_ = glfwCreateWindow(VideoCore::kScreenTopWidth, 
-        (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), "citra", NULL, NULL);
+    m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth, 
+        (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), 
+        m_window_title.c_str(), NULL, NULL);
 
     // Setup callbacks
-    glfwSetWindowUserPointer(render_window_, this);
-    //glfwSetKeyCallback(render_window_, OnKeyEvent);
-    //glfwSetWindowSizeCallback(render_window_, OnWindowSizeEvent);
+    glfwSetWindowUserPointer(m_render_window, this);
+    //glfwSetKeyCallback(m_render_window, OnKeyEvent);
+    //glfwSetWindowSizeCallback(m_render_window, OnWindowSizeEvent);
 
     DoneCurrent();
 }
@@ -43,23 +47,17 @@ EmuWindow_GLFW::~EmuWindow_GLFW() {
 
 /// Swap buffers to display the next frame
 void EmuWindow_GLFW::SwapBuffers() {
-    glfwSwapBuffers(render_window_);
+    glfwSwapBuffers(m_render_window);
 }
 
 /// Polls window events
 void EmuWindow_GLFW::PollEvents() {
-    // TODO(ShizZy): Does this belong here? This is a reasonable place to update the window title
-    //  from the main thread, but this should probably be in an event handler...
-    static char title[128];
-    sprintf(title, "%s (FPS: %02.02f)", window_title_.c_str(), 0.0f);
-    glfwSetWindowTitle(render_window_, title);
-
     glfwPollEvents();
 }
 
 /// Makes the GLFW OpenGL context current for the caller thread
 void EmuWindow_GLFW::MakeCurrent() {
-    glfwMakeContextCurrent(render_window_);
+    glfwMakeContextCurrent(m_render_window);
 }
 
 /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread

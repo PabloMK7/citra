@@ -26,7 +26,7 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     void DoneCurrent();
 
-	GLFWwindow* render_window_;      ///< Internal GLFW render window
+	GLFWwindow* m_render_window;    ///< Internal GLFW render window
 
 private:
 

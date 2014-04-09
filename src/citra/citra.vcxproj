@@ -206,7 +206,6 @@
     <ClInclude Include="citra.h" />
     <ClInclude Include="emu_window\emu_window_glfw.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

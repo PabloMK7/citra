@@ -4,10 +4,12 @@
 
 #pragma once
 
-#include "version.h"
+#include <string>
 
-#define APP_NAME        "citra"
-#define APP_VERSION     "0.01-" VERSION
-#define APP_TITLE       APP_NAME " " APP_VERSION
-#define	COPYRIGHT       "Copyright (C) 2013 Citra Emulator"
+#include "common/common.h"
+
+#define APP_NAME        std::string("citra")
+#define APP_VERSION     std::string("0.01-") + std::string(g_scm_rev_str)
+#define APP_TITLE       (APP_NAME + " " + APP_VERSION)
+#define	COPYRIGHT       "Copyright (C) 2014 Citra Emulator"
 
