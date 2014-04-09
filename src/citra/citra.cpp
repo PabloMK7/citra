@@ -1,26 +1,6 @@
-/**
- * Copyright (C) 2013 citra Emulator
- *
- * @file    citra.cpp
- * @author  ShizZy <shizzy247@gmail.com>
- * @date    2013-09-04
- * @brief   Main entry point
- *
- * @section LICENSE
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
- *
- * Official project repository can be found at:
- * http://code.google.com/p/gekko-gc-emu/
- */
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
 
 #include "common/common.h"
 #include "common/log_manager.h"
@@ -34,17 +14,9 @@
 
 #include "citra/citra.h"
 
-#define E_ERR -1
-
-//#define PLAY_FIFO_RECORDING
-
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
-    //u32 tight_loop;
-
-    printf("citra starting...\n");
-
-	std::string program_dir = File::GetCurrentDir();
+    std::string program_dir = File::GetCurrentDir();
 
 	LogManager::Init();
 
@@ -52,7 +24,7 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    std::string boot_filename = "C:\\Users\\eric\\Desktop\\3ds\\homebrew\\Mandelbrot3DS.elf";
+    std::string boot_filename = "homebrew.elf";
     std::string error_str;
     
     bool res = Loader::LoadFile(boot_filename, &error_str);

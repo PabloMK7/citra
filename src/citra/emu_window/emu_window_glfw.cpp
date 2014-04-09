@@ -1,43 +1,13 @@
-/**
- * Copyright (C) 2013 Citra Emulator
- *
- * @file    emu_window_glfw.cpp
- * @author  ShizZy <shizzy@6bit.net>
- * @date    2013-09-04
- * @brief   Implementation implementation of EmuWindow class for GLFW
- *
- * @section LICENSE
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
- *
- * Official project repository can be found at:
- * http://code.google.com/p/gekko-gc-emu/
- */
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
 
 #include "common/common.h"
 #include "video_core/video_core.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
 static void OnKeyEvent(GLFWwindow* win, int key, int action) {
- //   EmuWindow_GLFW* emuwin = (EmuWindow_GLFW*)glfwGetWindowUserPointer(win);
-	//input_common::GCController::GCButtonState state;
-
-	//if (action == GLFW_PRESS) {
-	//	state = input_common::GCController::PRESSED;
-	//} else {
-	//	state = input_common::GCController::RELEASED;
-	//}
- //   for (int channel = 0; channel < 4 && emuwin->controller_interface(); ++channel) {
-	//	emuwin->controller_interface()->SetControllerStatus(channel, key, state);
- //   }
+    // TODO(bunnei): ImplementMe
 }
 
 static void OnWindowSizeEvent(GLFWwindow* win, int width, int height) {

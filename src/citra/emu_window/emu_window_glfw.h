@@ -1,26 +1,6 @@
-/**
- * Copyright (C) 2013 Citra Emulator
- *
- * @file    emu_window_glfw.h
- * @author  ShizZy <shizzy@6bit.net>
- * @date    2013-09-04
- * @brief   Implementation implementation of EmuWindow class for GLFW
- *
- * @section LICENSE
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details at
- * http://www.gnu.org/copyleft/gpl.html
- *
- * Official project repository can be found at:
- * http://code.google.com/p/gekko-gc-emu/
- */
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
 
 #pragma once
 
