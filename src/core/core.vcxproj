@@ -152,6 +152,7 @@
     <ClCompile Include="elf\elf_reader.cpp" />
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
+    <ClCompile Include="hle\hle_syscall.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\hw_lcd.cpp" />
     <ClCompile Include="loader.cpp" />
@@ -182,6 +183,9 @@
     <ClInclude Include="file_sys\directory_file_system.h" />
     <ClInclude Include="file_sys\file_sys.h" />
     <ClInclude Include="file_sys\meta_file_system.h" />
+    <ClInclude Include="hle\function_wrappers.h" />
+    <ClInclude Include="hle\hle.h" />
+    <ClInclude Include="hle\hle_syscall.h" />
     <ClInclude Include="hw\hw.h" />
     <ClInclude Include="hw\hw_lcd.h" />
     <ClInclude Include="loader.h" />

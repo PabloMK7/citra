@@ -22,6 +22,9 @@
     <Filter Include="elf">
       <UniqueIdentifier>{7ae34319-6d72-4d12-bc62-9b438ba9241f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hle">
+      <UniqueIdentifier>{8b62769e-3e2a-4a57-a7bc-b3b2933c2bc7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp">
@@ -75,6 +78,9 @@
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="core_timing.cpp" />
+    <ClCompile Include="hle\hle_syscall.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -148,6 +154,15 @@
     <ClInclude Include="loader.h" />
     <ClInclude Include="mem_map.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="hle\hle.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\function_wrappers.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\hle_syscall.h">
+      <Filter>hle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
