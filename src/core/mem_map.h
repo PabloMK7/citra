@@ -70,4 +70,8 @@ void Write32(const u32 addr, const u32 data);
 
 u8* GetPointer(const u32 Address);
 
+inline const char* GetCharPointer(const u32 address) {
+	return (const char *)GetPointer(address);
+}
+
 } // namespace
