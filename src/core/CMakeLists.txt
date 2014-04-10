@@ -15,7 +15,7 @@ set(SRCS    core.cpp
             arm/interpreter/thumbemu.cpp
             arm/mmu/arm1176jzf_s_mmu.cpp
             elf/elf_reader.cpp
-            file_sys/directory_file_system/cpp
+            file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
             hw/hw.cpp
             hw/hw_lcd.cpp)
