@@ -1,10 +1,23 @@
-set(SRCS	src/core.cpp
-			src/memory.cpp
-			src/boot/apploader.cpp
-			src/boot/bootrom.cpp
-            src/boot/loader.cpp
-			src/hle/hle.cpp
-			src/hw/hw.cpp
-	    )
+set(SRCS    core.cpp
+            core_timing.cpp
+            loader.cpp
+            mem_map.cpp
+            mem_map_funcs.cpp
+            system.cpp
+            arm/disassembler/arm_disasm.cpp
+            arm/interpreter/arm_interpreter.cpp
+            arm/interpreter/armemu.cpp
+            arm/interpreter/arminit.cpp
+            arm/interpreter/armmmu.cpp
+            arm/interpreter/armos.cpp
+            arm/interpreter/armsupp.cpp
+            arm/interpreter/armvirt.cpp
+            arm/interpreter/thumbemu.cpp
+            arm/mmu/arm1176jzf_s_mmu.cpp
+            elf/elf_reader.cpp
+            file_sys/directory_file_system/cpp
+            file_sys/meta_file_system.cpp
+            hw/hw.cpp
+            hw/hw_lcd.cpp)
 
 add_library(core STATIC ${SRCS})

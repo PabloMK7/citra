@@ -37,9 +37,7 @@ include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIR})
     
 # internal includes
-include_directories(src/common/src)
-include_directories(src/core/src)
-include_directories(src/citra/src)
+include_directories(src)
 
 # process subdirectories
 if(QT4_FOUND AND QT_QTCORE_FOUND AND QT_QTGUI_FOUND AND QT_QTOPENGL_FOUND AND NOT DISABLE_QT4)
