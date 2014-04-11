@@ -37,12 +37,12 @@ void Update() {
 /// Initialize hardware
 void Init() {
     g_last_ticks = Core::g_app_core->GetTicks();
-    NOTICE_LOG(LCD, "LCD initialized OK");
+    NOTICE_LOG(LCD, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(LCD, "LCD shutdown OK");
+    NOTICE_LOG(LCD, "shutdown OK");
 }
 
 } // namespace
