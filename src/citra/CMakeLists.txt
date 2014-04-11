@@ -1,5 +1,5 @@
-set(SRCS	src/citra.cpp
-            src/emuwindow/emuwindow_glfw.cpp)
+set(SRCS    citra.cpp
+            emu_window/emu_window_glfw.cpp)
 
 # NOTE: This is a workaround for CMake bug 0006976 (missing X11_xf86vmode_LIB variable)
 if (NOT X11_xf86vmode_LIB)

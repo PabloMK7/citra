@@ -55,7 +55,7 @@ public:
         m_client_area_height = val;
     }
 
-    std::string GetWindowTitle() { 
+    std::string GetWindowTitle() const { 
         return m_window_title;
     }
     

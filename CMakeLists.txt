@@ -9,15 +9,9 @@ add_definitions(-DSINGLETHREADED)
 # dependency checking
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
 include(FindOpenGL REQUIRED)
-include(FindGLFW REQUIRED)
 include(FindX11 REQUIRED)
 
-if(NOT GLFW_FOUND)
-    message(FATAL_ERROR "glfw not found")
-else()
-    include_directories(${GLFW_INCLUDE_DIRS})
-endif()
-
+include_directories(${GLFW_INCLUDE_DIRS})
 option(DISABLE_QT4 "Disable Qt4 GUI" OFF)
 if(NOT DISABLE_QT4)
     include(FindQt4)
@@ -33,13 +27,10 @@ if(NOT DISABLE_QT4)
 endif()
 
 # external includes
-include_directories(${SDL2_INCLUDE_DIR})
 include_directories(${OPENGL_INCLUDE_DIR})
     
 # internal includes
-include_directories(src/common/src)
-include_directories(src/core/src)
-include_directories(src/citra/src)
+include_directories(src)
 
 # process subdirectories
 if(QT4_FOUND AND QT_QTCORE_FOUND AND QT_QTGUI_FOUND AND QT_QTOPENGL_FOUND AND NOT DISABLE_QT4)
