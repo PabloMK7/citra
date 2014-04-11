@@ -14,11 +14,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
     <UIC>
-      <QtUicPrefix>src/ui_</QtUicPrefix>
+      <QtUicPrefix>ui_</QtUicPrefix>
       <QtUicExt>.h</QtUicExt>
     </UIC>
     <MOC>
-      <QtCommandLine>/I"$(SolutionDir)src\common\src" /I"$(SolutionDir)src\core\src" /I"$(ExternalsDir)glew-1.6.0\include" /I"$(ExternalsDir)sdl-1.2.15\include" /I"$(ExternalsDir)qhexedit"</QtCommandLine>
+      <QtCommandLine>/I"$(SolutionDir)src" /I"$(ExternalsDir)glew-1.6.0\include" /I"$(ExternalsDir)sdl-1.2.15\include" /I"$(ExternalsDir)qhexedit"</QtCommandLine>
       <QtKeywords>false</QtKeywords>
     </MOC>
     <Link />

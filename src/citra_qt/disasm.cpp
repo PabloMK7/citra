@@ -5,13 +5,13 @@
 #include "bootmanager.hxx"
 #include "hotkeys.hxx"
 
-#include "common.h"
-#include "mem_map.h"
+#include "common/common.h"
+#include "core/mem_map.h"
 
-#include "core.h"
-#include "break_points.h"
-#include "arm/interpreter/armdefs.h"
-#include "arm/disassembler/arm_disasm.h"
+#include "core/core.h"
+#include "common/break_points.h"
+#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/disassembler/arm_disasm.h"
 
 GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
 {
@@ -43,7 +43,7 @@ void GDisAsmView::Init()
 {
     ARM_Disasm* disasm = new ARM_Disasm();
 
-    base_addr = Core::g_app_core->PC();
+    base_addr = Core::g_app_core->GetPC();
     unsigned int curInstAddr = base_addr;
     char result[255];
 
@@ -112,7 +112,7 @@ void GDisAsmView::OnToggleStartStop()
 
 void GDisAsmView::OnCPUStepped()
 {
-    ARMword next_instr = Core::g_app_core->PC();
+    ARMword next_instr = Core::g_app_core->GetPC();
 
     if (breakpoints->IsAddressBreakPoint(next_instr))
     {

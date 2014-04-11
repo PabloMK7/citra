@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "ui_controller_config.h"
+//#include "ui_controller_config.h"
 
 /* TODO(bunnei): ImplementMe
 

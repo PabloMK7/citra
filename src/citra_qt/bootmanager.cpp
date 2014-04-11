@@ -1,11 +1,11 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
 
-#include "common.h"
+#include "common/common.h"
 #include "bootmanager.hxx"
 
-#include "core.h"
-#include "loader.h"
+#include "core/core.h"
+#include "core/loader.h"
 
 #include "version.h"
 
@@ -85,8 +85,8 @@ public:
 //        makeCurrent();
     }
     void resizeEvent(QResizeEvent* ev) {
-        parent_->set_client_area_width(size().width());
-        parent_->set_client_area_height(size().height());
+        parent_->SetClientAreaWidth(size().width());
+        parent_->SetClientAreaHeight(size().height());
     }
 private:
     GRenderWindow* parent_;

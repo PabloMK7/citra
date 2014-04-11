@@ -1,8 +1,8 @@
 #include <QDockWidget>
 #include "ui_disasm.h"
 
-#include "common.h"
-#include "break_points.h"
+#include "common/common.h"
+#include "common/break_points.h"
 
 class QAction;
 class QStandardItemModel;

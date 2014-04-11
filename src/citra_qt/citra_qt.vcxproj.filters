@@ -61,21 +61,15 @@
     </MOC>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bootmanager.hxx" />
     <ClInclude Include="hotkeys.hxx" />
-    <ClInclude Include="main.hxx" />
     <ClInclude Include="ui_hotkeys.h" />
-    <ClInclude Include="ui_image_info.h" />
+    <ClInclude Include="main.hxx" />
     <ClInclude Include="ui_main.h" />
-    <ClInclude Include="ui_welcome_wizard.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="config\controller_config.hxx">
       <Filter>config</Filter>
     </ClInclude>
     <ClInclude Include="config\controller_config_util.hxx">
-      <Filter>config</Filter>
-    </ClInclude>
-    <ClInclude Include="config\ui_controller_config.h">
       <Filter>config</Filter>
     </ClInclude>
     <ClInclude Include="cpu_regs.hxx">
@@ -96,11 +90,11 @@
     <ClInclude Include="ui_disasm.h">
       <Filter>debugger</Filter>
     </ClInclude>
-    <ClInclude Include="ui_gfx_fifo_player.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
     <ClInclude Include="callstack.hxx">
       <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_controller_config.h">
+      <Filter>config</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

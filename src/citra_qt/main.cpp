@@ -4,8 +4,8 @@
 #include "qhexedit.h"
 #include "main.hxx"
 
-#include "common.h"
-#include "platform.h"
+#include "common/common.h"
+#include "common/platform.h"
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <unistd.h>
 #endif
@@ -19,9 +19,9 @@
 #include "callstack.hxx"
 #include "ramview.hxx"
 
-#include "system.h"
-#include "loader.h"
-#include "core.h"
+#include "core/system.h"
+#include "core/loader.h"
+#include "core/core.h"
 #include "version.h"
 
 

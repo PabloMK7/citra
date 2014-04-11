@@ -9,7 +9,7 @@
     <UIC>
       <QtUicExt>.hpp</QtUicExt>
       <QtUicPrefix>ui_</QtUicPrefix>
-      <CommandLineTemplate>%QTDIR%\bin\uic.exe [inputs] -o "[QtUicPrefix]%(FileName)[QtUicExt]"</CommandLineTemplate>
+      <CommandLineTemplate>$(QTDIR)\bin\uic.exe [inputs] -o "[QtUicPrefix]%(FileName)[QtUicExt]"</CommandLineTemplate>
       <Outputs>[QtUicPrefix]%(FileName)[QtUicExt]</Outputs>
       <ExecutionDescription>%(FileName).ui</ExecutionDescription>
     </UIC>
@@ -33,7 +33,7 @@
       <QtMocNoWarnings>False</QtMocNoWarnings>
       <QtMocPfx>_moc</QtMocPfx>
       <QtMocFilename>%(FileName)%(QtMocPfx)</QtMocFilename>
-      <CommandLineTemplate>%QTDIR%\bin\moc.exe [QtMocNoWarnings] [QtCoreLib] [QtShared] [QtThread] [QtUnicode] [QtLargeFile] [QtKeywords] [QtOpenGLLib] [QtNoDebug] [QtGuiLib] -DWIN32 -D_MSC_VER=1500 -DWIN32 [Inputs] -o$(IntDir)%(QtMocFilename).cpp &amp;&amp; cl.exe $(IntDir)%(QtMocFilename).cpp [QtCommandLine] /c /Fo"$(IntDir)%(QtMocFilename).obj"</CommandLineTemplate>
+      <CommandLineTemplate>$(QTDIR)\bin\moc.exe [QtMocNoWarnings] [QtCoreLib] [QtShared] [QtThread] [QtUnicode] [QtLargeFile] [QtKeywords] [QtOpenGLLib] [QtNoDebug] [QtGuiLib] -DWIN32 -D_MSC_VER=1500 -DWIN32 [Inputs] -o$(IntDir)%(QtMocFilename).cpp &amp;&amp; cl.exe $(IntDir)%(QtMocFilename).cpp [QtCommandLine] /c /Fo"$(IntDir)%(QtMocFilename).obj"</CommandLineTemplate>
       <Outputs>$(IntDir)%(QtMocFilename).obj</Outputs>
       <ExecutionDescription>%(FileName).hxx</ExecutionDescription>
       <ShowOnlyRuleProperties>true</ShowOnlyRuleProperties>

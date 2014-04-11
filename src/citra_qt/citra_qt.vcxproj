@@ -142,6 +142,15 @@
     <MOC Include="..\..\externals\qhexedit\qhexedit.h" />
     <MOC Include="..\..\externals\qhexedit\qhexedit_p.h" />
     <MOC Include="..\..\externals\qhexedit\xbytearray.h" />
+    <MOC Include="config\controller_config.hxx" />
+    <MOC Include="config\controller_config_util.hxx" />
+    <MOC Include="callstack.hxx" />
+    <MOC Include="cpu_regs.hxx" />
+    <MOC Include="disasm.hxx" />
+    <MOC Include="ramview.hxx" />
+    <MOC Include="bootmanager.hxx" />
+    <MOC Include="hotkeys.hxx" />
+    <MOC Include="main.hxx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
@@ -150,26 +159,23 @@
     <ProjectReference Include="..\core\core.vcxproj">
       <Project>{8aea7f29-3466-4786-a10d-6a4bd0610977}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\video_core\video_core.vcxproj">
+      <Project>{6678d1a3-33a6-48a9-878b-48e5d2903d27}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bootmanager.hxx" />
     <ClInclude Include="callstack.hxx" />
     <ClInclude Include="config\controller_config.hxx" />
     <ClInclude Include="config\controller_config_util.hxx" />
-    <ClInclude Include="config\ui_controller_config.h" />
     <ClInclude Include="cpu_regs.hxx" />
     <ClInclude Include="disasm.hxx" />
-    <ClInclude Include="hotkeys.hxx" />
-    <ClInclude Include="main.hxx" />
     <ClInclude Include="ramview.hxx" />
     <ClInclude Include="ui_callstack.h" />
+    <ClInclude Include="ui_controller_config.h" />
     <ClInclude Include="ui_cpu_regs.h" />
     <ClInclude Include="ui_disasm.h" />
-    <ClInclude Include="ui_gfx_fifo_player.h" />
     <ClInclude Include="ui_hotkeys.h" />
-    <ClInclude Include="ui_image_info.h" />
     <ClInclude Include="ui_main.h" />
-    <ClInclude Include="ui_welcome_wizard.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

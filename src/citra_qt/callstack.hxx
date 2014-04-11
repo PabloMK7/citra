@@ -1,6 +1,6 @@
 #include <QDockWidget>
 #include "ui_callstack.h"
-#include "platform.h"
+#include "common/platform.h"
 
 class QStandardItemModel;
 
