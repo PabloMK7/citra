@@ -34,4 +34,4 @@
 //    }
 //};
 
-void Register_SysCall();
+void Register_Syscall();

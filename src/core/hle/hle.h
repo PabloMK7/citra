@@ -30,10 +30,12 @@ struct ModuleDef {
 	const FunctionDef*  func_table;
 };
 
+void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
+
+void CallSyscall(u32 opcode);
+
 void Init();
 
 void Shutdown();
-
-void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
 
 } // namespace

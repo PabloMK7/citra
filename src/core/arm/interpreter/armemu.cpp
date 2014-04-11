@@ -16,6 +16,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
+#include "core/hle/hle.h"
+
 #include "arm_regformat.h"
 #include "armdefs.h"
 #include "armemu.h"
@@ -4558,6 +4560,7 @@ ARMul_Emulate26 (ARMul_State * state)
                 //    ARMul_OSHandleSWI (state, BITS (0, 23));
                 //    break;
                 //}
+                HLE::CallSyscall(instr);
                 ARMul_Abort (state, ARMul_SWIV);
                 break;
             }
