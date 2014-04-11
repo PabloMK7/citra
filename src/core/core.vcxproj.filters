@@ -25,6 +25,9 @@
     <Filter Include="hle">
       <UniqueIdentifier>{8b62769e-3e2a-4a57-a7bc-b3b2933c2bc7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hle\service">
+      <UniqueIdentifier>{812c5189-ca49-4704-b842-3ffad09092d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp">
@@ -78,10 +81,10 @@
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="core_timing.cpp" />
-    <ClCompile Include="hle\hle_syscall.cpp">
+    <ClCompile Include="hle\hle.cpp">
       <Filter>hle</Filter>
     </ClCompile>
-    <ClCompile Include="hle\hle.cpp">
+    <ClCompile Include="hle\syscall.cpp">
       <Filter>hle</Filter>
     </ClCompile>
   </ItemGroup>
@@ -163,7 +166,10 @@
     <ClInclude Include="hle\function_wrappers.h">
       <Filter>hle</Filter>
     </ClInclude>
-    <ClInclude Include="hle\hle_syscall.h">
+    <ClInclude Include="hle\service\service.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\syscall.h">
       <Filter>hle</Filter>
     </ClInclude>
   </ItemGroup>

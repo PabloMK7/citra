@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "core/hle/hle.h"
-#include "core/hle/hle_syscall.h"
+#include "core/hle/syscall.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef* func
 }
 
 void RegisterAllModules() {
-    Register_Syscall();
+    Syscall::Register();
 }
 
 void Init() {
