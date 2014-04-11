@@ -152,7 +152,7 @@
     <ClCompile Include="elf\elf_reader.cpp" />
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
-    <ClCompile Include="hle.cpp" />
+    <ClCompile Include="hle\hle.cpp" />
     <ClCompile Include="hle\hle_syscall.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\hw_lcd.cpp" />

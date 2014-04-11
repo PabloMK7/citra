@@ -81,7 +81,7 @@
     <ClCompile Include="hle\hle_syscall.cpp">
       <Filter>hle</Filter>
     </ClCompile>
-    <ClCompile Include="hle.cpp">
+    <ClCompile Include="hle\hle.cpp">
       <Filter>hle</Filter>
     </ClCompile>
   </ItemGroup>
