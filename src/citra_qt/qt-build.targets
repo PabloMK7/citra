@@ -1,4 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2010 Daher Alfawares
+Licensed under GPLv2
+Refer to the license.txt file included.
+-->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <PropertyPageSchema
