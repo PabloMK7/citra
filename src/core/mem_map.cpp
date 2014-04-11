@@ -63,7 +63,7 @@ void Init() {
 
     g_scratchpad = new u8[MEM_SCRATCHPAD_SIZE];
 
-    NOTICE_LOG(MEMMAP, "Memory system initialized. RAM at %p (mirror at 0 @ %p)", g_fcram, 
+    NOTICE_LOG(MEMMAP, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_fcram, 
         g_physical_fcram);
 }
 
@@ -77,7 +77,7 @@ void Shutdown() {
     g_base          = NULL;
     g_scratchpad    = NULL;
 
-    NOTICE_LOG(MEMMAP, "Memory system shut down.");
+    NOTICE_LOG(MEMMAP, "shutdown OK");
 }
 
 } // namespace

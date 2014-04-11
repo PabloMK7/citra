@@ -40,7 +40,7 @@ inline void _Read(T &var, const u32 addr) {
         var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
 
     } else {
-        _assert_msg_(MEMMAP, false, "unknown memory read");
+        _assert_msg_(MEMMAP, false, "unknown memory read @ 0x%08X", addr);
     }
 }
 

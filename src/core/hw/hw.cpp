@@ -12,12 +12,12 @@ namespace HW {
 
 template <typename T>
 inline void Read(T &var, const u32 addr) {
-    NOTICE_LOG(HW, "Hardware read from address %08X", addr);
+    NOTICE_LOG(HW, "read from address %08X", addr);
 }
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    NOTICE_LOG(HW, "Hardware write to address %08X", addr);
+    NOTICE_LOG(HW, "write to address %08X", addr);
 }
 
 // Explicitly instantiate template functions because we aren't defining this in the header:
@@ -40,12 +40,12 @@ void Update() {
 /// Initialize hardware
 void Init() {
     LCD::Init();
-    NOTICE_LOG(HW, "Hardware initialized OK");
+    NOTICE_LOG(HW, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(HW, "Hardware shutdown OK");
+    NOTICE_LOG(HW, "shutdown OK");
 }
 
 }

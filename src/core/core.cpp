@@ -24,24 +24,6 @@ void RunLoop() {
 
 /// Step the CPU one instruction
 void SingleStep() {
-
-    char current_instr[512];
-
-    if (g_app_core->GetPC() == 0x080D1534) {
-        g_disasm->disasm(g_app_core->GetPC(), Memory::Read32(g_app_core->GetPC()), current_instr);
-
-
-        NOTICE_LOG(ARM11, "0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-            g_app_core->GetReg(0),
-            g_app_core->GetReg(1),
-            g_app_core->GetReg(2),
-            g_app_core->GetReg(3), Memory::Read32(g_app_core->GetReg(0)), Memory::Read32(g_app_core->GetReg(1)));
-
-
-        NOTICE_LOG(ARM11, "0x%08X\t%s", g_app_core->GetPC(), current_instr);
-    }
-
-
     g_app_core->Step();
     HW::Update();
 }
@@ -58,7 +40,7 @@ void Stop() {
 
 /// Initialize the core
 int Init() {
-    NOTICE_LOG(MASTER_LOG, "Core initialized OK");
+    NOTICE_LOG(MASTER_LOG, "initialized OK");
 
     g_disasm = new ARM_Disasm();
     g_app_core = new ARM_Interpreter();
@@ -72,7 +54,7 @@ void Shutdown() {
     delete g_app_core;
     delete g_sys_core;
 
-    NOTICE_LOG(MASTER_LOG, "Core shutdown OK");
+    NOTICE_LOG(MASTER_LOG, "shutdown OK");
 }
 
 } // namespace
