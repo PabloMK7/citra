@@ -10,13 +10,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef void (*HLEFunc)();
-typedef void (*SysCallFunc)();
 
 struct HLEFunction {
 	u32                 id;
 	HLEFunc             func;
 	const char*         name;
-	u32                 flags;
 };
 
 struct HLEModule {
@@ -25,11 +23,15 @@ struct HLEModule {
 	const HLEFunction*  func_table;
 };
 
-struct SysCall {
-    u8                  id;
-	SysCallFunc         func;
-    const char*         name;
-};
-
 #define PARAM(n)        Core::g_app_core->GetReg(n)
 #define RETURN(n)       Core::g_app_core->SetReg(0, n)
+
+namespace HLE {
+
+void Init();
+
+void Shutdown();
+
+void RegisterModule(const char *name, int num_functions, const HLEFunction *func_table);
+
+} // namespace

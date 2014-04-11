@@ -7,16 +7,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+typedef u32 Handle;
+typedef s32 Result;
 
 Result SVC_ConnectToPort(void* out, const char* port_name) {
-    NOTICE_LOG(OSHLE, "SVC_ConnectToPort called, port_name: %s", port_name);
+    NOTICE_LOG(OSHLE, "svcConnectToPort called, port_name: %s", port_name);
     return 0;
 }
 
-const SysCall SysCallTable[] = {
+const HLEFunction SysCallTable[] = {
     {0x2D, WrapI_VC<SVC_ConnectToPort>, "svcConnectToPort"},
 };
 
-void Register_SysCalls() {
+void Register_SysCall() {
+    HLE::RegisterModule("SysCallTable", ARRAY_SIZE(SysCallTable), SysCallTable);
 }

@@ -35,8 +35,6 @@
 //};
 
 
-typedef u32 Handle;
-typedef s32 Result;
 
 
-Result ConnectToPort(Handle* out, const char* port_name);
+void Register_SysCall();

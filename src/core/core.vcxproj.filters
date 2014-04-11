@@ -81,6 +81,9 @@
     <ClCompile Include="hle\hle_syscall.cpp">
       <Filter>hle</Filter>
     </ClCompile>
+    <ClCompile Include="hle.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
