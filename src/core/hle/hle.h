@@ -19,15 +19,15 @@ namespace HLE {
 typedef void (*Func)();
 
 struct FunctionDef {
-	u32                 id;
-	Func                func;
-	std::string         name;
+    u32                 id;
+    Func                func;
+    std::string         name;
 };
 
 struct ModuleDef {
-	std::string         name;
-	int                 num_funcs;
-	const FunctionDef*  func_table;
+    std::string         name;
+    int                 num_funcs;
+    const FunctionDef*  func_table;
 };
 
 void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
