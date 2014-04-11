@@ -9,29 +9,31 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef void (*HLEFunc)();
-
-struct HLEFunction {
-	u32                 id;
-	HLEFunc             func;
-	const char*         name;
-};
-
-struct HLEModule {
-	const char*         name;
-	int                 num_funcs;
-	const HLEFunction*  func_table;
-};
-
 #define PARAM(n)        Core::g_app_core->GetReg(n)
 #define RETURN(n)       Core::g_app_core->SetReg(0, n)
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 namespace HLE {
+
+typedef void (*Func)();
+
+struct FunctionDef {
+	u32                 id;
+	Func                func;
+	std::string         name;
+};
+
+struct ModuleDef {
+	std::string         name;
+	int                 num_funcs;
+	const FunctionDef*  func_table;
+};
 
 void Init();
 
 void Shutdown();
 
-void RegisterModule(const char *name, int num_functions, const HLEFunction *func_table);
+void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
 
 } // namespace

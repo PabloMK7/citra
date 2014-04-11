@@ -15,10 +15,10 @@ Result SVC_ConnectToPort(void* out, const char* port_name) {
     return 0;
 }
 
-const HLEFunction SysCallTable[] = {
+const HLE::FunctionDef SysCall_Table[] = {
     {0x2D, WrapI_VC<SVC_ConnectToPort>, "svcConnectToPort"},
 };
 
 void Register_SysCall() {
-    HLE::RegisterModule("SysCallTable", ARRAY_SIZE(SysCallTable), SysCallTable);
+    HLE::RegisterModule("SysCallTable", ARRAY_SIZE(SysCall_Table), SysCall_Table);
 }

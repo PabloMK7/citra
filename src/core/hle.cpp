@@ -11,10 +11,10 @@
 
 namespace HLE {
 
-static std::vector<HLEModule> g_module_db;
+static std::vector<ModuleDef> g_module_db;
 
-void RegisterModule(const char *name, int num_functions, const HLEFunction *func_table) {
-    HLEModule module = {name, num_functions, func_table};
+void RegisterModule(std::string name, int num_functions, const FunctionDef* func_table) {
+    ModuleDef module = {name, num_functions, func_table};
     g_module_db.push_back(module);
 }
 
