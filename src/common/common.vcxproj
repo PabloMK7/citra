@@ -186,6 +186,7 @@
     <ClInclude Include="std_thread.h" />
     <ClInclude Include="string_util.h" />
     <ClInclude Include="swap.h" />
+    <ClInclude Include="symbols.h" />
     <ClInclude Include="thread.h" />
     <ClInclude Include="thunk.h" />
     <ClInclude Include="timer.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="msg_handler.cpp" />
     <ClCompile Include="string_util.cpp" />
+    <ClCompile Include="symbols.cpp" />
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="utf8.cpp" />

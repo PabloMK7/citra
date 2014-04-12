@@ -37,6 +37,7 @@
     <ClInclude Include="thunk.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="utf8.h" />
+    <ClInclude Include="symbols.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="break_points.cpp" />
@@ -56,6 +57,7 @@
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="utf8.cpp" />
     <ClCompile Include="version.cpp" />
+    <ClCompile Include="symbols.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
