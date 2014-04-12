@@ -10,6 +10,7 @@
 
 #include "core/core.h"
 #include "common/break_points.h"
+#include "common/symbols.h"
 #include "core/arm/interpreter/armdefs.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
@@ -20,7 +21,7 @@ GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(p
 	breakpoints = new BreakPoints();
 
     model = new QStandardItemModel(this);
-    model->setColumnCount(2);
+    model->setColumnCount(3);
     disasm_ui.treeView->setModel(model);
 
     RegisterHotkey("Disassembler", "Start/Stop", QKeySequence(Qt::Key_F5), Qt::ApplicationShortcut);
@@ -52,6 +53,13 @@ void GDisAsmView::Init()
         disasm->disasm(curInstAddr, Memory::Read32(curInstAddr), result);
         model->setItem(i, 0, new QStandardItem(QString("0x%1").arg((uint)(curInstAddr), 8, 16, QLatin1Char('0'))));
         model->setItem(i, 1, new QStandardItem(QString(result)));
+        if (Symbols::HasSymbol(curInstAddr))
+        {
+            TSymbol symbol = Symbols::GetSymbol(curInstAddr);
+            model->setItem(i, 2, new QStandardItem(QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
+                                                                          .arg(symbol.size / 4))); // divide by 4 to get instruction count
+
+        }
         curInstAddr += 4;
     }
     disasm_ui.treeView->resizeColumnToContents(0);
