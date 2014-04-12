@@ -6,12 +6,9 @@
 
 #include "common/common.h"
 
+#include "common/symbols.h"
 #include "core/mem_map.h"
 #include "core/elf/elf_reader.h"
-
-//#include "Core/Debugger/Debugger_SymbolMap.h"
-//#include "Core/HW/Memmap.h"
-//#include "Core/PowerPC/PPCSymbolDB.h"
 
 //void bswap(Elf32_Word &w) {w = Common::swap32(w);}
 //void bswap(Elf32_Half &w) {w = Common::swap16(w);}
@@ -71,16 +68,9 @@ ElfReader::ElfReader(void *ptr)
 	segments = (Elf32_Phdr *)(base + header->e_phoff);
 	sections = (Elf32_Shdr *)(base + header->e_shoff);
 
-	//for (int i = 0; i < GetNumSegments(); i++)
-	//{
-	//	byteswapSegment(segments[i]);
-	//}
-
-	//for (int i = 0; i < GetNumSections(); i++)
-	//{
-	//	byteswapSection(sections[i]);
-	//}
 	entryPoint = header->e_entry;
+
+    LoadSymbols();
 }
 
 const char *ElfReader::GetSectionName(int section) const
@@ -100,9 +90,6 @@ const char *ElfReader::GetSectionName(int section) const
 bool ElfReader::LoadInto(u32 vaddr)
 {
 	DEBUG_LOG(MASTER_LOG,"String section: %i", header->e_shstrndx);
-
-//	sectionOffsets = new u32[GetNumSections()];
-//	sectionAddrs = new u32[GetNumSections()];
 
 	// Should we relocate?
 	bRelocate = (header->e_type != ET_EXEC);
@@ -153,30 +140,8 @@ bool ElfReader::LoadInto(u32 vaddr)
 		}
 	}
 
-	/*
-	LOG(MASTER_LOG,"%i sections:", header->e_shnum);
 
-	for (int i=0; i<GetNumSections(); i++)
-	{
-		Elf32_Shdr *s = &sections[i];
-		const char *name = GetSectionName(i);
-
-		u32 writeAddr = s->sh_addr + baseAddress;
-		sectionOffsets[i] = writeAddr - vaddr;
-		sectionAddrs[i] = writeAddr;
-
-		if (s->sh_flags & SHF_ALLOC)
-		{
-			LOG(MASTER_LOG,"Data Section found: %s     Sitting at %08x, size %08x", name, writeAddr, s->sh_size);
-
-		}
-		else
-		{
-			LOG(MASTER_LOG,"NonData Section found: %s     Ignoring (size=%08x) (flags=%08x)", name, s->sh_size, s->sh_flags);
-		}
-	}
-*/
-	INFO_LOG(MASTER_LOG,"Done loading.");
+    INFO_LOG(MASTER_LOG,"Done loading.");
 	return true;
 }
 
@@ -192,8 +157,6 @@ SectionID ElfReader::GetSectionByName(const char *name, int firstSection) const
 	return -1;
 }
 
-/* TODO(bunnei): The following is verbatim from Dolphin - needs to be updated for this project:
-
 bool ElfReader::LoadSymbols()
 {
 	bool hasSymbols = false;
@@ -208,33 +171,20 @@ bool ElfReader::LoadSymbols()
 		int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
 		for (int sym = 0; sym < numSymbols; sym++)
 		{
-			int size = Common::swap32(symtab[sym].st_size);
+            int size = symtab[sym].st_size;
 			if (size == 0)
 				continue;
 
 			// int bind = symtab[sym].st_info >> 4;
 			int type = symtab[sym].st_info & 0xF;
-			int sectionIndex = Common::swap16(symtab[sym].st_shndx);
-			int value = Common::swap32(symtab[sym].st_value);
-			const char *name = stringBase + Common::swap32(symtab[sym].st_name);
-			if (bRelocate)
-				value += sectionAddrs[sectionIndex];
 
-			int symtype = Symbol::SYMBOL_DATA;
-			switch (type)
-			{
-			case STT_OBJECT:
-				symtype = Symbol::SYMBOL_DATA; break;
-			case STT_FUNC:
-				symtype = Symbol::SYMBOL_FUNCTION; break;
-			default:
-				continue;
-			}
-			g_symbolDB.AddKnownSymbol(value, size, name, symtype);
-			hasSymbols = true;
+			const char *name = stringBase + symtab[sym].st_name;
+
+            Symbols::Add(symtab[sym].st_value, name, size, type);
+
+            hasSymbols = true;
 		}
 	}
-	g_symbolDB.Index();
-	return hasSymbols;
+
+    return hasSymbols;
 }
-*/
