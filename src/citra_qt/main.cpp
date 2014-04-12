@@ -6,6 +6,7 @@
 
 #include "common/common.h"
 #include "common/platform.h"
+#include "common/log_manager.h"
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <unistd.h>
 #endif
@@ -31,7 +32,9 @@ GMainWindow::GMainWindow()
     statusBar()->hide();
 
     render_window = new GRenderWindow;
-    render_window->hide();
+    //render_window->setStyleSheet("background-color:black;");
+    ui.horizontalLayout->addWidget(render_window); 
+    //render_window->hide();
 
     disasm = new GDisAsmView(this, render_window->GetEmuThread());
     addDockWidget(Qt::BottomDockWidgetArea, disasm);
@@ -63,15 +66,15 @@ GMainWindow::GMainWindow()
     restoreState(settings.value("state").toByteArray());
     render_window->restoreGeometry(settings.value("geometryRenderWindow").toByteArray());
 
-    ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", false).toBool());
-    SetupEmuWindowMode();
+    //ui.action_Popout_Window_Mode->setChecked(settings.value("popupWindowMode", false).toBool());
+    //ToggleWindowMode();
 
     // Setup connections
     connect(ui.action_load_elf, SIGNAL(triggered()), this, SLOT(OnMenuLoadELF()));
 	connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
 	connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
 	connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
-	connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(SetupEmuWindowMode()));
+	//connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(SetupEmuWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
@@ -89,6 +92,7 @@ GMainWindow::GMainWindow()
     show();
 
     System::Init(render_window);
+    LogManager::Init();
 }
 
 GMainWindow::~GMainWindow()
@@ -124,9 +128,6 @@ void GMainWindow::BootGame(const char* filename)
     arm_regs->OnCPUStepped();
 
     render_window->GetEmuThread().start();
-
-    SetupEmuWindowMode();
-    render_window->show();
 }
 
 void GMainWindow::OnMenuLoadELF()
@@ -171,11 +172,11 @@ void GMainWindow::OnOpenHotkeysDialog()
 }
 
 
-void GMainWindow::SetupEmuWindowMode()
+void GMainWindow::ToggleWindowMode()
 {
     //if (!render_window->GetEmuThread().isRunning())
     //    return;
-
+    /*
     bool enable = ui.action_Single_Window_Mode->isChecked();
     if (enable && render_window->parent() == NULL) // switch to single window mode
     {
@@ -192,6 +193,7 @@ void GMainWindow::SetupEmuWindowMode()
         render_window->DoneCurrent();
         render_window->RestoreGeometry();
     }
+    */
 }
 
 void GMainWindow::OnConfigure()
@@ -206,7 +208,7 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("geometry", saveGeometry());
     settings.setValue("state", saveState());
     settings.setValue("geometryRenderWindow", render_window->saveGeometry());
-    settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
+    //settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
 

@@ -37,8 +37,8 @@ private slots:
 	void OnStopGame();
 	void OnMenuLoadELF();
     void OnOpenHotkeysDialog();
-    void SetupEmuWindowMode();
     void OnConfigure();
+    void ToggleWindowMode();
 
 private:
     Ui::MainWindow ui;

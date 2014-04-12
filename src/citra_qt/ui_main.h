@@ -32,7 +32,6 @@ public:
     QAction *action_Pause;
     QAction *action_Stop;
     QAction *action_About;
-    QAction *action_Single_Window_Mode;
     QAction *action_Hotkeys;
     QAction *action_Configure;
     QWidget *centralwidget;
@@ -68,9 +67,6 @@ public:
         action_Stop->setEnabled(false);
         action_About = new QAction(MainWindow);
         action_About->setObjectName(QString::fromUtf8("action_About"));
-        action_Single_Window_Mode = new QAction(MainWindow);
-        action_Single_Window_Mode->setObjectName(QString::fromUtf8("action_Single_Window_Mode"));
-        action_Single_Window_Mode->setCheckable(true);
         action_Hotkeys = new QAction(MainWindow);
         action_Hotkeys->setObjectName(QString::fromUtf8("action_Hotkeys"));
         action_Configure = new QAction(MainWindow);
@@ -108,7 +104,6 @@ public:
         menu_Emulation->addAction(action_Stop);
         menu_Emulation->addSeparator();
         menu_Emulation->addAction(action_Configure);
-        menu_View->addAction(action_Single_Window_Mode);
         menu_View->addAction(action_Hotkeys);
         menu_Help->addAction(action_About);
 
@@ -128,7 +123,6 @@ public:
         action_Pause->setText(QApplication::translate("MainWindow", "&Pause", 0, QApplication::UnicodeUTF8));
         action_Stop->setText(QApplication::translate("MainWindow", "&Stop", 0, QApplication::UnicodeUTF8));
         action_About->setText(QApplication::translate("MainWindow", "About Citra", 0, QApplication::UnicodeUTF8));
-        action_Single_Window_Mode->setText(QApplication::translate("MainWindow", "Single Window Mode", 0, QApplication::UnicodeUTF8));
         action_Hotkeys->setText(QApplication::translate("MainWindow", "Configure &Hotkeys ...", 0, QApplication::UnicodeUTF8));
         action_Configure->setText(QApplication::translate("MainWindow", "Configure ...", 0, QApplication::UnicodeUTF8));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", 0, QApplication::UnicodeUTF8));

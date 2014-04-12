@@ -6,6 +6,7 @@
 
 #include "core/core.h"
 #include "core/loader.h"
+#include "video_core/video_core.h"
 
 #include "version.h"
 
@@ -35,7 +36,8 @@ void EmuThread::run()
                     exec_cpu_step = false;
 
                 Core::SingleStep();
-                emit CPUStepped();
+                if (!cpu_running)
+                    emit CPUStepped();
             }
         }
     }
@@ -103,9 +105,8 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
 
     child = new GGLWidgetInternal(this);
-
     QBoxLayout* layout = new QHBoxLayout(this);
-    resize(640, 480); // TODO: Load size from config instead
+    resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
