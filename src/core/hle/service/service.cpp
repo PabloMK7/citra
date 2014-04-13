@@ -5,14 +5,15 @@
 #include "common/common.h"
 #include "common/log.h"
 
+#include "core/hle/hle.h"
 #include "core/hle/service/service.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Service
 
 namespace Service {
 
 Manager* g_manager = NULL;  ///< Service manager
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Service Manager class
 
 Manager::Manager() {
 }
@@ -62,7 +63,11 @@ Interface* Manager::FetchFromPortName(std::string port_name) {
     return FetchFromUID(itr->second);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Interface to "SRV" service
+
 class Interface_SRV : public Interface {
+
 public:
 
     Interface_SRV() {
@@ -70,6 +75,12 @@ public:
 
     ~Interface_SRV() {
     }
+
+    enum {
+        CMD_OFFSET              = 0x80,
+        CMD_HEADER_INIT         = 0x10002,  ///< Command header to initialize SRV service
+        CMD_HEADER_GET_HANDLE   = 0x50100,  ///< Command header to get handle of other services
+    };
 
     /**
      * Gets the string name used by CTROS for a service
@@ -92,11 +103,26 @@ public:
      * @return Return result of svcSendSyncRequest passed back to user app
      */
     Syscall::Result Sync() {
-        ERROR_LOG(HLE, "Unimplemented function Interface_SRV::Sync");
+        u32 header = 0;
+        HLE::Read<u32>(header, (HLE::CMD_BUFFER_ADDR + CMD_OFFSET));
+
+        switch (header) {
+        case CMD_HEADER_INIT:
+            NOTICE_LOG(HLE, "Interface_SRV::Sync - Initialize");
+            break;
+
+        case CMD_HEADER_GET_HANDLE:
+            NOTICE_LOG(HLE, "Interface_SRV::Sync - GetHandle, port: %s", HLE::GetCharPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET + 4));
+            break;
+        }
+
         return 0;
     }
-
+     
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Module interface
 
 /// Initialize ServiceManager
 void Init() {
