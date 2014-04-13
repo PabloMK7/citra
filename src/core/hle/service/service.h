@@ -40,7 +40,7 @@ public:
      * Gets the string name used by CTROS for a service
      * @return String name of service
      */
-    virtual std::string GetName() {
+    virtual std::string GetName() const {
         return "[UNKNOWN SERVICE NAME]";
     }
 
@@ -48,7 +48,7 @@ public:
      * Gets the string name used by CTROS for a service
      * @return Port name of service
      */
-    virtual std::string GetPortName() {
+    virtual std::string GetPortName() const {
         return "[UNKNOWN SERVICE PORT]";
     }
 

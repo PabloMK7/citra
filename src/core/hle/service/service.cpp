@@ -75,7 +75,7 @@ public:
      * Gets the string name used by CTROS for a service
      * @return String name of service
      */
-    std::string GetName() {
+    std::string GetName() const {
         return "ServiceManager";
     }
 
@@ -83,7 +83,7 @@ public:
      * Gets the string name used by CTROS for a service
      * @return Port name of service
      */
-    std::string GetPortName() {
+    std::string GetPortName() const {
         return "srv:";
     }
 
@@ -92,8 +92,8 @@ public:
      * @return Return result of svcSendSyncRequest passed back to user app
      */
     Syscall::Result Sync() {
-        ERROR_LOG(HLE, "Unimplemented function ServiceManager::Sync");
-        return -1;
+        ERROR_LOG(HLE, "Unimplemented function Interface_SRV::Sync");
+        return 0;
     }
 
 };
@@ -102,13 +102,13 @@ public:
 void Init() {
     g_manager = new Manager;
     g_manager->AddService(new Interface_SRV);
-    NOTICE_LOG(HLE, "ServiceManager initialized OK");
+    NOTICE_LOG(HLE, "Services initialized OK");
 }
 
 /// Shutdown ServiceManager
 void Shutdown() {
     delete g_manager;
-    NOTICE_LOG(HLE, "ServiceManager shutdown OK");
+    NOTICE_LOG(HLE, "Services shutdown OK");
 }
 
 
