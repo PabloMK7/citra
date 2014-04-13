@@ -153,6 +153,7 @@
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
     <ClCompile Include="hle\hle.cpp" />
+    <ClCompile Include="hle\service\service.cpp" />
     <ClCompile Include="hle\syscall.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\hw_lcd.cpp" />

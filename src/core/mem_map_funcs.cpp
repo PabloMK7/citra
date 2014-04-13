@@ -6,6 +6,7 @@
 
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
+#include "hle/hle.h"
 
 namespace Memory {
 
@@ -15,9 +16,16 @@ inline void _Read(T &var, const u32 addr) {
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
 
+    
+    // Memory allocated for HLE use that can be addressed from the emulated application
+    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
+    // core running the user application (appcore)
+    if (addr >= MEM_OSHLE_VADDR && addr < MEM_OSHLE_VADDR_END) {
+        NOTICE_LOG(MEMMAP, "OSHLE read @ 0x%08X", addr);
+
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
+    } else if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
         HW::Read<T>(var, addr);
 
     // FCRAM virtual address reads
@@ -47,9 +55,15 @@ inline void _Read(T &var, const u32 addr) {
 template <typename T>
 inline void _Write(u32 addr, const T data) {
     
+    // Memory allocated for HLE use that can be addressed from the emulated application
+    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
+    // core running the user application (appcore)
+    if (addr >= MEM_OSHLE_VADDR && addr < MEM_OSHLE_VADDR_END) {
+        NOTICE_LOG(MEMMAP, "OSHLE write @ 0x%08X", addr);
+
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
+    } else if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
         HW::Write<const T>(addr, data);
     
     // ExeFS:/.code is loaded here:

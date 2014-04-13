@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+ // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
@@ -12,7 +12,6 @@
 
 namespace Memory {
 
-    
 u8*    g_base                   = NULL;         ///< The base pointer to the auto-mirrored arena.
 
 MemArena g_arena;                               ///< The MemArena class

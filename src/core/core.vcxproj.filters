@@ -87,6 +87,9 @@
     <ClCompile Include="hle\syscall.cpp">
       <Filter>hle</Filter>
     </ClCompile>
+    <ClCompile Include="hle\service\service.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">

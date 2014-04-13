@@ -16,6 +16,11 @@
 
 namespace HLE {
 
+enum {
+    OS_THREAD_COMMAND_BUFFER_ADDR = 0xA0004000,
+};
+
+typedef u32 Addr;
 typedef void (*Func)();
 
 struct FunctionDef {
@@ -33,6 +38,8 @@ struct ModuleDef {
 void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
 
 void CallSyscall(u32 opcode);
+
+Addr CallGetThreadCommandBuffer();
 
 void Init();
 
