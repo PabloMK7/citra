@@ -66,14 +66,14 @@ Interface* Manager::FetchFromPortName(std::string port_name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface to "SRV" service
 
-class Interface_SRV : public Interface {
+class SRV : public Interface {
 
 public:
 
-    Interface_SRV() {
+    SRV() {
     }
 
-    ~Interface_SRV() {
+    ~SRV() {
     }
 
     enum {
@@ -108,11 +108,11 @@ public:
 
         switch (header) {
         case CMD_HEADER_INIT:
-            NOTICE_LOG(HLE, "Interface_SRV::Sync - Initialize");
+            NOTICE_LOG(HLE, "SRV::Sync - Initialize");
             break;
 
         case CMD_HEADER_GET_HANDLE:
-            NOTICE_LOG(HLE, "Interface_SRV::Sync - GetHandle, port: %s", HLE::GetCharPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET + 4));
+            NOTICE_LOG(HLE, "SRV::Sync - GetHandle, port: %s", HLE::GetCharPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET + 4));
             break;
         }
 
@@ -127,7 +127,7 @@ public:
 /// Initialize ServiceManager
 void Init() {
     g_manager = new Manager;
-    g_manager->AddService(new Interface_SRV);
+    g_manager->AddService(new SRV);
     NOTICE_LOG(HLE, "Services initialized OK");
 }
 
