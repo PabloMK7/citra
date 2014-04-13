@@ -50,8 +50,8 @@ extern u8 *g_base;
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
 // 32-bit: Same as the corresponding physical/virtual pointers.
-extern u8* g_fcram;			///< Main memory
-extern u8* g_vram;			///< Video memory (VRAM)
+extern u8* g_fcram;         ///< Main memory
+extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_scratchpad;    ///< Stack memory
 
 void Init();
@@ -71,7 +71,7 @@ void Write32(const u32 addr, const u32 data);
 u8* GetPointer(const u32 Address);
 
 inline const char* GetCharPointer(const u32 address) {
-	return (const char *)GetPointer(address);
+    return (const char *)GetPointer(address);
 }
 
 } // namespace
