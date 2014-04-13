@@ -20,8 +20,8 @@ inline void _Read(T &var, const u32 addr) {
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
     // core running the user application (appcore)
-    if (addr >= MEM_OSHLE_VADDR && addr < MEM_OSHLE_VADDR_END) {
-        NOTICE_LOG(MEMMAP, "OSHLE read @ 0x%08X", addr);
+    if (addr >= HLE::CMD_BUFFER_ADDR && addr < HLE::CMD_BUFFER_ADDR_END) {
+        HLE::Read<T>(var, addr);
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -58,13 +58,13 @@ inline void _Write(u32 addr, const T data) {
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
     // core running the user application (appcore)
-    if (addr >= MEM_OSHLE_VADDR && addr < MEM_OSHLE_VADDR_END) {
-        NOTICE_LOG(MEMMAP, "OSHLE write @ 0x%08X", addr);
+    if (addr >= HLE::CMD_BUFFER_ADDR && addr < HLE::CMD_BUFFER_ADDR_END) {
+        HLE::Write<T>(addr, data);
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
     } else if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
-        HW::Write<const T>(addr, data);
+        HW::Write<T>(addr, data);
     
     // ExeFS:/.code is loaded here:
     } else if ((addr & 0xFFF00000) == 0x00100000) {

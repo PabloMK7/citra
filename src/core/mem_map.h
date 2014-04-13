@@ -32,10 +32,6 @@ enum {
 
     MEM_VRAM_VADDR          = 0x1F000000,
     MEM_SCRATCHPAD_VADDR    = (0x10000000 - MEM_SCRATCHPAD_SIZE),  ///< Scratchpad virtual address
-
-    MEM_OSHLE_SIZE          = 0x08000000,   ///< ...Same size as FCRAM for now
-    MEM_OSHLE_VADDR         = 0xA0000000,   ///< Memory for use by OSHLE accessible by appcore CPU
-    MEM_OSHLE_VADDR_END     = (MEM_OSHLE_VADDR + MEM_OSHLE_SIZE),
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
