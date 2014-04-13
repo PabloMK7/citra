@@ -7,6 +7,7 @@
 
 #include "core/hle/hle.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/apt.h"
 
 namespace Service {
 
@@ -104,19 +105,36 @@ public:
      */
     Syscall::Result Sync() {
         u32 header = 0;
-        HLE::Read<u32>(header, (HLE::CMD_BUFFER_ADDR + CMD_OFFSET));
+        Syscall::Result res = 0;
+        
+        u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET);
 
-        switch (header) {
+        switch (cmd_buff[0]) {
+
         case CMD_HEADER_INIT:
-            NOTICE_LOG(HLE, "SRV::Sync - Initialize");
+            NOTICE_LOG(OSHLE, "SRV::Sync - Initialize");
             break;
 
         case CMD_HEADER_GET_HANDLE:
-            NOTICE_LOG(HLE, "SRV::Sync - GetHandle, port: %s", HLE::GetCharPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET + 4));
+            const char* port_name = (const char*)&cmd_buff[1];
+            Interface* service = g_manager->FetchFromPortName(port_name);
+
+            NOTICE_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name, 
+                service->GetUID());
+
+            if (NULL != service) {
+                cmd_buff[3] = service->GetUID();
+            } else {
+                ERROR_LOG(OSHLE, "Service %s does not exist", port_name);
+                res = -1;
+            }
+            
             break;
         }
 
-        return 0;
+        cmd_buff[1] = res;
+
+        return res;
     }
      
 };
@@ -128,6 +146,7 @@ public:
 void Init() {
     g_manager = new Manager;
     g_manager->AddService(new SRV);
+    g_manager->AddService(new APT);
     NOTICE_LOG(HLE, "Services initialized OK");
 }
 

@@ -90,6 +90,9 @@
     <ClCompile Include="hle\service\service.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="hle\service\apt.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -174,6 +177,9 @@
     </ClInclude>
     <ClInclude Include="hle\syscall.h">
       <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\apt.h">
+      <Filter>hle\service</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

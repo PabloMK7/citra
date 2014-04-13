@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 
+#include "common/common.h"
 #include "common/common_types.h"
 #include "core/hle/syscall.h"
 

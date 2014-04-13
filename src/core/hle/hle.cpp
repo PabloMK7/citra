@@ -42,6 +42,7 @@ u8 *GetPointer(const u32 addr) {
         return g_command_buffer + (addr & CMD_BUFFER_MASK);
     } else {
         ERROR_LOG(HLE, "unknown pointer from address %08X", addr);
+        return 0;
     }
 }
 
