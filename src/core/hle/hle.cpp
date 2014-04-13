@@ -37,6 +37,14 @@ inline void Write(u32 addr, const T data) {
     }
 }
 
+u8 *GetPointer(const u32 addr) {
+    if (addr >= HLE::CMD_BUFFER_ADDR && addr < HLE::CMD_BUFFER_ADDR_END) {
+        return g_command_buffer + (addr & CMD_BUFFER_MASK);
+    } else {
+        ERROR_LOG(HLE, "unknown pointer from address %08X", addr);
+    }
+}
+
 // Explicitly instantiate template functions because we aren't defining this in the header:
 
 template void Read<u64>(u64 &var, const u32 addr);

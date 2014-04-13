@@ -46,6 +46,12 @@ inline void Read(T &var, const u32 addr);
 template <typename T>
 inline void Write(u32 addr, const T data);
 
+u8* GetPointer(const u32 Address);
+
+inline const char* GetCharPointer(const u32 address) {
+    return (const char *)GetPointer(address);
+}
+
 void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
 
 void CallSyscall(u32 opcode);
