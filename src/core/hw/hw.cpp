@@ -27,10 +27,10 @@ template void Read<u32>(u32 &var, const u32 addr);
 template void Read<u16>(u16 &var, const u32 addr);
 template void Read<u8>(u8 &var, const u32 addr);
 
-template void Write<const u64>(u32 addr, const u64 data);
-template void Write<const u32>(u32 addr, const u32 data);
-template void Write<const u16>(u32 addr, const u16 data);
-template void Write<const u8>(u32 addr, const u8 data);
+template void Write<u64>(u32 addr, const u64 data);
+template void Write<u32>(u32 addr, const u32 data);
+template void Write<u16>(u32 addr, const u16 data);
+template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
 void Update() {
