@@ -64,7 +64,13 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    virtual Syscall::Result Sync();
+    Syscall::Result Sync();
+
+private:
+
+
+    Syscall::Result GetLockHandle();
+
 
 };
 

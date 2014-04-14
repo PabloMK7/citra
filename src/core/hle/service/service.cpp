@@ -104,9 +104,7 @@ public:
      * @return Return result of svcSendSyncRequest passed back to user app
      */
     Syscall::Result Sync() {
-        u32 header = 0;
         Syscall::Result res = 0;
-        
         u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET);
 
         switch (cmd_buff[0]) {
@@ -116,6 +114,7 @@ public:
             break;
 
         case CMD_HEADER_GET_HANDLE:
+        {
             const char* port_name = (const char*)&cmd_buff[1];
             Interface* service = g_manager->FetchFromPortName(port_name);
 
@@ -128,7 +127,12 @@ public:
                 ERROR_LOG(OSHLE, "Service %s does not exist", port_name);
                 res = -1;
             }
-            
+            break;
+        }
+
+        default:
+            ERROR_LOG(OSHLE, "SRV::Sync - Unknown command 0x%08X", cmd_buff[0]);
+            res = -1;
             break;
         }
 
