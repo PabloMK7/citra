@@ -17,6 +17,22 @@
     #include <errno.h>
 #endif
 
+/// Make a string lowercase
+void LowerStr(char* str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower(str[ i ]);
+    }
+}
+
+/// Make a string uppercase
+void UpperStr(char* str) {
+    for (int i=0; i < strlen(str); i++) {
+        if(str[i] >= 'a' && str[i] <= 'z') {
+            str[i] &= 0xDF;
+        }
+    }
+}
+
 // faster than sscanf
 bool AsciiToHex(const char* _szValue, u32& result)
 {
