@@ -9,6 +9,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
+#include "core/hle/service/gsp.h"
 #include "core/hle/service/srv.h"
 
 namespace Service {
@@ -73,8 +74,11 @@ Interface* Manager::FetchFromPortName(std::string port_name) {
 /// Initialize ServiceManager
 void Init() {
     g_manager = new Manager;
+    
     g_manager->AddService(new SRV::Interface);
     g_manager->AddService(new APT_U::Interface);
+    g_manager->AddService(new GSP_GPU::Interface);
+
     NOTICE_LOG(HLE, "Services initialized OK");
 }
 

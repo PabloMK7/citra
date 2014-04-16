@@ -18,7 +18,7 @@ public:
     ~Interface();
 
     /**
-     * Gets the string name used by CTROS for a service
+     * Gets the string name used by CTROS for the service
      * @return Port name of service
      */
     std::string GetPortName() const {

@@ -17,7 +17,7 @@ void GetServiceHandle() {
     Syscall::Result res = 0;
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
 
-    const char* port_name = (const char*)&cmd_buff[1];
+    std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
     NOTICE_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name, 

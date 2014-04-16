@@ -19,7 +19,8 @@ namespace Service {
 
 typedef s32 NativeUID;                          ///< Native handle for a service
 
-static const int kCommandHeaderOffset = 0x80;   ///< Offset into command buffer of header
+static const int kMaxPortSize           = 0x08; ///< Maximum size of a port name (8 characters)
+static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer of header
 
 class Manager;
 
@@ -59,14 +60,15 @@ public:
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "Unknown/unimplemented function: port=%s, command=0x%08X!", 
+            ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
                 GetPortName().c_str(), cmd_buff[0]);
             return -1;
         }
         if (itr->second.func == NULL) {
-            ERROR_LOG(OSHLE, "Unimplemented function: port=%s, name=%s!", 
+            ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
                 GetPortName().c_str(), itr->second.name.c_str());
-        }
+            return -1;
+        } 
 
         itr->second.func();
 
