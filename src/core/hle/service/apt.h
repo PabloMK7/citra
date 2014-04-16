@@ -34,8 +34,6 @@ public:
 
 private:
 
-    Syscall::Result GetLockHandle();
-
     DISALLOW_COPY_AND_ASSIGN(Interface);
 };
 
