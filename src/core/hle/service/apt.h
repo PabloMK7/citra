@@ -17,13 +17,13 @@ namespace Service {
 // exactly the same, however certain commands are only accessible with APT:S(NS module will call 
 // svcBreak when the command isn't accessible). See http://3dbrew.org/wiki/NS#APT_Services.
 
-class APT : public Interface {
+class APT_U : public Interface {
 public:
 
-    APT() {
+    APT_U() {
     }
 
-    ~APT() {
+    ~APT_U() {
     }
 
     enum {
@@ -45,14 +45,6 @@ public:
     };
 
     /**
-     * Gets the string name used by CTROS for the APT service
-     * @return String name of service
-     */
-    std::string GetName() const {
-        return "APT";
-    }
-
-    /**
      * Gets the string port name used by CTROS for the APT service
      * @return Port name of service
      */
@@ -68,10 +60,9 @@ public:
 
 private:
 
-
     Syscall::Result GetLockHandle();
 
-
+    DISALLOW_COPY_AND_ASSIGN(APT_U);
 };
 
 } // namespace

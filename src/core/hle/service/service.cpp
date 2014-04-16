@@ -4,10 +4,12 @@
 
 #include "common/common.h"
 #include "common/log.h"
+#include "common/string_util.h"
 
 #include "core/hle/hle.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
+#include "core/hle/service/srv.h"
 
 namespace Service {
 
@@ -64,84 +66,6 @@ Interface* Manager::FetchFromPortName(std::string port_name) {
     return FetchFromUID(itr->second);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface to "SRV" service
-
-class SRV : public Interface {
-
-public:
-
-    SRV() {
-    }
-
-    ~SRV() {
-    }
-
-    enum {
-        CMD_OFFSET              = 0x80,
-        CMD_HEADER_INIT         = 0x10002,  ///< Command header to initialize SRV service
-        CMD_HEADER_GET_HANDLE   = 0x50100,  ///< Command header to get handle of other services
-    };
-
-    /**
-     * Gets the string name used by CTROS for a service
-     * @return String name of service
-     */
-    std::string GetName() const {
-        return "ServiceManager";
-    }
-
-    /**
-     * Gets the string name used by CTROS for a service
-     * @return Port name of service
-     */
-    std::string GetPortName() const {
-        return "srv:";
-    }
-
-    /**
-     * Called when svcSendSyncRequest is called, loads command buffer and executes comand
-     * @return Return result of svcSendSyncRequest passed back to user app
-     */
-    Syscall::Result Sync() {
-        Syscall::Result res = 0;
-        u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET);
-
-        switch (cmd_buff[0]) {
-
-        case CMD_HEADER_INIT:
-            NOTICE_LOG(OSHLE, "SRV::Sync - Initialize");
-            break;
-
-        case CMD_HEADER_GET_HANDLE:
-        {
-            const char* port_name = (const char*)&cmd_buff[1];
-            Interface* service = g_manager->FetchFromPortName(port_name);
-
-            NOTICE_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name, 
-                service->GetUID());
-
-            if (NULL != service) {
-                cmd_buff[3] = service->GetUID();
-            } else {
-                ERROR_LOG(OSHLE, "Service %s does not exist", port_name);
-                res = -1;
-            }
-            break;
-        }
-
-        default:
-            ERROR_LOG(OSHLE, "SRV::Sync - Unknown command 0x%08X", cmd_buff[0]);
-            res = -1;
-            break;
-        }
-
-        cmd_buff[1] = res;
-
-        return res;
-    }
-     
-};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
@@ -149,8 +73,8 @@ public:
 /// Initialize ServiceManager
 void Init() {
     g_manager = new Manager;
-    g_manager->AddService(new SRV);
-    g_manager->AddService(new APT);
+    g_manager->AddService(new SRV::Interface);
+    g_manager->AddService(new APT_U);
     NOTICE_LOG(HLE, "Services initialized OK");
 }
 

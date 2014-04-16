@@ -93,6 +93,9 @@
     <ClCompile Include="hle\service\apt.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="hle\service\srv.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -179,6 +182,9 @@
       <Filter>hle</Filter>
     </ClInclude>
     <ClInclude Include="hle\service\apt.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\srv.h">
       <Filter>hle\service</Filter>
     </ClInclude>
   </ItemGroup>

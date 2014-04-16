@@ -39,14 +39,6 @@ public:
 
     /**
      * Gets the string name used by CTROS for a service
-     * @return String name of service
-     */
-    virtual std::string GetName() const {
-        return "[UNKNOWN SERVICE NAME]";
-    }
-
-    /**
-     * Gets the string name used by CTROS for a service
      * @return Port name of service
      */
     virtual std::string GetPortName() const {
@@ -59,8 +51,19 @@ public:
      */
     virtual Syscall::Result Sync() = 0;
 
+protected:
+    /**
+     * Registers the functions in the service
+     */
+    void Register(const HLE::FunctionDef* functions, int len) {
+        for (int i = 0; i < len; i++) {
+            m_functions[functions[i].id] = functions[i];
+        }
+    }
+
 private:
     u32 m_uid;
+    std::map<u32, HLE::FunctionDef> m_functions;
 };
 
 /// Simple class to manage accessing services from ports and UID handles
