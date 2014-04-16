@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
 
-namespace Service {
+namespace APT_U {
 
 // Application and title launching service. These services handle signaling for home/power button as
 // well. Only one session for either APT service can be open at a time, normally processes close the
@@ -17,13 +17,13 @@ namespace Service {
 // exactly the same, however certain commands are only accessible with APT:S(NS module will call 
 // svcBreak when the command isn't accessible). See http://3dbrew.org/wiki/NS#APT_Services.
 
-class APT_U : public Interface {
+class Interface : public Service::Interface {
 public:
 
-    APT_U() {
+    Interface() {
     }
 
-    ~APT_U() {
+    ~Interface() {
     }
 
     enum {
@@ -62,7 +62,7 @@ private:
 
     Syscall::Result GetLockHandle();
 
-    DISALLOW_COPY_AND_ASSIGN(APT_U);
+    DISALLOW_COPY_AND_ASSIGN(Interface);
 };
 
 } // namespace

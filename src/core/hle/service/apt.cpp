@@ -8,7 +8,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/apt.h"
 
-namespace Service {
+namespace APT_U {
 
 const HLE::FunctionDef APT_U_Table[] = {
     {0x00010040, NULL,      "GetLockHandle"},
@@ -92,7 +92,7 @@ const HLE::FunctionDef APT_U_Table[] = {
 };
 
 // Returns handle to APT Mutex. Not imlemented.
-Syscall::Result APT_U::GetLockHandle() {
+Syscall::Result Interface::GetLockHandle() {
     return 0x00000000;
 }
 
@@ -100,7 +100,7 @@ Syscall::Result APT_U::GetLockHandle() {
  * Called when svcSendSyncRequest is called, loads command buffer and executes comand
  * @return Return result of svcSendSyncRequest passed back to user app
  */
-Syscall::Result APT_U::Sync() {
+Syscall::Result Interface::Sync() {
     Syscall::Result res = 0;
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + CMD_OFFSET);
 
