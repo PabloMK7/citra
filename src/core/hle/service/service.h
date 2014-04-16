@@ -17,7 +17,9 @@
 
 namespace Service {
 
-typedef s32 NativeUID;          ///< Native handle for a service
+typedef s32 NativeUID;                          ///< Native handle for a service
+
+static const int kCommandHeaderOffset = 0x80;   ///< Offset into command buffer of header
 
 class Manager;
 
@@ -25,6 +27,9 @@ class Manager;
 class Interface {
     friend class Manager;
 public:
+
+    Interface() {
+    }
 
     virtual ~Interface() {
     }
@@ -49,7 +54,24 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    virtual Syscall::Result Sync() = 0;
+    Syscall::Result Sync() {
+        u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + kCommandHeaderOffset);
+        auto itr = m_functions.find(cmd_buff[0]);
+
+        if (itr == m_functions.end()) {
+            ERROR_LOG(OSHLE, "Unknown/unimplemented function: port=%s, command=0x%08X!", 
+                GetPortName().c_str(), cmd_buff[0]);
+            return -1;
+        }
+        if (itr->second.func == NULL) {
+            ERROR_LOG(OSHLE, "Unimplemented function: port=%s, name=%s!", 
+                GetPortName().c_str(), itr->second.name.c_str());
+        }
+
+        itr->second.func();
+
+        return 0; // TODO: Implement return from actual function
+    }
 
 protected:
     /**
@@ -64,6 +86,8 @@ protected:
 private:
     u32 m_uid;
     std::map<u32, HLE::FunctionDef> m_functions;
+
+    DISALLOW_COPY_AND_ASSIGN(Interface);
 };
 
 /// Simple class to manage accessing services from ports and UID handles
