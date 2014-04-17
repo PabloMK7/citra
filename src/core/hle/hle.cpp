@@ -76,7 +76,7 @@ void CallSyscall(u32 opcode) {
     if (info->func) {
         info->func();
     } else {
-        ERROR_LOG(HLE, "Unimplemented HLE function %s", info->name);
+        ERROR_LOG(HLE, "Unimplemented SysCall function %s(..)", info->name.c_str());
     }
 }
 
