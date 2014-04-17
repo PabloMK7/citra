@@ -10,6 +10,7 @@
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
 #include "core/hle/service/gsp.h"
+#include "core/hle/service/hid.h"
 #include "core/hle/service/srv.h"
 
 namespace Service {
@@ -78,6 +79,7 @@ void Init() {
     g_manager->AddService(new SRV::Interface);
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new GSP_GPU::Interface);
+    g_manager->AddService(new HID_User::Interface);
 
     NOTICE_LOG(HLE, "Services initialized OK");
 }

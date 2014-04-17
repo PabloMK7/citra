@@ -99,6 +99,9 @@
     <ClCompile Include="hle\service\gsp.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="hle\service\hid.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -191,6 +194,9 @@
       <Filter>hle\service</Filter>
     </ClInclude>
     <ClInclude Include="hle\service\gsp.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\hid.h">
       <Filter>hle\service</Filter>
     </ClInclude>
   </ItemGroup>
