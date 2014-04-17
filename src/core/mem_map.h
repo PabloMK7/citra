@@ -17,8 +17,7 @@ enum {
     MEM_VRAM_SIZE           = 0x00600000,	///< VRAM size
     MEM_DSP_SIZE            = 0x00080000,	///< DSP memory size
     MEM_AXI_WRAM_SIZE       = 0x00080000,	///< AXI WRAM size
-    MEM_FCRAM_SIZE          = 0x08000000,	///< FCRAM size... Really 0x07E00000, but power of 2
-                                            //      works much better
+    MEM_FCRAM_SIZE          = 0x08000000,	///< FCRAM size
     MEM_SCRATCHPAD_SIZE     = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
                             
     MEM_VRAM_MASK           = 0x007FFFFF,
@@ -52,7 +51,6 @@ extern u8 *g_base;
 // 32-bit: Same as the corresponding physical/virtual pointers.
 extern u8* g_fcram;         ///< Main memory
 extern u8* g_vram;          ///< Video memory (VRAM)
-extern u8* g_scratchpad;    ///< Stack memory
 
 void Init();
 void Shutdown();

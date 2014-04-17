@@ -10,154 +10,106 @@
 
 namespace Memory {
 
+/// Convert a physical address to virtual address
+u32 _AddressPhysicalToVirtual(const u32 addr) {
+    // Our memory interface read/write functions assume virtual addresses. Put any physical address 
+    // to virtual address translations here. This is obviously quite hacky... But we're not doing 
+    // any MMU emulation yet or anything
+    if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
+        return (addr & MEM_FCRAM_MASK) | MEM_FCRAM_VADDR;
+    }
+    return addr;
+}
+
 template <typename T>
 inline void _Read(T &var, const u32 addr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
 
+    const u32 vaddr = _AddressPhysicalToVirtual(addr);
     
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
     // core running the user application (appcore)
-    if (addr >= HLE::CMD_BUFFER_ADDR && addr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Read<T>(var, addr);
+    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
+        HLE::Read<T>(var, vaddr);
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
-        HW::Read<T>(var, addr);
+    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+        HW::Read<T>(var, vaddr);
 
-    // FCRAM virtual address reads
-    } else if ((addr & 0x3E000000) == 0x08000000) {
-        var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
+    // FCRAM
+    } else if ((vaddr > MEM_FCRAM_VADDR)  && (vaddr < MEM_FCRAM_VADDR_END)) {
+        var = *((const T*)&g_fcram[vaddr & MEM_FCRAM_MASK]);
 
-    // Scratchpad memory
-    } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
-        var = *((const T*)&g_scratchpad[addr & MEM_SCRATCHPAD_MASK]);
- 
-    /*else if ((addr & 0x3F800000) == 0x04000000) {
-        var = *((const T*)&m_pVRAM[addr & VRAM_MASK]);
-    }*/
-
-    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
-    // Until we progress far enough along, we'll accept all physical address reads here. I think 
-    // that this is typically a corner-case from usermode software unless they are trying to do 
-    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
-    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
-        var = *((const T*)&g_fcram[addr & MEM_FCRAM_MASK]);
+    /*else if ((vaddr & 0x3F800000) == 0x04000000) {
+        var = *((const T*)&m_pVRAM[vaddr & VRAM_MASK]);*/
 
     } else {
-        _assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
+        _assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
 template <typename T>
 inline void _Write(u32 addr, const T data) {
+    u32 vaddr = _AddressPhysicalToVirtual(addr);
     
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
     // core running the user application (appcore)
-    if (addr >= HLE::CMD_BUFFER_ADDR && addr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Write<T>(addr, data);
+    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
+        HLE::Write<T>(vaddr, data);
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((addr & 0xFF000000) == 0x10000000 || (addr & 0xFF000000) == 0x1E000000) {
-        HW::Write<T>(addr, data);
+    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+        HW::Write<T>(vaddr, data);
     
     // ExeFS:/.code is loaded here:
-    } else if ((addr & 0xFFF00000) == 0x00100000) {
+    } else if ((vaddr & 0xFFF00000) == 0x00100000) {
         // TODO(ShizZy): This is dumb... handle correctly. From 3DBrew:
         // http://3dbrew.org/wiki/Memory_layout#ARM11_User-land_memory_regions
         // The ExeFS:/.code is loaded here, executables must be loaded to the 0x00100000 region when
         // the exheader "special memory" flag is clear. The 0x03F00000-byte size restriction only 
         // applies when this flag is clear. Executables are usually loaded to 0x14000000 when the 
         // exheader "special memory" flag is set, however this address can be arbitrary.
-        *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
+        *(T*)&g_fcram[vaddr & MEM_FCRAM_MASK] = data;
 
-    // Scratchpad memory
-    } else if (addr > MEM_SCRATCHPAD_VADDR && addr <= (MEM_SCRATCHPAD_VADDR + MEM_SCRATCHPAD_SIZE)) {
-        *(T*)&g_scratchpad[addr & MEM_SCRATCHPAD_MASK] = data;
+    // FCRAM
+    } else if ((vaddr > MEM_FCRAM_VADDR)  && (vaddr < MEM_FCRAM_VADDR_END)) {
+        *(T*)&g_fcram[vaddr & MEM_FCRAM_MASK] = data;
 
-    // Heap mapped by ControlMemory:
-    } else if ((addr & 0x3E000000) == 0x08000000) {
-        // TODO(ShizZy): Writes to this virtual address should be put in physical memory at FCRAM + GSP
-        // heap size... the following is writing to FCRAM + 0, which is actually supposed to be the 
-        // application's GSP heap
-        *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
-
-    } else if ((addr & 0xFF000000) == 0x14000000) {
+    } else if ((vaddr & 0xFF000000) == 0x14000000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to GSP heap");
-    } else if ((addr & 0xFFF00000) == 0x1EC00000) {
+    } else if ((vaddr & 0xFFF00000) == 0x1EC00000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to IO registers");
-    } else if ((addr & 0xFF000000) == 0x1F000000) {
+    } else if ((vaddr & 0xFF000000) == 0x1F000000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to VRAM");
-    } else if ((addr & 0xFFF00000) == 0x1FF00000) {
+    } else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
-    } else if ((addr & 0xFFFF0000) == 0x1FF80000) {
+    } else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
-    } else if ((addr & 0xFFFFF000) == 0x1FF81000) {
+    } else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
     
-    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
-    // Until we progress far enough along, we'll accept all physical address writes here. I think 
-    // that this is typically a corner-case from usermode software unless they are trying to do 
-    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
-    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
-        *(T*)&g_fcram[addr & MEM_FCRAM_MASK] = data;
-
     // Error out...
     } else {
         _assert_msg_(MEMMAP, false, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8,
-            data, addr);
-    }
-}
-
-bool IsValidAddress(const u32 addr) {
-    if ((addr & 0x3E000000) == 0x08000000) {
-        return true;
-    } else if ((addr & 0x3F800000) == 0x04000000) {
-        return true;
-    } else if ((addr & 0xBFFF0000) == 0x00010000) {
-        return true;
-    } else if ((addr & 0x3F000000) >= 0x08000000 && (addr & 0x3F000000) < 0x08000000 + MEM_FCRAM_MASK) {
-        return true;
-    } else {
-        return false;
+            data, vaddr);
     }
 }
 
 u8 *GetPointer(const u32 addr) {
-    // TODO(bunnei): Just a stub for now... ImplementMe!
-    if ((addr & 0x3E000000) == 0x08000000) {
-        return g_fcram + (addr & MEM_FCRAM_MASK);
+    const u32 vaddr = _AddressPhysicalToVirtual(addr);
 
-    // HACK(bunnei): There is no layer yet to translate virtual addresses to physical addresses. 
-    // Until we progress far enough along, we'll accept all physical address reads here. I think 
-    // that this is typically a corner-case from usermode software unless they are trying to do 
-    // bare-metal things (e.g. early 3DS homebrew writes directly to the FB @ 0x20184E60, etc.
-    } else if (((addr & 0xF0000000) == MEM_FCRAM_PADDR) && (addr < (MEM_FCRAM_PADDR_END))) {
-        return g_fcram + (addr & MEM_FCRAM_MASK);
+    // FCRAM
+    if ((vaddr > MEM_FCRAM_VADDR)  && (vaddr < MEM_FCRAM_VADDR_END)) {
+        return g_fcram + (vaddr & MEM_FCRAM_MASK);
 
-    //else if ((addr & 0x3F800000) == 0x04000000) {
-    //    return g_vram + (addr & MEM_VRAM_MASK);
-    //}
-    //else if ((addr & 0x3F000000) >= 0x08000000 && (addr & 0x3F000000) < 0x08000000 + g_MemorySize) {
-    //    return m_pRAM + (addr & g_MemoryMask);
-    //}
     } else {
-        //ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-        ERROR_LOG(MEMMAP, "Unknown GetPointer %08x", addr);
-        static bool reported = false;
-        //if (!reported) {
-        //    Reporting::ReportMessage("Unknown GetPointer %08x PC %08x LR %08x", addr, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-        //    reported = true;
-        //}
-        //if (!g_Config.bIgnoreBadMemAccess) {
-        //    Core_EnableStepping(true);
-        //    host->SetDebugMode(true);
-        //}
+        ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
 }

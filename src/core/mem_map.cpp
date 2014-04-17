@@ -19,7 +19,6 @@ MemArena g_arena;                               ///< The MemArena class
 u8* g_bootrom                   = NULL;         ///< Bootrom physical memory
 u8* g_fcram                     = NULL;         ///< Main memory (FCRAM) pointer
 u8* g_vram                      = NULL;         ///< Video memory (VRAM) pointer
-u8* g_scratchpad                = NULL;         ///< Scratchpad memory - Used for main thread stack
 
 u8* g_physical_bootrom          = NULL;         ///< Bootrom physical memory
 u8* g_uncached_bootrom          = NULL;
@@ -60,8 +59,6 @@ void Init() {
 
     g_base = MemoryMap_Setup(g_views, kNumMemViews, flags, &g_arena);
 
-    g_scratchpad = new u8[MEM_SCRATCHPAD_SIZE];
-
     NOTICE_LOG(MEMMAP, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_fcram, 
         g_physical_fcram);
 }
@@ -71,10 +68,7 @@ void Shutdown() {
     MemoryMap_Shutdown(g_views, kNumMemViews, flags, &g_arena);
     
     g_arena.ReleaseSpace();
-    delete[] g_scratchpad;
-    
-    g_base          = NULL;
-    g_scratchpad    = NULL;
+    g_base = NULL;
 
     NOTICE_LOG(MEMMAP, "shutdown OK");
 }
