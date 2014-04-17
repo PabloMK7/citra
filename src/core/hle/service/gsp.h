@@ -7,10 +7,11 @@
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Service
+// Namespace GSP_GPU
 
 namespace GSP_GPU {
 
+/// Interface to "srv:" service
 class Interface : public Service::Interface {
 public:
 

@@ -8,6 +8,9 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp.h"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Namespace GSP_GPU
+
 namespace GSP_GPU {
 
 const HLE::FunctionDef FunctionTable[] = {

@@ -7,7 +7,7 @@
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Service
+// Namespace APT_U
 
 namespace APT_U {
 
@@ -17,6 +17,7 @@ namespace APT_U {
 // exactly the same, however certain commands are only accessible with APT:S(NS module will call 
 // svcBreak when the command isn't accessible). See http://3dbrew.org/wiki/NS#APT_Services.
 
+/// Interface to "APT:U" service
 class Interface : public Service::Interface {
 public:
 
