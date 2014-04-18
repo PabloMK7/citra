@@ -229,6 +229,17 @@ extern ARMword isize;
     }									\
   while (0)
 
+#define SETABORT_SKIPBRANCH(i, m, d)						\
+  do									\
+    { 									\
+      int SETABORT_mode = (m);						\
+									\
+      ARMul_SetSPSR (state, SETABORT_mode, ARMul_GetCPSR (state));	\
+      ARMul_SetCPSR (state, ((ARMul_GetCPSR (state) & ~(EMODE | TBIT))	\
+			     | (i) | SETABORT_mode));			\
+    }									\
+  while (0)
+
 //#ifndef MODE32
 #define VECTORS 0x20
 #define LEGALADDR 0x03ffffff

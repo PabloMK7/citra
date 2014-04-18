@@ -14,6 +14,12 @@
 
 #include "common/common.h"
 
+/// Make a string lowercase
+void LowerStr(char* str);
+
+/// Make a string uppercase
+void UpperStr(char* str);
+
 std::string StringFromFormat(const char* format, ...);
 // Cheap!
 bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list args);

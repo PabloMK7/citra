@@ -22,6 +22,12 @@
     <Filter Include="elf">
       <UniqueIdentifier>{7ae34319-6d72-4d12-bc62-9b438ba9241f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hle">
+      <UniqueIdentifier>{8b62769e-3e2a-4a57-a7bc-b3b2933c2bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hle\service">
+      <UniqueIdentifier>{812c5189-ca49-4704-b842-3ffad09092d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp">
@@ -63,9 +69,6 @@
     <ClCompile Include="hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
-    <ClCompile Include="hw\hw_lcd.cpp">
-      <Filter>hw</Filter>
-    </ClCompile>
     <ClCompile Include="elf\elf_reader.cpp">
       <Filter>elf</Filter>
     </ClCompile>
@@ -75,6 +78,33 @@
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
     <ClCompile Include="core_timing.cpp" />
+    <ClCompile Include="hle\hle.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\syscall.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\service\service.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\service\apt.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\service\srv.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\service\gsp.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
+    <ClCompile Include="hle\service\hid.cpp">
+      <Filter>hle\service</Filter>
+    </ClCompile>
+    <ClCompile Include="hw\ndma.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hw\lcd.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -131,9 +161,6 @@
     <ClInclude Include="hw\hw.h">
       <Filter>hw</Filter>
     </ClInclude>
-    <ClInclude Include="hw\hw_lcd.h">
-      <Filter>hw</Filter>
-    </ClInclude>
     <ClInclude Include="elf\elf_reader.h">
       <Filter>elf</Filter>
     </ClInclude>
@@ -148,6 +175,36 @@
     <ClInclude Include="loader.h" />
     <ClInclude Include="mem_map.h" />
     <ClInclude Include="system.h" />
+    <ClInclude Include="hle\hle.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\function_wrappers.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\service.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\syscall.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\apt.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\srv.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\gsp.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\service\hid.h">
+      <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hw\ndma.h">
+      <Filter>hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hw\lcd.h">
+      <Filter>hw</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

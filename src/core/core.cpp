@@ -40,7 +40,7 @@ void Stop() {
 
 /// Initialize the core
 int Init() {
-    NOTICE_LOG(MASTER_LOG, "Core initialized OK");
+    NOTICE_LOG(MASTER_LOG, "initialized OK");
 
     g_disasm = new ARM_Disasm();
     g_app_core = new ARM_Interpreter();
@@ -54,7 +54,7 @@ void Shutdown() {
     delete g_app_core;
     delete g_sys_core;
 
-    NOTICE_LOG(MASTER_LOG, "Core shutdown OK");
+    NOTICE_LOG(MASTER_LOG, "shutdown OK");
 }
 
 } // namespace

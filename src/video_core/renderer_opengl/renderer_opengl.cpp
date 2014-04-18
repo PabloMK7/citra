@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include "core/hw/lcd.h"
+
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 
@@ -75,8 +77,8 @@ void RendererOpenGL::FlipFramebuffer(u32 addr, u8* out) {
  */
 void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {  
 
-    FlipFramebuffer(0x20282160, m_xfb_top_flipped);
-    FlipFramebuffer(0x202118E0, m_xfb_bottom_flipped);
+    FlipFramebuffer(LCD::TOP_RIGHT_FRAME1,  m_xfb_top_flipped);
+    FlipFramebuffer(LCD::SUB_FRAME1,        m_xfb_bottom_flipped);
 
     // Blit the top framebuffer
     // ------------------------
@@ -84,7 +86,7 @@ void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {
     // Update textures with contents of XFB in RAM - top
     glBindTexture(GL_TEXTURE_2D, m_xfb_texture_top);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
-        GL_RGB, GL_UNSIGNED_BYTE, m_xfb_top_flipped);
+        GL_BGR, GL_UNSIGNED_BYTE, m_xfb_top_flipped);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Render target is destination framebuffer

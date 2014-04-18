@@ -38,12 +38,13 @@ void Init(EmuWindow* emu_window) {
 
     g_current_frame = 0;
 
-    NOTICE_LOG(VIDEO, "initialized ok");
+    NOTICE_LOG(VIDEO, "initialized OK");
 }
 
 /// Shutdown the video core
 void Shutdown() {
     delete g_renderer;
+    NOTICE_LOG(VIDEO, "shutdown OK");
 }
 
 } // namespace

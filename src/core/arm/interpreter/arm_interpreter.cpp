@@ -31,30 +31,61 @@ ARM_Interpreter::ARM_Interpreter()  {
     m_state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
 }
 
-void ARM_Interpreter::SetPC(u32 pc) {
-    m_state->pc = m_state->Reg[15] = pc;
-}
-
-u32 ARM_Interpreter::GetPC() const {
-    return m_state->pc;
-}
-
-u32 ARM_Interpreter::GetReg(int index) const {
-    return m_state->Reg[index];
-}
-
-u32 ARM_Interpreter::GetCPSR() const {
-    return m_state->Cpsr;
-}
-
-u64 ARM_Interpreter::GetTicks() const {
-    return ARMul_Time(m_state);
-}
-
 ARM_Interpreter::~ARM_Interpreter() {
     delete m_state;
 }
 
+/**
+ * Set the Program Counter to an address
+ * @param addr Address to set PC to
+ */
+void ARM_Interpreter::SetPC(u32 pc) {
+    m_state->pc = m_state->Reg[15] = pc;
+}
+
+/*
+ * Get the current Program Counter
+ * @return Returns current PC
+ */
+u32 ARM_Interpreter::GetPC() const {
+    return m_state->pc;
+}
+
+/**
+ * Get an ARM register
+ * @param index Register index (0-15)
+ * @return Returns the value in the register
+ */
+u32 ARM_Interpreter::GetReg(int index) const {
+    return m_state->Reg[index];
+}
+
+/**
+ * Set an ARM register
+ * @param index Register index (0-15)
+ * @param value Value to set register to
+ */
+void ARM_Interpreter::SetReg(int index, u32 value) {
+    m_state->Reg[index] = value;
+}
+
+/**
+ * Get the current CPSR register
+ * @return Returns the value of the CPSR register
+ */
+u32 ARM_Interpreter::GetCPSR() const {
+    return m_state->Cpsr;
+}
+
+/**
+ * Returns the number of clock ticks since the last reset
+ * @return Returns number of clock ticks
+ */
+u64 ARM_Interpreter::GetTicks() const {
+    return ARMul_Time(m_state);
+}
+
+/// Execture next instruction
 void ARM_Interpreter::ExecuteInstruction() {
     m_state->step++;
     m_state->cycle++;

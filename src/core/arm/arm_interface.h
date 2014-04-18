@@ -43,6 +43,13 @@ public:
     virtual u32 GetReg(int index) const = 0;
 
     /**
+     * Set an ARM register
+     * @param index Register index (0-15)
+     * @param value Value to set register to
+     */
+    virtual void SetReg(int index, u32 value) = 0;
+
+    /**
      * Get the current CPSR register
      * @return Returns the value of the CPSR register
      */
@@ -59,10 +66,12 @@ public:
         return m_num_instructions;
     }
 
-private:
+protected:
     
     /// Execture next instruction
     virtual void ExecuteInstruction() = 0;
+
+private:
 
     u64 m_num_instructions;                     ///< Number of instructions executed
 

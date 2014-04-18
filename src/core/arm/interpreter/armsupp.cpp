@@ -19,6 +19,8 @@
 #include "armemu.h"
 //#include "ansidecl.h"
 #include "skyeye_defs.h"
+#include "core/hle/hle.h"
+
 unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
                                         unsigned cpnum);
 //extern int skyeye_instr_debug;
@@ -734,39 +736,39 @@ ARMword
 ARMul_MRC (ARMul_State * state, ARMword instr)
 {
 	unsigned cpab;
-	ARMword result = 0;
+	ARMword result = HLE::CallGetThreadCommandBuffer();
 
-	//printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
-	if (!CP_ACCESS_ALLOWED (state, CPNum)) {
-		//chy 2004-07-19 should fix in the future????!!!!
-		//printf("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n",CPNum, instr);
-		ARMul_UndefInstr (state, instr);
-		return -1;
-	}
+	////printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
+	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {
+	//	//chy 2004-07-19 should fix in the future????!!!!
+	//	//printf("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n",CPNum, instr);
+	//	ARMul_UndefInstr (state, instr);
+	//	return -1;
+	//}
 
-	cpab = (state->MRC[CPNum]) (state, ARMul_FIRST, instr, &result);
-	while (cpab == ARMul_BUSY) {
-		ARMul_Icycles (state, 1, 0);
-		if (IntPending (state)) {
-			cpab = (state->MRC[CPNum]) (state, ARMul_INTERRUPT,
-						    instr, 0);
-			return (0);
-		}
-		else
-			cpab = (state->MRC[CPNum]) (state, ARMul_BUSY, instr,
-						    &result);
-	}
-	if (cpab == ARMul_CANT) {
-		printf ("SKYEYE ARMul_MRC,CANT UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
-		ARMul_Abort (state, ARMul_UndefinedInstrV);
-		/* Parent will destroy the flags otherwise.  */
-		result = ECC;
-	}
-	else {
-		BUSUSEDINCPCN;
-		ARMul_Ccycles (state, 1, 0);
-		ARMul_Icycles (state, 1, 0);
-	}
+	//cpab = (state->MRC[CPNum]) (state, ARMul_FIRST, instr, &result);
+	//while (cpab == ARMul_BUSY) {
+	//	ARMul_Icycles (state, 1, 0);
+	//	if (IntPending (state)) {
+	//		cpab = (state->MRC[CPNum]) (state, ARMul_INTERRUPT,
+	//					    instr, 0);
+	//		return (0);
+	//	}
+	//	else
+	//		cpab = (state->MRC[CPNum]) (state, ARMul_BUSY, instr,
+	//					    &result);
+	//}
+	//if (cpab == ARMul_CANT) {
+	//	printf ("SKYEYE ARMul_MRC,CANT UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
+	//	ARMul_Abort (state, ARMul_UndefinedInstrV);
+	//	/* Parent will destroy the flags otherwise.  */
+	//	result = ECC;
+	//}
+	//else {
+	//	BUSUSEDINCPCN;
+	//	ARMul_Ccycles (state, 1, 0);
+	//	ARMul_Icycles (state, 1, 0);
+	//}
 
 	return result;
 }

@@ -530,9 +530,13 @@ ARMul_Abort (ARMul_State * state, ARMword vector)
 			  isize);
 		break;
 	case ARMul_SWIV:	/* Software Interrupt */
-		SETABORT (IBIT, state->prog32Sig ? SVC32MODE : SVC26MODE,
+		// Modified SETABORT that doesn't branch to a SVC vector as we are implementing this in HLE
+		// Instead of doing normal routine, backup R15 by one instruction (this is what PC will get 
+		// set to, making it the next instruction after the SVC call), and skip setting the LR.
+		SETABORT_SKIPBRANCH (IBIT, state->prog32Sig ? SVC32MODE : SVC26MODE,
 			  isize);
-		break;
+		state->Reg[15] -= 4;
+		return;
 	case ARMul_PrefetchAbortV:	/* Prefetch Abort */
 		state->AbortAddr = 1;
 		SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
