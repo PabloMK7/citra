@@ -12,25 +12,38 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum {
-    MEM_BOOTROM_SIZE        = 0x00010000,	///< Bootrom (super secret code/data @ 0x8000) size
-    MEM_MPCORE_PRIV_SIZE    = 0x00002000,	///< MPCore private memory region size
-    MEM_VRAM_SIZE           = 0x00600000,	///< VRAM size
-    MEM_DSP_SIZE            = 0x00080000,	///< DSP memory size
-    MEM_AXI_WRAM_SIZE       = 0x00080000,	///< AXI WRAM size
-    MEM_FCRAM_SIZE          = 0x08000000,	///< FCRAM size
-    MEM_SCRATCHPAD_SIZE     = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
-                            
-    MEM_VRAM_MASK           = 0x007FFFFF,
-    MEM_FCRAM_MASK          = (MEM_FCRAM_SIZE - 1),	            ///< FCRAM mask
-    MEM_SCRATCHPAD_MASK     = (MEM_SCRATCHPAD_SIZE - 1),           ///< Scratchpad memory mask
-                            
-    MEM_FCRAM_PADDR         = 0x20000000,                           ///< FCRAM physical address
-    MEM_FCRAM_PADDR_END     = (MEM_FCRAM_PADDR + MEM_FCRAM_SIZE),   ///< FCRAM end of physical space
-    MEM_FCRAM_VADDR         = 0x08000000,                           ///< FCRAM virtual address
-    MEM_FCRAM_VADDR_END     = (MEM_FCRAM_VADDR + MEM_FCRAM_SIZE),   ///< FCRAM end of virtual space
+    BOOTROM_SIZE            = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
+    MPCORE_PRIV_SIZE        = 0x00002000,   ///< MPCore private memory region size
+    VRAM_SIZE               = 0x00600000,   ///< VRAM size
+    DSP_SIZE                = 0x00080000,   ///< DSP memory size
+    AXI_WRAM_SIZE           = 0x00080000,   ///< AXI WRAM size
+    FCRAM_SIZE              = 0x08000000,   ///< FCRAM size
+    SCRATCHPAD_SIZE         = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
+    HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
+    HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
 
-    MEM_VRAM_VADDR          = 0x1F000000,
-    MEM_SCRATCHPAD_VADDR    = (0x10000000 - MEM_SCRATCHPAD_SIZE),  ///< Scratchpad virtual address
+    HEAP_PADDR              = HEAP_GSP_SIZE,
+    HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
+    HEAP_VADDR              = 0x08000000,
+    HEAP_VADDR_END          = (HEAP_VADDR + HEAP_SIZE),
+    HEAP_GSP_VADDR          = 0x14000000,
+    HEAP_GSP_VADDR_END      = (HEAP_GSP_VADDR + HEAP_GSP_SIZE),
+    HEAP_GSP_PADDR          = 0x00000000,
+    HEAP_GSP_PADDR_END      = (HEAP_GSP_PADDR + HEAP_GSP_SIZE),
+
+    VRAM_MASK               = 0x007FFFFF,
+    FCRAM_MASK              = (FCRAM_SIZE - 1),                 ///< FCRAM mask
+    SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
+    HEAP_MASK               = (HEAP_SIZE - 1),
+
+    FCRAM_PADDR             = 0x20000000,                       ///< FCRAM physical address
+    FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
+    FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
+    FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
+
+    VRAM_VADDR              = 0x1F000000,
+    SCRATCHPAD_VADDR_END    = 0x10000000,
+    SCRATCHPAD_VADDR        = (SCRATCHPAD_VADDR_END - SCRATCHPAD_SIZE), ///< Stack space
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +62,7 @@ extern u8 *g_base;
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
 // 32-bit: Same as the corresponding physical/virtual pointers.
-extern u8* g_fcram;         ///< Main memory
+extern u8* g_heap;         ///< Main memory
 extern u8* g_vram;          ///< Video memory (VRAM)
 
 void Init();
