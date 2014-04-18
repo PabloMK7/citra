@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "core/hw/hw_lcd.h"
+#include "core/hw/lcd.h"
 
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"

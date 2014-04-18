@@ -6,7 +6,7 @@
 #include "common/log.h"
 
 #include "core/hw/hw.h"
-#include "core/hw/hw_lcd.h"
+#include "core/hw/lcd.h"
 #include "core/hw/ndma.h"
 
 namespace HW {

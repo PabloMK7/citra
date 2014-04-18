@@ -6,8 +6,6 @@
 
 #include "core/mem_map.h"
 
-#include "core/hw/hw_lcd.h"
-
 #include "core/hle/function_wrappers.h"
 #include "core/hle/syscall.h"
 #include "core/hle/service/service.h"

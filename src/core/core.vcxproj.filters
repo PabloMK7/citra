@@ -69,9 +69,6 @@
     <ClCompile Include="hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
-    <ClCompile Include="hw\hw_lcd.cpp">
-      <Filter>hw</Filter>
-    </ClCompile>
     <ClCompile Include="elf\elf_reader.cpp">
       <Filter>elf</Filter>
     </ClCompile>
@@ -103,6 +100,9 @@
       <Filter>hle\service</Filter>
     </ClCompile>
     <ClCompile Include="hw\ndma.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
+    <ClCompile Include="hw\lcd.cpp">
       <Filter>hw</Filter>
     </ClCompile>
   </ItemGroup>
@@ -161,9 +161,6 @@
     <ClInclude Include="hw\hw.h">
       <Filter>hw</Filter>
     </ClInclude>
-    <ClInclude Include="hw\hw_lcd.h">
-      <Filter>hw</Filter>
-    </ClInclude>
     <ClInclude Include="elf\elf_reader.h">
       <Filter>elf</Filter>
     </ClInclude>
@@ -203,6 +200,9 @@
       <Filter>hle\service</Filter>
     </ClInclude>
     <ClInclude Include="hw\ndma.h">
+      <Filter>hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hw\lcd.h">
       <Filter>hw</Filter>
     </ClInclude>
   </ItemGroup>

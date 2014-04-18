@@ -6,7 +6,7 @@
 #include "common/log.h"
 
 #include "core/core.h"
-#include "core/hw/hw_lcd.h"
+#include "core/hw/lcd.h"
 
 #include "video_core/video_core.h"
 

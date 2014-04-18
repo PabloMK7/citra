@@ -160,7 +160,7 @@
     <ClCompile Include="hle\service\srv.cpp" />
     <ClCompile Include="hle\syscall.cpp" />
     <ClCompile Include="hw\hw.cpp" />
-    <ClCompile Include="hw\hw_lcd.cpp" />
+    <ClCompile Include="hw\lcd.cpp" />
     <ClCompile Include="hw\ndma.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="mem_map.cpp" />
@@ -199,7 +199,7 @@
     <ClInclude Include="hle\service\srv.h" />
     <ClInclude Include="hle\syscall.h" />
     <ClInclude Include="hw\hw.h" />
-    <ClInclude Include="hw\hw_lcd.h" />
+    <ClInclude Include="hw\lcd.h" />
     <ClInclude Include="hw\ndma.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="mem_map.h" />
