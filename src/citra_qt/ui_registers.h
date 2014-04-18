@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'cpu_regs.ui'
+** Form generated from reading UI file 'registers.ui'
 **
 ** Created by: Qt User Interface Compiler version 4.8.5
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_CPU_REGS_H
-#define UI_CPU_REGS_H
+#ifndef UI_REGISTERS_H
+#define UI_REGISTERS_H
 
 #include <QtCore/QVariant>
 #include <QtGui/QAction>
@@ -66,4 +66,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // UI_CPU_REGS_H
+#endif // UI_REGISTERS_H

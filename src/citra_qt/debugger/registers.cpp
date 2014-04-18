@@ -1,9 +1,9 @@
-#include "cpu_regs.hxx"
+#include "registers.hxx"
 
 #include "core/core.h"
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/arm_interface.h"
 
-GARM11RegsView::GARM11RegsView(QWidget* parent) : QDockWidget(parent)
+RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent)
 {
     cpu_regs_ui.setupUi(this);
 
@@ -37,7 +37,7 @@ GARM11RegsView::GARM11RegsView(QWidget* parent) : QDockWidget(parent)
     CSPR->addChild(new QTreeWidgetItem(QStringList("N")));
 }
 
-void GARM11RegsView::OnCPUStepped()
+void RegistersWidget::OnCPUStepped()
 {
     ARM_Interface* app_core = Core::g_app_core;
 

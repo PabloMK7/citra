@@ -15,10 +15,10 @@
 #include "hotkeys.hxx"
 
 //debugger
-#include "disasm.hxx"
-#include "cpu_regs.hxx"
-#include "callstack.hxx"
-#include "ramview.hxx"
+#include "debugger/disassembler.hxx"
+#include "debugger/registers.hxx"
+#include "debugger/callstack.hxx"
+#include "debugger/ramview.hxx"
 
 #include "core/system.h"
 #include "core/loader.h"
@@ -36,17 +36,22 @@ GMainWindow::GMainWindow()
     ui.horizontalLayout->addWidget(render_window); 
     //render_window->hide();
 
-    disasm = new GDisAsmView(this, render_window->GetEmuThread());
-    addDockWidget(Qt::BottomDockWidgetArea, disasm);
-    disasm->hide();
+    disasmWidget = new DisassemblerWidget(this, render_window->GetEmuThread());
+    addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
+    disasmWidget->hide();
 
-    arm_regs = new GARM11RegsView(this);
-    addDockWidget(Qt::RightDockWidgetArea, arm_regs);
-    arm_regs->hide();
+    registersWidget = new RegistersWidget(this);
+    addDockWidget(Qt::RightDockWidgetArea, registersWidget);
+    registersWidget->hide();
+
+    callstackWidget = new CallstackWidget(this);
+    addDockWidget(Qt::RightDockWidgetArea, callstackWidget);
+    callstackWidget->hide();
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
-    debug_menu->addAction(disasm->toggleViewAction());
-    debug_menu->addAction(arm_regs->toggleViewAction());
+    debug_menu->addAction(disasmWidget->toggleViewAction());
+    debug_menu->addAction(registersWidget->toggleViewAction());
+    debug_menu->addAction(callstackWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
@@ -78,8 +83,9 @@ GMainWindow::GMainWindow()
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), disasm, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), arm_regs, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), disasmWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), registersWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), callstackWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load Image", QKeySequence::Open);
@@ -124,8 +130,9 @@ void GMainWindow::BootGame(const char* filename)
         ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
     }
 
-    disasm->Init();
-    arm_regs->OnCPUStepped();
+    disasmWidget->Init();
+    registersWidget->OnCPUStepped();
+    callstackWidget->OnCPUStepped();
 
     render_window->GetEmuThread().start();
 }

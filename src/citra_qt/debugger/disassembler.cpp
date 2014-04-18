@@ -1,9 +1,9 @@
 #include <QtGui>
-#include "ui_disasm.h"
-#include "disasm.hxx"
 
-#include "bootmanager.hxx"
-#include "hotkeys.hxx"
+#include "disassembler.hxx"
+
+#include "../bootmanager.hxx"
+#include "../hotkeys.hxx"
 
 #include "common/common.h"
 #include "core/mem_map.h"
@@ -14,7 +14,7 @@
 #include "core/arm/interpreter/armdefs.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
-GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
+DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
 {
     disasm_ui.setupUi(this);
 
@@ -23,7 +23,7 @@ GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(p
     model = new QStandardItemModel(this);
     model->setColumnCount(3);
     disasm_ui.treeView->setModel(model);
-
+    disasm_ui.tableView->setModel(model);
     RegisterHotkey("Disassembler", "Start/Stop", QKeySequence(Qt::Key_F5), Qt::ApplicationShortcut);
     RegisterHotkey("Disassembler", "Step", QKeySequence(Qt::Key_F10), Qt::ApplicationShortcut);
     RegisterHotkey("Disassembler", "Step into", QKeySequence(Qt::Key_F11), Qt::ApplicationShortcut);
@@ -40,7 +40,7 @@ GDisAsmView::GDisAsmView(QWidget* parent, EmuThread& emu_thread) : QDockWidget(p
     connect(GetHotkey("Disassembler", "Set Breakpoint", this), SIGNAL(activated()), this, SLOT(OnSetBreakpoint()));
 }
 
-void GDisAsmView::Init()
+void DisassemblerWidget::Init()
 {
     ARM_Disasm* disasm = new ARM_Disasm();
 
@@ -64,13 +64,20 @@ void GDisAsmView::Init()
     }
     disasm_ui.treeView->resizeColumnToContents(0);
     disasm_ui.treeView->resizeColumnToContents(1);
-    
+    disasm_ui.treeView->resizeColumnToContents(2);
+    disasm_ui.tableView->resizeColumnToContents(0);
+    disasm_ui.tableView->resizeColumnToContents(1);
+    disasm_ui.tableView->resizeColumnToContents(2);
+
     QModelIndex model_index = model->index(0, 0);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+
+    disasm_ui.tableView->scrollTo(model_index);
+    disasm_ui.tableView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
-void GDisAsmView::OnSetBreakpoint()
+void DisassemblerWidget::OnSetBreakpoint()
 {
     int selected_row = SelectedRow();
 
@@ -92,33 +99,33 @@ void GDisAsmView::OnSetBreakpoint()
     }
 }
 
-void GDisAsmView::OnContinue()
+void DisassemblerWidget::OnContinue()
 {
     emu_thread.SetCpuRunning(true);
 }
 
-void GDisAsmView::OnStep()
+void DisassemblerWidget::OnStep()
 {
     OnStepInto(); // change later
 }
 
-void GDisAsmView::OnStepInto()
+void DisassemblerWidget::OnStepInto()
 {
     emu_thread.SetCpuRunning(false);
     emu_thread.ExecStep();
 }
 
-void GDisAsmView::OnPause()
+void DisassemblerWidget::OnPause()
 {
     emu_thread.SetCpuRunning(false);
 }
 
-void GDisAsmView::OnToggleStartStop()
+void DisassemblerWidget::OnToggleStartStop()
 {
     emu_thread.SetCpuRunning(!emu_thread.IsCpuRunning());
 }
 
-void GDisAsmView::OnCPUStepped()
+void DisassemblerWidget::OnCPUStepped()
 {
     ARMword next_instr = Core::g_app_core->GetPC();
 
@@ -131,9 +138,13 @@ void GDisAsmView::OnCPUStepped()
     QModelIndex model_index = model->index(index, 0);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+
+    disasm_ui.tableView->scrollTo(model_index);
+    disasm_ui.tableView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+    disasm_ui.tableView->selectionModel()->select(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
-int GDisAsmView::SelectedRow()
+int DisassemblerWidget::SelectedRow()
 {
     QModelIndex index = disasm_ui.treeView->selectionModel()->currentIndex();
     if (!index.isValid())
@@ -141,3 +152,10 @@ int GDisAsmView::SelectedRow()
 
     return model->itemFromIndex(disasm_ui.treeView->selectionModel()->currentIndex())->row();
 }
+/*
+void DisassemblerWidget::paintEvent()
+{
+    QPainter painter(this);
+    painter.drawRect(10, 10, 50, 50);
+}
+*/

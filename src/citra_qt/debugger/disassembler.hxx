@@ -1,5 +1,5 @@
 #include <QDockWidget>
-#include "ui_disasm.h"
+#include "../ui_disassembler.h"
 
 #include "common/common.h"
 #include "common/break_points.h"
@@ -8,12 +8,12 @@ class QAction;
 class QStandardItemModel;
 class EmuThread;
 
-class GDisAsmView : public QDockWidget
+class DisassemblerWidget : public QDockWidget
 {
     Q_OBJECT
 
 public:
-    GDisAsmView(QWidget* parent, EmuThread& emu_thread);
+    DisassemblerWidget(QWidget* parent, EmuThread& emu_thread);
 
     void Init();
 

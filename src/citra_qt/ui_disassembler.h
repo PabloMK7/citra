@@ -1,13 +1,13 @@
 /********************************************************************************
-** Form generated from reading UI file 'disasm.ui'
+** Form generated from reading UI file 'disassembler.ui'
 **
 ** Created by: Qt User Interface Compiler version 4.8.5
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
 
-#ifndef UI_DISASM_H
-#define UI_DISASM_H
+#ifndef UI_DISASSEMBLER_H
+#define UI_DISASSEMBLER_H
 
 #include <QtCore/QVariant>
 #include <QtGui/QAction>
@@ -17,6 +17,7 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QPushButton>
+#include <QtGui/QTableView>
 #include <QtGui/QTreeView>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
@@ -35,6 +36,7 @@ public:
     QPushButton *pushButton;
     QPushButton *button_breakpoint;
     QTreeView *treeView;
+    QTableView *tableView;
 
     void setupUi(QDockWidget *DockWidget)
     {
@@ -84,6 +86,12 @@ public:
 
         verticalLayout->addWidget(treeView);
 
+        tableView = new QTableView(dockWidgetContents);
+        tableView->setObjectName(QString::fromUtf8("tableView"));
+        tableView->setAlternatingRowColors(true);
+
+        verticalLayout->addWidget(tableView);
+
         DockWidget->setWidget(dockWidgetContents);
 
         retranslateUi(DockWidget);
@@ -109,4 +117,4 @@ namespace Ui {
 
 QT_END_NAMESPACE
 
-#endif // UI_DISASM_H
+#endif // UI_DISASSEMBLER_H

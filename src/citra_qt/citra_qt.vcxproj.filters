@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="debugger">
-      <UniqueIdentifier>{1b8f77c1-61e8-4a9f-95f8-8d1c53015ad8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="qhexedit">
       <UniqueIdentifier>{dede739c-939b-4147-9e72-4a326b97d237}</UniqueIdentifier>
     </Filter>
     <Filter Include="config">
       <UniqueIdentifier>{80178741-d3ab-4031-892c-ec58490ea8bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="debugger">
+      <UniqueIdentifier>{9495d0e7-87d6-4fe1-92f1-cfa1bbec7025}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,16 +33,16 @@
     <ClCompile Include="config\controller_config_util.cpp">
       <Filter>config</Filter>
     </ClCompile>
-    <ClCompile Include="cpu_regs.cpp">
+    <ClCompile Include="debugger\callstack.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="disasm.cpp">
+    <ClCompile Include="debugger\ramview.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="ramview.cpp">
+    <ClCompile Include="debugger\disassembler.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="callstack.cpp">
+    <ClCompile Include="debugger\registers.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,39 +59,29 @@
     <MOC Include="..\..\externals\qhexedit\qhexedit.h">
       <Filter>qhexedit</Filter>
     </MOC>
+    <MOC Include="bootmanager.hxx" />
+    <MOC Include="hotkeys.hxx" />
+    <MOC Include="main.hxx" />
+    <MOC Include="debugger\callstack.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="debugger\ramview.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="debugger\disassembler.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="debugger\registers.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="hotkeys.hxx" />
-    <ClInclude Include="ui_hotkeys.h" />
-    <ClInclude Include="main.hxx" />
-    <ClInclude Include="ui_main.h" />
     <ClInclude Include="version.h" />
     <ClInclude Include="config\controller_config.hxx">
       <Filter>config</Filter>
     </ClInclude>
     <ClInclude Include="config\controller_config_util.hxx">
       <Filter>config</Filter>
-    </ClInclude>
-    <ClInclude Include="cpu_regs.hxx">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="disasm.hxx">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="ramview.hxx">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="ui_callstack.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="ui_cpu_regs.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="ui_disasm.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
-    <ClInclude Include="callstack.hxx">
-      <Filter>debugger</Filter>
     </ClInclude>
     <ClInclude Include="ui_controller_config.h">
       <Filter>config</Filter>
@@ -103,13 +93,13 @@
     <UIC Include="config\controller_config.ui">
       <Filter>config</Filter>
     </UIC>
-    <UIC Include="callstack.ui">
+    <UIC Include="debugger\callstack.ui">
       <Filter>debugger</Filter>
     </UIC>
-    <UIC Include="cpu_regs.ui">
+    <UIC Include="debugger\disassembler.ui">
       <Filter>debugger</Filter>
     </UIC>
-    <UIC Include="disasm.ui">
+    <UIC Include="debugger\registers.ui">
       <Filter>debugger</Filter>
     </UIC>
   </ItemGroup>

@@ -7,8 +7,9 @@
 
 class GImageInfo;
 class GRenderWindow;
-class GDisAsmView;
-class GARM11RegsView;
+class DisassemblerWidget;
+class RegistersWidget;
+class CallstackWidget;
 
 class GMainWindow : public QMainWindow
 {
@@ -44,8 +45,10 @@ private:
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
-    GDisAsmView* disasm;
-    GARM11RegsView* arm_regs;
+
+    DisassemblerWidget* disasmWidget;
+    RegistersWidget* registersWidget;
+    CallstackWidget* callstackWidget;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_

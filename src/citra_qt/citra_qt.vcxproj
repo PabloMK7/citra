@@ -127,27 +127,25 @@
     <ClCompile Include="..\..\externals\qhexedit\qhexedit.cpp" />
     <ClCompile Include="..\..\externals\qhexedit\qhexedit_p.cpp" />
     <ClCompile Include="..\..\externals\qhexedit\xbytearray.cpp" />
-    <ClCompile Include="bootmanager.cpp" />
-    <ClCompile Include="callstack.cpp" />
     <ClCompile Include="config\controller_config.cpp" />
     <ClCompile Include="config\controller_config_util.cpp" />
-    <ClCompile Include="cpu_regs.cpp" />
-    <ClCompile Include="disasm.cpp" />
+    <ClCompile Include="debugger\callstack.cpp" />
+    <ClCompile Include="debugger\registers.cpp" />
+    <ClCompile Include="debugger\disassembler.cpp" />
+    <ClCompile Include="debugger\ramview.cpp" />
+    <ClCompile Include="bootmanager.cpp" />
     <ClCompile Include="hotkeys.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ramview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <MOC Include="..\..\externals\qhexedit\commands.h" />
     <MOC Include="..\..\externals\qhexedit\qhexedit.h" />
     <MOC Include="..\..\externals\qhexedit\qhexedit_p.h" />
     <MOC Include="..\..\externals\qhexedit\xbytearray.h" />
-    <MOC Include="config\controller_config.hxx" />
-    <MOC Include="config\controller_config_util.hxx" />
-    <MOC Include="callstack.hxx" />
-    <MOC Include="cpu_regs.hxx" />
-    <MOC Include="disasm.hxx" />
-    <MOC Include="ramview.hxx" />
+    <MOC Include="debugger\callstack.hxx" />
+    <MOC Include="debugger\registers.hxx" />
+    <MOC Include="debugger\disassembler.hxx" />
+    <MOC Include="debugger\ramview.hxx" />
     <MOC Include="bootmanager.hxx" />
     <MOC Include="hotkeys.hxx" />
     <MOC Include="main.hxx" />
@@ -164,25 +162,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="callstack.hxx" />
     <ClInclude Include="config\controller_config.hxx" />
     <ClInclude Include="config\controller_config_util.hxx" />
-    <ClInclude Include="cpu_regs.hxx" />
-    <ClInclude Include="disasm.hxx" />
-    <ClInclude Include="ramview.hxx" />
-    <ClInclude Include="ui_callstack.h" />
     <ClInclude Include="ui_controller_config.h" />
-    <ClInclude Include="ui_cpu_regs.h" />
-    <ClInclude Include="ui_disasm.h" />
-    <ClInclude Include="ui_hotkeys.h" />
-    <ClInclude Include="ui_main.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <UIC Include="callstack.ui" />
     <UIC Include="config\controller_config.ui" />
-    <UIC Include="cpu_regs.ui" />
-    <UIC Include="disasm.ui" />
+    <UIC Include="debugger\callstack.ui" />
+    <UIC Include="debugger\registers.ui" />
+    <UIC Include="debugger\disassembler.ui" />
     <UIC Include="hotkeys.ui" />
     <UIC Include="main.ui" />
   </ItemGroup>
