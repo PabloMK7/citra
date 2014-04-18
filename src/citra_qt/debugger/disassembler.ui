@@ -70,16 +70,6 @@
            </attribute>
          </widget>
        </item>
-       <item>
-         <widget class="QTableView" name="tableView">
-         <property name="alternatingRowColors">
-           <bool>true</bool>
-         </property>
-         <attribute name="headerVisible">
-           <bool>false</bool>
-         </attribute>
-       </widget>
-     </item>
    </layout>
   </widget>
  </widget>

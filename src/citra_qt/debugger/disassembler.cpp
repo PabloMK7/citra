@@ -23,7 +23,7 @@ DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread& emu_thread) :
     model = new QStandardItemModel(this);
     model->setColumnCount(3);
     disasm_ui.treeView->setModel(model);
-    disasm_ui.tableView->setModel(model);
+
     RegisterHotkey("Disassembler", "Start/Stop", QKeySequence(Qt::Key_F5), Qt::ApplicationShortcut);
     RegisterHotkey("Disassembler", "Step", QKeySequence(Qt::Key_F10), Qt::ApplicationShortcut);
     RegisterHotkey("Disassembler", "Step into", QKeySequence(Qt::Key_F11), Qt::ApplicationShortcut);
@@ -65,16 +65,10 @@ void DisassemblerWidget::Init()
     disasm_ui.treeView->resizeColumnToContents(0);
     disasm_ui.treeView->resizeColumnToContents(1);
     disasm_ui.treeView->resizeColumnToContents(2);
-    disasm_ui.tableView->resizeColumnToContents(0);
-    disasm_ui.tableView->resizeColumnToContents(1);
-    disasm_ui.tableView->resizeColumnToContents(2);
 
     QModelIndex model_index = model->index(0, 0);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-
-    disasm_ui.tableView->scrollTo(model_index);
-    disasm_ui.tableView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
 void DisassemblerWidget::OnSetBreakpoint()
@@ -138,10 +132,6 @@ void DisassemblerWidget::OnCPUStepped()
     QModelIndex model_index = model->index(index, 0);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-
-    disasm_ui.tableView->scrollTo(model_index);
-    disasm_ui.tableView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-    disasm_ui.tableView->selectionModel()->select(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
 int DisassemblerWidget::SelectedRow()
@@ -152,10 +142,3 @@ int DisassemblerWidget::SelectedRow()
 
     return model->itemFromIndex(disasm_ui.treeView->selectionModel()->currentIndex())->row();
 }
-/*
-void DisassemblerWidget::paintEvent()
-{
-    QPainter painter(this);
-    painter.drawRect(10, 10, 50, 50);
-}
-*/

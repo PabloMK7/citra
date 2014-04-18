@@ -17,7 +17,6 @@
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
 #include <QtGui/QPushButton>
-#include <QtGui/QTableView>
 #include <QtGui/QTreeView>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QWidget>
@@ -36,7 +35,6 @@ public:
     QPushButton *pushButton;
     QPushButton *button_breakpoint;
     QTreeView *treeView;
-    QTableView *tableView;
 
     void setupUi(QDockWidget *DockWidget)
     {
@@ -85,12 +83,6 @@ public:
         treeView->header()->setVisible(false);
 
         verticalLayout->addWidget(treeView);
-
-        tableView = new QTableView(dockWidgetContents);
-        tableView->setObjectName(QString::fromUtf8("tableView"));
-        tableView->setAlternatingRowColors(true);
-
-        verticalLayout->addWidget(tableView);
 
         DockWidget->setWidget(dockWidgetContents);
 
