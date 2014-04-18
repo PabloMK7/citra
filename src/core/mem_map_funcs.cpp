@@ -103,11 +103,11 @@ u8 *GetPointer(const u32 addr) {
     const u32 vaddr = _AddressPhysicalToVirtual(addr);
 
     // FCRAM - GSP heap
-    if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
         return g_heap_gsp + (vaddr & HEAP_GSP_MASK);
 
     // FCRAM - application heap
-    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         return g_heap + (vaddr & HEAP_MASK);
 
     } else {
