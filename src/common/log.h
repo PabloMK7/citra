@@ -55,7 +55,7 @@ enum LOG_TYPE {
     WII_IPC_HID,
     WII_IPC_HLE,
     WII_IPC_NET,
-    WII_IPC_WC24,
+    NDMA,
     HLE,
     RENDER,
     LCD,

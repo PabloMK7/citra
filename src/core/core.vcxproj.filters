@@ -102,6 +102,9 @@
     <ClCompile Include="hle\service\hid.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="hw\ndma.cpp">
+      <Filter>hw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -198,6 +201,9 @@
     </ClInclude>
     <ClInclude Include="hle\service\hid.h">
       <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="hw\ndma.h">
+      <Filter>hw</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
