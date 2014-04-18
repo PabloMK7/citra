@@ -49,6 +49,23 @@ enum {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/// Represents a block of heap memory mapped by ControlMemory
+struct HeapBlock {
+    HeapBlock() : base_address(0), address(0), size(0), operation(0), permissions(0) {
+    }
+    u32 base_address;
+    u32 address;
+    u32 size;
+    u32 operation;
+    u32 permissions;
+
+    const u32 GetVirtualAddress() const{
+        return base_address + address;
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Base is a pointer to the base of the memory map. Yes, some MMU tricks
 // are used to set up a full GC or Wii memory map in process memory.  on
 // 32-bit, you have to mask your offsets with 0x3FFFFFFF. This means that
@@ -80,6 +97,14 @@ void Write16(const u32 addr, const u16 data);
 void Write32(const u32 addr, const u32 data);
 
 u8* GetPointer(const u32 Address);
+
+/**
+ * Maps a block of memory on the GSP heap
+ * @param size Size of block in bytes
+ * @param operation Control memory operation
+ * @param permissions Control memory permissions
+ */
+u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
 
 inline const char* GetCharPointer(const u32 address) {
     return (const char *)GetPointer(address);

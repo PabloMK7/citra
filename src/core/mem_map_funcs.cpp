@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <map>
+
 #include "common/common.h"
 
 #include "core/mem_map.h"
@@ -9,6 +11,8 @@
 #include "hle/hle.h"
 
 namespace Memory {
+
+std::map<u32, HeapBlock> g_heap_gsp_map;
 
 /// Convert a physical address to virtual address
 u32 _AddressPhysicalToVirtual(const u32 addr) {
@@ -114,6 +118,28 @@ u8 *GetPointer(const u32 addr) {
         ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
+}
+
+/**
+ * Maps a block of memory on the GSP heap
+ * @param size Size of block in bytes
+ * @param flags Memory allocation flags
+ */
+u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
+    HeapBlock block;
+    
+    block.base_address  = HEAP_GSP_VADDR;
+    block.size          = size;
+    block.operation     = operation;
+    block.permissions   = permissions;
+    
+    if (g_heap_gsp_map.size() > 0) {
+        const HeapBlock last_block = g_heap_gsp_map.rbegin()->second;
+        block.address = last_block.address + last_block.size;
+    }
+    g_heap_gsp_map[block.GetVirtualAddress()] = block;
+
+    return block.GetVirtualAddress();
 }
 
 u8 Read8(const u32 addr) {
