@@ -34,6 +34,7 @@ enum {
     VRAM_MASK               = 0x007FFFFF,
     FCRAM_MASK              = (FCRAM_SIZE - 1),                 ///< FCRAM mask
     SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
+    HEAP_GSP_MASK           = (HEAP_GSP_SIZE - 1),
     HEAP_MASK               = (HEAP_SIZE - 1),
 
     FCRAM_PADDR             = 0x20000000,                       ///< FCRAM physical address
@@ -62,7 +63,8 @@ extern u8 *g_base;
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
 // 32-bit: Same as the corresponding physical/virtual pointers.
-extern u8* g_heap;         ///< Main memory
+extern u8* g_heap_gsp;      ///< GSP heap (main memory)
+extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 
 void Init();

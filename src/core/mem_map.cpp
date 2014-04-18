@@ -16,9 +16,8 @@ u8*    g_base                   = NULL;         ///< The base pointer to the aut
 
 MemArena g_arena;                               ///< The MemArena class
 
-u8* g_bootrom                   = NULL;         ///< Bootrom physical memory
-u8* g_heap_gsp                  = NULL;
-u8* g_heap                      = NULL;
+u8* g_heap_gsp                  = NULL;         ///< GSP heap (main memory)
+u8* g_heap                      = NULL;         ///< Application heap (main memory)
 u8* g_vram                      = NULL;         ///< Video memory (VRAM) pointer
 
 u8* g_physical_bootrom          = NULL;         ///< Bootrom physical memory

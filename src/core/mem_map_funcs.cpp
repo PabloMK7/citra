@@ -40,6 +40,10 @@ inline void _Read(T &var, const u32 addr) {
     } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
         HW::Read<T>(var, vaddr);
 
+    // FCRAM - GSP heap
+    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+        var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
+
     // FCRAM - application heap
     } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         var = *((const T*)&g_heap[vaddr & HEAP_MASK]);
@@ -68,8 +72,8 @@ inline void _Write(u32 addr, const T data) {
         HW::Write<T>(vaddr, data);
 
     // FCRAM - GSP heap
-    //} else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_VADDR_GSP_END)) {
-    //    *(T*)&g_heap_gsp[vaddr & FCRAM_MASK] = data;
+    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+        *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
 
     // FCRAM - application heap
     } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
@@ -98,8 +102,12 @@ inline void _Write(u32 addr, const T data) {
 u8 *GetPointer(const u32 addr) {
     const u32 vaddr = _AddressPhysicalToVirtual(addr);
 
+    // FCRAM - GSP heap
+    if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+        return g_heap_gsp + (vaddr & HEAP_GSP_MASK);
+
     // FCRAM - application heap
-    if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         return g_heap + (vaddr & HEAP_MASK);
 
     } else {
