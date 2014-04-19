@@ -7,6 +7,11 @@
     <Link>
       <AdditionalDependencies>QtCore4.lib;QtGui4.lib;QtOpenGL4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(QtLibraryDir)QtCore4.dll" "$(EmuBinDir)" /Y /S /D
+xcopy "$(QtLibraryDir)QtGui4.dll" "$(EmuBinDir)" /Y /S /D
+xcopy "$(QtLibraryDir)QtOpenGL4.dll" "$(EmuBinDir)" /Y /S /D</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

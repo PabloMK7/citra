@@ -12,7 +12,8 @@
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)data" "$(EmuBinDir)" /Y /S /D
 xcopy "$(ExternalsDir)glew-1.10.0\bin\Release\$(PlatformName)\glew32.dll" "$(EmuBinDir)" /Y /S /D
-xcopy "$(ExternalsDir)glfw-3.0.2\lib-msvc100\glfw3.dll" "$(EmuBinDir)" /Y /S /D</Command>
+xcopy "$(ExternalsDir)glfw-3.0.2\lib-msvc100\glfw3.dll" "$(EmuBinDir)" /Y /S /D
+%(Command)</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>comctl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -22,3 +22,6 @@ ipch/
 # Build generated files
 build/
 bin/
+
+# GIT revision number
+src/common/scm_rev.h
