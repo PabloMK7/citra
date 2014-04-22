@@ -32,6 +32,8 @@ RendererOpenGL::~RendererOpenGL() {
 
 /// Swap buffers (render frame)
 void RendererOpenGL::SwapBuffers() {
+    m_render_window->MakeCurrent();
+
     // EFB->XFB copy
     // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some 
     // register write We're also treating both framebuffers as a single one in OpenGL.
