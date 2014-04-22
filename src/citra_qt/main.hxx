@@ -36,7 +36,7 @@ private slots:
 	void OnStartGame();
 	void OnPauseGame();
 	void OnStopGame();
-	void OnMenuLoadELF();
+	void OnMenuLoadFile();
     void OnOpenHotkeysDialog();
     void OnConfigure();
     void ToggleWindowMode();

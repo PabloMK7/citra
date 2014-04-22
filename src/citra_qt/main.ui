@@ -39,7 +39,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="action_load_elf"/>
+    <addaction name="action_Load_File"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -57,6 +57,7 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <addaction name="action_Popout_Window_Mode"/>
     <addaction name="action_Hotkeys"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -71,9 +72,9 @@
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action_load_elf">
+  <action name="action_Load_File">
    <property name="text">
-    <string>Load ELF ...</string>
+    <string>Load file...</string>
    </property>
   </action>
   <action name="action_Exit">
@@ -103,11 +104,19 @@
      </property>
    </action>
    <action name="action_About">
-   <property name="text">
-    <string>About Citra</string>
-   </property>
-  </action>
-  <action name="action_Hotkeys">
+     <property name="text">
+       <string>About Citra</string>
+     </property>
+   </action>
+   <action name="action_Popout_Window_Mode">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Popout window</string>
+     </property>
+   </action>
+   <action name="action_Hotkeys">
    <property name="text">
     <string>Configure &amp;Hotkeys ...</string>
    </property>

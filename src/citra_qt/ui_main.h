@@ -26,12 +26,13 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
-    QAction *action_load_elf;
+    QAction *action_Load_File;
     QAction *action_Exit;
     QAction *action_Start;
     QAction *action_Pause;
     QAction *action_Stop;
     QAction *action_About;
+    QAction *action_Popout_Window_Mode;
     QAction *action_Hotkeys;
     QAction *action_Configure;
     QWidget *centralwidget;
@@ -53,8 +54,8 @@ public:
         MainWindow->setWindowIcon(icon);
         MainWindow->setTabShape(QTabWidget::Rounded);
         MainWindow->setDockNestingEnabled(true);
-        action_load_elf = new QAction(MainWindow);
-        action_load_elf->setObjectName(QString::fromUtf8("action_load_elf"));
+        action_Load_File = new QAction(MainWindow);
+        action_Load_File->setObjectName(QString::fromUtf8("action_Load_File"));
         action_Exit = new QAction(MainWindow);
         action_Exit->setObjectName(QString::fromUtf8("action_Exit"));
         action_Start = new QAction(MainWindow);
@@ -67,6 +68,9 @@ public:
         action_Stop->setEnabled(false);
         action_About = new QAction(MainWindow);
         action_About->setObjectName(QString::fromUtf8("action_About"));
+        action_Popout_Window_Mode = new QAction(MainWindow);
+        action_Popout_Window_Mode->setObjectName(QString::fromUtf8("action_Popout_Window_Mode"));
+        action_Popout_Window_Mode->setCheckable(true);
         action_Hotkeys = new QAction(MainWindow);
         action_Hotkeys->setObjectName(QString::fromUtf8("action_Hotkeys"));
         action_Configure = new QAction(MainWindow);
@@ -96,7 +100,7 @@ public:
         menubar->addAction(menu_Emulation->menuAction());
         menubar->addAction(menu_View->menuAction());
         menubar->addAction(menu_Help->menuAction());
-        menu_File->addAction(action_load_elf);
+        menu_File->addAction(action_Load_File);
         menu_File->addSeparator();
         menu_File->addAction(action_Exit);
         menu_Emulation->addAction(action_Start);
@@ -104,6 +108,7 @@ public:
         menu_Emulation->addAction(action_Stop);
         menu_Emulation->addSeparator();
         menu_Emulation->addAction(action_Configure);
+        menu_View->addAction(action_Popout_Window_Mode);
         menu_View->addAction(action_Hotkeys);
         menu_Help->addAction(action_About);
 
@@ -117,12 +122,13 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Citra", 0, QApplication::UnicodeUTF8));
-        action_load_elf->setText(QApplication::translate("MainWindow", "Load ELF ...", 0, QApplication::UnicodeUTF8));
+        action_Load_File->setText(QApplication::translate("MainWindow", "Load file...", 0, QApplication::UnicodeUTF8));
         action_Exit->setText(QApplication::translate("MainWindow", "E&xit", 0, QApplication::UnicodeUTF8));
         action_Start->setText(QApplication::translate("MainWindow", "&Start", 0, QApplication::UnicodeUTF8));
         action_Pause->setText(QApplication::translate("MainWindow", "&Pause", 0, QApplication::UnicodeUTF8));
         action_Stop->setText(QApplication::translate("MainWindow", "&Stop", 0, QApplication::UnicodeUTF8));
         action_About->setText(QApplication::translate("MainWindow", "About Citra", 0, QApplication::UnicodeUTF8));
+        action_Popout_Window_Mode->setText(QApplication::translate("MainWindow", "Popout window", 0, QApplication::UnicodeUTF8));
         action_Hotkeys->setText(QApplication::translate("MainWindow", "Configure &Hotkeys ...", 0, QApplication::UnicodeUTF8));
         action_Configure->setText(QApplication::translate("MainWindow", "Configure ...", 0, QApplication::UnicodeUTF8));
         menu_File->setTitle(QApplication::translate("MainWindow", "&File", 0, QApplication::UnicodeUTF8));
