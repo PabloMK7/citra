@@ -97,8 +97,8 @@ GMainWindow::GMainWindow()
 
     show();
 
-    System::Init(render_window);
     LogManager::Init();
+    System::Init(render_window);
 }
 
 GMainWindow::~GMainWindow()
