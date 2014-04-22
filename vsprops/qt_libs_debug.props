@@ -12,9 +12,9 @@
       <QtCommandLine>/I"$(SolutionDir)src" /I"$(ExternalsDir)glew-1.6.0\include" /I"$(ExternalsDir)sdl-1.2.15\include" /I"$(ExternalsDir)qhexedit" /D"_DEBUG"</QtCommandLine>
     </MOC>
     <PostBuildEvent>
-      <Command>xcopy "$(QtLibraryDir)QtCored4.dll" "$(EmuBinDir)" /Y /S /D
-xcopy "$(QtLibraryDir)QtGuid4.dll" "$(EmuBinDir)" /Y /S /D
-xcopy "$(QtLibraryDir)QtOpenGLd4.dll" "$(EmuBinDir)" /Y /S /D</Command>
+      <Command>xcopy "$(QtBinaryDir)QtCored4.dll" "$(EmuBinDir)" /Y /S /D
+xcopy "$(QtBinaryDir)QtGuid4.dll" "$(EmuBinDir)" /Y /S /D
+xcopy "$(QtBinaryDir)QtOpenGLd4.dll" "$(EmuBinDir)" /Y /S /D</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup />
