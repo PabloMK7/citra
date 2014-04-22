@@ -11,6 +11,7 @@ set(SRCS    break_points.cpp
             misc.cpp
             msg_handler.cpp
             string_util.cpp
+            symbols.cpp
             thread.cpp
             timer.cpp
             utf8.cpp

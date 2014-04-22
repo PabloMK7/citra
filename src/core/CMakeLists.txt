@@ -17,7 +17,15 @@ set(SRCS    core.cpp
             elf/elf_reader.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
+            hle/hle.cpp
+            hle/syscall.cpp
+            hle/service/apt.cpp
+            hle/service/gsp.cpp
+            hle/service/hid.cpp
+            hle/service/service.cpp
+            hle/service/srv.cpp
             hw/hw.cpp
-            hw/hw_lcd.cpp)
+            hw/lcd.cpp
+            hw/ndma.cpp)
 
 add_library(core STATIC ${SRCS})

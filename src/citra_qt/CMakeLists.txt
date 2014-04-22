@@ -1,8 +1,8 @@
 set(SRCS
             bootmanager.cpp
             callstack.cpp
-            disasm.cpp
-            cpu_regs.cpp
+            disassembler.cpp
+            registers.cpp
             hotkeys.cpp
             main.cpp
             ramview.cpp
@@ -11,8 +11,8 @@ set(SRCS
 
 qt4_wrap_ui(UI_HDRS
                     callstack.ui
-                    disasm.ui
-                    cpu_regs.ui
+                    disassembler.ui
+                    registers.ui
                     hotkeys.ui
                     main.ui
                     config/controller_config.ui)
@@ -20,8 +20,8 @@ qt4_wrap_ui(UI_HDRS
 qt4_wrap_cpp(MOC_SRCS
                         bootmanager.hxx
                         callstack.hxx
-                        disasm.hxx
-                        cpu_regs.hxx
+                        disassembler.hxx
+                        registers.hxx
                         hotkeys.hxx
                         main.hxx
                         ramview.hxx
