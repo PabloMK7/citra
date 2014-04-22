@@ -108,32 +108,6 @@ inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 
 typedef void EXCEPTION_POINTERS;
 
-inline u32 _rotl(u32 x, int shift) {
-    shift &= 31;
-    if (0 == shift) {
-        return x;
-    }
-    return (x << shift) | (x >> (32 - shift));
-}
-
-inline u64 _rotl64(u64 x, u32 shift){
-    u32 n = shift % 64;
-    return (x << n) | (x >> (64 - n));
-}
-
-inline u32 _rotr(u32 x, int shift) {
-    shift &= 31;
-    if (0 == shift) {
-        return x;
-    }
-    return (x >> shift) | (x << (32 - shift));
-}
-
-inline u64 _rotr64(u64 x, u32 shift){
-    u32 n = shift % 64;
-    return (x >> n) | (x << (64 - n));
-}
-
 #endif
 
 #define GCC_VERSION_AVAILABLE(major, minor) (defined(__GNUC__) &&  (__GNUC__ > (major) || \
