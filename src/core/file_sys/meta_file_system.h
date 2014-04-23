@@ -104,7 +104,7 @@ public:
 	// TODO: void IoCtl(...)
 
 	void SetStartingDirectory(const std::string &dir) {
-		std::lock_guard<std::mutex> guard(lock);
+		std::lock_guard<std::recursive_mutex> guard(lock);
 		startingDirectory = dir;
 	}
 };

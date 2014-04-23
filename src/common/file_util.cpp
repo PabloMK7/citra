@@ -672,7 +672,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
         else
             paths[D_USER_IDX] = std::string(getenv("HOME") ? 
                 getenv("HOME") : getenv("PWD") ? 
-                getenv("PWD") : "") + DIR_SEP DOLPHIN_DATA_DIR DIR_SEP;
+                getenv("PWD") : "") + DIR_SEP EMU_DATA_DIR DIR_SEP;
 #endif
 
         paths[D_CONFIG_IDX]            = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;

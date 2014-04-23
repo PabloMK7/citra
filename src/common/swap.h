@@ -497,27 +497,27 @@ typedef s64 s64_le;
 typedef float float_le;
 typedef double double_le;
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_be;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_be;
+typedef swap_struct_t<u64, swap_64_t<u64> > u64_be;
+typedef swap_struct_t<s64, swap_64_t<s64> > s64_be;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_be;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_be;
+typedef swap_struct_t<u32, swap_32_t<u32> > u32_be;
+typedef swap_struct_t<s32, swap_32_t<s32> > s32_be;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_be;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_be;
+typedef swap_struct_t<u16, swap_16_t<u16> > u16_be;
+typedef swap_struct_t<s16, swap_16_t<s16> > s16_be;
 
 typedef swap_struct_t<float, swap_float_t<float> > float_be;
 typedef swap_struct_t<double, swap_double_t<double> > double_be;
 #else
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_le;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_le;
+typedef swap_struct_t<u64, swap_64_t<u64> > u64_le;
+typedef swap_struct_t<s64, swap_64_t<s64> > s64_le;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_le;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_le;
+typedef swap_struct_t<u32, swap_32_t<u32> > u32_le;
+typedef swap_struct_t<s32, swap_32_t<s32> > s32_le;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_le;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_le;
+typedef swap_struct_t<u16, swap_16_t<u16> > u16_le;
+typedef swap_struct_t< s16, swap_16_t<s16> > s16_le;
 
 typedef swap_struct_t<float, swap_float_t<float> > float_le;
 typedef swap_struct_t<double, swap_double_t<double> > double_le;

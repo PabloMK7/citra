@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include "common/platform.h"
+
 #if EMU_PLATFORM == PLATFORM_WINDOWS
 #include <windows.h>
 #endif
