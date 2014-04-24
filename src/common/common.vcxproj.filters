@@ -38,6 +38,7 @@
     <ClInclude Include="timer.h" />
     <ClInclude Include="utf8.h" />
     <ClInclude Include="symbols.h" />
+    <ClInclude Include="scm_rev.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="break_points.cpp" />
@@ -56,8 +57,8 @@
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="utf8.cpp" />
-    <ClCompile Include="version.cpp" />
     <ClCompile Include="symbols.cpp" />
+    <ClCompile Include="scm_rev.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

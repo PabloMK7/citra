@@ -23,3 +23,5 @@ ipch/
 build/
 bin/
 
+# Generated source files
+src/common/scm_rev.cpp

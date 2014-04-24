@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="force_rebuild.h" />
-    <ClInclude Include="scm_rev.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="scm_rev_gen.js" />

@@ -181,6 +181,7 @@
     <ClInclude Include="mem_arena.h" />
     <ClInclude Include="msg_handler.h" />
     <ClInclude Include="platform.h" />
+    <ClInclude Include="scm_rev.h" />
     <ClInclude Include="std_condition_variable.h" />
     <ClInclude Include="std_mutex.h" />
     <ClInclude Include="std_thread.h" />
@@ -205,12 +206,12 @@
     <ClCompile Include="mem_arena.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="msg_handler.cpp" />
+    <ClCompile Include="scm_rev.cpp" />
     <ClCompile Include="string_util.cpp" />
     <ClCompile Include="symbols.cpp" />
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="utf8.cpp" />
-    <ClCompile Include="version.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
