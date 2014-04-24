@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 2.6)
 
 project(citra)
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-std=c++11 -fpermissive")
+SET(GCC_COMPILE_FLAGS "-std=c++11 -fpermissive")
 
 # silence some spam
 add_definitions(-Wno-attributes)
 add_definitions(-DSINGLETHREADED)
-add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
+add_definitions(${GCC_COMPILE_FLAGS})
 
 # dependency checking
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
