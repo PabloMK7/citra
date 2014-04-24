@@ -1,0 +1,18 @@
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2
+// Refer to the license.txt file included.
+
+#include "common/scm_rev.h"
+
+#define GIT_REV      "@GIT_REV@"
+#define GIT_REF_SPEC "@GIT_REF_SPEC@"
+#define GIT_DESC     "@GIT_DESC@"
+
+namespace Common {
+
+const char g_scm_rev[]      = GIT_REV;
+const char g_scm_ref_spec[] = GIT_REF_SPEC;
+const char g_scm_desc[]     = GIT_DESC;
+
+} // namespace
+

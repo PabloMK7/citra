@@ -1,3 +1,5 @@
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/scm_rev.cpp" @ONLY)
+
 set(SRCS    break_points.cpp
             console_listener.cpp
             extended_trace.cpp
@@ -15,6 +17,6 @@ set(SRCS    break_points.cpp
             thread.cpp
             timer.cpp
             utf8.cpp
-            version.cpp)
+            ${CMAKE_CURRENT_BINARY_DIR}/scm_rev.cpp)
 
 add_library(common STATIC ${SRCS})

@@ -23,5 +23,3 @@ ipch/
 build/
 bin/
 
-# GIT revision number
-src/common/scm_rev.h

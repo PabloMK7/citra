@@ -12,10 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// SVN version number
-extern const char *g_scm_rev_str;
-extern const char *g_netplay_citra_ver;
-
 // Force enable logging in the right modes. For some reason, something had changed
 // so that debugfast no longer logged.
 #if defined(_DEBUG) || defined(DEBUGFAST)
