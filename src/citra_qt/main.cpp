@@ -93,6 +93,10 @@ GMainWindow::GMainWindow()
     connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this, SLOT(OnMenuLoadFile()));
     connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this, SLOT(OnStartGame()));
 
+    setWindowTitle(render_window->GetWindowTitle().c_str());
+
+    show();
+
     LogManager::Init();
     System::Init(render_window);
 }
