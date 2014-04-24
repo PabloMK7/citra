@@ -80,6 +80,34 @@ function(get_git_head_revision _refspecvar _hashvar)
 	set(${_hashvar} "${HEAD_HASH}" PARENT_SCOPE)
 endfunction()
 
+function(git_branch_name _var)
+	if(NOT GIT_FOUND)
+		find_package(Git QUIET)
+	endif()
+
+	if(NOT GIT_FOUND)
+		set(${_var} "GIT-NOTFOUND" PARENT_SCOPE)
+		return()
+	endif()
+
+	execute_process(COMMAND
+		"${GIT_EXECUTABLE}"
+		rev-parse --abbrev-ref HEAD
+		WORKING_DIRECTORY
+		"${CMAKE_SOURCE_DIR}"
+		RESULT_VARIABLE
+		res
+		OUTPUT_VARIABLE
+		out
+		ERROR_QUIET
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+	if(NOT res EQUAL 0)
+		set(out "${out}-${res}-NOTFOUND")
+	endif()
+
+	set(${_var} "${out}" PARENT_SCOPE)
+endfunction()
+
 function(git_describe _var)
 	if(NOT GIT_FOUND)
 		find_package(Git QUIET)
