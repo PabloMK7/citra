@@ -10,5 +10,5 @@ If you want to contribute please take a took at the [Coding Style](https://githu
 
 ### Building
 
-* __Windows__: Install *Visual Studio 2013*. Then open the *.SLN* file, and press *Build* > *Rebuild Solution*.
-* __Linux__: *TODO*
+* __Windows__: [Windows Build](https://github.com/bunnei/citra/wiki/Windows-Build)
+* __Linux__: [Linux Build](https://github.com/bunnei/citra/wiki/Linux-Build)
