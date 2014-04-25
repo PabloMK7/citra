@@ -12,11 +12,11 @@
 
 namespace SRV {
 
-void Initialize() {
+void Initialize(Service::Interface* self) {
     NOTICE_LOG(OSHLE, "SRV::Sync - Initialize");
 }
 
-void GetServiceHandle() {
+void GetServiceHandle(Service::Interface* self) {
     Syscall::Result res = 0;
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
 
@@ -37,7 +37,7 @@ void GetServiceHandle() {
     //return res;
 }
 
-const HLE::FunctionDef FunctionTable[] = {
+const Interface::FunctionInfo FunctionTable[] = {
     {0x00010002, Initialize,        "Initialize"},
     {0x00020000, NULL,              "GetProcSemaphore"},
     {0x00030100, NULL,              "RegisterService"},
