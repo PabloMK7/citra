@@ -13,6 +13,8 @@ add_definitions(${GCC_COMPILE_FLAGS})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
 include(FindOpenGL REQUIRED)
 include(FindX11 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLFW REQUIRED glfw3)
 
 include_directories(${GLFW_INCLUDE_DIRS})
 option(DISABLE_QT4 "Disable Qt4 GUI" OFF)
