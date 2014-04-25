@@ -20,7 +20,7 @@
 
 //#include "ansidecl.h"
 #include "skyeye_defs.h"
-#include "core/hle/hle.h"
+#include "core/hle/mrc.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
@@ -738,7 +738,8 @@ ARMword
 ARMul_MRC (ARMul_State * state, ARMword instr)
 {
 	unsigned cpab;
-	ARMword result = HLE::CallGetThreadCommandBuffer();
+
+	ARMword result = HLE::CallMRC((HLE::ARM11_MRC_OPERATION)BITS(20, 27));
 
 	////printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
 	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {

@@ -18,6 +18,7 @@ set(SRCS    core.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
             hle/hle.cpp
+            hle/mrc.cpp
             hle/syscall.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp

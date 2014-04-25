@@ -105,6 +105,9 @@
     <ClCompile Include="hw\lcd.cpp">
       <Filter>hw</Filter>
     </ClCompile>
+    <ClCompile Include="hle\mrc.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -204,6 +207,9 @@
     </ClInclude>
     <ClInclude Include="hw\lcd.h">
       <Filter>hw</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\mrc.h">
+      <Filter>hle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

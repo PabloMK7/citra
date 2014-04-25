@@ -80,14 +80,6 @@ void CallSyscall(u32 opcode) {
     }
 }
 
-/// Returns the coprocessor (in this case, syscore) command buffer pointer
-Addr CallGetThreadCommandBuffer() {
-    // Called on insruction: mrc p15, 0, r0, c13, c0, 3
-    // Returns an address in OSHLE memory for the CPU to read/write to
-    RETURN(CMD_BUFFER_ADDR);
-    return CMD_BUFFER_ADDR;
-}
-
 void RegisterModule(std::string name, int num_functions, const FunctionDef* func_table) {
     ModuleDef module = {name, num_functions, func_table};
     g_module_db.push_back(module);

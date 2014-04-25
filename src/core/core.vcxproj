@@ -153,6 +153,7 @@
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
     <ClCompile Include="hle\hle.cpp" />
+    <ClCompile Include="hle\mrc.cpp" />
     <ClCompile Include="hle\service\apt.cpp" />
     <ClCompile Include="hle\service\gsp.cpp" />
     <ClCompile Include="hle\service\hid.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="file_sys\meta_file_system.h" />
     <ClInclude Include="hle\function_wrappers.h" />
     <ClInclude Include="hle\hle.h" />
+    <ClInclude Include="hle\mrc.h" />
     <ClInclude Include="hle\service\apt.h" />
     <ClInclude Include="hle\service\gsp.h" />
     <ClInclude Include="hle\service\hid.h" />
