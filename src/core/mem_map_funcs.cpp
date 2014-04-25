@@ -12,7 +12,9 @@
 
 namespace Memory {
 
-std::map<u32, HeapBlock> g_heap_gsp_map;
+std::map<u32, MemoryBlock> g_heap_map;
+std::map<u32, MemoryBlock> g_heap_gsp_map;
+std::map<u32, MemoryBlock> g_shared_map;
 
 /// Convert a physical address to virtual address
 u32 _AddressPhysicalToVirtual(const u32 addr) {
@@ -121,12 +123,58 @@ u8 *GetPointer(const u32 addr) {
 }
 
 /**
+ * Maps a block of memory in shared memory
+ * @param handle Handle to map memory block for
+ * @param addr Address to map memory block to
+ * @param permissions Memory map permissions
+ */
+u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) {
+    MemoryBlock block;
+    
+    block.handle        = handle;
+    block.base_address  = addr;
+    block.permissions   = permissions;
+    
+    if (g_shared_map.size() > 0) {
+        const MemoryBlock last_block = g_shared_map.rbegin()->second;
+        block.address = last_block.address + last_block.size;
+    }
+    g_shared_map[block.GetVirtualAddress()] = block;
+
+    return block.GetVirtualAddress();
+}
+
+/**
+ * Maps a block of memory on the heap
+ * @param size Size of block in bytes
+ * @param operation Memory map operation type
+ * @param flags Memory allocation flags
+ */
+u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
+    MemoryBlock block;
+    
+    block.base_address  = HEAP_VADDR;
+    block.size          = size;
+    block.operation     = operation;
+    block.permissions   = permissions;
+    
+    if (g_heap_map.size() > 0) {
+        const MemoryBlock last_block = g_heap_map.rbegin()->second;
+        block.address = last_block.address + last_block.size;
+    }
+    g_heap_map[block.GetVirtualAddress()] = block;
+
+    return block.GetVirtualAddress();
+}
+
+/**
  * Maps a block of memory on the GSP heap
  * @param size Size of block in bytes
+ * @param operation Memory map operation type
  * @param flags Memory allocation flags
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
-    HeapBlock block;
+    MemoryBlock block;
     
     block.base_address  = HEAP_GSP_VADDR;
     block.size          = size;
@@ -134,7 +182,7 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
     block.permissions   = permissions;
     
     if (g_heap_gsp_map.size() > 0) {
-        const HeapBlock last_block = g_heap_gsp_map.rbegin()->second;
+        const MemoryBlock last_block = g_heap_gsp_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
     g_heap_gsp_map[block.GetVirtualAddress()] = block;

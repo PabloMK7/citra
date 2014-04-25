@@ -16,15 +16,15 @@ u8*    g_base                   = NULL;         ///< The base pointer to the aut
 
 MemArena g_arena;                               ///< The MemArena class
 
-u8* g_heap_gsp                  = NULL;         ///< GSP heap (main memory)
 u8* g_heap                      = NULL;         ///< Application heap (main memory)
+u8* g_heap_gsp                  = NULL;         ///< GSP heap (main memory)
 u8* g_vram                      = NULL;         ///< Video memory (VRAM) pointer
 
 u8* g_physical_bootrom          = NULL;         ///< Bootrom physical memory
 u8* g_uncached_bootrom          = NULL;
 
 u8* g_physical_fcram            = NULL;         ///< Main physical memory (FCRAM)
-u8* g_physical_heap_gsp         = NULL;
+u8* g_physical_heap_gsp         = NULL;         ///< GSP heap physical memory
 u8* g_physical_vram             = NULL;         ///< Video physical memory (VRAM)
 u8* g_physical_scratchpad       = NULL;         ///< Scratchpad memory used for main thread stack
 

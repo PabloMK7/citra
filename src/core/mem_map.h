@@ -22,6 +22,8 @@ enum {
     HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
     HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
 
+    SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
+
     HEAP_PADDR              = HEAP_GSP_SIZE,
     HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
     HEAP_VADDR              = 0x08000000,
@@ -49,10 +51,11 @@ enum {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Represents a block of heap memory mapped by ControlMemory
-struct HeapBlock {
-    HeapBlock() : base_address(0), address(0), size(0), operation(0), permissions(0) {
+/// Represents a block of memory mapped by ControlMemory/MapMemoryBlock
+struct MemoryBlock {
+    MemoryBlock() : handle(0), base_address(0), address(0), size(0), operation(0), permissions(0) {
     }
+    u32 handle;
     u32 base_address;
     u32 address;
     u32 size;
@@ -99,9 +102,25 @@ void Write32(const u32 addr, const u32 data);
 u8* GetPointer(const u32 Address);
 
 /**
+ * Maps a block of memory in shared memory
+ * @param handle Handle to map memory block for
+ * @param addr Address to map memory block to
+ * @param permissions Memory map permissions
+ */
+u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) ;
+
+/**
+ * Maps a block of memory on the heap
+ * @param size Size of block in bytes
+ * @param operation Memory map operation type
+ * @param flags Memory allocation flags
+ */
+u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
+
+/**
  * Maps a block of memory on the GSP heap
  * @param size Size of block in bytes
- * @param operation Control memory operation
+ * @param operation Memory map operation type
  * @param permissions Control memory permissions
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
