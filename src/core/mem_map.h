@@ -21,8 +21,11 @@ enum {
     SCRATCHPAD_SIZE         = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
     HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
     HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
+    SHARED_MEMORY_SIZE      = 0x04000000,   ///< Shared memory size
+    HARDWARE_IO_SIZE        = 0x01000000,
 
     SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
+    SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
 
     HEAP_PADDR              = HEAP_GSP_SIZE,
     HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
@@ -38,11 +41,16 @@ enum {
     SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
     HEAP_GSP_MASK           = (HEAP_GSP_SIZE - 1),
     HEAP_MASK               = (HEAP_SIZE - 1),
+    SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
 
     FCRAM_PADDR             = 0x20000000,                       ///< FCRAM physical address
     FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
+
+    HARDWARE_IO_VADDR       = 0x1EC00000,
+    HARDWARE_IO_VADDR_END   = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
+    
 
     VRAM_VADDR              = 0x1F000000,
     SCRATCHPAD_VADDR_END    = 0x10000000,
@@ -84,6 +92,7 @@ extern u8 *g_base;
 extern u8* g_heap_gsp;      ///< GSP heap (main memory)
 extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
+extern u8* g_shared_mem;    ///< Shared memory
 
 void Init();
 void Shutdown();

@@ -15,14 +15,29 @@
 
 namespace Syscall {
 
+enum ControlMemoryOperation {
+    MEMORY_OPERATION_HEAP       = 0x00000003,
+    MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
+};
+
+enum MapMemoryPermission {
+    MEMORY_PERMISSION_UNMAP     = 0x00000000,
+    MEMORY_PERMISSION_NORMAL    = 0x00000001,
+};
+
 /// Map application or GSP heap memory
 Result ControlMemory(void* outaddr, u32 addr0, u32 addr1, u32 size, u32 operation, u32 permissions) {
     u32 virtual_address = 0x00000000;
 
     switch (operation) {
 
-    // Map GSP heap memory?
-    case 0x00010003:
+    // Map normal heap memory
+    case MEMORY_OPERATION_HEAP:
+        virtual_address = Memory::MapBlock_Heap(size, operation, permissions);
+        break;
+
+    // Map GSP heap memory
+    case MEMORY_OPERATION_GSP_HEAP:
         virtual_address = Memory::MapBlock_HeapGSP(size, operation, permissions);
         break;
 
@@ -31,7 +46,22 @@ Result ControlMemory(void* outaddr, u32 addr0, u32 addr1, u32 size, u32 operatio
         ERROR_LOG(OSHLE, "Unknown ControlMemory operation %08X", operation);
     }
 
-    Core::g_app_core->SetReg(1,  Memory::MapBlock_HeapGSP(size, operation, permissions));
+    Core::g_app_core->SetReg(1, virtual_address);
+    return 0;
+}
+
+/// Maps a memory block to specified address
+Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherpermission) {
+    int x = 0;
+    switch (mypermissions) {
+    case MEMORY_PERMISSION_NORMAL:
+    case MEMORY_PERMISSION_NORMAL + 1:
+    case MEMORY_PERMISSION_NORMAL + 2:
+        Memory::MapBlock_Shared(memblock, addr, mypermissions);
+        break;
+    default:
+        ERROR_LOG(OSHLE, "Unknown MapMemoryBlock permissions %08X", mypermissions);
+    }
     return 0;
 }
 
@@ -93,7 +123,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x1C,  NULL,                               "CancelTimer"},
     {0x1D,  NULL,                               "ClearTimer"},
     {0x1E,  NULL,                               "CreateMemoryBlock"},
-    {0x1F,  NULL,                               "MapMemoryBlock"},
+    {0x1F,  WrapI_UUUU<MapMemoryBlock>,         "MapMemoryBlock"},
     {0x20,  NULL,                               "UnmapMemoryBlock"},
     {0x21,  NULL,                               "CreateAddressArbiter"},
     {0x22,  NULL,                               "ArbitrateAddress"},

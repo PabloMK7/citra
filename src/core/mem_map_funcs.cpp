@@ -43,16 +43,21 @@ inline void _Read(T &var, const u32 addr) {
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Read<T>(var, vaddr);
 
     // FCRAM - GSP heap
-    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
         var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
 
     // FCRAM - application heap
-    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         var = *((const T*)&g_heap[vaddr & HEAP_MASK]);
+
+    // Shared memory
+    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        NOTICE_LOG(OSHLE, "wtf read");
+        var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
 
     /*else if ((vaddr & 0x3F800000) == 0x04000000) {
         var = *((const T*)&m_pVRAM[vaddr & VRAM_MASK]);*/
@@ -74,16 +79,21 @@ inline void _Write(u32 addr, const T data) {
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Write<T>(vaddr, data);
 
     // FCRAM - GSP heap
-    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
         *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
 
     // FCRAM - application heap
-    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         *(T*)&g_heap[vaddr & HEAP_MASK] = data;
+
+    // Shared memory
+    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        NOTICE_LOG(OSHLE, "wtf read");
+        *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
 
     } else if ((vaddr & 0xFF000000) == 0x14000000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to GSP heap");
@@ -115,6 +125,11 @@ u8 *GetPointer(const u32 addr) {
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         return g_heap + (vaddr & HEAP_MASK);
+
+    // Shared memory
+    } else if ((vaddr > SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        NOTICE_LOG(OSHLE, "wtf read");
+        return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
 
     } else {
         ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
