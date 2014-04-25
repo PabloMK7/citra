@@ -56,14 +56,10 @@ inline void _Read(T &var, const u32 addr) {
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        NOTICE_LOG(OSHLE, "wtf read");
         var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
 
-    /*else if ((vaddr & 0x3F800000) == 0x04000000) {
-        var = *((const T*)&m_pVRAM[vaddr & VRAM_MASK]);*/
-
     } else {
-        //_assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
+        _assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
@@ -92,7 +88,6 @@ inline void _Write(u32 addr, const T data) {
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        NOTICE_LOG(OSHLE, "wtf read");
         *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
 
     } else if ((vaddr & 0xFF000000) == 0x14000000) {
@@ -128,7 +123,6 @@ u8 *GetPointer(const u32 addr) {
 
     // Shared memory
     } else if ((vaddr > SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        NOTICE_LOG(OSHLE, "wtf read");
         return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
 
     } else {
