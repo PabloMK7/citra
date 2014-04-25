@@ -26,7 +26,7 @@ enum MapMemoryPermission {
 };
 
 /// Map application or GSP heap memory
-Result ControlMemory(void* outaddr, u32 addr0, u32 addr1, u32 size, u32 operation, u32 permissions) {
+Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
     u32 virtual_address = 0x00000000;
 
     switch (operation) {
@@ -93,7 +93,7 @@ Result WaitSynchronization1(Handle handle, s64 nanoseconds) {
 
 const HLE::FunctionDef Syscall_Table[] = {
     {0x00,  NULL,                               "Unknown"},
-    {0x01,  WrapI_VUUUUU<ControlMemory>,        "ControlMemory"},
+    {0x01,  WrapI_UUUUU<ControlMemory>,         "ControlMemory"},
     {0x02,  NULL,                               "QueryMemory"},
     {0x03,  NULL,                               "ExitProcess"},
     {0x04,  NULL,                               "GetProcessAffinityMask"},
