@@ -5,13 +5,49 @@
 
 #include "common/log.h"
 
+#include "core/mem_map.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp.h"
+
+#include "core/hw/lcd.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace GSP_GPU
 
 namespace GSP_GPU {
+
+enum {
+    REG_FRAMEBUFFER_1   = 0x00400468,
+    REG_FRAMEBUFFER_2   = 0x00400494,
+};
+
+/// Read a GSP GPU hardware register
+void ReadHWRegs(Service::Interface* self) {
+    static const u32 framebuffer_1[] = {LCD::VRAM_TOP_LEFT_FRAME1, LCD::VRAM_TOP_RIGHT_FRAME1};
+    static const u32 framebuffer_2[] = {LCD::VRAM_TOP_LEFT_FRAME2, LCD::VRAM_TOP_RIGHT_FRAME2};
+
+    u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
+    u32 reg_addr = cmd_buff[1];
+    u32 size = cmd_buff[2];
+    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
+    
+    switch (reg_addr) {
+
+    // Top framebuffer 1 addresses
+    case REG_FRAMEBUFFER_1:
+        memcpy(dst, framebuffer_1, size);
+        break;
+
+    // Top framebuffer 2 addresses
+    case REG_FRAMEBUFFER_2:
+        memcpy(dst, framebuffer_1, size);
+        break;
+
+    default:
+        ERROR_LOG(OSHLE, "GSP_GPU::ReadHWRegs unknown register read at address %08X", reg_addr);
+    }
+
+}
 
 void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
@@ -26,7 +62,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, NULL,                          "WriteHWRegs"},
     {0x00020084, NULL,                          "WriteHWRegsWithMask"},
     {0x00030082, NULL,                          "WriteHWRegRepeat"},
-    {0x00040080, NULL,                          "ReadHWRegs"},
+    {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
     {0x00050200, NULL,                          "SetBufferSwap"},
     {0x00060082, NULL,                          "SetCommandList"},
     {0x000700C2, NULL,                          "RequestDma"},
