@@ -58,8 +58,12 @@ inline void _Read(T &var, const u32 addr) {
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
 
+    // VRAM
+    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
+
     } else {
-        _assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
+        //_assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
@@ -90,12 +94,10 @@ inline void _Write(u32 addr, const T data) {
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
 
-    } else if ((vaddr & 0xFF000000) == 0x14000000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to GSP heap");
-    } else if ((vaddr & 0xFFF00000) == 0x1EC00000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to IO registers");
-    } else if ((vaddr & 0xFF000000) == 0x1F000000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to VRAM");
+    // VRAM
+    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        *(T*)&g_vram[vaddr & VRAM_MASK] = data;
+
     } else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
     } else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
@@ -124,6 +126,10 @@ u8 *GetPointer(const u32 addr) {
     // Shared memory
     } else if ((vaddr > SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
+
+    // VRAM
+    } else if ((vaddr > VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        return g_vram + (vaddr & VRAM_MASK);
 
     } else {
         ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
