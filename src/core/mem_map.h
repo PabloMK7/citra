@@ -48,7 +48,9 @@ enum {
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
 
-    HARDWARE_IO_VADDR       = 0x1EC00000,
+    HARDWARE_IO_PADDR       = 0x10000000,                       ///< IO physical address start
+    HARDWARE_IO_VADDR       = 0x1EC00000,                       ///< IO virtual address start
+    HARDWARE_IO_PADDR_END   = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
     HARDWARE_IO_VADDR_END   = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
 
     VRAM_VADDR              = 0x1F000000,

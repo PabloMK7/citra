@@ -21,8 +21,16 @@ u32 _AddressPhysicalToVirtual(const u32 addr) {
     // Our memory interface read/write functions assume virtual addresses. Put any physical address 
     // to virtual address translations here. This is obviously quite hacky... But we're not doing 
     // any MMU emulation yet or anything
-    if ((addr >= FCRAM_PADDR) && (addr < (FCRAM_PADDR_END))) {
+    if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
         return (addr & FCRAM_MASK) | FCRAM_VADDR;
+
+    // Hardware IO
+    // TODO(bunnei): FixMe
+    // This isn't going to work... The physical address of HARDWARE_IO conflicts with the virtual 
+    // address of shared memory.
+    //} else if ((addr >= HARDWARE_IO_PADDR) && (addr < HARDWARE_IO_PADDR_END)) {
+    //    return (addr + 0x0EB00000);
+
     }
     return addr;
 }
@@ -132,7 +140,7 @@ u8 *GetPointer(const u32 addr) {
         return g_vram + (vaddr & VRAM_MASK);
 
     } else {
-        ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
+        ERROR_LOG(MEMMAP, "unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
 }
