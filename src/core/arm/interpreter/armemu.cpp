@@ -4467,7 +4467,6 @@ ARMul_Emulate26 (ARMul_State * state)
                     }
                 /* Drop through.  */
 
-            //case 0xe0:
             case 0xe4:
             case 0xe6:
             case 0xe8:
