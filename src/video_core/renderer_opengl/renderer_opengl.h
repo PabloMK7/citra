@@ -87,5 +87,4 @@ private:
     u8 m_xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4]; 
     u8 m_xfb_bottom_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4];   
 
-    DISALLOW_COPY_AND_ASSIGN(RendererOpenGL);
 };

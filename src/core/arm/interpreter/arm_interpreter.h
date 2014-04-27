@@ -63,5 +63,4 @@ private:
 
     ARMul_State* m_state;
 
-    DISALLOW_COPY_AND_ASSIGN(ARM_Interpreter);
 };
