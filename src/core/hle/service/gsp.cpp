@@ -23,8 +23,8 @@ enum {
 
 /// Read a GSP GPU hardware register
 void ReadHWRegs(Service::Interface* self) {
-    static const u32 framebuffer_1[] = {LCD::VRAM_TOP_LEFT_FRAME1, LCD::VRAM_TOP_RIGHT_FRAME1};
-    static const u32 framebuffer_2[] = {LCD::VRAM_TOP_LEFT_FRAME2, LCD::VRAM_TOP_RIGHT_FRAME2};
+    static const u32 framebuffer_1[] = {LCD::PADDR_VRAM_TOP_LEFT_FRAME1, LCD::PADDR_VRAM_TOP_RIGHT_FRAME1};
+    static const u32 framebuffer_2[] = {LCD::PADDR_VRAM_TOP_LEFT_FRAME2, LCD::PADDR_VRAM_TOP_RIGHT_FRAME2};
 
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
     u32 reg_addr = cmd_buff[1];
@@ -33,14 +33,20 @@ void ReadHWRegs(Service::Interface* self) {
     
     switch (reg_addr) {
 
+    // NOTE: Calling SetFramebufferLocation here is a hack... Not sure the correct way yet to set 
+    // whether the framebuffers should be in VRAM or GSP heap, but from what I understand, if the 
+    // user application is reading from either of these registers, then its going to be in VRAM.
+
     // Top framebuffer 1 addresses
     case REG_FRAMEBUFFER_1:
+        LCD::SetFramebufferLocation(LCD::FRAMEBUFFER_LOCATION_VRAM);
         memcpy(dst, framebuffer_1, size);
         break;
 
     // Top framebuffer 2 addresses
     case REG_FRAMEBUFFER_2:
-        memcpy(dst, framebuffer_1, size);
+        LCD::SetFramebufferLocation(LCD::FRAMEBUFFER_LOCATION_VRAM);
+        memcpy(dst, framebuffer_2, size);
         break;
 
     default:
