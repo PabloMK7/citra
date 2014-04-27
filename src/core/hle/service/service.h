@@ -115,7 +115,7 @@ private:
     u32 m_uid;
     
     std::vector<Syscall::Handle>    m_handles;
-    std::map<u32, FunctionInfo> m_functions;
+    std::map<u32, FunctionInfo>     m_functions;
 };
 
 /// Simple class to manage accessing services from ports and UID handles
