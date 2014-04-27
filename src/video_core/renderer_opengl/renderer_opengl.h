@@ -55,11 +55,11 @@ private:
 
     /**
      * Helper function to flip framebuffer from left-to-right to top-to-bottom
-     * @param addr Address of framebuffer in RAM
+     * @param in Pointer to input raw framebuffer in V/RAM
      * @param out Pointer to output buffer with flipped framebuffer
      * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
      */
-    void RendererOpenGL::FlipFramebuffer(u32 addr, u8* out);
+    void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out);
 
 
     EmuWindow*  m_render_window;                    ///< Handle to render window
