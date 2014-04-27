@@ -53,7 +53,9 @@ enum {
     HARDWARE_IO_PADDR_END   = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
     HARDWARE_IO_VADDR_END   = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
 
+    VRAM_PADDR              = 0x18000000,
     VRAM_VADDR              = 0x1F000000,
+    VRAM_PADDR_END          = (VRAM_PADDR + VRAM_SIZE),
     VRAM_VADDR_END          = (VRAM_VADDR + VRAM_SIZE),
 
     SCRATCHPAD_VADDR_END    = 0x10000000,
@@ -139,6 +141,18 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
 
 inline const char* GetCharPointer(const u32 address) {
     return (const char *)GetPointer(address);
+}
+
+inline const u32 VirtualAddressFromPhysical_FCRAM(const u32 address) {
+    return ((address & FCRAM_MASK) | FCRAM_VADDR);
+}
+
+inline const u32 VirtualAddressFromPhysical_IO(const u32 address) {
+    return (address + 0x0EB00000);
+}
+
+inline const u32 VirtualAddressFromPhysical_VRAM(const u32 address) {
+    return (address + 0x07000000);
 }
 
 } // namespace

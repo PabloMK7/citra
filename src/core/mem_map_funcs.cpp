@@ -22,7 +22,7 @@ u32 _AddressPhysicalToVirtual(const u32 addr) {
     // to virtual address translations here. This is obviously quite hacky... But we're not doing 
     // any MMU emulation yet or anything
     if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
-        return (addr & FCRAM_MASK) | FCRAM_VADDR;
+        return VirtualAddressFromPhysical_FCRAM(addr);
 
     // Hardware IO
     // TODO(bunnei): FixMe
