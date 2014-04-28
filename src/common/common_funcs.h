@@ -24,19 +24,6 @@ template<> struct CompileTimeAssert<true> {};
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
-#if defined __GNUC__ && !defined __SSSE3__ && !defined _M_GENERIC
-#include <emmintrin.h>
-static __inline __m128i __attribute__((__always_inline__))
-_mm_shuffle_epi8(__m128i a, __m128i mask)
-{
-    __m128i result;
-    __asm__("pshufb %1, %0"
-        : "=x" (result)
-        : "xm" (mask), "0" (a));
-    return result;
-}
-#endif
-
 #ifndef _WIN32
 
 #include <errno.h>
