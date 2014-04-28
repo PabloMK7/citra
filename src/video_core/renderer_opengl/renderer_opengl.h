@@ -59,7 +59,7 @@ private:
      * @param out Pointer to output buffer with flipped framebuffer
      * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
      */
-    void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out);
+    void FlipFramebuffer(const u8* in, u8* out);
 
 
     EmuWindow*  m_render_window;                    ///< Handle to render window
