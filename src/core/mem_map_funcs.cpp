@@ -16,12 +16,16 @@ std::map<u32, MemoryBlock> g_heap_map;
 std::map<u32, MemoryBlock> g_heap_gsp_map;
 std::map<u32, MemoryBlock> g_shared_map;
 
-/// Convert a physical address to virtual address
-u32 _AddressPhysicalToVirtual(const u32 addr) {
+/// Convert a physical address (or firmware-specific virtual address) to primary virtual address
+u32 _VirtualAddress(const u32 addr) {
     // Our memory interface read/write functions assume virtual addresses. Put any physical address 
     // to virtual address translations here. This is obviously quite hacky... But we're not doing 
     // any MMU emulation yet or anything
     if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
+        return VirtualAddressFromPhysical_FCRAM(addr);
+
+    // Virtual address mapping FW0B
+    } else if ((addr >= FRAM_VADDR_FW0B) && (addr < FRAM_VADDR_FW0B_END)) {
         return VirtualAddressFromPhysical_FCRAM(addr);
 
     // Hardware IO
@@ -41,7 +45,7 @@ inline void _Read(T &var, const u32 addr) {
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
 
-    const u32 vaddr = _AddressPhysicalToVirtual(addr);
+    const u32 vaddr = _VirtualAddress(addr);
     
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
@@ -77,7 +81,7 @@ inline void _Read(T &var, const u32 addr) {
 
 template <typename T>
 inline void _Write(u32 addr, const T data) {
-    u32 vaddr = _AddressPhysicalToVirtual(addr);
+    u32 vaddr = _VirtualAddress(addr);
     
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
@@ -121,7 +125,7 @@ inline void _Write(u32 addr, const T data) {
 }
 
 u8 *GetPointer(const u32 addr) {
-    const u32 vaddr = _AddressPhysicalToVirtual(addr);
+    const u32 vaddr = _VirtualAddress(addr);
 
     // FCRAM - GSP heap
     if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
