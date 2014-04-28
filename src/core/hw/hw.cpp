@@ -12,49 +12,42 @@
 namespace HW {
 
 enum {
-    ADDRESS_CONFIG      = 0x10000000,
-    ADDRESS_IRQ         = 0x10001000,
-    ADDRESS_NDMA        = 0x10002000,
-    ADDRESS_TIMER       = 0x10003000,
-    ADDRESS_CTRCARD     = 0x10004000,
-    ADDRESS_CTRCARD_2   = 0x10005000,
-    ADDRESS_SDMC_NAND   = 0x10006000,
-    ADDRESS_SDMC_NAND_2 = 0x10007000,   // Apparently not used on retail
-    ADDRESS_PXI         = 0x10008000,
-    ADDRESS_AES         = 0x10009000,
-    ADDRESS_SHA         = 0x1000A000,
-    ADDRESS_RSA         = 0x1000B000,
-    ADDRESS_XDMA        = 0x1000C000,
-    ADDRESS_SPICARD     = 0x1000D800,
-    ADDRESS_CONFIG_2    = 0x10010000,
-    ADDRESS_HASH        = 0x10101000,
-    ADDRESS_CSND        = 0x10103000,
-    ADDRESS_DSP         = 0x10140000,
-    ADDRESS_PDN         = 0x10141000,
-    ADDRESS_CODEC       = 0x10141000,
-    ADDRESS_SPI         = 0x10142000,
-    ADDRESS_SPI_2       = 0x10143000,
-    ADDRESS_I2C         = 0x10144000,
-    ADDRESS_CODEC_2     = 0x10145000,
-    ADDRESS_HID         = 0x10146000,
-    ADDRESS_PAD         = 0x10146000,
-    ADDRESS_PTM         = 0x10146000,
-    ADDRESS_I2C_2       = 0x10148000,
-    ADDRESS_SPI_3       = 0x10160000,
-    ADDRESS_I2C_3       = 0x10161000,
-    ADDRESS_MIC         = 0x10162000,
-    ADDRESS_PXI_2       = 0x10163000,
-    ADDRESS_NTRCARD     = 0x10164000,
-    ADDRESS_DSP_2       = 0x10203000,
-    ADDRESS_HASH_2      = 0x10301000,
+    VADDR_HASH      = 0x1EC01000,
+    VADDR_CSND      = 0x1EC03000,
+    VADDR_DSP       = 0x1EC40000,
+    VADDR_PDN       = 0x1EC41000,
+    VADDR_CODEC     = 0x1EC41000,
+    VADDR_SPI       = 0x1EC42000,
+    VADDR_SPI_2     = 0x1EC43000,   // Only used under TWL_FIRM?
+    VADDR_I2C       = 0x1EC44000,
+    VADDR_CODEC_2   = 0x1EC45000,
+    VADDR_HID       = 0x1EC46000,
+    VADDR_PAD       = 0x1EC46000,
+    VADDR_PTM       = 0x1EC46000,
+    VADDR_GPIO      = 0x1EC47000,
+    VADDR_I2C_2     = 0x1EC48000,
+    VADDR_SPI_3     = 0x1EC60000,
+    VADDR_I2C_3     = 0x1EC61000,
+    VADDR_MIC       = 0x1EC62000,
+    VADDR_PXI       = 0x1EC63000,   // 0xFFFD2000
+    //VADDR_NTRCARD
+    VADDR_CDMA      = 0xFFFDA000,   // CoreLink DMA-330? Info
+    VADDR_DSP_2     = 0x1ED03000,
+    VADDR_HASH_2    = 0x1EE01000,
+    VADDR_LCD       = 0x1EF00000,
 };
 
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
     
-    case ADDRESS_NDMA:
-        NDMA::Read(var, addr);
+    // TODO(bunnei): What is the virtual address of NDMA?
+    // case VADDR_NDMA:
+    //     NDMA::Read(var, addr);
+    //     break;
+
+    case VADDR_LCD:
+        LCD::Read(var, addr);
         break;
 
     default:
@@ -66,8 +59,13 @@ template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
     
-    case ADDRESS_NDMA:
-        NDMA::Write(addr, data);
+    // TODO(bunnei): What is the virtual address of NDMA?
+    // case VADDR_NDMA 
+    //     NDMA::Write(addr, data);
+    //     break;
+
+    case VADDR_LCD:
+        LCD::Write(addr, data);
         break;
 
     default:

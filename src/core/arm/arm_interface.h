@@ -8,7 +8,7 @@
 #include "common/common_types.h"
 
 /// Generic ARM11 CPU interface
-class ARM_Interface {
+class ARM_Interface : NonCopyable {
 public:
     ARM_Interface() {
         m_num_instructions = 0;
@@ -75,5 +75,4 @@ private:
 
     u64 m_num_instructions;                     ///< Number of instructions executed
 
-    DISALLOW_COPY_AND_ASSIGN(ARM_Interface);
 };

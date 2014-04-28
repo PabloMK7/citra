@@ -13,16 +13,16 @@
 
 namespace APT_U {
 
-void Initialize() {
+void Initialize(Service::Interface* self) {
     NOTICE_LOG(OSHLE, "APT_U::Sync - Initialize");
 }
 
-void GetLockHandle() {
+void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
     cmd_buff[5] = 0x00000000; // TODO: This should be an actual mutex handle
 }
 
-const HLE::FunctionDef FunctionTable[] = {
+const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, GetLockHandle, "GetLockHandle"},
     {0x00020080, Initialize,    "Initialize"},
     {0x00030040, NULL,          "Enable"},

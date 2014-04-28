@@ -159,9 +159,4 @@ enum EMUSTATE_CHANGE
     EMUSTATE_CHANGE_STOP
 };
 
-// This should be used in the private: declarations for a class
-#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-    TypeName(const TypeName&);               \
-    void operator=(const TypeName&)
-
 #endif // _COMMON_H_

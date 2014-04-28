@@ -29,9 +29,6 @@ public:
         return "hid:USER";
     }
 
-private:
-
-    DISALLOW_COPY_AND_ASSIGN(Interface);
 };
 
 } // namespace

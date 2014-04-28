@@ -25,7 +25,7 @@ static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer 
 class Manager;
 
 /// Interface to a CTROS service
-class Interface {
+class Interface : NonCopyable {
     friend class Manager;
 public:
 
@@ -34,6 +34,14 @@ public:
 
     virtual ~Interface() {
     }
+
+    typedef void (*Function)(Interface*);
+
+    struct FunctionInfo {
+        u32         id;
+        Function    func;
+        std::string name;
+    };
 
     /**
      * Gets the UID for the serice
@@ -49,6 +57,23 @@ public:
      */
     virtual std::string GetPortName() const {
         return "[UNKNOWN SERVICE PORT]";
+    }
+
+    /// Allocates a new handle for the service
+    Syscall::Handle NewHandle() {
+        Syscall::Handle handle = (m_handles.size() << 16) | m_uid;
+        m_handles.push_back(handle);
+        return handle;
+    }
+
+    /// Frees a handle from the service
+    void DeleteHandle(Syscall::Handle handle) {
+        for(auto iter = m_handles.begin(); iter != m_handles.end(); ++iter) {
+            if(*iter == handle) {
+                m_handles.erase(iter);
+                break;
+            }
+        }
     }
 
     /**
@@ -70,16 +95,17 @@ public:
             return -1;
         } 
 
-        itr->second.func();
+        itr->second.func(this);
 
         return 0; // TODO: Implement return from actual function
     }
 
 protected:
+
     /**
      * Registers the functions in the service
      */
-    void Register(const HLE::FunctionDef* functions, int len) {
+    void Register(const FunctionInfo* functions, int len) {
         for (int i = 0; i < len; i++) {
             m_functions[functions[i].id] = functions[i];
         }
@@ -87,9 +113,9 @@ protected:
 
 private:
     u32 m_uid;
-    std::map<u32, HLE::FunctionDef> m_functions;
-
-    DISALLOW_COPY_AND_ASSIGN(Interface);
+    
+    std::vector<Syscall::Handle>    m_handles;
+    std::map<u32, FunctionInfo>     m_functions;
 };
 
 /// Simple class to manage accessing services from ports and UID handles
@@ -126,8 +152,6 @@ private:
 
     std::vector<Interface*>     m_services;
     std::map<std::string, u32>  m_port_map;
-
-    DISALLOW_COPY_AND_ASSIGN(Manager);
 };
 
 /// Initialize ServiceManager

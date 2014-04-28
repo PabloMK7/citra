@@ -57,8 +57,6 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef *func
 
 void CallSyscall(u32 opcode);
 
-Addr CallGetThreadCommandBuffer();
-
 void Init();
 
 void Shutdown();

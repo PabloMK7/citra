@@ -21,6 +21,11 @@ enum {
     SCRATCHPAD_SIZE         = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
     HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
     HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
+    SHARED_MEMORY_SIZE      = 0x04000000,   ///< Shared memory size
+    HARDWARE_IO_SIZE        = 0x01000000,
+
+    SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
+    SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
 
     HEAP_PADDR              = HEAP_GSP_SIZE,
     HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
@@ -36,23 +41,34 @@ enum {
     SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
     HEAP_GSP_MASK           = (HEAP_GSP_SIZE - 1),
     HEAP_MASK               = (HEAP_SIZE - 1),
+    SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
 
     FCRAM_PADDR             = 0x20000000,                       ///< FCRAM physical address
     FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
 
+    HARDWARE_IO_PADDR       = 0x10000000,                       ///< IO physical address start
+    HARDWARE_IO_VADDR       = 0x1EC00000,                       ///< IO virtual address start
+    HARDWARE_IO_PADDR_END   = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
+    HARDWARE_IO_VADDR_END   = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
+
+    VRAM_PADDR              = 0x18000000,
     VRAM_VADDR              = 0x1F000000,
+    VRAM_PADDR_END          = (VRAM_PADDR + VRAM_SIZE),
+    VRAM_VADDR_END          = (VRAM_VADDR + VRAM_SIZE),
+
     SCRATCHPAD_VADDR_END    = 0x10000000,
     SCRATCHPAD_VADDR        = (SCRATCHPAD_VADDR_END - SCRATCHPAD_SIZE), ///< Stack space
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Represents a block of heap memory mapped by ControlMemory
-struct HeapBlock {
-    HeapBlock() : base_address(0), address(0), size(0), operation(0), permissions(0) {
+/// Represents a block of memory mapped by ControlMemory/MapMemoryBlock
+struct MemoryBlock {
+    MemoryBlock() : handle(0), base_address(0), address(0), size(0), operation(0), permissions(0) {
     }
+    u32 handle;
     u32 base_address;
     u32 address;
     u32 size;
@@ -81,6 +97,7 @@ extern u8 *g_base;
 extern u8* g_heap_gsp;      ///< GSP heap (main memory)
 extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
+extern u8* g_shared_mem;    ///< Shared memory
 
 void Init();
 void Shutdown();
@@ -99,15 +116,43 @@ void Write32(const u32 addr, const u32 data);
 u8* GetPointer(const u32 Address);
 
 /**
+ * Maps a block of memory in shared memory
+ * @param handle Handle to map memory block for
+ * @param addr Address to map memory block to
+ * @param permissions Memory map permissions
+ */
+u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) ;
+
+/**
+ * Maps a block of memory on the heap
+ * @param size Size of block in bytes
+ * @param operation Memory map operation type
+ * @param flags Memory allocation flags
+ */
+u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
+
+/**
  * Maps a block of memory on the GSP heap
  * @param size Size of block in bytes
- * @param operation Control memory operation
+ * @param operation Memory map operation type
  * @param permissions Control memory permissions
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
 
 inline const char* GetCharPointer(const u32 address) {
     return (const char *)GetPointer(address);
+}
+
+inline const u32 VirtualAddressFromPhysical_FCRAM(const u32 address) {
+    return ((address & FCRAM_MASK) | FCRAM_VADDR);
+}
+
+inline const u32 VirtualAddressFromPhysical_IO(const u32 address) {
+    return (address + 0x0EB00000);
+}
+
+inline const u32 VirtualAddressFromPhysical_VRAM(const u32 address) {
+    return (address + 0x07000000);
 }
 
 } // namespace

@@ -12,15 +12,25 @@
 
 namespace Memory {
 
-std::map<u32, HeapBlock> g_heap_gsp_map;
+std::map<u32, MemoryBlock> g_heap_map;
+std::map<u32, MemoryBlock> g_heap_gsp_map;
+std::map<u32, MemoryBlock> g_shared_map;
 
 /// Convert a physical address to virtual address
 u32 _AddressPhysicalToVirtual(const u32 addr) {
     // Our memory interface read/write functions assume virtual addresses. Put any physical address 
     // to virtual address translations here. This is obviously quite hacky... But we're not doing 
     // any MMU emulation yet or anything
-    if ((addr >= FCRAM_PADDR) && (addr < (FCRAM_PADDR_END))) {
-        return (addr & FCRAM_MASK) | FCRAM_VADDR;
+    if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
+        return VirtualAddressFromPhysical_FCRAM(addr);
+
+    // Hardware IO
+    // TODO(bunnei): FixMe
+    // This isn't going to work... The physical address of HARDWARE_IO conflicts with the virtual 
+    // address of shared memory.
+    //} else if ((addr >= HARDWARE_IO_PADDR) && (addr < HARDWARE_IO_PADDR_END)) {
+    //    return (addr + 0x0EB00000);
+
     }
     return addr;
 }
@@ -41,19 +51,24 @@ inline void _Read(T &var, const u32 addr) {
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Read<T>(var, vaddr);
 
     // FCRAM - GSP heap
-    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
         var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
 
     // FCRAM - application heap
-    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         var = *((const T*)&g_heap[vaddr & HEAP_MASK]);
 
-    /*else if ((vaddr & 0x3F800000) == 0x04000000) {
-        var = *((const T*)&m_pVRAM[vaddr & VRAM_MASK]);*/
+    // Shared memory
+    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
+
+    // VRAM
+    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
 
     } else {
         //_assert_msg_(MEMMAP, false, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
@@ -72,23 +87,25 @@ inline void _Write(u32 addr, const T data) {
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr & 0xFF000000) == 0x10000000 || (vaddr & 0xFF000000) == 0x1E000000) {
+    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Write<T>(vaddr, data);
 
     // FCRAM - GSP heap
-    } else if ((vaddr > HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
         *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
 
     // FCRAM - application heap
-    } else if ((vaddr > HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         *(T*)&g_heap[vaddr & HEAP_MASK] = data;
 
-    } else if ((vaddr & 0xFF000000) == 0x14000000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to GSP heap");
-    } else if ((vaddr & 0xFFF00000) == 0x1EC00000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to IO registers");
-    } else if ((vaddr & 0xFF000000) == 0x1F000000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to VRAM");
+    // Shared memory
+    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
+
+    // VRAM
+    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        *(T*)&g_vram[vaddr & VRAM_MASK] = data;
+
     } else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
         _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
     } else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
@@ -114,19 +131,73 @@ u8 *GetPointer(const u32 addr) {
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
         return g_heap + (vaddr & HEAP_MASK);
 
+    // Shared memory
+    } else if ((vaddr > SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+        return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
+
+    // VRAM
+    } else if ((vaddr > VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+        return g_vram + (vaddr & VRAM_MASK);
+
     } else {
-        ERROR_LOG(MEMMAP, "Unknown GetPointer @ 0x%08x", vaddr);
+        ERROR_LOG(MEMMAP, "unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
 }
 
 /**
+ * Maps a block of memory in shared memory
+ * @param handle Handle to map memory block for
+ * @param addr Address to map memory block to
+ * @param permissions Memory map permissions
+ */
+u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) {
+    MemoryBlock block;
+    
+    block.handle        = handle;
+    block.base_address  = addr;
+    block.permissions   = permissions;
+    
+    if (g_shared_map.size() > 0) {
+        const MemoryBlock last_block = g_shared_map.rbegin()->second;
+        block.address = last_block.address + last_block.size;
+    }
+    g_shared_map[block.GetVirtualAddress()] = block;
+
+    return block.GetVirtualAddress();
+}
+
+/**
+ * Maps a block of memory on the heap
+ * @param size Size of block in bytes
+ * @param operation Memory map operation type
+ * @param flags Memory allocation flags
+ */
+u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
+    MemoryBlock block;
+    
+    block.base_address  = HEAP_VADDR;
+    block.size          = size;
+    block.operation     = operation;
+    block.permissions   = permissions;
+    
+    if (g_heap_map.size() > 0) {
+        const MemoryBlock last_block = g_heap_map.rbegin()->second;
+        block.address = last_block.address + last_block.size;
+    }
+    g_heap_map[block.GetVirtualAddress()] = block;
+
+    return block.GetVirtualAddress();
+}
+
+/**
  * Maps a block of memory on the GSP heap
  * @param size Size of block in bytes
+ * @param operation Memory map operation type
  * @param flags Memory allocation flags
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
-    HeapBlock block;
+    MemoryBlock block;
     
     block.base_address  = HEAP_GSP_VADDR;
     block.size          = size;
@@ -134,7 +205,7 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
     block.permissions   = permissions;
     
     if (g_heap_gsp_map.size() > 0) {
-        const HeapBlock last_block = g_heap_gsp_map.rbegin()->second;
+        const MemoryBlock last_block = g_heap_gsp_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
     g_heap_gsp_map[block.GetVirtualAddress()] = block;

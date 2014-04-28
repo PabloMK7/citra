@@ -53,12 +53,11 @@ void RendererOpenGL::SwapBuffers() {
 
 /**
  * Helper function to flip framebuffer from left-to-right to top-to-bottom
- * @param addr Address of framebuffer in RAM
+ * @param in Pointer to input raw framebuffer in V/RAM
  * @param out Pointer to output buffer with flipped framebuffer
  * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
  */
-void RendererOpenGL::FlipFramebuffer(u32 addr, u8* out) {
-    u8* in = Memory::GetPointer(addr);
+void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
     for (int y = 0; y < VideoCore::kScreenTopHeight; y++) {
         for (int x = 0; x < VideoCore::kScreenTopWidth; x++) {
             int in_coord = (VideoCore::kScreenTopHeight * 3 * x) + (VideoCore::kScreenTopHeight * 3)
@@ -77,10 +76,10 @@ void RendererOpenGL::FlipFramebuffer(u32 addr, u8* out) {
  * @param src_rect Source rectangle in XFB to copy
  * @param dst_rect Destination rectangle in output framebuffer to copy to
  */
-void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {  
+void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {
 
-    FlipFramebuffer(LCD::TOP_RIGHT_FRAME1,  m_xfb_top_flipped);
-    FlipFramebuffer(LCD::SUB_FRAME1,        m_xfb_bottom_flipped);
+    FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_top_left_1), m_xfb_top_flipped);
+    FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_sub_left_1), m_xfb_bottom_flipped);
 
     // Blit the top framebuffer
     // ------------------------

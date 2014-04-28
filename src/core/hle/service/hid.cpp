@@ -12,7 +12,7 @@
 
 namespace HID_User {
 
-const HLE::FunctionDef FunctionTable[] = {
+const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0000, NULL, "GetIPCHandles"},
     {0x00110000, NULL, "EnableAccelerometer"},
     {0x00130000, NULL, "EnableGyroscopeLow"},

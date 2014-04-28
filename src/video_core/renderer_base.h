@@ -6,7 +6,7 @@
 
 #include "common/common.h"
 
-class RendererBase {
+class RendererBase : NonCopyable {
 public:
 
     /// Used to reference a framebuffer
@@ -52,6 +52,4 @@ protected:
     f32 m_current_fps;              ///< Current framerate, should be set by the renderer
     int m_current_frame;            ///< Current frame, should be set by the renderer
 
-private:
-    DISALLOW_COPY_AND_ASSIGN(RendererBase);
 };
