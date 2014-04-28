@@ -654,7 +654,7 @@ inline PointerWrapSection::~PointerWrapSection() {
 }
 
 
-class CChunkFileReader
+/*class CChunkFileReader
 {
 public:
     enum Error {
@@ -869,6 +869,6 @@ private:
         int UncompressedSize;
         char GitVersion[32];
     };
-};
+}; */
 
 #endif  // _POINTERWRAP_H_
