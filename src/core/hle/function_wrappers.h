@@ -83,15 +83,6 @@ template<u32 func(int, void *)> void WrapU_IV() {
     RETURN(retval);
 }
 
-template<float func()> void WrapF_V() {
-    RETURNF(func());
-}
-
-// TODO: Not sure about the floating point parameter passing
-template<float func(int, float, u32)> void WrapF_IFU() {
-    RETURNF(func(PARAM(0), PARAMF(0), PARAM(1)));
-}
-
 template<u32 func(u32)> void WrapU_U() {
     u32 retval = func(PARAM(0));
     RETURN(retval);
@@ -124,12 +115,6 @@ template<u32 func(int, u32, int)> void WrapU_IUI() {
 
 template<int func(u32, u32)> void WrapI_UU() {
     int retval = func(PARAM(0), PARAM(1));
-    RETURN(retval);
-}
-
-template<int func(u32, float, float)> void WrapI_UFF() {
-    // Not sure about the float arguments.
-    int retval = func(PARAM(0), PARAMF(0), PARAMF(1));
     RETURN(retval);
 }
 
