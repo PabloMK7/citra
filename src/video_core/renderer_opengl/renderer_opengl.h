@@ -28,7 +28,7 @@ public:
      * @param src_rect Source rectangle in XFB to copy
      * @param dst_rect Destination rectangle in output framebuffer to copy to
      */
-    void RenderXFB(const Rect& src_rect, const Rect& dst_rect);
+    void RenderXFB(const BasicRect& src_rect, const BasicRect& dst_rect);
 
     /** 
      * Set the emulator window to use for renderer

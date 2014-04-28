@@ -37,7 +37,7 @@ void RendererOpenGL::SwapBuffers() {
     // EFB->XFB copy
     // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some 
     // register write We're also treating both framebuffers as a single one in OpenGL.
-    Rect framebuffer_size(0, 0, m_resolution_width, m_resolution_height);
+    BasicRect framebuffer_size(0, 0, m_resolution_width, m_resolution_height);
     RenderXFB(framebuffer_size, framebuffer_size);
 
     // XFB->Window copy
@@ -76,7 +76,7 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
  * @param src_rect Source rectangle in XFB to copy
  * @param dst_rect Destination rectangle in output framebuffer to copy to
  */
-void RendererOpenGL::RenderXFB(const Rect& src_rect, const Rect& dst_rect) {
+void RendererOpenGL::RenderXFB(const BasicRect& src_rect, const BasicRect& dst_rect) {
 
     FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_top_left_1), m_xfb_top_flipped);
     FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_sub_left_1), m_xfb_bottom_flipped);

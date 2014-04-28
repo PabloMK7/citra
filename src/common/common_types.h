@@ -101,15 +101,15 @@ union t128 {
 };
 
 /// Rectangle data structure
-class Rect {
+class BasicRect {
 public:
-    Rect(int x0=0, int y0=0, int x1=0, int y1=0) {
+    BasicRect(int x0=0, int y0=0, int x1=0, int y1=0) {
         x0_ = x0;
         y0_ = y0;
         x1_ = x1;
         y1_ = y1;
     }
-    ~Rect() { }
+    ~BasicRect() { }
 
     int x0_;    ///< Rect top left X-coordinate
     int y0_;    ///< Rect top left Y-coordinate
@@ -119,7 +119,7 @@ public:
     inline u32 width() const { return abs(x1_ - x0_); }
     inline u32 height() const { return abs(y1_ - y0_); }
 
-    inline bool operator == (const Rect& val) const {
+    inline bool operator == (const BasicRect& val) const {
         return (x0_ == val.x0_ && y0_ == val.y0_ && x1_ == val.x1_ && y1_ == val.y1_);
     }
 };
