@@ -8,6 +8,23 @@ set(SRCS
             main.cpp
             config/controller_config.cpp
             config/controller_config_util.cpp)
+set (HEADS
+            bootmanager.hxx
+            debugger/callstack.hxx
+            debugger/disassembler.hxx
+            debugger/ramview.hxx
+            debugger/registers.hxx
+            hotkeys.hxx
+            main.hxx
+            ui_callstack.h
+            ui_controller_config.h
+            ui_disassembler.h
+            ui_hotkeys.h
+            ui_main.h
+            ui_registers.h
+            version.h
+            config/controller_config.hxx
+            config/controller_config_util.hxx)
 
 qt4_wrap_ui(UI_HDRS
                     debugger/callstack.ui
@@ -32,7 +49,11 @@ qt4_wrap_cpp(MOC_SRCS
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(./)
 
-add_executable(citra-qt ${SRCS} ${MOC_SRCS} ${UI_HDRS})
-target_link_libraries(citra-qt core common video_core qhexedit ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARY} rt GLEW ${GLFW_LIBRARIES})
+add_executable(citra-qt ${SRCS} ${HEADS} ${MOC_SRCS} ${UI_HDRS})
+if (APPLE)
+	target_link_libraries(citra-qt core common video_core qhexedit iconv ${COREFOUNDATION_LIBRARY} ${QT_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
+else()
+
+endif()
 
 #install(TARGETS citra-qt RUNTIME DESTINATION ${bindir})
