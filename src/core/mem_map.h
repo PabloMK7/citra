@@ -47,6 +47,8 @@ enum {
     FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
+    FRAM_VADDR_FW0B         = 0xF0000000,                       ///< FCRAM adress for firmare FW0B
+    FRAM_VADDR_FW0B_END     = (FRAM_VADDR_FW0B + FCRAM_SIZE),   ///< FCRAM adress end for FW0B
 
     HARDWARE_IO_PADDR       = 0x10000000,                       ///< IO physical address start
     HARDWARE_IO_VADDR       = 0x1EC00000,                       ///< IO virtual address start
