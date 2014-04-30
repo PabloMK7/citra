@@ -9,6 +9,6 @@ if (NOT X11_xf86vmode_LIB)
 endif()
 
 add_executable(citra ${SRCS} ${HEADS})
-target_link_libraries(citra core common video_core GLEW pthread X11 Xxf86vm Xi Xcursor ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} rt ${X11_Xrandr_LIB} ${X11_xv86vmode_LIB})
+target_link_libraries(citra core common video_core iconv pthread ${COREFOUNDATION_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${GLFW_LIBRARIES})
 
 #install(TARGETS citra RUNTIME DESTINATION ${bindir})

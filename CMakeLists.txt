@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project(citra)
 
+SET(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
 SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -fpermissive")
 SET(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -fpermissive")
 
@@ -19,7 +20,10 @@ find_package(OpenGL REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
 IF (APPLE)
-   FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
+    FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
+    SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
+    SET(CMAKE_CXX_FLAGS_DEBUG "-stdlib=libc++")
+    SET(CMAKE_CXX_FLAGS_RELEASE "-stdlib=libc++")
 ENDIF (APPLE)
 
 include_directories(${GLFW_INCLUDE_DIRS})
