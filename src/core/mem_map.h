@@ -105,6 +105,7 @@ extern u8* g_heap_gsp;      ///< GSP heap (main memory)
 extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_shared_mem;    ///< Shared memory
+extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 
 void Init();
 void Shutdown();

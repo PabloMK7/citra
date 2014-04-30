@@ -58,6 +58,10 @@ inline void _Read(T &var, const u32 addr) {
     } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Read<T>(var, vaddr);
 
+    // ExeFS:/.code is loaded here
+    } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
+        var = *((const T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK]);
+
     // FCRAM - GSP heap
     } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
         var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
@@ -94,6 +98,10 @@ inline void _Write(u32 addr, const T data) {
     } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
         HW::Write<T>(vaddr, data);
 
+    // ExeFS:/.code is loaded here
+    } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
+        *(T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK] = data;
+
     // FCRAM - GSP heap
     } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
         *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
@@ -127,8 +135,12 @@ inline void _Write(u32 addr, const T data) {
 u8 *GetPointer(const u32 addr) {
     const u32 vaddr = _VirtualAddress(addr);
 
+    // ExeFS:/.code is loaded here
+    if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
+        return g_exefs_code + (vaddr & EXEFS_CODE_MASK);
+
     // FCRAM - GSP heap
-    if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
+    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
         return g_heap_gsp + (vaddr & HEAP_GSP_MASK);
 
     // FCRAM - application heap
