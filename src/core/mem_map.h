@@ -17,39 +17,41 @@ enum {
     VRAM_SIZE               = 0x00600000,   ///< VRAM size
     DSP_SIZE                = 0x00080000,   ///< DSP memory size
     AXI_WRAM_SIZE           = 0x00080000,   ///< AXI WRAM size
+
     FCRAM_SIZE              = 0x08000000,   ///< FCRAM size
-    SCRATCHPAD_SIZE         = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
-    HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
-    HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
-    SHARED_MEMORY_SIZE      = 0x04000000,   ///< Shared memory size
-    HARDWARE_IO_SIZE        = 0x01000000,
-
-    SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
-    SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
-
-    HEAP_PADDR              = HEAP_GSP_SIZE,
-    HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
-    HEAP_VADDR              = 0x08000000,
-    HEAP_VADDR_END          = (HEAP_VADDR + HEAP_SIZE),
-    HEAP_GSP_VADDR          = 0x14000000,
-    HEAP_GSP_VADDR_END      = (HEAP_GSP_VADDR + HEAP_GSP_SIZE),
-    HEAP_GSP_PADDR          = 0x00000000,
-    HEAP_GSP_PADDR_END      = (HEAP_GSP_PADDR + HEAP_GSP_SIZE),
-
-    VRAM_MASK               = 0x007FFFFF,
-    FCRAM_MASK              = (FCRAM_SIZE - 1),                 ///< FCRAM mask
-    SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
-    HEAP_GSP_MASK           = (HEAP_GSP_SIZE - 1),
-    HEAP_MASK               = (HEAP_SIZE - 1),
-    SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
-
     FCRAM_PADDR             = 0x20000000,                       ///< FCRAM physical address
     FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
-    FRAM_VADDR_FW0B         = 0xF0000000,                       ///< FCRAM adress for firmare FW0B
-    FRAM_VADDR_FW0B_END     = (FRAM_VADDR_FW0B + FCRAM_SIZE),   ///< FCRAM adress end for FW0B
+    FCRAM_VADDR_FW0B        = 0xF0000000,                       ///< FCRAM adress for firmare FW0B
+    FCRAM_VADDR_FW0B_END    = (FCRAM_VADDR_FW0B + FCRAM_SIZE),  ///< FCRAM adress end for FW0B
+    FCRAM_MASK              = (FCRAM_SIZE - 1),                 ///< FCRAM mask
 
+    SHARED_MEMORY_SIZE      = 0x04000000,   ///< Shared memory size
+    SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
+    SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
+    SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
+
+    EXEFS_CODE_SIZE         = 0x03F00000,
+    EXEFS_CODE_VADDR        = 0x00100000,   ///< ExeFS:/.code is loaded here
+    EXEFS_CODE_VADDR_END    = (EXEFS_CODE_VADDR + EXEFS_CODE_SIZE),
+    EXEFS_CODE_MASK         = (EXEFS_CODE_VADDR - 1),
+
+    HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
+    //HEAP_PADDR              = HEAP_GSP_SIZE,
+    //HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
+    HEAP_VADDR              = 0x08000000,
+    HEAP_VADDR_END          = (HEAP_VADDR + HEAP_SIZE),
+    HEAP_MASK               = (HEAP_SIZE - 1),
+
+    HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
+    HEAP_GSP_VADDR          = 0x14000000,
+    HEAP_GSP_VADDR_END      = (HEAP_GSP_VADDR + HEAP_GSP_SIZE),
+    HEAP_GSP_PADDR          = 0x00000000,
+    HEAP_GSP_PADDR_END      = (HEAP_GSP_PADDR + HEAP_GSP_SIZE),
+    HEAP_GSP_MASK           = (HEAP_GSP_SIZE - 1),
+
+    HARDWARE_IO_SIZE        = 0x01000000,
     HARDWARE_IO_PADDR       = 0x10000000,                       ///< IO physical address start
     HARDWARE_IO_VADDR       = 0x1EC00000,                       ///< IO virtual address start
     HARDWARE_IO_PADDR_END   = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
@@ -59,9 +61,12 @@ enum {
     VRAM_VADDR              = 0x1F000000,
     VRAM_PADDR_END          = (VRAM_PADDR + VRAM_SIZE),
     VRAM_VADDR_END          = (VRAM_VADDR + VRAM_SIZE),
+    VRAM_MASK               = 0x007FFFFF,
 
+    SCRATCHPAD_SIZE         = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
     SCRATCHPAD_VADDR_END    = 0x10000000,
     SCRATCHPAD_VADDR        = (SCRATCHPAD_VADDR_END - SCRATCHPAD_SIZE), ///< Stack space
+    SCRATCHPAD_MASK         = (SCRATCHPAD_SIZE - 1),            ///< Scratchpad memory mask
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

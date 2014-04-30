@@ -25,7 +25,7 @@ u32 _VirtualAddress(const u32 addr) {
         return VirtualAddressFromPhysical_FCRAM(addr);
 
     // Virtual address mapping FW0B
-    } else if ((addr >= FRAM_VADDR_FW0B) && (addr < FRAM_VADDR_FW0B_END)) {
+    } else if ((addr >= FCRAM_VADDR_FW0B) && (addr < FCRAM_VADDR_FW0B_END)) {
         return VirtualAddressFromPhysical_FCRAM(addr);
 
     // Hardware IO
