@@ -29,4 +29,41 @@ set(SRCS    core.cpp
             hw/lcd.cpp
             hw/ndma.cpp)
 
-add_library(core STATIC ${SRCS})
+set(HEADS   core.h
+            core_timing.h
+            loader.h
+            mem_map.h
+            system.h
+            arm/disassembler/arm_disasm.h
+            arm/interpreter/arm_interpreter.h
+            arm/interpreter/arm_regformat.h
+            arm/interpreter/armcpu.h
+            arm/interpreter/armdefs.h
+            arm/interpreter/armemu.h
+            arm/interpreter/armmmu.h
+            arm/interpreter/armos.h
+            arm/interpreter/skyeye_defs.h
+            arm/mmu/arm1176jzf_s_mmu.h
+            arm/mmu/cache.h
+            arm/mmu/rb.h
+            arm/mmu/tlb.h
+            arm/mmu/wb.h
+            elf/elf_reader.h
+            elf/elf_types.h
+			file_sys/directory_file_system.h
+            file_sys/file_sys.h
+            file_sys/meta_file_system.h
+			hle/hle.h
+            hle/mrc.h
+            hle/syscall.h
+            hle/function_wrappers.h
+            hle/service/apt.h
+            hle/service/gsp.h
+            hle/service/hid.h
+            hle/service/service.h
+            hle/service/srv.h
+            hw/hw.h
+            hw/lcd.h
+            hw/ndma.h)
+
+add_library(core STATIC ${SRCS} ${HEADS})

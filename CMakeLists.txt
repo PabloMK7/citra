@@ -26,7 +26,14 @@ IF (APPLE)
     SET(CMAKE_CXX_FLAGS_RELEASE "-stdlib=libc++")
 ENDIF (APPLE)
 
+#external includes
 include_directories(${GLFW_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIR})
+include_directories(${GLEW_INCLUDE_DIR})
+
+#use pkg_search_module library dirs
+link_directories(${GLFW_LIBRARY_DIRS})
+
 option(DISABLE_QT4 "Disable Qt4 GUI" OFF)
 if(NOT DISABLE_QT4)
     include(FindQt4)
@@ -47,10 +54,6 @@ include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REF_SPEC GIT_REV)
 git_describe(GIT_DESC --always --long --dirty)
 git_branch_name(GIT_BRANCH)
-
-# external includes
-include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${GLEW_INCLUDE_DIR})
     
 # internal includes
 include_directories(src)
