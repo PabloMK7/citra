@@ -5,6 +5,7 @@ set(SRCS    core.cpp
             mem_map_funcs.cpp
             system.cpp
             arm/disassembler/arm_disasm.cpp
+            arm/disassembler/load_symbol_map.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp

@@ -108,6 +108,9 @@
     <ClCompile Include="hle\mrc.cpp">
       <Filter>hle</Filter>
     </ClCompile>
+    <ClCompile Include="arm\disassembler\load_symbol_map.cpp">
+      <Filter>arm\disassembler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -210,6 +213,9 @@
     </ClInclude>
     <ClInclude Include="hle\mrc.h">
       <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\disassembler\load_symbol_map.h">
+      <Filter>arm\disassembler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

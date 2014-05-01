@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp" />
+    <ClCompile Include="arm\disassembler\load_symbol_map.cpp" />
     <ClCompile Include="arm\interpreter\armemu.cpp" />
     <ClCompile Include="arm\interpreter\arminit.cpp" />
     <ClCompile Include="arm\interpreter\armmmu.cpp" />
@@ -171,6 +172,7 @@
   <ItemGroup>
     <ClInclude Include="arm\arm_interface.h" />
     <ClInclude Include="arm\disassembler\arm_disasm.h" />
+    <ClInclude Include="arm\disassembler\load_symbol_map.h" />
     <ClInclude Include="arm\interpreter\armcpu.h" />
     <ClInclude Include="arm\interpreter\armdefs.h" />
     <ClInclude Include="arm\interpreter\armemu.h" />
