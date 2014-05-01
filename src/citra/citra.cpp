@@ -24,7 +24,7 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    std::string boot_filename = "/Users/gandrade-air/Downloads/homebrew/yeti3DS-master.elf";
+    std::string boot_filename = "homebrew.elf";
     std::string error_str;
     
     bool res = Loader::LoadFile(boot_filename, &error_str);
