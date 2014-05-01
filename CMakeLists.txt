@@ -21,9 +21,8 @@ pkg_search_module(GLFW REQUIRED glfw3)
 
 IF (APPLE)
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
-    SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
-    SET(CMAKE_CXX_FLAGS_DEBUG "-stdlib=libc++")
-    SET(CMAKE_CXX_FLAGS_RELEASE "-stdlib=libc++")
+	SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
+	SET(CMAKE_EXE_LINKER_FLAGS "-stdlib=libc++")
 ENDIF (APPLE)
 
 #external includes

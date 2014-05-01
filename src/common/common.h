@@ -25,7 +25,7 @@
 #define HAVE_CXX11_SYNTAX 1
 #endif
 
-//#if HAVE_CXX11_SYNTAX
+#if HAVE_CXX11_SYNTAX
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable
 {
@@ -37,7 +37,7 @@ private:
     NonCopyable(NonCopyable&);
     NonCopyable& operator=(NonCopyable& other);
 };
-//#endif
+#endif
 
 #include "common/log.h"
 #include "common/common_types.h"
