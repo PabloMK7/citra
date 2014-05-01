@@ -82,13 +82,28 @@ Result SendSyncRequest(Handle session) {
 /// Close a handle
 Result CloseHandle(Handle handle) {
     // ImplementMe
+    NOTICE_LOG(OSHLE, "stubbed function CloseHandle");
     return 0;
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 Result WaitSynchronization1(Handle handle, s64 nanoseconds) {
     // ImplementMe
+    NOTICE_LOG(OSHLE, "stubbed function WaitSynchronization1");
     return 0;
+}
+
+/// Create an address arbiter (to allocate access to shared resources)
+Result CreateAddressArbiter(void* arbiter) {
+    // ImplementMe
+    NOTICE_LOG(OSHLE, "stubbed function CreateAddressArbiter");
+    Core::g_app_core->SetReg(1, 0xDEADBEEF);
+    return 0;
+}
+
+/// Used to output a message on a debug hardware unit - does nothing on a retail unit
+void OutputDebugString(const char* string) {
+    NOTICE_LOG(OSHLE, "## OSDEBUG: %s", string);
 }
 
 const HLE::FunctionDef Syscall_Table[] = {
@@ -125,7 +140,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x1E,  NULL,                               "CreateMemoryBlock"},
     {0x1F,  WrapI_UUUU<MapMemoryBlock>,         "MapMemoryBlock"},
     {0x20,  NULL,                               "UnmapMemoryBlock"},
-    {0x21,  NULL,                               "CreateAddressArbiter"},
+    {0x21,  WrapI_V<CreateAddressArbiter>,      "CreateAddressArbiter"},
     {0x22,  NULL,                               "ArbitrateAddress"},
     {0x23,  WrapI_U<CloseHandle>,               "CloseHandle"},
     {0x24,  WrapI_US64<WaitSynchronization1>,   "WaitSynchronization1"},
@@ -153,7 +168,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x3A,  NULL,                               "GetResourceLimitCurrentValues"},
     {0x3B,  NULL,                               "GetThreadContext"},
     {0x3C,  NULL,                               "Break"},
-    {0x3D,  NULL,                               "OutputDebugString"},
+    {0x3D,  WrapV_C<OutputDebugString>,         "OutputDebugString"},
     {0x3E,  NULL,                               "ControlPerformanceCounter"},
     {0x3F,  NULL,                               "Unknown"},
     {0x40,  NULL,                               "Unknown"},
