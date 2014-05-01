@@ -6,6 +6,7 @@
 
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/utils.h"
 
 #include "core/mem_map.h"
 
@@ -49,6 +50,7 @@ void RendererOpenGL::SwapBuffers() {
 
     // Switch back to EFB and clear
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo[kFramebuffer_EFB]);
+	VideoCore::DumpTGA("dump.tga", 400, 240, m_xfb_top_flipped);
 }
 
 /**
