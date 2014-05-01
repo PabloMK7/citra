@@ -35,7 +35,7 @@ enum {
     EXEFS_CODE_SIZE         = 0x03F00000,
     EXEFS_CODE_VADDR        = 0x00100000,   ///< ExeFS:/.code is loaded here
     EXEFS_CODE_VADDR_END    = (EXEFS_CODE_VADDR + EXEFS_CODE_SIZE),
-    EXEFS_CODE_MASK         = (EXEFS_CODE_VADDR - 1),
+    EXEFS_CODE_MASK         = 0x03FFFFFF,
 
     HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
     //HEAP_PADDR              = HEAP_GSP_SIZE,
