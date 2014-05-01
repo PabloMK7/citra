@@ -73,11 +73,10 @@ void EmuThread::Stop()
 class GGLWidgetInternal : public QGLWidget
 {
 public:
-    GGLWidgetInternal(GRenderWindow* parent) : QGLWidget(parent)
+    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(parent)
     {
-        setAutoBufferSwap(false);
-        doneCurrent();
-        parent_ = parent;
+		doneCurrent();
+		parent_ = parent;
     }
 
     void paintEvent(QPaintEvent* ev)
@@ -103,8 +102,13 @@ EmuThread& GRenderWindow::GetEmuThread()
 GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this)
 {
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
-
-    child = new GGLWidgetInternal(this);
+	QGLFormat fmt;
+	fmt.setProfile(QGLFormat::CoreProfile);
+	fmt.setVersion(4,1);
+	fmt.setSampleBuffers(true);
+	fmt.setSamples(4);
+	
+    child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
     resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
