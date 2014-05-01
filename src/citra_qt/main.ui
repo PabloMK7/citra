@@ -40,6 +40,7 @@
      <string>&amp;File</string>
     </property>
     <addaction name="action_Load_File"/>
+    <addaction name="action_Load_Symbol_Map"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -72,12 +73,17 @@
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="action_Load_File">
-   <property name="text">
-    <string>Load file...</string>
-   </property>
-  </action>
-  <action name="action_Exit">
+   <action name="action_Load_File">
+     <property name="text">
+       <string>Load file...</string>
+     </property>
+   </action>
+   <action name="action_Load_Symbol_Map">
+     <property name="text">
+       <string>Load symbol map...</string>
+     </property>
+   </action>
+   <action name="action_Exit">
    <property name="text">
     <string>E&amp;xit</string>
    </property>

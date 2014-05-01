@@ -27,6 +27,7 @@ class Ui_MainWindow
 {
 public:
     QAction *action_Load_File;
+    QAction *action_Load_Symbol_Map;
     QAction *action_Exit;
     QAction *action_Start;
     QAction *action_Pause;
@@ -56,6 +57,8 @@ public:
         MainWindow->setDockNestingEnabled(true);
         action_Load_File = new QAction(MainWindow);
         action_Load_File->setObjectName(QString::fromUtf8("action_Load_File"));
+        action_Load_Symbol_Map = new QAction(MainWindow);
+        action_Load_Symbol_Map->setObjectName(QString::fromUtf8("action_Load_Symbol_Map"));
         action_Exit = new QAction(MainWindow);
         action_Exit->setObjectName(QString::fromUtf8("action_Exit"));
         action_Start = new QAction(MainWindow);
@@ -101,6 +104,7 @@ public:
         menubar->addAction(menu_View->menuAction());
         menubar->addAction(menu_Help->menuAction());
         menu_File->addAction(action_Load_File);
+        menu_File->addAction(action_Load_Symbol_Map);
         menu_File->addSeparator();
         menu_File->addAction(action_Exit);
         menu_Emulation->addAction(action_Start);
@@ -123,6 +127,7 @@ public:
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Citra", 0, QApplication::UnicodeUTF8));
         action_Load_File->setText(QApplication::translate("MainWindow", "Load file...", 0, QApplication::UnicodeUTF8));
+        action_Load_Symbol_Map->setText(QApplication::translate("MainWindow", "Load symbol map...", 0, QApplication::UnicodeUTF8));
         action_Exit->setText(QApplication::translate("MainWindow", "E&xit", 0, QApplication::UnicodeUTF8));
         action_Start->setText(QApplication::translate("MainWindow", "&Start", 0, QApplication::UnicodeUTF8));
         action_Pause->setText(QApplication::translate("MainWindow", "&Pause", 0, QApplication::UnicodeUTF8));
