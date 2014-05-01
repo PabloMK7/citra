@@ -20,7 +20,7 @@
 
 //#include "ansidecl.h"
 #include "skyeye_defs.h"
-#include "core/hle/mrc.h"
+#include "core/hle/coprocessor.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
@@ -663,13 +663,13 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
 {
 	unsigned cpab;
 
-	//printf("SKYEYE ARMul_MCR, CPnum is %x, source %x\n",CPNum, source);
-	if (!CP_ACCESS_ALLOWED (state, CPNum)) {
-		//chy 2004-07-19 should fix in the future ????!!!!
-		//printf("SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x\n",CPNum, source);
-		ARMul_UndefInstr (state, instr);
-		return;
-	}
+	////printf("SKYEYE ARMul_MCR, CPnum is %x, source %x\n",CPNum, source);
+	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {
+	//	//chy 2004-07-19 should fix in the future ????!!!!
+	//	//printf("SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x\n",CPNum, source);
+	//	ARMul_UndefInstr (state, instr);
+	//	return;
+	//}
 
 	cpab = (state->MCR[CPNum]) (state, ARMul_FIRST, instr, source);
 
