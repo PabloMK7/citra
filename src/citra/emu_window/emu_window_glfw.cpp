@@ -28,17 +28,17 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth, 
         (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), 
         m_window_title.c_str(), NULL, NULL);
 
-	if (m_render_window == NULL) {
-		printf("Failed to create GLFW window! Exiting...");
-		exit(1);
-	}
-	
+    if (m_render_window == NULL) {
+        printf("Failed to create GLFW window! Exiting...");
+        exit(1);
+    }
+    
     // Setup callbacks
     glfwSetWindowUserPointer(m_render_window, this);
     //glfwSetKeyCallback(m_render_window, OnKeyEvent);

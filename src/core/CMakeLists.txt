@@ -50,10 +50,10 @@ set(HEADS   core.h
             arm/mmu/wb.h
             elf/elf_reader.h
             elf/elf_types.h
-			file_sys/directory_file_system.h
+            file_sys/directory_file_system.h
             file_sys/file_sys.h
             file_sys/meta_file_system.h
-			hle/hle.h
+            hle/hle.h
             hle/mrc.h
             hle/syscall.h
             hle/function_wrappers.h

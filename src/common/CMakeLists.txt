@@ -45,7 +45,7 @@ set(HEADS   atomic.h
             memory_util.h
             msg_handler.h
             platform.h
-			scm_rev.h
+            scm_rev.h
             std_condition_variable.h
             std_mutex.h
             std_thread.h

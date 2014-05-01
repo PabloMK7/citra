@@ -53,7 +53,7 @@ add_executable(citra-qt ${SRCS} ${HEADS} ${MOC_SRCS} ${UI_HDRS})
 if (APPLE)
     target_link_libraries(citra-qt core common video_core qhexedit iconv ${COREFOUNDATION_LIBRARY} ${QT_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
 else()
-	target_link_libraries(citra-qt core common video_core qhexedit ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARY} rt GLEW ${GLFW_LIBRARIES})
+    target_link_libraries(citra-qt core common video_core qhexedit ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARY} rt GLEW ${GLFW_LIBRARIES})
 endif()
 
 #install(TARGETS citra-qt RUNTIME DESTINATION ${bindir})

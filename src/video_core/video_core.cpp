@@ -30,8 +30,8 @@ void Start() {
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
-	glewExperimental = GL_TRUE;
-	
+    glewExperimental = GL_TRUE;
+
     g_emu_window = emu_window;
     g_emu_window->MakeCurrent();
     g_renderer = new RendererOpenGL();
