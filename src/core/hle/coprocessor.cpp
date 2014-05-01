@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#include "core/hle/mrc.h"
+#include "core/hle/coprocessor.h"
 #include "core/hle/hle.h"
 #include "core/mem_map.h"
 #include "core/core.h"
