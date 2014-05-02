@@ -24,7 +24,14 @@ int __cdecl main(int argc, char **argv) {
 
 	System::Init(emu_window);
 
-    std::string boot_filename = argv[1];
+    std::string boot_filename;
+	
+	if (argc < 2) {
+		ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
+	}
+	else {
+		boot_filename = argv[1];
+	}
     std::string error_str;
     
     bool res = Loader::LoadFile(boot_filename, &error_str);
