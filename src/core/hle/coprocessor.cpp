@@ -44,8 +44,18 @@ Addr GetThreadCommandBuffer() {
     return CMD_BUFFER_ADDR;
 }
 
-/// Call an MRC operation in HLE
-u32 CallMRC(ARM11_MRC_OPERATION operation) {
+/// Call an MCR (move to coprocessor from ARM register) instruction in HLE
+s32 CallMCR(u32 instruction, u32 value) {
+    CoprocessorOperation operation = (CoprocessorOperation)((instruction >> 20) & 0xFF);
+    ERROR_LOG(OSHLE, "unimplemented MCR instruction=0x%08X, operation=%02X, value=%08X", 
+        instruction, operation, value);
+    return -1;
+}
+
+/// Call an MRC (move to ARM register from coprocessor) instruction in HLE
+s32 CallMRC(u32 instruction) {
+    CoprocessorOperation operation = (CoprocessorOperation)((instruction >> 20) & 0xFF);
+
     switch (operation) {
 
     case DATA_SYNCHRONIZATION_BARRIER:
@@ -55,7 +65,7 @@ u32 CallMRC(ARM11_MRC_OPERATION operation) {
         return GetThreadCommandBuffer();
 
     default:
-        ERROR_LOG(OSHLE, "unimplemented MRC operation 0x%02X", operation);
+        ERROR_LOG(OSHLE, "unimplemented MRC instruction 0x%08X", instruction);
         break;
     }
     return -1;

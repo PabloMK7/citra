@@ -661,7 +661,8 @@ ARMul_STC (ARMul_State * state, ARMword instr, ARMword address)
 void
 ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
 {
-	unsigned cpab;
+    HLE::CallMCR(instr, source);
+	//unsigned cpab;
 
 	////printf("SKYEYE ARMul_MCR, CPnum is %x, source %x\n",CPNum, source);
 	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {
@@ -671,29 +672,29 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
 	//	return;
 	//}
 
-	cpab = (state->MCR[CPNum]) (state, ARMul_FIRST, instr, source);
+	//cpab = (state->MCR[CPNum]) (state, ARMul_FIRST, instr, source);
 
-	while (cpab == ARMul_BUSY) {
-		ARMul_Icycles (state, 1, 0);
+	//while (cpab == ARMul_BUSY) {
+	//	ARMul_Icycles (state, 1, 0);
 
-		if (IntPending (state)) {
-			cpab = (state->MCR[CPNum]) (state, ARMul_INTERRUPT,
-						    instr, 0);
-			return;
-		}
-		else
-			cpab = (state->MCR[CPNum]) (state, ARMul_BUSY, instr,
-						    source);
-	}
+	//	if (IntPending (state)) {
+	//		cpab = (state->MCR[CPNum]) (state, ARMul_INTERRUPT,
+	//					    instr, 0);
+	//		return;
+	//	}
+	//	else
+	//		cpab = (state->MCR[CPNum]) (state, ARMul_BUSY, instr,
+	//					    source);
+	//}
 
-	if (cpab == ARMul_CANT) {
-		printf ("SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x\n", instr, CPNum, source);
-		ARMul_Abort (state, ARMul_UndefinedInstrV);
-	}
-	else {
-		BUSUSEDINCPCN;
-		ARMul_Ccycles (state, 1, 0);
-	}
+	//if (cpab == ARMul_CANT) {
+	//	printf ("SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x\n", instr, CPNum, source);
+	//	ARMul_Abort (state, ARMul_UndefinedInstrV);
+	//}
+	//else {
+	//	BUSUSEDINCPCN;
+	//	ARMul_Ccycles (state, 1, 0);
+	//}
 }
 
 /* This function does the Busy-Waiting for an MCRR instruction.  */
@@ -739,7 +740,7 @@ ARMul_MRC (ARMul_State * state, ARMword instr)
 {
 	unsigned cpab;
 
-	ARMword result = HLE::CallMRC((HLE::ARM11_MRC_OPERATION)BITS(20, 27));
+	ARMword result = HLE::CallMRC(instr);
 
 	////printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
 	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {
