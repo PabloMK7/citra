@@ -39,6 +39,7 @@
     <ClInclude Include="utf8.h" />
     <ClInclude Include="symbols.h" />
     <ClInclude Include="scm_rev.h" />
+    <ClInclude Include="bit_field.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="break_points.cpp" />
