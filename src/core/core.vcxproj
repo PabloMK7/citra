@@ -153,6 +153,7 @@
     <ClCompile Include="elf\elf_reader.cpp" />
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
+    <ClCompile Include="hle\config_mem.cpp" />
     <ClCompile Include="hle\coprocessor.cpp" />
     <ClCompile Include="hle\hle.cpp" />
     <ClCompile Include="hle\service\apt.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="file_sys\directory_file_system.h" />
     <ClInclude Include="file_sys\file_sys.h" />
     <ClInclude Include="file_sys\meta_file_system.h" />
+    <ClInclude Include="hle\config_mem.h" />
     <ClInclude Include="hle\coprocessor.h" />
     <ClInclude Include="hle\function_wrappers.h" />
     <ClInclude Include="hle\hle.h" />

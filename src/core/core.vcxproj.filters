@@ -111,6 +111,9 @@
     <ClCompile Include="hle\coprocessor.cpp">
       <Filter>hle</Filter>
     </ClCompile>
+    <ClCompile Include="hle\config_mem.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -215,6 +218,9 @@
       <Filter>arm\disassembler</Filter>
     </ClInclude>
     <ClInclude Include="hle\coprocessor.h">
+      <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\config_mem.h">
       <Filter>hle</Filter>
     </ClInclude>
   </ItemGroup>
