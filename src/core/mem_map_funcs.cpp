@@ -9,6 +9,7 @@
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
 #include "hle/hle.h"
+#include "hle/config_mem.h"
 
 namespace Memory {
 
@@ -46,7 +47,7 @@ inline void _Read(T &var, const u32 addr) {
     // Could just do a base-relative read, too.... TODO
 
     const u32 vaddr = _VirtualAddress(addr);
-    
+
     // Memory allocated for HLE use that can be addressed from the emulated application
     // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
     // core running the user application (appcore)
@@ -73,6 +74,10 @@ inline void _Read(T &var, const u32 addr) {
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
+
+    // Config memory
+    } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
+        ConfigMem::Read<T>(var, vaddr);
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
@@ -118,12 +123,12 @@ inline void _Write(u32 addr, const T data) {
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         *(T*)&g_vram[vaddr & VRAM_MASK] = data;
 
-    } else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
-    } else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
-    } else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
+    //} else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
+    //} else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
+    //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
     
     // Error out...
     } else {
