@@ -5536,14 +5536,15 @@ Handle_Load_Double (ARMul_State * state, ARMword instr)
         addr = base;
 
     /* The address must be aligned on a 8 byte boundary.  */
-    if (addr & 0x7) {
-#ifdef ABORTS
-        ARMul_DATAABORT (addr);
-#else
-        ARMul_UndefInstr (state, instr);
-#endif
-        return;
-    }
+    // FIX(Normatt): Disable strict alignment on LDRD/STRD
+//    if (addr & 0x7) {
+//#ifdef ABORTS
+//        ARMul_DATAABORT (addr);
+//#else
+//        ARMul_UndefInstr (state, instr);
+//#endif
+//        return;
+//    }
 
     /* For pre indexed or post indexed addressing modes,
        check that the destination registers do not overlap
@@ -5640,14 +5641,15 @@ Handle_Store_Double (ARMul_State * state, ARMword instr)
         addr = base;
 
     /* The address must be aligned on a 8 byte boundary.  */
-    if (addr & 0x7) {
-#ifdef ABORTS
-        ARMul_DATAABORT (addr);
-#else
-        ARMul_UndefInstr (state, instr);
-#endif
-        return;
-    }
+    // FIX(Normatt): Disable strict alignment on LDRD/STRD
+//    if (addr & 0x7) {
+//#ifdef ABORTS
+//        ARMul_DATAABORT (addr);
+//#else
+//        ARMul_UndefInstr (state, instr);
+//#endif
+//        return;
+//    }
 
     /* For pre indexed or post indexed addressing modes,
        check that the destination registers do not overlap
@@ -6405,6 +6407,8 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
         if (state->Aborted) {
             TAKEABORT;
         }
+        // FIX(Normmatt): Handle RD in STREX/STREXB
+        state->Reg[DESTReg] = 0; //Always succeed
 
         return 1;
      }
@@ -6432,7 +6436,8 @@ handle_v6_insn (ARMul_State * state, ARMword instr)
         if (state->Aborted) {
             TAKEABORT;
         }
-
+        // FIX(Normmatt): Handle RD in STREX/STREXB
+        state->Reg[DESTReg] = 0; //Always succeed
         //printf("In %s, strexb not implemented\n", __FUNCTION__);
         UNDEF_LSRBPC;
         /* WRITESDEST (dest); */
