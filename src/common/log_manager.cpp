@@ -147,7 +147,7 @@ LogContainer::LogContainer(const char* shortName, const char* fullName, bool ena
 {
     strncpy(m_fullName, fullName, 128);
     strncpy(m_shortName, shortName, 32);
-    m_level = MAX_LOGLEVEL;
+    m_level = (LogTypes::LOG_LEVELS)MAX_LOGLEVEL;
 }
 
 // LogContainer

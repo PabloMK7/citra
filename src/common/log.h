@@ -88,10 +88,10 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type,
         ;
 
 #if defined LOGGING || defined _DEBUG || defined DEBUGFAST
-#define MAX_LOGLEVEL LogTypes::LDEBUG
+#define MAX_LOGLEVEL DEBUG_LEVEL
 #else
 #ifndef MAX_LOGLEVEL
-#define MAX_LOGLEVEL LogTypes::LWARNING
+#define MAX_LOGLEVEL WARNING_LEVEL
 #endif // loglevel
 #endif // logging
 
