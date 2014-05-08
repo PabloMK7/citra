@@ -58,15 +58,14 @@ void RendererOpenGL::SwapBuffers() {
  * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
  */
 void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
-    for (int y = 0; y < VideoCore::kScreenTopHeight; y++) {
-        for (int x = 0; x < VideoCore::kScreenTopWidth; x++) {
-            int in_coord = (VideoCore::kScreenTopHeight * 3 * x) + (VideoCore::kScreenTopHeight * 3)
-                - (3 * y + 3);
-            int out_coord = (VideoCore::kScreenTopWidth * y * 3) + (x * 3);
-
-            out[out_coord + 0] = in[in_coord + 0];
+    int in_coord = 0;
+    for (int x = 0; x < VideoCore::kScreenTopWidth; x++) {
+        for (int y = VideoCore::kScreenTopHeight-1; y >= 0; y--) {
+            int out_coord = (x + y * VideoCore::kScreenTopWidth) * 3;
+            out[out_coord] = in[in_coord];
             out[out_coord + 1] = in[in_coord + 1];
             out[out_coord + 2] = in[in_coord + 2];
+            in_coord+=3;
         }
     }
 }
