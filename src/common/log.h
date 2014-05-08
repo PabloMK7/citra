@@ -33,7 +33,7 @@ enum LOG_TYPE {
     EXPANSIONINTERFACE,
     GDB_STUB,
     ARM11,
-    GPFIFO,
+    GSP,
     OSHLE,
     MASTER_LOG,
     MEMMAP,
