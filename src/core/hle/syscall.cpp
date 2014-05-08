@@ -48,7 +48,7 @@ Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissi
     default:
         ERROR_LOG(SVC, "ControlMemory unknown operation=0x%08X", operation);
     }
-    DEBUG_LOG(SVC, "...returned virtual_address=0x%08X", virtual_address);
+
     Core::g_app_core->SetReg(1, virtual_address);
 
     return 0;
