@@ -18,7 +18,7 @@ void Initialize(Service::Interface* self) {
 }
 
 void GetLockHandle(Service::Interface* self) {
-    u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
+    u32* cmd_buff = Service::GetCommandBuffer();
     cmd_buff[5] = 0x00000000; // TODO: This should be an actual mutex handle
 }
 

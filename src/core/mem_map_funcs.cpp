@@ -48,11 +48,9 @@ inline void _Read(T &var, const u32 addr) {
 
     const u32 vaddr = _VirtualAddress(addr);
 
-    // Memory allocated for HLE use that can be addressed from the emulated application
-    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
-    // core running the user application (appcore)
-    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Read<T>(var, vaddr);
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        var = *((const T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK]);
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -92,11 +90,9 @@ template <typename T>
 inline void _Write(u32 addr, const T data) {
     u32 vaddr = _VirtualAddress(addr);
     
-    // Memory allocated for HLE use that can be addressed from the emulated application
-    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
-    // core running the user application (appcore)
-    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Write<T>(vaddr, data);
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        *(T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK] = data;
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -140,8 +136,12 @@ inline void _Write(u32 addr, const T data) {
 u8 *GetPointer(const u32 addr) {
     const u32 vaddr = _VirtualAddress(addr);
 
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
+
     // ExeFS:/.code is loaded here
-    if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
+    } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         return g_exefs_code + (vaddr & EXEFS_CODE_MASK);
 
     // FCRAM - GSP heap
