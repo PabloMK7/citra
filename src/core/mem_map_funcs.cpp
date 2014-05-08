@@ -9,6 +9,7 @@
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
 #include "hle/hle.h"
+#include "hle/config_mem.h"
 
 namespace Memory {
 
@@ -46,12 +47,10 @@ inline void _Read(T &var, const u32 addr) {
     // Could just do a base-relative read, too.... TODO
 
     const u32 vaddr = _VirtualAddress(addr);
-    
-    // Memory allocated for HLE use that can be addressed from the emulated application
-    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
-    // core running the user application (appcore)
-    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Read<T>(var, vaddr);
+
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        var = *((const T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK]);
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -74,6 +73,10 @@ inline void _Read(T &var, const u32 addr) {
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
 
+    // Config memory
+    } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
+        ConfigMem::Read<T>(var, vaddr);
+
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
@@ -87,11 +90,9 @@ template <typename T>
 inline void _Write(u32 addr, const T data) {
     u32 vaddr = _VirtualAddress(addr);
     
-    // Memory allocated for HLE use that can be addressed from the emulated application
-    // The primary use of this is sharing a commandbuffer between the HLE OS (syscore) and the LLE
-    // core running the user application (appcore)
-    if (vaddr >= HLE::CMD_BUFFER_ADDR && vaddr < HLE::CMD_BUFFER_ADDR_END) {
-        HLE::Write<T>(vaddr, data);
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        *(T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK] = data;
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -118,12 +119,12 @@ inline void _Write(u32 addr, const T data) {
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         *(T*)&g_vram[vaddr & VRAM_MASK] = data;
 
-    } else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
-    } else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
-    } else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
-        _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
+    //} else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
+    //} else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
+    //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
+    //    _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
     
     // Error out...
     } else {
@@ -135,8 +136,12 @@ inline void _Write(u32 addr, const T data) {
 u8 *GetPointer(const u32 addr) {
     const u32 vaddr = _VirtualAddress(addr);
 
+    // Kernel memory command buffer
+    if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
+        return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
+
     // ExeFS:/.code is loaded here
-    if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
+    } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         return g_exefs_code + (vaddr & EXEFS_CODE_MASK);
 
     // FCRAM - GSP heap

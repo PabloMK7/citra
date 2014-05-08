@@ -355,7 +355,7 @@ arm1176jzf_s_mmu_load_instr (ARMul_State *state, ARMword va, ARMword *instr)
 
     static int debug_count = 0;    /* used for debug */
 
-    DEBUG_LOG(ARM11, "va = %x\n", va);
+    //DEBUG_LOG(ARM11, "va = %x\n", va);
 
     va = mmu_pid_va_map (va);
     if (MMU_Enabled) {
@@ -444,7 +444,7 @@ arm1176jzf_s_mmu_read (ARMul_State *state, ARMword va, ARMword *data,
     ARMword perm;        /* physical addr access permissions */
     int ap, sop;
 
-    DEBUG_LOG(ARM11, "va = %x\n", va);
+    //DEBUG_LOG(ARM11, "va = %x\n", va);
 
     va = mmu_pid_va_map (va);
     real_va = va;
@@ -629,7 +629,7 @@ arm1176jzf_s_mmu_write (ARMul_State *state, ARMword va, ARMword data,
     }
 #endif
 
-    DEBUG_LOG(ARM11, "va = %x, val = %x\n", va, data);
+    //DEBUG_LOG(ARM11, "va = %x, val = %x\n", va, data);
     va = mmu_pid_va_map (va);
     real_va = va;
 

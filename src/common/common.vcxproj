@@ -157,6 +157,7 @@
     <ClInclude Include="atomic.h" />
     <ClInclude Include="atomic_gcc.h" />
     <ClInclude Include="atomic_win32.h" />
+    <ClInclude Include="bit_field.h" />
     <ClInclude Include="break_points.h" />
     <ClInclude Include="chunk_file.h" />
     <ClInclude Include="common.h" />

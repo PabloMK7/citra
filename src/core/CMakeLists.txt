@@ -5,6 +5,7 @@ set(SRCS    core.cpp
             mem_map_funcs.cpp
             system.cpp
             arm/disassembler/arm_disasm.cpp
+            arm/disassembler/load_symbol_map.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
@@ -18,7 +19,8 @@ set(SRCS    core.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
             hle/hle.cpp
-            hle/mrc.cpp
+            hle/config_mem.cpp
+            hle/coprocessor.cpp
             hle/syscall.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp

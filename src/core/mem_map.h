@@ -32,6 +32,16 @@ enum {
     SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
     SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
 
+    CONFIG_MEMORY_SIZE      = 0x00001000,   ///< Configuration memory size
+    CONFIG_MEMORY_VADDR     = 0x1FF80000,   ///< Configuration memory virtual address
+    CONFIG_MEMORY_VADDR_END = (CONFIG_MEMORY_VADDR + CONFIG_MEMORY_SIZE),
+    CONFIG_MEMORY_MASK      = (CONFIG_MEMORY_SIZE - 1),
+
+    KERNEL_MEMORY_SIZE      = 0x00001000,   ///< Kernel memory size
+    KERNEL_MEMORY_VADDR     = 0xFFFF0000,   ///< Kernel memory where the kthread objects etc are
+    KERNEL_MEMORY_VADDR_END = (KERNEL_MEMORY_VADDR + KERNEL_MEMORY_SIZE),
+    KERNEL_MEMORY_MASK      = (KERNEL_MEMORY_SIZE - 1),
+
     EXEFS_CODE_SIZE         = 0x03F00000,
     EXEFS_CODE_VADDR        = 0x00100000,   ///< ExeFS:/.code is loaded here
     EXEFS_CODE_VADDR_END    = (EXEFS_CODE_VADDR + EXEFS_CODE_SIZE),
@@ -105,6 +115,7 @@ extern u8* g_heap_gsp;      ///< GSP heap (main memory)
 extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_shared_mem;    ///< Shared memory
+extern u8* g_kernel_mem;    ///< Kernel memory
 extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 
 void Init();
