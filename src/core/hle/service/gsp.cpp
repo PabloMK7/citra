@@ -28,12 +28,7 @@ union GX_CmdBufferHeader {
     // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only 
     // used if this field is value 1.
     BitField<8,8,u32>  number_commands;
-    
-    // Must not be value 1. When the error-code u32 is set, this u8 is set to value 0x80.
-    BitField<16,8,u32> unk_0;
 
-    // Bit 0 must not be set
-    BitField<24,8,u32> unk_1;
 };
 
 /// Gets the address of the start (header) of a command buffer in GSP shared memory
