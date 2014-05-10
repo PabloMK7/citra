@@ -22,6 +22,8 @@ set(SRCS    core.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
             hle/syscall.cpp
+            hle/kernel/kernel.cpp
+            hle/kernel/thread.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
