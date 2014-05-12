@@ -78,6 +78,14 @@ u32 ARM_Interpreter::GetCPSR() const {
 }
 
 /**
+ * Set the current CPSR register
+ * @param cpsr Value to set CPSR to
+ */
+void ARM_Interpreter::SetCPSR(u32 cpsr) {
+    m_state->Cpsr = cpsr;
+}
+
+/**
  * Returns the number of clock ticks since the last reset
  * @return Returns number of clock ticks
  */

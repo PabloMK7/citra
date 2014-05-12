@@ -49,6 +49,12 @@ public:
     u32 GetCPSR() const;
 
     /**
+     * Set the current CPSR register
+     * @param cpsr Value to set CPSR to
+     */
+    void SetCPSR(u32 cpsr);
+
+    /**
      * Returns the number of clock ticks since the last reset
      * @return Returns number of clock ticks
      */
