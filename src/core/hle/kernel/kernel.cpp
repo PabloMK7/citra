@@ -8,6 +8,7 @@
 
 #include "common/common.h"
 
+#include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
@@ -139,4 +140,14 @@ KernelObject *KernelObjectPool::CreateByIDType(int type) {
         ERROR_LOG(COMMON, "Unable to load state: could not find object type %d.", type);
         return NULL;
     }
+}
+
+bool __KernelLoadExec(u32 entry_point) {
+    __KernelInit();
+    
+    Core::g_app_core->SetPC(entry_point);
+
+    UID thread_id = __KernelSetupRootThread(0xDEADBEEF, 0, 0x31);
+
+    return true;
 }
