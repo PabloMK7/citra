@@ -10,7 +10,7 @@
 #include "core/core.h"
 #include "core/file_sys/directory_file_system.h"
 #include "core/elf/elf_reader.h"
-
+#include "core/hle/kernel/kernel.h"
 #include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ bool Load_ELF(std::string &filename) {
         elf_reader = new ElfReader(buffer);
         elf_reader->LoadInto(0x00100000);
 
-        Core::g_app_core->SetPC(elf_reader->GetEntryPoint());
+        __KernelLoadExec(elf_reader->GetEntryPoint());
 
         delete[] buffer;
         delete elf_reader;
@@ -89,11 +89,11 @@ bool Load_DAT(std::string &filename) {
         * but for the sake of making it easier... we'll temporarily/hackishly
         * allow it. No sense in making a proper reader for this.
         */
-        u32 entrypoint = 0x00100000; // write to same entrypoint as elf
+        u32 entry_point = 0x00100000; // write to same entrypoint as elf
         u32 payload_offset = 0xA150;
         
         const u8 *src = &buffer[payload_offset];
-        u8 *dst = Memory::GetPointer(entrypoint);
+        u8 *dst = Memory::GetPointer(entry_point);
         u32 srcSize = size - payload_offset; //just load everything...
         u32 *s = (u32*)src;
         u32 *d = (u32*)dst;
@@ -102,7 +102,8 @@ bool Load_DAT(std::string &filename) {
             *d++ = (*s++);
         }
         
-        Core::g_app_core->SetPC(entrypoint);
+        __KernelLoadExec(entry_point);
+
 
         delete[] buffer;
     }
@@ -131,10 +132,10 @@ bool Load_BIN(std::string &filename) {
 
         f.ReadBytes(buffer, size);
 
-        u32 entrypoint = 0x00100000; // Hardcoded, read from exheader
+        u32 entry_point = 0x00100000; // Hardcoded, read from exheader
         
         const u8 *src = buffer;
-        u8 *dst = Memory::GetPointer(entrypoint);
+        u8 *dst = Memory::GetPointer(entry_point);
         u32 srcSize = size;
         u32 *s = (u32*)src;
         u32 *d = (u32*)dst;
@@ -143,7 +144,7 @@ bool Load_BIN(std::string &filename) {
             *d++ = (*s++);
         }
         
-        Core::g_app_core->SetPC(entrypoint);
+        __KernelLoadExec(entry_point);
 
         delete[] buffer;
     }
