@@ -417,7 +417,6 @@ void ThreadContext::reset() {
     for (int i = 0; i < 16; i++) {
         reg[i] = 0;
     }
-    reg[13] = Memory::SCRATCHPAD_VADDR_END;
     cpsr = 0;
 }
 
@@ -464,6 +463,7 @@ Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 prior
 void __KernelResetThread(Thread *t, int lowest_priority) {
     t->context.reset();
     t->context.pc = t->nt.entry_point;
+    t->context.reg[13] = t->nt.initial_stack;
 
     // If the thread would be better than lowestPriority, reset to its initial.  Yes, kinda odd...
     if (t->nt.current_priority < lowest_priority) {
