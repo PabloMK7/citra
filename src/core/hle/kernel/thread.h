@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/hle/kernel/kernel.h"
 
 enum ThreadStatus {
     THREADSTATUS_RUNNING    = 1,

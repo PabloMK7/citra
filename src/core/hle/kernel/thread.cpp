@@ -427,10 +427,11 @@ std::vector<UID> g_thread_queue;
 // Lists only ready thread ids
 ThreadQueueList g_thread_ready_queue;
 
-UID g_current_thread;
-Thread* g_current_thread_ptr;
-const char *g_hle_current_thread_name = NULL;
+UID         g_current_thread            = 0;
+Thread*     g_current_thread_ptr        = NULL;
+const char* g_hle_current_thread_name   = NULL;
 
+/// Creates a new thread
 Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 priority, 
     u32 entrypoint, u32 arg, u32 stack_top, u32 processor_id, int stack_size) {
 
@@ -459,38 +460,25 @@ Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 prior
     return t;
 }
 
+/// Resets the specified thread back to initial calling state
 void __KernelResetThread(Thread *t, int lowest_priority) {
     t->context.reset();
     t->context.pc = t->nt.entry_point;
 
     // If the thread would be better than lowestPriority, reset to its initial.  Yes, kinda odd...
-    if (t->nt.current_priority < lowest_priority)
+    if (t->nt.current_priority < lowest_priority) {
         t->nt.current_priority = t->nt.initial_priority;
+    }
 
-    //t->nt.wait_type = WAITTYPE_NONE;
-    //t->nt.wait_id = 0;
     memset(&t->waitInfo, 0, sizeof(t->waitInfo));
-
-    //t->nt.exitStatus = SCE_KERNEL_ERROR_NOT_DORMANT;
-    //t->isProcessingCallbacks = false;
-    //t->currentCallbackId = 0;
-    //t->currentMipscallId = 0;
-    //t->pendingMipsCalls.clear();
-
-    //t->context.r[MIPS_REG_RA] = threadReturnHackAddr; //hack! TODO fix
-    // TODO: Not sure if it's reset here, but this makes sense.
-    //t->context.r[MIPS_REG_GP] = t->nt.gpreg;
-    //t->FillStack();
-
-    //if (!t->waitingThreads.empty())
-    //    ERROR_LOG(KERNEL, "Resetting thread with threads waiting on end?");
 }
 
-
+/// Returns the current executing thread
 inline Thread *__GetCurrentThread() {
     return g_current_thread_ptr;
 }
 
+/// Sets the current executing thread
 inline void __SetCurrentThread(Thread *thread, UID thread_id, const char *name) {
     g_current_thread = thread_id;
     g_current_thread_ptr = thread;
@@ -526,30 +514,29 @@ void __KernelChangeReadyState(UID thread_id, bool ready) {
     }
 }
 
-// Returns NULL if the current thread is fine.
+/// Returns NULL if the current thread is fine.
 Thread* __KernelNextThread() {
-    UID bestThread;
+    UID best_thread;
 
     // If the current thread is running, it's a valid candidate.
     Thread *cur = __GetCurrentThread();
     if (cur && cur->IsRunning()) {
-        bestThread = g_thread_ready_queue.pop_first_better(cur->nt.current_priority);
-        if (bestThread != 0) {
+        best_thread = g_thread_ready_queue.pop_first_better(cur->nt.current_priority);
+        if (best_thread != 0) {
             __KernelChangeReadyState(cur, g_current_thread, true);
         }
     } else {
-        bestThread = g_thread_ready_queue.pop_first();
+        best_thread = g_thread_ready_queue.pop_first();
     }
-
     // Assume g_thread_ready_queue has not become corrupt.
-    if (bestThread != 0) {
-        return g_kernel_objects.GetFast<Thread>(bestThread);
+    if (best_thread != 0) {
+        return g_kernel_objects.GetFast<Thread>(best_thread);
     } else {
         return NULL;
     }
 }
 
-// Saves the current CPU context
+/// Saves the current CPU context
 void __KernelSaveContext(ThreadContext *ctx) {
     ctx->reg[0] = Core::g_app_core->GetReg(0);
     ctx->reg[1] = Core::g_app_core->GetReg(1);
@@ -571,7 +558,7 @@ void __KernelSaveContext(ThreadContext *ctx) {
     ctx->cpsr = Core::g_app_core->GetCPSR();
 }
 
-// Loads a CPU context
+/// Loads a CPU context
 void __KernelLoadContext(ThreadContext *ctx) {
     Core::g_app_core->SetReg(0, ctx->reg[0]);
     Core::g_app_core->SetReg(1, ctx->reg[1]);
@@ -593,59 +580,35 @@ void __KernelLoadContext(ThreadContext *ctx) {
     Core::g_app_core->SetCPSR(ctx->cpsr);
 }
 
+/// Switches thread context
 void __KernelSwitchContext(Thread *target, const char *reason) {
-    u32 oldPC = 0;
-    UID oldUID = 0;
-    const char *oldName = g_hle_current_thread_name != NULL ? g_hle_current_thread_name : "(none)";
-
+    u32 old_pc = 0;
+    UID old_uid = 0;
+    const char *old_name = g_hle_current_thread_name != NULL ? g_hle_current_thread_name : "(none)";
     Thread *cur = __GetCurrentThread();
+
     if (cur) { // It might just have been deleted.
         __KernelSaveContext(&cur->context);
-        oldPC = Core::g_app_core->GetPC();
-        oldUID = cur->GetUID();
+        old_pc = Core::g_app_core->GetPC();
+        old_uid = cur->GetUID();
 
         // Normally this is taken care of in __KernelNextThread().
         if (cur->IsRunning())
-            __KernelChangeReadyState(cur, oldUID, true);
+            __KernelChangeReadyState(cur, old_uid, true);
     }
-
     if (target) {
         __SetCurrentThread(target, target->GetUID(), target->nt.name);
         __KernelChangeReadyState(target, g_current_thread, false);
+
         target->nt.status = (target->nt.status | THREADSTATUS_RUNNING) & ~THREADSTATUS_READY;
 
         __KernelLoadContext(&target->context);
     } else {
         __SetCurrentThread(NULL, 0, NULL);
     }
-
-#if DEBUG_LEVEL <= MAX_LOGLEVEL || DEBUG_LOG == NOTICE_LOG
-    //bool fromIdle = oldUID == threadIdleID[0] || oldUID == threadIdleID[1];
-    //bool toIdle = currentThread == threadIdleID[0] || currentThread == threadIdleID[1];
-    //if (!(fromIdle && toIdle))
-    //{
-    //    u64 nowCycles = CoreTiming::GetTicks();
-    //    s64 consumedCycles = nowCycles - lastSwitchCycles;
-    //    lastSwitchCycles = nowCycles;
-
-    //    DEBUG_LOG(SCEKERNEL, "Context switch: %s -> %s (%i->%i, pc: %08x->%08x, %s) +%lldus",
-    //        oldName, hleCurrentThreadName,
-    //        oldUID, currentThread,
-    //        oldPC, currentMIPS->pc,
-    //        reason,
-    //        cyclesToUs(consumedCycles));
-    //}
-#endif
-
-    if (target) {
-        //// No longer waiting.
-        //target->nt.waitType = WAITTYPE_NONE;
-        //target->nt.waitID = 0;
-
-        //__KernelExecutePendingARMCalls(target, true);
-    }
 }
 
+/// Sets up the root (primary) thread of execution
 UID __KernelSetupRootThread(UID module_id, int arg, int prio, int stack_size) {
     UID id;
 
