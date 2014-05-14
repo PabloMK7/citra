@@ -740,7 +740,7 @@ template<int func(void*, u32, void*, int)> void WrapI_VUVI(){
 }
 
 template<int func(void*, u32, u32, u32, u32, u32)> void WrapI_VUUUUU(){
-    u32 retval = func(Memory::GetPointer(PARAM(0)), PARAM(1), PARAM(2), PARAM(3), PARAM(4), PARAM(5));
+    u32 retval = func(NULL, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4));
     RETURN(retval);
 }
 

@@ -10,6 +10,8 @@
 #include "core/hle/syscall.h"
 #include "core/hle/service/service.h"
 
+#include "common/symbols.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Syscall
 
@@ -26,7 +28,8 @@ enum MapMemoryPermission {
 };
 
 /// Map application or GSP heap memory
-Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+    u32* outaddr = (u32*)_outaddr;
     u32 virtual_address = 0x00000000;
 
     DEBUG_LOG(SVC, "ControlMemory called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
@@ -48,7 +51,9 @@ Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissi
     default:
         ERROR_LOG(SVC, "ControlMemory unknown operation=0x%08X", operation);
     }
-
+    if (NULL != outaddr) {
+        *outaddr = virtual_address;
+    }
     Core::g_app_core->SetReg(1, virtual_address);
 
     return 0;
@@ -134,16 +139,42 @@ Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void*
     return 0;
 }
 
+Result CreateThread(void* thread, u32 threadpriority, u32 entrypoint, u32 arg, u32 stacktop, u32 processorid) {
+    std::string symbol_name = "unknown";
+    if (Symbols::HasSymbol(entrypoint)) {
+        TSymbol symbol = Symbols::GetSymbol(entrypoint);
+        symbol_name = symbol.name;
+    }
+    // stack top: 0x0056A4A0
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, "
+        "stacktop=0x%08X, threadpriority=0x%08X, processorid=0x%08X", entrypoint, 
+        symbol_name.c_str(), arg, stacktop, threadpriority, processorid);
+
+    return 0;
+}
+
+Result CreateMutex(void* _mutex, u32 initial_locked) {
+    Handle* mutex = (Handle*)_mutex;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateMutex called initial_locked=%s", 
+        initial_locked ? "true" : "false");
+    return 0;
+}
+
+Result ReleaseMutex(Handle handle) {
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) ReleaseMutex called handle=0x%08X", handle);
+    return 0;
+}
+
 const HLE::FunctionDef Syscall_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
-    {0x01,  WrapI_UUUUU<ControlMemory>,                 "ControlMemory"},
+    {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
     {0x02,  NULL,                                       "QueryMemory"},
     {0x03,  NULL,                                       "ExitProcess"},
     {0x04,  NULL,                                       "GetProcessAffinityMask"},
     {0x05,  NULL,                                       "SetProcessAffinityMask"},
     {0x06,  NULL,                                       "GetProcessIdealProcessor"},
     {0x07,  NULL,                                       "SetProcessIdealProcessor"},
-    {0x08,  NULL,                                       "CreateThread"},
+    {0x08,  WrapI_VUUUUU<CreateThread>,                 "CreateThread"},
     {0x09,  NULL,                                       "ExitThread"},
     {0x0A,  NULL,                                       "SleepThread"},
     {0x0B,  NULL,                                       "GetThreadPriority"},
@@ -154,8 +185,8 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x10,  NULL,                                       "SetThreadIdealProcessor"},
     {0x11,  NULL,                                       "GetCurrentProcessorNumber"},
     {0x12,  NULL,                                       "Run"},
-    {0x13,  NULL,                                       "CreateMutex"},
-    {0x14,  NULL,                                       "ReleaseMutex"},
+    {0x13,  WrapI_VU<CreateMutex>,                      "CreateMutex"},
+    {0x14,  WrapI_U<ReleaseMutex>,                      "ReleaseMutex"},
     {0x15,  NULL,                                       "CreateSemaphore"},
     {0x16,  NULL,                                       "ReleaseSemaphore"},
     {0x17,  NULL,                                       "CreateEvent"},
