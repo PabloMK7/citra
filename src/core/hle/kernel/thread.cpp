@@ -11,10 +11,212 @@
 
 #include "common/common.h"
 
+#include "core/core.h"
+#include "core/mem_map.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
-// Real CTR struct, don't change the fields.
+struct ThreadQueueList {
+    // Number of queues (number of priority levels starting at 0.)
+    static const int NUM_QUEUES = 128;
+    // Initial number of threads a single queue can handle.
+    static const int INITIAL_CAPACITY = 32;
+
+    struct Queue {
+        // Next ever-been-used queue (worse priority.)
+        Queue *next;
+        // First valid item in data.
+        int first;
+        // One after last valid item in data.
+        int end;
+        // A too-large array with room on the front and end.
+        UID *data;
+        // Size of data array.
+        int capacity;
+    };
+
+    ThreadQueueList() {
+        memset(queues, 0, sizeof(queues));
+        first = invalid();
+    }
+
+    ~ThreadQueueList() {
+        for (int i = 0; i < NUM_QUEUES; ++i) {
+            if (queues[i].data != NULL) {
+                free(queues[i].data);
+            }
+        }
+    }
+
+    // Only for debugging, returns priority level.
+    int contains(const UID uid) {
+        for (int i = 0; i < NUM_QUEUES; ++i) {
+            if (queues[i].data == NULL) {
+                continue;
+            }
+            Queue *cur = &queues[i];
+            for (int j = cur->first; j < cur->end; ++j) {
+                if (cur->data[j] == uid) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    inline UID pop_first() {
+        Queue *cur = first;
+        while (cur != invalid()) {
+            if (cur->end - cur->first > 0) {
+                return cur->data[cur->first++];
+            }
+            cur = cur->next;
+        }
+
+        _dbg_assert_msg_(KERNEL, false, "ThreadQueueList should not be empty.");
+        return 0;
+    }
+
+    inline UID pop_first_better(u32 priority) {
+        Queue *cur = first;
+        Queue *stop = &queues[priority];
+        while (cur < stop) {
+            if (cur->end - cur->first > 0) {
+                return cur->data[cur->first++];
+            }
+            cur = cur->next;
+        }
+        return 0;
+    }
+
+    inline void push_front(u32 priority, const UID thread_id) {
+        Queue *cur = &queues[priority];
+        cur->data[--cur->first] = thread_id;
+        if (cur->first == 0) {
+            rebalance(priority);
+        }
+    }
+
+    inline void push_back(u32 priority, const UID thread_id)
+    {
+        Queue *cur = &queues[priority];
+        cur->data[cur->end++] = thread_id;
+        if (cur->end == cur->capacity) {
+            rebalance(priority);
+        }
+    }
+
+    inline void remove(u32 priority, const UID thread_id) {
+        Queue *cur = &queues[priority];
+        _dbg_assert_msg_(KERNEL, cur->next != NULL, "ThreadQueueList::Queue should already be linked up.");
+
+        for (int i = cur->first; i < cur->end; ++i) {
+            if (cur->data[i] == thread_id) {
+                int remaining = --cur->end - i;
+                if (remaining > 0) {
+                    memmove(&cur->data[i], &cur->data[i + 1], remaining * sizeof(UID));
+                }
+                return;
+            }
+        }
+
+        // Wasn't there.
+    }
+
+    inline void rotate(u32 priority) {
+        Queue *cur = &queues[priority];
+        _dbg_assert_msg_(KERNEL, cur->next != NULL, "ThreadQueueList::Queue should already be linked up.");
+
+        if (cur->end - cur->first > 1) {
+            cur->data[cur->end++] = cur->data[cur->first++];
+            if (cur->end == cur->capacity) {
+                rebalance(priority);
+            }
+        }
+    }
+
+    inline void clear() {
+        for (int i = 0; i < NUM_QUEUES; ++i) {
+            if (queues[i].data != NULL) {
+                free(queues[i].data);
+            }
+        }
+        memset(queues, 0, sizeof(queues));
+        first = invalid();
+    }
+
+    inline bool empty(u32 priority) const {
+        const Queue *cur = &queues[priority];
+        return cur->first == cur->end;
+    }
+
+    inline void prepare(u32 priority) {
+        Queue *cur = &queues[priority];
+        if (cur->next == NULL) {
+            link(priority, INITIAL_CAPACITY);
+        }
+    }
+
+private:
+    Queue *invalid() const {
+        return (Queue *)-1;
+    }
+
+    void link(u32 priority, int size) {
+        _dbg_assert_msg_(KERNEL, queues[priority].data == NULL, "ThreadQueueList::Queue should only be initialized once.");
+
+        if (size <= INITIAL_CAPACITY) {
+            size = INITIAL_CAPACITY;
+        } else {
+            int goal = size;
+            size = INITIAL_CAPACITY;
+            while (size < goal)
+                size *= 2;
+        }
+        Queue *cur = &queues[priority];
+        cur->data = (UID*)malloc(sizeof(UID)* size);
+        cur->capacity = size;
+        cur->first = size / 2;
+        cur->end = size / 2;
+
+        for (int i = (int)priority - 1; i >= 0; --i) {
+            if (queues[i].next != NULL) {
+                cur->next = queues[i].next;
+                queues[i].next = cur;
+                return;
+            }
+        }
+
+        cur->next = first;
+        first = cur;
+    }
+
+    void rebalance(u32 priority) {
+        Queue *cur = &queues[priority];
+        int size = cur->end - cur->first;
+        if (size >= cur->capacity - 2) {
+            UID* new_data = (UID*)realloc(cur->data, cur->capacity * 2 * sizeof(UID));
+            if (new_data != NULL) {
+                cur->capacity *= 2;
+                cur->data = new_data;
+            }
+        }
+
+        int newFirst = (cur->capacity - size) / 2;
+        if (newFirst != cur->first) {
+            memmove(&cur->data[newFirst], &cur->data[cur->first], size * sizeof(UID));
+            cur->first = newFirst;
+            cur->end = newFirst + size;
+        }
+    }
+
+    // The first queue that's ever been used.
+    Queue* first;
+    // The priority level queues of thread ids.
+    Queue queues[NUM_QUEUES];
+};
+
+// Supposed to represent a real CTR struct... but not sure of the correct fields yet.
 struct NativeThread {
     //u32         Pointer to vtable
     //u32         Reference count
@@ -25,6 +227,22 @@ struct NativeThread {
     //      if the beginning of this mapped page is 0xFF401000, this ptr would be 0xFF402000.
     //KThread*    Previous ? (virtual address)
     //KThread*    Next ? (virtual address)
+
+    u32_le native_size;
+    char name[KERNELOBJECT_MAX_NAME_LENGTH + 1];
+
+    // Threading stuff
+    u32_le status;
+    u32_le entry_point;
+    u32_le initial_stack;
+    u32_le stack_top;
+    u32_le stack_size;
+    
+    u32_le arg;
+    u32_le processor_id;
+
+    s32_le initial_priority;
+    s32_le current_priority;
 };
 
 struct ThreadWaitInfo {
@@ -52,42 +270,23 @@ public:
     //}
 
     //static u32 GetMissingErrorCode() { return SCE_KERNEL_ERROR_UNKNOWN_THID; }
-    //static int GetStaticIDType() { return SCE_KERNEL_TMID_Thread; }
-    //int GetIDType() const { return SCE_KERNEL_TMID_Thread; }
+    static KernelIDType GetStaticIDType() { return KERNEL_ID_TYPE_THREAD; }
+    KernelIDType GetIDType() const { return KERNEL_ID_TYPE_THREAD; }
 
-    //bool AllocateStack(u32 &stack_size) {
-    //    FreeStack();
-
-    //    bool fromTop = (nt.attr & PSP_THREAD_ATTR_LOW_STACK) == 0;
-    //    if (nt.attr & PSP_THREAD_ATTR_KERNEL)
-    //    {
-    //        // Allocate stacks for kernel threads (idle) in kernel RAM
-    //        currentStack.start = kernelMemory.Alloc(stack_size, fromTop, (std::string("stack/") + nt.name).c_str());
-    //    }
-    //    else
-    //    {
-    //        currentStack.start = userMemory.Alloc(stack_size, fromTop, (std::string("stack/") + nt.name).c_str());
-    //    }
-    //    if (currentStack.start == (u32)-1)
-    //    {
-    //        currentStack.start = 0;
-    //        nt.initialStack = 0;
-    //        ERROR_LOG(KERNEL, "Failed to allocate stack for thread");
-    //        return false;
-    //    }
-
-    //    nt.initialStack = currentStack.start;
-    //    nt.stack_size = stack_size;
-    //    return true;
-    //}
+    bool SetupStack(u32 stack_top, int stack_size) {
+        current_stack.start = stack_top; 
+        nt.initial_stack = current_stack.start;
+        nt.stack_size = stack_size;
+        return true;
+    }
 
     //bool FillStack() {
     //    // Fill the stack.
     //    if ((nt.attr & PSP_THREAD_ATTR_NO_FILLSTACK) == 0) {
-    //        Memory::Memset(currentStack.start, 0xFF, nt.stack_size);
+    //        Memory::Memset(current_stack.start, 0xFF, nt.stack_size);
     //    }
-    //    context.r[MIPS_REG_SP] = currentStack.start + nt.stack_size;
-    //    currentStack.end = context.r[MIPS_REG_SP];
+    //    context.r[MIPS_REG_SP] = current_stack.start + nt.stack_size;
+    //    current_stack.end = context.r[MIPS_REG_SP];
     //    // The k0 section is 256 bytes at the top of the stack.
     //    context.r[MIPS_REG_SP] -= 256;
     //    context.r[MIPS_REG_K0] = context.r[MIPS_REG_SP];
@@ -104,7 +303,7 @@ public:
     //}
 
     //void FreeStack() {
-    //    if (currentStack.start != 0) {
+    //    if (current_stack.start != 0) {
     //        DEBUG_LOG(KERNEL, "Freeing thread stack %s", nt.name);
 
     //        if ((nt.attr & PSP_THREAD_ATTR_CLEAR_STACK) != 0 && nt.initialStack != 0) {
@@ -112,12 +311,12 @@ public:
     //        }
 
     //        if (nt.attr & PSP_THREAD_ATTR_KERNEL) {
-    //            kernelMemory.Free(currentStack.start);
+    //            kernelMemory.Free(current_stack.start);
     //        }
     //        else {
-    //            userMemory.Free(currentStack.start);
+    //            userMemory.Free(current_stack.start);
     //        }
-    //        currentStack.start = 0;
+    //        current_stack.start = 0;
     //    }
     //}
 
@@ -126,14 +325,14 @@ public:
     //    if (stack == (u32)-1)
     //        return false;
 
-    //    pushed_stacks.push_back(currentStack);
-    //    currentStack.start = stack;
-    //    currentStack.end = stack + size;
-    //    nt.initialStack = currentStack.start;
-    //    nt.stack_size = currentStack.end - currentStack.start;
+    //    pushed_stacks.push_back(current_stack);
+    //    current_stack.start = stack;
+    //    current_stack.end = stack + size;
+    //    nt.initialStack = current_stack.start;
+    //    nt.stack_size = current_stack.end - current_stack.start;
 
-    //    // We still drop the threadID at the bottom and fill it, but there's no k0.
-    //    Memory::Memset(currentStack.start, 0xFF, nt.stack_size);
+    //    // We still drop the thread_id at the bottom and fill it, but there's no k0.
+    //    Memory::Memset(current_stack.start, 0xFF, nt.stack_size);
     //    Memory::Write_U32(GetUID(), nt.initialStack);
     //    return true;
     //}
@@ -142,16 +341,16 @@ public:
     //    if (pushed_stacks.size() == 0) {
     //        return false;
     //    }
-    //    userMemory.Free(currentStack.start);
-    //    currentStack = pushed_stacks.back();
+    //    userMemory.Free(current_stack.start);
+    //    current_stack = pushed_stacks.back();
     //    pushed_stacks.pop_back();
-    //    nt.initialStack = currentStack.start;
-    //    nt.stack_size = currentStack.end - currentStack.start;
+    //    nt.initialStack = current_stack.start;
+    //    nt.stack_size = current_stack.end - current_stack.start;
     //    return true;
     //}
 
     Thread() {
-        currentStack.start = 0;
+        current_stack.start = 0;
     }
 
     // Can't use a destructor since savestates will call that too.
@@ -177,20 +376,20 @@ public:
     ThreadWaitInfo getWaitInfo();
 
     // Utils
-    //inline bool isRunning() const { return (nt.status & THREADSTATUS_RUNNING) != 0; }
-    //inline bool isStopped() const { return (nt.status & THREADSTATUS_DORMANT) != 0; }
-    //inline bool isReady() const { return (nt.status & THREADSTATUS_READY) != 0; }
-    //inline bool isWaiting() const { return (nt.status & THREADSTATUS_WAIT) != 0; }
-    //inline bool isSuspended() const { return (nt.status & THREADSTATUS_SUSPEND) != 0; }
+    inline bool IsRunning() const { return (nt.status & THREADSTATUS_RUNNING) != 0; }
+    inline bool IsStopped() const { return (nt.status & THREADSTATUS_DORMANT) != 0; }
+    inline bool IsReady() const { return (nt.status & THREADSTATUS_READY) != 0; }
+    inline bool IsWaiting() const { return (nt.status & THREADSTATUS_WAIT) != 0; }
+    inline bool IsSuspended() const { return (nt.status & THREADSTATUS_SUSPEND) != 0; }
 
     NativeThread nt;
 
     ThreadWaitInfo waitInfo;
     UID moduleId;
 
-    bool isProcessingCallbacks;
-    u32 currentMipscallId;
-    UID currentCallbackId;
+    //bool isProcessingCallbacks;
+    //u32 currentMipscallId;
+    //UID currentCallbackId;
 
     ThreadContext context;
 
@@ -206,7 +405,7 @@ public:
     // These are stacks that aren't "active" right now, but will pop off once the func returns.
     std::vector<StackInfo> pushed_stacks;
 
-    StackInfo currentStack;
+    StackInfo current_stack;
 
     // For thread end.
     std::vector<UID> waiting_threads;
@@ -214,15 +413,276 @@ public:
     std::map<UID, u64> paused_waits;
 };
 
+void ThreadContext::reset() {
+    for (int i = 0; i < 16; i++) {
+        reg[i] = 0;
+    }
+    reg[13] = Memory::SCRATCHPAD_VADDR_END;
+    cpsr = 0;
+}
+
+// Lists all thread ids that aren't deleted/etc.
+std::vector<UID> g_thread_queue;
+
+// Lists only ready thread ids
+ThreadQueueList g_thread_ready_queue;
+
+UID g_current_thread;
+Thread* g_current_thread_ptr;
+const char *g_hle_current_thread_name = NULL;
+
+Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 priority, 
+    u32 entrypoint, u32 arg, u32 stack_top, u32 processor_id, int stack_size) {
+
+    Thread *t = new Thread;
+    id = g_kernel_objects.Create(t);
+
+    g_thread_queue.push_back(id);
+    g_thread_ready_queue.prepare(priority);
+
+    memset(&t->nt, 0xCD, sizeof(t->nt));
+
+    t->nt.entry_point = entrypoint;
+    t->nt.native_size = sizeof(t->nt);
+    t->nt.initial_priority = t->nt.current_priority = priority;
+    t->nt.status = THREADSTATUS_DORMANT;
+    t->nt.initial_stack = t->nt.stack_top = stack_top;
+    t->nt.stack_size = stack_size;
+    t->nt.processor_id = processor_id;
+
+    strncpy(t->nt.name, name, KERNELOBJECT_MAX_NAME_LENGTH);
+    t->nt.name[KERNELOBJECT_MAX_NAME_LENGTH] = '\0';
+
+    t->nt.stack_size = stack_size;
+    t->SetupStack(stack_top, stack_size);
+
+    return t;
+}
+
+void __KernelResetThread(Thread *t, int lowest_priority) {
+    t->context.reset();
+    t->context.pc = t->nt.entry_point;
+
+    // If the thread would be better than lowestPriority, reset to its initial.  Yes, kinda odd...
+    if (t->nt.current_priority < lowest_priority)
+        t->nt.current_priority = t->nt.initial_priority;
+
+    //t->nt.wait_type = WAITTYPE_NONE;
+    //t->nt.wait_id = 0;
+    memset(&t->waitInfo, 0, sizeof(t->waitInfo));
+
+    //t->nt.exitStatus = SCE_KERNEL_ERROR_NOT_DORMANT;
+    //t->isProcessingCallbacks = false;
+    //t->currentCallbackId = 0;
+    //t->currentMipscallId = 0;
+    //t->pendingMipsCalls.clear();
+
+    //t->context.r[MIPS_REG_RA] = threadReturnHackAddr; //hack! TODO fix
+    // TODO: Not sure if it's reset here, but this makes sense.
+    //t->context.r[MIPS_REG_GP] = t->nt.gpreg;
+    //t->FillStack();
+
+    //if (!t->waitingThreads.empty())
+    //    ERROR_LOG(KERNEL, "Resetting thread with threads waiting on end?");
+}
+
+
+inline Thread *__GetCurrentThread() {
+    return g_current_thread_ptr;
+}
+
+inline void __SetCurrentThread(Thread *thread, UID thread_id, const char *name) {
+    g_current_thread = thread_id;
+    g_current_thread_ptr = thread;
+    g_hle_current_thread_name = name;
+}
+
+// TODO: Use __KernelChangeThreadState instead?  It has other affects...
+void __KernelChangeReadyState(Thread *thread, UID thread_id, bool ready) {
+    // Passing the id as a parameter is just an optimization, if it's wrong it will cause havoc.
+    _dbg_assert_msg_(KERNEL, thread->GetUID() == thread_id, "Incorrect thread_id");
+    int prio = thread->nt.current_priority;
+
+    if (thread->IsReady()) {
+        if (!ready)
+            g_thread_ready_queue.remove(prio, thread_id);
+    } else if (ready) {
+        if (thread->IsRunning()) {
+            g_thread_ready_queue.push_front(prio, thread_id);
+        } else {
+            g_thread_ready_queue.push_back(prio, thread_id);
+        }
+        thread->nt.status = THREADSTATUS_READY;
+    }
+}
+
+void __KernelChangeReadyState(UID thread_id, bool ready) {
+    u32 error;
+    Thread *thread = g_kernel_objects.Get<Thread>(thread_id, error);
+    if (thread) {
+        __KernelChangeReadyState(thread, thread_id, ready);
+    } else {
+        WARN_LOG(KERNEL, "Trying to change the ready state of an unknown thread?");
+    }
+}
+
+// Returns NULL if the current thread is fine.
+Thread* __KernelNextThread() {
+    UID bestThread;
+
+    // If the current thread is running, it's a valid candidate.
+    Thread *cur = __GetCurrentThread();
+    if (cur && cur->IsRunning()) {
+        bestThread = g_thread_ready_queue.pop_first_better(cur->nt.current_priority);
+        if (bestThread != 0) {
+            __KernelChangeReadyState(cur, g_current_thread, true);
+        }
+    } else {
+        bestThread = g_thread_ready_queue.pop_first();
+    }
+
+    // Assume g_thread_ready_queue has not become corrupt.
+    if (bestThread != 0) {
+        return g_kernel_objects.GetFast<Thread>(bestThread);
+    } else {
+        return NULL;
+    }
+}
+
+// Saves the current CPU context
+void __KernelSaveContext(ThreadContext *ctx) {
+    ctx->reg[0] = Core::g_app_core->GetReg(0);
+    ctx->reg[1] = Core::g_app_core->GetReg(1);
+    ctx->reg[2] = Core::g_app_core->GetReg(2);
+    ctx->reg[3] = Core::g_app_core->GetReg(3);
+    ctx->reg[4] = Core::g_app_core->GetReg(4);
+    ctx->reg[5] = Core::g_app_core->GetReg(5);
+    ctx->reg[6] = Core::g_app_core->GetReg(6);
+    ctx->reg[7] = Core::g_app_core->GetReg(7);
+    ctx->reg[8] = Core::g_app_core->GetReg(8);
+    ctx->reg[9] = Core::g_app_core->GetReg(9);
+    ctx->reg[10] = Core::g_app_core->GetReg(10);
+    ctx->reg[11] = Core::g_app_core->GetReg(11);
+    ctx->reg[12] = Core::g_app_core->GetReg(12);
+    ctx->reg[13] = Core::g_app_core->GetReg(13);
+    ctx->reg[14] = Core::g_app_core->GetReg(14);
+    ctx->reg[15] = Core::g_app_core->GetReg(15);
+    ctx->pc = Core::g_app_core->GetPC();
+    ctx->cpsr = Core::g_app_core->GetCPSR();
+}
+
+// Loads a CPU context
+void __KernelLoadContext(ThreadContext *ctx) {
+    Core::g_app_core->SetReg(0, ctx->reg[0]);
+    Core::g_app_core->SetReg(1, ctx->reg[1]);
+    Core::g_app_core->SetReg(2, ctx->reg[2]);
+    Core::g_app_core->SetReg(3, ctx->reg[3]);
+    Core::g_app_core->SetReg(4, ctx->reg[4]);
+    Core::g_app_core->SetReg(5, ctx->reg[5]);
+    Core::g_app_core->SetReg(6, ctx->reg[6]);
+    Core::g_app_core->SetReg(7, ctx->reg[7]);
+    Core::g_app_core->SetReg(8, ctx->reg[8]);
+    Core::g_app_core->SetReg(9, ctx->reg[9]);
+    Core::g_app_core->SetReg(10, ctx->reg[10]);
+    Core::g_app_core->SetReg(11, ctx->reg[11]);
+    Core::g_app_core->SetReg(12, ctx->reg[12]);
+    Core::g_app_core->SetReg(13, ctx->reg[13]);
+    Core::g_app_core->SetReg(14, ctx->reg[14]);
+    Core::g_app_core->SetReg(15, ctx->reg[15]);
+    Core::g_app_core->SetPC(ctx->pc);
+    Core::g_app_core->SetCPSR(ctx->cpsr);
+}
+
+void __KernelSwitchContext(Thread *target, const char *reason) {
+    u32 oldPC = 0;
+    UID oldUID = 0;
+    const char *oldName = g_hle_current_thread_name != NULL ? g_hle_current_thread_name : "(none)";
+
+    Thread *cur = __GetCurrentThread();
+    if (cur) { // It might just have been deleted.
+        __KernelSaveContext(&cur->context);
+        oldPC = Core::g_app_core->GetPC();
+        oldUID = cur->GetUID();
+
+        // Normally this is taken care of in __KernelNextThread().
+        if (cur->IsRunning())
+            __KernelChangeReadyState(cur, oldUID, true);
+    }
+
+    if (target) {
+        __SetCurrentThread(target, target->GetUID(), target->nt.name);
+        __KernelChangeReadyState(target, g_current_thread, false);
+        target->nt.status = (target->nt.status | THREADSTATUS_RUNNING) & ~THREADSTATUS_READY;
+
+        __KernelLoadContext(&target->context);
+    } else {
+        __SetCurrentThread(NULL, 0, NULL);
+    }
+
+#if DEBUG_LEVEL <= MAX_LOGLEVEL || DEBUG_LOG == NOTICE_LOG
+    //bool fromIdle = oldUID == threadIdleID[0] || oldUID == threadIdleID[1];
+    //bool toIdle = currentThread == threadIdleID[0] || currentThread == threadIdleID[1];
+    //if (!(fromIdle && toIdle))
+    //{
+    //    u64 nowCycles = CoreTiming::GetTicks();
+    //    s64 consumedCycles = nowCycles - lastSwitchCycles;
+    //    lastSwitchCycles = nowCycles;
+
+    //    DEBUG_LOG(SCEKERNEL, "Context switch: %s -> %s (%i->%i, pc: %08x->%08x, %s) +%lldus",
+    //        oldName, hleCurrentThreadName,
+    //        oldUID, currentThread,
+    //        oldPC, currentMIPS->pc,
+    //        reason,
+    //        cyclesToUs(consumedCycles));
+    //}
+#endif
+
+    if (target) {
+        //// No longer waiting.
+        //target->nt.waitType = WAITTYPE_NONE;
+        //target->nt.waitID = 0;
+
+        //__KernelExecutePendingARMCalls(target, true);
+    }
+}
+
+UID __KernelSetupRootThread(UID module_id, int arg, int prio, int stack_size) {
+    UID id;
+
+    Thread *thread = __KernelCreateThread(id, module_id, "root", prio, Core::g_app_core->GetPC(),
+        arg, Memory::SCRATCHPAD_VADDR_END, 0xFFFFFFFE, stack_size=stack_size);
+
+    if (thread->current_stack.start == 0) {
+        ERROR_LOG(KERNEL, "Unable to allocate stack for root thread.");
+    }
+    __KernelResetThread(thread, 0);
+
+    Thread *prev_thread = __GetCurrentThread();
+    if (prev_thread && prev_thread->IsRunning())
+        __KernelChangeReadyState(g_current_thread, true);
+    __SetCurrentThread(thread, id, "root");
+    thread->nt.status = THREADSTATUS_RUNNING; // do not schedule
+
+    strcpy(thread->nt.name, "root");
+
+    __KernelLoadContext(&thread->context);
+    
+    // NOTE(bunnei): Not sure this is really correct, ignore args for now...
+    //Core::g_app_core->SetReg(0, args); 
+    //Core::g_app_core->SetReg(13, (args + 0xf) & ~0xf); // Setup SP - probably not correct
+    //u32 location = Core::g_app_core->GetReg(13); // SP
+    //Core::g_app_core->SetReg(1, location);
+    
+    //if (argp)
+    //    Memory::Memcpy(location, argp, args);
+    //// Let's assume same as starting a new thread, 64 bytes for safety/kernel.
+    //Core::g_app_core->SetReg(13, Core::g_app_core->GetReg(13) - 64);
+
+    return id;
+}
+
 void __KernelThreadingInit() {
 }
 
 void __KernelThreadingShutdown() {
 }
-
-//const char *__KernelGetThreadName(UID threadID);
-//
-//void __KernelSaveContext(ThreadContext *ctx);
-//void __KernelLoadContext(ThreadContext *ctx);
-
-//void __KernelSwitchContext(Thread *target, const char *reason);
