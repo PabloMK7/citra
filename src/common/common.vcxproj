@@ -190,6 +190,7 @@
     <ClInclude Include="swap.h" />
     <ClInclude Include="symbols.h" />
     <ClInclude Include="thread.h" />
+    <ClInclude Include="thread_queue_list.h" />
     <ClInclude Include="thunk.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="utf8.h" />
