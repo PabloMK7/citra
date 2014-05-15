@@ -147,7 +147,8 @@ bool __KernelLoadExec(u32 entry_point) {
     
     Core::g_app_core->SetPC(entry_point);
 
-    UID thread_id = __KernelSetupRootThread(0xDEADBEEF, 0, 0x31);
+    // 0x30 is the typical main thread priority I've seen used so far
+    UID thread_id = __KernelSetupRootThread(0xDEADBEEF, 0, 0x30);
 
     return true;
 }
