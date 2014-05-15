@@ -37,6 +37,17 @@ void CallSyscall(u32 opcode) {
     }
 }
 
+void EatCycles(u32 cycles) {
+    // TODO: ImplementMe
+}
+
+void ReSchedule(const char *reason) {
+#ifdef _DEBUG
+    _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "ReSchedule: Invalid or too long reason.");
+#endif
+    // TODO: ImplementMe
+}
+
 void RegisterModule(std::string name, int num_functions, const FunctionDef* func_table) {
     ModuleDef module = {name, num_functions, func_table};
     g_module_db.push_back(module);

@@ -36,6 +36,10 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef *func
 
 void CallSyscall(u32 opcode);
 
+void EatCycles(u32 cycles);
+
+void ReSchedule(const char *reason);
+
 void Init();
 
 void Shutdown();
