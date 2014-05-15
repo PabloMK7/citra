@@ -187,6 +187,9 @@ FileType IdentifyFile(std::string &filename) {
     else if (!strcasecmp(extension.c_str(), ".elf")) {
         return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
     }
+    else if (!strcasecmp(extension.c_str(), ".axf")) {
+        return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
+    }
     else if (!strcasecmp(extension.c_str(), ".bin")) {
         return FILETYPE_CTR_BIN;
     }
