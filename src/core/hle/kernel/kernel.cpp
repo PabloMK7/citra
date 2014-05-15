@@ -27,7 +27,7 @@ KernelObjectPool::KernelObjectPool() {
     next_id = INITIAL_NEXT_ID;
 }
 
-UID KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_top) {
+Handle KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_top) {
     if (range_top > MAX_COUNT) {
         range_top = MAX_COUNT;
     }
@@ -38,7 +38,7 @@ UID KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_top)
         if (!occupied[i]) {
             occupied[i] = true;
             pool[i] = obj;
-            pool[i]->uid = i + HANDLE_OFFSET;
+            pool[i]->handle = i + HANDLE_OFFSET;
             return i + HANDLE_OFFSET;
         }
     }
@@ -46,7 +46,7 @@ UID KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_top)
     return 0;
 }
 
-bool KernelObjectPool::IsValid(UID handle)
+bool KernelObjectPool::IsValid(Handle handle)
 {
     int index = handle - HANDLE_OFFSET;
     if (index < 0)
@@ -70,7 +70,7 @@ void KernelObjectPool::Clear()
     next_id = INITIAL_NEXT_ID;
 }
 
-KernelObject *&KernelObjectPool::operator [](UID handle)
+KernelObject *&KernelObjectPool::operator [](Handle handle)
 {
     _dbg_assert_msg_(KERNEL, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
     return pool[handle - HANDLE_OFFSET];
@@ -148,7 +148,7 @@ bool __KernelLoadExec(u32 entry_point) {
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    UID thread_id = __KernelSetupRootThread(0xDEADBEEF, 0, 0x30);
+    Handle thread_id = __KernelSetupMainThread(0x30);
 
     return true;
 }

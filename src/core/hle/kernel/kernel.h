@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-typedef u32 UID;
+typedef s32 Handle;
 
 enum KernelIDType {
     KERNEL_ID_TYPE_THREAD       = 1,
@@ -15,20 +15,23 @@ enum KernelIDType {
     KERNEL_ID_TYPE_EVENT        = 4,
 };
 
+enum {
+    KERNELOBJECT_MAX_NAME_LENGTH = 255,
+};
+
 #define KERNELOBJECT_MAX_NAME_LENGTH 31
 
 class KernelObjectPool;
 
 class KernelObject {
     friend class KernelObjectPool;
-    u32 uid;
+    u32 handle;
 public:
     virtual ~KernelObject() {}
-    UID GetUID() const { return uid; }
+    Handle GetHandle() const { return handle; }
     virtual const char *GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual const char *GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual KernelIDType GetIDType() const = 0;
-    //virtual void GetQuickInfo(char *ptr, int size);
 };
 
 class KernelObjectPool {
@@ -36,13 +39,13 @@ public:
     KernelObjectPool();
     ~KernelObjectPool() {}
 
-    // Allocates a UID within the range and inserts the object into the map.
-    UID Create(KernelObject *obj, int range_bottom=INITIAL_NEXT_ID, int range_top=0x7FFFFFFF);
+    // Allocates a handle within the range and inserts the object into the map.
+    Handle Create(KernelObject *obj, int range_bottom=INITIAL_NEXT_ID, int range_top=0x7FFFFFFF);
 
     static KernelObject *CreateByIDType(int type);
 
     template <class T>
-    u32 Destroy(UID handle) {
+    u32 Destroy(Handle handle) {
         u32 error;
         if (Get<T>(handle, error)) {
             occupied[handle - HANDLE_OFFSET] = false;
@@ -51,10 +54,10 @@ public:
         return error;
     };
 
-    bool IsValid(UID handle);
+    bool IsValid(Handle handle);
 
     template <class T>
-    T* Get(UID handle, u32& outError) {
+    T* Get(Handle handle, u32& outError) {
         if (handle < HANDLE_OFFSET || handle >= HANDLE_OFFSET + MAX_COUNT || !occupied[handle - HANDLE_OFFSET]) {
             // Tekken 6 spams 0x80020001 gets wrong with no ill effects, also on the real PSP
             if (handle != 0 && (u32)handle != 0x80020001) {
@@ -79,8 +82,8 @@ public:
 
     // ONLY use this when you know the handle is valid.
     template <class T>
-    T *GetFast(UID handle) {
-        const UID realHandle = handle - HANDLE_OFFSET;
+    T *GetFast(Handle handle) {
+        const Handle realHandle = handle - HANDLE_OFFSET;
         _dbg_assert_(KERNEL, realHandle >= 0 && realHandle < MAX_COUNT && occupied[realHandle]);
         return static_cast<T *>(pool[realHandle]);
     }
@@ -100,7 +103,7 @@ public:
         }
     }
 
-    bool GetIDType(UID handle, int *type) const {
+    bool GetIDType(Handle handle, int *type) const {
         if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) || 
             !occupied[handle - HANDLE_OFFSET]) {
             ERROR_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
@@ -111,7 +114,7 @@ public:
         return true;
     }
 
-    KernelObject *&operator [](UID handle);
+    KernelObject *&operator [](Handle handle);
     void List();
     void Clear();
     int GetCount();
