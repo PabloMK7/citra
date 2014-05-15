@@ -13,6 +13,8 @@
 
 #include "core/core.h"
 #include "core/mem_map.h"
+#include "core/hle/hle.h"
+#include "core/hle/syscall.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
@@ -357,7 +359,7 @@ public:
     //void Cleanup() {
     //    // Callbacks are automatically deleted when their owning thread is deleted.
     //    for (auto it = callbacks.begin(), end = callbacks.end(); it != end; ++it)
-    //        kernelObjects.Destroy<Callback>(*it);
+    //        g_kernel_objects.Destroy<Callback>(*it);
 
     //    if (pushed_stacks.size() != 0)
     //    {
@@ -432,7 +434,7 @@ const char* g_hle_current_thread_name   = NULL;
 
 /// Creates a new thread
 Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 priority, 
-    u32 entrypoint, u32 arg, u32 stack_top, u32 processor_id, int stack_size) {
+    u32 entry_point, u32 arg, u32 stack_top, u32 processor_id, int stack_size) {
 
     Thread *t = new Thread;
     id = g_kernel_objects.Create(t);
@@ -442,7 +444,7 @@ Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 prior
 
     memset(&t->nt, 0xCD, sizeof(t->nt));
 
-    t->nt.entry_point = entrypoint;
+    t->nt.entry_point = entry_point;
     t->nt.native_size = sizeof(t->nt);
     t->nt.initial_priority = t->nt.current_priority = priority;
     t->nt.status = THREADSTATUS_DORMANT;
@@ -457,6 +459,18 @@ Thread* __KernelCreateThread(UID& id, UID module_id, const char* name, u32 prior
     t->SetupStack(stack_top, stack_size);
 
     return t;
+}
+
+UID __KernelCreateThread(UID module_id, const char* name, u32 priority, u32 entry_point, u32 arg, 
+    u32 stack_top, u32 processor_id, int stack_size) {
+    UID id;
+    __KernelCreateThread(id, module_id, name, priority, entry_point, arg, stack_top, processor_id, 
+        stack_size);
+    
+    HLE::EatCycles(32000);
+    HLE::ReSchedule("thread created");
+    
+    return id;
 }
 
 /// Resets the specified thread back to initial calling state
@@ -608,6 +622,31 @@ void __KernelSwitchContext(Thread *target, const char *reason) {
     }
 }
 
+bool __KernelSwitchToThread(UID thread_id, const char *reason) {
+    if (!reason) {
+        reason = "switch to thread";
+    }
+    if (g_current_thread == thread_id) {
+        return false;
+    }
+    u32 error;
+    Thread *t = g_kernel_objects.Get<Thread>(thread_id, error);
+    if (!t) {
+        ERROR_LOG(KERNEL, "__KernelSwitchToThread: %x doesn't exist", thread_id);
+        HLE::ReSchedule("switch to deleted thread");
+    } else if (t->IsReady() || t->IsRunning()) {
+        Thread *current = __GetCurrentThread();
+        if (current && current->IsRunning()) {
+            __KernelChangeReadyState(current, g_current_thread, true);
+        }
+        __KernelSwitchContext(t, reason);
+        return true;
+    } else {
+        HLE::ReSchedule("switch to waiting thread");
+    }
+    return false;
+}
+
 /// Sets up the root (primary) thread of execution
 UID __KernelSetupRootThread(UID module_id, int arg, int prio, int stack_size) {
     UID id;
@@ -633,7 +672,7 @@ UID __KernelSetupRootThread(UID module_id, int arg, int prio, int stack_size) {
     // NOTE(bunnei): Not sure this is really correct, ignore args for now...
     //Core::g_app_core->SetReg(0, args); 
     //Core::g_app_core->SetReg(13, (args + 0xf) & ~0xf); // Setup SP - probably not correct
-    //u32 location = Core::g_app_core->GetReg(13); // SP
+    //u32 location = Core::g_app_core->GetReg(13); // SP 
     //Core::g_app_core->SetReg(1, location);
     
     //if (argp)
@@ -642,6 +681,33 @@ UID __KernelSetupRootThread(UID module_id, int arg, int prio, int stack_size) {
     //Core::g_app_core->SetReg(13, Core::g_app_core->GetReg(13) - 64);
 
     return id;
+}
+
+int __KernelRotateThreadReadyQueue(int priority) {
+    Thread *cur = __GetCurrentThread();
+
+    // 0 is special, it means "my current priority."
+    if (priority == 0) {
+        priority = cur->nt.current_priority;
+    }
+    //if (priority <= 0x07 || priority > 0x77)
+    //    return SCE_KERNEL_ERROR_ILLEGAL_PRIORITY;
+
+    if (!g_thread_ready_queue.empty(priority)) {
+        // In other words, yield to everyone else.
+        if (cur->nt.current_priority == priority) {
+            g_thread_ready_queue.push_back(priority, g_current_thread);
+            cur->nt.status = (cur->nt.status & ~THREADSTATUS_RUNNING) | THREADSTATUS_READY;
+
+        // Yield the next thread of this priority to all other threads of same priority.
+        } else {
+            g_thread_ready_queue.rotate(priority);
+        }
+    }
+    HLE::EatCycles(250);
+    HLE::ReSchedule("rotatethreadreadyqueue");
+
+    return 0;
 }
 
 void __KernelThreadingInit() {
