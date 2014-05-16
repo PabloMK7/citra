@@ -420,12 +420,10 @@ extern ARMword isize;
      || (! (STATE)->is_XScale)				\
      || (read_cp15_reg (15, 0, 1) & (1 << (CP))))
 */
-//#define CP_ACCESS_ALLOWED(STATE, CP)			\
-//	(((CP) >= 14)					\
-//	|| (!(STATE)->is_XScale)				\
-//	|| (xscale_cp15_cp_access_allowed(STATE, 15, CP)))
-
-#define CP_ACCESS_ALLOWED(STATE, CP) false // Disabled coprocessor shit /bunnei
+#define CP_ACCESS_ALLOWED(STATE, CP)			\
+	(((CP) >= 14)					\
+	|| (!(STATE)->is_XScale)				\
+	|| (xscale_cp15_cp_access_allowed(STATE, 15, CP)))
 
 /* Macro to rotate n right by b bits.  */
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))
