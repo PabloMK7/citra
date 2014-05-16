@@ -459,7 +459,7 @@ so I think MMUReg[1]'s bit 6 should always be 1
 	//state->data32Sig << 5 | state->lateabtSig << 6 | state->bigendSig << 7;
 
 
-	ARMul_ConsolePrint (state, ", MMU present");
+	NOTICE_LOG(ARM11, "ARMul_ConsolePrint: MMU present");
 
 	return TRUE;
 }
