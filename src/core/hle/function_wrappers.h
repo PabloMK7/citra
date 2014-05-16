@@ -734,6 +734,11 @@ template<int func(void*, u32)> void WrapI_VU(){
     RETURN(retval);
 }
 
+template<int func(void*, void*, u32)> void WrapI_VVU(){
+    u32 retval = func(Memory::GetPointer(PARAM(0)), Memory::GetPointer(PARAM(1)), PARAM(2));
+    RETURN(retval);
+}
+
 template<int func(void*, u32, void*, int)> void WrapI_VUVI(){
     u32 retval = func(Memory::GetPointer(PARAM(0)), PARAM(1), Memory::GetPointer(PARAM(2)), PARAM(3));
     RETURN(retval);

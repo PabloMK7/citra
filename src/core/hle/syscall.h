@@ -9,6 +9,17 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // SVC structures
 
+struct MemoryInfo {
+    u32 base_address;
+    u32 size;
+    u32 permission;
+    u32 state;
+};
+
+struct PageInfo {
+    u32 flags;
+};
+
 struct ThreadContext {
     u32 cpu_registers[13];
     u32 sp;

@@ -169,10 +169,22 @@ Result ReleaseMutex(Handle handle) {
     return 0;
 }
 
+Result GetThreadId(void* thread_id, u32 thread) {
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
+    return 0;
+}
+
+Result QueryMemory(void *_info, void *_out, u32 addr) {
+    MemoryInfo* info = (MemoryInfo*) _info;
+    PageInfo* out = (PageInfo*) _out;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
+    return 0;
+}
+
 const HLE::FunctionDef Syscall_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
     {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
-    {0x02,  NULL,                                       "QueryMemory"},
+    {0x02,  WrapI_VVU<QueryMemory>,                     "QueryMemory"},
     {0x03,  NULL,                                       "ExitProcess"},
     {0x04,  NULL,                                       "GetProcessAffinityMask"},
     {0x05,  NULL,                                       "SetProcessAffinityMask"},
@@ -225,7 +237,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x34,  NULL,                                       "OpenThread"},
     {0x35,  NULL,                                       "GetProcessId"},
     {0x36,  NULL,                                       "GetProcessIdOfThread"},
-    {0x37,  NULL,                                       "GetThreadId"},
+    {0x37,  WrapI_VU<GetThreadId>,                      "GetThreadId"},
     {0x38,  WrapI_VU<GetResourceLimit>,                 "GetResourceLimit"},
     {0x39,  NULL,                                       "GetResourceLimitLimitValues"},
     {0x3A,  WrapI_VUVI<GetResourceLimitCurrentValues>,  "GetResourceLimitCurrentValues"},
