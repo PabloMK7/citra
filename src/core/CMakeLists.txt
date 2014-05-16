@@ -7,6 +7,7 @@ set(SRCS    core.cpp
             arm/disassembler/arm_disasm.cpp
             arm/disassembler/load_symbol_map.cpp
             arm/interpreter/arm_interpreter.cpp
+            arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
             arm/interpreter/armmmu.cpp

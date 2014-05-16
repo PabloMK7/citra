@@ -84,255 +84,255 @@ ARMword xscale_mmu_mcr (ARMul_State * state, ARMword instr, ARMword value);
 #define PXA270_ICPR 0x40D00010
 #define PXA270_ICLR 0x40D00008
 //chy 2005-09-19 for xscale pxa27x cp6
-//unsigned
-//xscale_cp6_mrc (ARMul_State * state, unsigned type, ARMword instr,
-//		ARMword * data)
-//{
-//	unsigned opcode_2 = BITS (5, 7);
-//	unsigned CRm = BITS (0, 3);
-//	unsigned reg = BITS (16, 19);
-//	unsigned result;
-//
-//	//printf("SKYEYE: xscale_cp6_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,state->Reg[15], instr);
-//
-//	switch (reg) {
-//	case CR0_ICIP: {		// cp 6 reg 0
-//		//printf("cp6_mrc cr0 ICIP              \n");
-//		/* *data = (pxa270_io.icmr & pxa270_io.icpr) & ~pxa270_io.iclr; */
-//		/* use bus_read get the pxa270 machine registers  2010.9.26 jeff*/
-//		int icmr, icpr, iclr;
-//		bus_read(32, PXA270_ICMR, &icmr);
-//		bus_read(32, PXA270_ICPR, &icpr);
-//		bus_read(32, PXA270_ICLR, &iclr);
-//		*data = (icmr & icpr)  & ~iclr;
-//		}
-//		break;
-//	case CR1_ICMR: {	// cp 6 reg 1
-//		//printf("cp6_mrc cr1 ICMR\n");
-//		/* *data = pxa270_io.icmr; */
-//		int icmr;
-//		/* use bus_read get the pxa270 machine registers  2010.9.26 jeff*/
-//		bus_read(32, PXA270_ICMR, &icmr);
-//		*data = icmr;
-//		}
-//		break;
-//	default:
-//		*data = 0;
-//		printf ("SKYEYE:cp6_mrc unknown cp6 regs!!!!!!\n");
-//		printf ("SKYEYE: xscale_cp6_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n", opcode_2, CRm, reg, state->Reg[15], instr);
-//		break;
-//	}
-//	return 0;
-//}
-//
-////chy 2005-09-19 end
-////xscale cp13 ----------------------------------------------------
-//unsigned
-//xscale_cp13_init (ARMul_State * state)
-//{
-//	//printf("SKYEYE: xscale_cp13_init: begin\n");
-//	return 0;
-//}
-//
-//unsigned
-//xscale_cp13_exit (ARMul_State * state)
-//{
-//	//printf("SKYEYE: xscale_cp13_exit: begin\n");
-//	return 0;
-//}
-//
-//unsigned
-//xscale_cp13_ldc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword data)
-//{
-//	printf ("SKYEYE: xscale_cp13_ldc: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp13_stc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword * data)
-//{
-//	printf ("SKYEYE: xscale_cp13_stc: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp13_mrc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword * data)
-//{
-//	printf ("SKYEYE: xscale_cp13_mrc: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp13_mcr (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword data)
-//{
-//	printf ("SKYEYE: xscale_cp13_mcr: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp13_cdp (ARMul_State * state, unsigned type, ARMword instr)
-//{
-//	printf ("SKYEYE: xscale_cp13_cdp: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp13_read_reg (ARMul_State * state, unsigned reg, ARMword * data)
-//{
-//	printf ("SKYEYE: xscale_cp13_read_reg: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	return 0;
-//	//exit(-1);
-//}
-//
-//unsigned
-//xscale_cp13_write_reg (ARMul_State * state, unsigned reg, ARMword data)
-//{
-//	printf ("SKYEYE: xscale_cp13_write_reg: ERROR isn't existed,");
-//	SKYEYE_OUTREGS (stderr);
-//	fprintf (stderr, "\n");
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-////------------------------------------------------------------------
-////xscale cp14 ----------------------------------------------------
-//unsigned
-//xscale_cp14_init (ARMul_State * state)
-//{
-//	//printf("SKYEYE: xscale_cp14_init: begin\n");
-//	pxa_cp14_regs.cclkcfg = 0;
-//	pxa_cp14_regs.pwrmode = 0;
-//	return 0;
-//}
-//
-//unsigned
-//xscale_cp14_exit (ARMul_State * state)
-//{
-//	//printf("SKYEYE: xscale_cp14_exit: begin\n");
-//	return 0;
-//}
-//
-//unsigned
-//xscale_cp14_ldc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword data)
-//{
-//	printf ("SKYEYE: xscale_cp14_ldc: ERROR isn't existed, reg15 0x%x\n",
-//		state->Reg[15]);
-//	SKYEYE_OUTREGS (stderr);
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp14_stc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword * data)
-//{
-//	printf ("SKYEYE: xscale_cp14_stc: ERROR isn't existed, reg15 0x%x\n",
-//		state->Reg[15]);
-//	SKYEYE_OUTREGS (stderr);
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//
-//unsigned
-//xscale_cp14_mrc (ARMul_State * state, unsigned type, ARMword instr,
-//		 ARMword * data)
-//{
-//	unsigned opcode_2 = BITS (5, 7);
-//	unsigned CRm = BITS (0, 3);
-//	unsigned reg = BITS (16, 19);
-//	unsigned result;
-//
-//	//printf("SKYEYE: xscale_cp14_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,\
-//	state->Reg[15], instr);
-//
-//	switch (reg) {
-//	case CCLKCFG:		// cp 14 reg 6
-//		//printf("cp14_mrc cclkcfg              \n");
-//		*data = pxa_cp14_regs.cclkcfg;
-//		break;
-//	case PWRMODE:		// cp 14 reg 7
-//		//printf("cp14_mrc pwrmode              \n");
-//		*data = pxa_cp14_regs.pwrmode;
-//		break;
-//	default:
-//		*data = 0;
-//		printf ("SKYEYE:cp14_mrc unknown cp14 regs!!!!!!\n");
-//		break;
-//	}
-//	return 0;
-//}
-//unsigned xscale_cp14_mcr (ARMul_State * state, unsigned type, ARMword instr,
-//			  ARMword data)
-//{
-//	unsigned opcode_2 = BITS (5, 7);
-//	unsigned CRm = BITS (0, 3);
-//	unsigned reg = BITS (16, 19);
-//	unsigned result;
-//
-//	//printf("SKYEYE: xscale_cp14_mcr:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,\
-//	  state->Reg[15], instr);
-//
-//	switch (reg) {
-//	case CCLKCFG:		// cp 14 reg 6
-//		//printf("cp14_mcr cclkcfg              \n");
-//		pxa_cp14_regs.cclkcfg = data & 0xf;
-//		break;
-//		case PWRMODE:	// cp 14 reg 7
-//			//printf("cp14_mcr pwrmode              \n");
-//		pxa_cp14_regs.pwrmode = data & 0x3;
-//		break;
-//		default:printf ("SKYEYE: cp14_mcr unknown cp14 regs!!!!!!\n");
-//		break;
-//	}
-//	return 0;
-//}
-//unsigned xscale_cp14_cdp (ARMul_State * state, unsigned type, ARMword instr)
-//{
-//	printf ("SKYEYE: xscale_cp14_cdp: ERROR isn't existed, reg15 0x%x\n",
-//		state->Reg[15]);
-//	SKYEYE_OUTREGS (stderr);
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//unsigned xscale_cp14_read_reg (ARMul_State * state, unsigned reg,
-//			       ARMword * data)
-//{
-//	printf ("SKYEYE: xscale_cp14_read_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
-//	SKYEYE_OUTREGS (stderr);
-//	// skyeye_exit (-1);
-//	return 0; //No matter return value, only for compiler.
-//}
-//unsigned xscale_cp14_write_reg (ARMul_State * state, unsigned reg,
-//				ARMword data)
-//{
-//	printf ("SKYEYE: xscale_cp14_write_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
-//	SKYEYE_OUTREGS (stderr);
-//	// skyeye_exit (-1);
-//
-//	return 0; //No matter return value, only for compiler.
-//}
+unsigned
+xscale_cp6_mrc (ARMul_State * state, unsigned type, ARMword instr,
+		ARMword * data)
+{
+	unsigned opcode_2 = BITS (5, 7);
+	unsigned CRm = BITS (0, 3);
+	unsigned reg = BITS (16, 19);
+	unsigned result;
+
+	//printf("SKYEYE: xscale_cp6_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,state->Reg[15], instr);
+
+	switch (reg) {
+	case CR0_ICIP: {		// cp 6 reg 0
+		//printf("cp6_mrc cr0 ICIP              \n");
+		/* *data = (pxa270_io.icmr & pxa270_io.icpr) & ~pxa270_io.iclr; */
+		/* use bus_read get the pxa270 machine registers  2010.9.26 jeff*/
+		int icmr, icpr, iclr;
+		bus_read(32, PXA270_ICMR, (uint32_t*)&icmr);
+		bus_read(32, PXA270_ICPR, (uint32_t*)&icpr);
+		bus_read(32, PXA270_ICLR, (uint32_t*)&iclr);
+		*data = (icmr & icpr)  & ~iclr;
+		}
+		break;
+	case CR1_ICMR: {	// cp 6 reg 1
+		//printf("cp6_mrc cr1 ICMR\n");
+		/* *data = pxa270_io.icmr; */
+		int icmr;
+		/* use bus_read get the pxa270 machine registers  2010.9.26 jeff*/
+		bus_read(32, PXA270_ICMR, (uint32_t*)&icmr);
+		*data = icmr;
+		}
+		break;
+	default:
+		*data = 0;
+		printf ("SKYEYE:cp6_mrc unknown cp6 regs!!!!!!\n");
+		printf ("SKYEYE: xscale_cp6_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n", opcode_2, CRm, reg, state->Reg[15], instr);
+		break;
+	}
+	return 0;
+}
+
+//chy 2005-09-19 end
+//xscale cp13 ----------------------------------------------------
+unsigned
+xscale_cp13_init (ARMul_State * state)
+{
+	//printf("SKYEYE: xscale_cp13_init: begin\n");
+	return 0;
+}
+
+unsigned
+xscale_cp13_exit (ARMul_State * state)
+{
+	//printf("SKYEYE: xscale_cp13_exit: begin\n");
+	return 0;
+}
+
+unsigned
+xscale_cp13_ldc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword data)
+{
+	printf ("SKYEYE: xscale_cp13_ldc: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp13_stc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword * data)
+{
+	printf ("SKYEYE: xscale_cp13_stc: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp13_mrc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword * data)
+{
+	printf ("SKYEYE: xscale_cp13_mrc: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp13_mcr (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword data)
+{
+	printf ("SKYEYE: xscale_cp13_mcr: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp13_cdp (ARMul_State * state, unsigned type, ARMword instr)
+{
+	printf ("SKYEYE: xscale_cp13_cdp: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp13_read_reg (ARMul_State * state, unsigned reg, ARMword * data)
+{
+	printf ("SKYEYE: xscale_cp13_read_reg: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	return 0;
+	//exit(-1);
+}
+
+unsigned
+xscale_cp13_write_reg (ARMul_State * state, unsigned reg, ARMword data)
+{
+	printf ("SKYEYE: xscale_cp13_write_reg: ERROR isn't existed,");
+	SKYEYE_OUTREGS (stderr);
+	fprintf (stderr, "\n");
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+//------------------------------------------------------------------
+//xscale cp14 ----------------------------------------------------
+unsigned
+xscale_cp14_init (ARMul_State * state)
+{
+	//printf("SKYEYE: xscale_cp14_init: begin\n");
+	pxa_cp14_regs.cclkcfg = 0;
+	pxa_cp14_regs.pwrmode = 0;
+	return 0;
+}
+
+unsigned
+xscale_cp14_exit (ARMul_State * state)
+{
+	//printf("SKYEYE: xscale_cp14_exit: begin\n");
+	return 0;
+}
+
+unsigned
+xscale_cp14_ldc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword data)
+{
+	printf ("SKYEYE: xscale_cp14_ldc: ERROR isn't existed, reg15 0x%x\n",
+		state->Reg[15]);
+	SKYEYE_OUTREGS (stderr);
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp14_stc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword * data)
+{
+	printf ("SKYEYE: xscale_cp14_stc: ERROR isn't existed, reg15 0x%x\n",
+		state->Reg[15]);
+	SKYEYE_OUTREGS (stderr);
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+
+unsigned
+xscale_cp14_mrc (ARMul_State * state, unsigned type, ARMword instr,
+		 ARMword * data)
+{
+	unsigned opcode_2 = BITS (5, 7);
+	unsigned CRm = BITS (0, 3);
+	unsigned reg = BITS (16, 19);
+	unsigned result;
+
+	//printf("SKYEYE: xscale_cp14_mrc:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,\
+	state->Reg[15], instr);
+
+	switch (reg) {
+	case CCLKCFG:		// cp 14 reg 6
+		//printf("cp14_mrc cclkcfg              \n");
+		*data = pxa_cp14_regs.cclkcfg;
+		break;
+	case PWRMODE:		// cp 14 reg 7
+		//printf("cp14_mrc pwrmode              \n");
+		*data = pxa_cp14_regs.pwrmode;
+		break;
+	default:
+		*data = 0;
+		printf ("SKYEYE:cp14_mrc unknown cp14 regs!!!!!!\n");
+		break;
+	}
+	return 0;
+}
+unsigned xscale_cp14_mcr (ARMul_State * state, unsigned type, ARMword instr,
+			  ARMword data)
+{
+	unsigned opcode_2 = BITS (5, 7);
+	unsigned CRm = BITS (0, 3);
+	unsigned reg = BITS (16, 19);
+	unsigned result;
+
+	//printf("SKYEYE: xscale_cp14_mcr:opcode_2 0x%x, CRm 0x%x, reg 0x%x,reg[15] 0x%x, instr %x\n",opcode_2,CRm,reg,\
+	  state->Reg[15], instr);
+
+	switch (reg) {
+	case CCLKCFG:		// cp 14 reg 6
+		//printf("cp14_mcr cclkcfg              \n");
+		pxa_cp14_regs.cclkcfg = data & 0xf;
+		break;
+		case PWRMODE:	// cp 14 reg 7
+			//printf("cp14_mcr pwrmode              \n");
+		pxa_cp14_regs.pwrmode = data & 0x3;
+		break;
+		default:printf ("SKYEYE: cp14_mcr unknown cp14 regs!!!!!!\n");
+		break;
+	}
+	return 0;
+}
+unsigned xscale_cp14_cdp (ARMul_State * state, unsigned type, ARMword instr)
+{
+	printf ("SKYEYE: xscale_cp14_cdp: ERROR isn't existed, reg15 0x%x\n",
+		state->Reg[15]);
+	SKYEYE_OUTREGS (stderr);
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+unsigned xscale_cp14_read_reg (ARMul_State * state, unsigned reg,
+			       ARMword * data)
+{
+	printf ("SKYEYE: xscale_cp14_read_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
+	SKYEYE_OUTREGS (stderr);
+	// skyeye_exit (-1);
+	return 0; //No matter return value, only for compiler.
+}
+unsigned xscale_cp14_write_reg (ARMul_State * state, unsigned reg,
+				ARMword data)
+{
+	printf ("SKYEYE: xscale_cp14_write_reg: ERROR isn't existed, reg15 0x%x\n", state->Reg[15]);
+	SKYEYE_OUTREGS (stderr);
+	// skyeye_exit (-1);
+
+	return 0; //No matter return value, only for compiler.
+}
 
 //------------------------------------------------------------------
 //cp15 -------------------------------------

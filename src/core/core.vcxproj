@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp" />
     <ClCompile Include="arm\disassembler\load_symbol_map.cpp" />
+    <ClCompile Include="arm\interpreter\armcopro.cpp" />
     <ClCompile Include="arm\interpreter\armemu.cpp" />
     <ClCompile Include="arm\interpreter\arminit.cpp" />
     <ClCompile Include="arm\interpreter\armmmu.cpp" />
