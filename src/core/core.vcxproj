@@ -147,6 +147,10 @@
     <ClCompile Include="arm\interpreter\armvirt.cpp" />
     <ClCompile Include="arm\interpreter\arm_interpreter.cpp" />
     <ClCompile Include="arm\interpreter\thumbemu.cpp" />
+    <ClCompile Include="arm\interpreter\vfp\vfp.cpp" />
+    <ClCompile Include="arm\interpreter\vfp\vfpdouble.cpp" />
+    <ClCompile Include="arm\interpreter\vfp\vfpinstr.cpp" />
+    <ClCompile Include="arm\interpreter\vfp\vfpsingle.cpp" />
     <ClCompile Include="arm\mmu\arm1176jzf_s_mmu.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="core_timing.cpp" />
@@ -182,6 +186,9 @@
     <ClInclude Include="arm\interpreter\arm_interpreter.h" />
     <ClInclude Include="arm\interpreter\arm_regformat.h" />
     <ClInclude Include="arm\interpreter\skyeye_defs.h" />
+    <ClInclude Include="arm\interpreter\vfp\asm_vfp.h" />
+    <ClInclude Include="arm\interpreter\vfp\vfp.h" />
+    <ClInclude Include="arm\interpreter\vfp\vfp_helper.h" />
     <ClInclude Include="arm\mmu\arm1176jzf_s_mmu.h" />
     <ClInclude Include="arm\mmu\cache.h" />
     <ClInclude Include="arm\mmu\rb.h" />

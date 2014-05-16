@@ -14,7 +14,11 @@ set(SRCS    core.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
-            arm/mmu/arm1176jzf_s_mmu.cpp
+            arm/interpreter/vfp/vfp.cpp
+            arm/interpreter/vfp/vfpdouble.cpp
+            arm/interpreter/vfp/vfpinsr.cpp
+            arm/interpreter/vfp/vfpsingle.cpp
+            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
             elf/elf_reader.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp

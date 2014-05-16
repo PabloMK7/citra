@@ -28,6 +28,9 @@
     <Filter Include="hle\service">
       <UniqueIdentifier>{812c5189-ca49-4704-b842-3ffad09092d3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="arm\interpreter\vfp">
+      <UniqueIdentifier>{de62238f-a28e-4a33-8495-23fed6784588}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="arm\disassembler\arm_disasm.cpp">
@@ -113,6 +116,18 @@
     </ClCompile>
     <ClCompile Include="hle\config_mem.cpp">
       <Filter>hle</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\vfp\vfp.cpp">
+      <Filter>arm\interpreter\vfp</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\vfp\vfpinstr.cpp">
+      <Filter>arm\interpreter\vfp</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\vfp\vfpdouble.cpp">
+      <Filter>arm\interpreter\vfp</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\vfp\vfpsingle.cpp">
+      <Filter>arm\interpreter\vfp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -222,6 +237,15 @@
     </ClInclude>
     <ClInclude Include="hle\config_mem.h">
       <Filter>hle</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\vfp\asm_vfp.h">
+      <Filter>arm\interpreter\vfp</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\vfp\vfp.h">
+      <Filter>arm\interpreter\vfp</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\vfp\vfp_helper.h">
+      <Filter>arm\interpreter\vfp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
