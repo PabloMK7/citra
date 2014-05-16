@@ -7,9 +7,6 @@
     <Filter Include="arm\disassembler">
       <UniqueIdentifier>{61100188-a726-4024-ab16-95ee242b446e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="arm\mmu">
-      <UniqueIdentifier>{a64d3c8a-747a-491b-b782-6e2622bedf24}</UniqueIdentifier>
-    </Filter>
     <Filter Include="file_sys">
       <UniqueIdentifier>{7f618562-73d1-4f55-9628-887497c27654}</UniqueIdentifier>
     </Filter>
@@ -30,6 +27,9 @@
     </Filter>
     <Filter Include="arm\interpreter\vfp">
       <UniqueIdentifier>{de62238f-a28e-4a33-8495-23fed6784588}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arm\interpreter\mmu">
+      <UniqueIdentifier>{13ef9860-2ba0-47e9-a93d-b4052adab269}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -59,9 +59,6 @@
     </ClCompile>
     <ClCompile Include="arm\interpreter\thumbemu.cpp">
       <Filter>arm\interpreter</Filter>
-    </ClCompile>
-    <ClCompile Include="arm\mmu\arm1176jzf_s_mmu.cpp">
-      <Filter>arm\mmu</Filter>
     </ClCompile>
     <ClCompile Include="file_sys\directory_file_system.cpp">
       <Filter>file_sys</Filter>
@@ -129,6 +126,27 @@
     <ClCompile Include="arm\interpreter\vfp\vfpsingle.cpp">
       <Filter>arm\interpreter\vfp</Filter>
     </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\arm1176jzf_s_mmu.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\xscale_copro.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\sa_mmu.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\cache.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\rb.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\tlb.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\wb.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -157,21 +175,6 @@
     </ClInclude>
     <ClInclude Include="arm\interpreter\skyeye_defs.h">
       <Filter>arm\interpreter</Filter>
-    </ClInclude>
-    <ClInclude Include="arm\mmu\arm1176jzf_s_mmu.h">
-      <Filter>arm\mmu</Filter>
-    </ClInclude>
-    <ClInclude Include="arm\mmu\cache.h">
-      <Filter>arm\mmu</Filter>
-    </ClInclude>
-    <ClInclude Include="arm\mmu\rb.h">
-      <Filter>arm\mmu</Filter>
-    </ClInclude>
-    <ClInclude Include="arm\mmu\tlb.h">
-      <Filter>arm\mmu</Filter>
-    </ClInclude>
-    <ClInclude Include="arm\mmu\wb.h">
-      <Filter>arm\mmu</Filter>
     </ClInclude>
     <ClInclude Include="file_sys\directory_file_system.h">
       <Filter>file_sys</Filter>
@@ -246,6 +249,24 @@
     </ClInclude>
     <ClInclude Include="arm\interpreter\vfp\vfp_helper.h">
       <Filter>arm\interpreter\vfp</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\arm1176jzf_s_mmu.h">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\cache.h">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\rb.h">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\tlb.h">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\wb.h">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClInclude>
+    <ClInclude Include="arm\interpreter\mmu\sa_mmu.h">
+      <Filter>arm\interpreter\mmu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
