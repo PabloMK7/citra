@@ -149,6 +149,7 @@
     <ClCompile Include="arm\interpreter\arm_interpreter.cpp" />
     <ClCompile Include="arm\interpreter\mmu\arm1176jzf_s_mmu.cpp" />
     <ClCompile Include="arm\interpreter\mmu\cache.cpp" />
+    <ClCompile Include="arm\interpreter\mmu\maverick.cpp" />
     <ClCompile Include="arm\interpreter\mmu\rb.cpp" />
     <ClCompile Include="arm\interpreter\mmu\sa_mmu.cpp" />
     <ClCompile Include="arm\interpreter\mmu\tlb.cpp" />

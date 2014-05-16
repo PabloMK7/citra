@@ -150,6 +150,9 @@
     <ClCompile Include="arm\interpreter\armcopro.cpp">
       <Filter>arm</Filter>
     </ClCompile>
+    <ClCompile Include="arm\interpreter\mmu\maverick.cpp">
+      <Filter>arm\interpreter\mmu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">

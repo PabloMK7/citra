@@ -21,8 +21,9 @@ set(SRCS    core.cpp
             arm/interpreter/vfp/vfpsingle.cpp
             arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
             arm/interpreter/mmu/cache.cpp
-            arm/interpreter/mmu/sa_mmu.cpp
+            arm/interpreter/mmu/maverick.cpp
             arm/interpreter/mmu/rb.cpp
+            arm/interpreter/mmu/sa_mmu.cpp
             arm/interpreter/mmu/tlb.cpp
             arm/interpreter/mmu/wb.cpp
             arm/interpreter/mmu/xscale_copro.cpp
