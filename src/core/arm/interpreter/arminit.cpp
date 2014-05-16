@@ -23,8 +23,8 @@
 
 #include <math.h>
 
-#include "armdefs.h"
-#include "armemu.h"
+#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/interpreter/armemu.h"
 
 /***************************************************************************\
 *                 Definitions for the emulator architecture                 *
