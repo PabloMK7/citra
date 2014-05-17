@@ -14,9 +14,6 @@ enum CoprocessorOperation {
     CALL_GET_THREAD_COMMAND_BUFFER  = 0xE1,
 };
 
-/// Call an MCR (move to coprocessor from ARM register) instruction in HLE
-s32 CallMCR(u32 instruction, u32 value);
-
 /// Call an MRC (move to ARM register from coprocessor) instruction in HLE
 s32 CallMRC(u32 instruction);
 
