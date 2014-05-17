@@ -17,6 +17,10 @@ struct Registers {
     u32 framebuffer_sub_left_2;
     u32 framebuffer_sub_right_1;
     u32 framebuffer_sub_right_2;
+
+    u32 command_list_size;
+    u32 command_list_address;
+    u32 command_processing_enabled;
 };
 
 extern Registers g_regs;
@@ -24,7 +28,7 @@ extern Registers g_regs;
 enum {
     TOP_ASPECT_X        = 0x5,
     TOP_ASPECT_Y        = 0x3,
-    
+
     TOP_HEIGHT          = 240,
     TOP_WIDTH           = 400,
     BOTTOM_WIDTH        = 320,
@@ -57,12 +61,16 @@ enum {
     REG_FRAMEBUFFER_SUB_LEFT_2  = 0x1EF0056C,   // Sub LCD, second framebuffer
     REG_FRAMEBUFFER_SUB_RIGHT_1 = 0x1EF00594,   // Sub LCD, unused first framebuffer
     REG_FRAMEBUFFER_SUB_RIGHT_2 = 0x1EF00598,   // Sub LCD, unused second framebuffer
+
+    CommandListSize         = 0x1EF018E0,
+    CommandListAddress      = 0x1EF018E8,
+    ProcessCommandList      = 0x1EF018F0,
 };
 
 /// Framebuffer location
 enum FramebufferLocation {
     FRAMEBUFFER_LOCATION_UNKNOWN,   ///< Framebuffer location is unknown
-    FRAMEBUFFER_LOCATION_FCRAM,  ///< Framebuffer is in the GSP heap
+    FRAMEBUFFER_LOCATION_FCRAM,     ///< Framebuffer is in the GSP heap
     FRAMEBUFFER_LOCATION_VRAM,      ///< Framebuffer is in VRAM
 };
 

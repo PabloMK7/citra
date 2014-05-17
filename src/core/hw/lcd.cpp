@@ -7,11 +7,11 @@
 
 #include "core/core.h"
 #include "core/mem_map.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hw/lcd.h"
 
 #include "video_core/video_core.h"
 
-#include "core/hle/kernel/thread.h"
 
 namespace LCD {
 
@@ -89,31 +89,70 @@ inline void Read(T &var, const u32 addr) {
     case REG_FRAMEBUFFER_TOP_LEFT_1:
         var = g_regs.framebuffer_top_left_1;
         break;
+
     case REG_FRAMEBUFFER_TOP_LEFT_2:
         var = g_regs.framebuffer_top_left_2;
         break;
+
     case REG_FRAMEBUFFER_TOP_RIGHT_1:
         var = g_regs.framebuffer_top_right_1;
         break;
+
     case REG_FRAMEBUFFER_TOP_RIGHT_2:
         var = g_regs.framebuffer_top_right_2;
         break;
+
     case REG_FRAMEBUFFER_SUB_LEFT_1:
         var = g_regs.framebuffer_sub_left_1;
         break;
+
     case REG_FRAMEBUFFER_SUB_RIGHT_1:
         var = g_regs.framebuffer_sub_right_1;
         break;
+
+    case CommandListSize:
+        var = g_regs.command_list_size;
+        break;
+
+    case CommandListAddress:
+        var = g_regs.command_list_address;
+        break;
+
+    case ProcessCommandList:
+        var = g_regs.command_processing_enabled;
+        break;
+
     default:
         ERROR_LOG(LCD, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
         break;
     }
-    
 }
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    ERROR_LOG(LCD, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+    switch (addr) {
+    case CommandListSize:
+        g_regs.command_list_size = data;
+        break;
+
+    case CommandListAddress:
+        g_regs.command_list_address = data;
+        break;
+
+    case ProcessCommandList:
+        g_regs.command_processing_enabled = data;
+        if (g_regs.command_processing_enabled & 1)
+        {
+            // u32* buffer = (u32*)Memory::GetPointer(g_regs.command_list_address << 3);
+            ERROR_LOG(LCD, "Beginning %x bytes of commands from address %x", g_regs.command_list_size, g_regs.command_list_address << 3);
+            // TODO: Process command list!
+        }
+        break;
+
+    default:
+        ERROR_LOG(LCD, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        break;
+    }
 }
 
 // Explicitly instantiate template functions because we aren't defining this in the header:
