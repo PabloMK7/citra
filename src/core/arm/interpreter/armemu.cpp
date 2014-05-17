@@ -4734,7 +4734,7 @@ TEST_EMULATE:
         else if (state->Emulate != RUN)
             break;
     }
-    while (!state->stop_simulator);
+    while (state->NumInstrsToExecute--);
 
     state->decoded = decoded;
     state->loaded = loaded;

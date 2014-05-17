@@ -4,8 +4,9 @@
 
 #include "common/common_types.h"
 #include "common/log.h"
-#include "core/core.h"
+#include "common/symbols.h"
 
+#include "core/core.h"
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
 #include "core/arm/disassembler/arm_disasm.h"
@@ -19,13 +20,15 @@ ARM_Interface*  g_sys_core  = NULL; ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop() {
-    // TODO(ShizZy): ImplementMe
+    for (;;){
+        g_app_core->Run(10000);
+        HW::Update();
+    }
 }
 
 /// Step the CPU one instruction
 void SingleStep() {
     g_app_core->Step();
-    HW::Update();
 }
 
 /// Halt the core

@@ -288,6 +288,7 @@ struct ARMul_State
     ARMword loaded_addr, decoded_addr;    /* saved pipeline state addr*/
     unsigned int NumScycles, NumNcycles, NumIcycles, NumCcycles, NumFcycles;    /* emulated cycles used */
     unsigned long long NumInstrs;    /* the number of instructions executed */
+    unsigned NumInstrsToExecute;
     unsigned NextInstr;
     unsigned VectorCatch;    /* caught exception mask */
     unsigned CallDebug;    /* set to call the debugger */

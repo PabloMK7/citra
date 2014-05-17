@@ -6,6 +6,8 @@
 
 #include "core/core.h"
 #include "core/loader.h"
+#include "core/hw/hw.h"
+
 #include "video_core/video_core.h"
 
 #include "version.h"
@@ -40,6 +42,7 @@ void EmuThread::run()
                     emit CPUStepped();
             }
         }
+        HW::Update();
     }
 
     Core::Stop();

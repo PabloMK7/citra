@@ -93,16 +93,11 @@ u64 ARM_Interpreter::GetTicks() const {
     return ARMul_Time(m_state);
 }
 
-/// Execture next instruction
-void ARM_Interpreter::ExecuteInstruction() {
-    m_state->step++;
-    m_state->cycle++;
-    m_state->EndCondition = 0;
-    m_state->stop_simulator = 0;
-    m_state->NextInstr = RESUME;
-    m_state->last_pc = m_state->Reg[15];
-    m_state->Reg[15] = ARMul_DoInstr(m_state);
-    m_state->Cpsr = ((m_state->Cpsr & 0x0fffffdf) | (m_state->NFlag << 31) | (m_state->ZFlag << 30) | 
-                   (m_state->CFlag << 29) | (m_state->VFlag << 28) | (m_state->TFlag << 5));
-    m_state->NextInstr |= PRIMEPIPE; // Flush pipe
+/**
+ * Executes the given number of instructions
+ * @param num_instructions Number of instructions to executes
+ */
+void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
+    m_state->NumInstrsToExecute = num_instructions;
+    ARMul_Emulate32(m_state);
 }
