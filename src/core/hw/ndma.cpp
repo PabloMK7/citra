@@ -37,12 +37,12 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
-    NOTICE_LOG(LCD, "initialized OK");
+    NOTICE_LOG(GPU, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(LCD, "shutdown OK");
+    NOTICE_LOG(GPU, "shutdown OK");
 }
 
 } // namespace

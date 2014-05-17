@@ -6,7 +6,7 @@
 #include "common/log.h"
 
 #include "core/hw/hw.h"
-#include "core/hw/lcd.h"
+#include "core/hw/gpu.h"
 #include "core/hw/ndma.h"
 
 namespace HW {
@@ -34,7 +34,7 @@ enum {
     VADDR_CDMA      = 0xFFFDA000,   // CoreLink DMA-330? Info
     VADDR_DSP_2     = 0x1ED03000,
     VADDR_HASH_2    = 0x1EE01000,
-    VADDR_LCD       = 0x1EF00000,
+    VADDR_GPU       = 0x1EF00000,
 };
 
 template <typename T>
@@ -46,8 +46,8 @@ inline void Read(T &var, const u32 addr) {
     //     NDMA::Read(var, addr);
     //     break;
 
-    case VADDR_LCD:
-        LCD::Read(var, addr);
+    case VADDR_GPU:
+        GPU::Read(var, addr);
         break;
 
     default:
@@ -64,8 +64,8 @@ inline void Write(u32 addr, const T data) {
     //     NDMA::Write(addr, data);
     //     break;
 
-    case VADDR_LCD:
-        LCD::Write(addr, data);
+    case VADDR_GPU:
+        GPU::Write(addr, data);
         break;
 
     default:
@@ -87,13 +87,13 @@ template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
 void Update() {
-    LCD::Update();
+    GPU::Update();
     NDMA::Update();
 }
 
 /// Initialize hardware
 void Init() {
-    LCD::Init();
+    GPU::Init();
     NDMA::Init();
     NOTICE_LOG(HW, "initialized OK");
 }

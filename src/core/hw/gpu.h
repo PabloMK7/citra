@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-namespace LCD {
+namespace GPU {
 
 struct Registers {
     u32 framebuffer_top_left_1;

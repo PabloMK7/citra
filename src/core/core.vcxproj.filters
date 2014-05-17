@@ -102,7 +102,7 @@
     <ClCompile Include="hw\ndma.cpp">
       <Filter>hw</Filter>
     </ClCompile>
-    <ClCompile Include="hw\lcd.cpp">
+    <ClCompile Include="hw\gpu.cpp">
       <Filter>hw</Filter>
     </ClCompile>
     <ClCompile Include="arm\disassembler\load_symbol_map.cpp">
@@ -244,7 +244,7 @@
     <ClInclude Include="hw\ndma.h">
       <Filter>hw</Filter>
     </ClInclude>
-    <ClInclude Include="hw\lcd.h">
+    <ClInclude Include="hw\gpu.h">
       <Filter>hw</Filter>
     </ClInclude>
     <ClInclude Include="arm\disassembler\load_symbol_map.h">

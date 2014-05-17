@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "core/hw/lcd.h"
+#include "core/hw/gpu.h"
 
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
@@ -77,8 +77,8 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
  */
 void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect) {
 
-    FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_top_left_1), m_xfb_top_flipped);
-    FlipFramebuffer(LCD::GetFramebufferPointer(LCD::g_regs.framebuffer_sub_left_1), m_xfb_bottom_flipped);
+    FlipFramebuffer(GPU::GetFramebufferPointer(GPU::g_regs.framebuffer_top_left_1), m_xfb_top_flipped);
+    FlipFramebuffer(GPU::GetFramebufferPointer(GPU::g_regs.framebuffer_sub_left_1), m_xfb_bottom_flipped);
 
     // Blit the top framebuffer
     // ------------------------

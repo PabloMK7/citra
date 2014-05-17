@@ -60,7 +60,7 @@ enum LOG_TYPE {
     NDMA,
     HLE,
     RENDER,
-    LCD,
+    GPU,
     HW,
     TIME,
     NETPLAY,

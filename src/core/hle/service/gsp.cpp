@@ -10,7 +10,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp.h"
 
-#include "core/hw/lcd.h"
+#include "core/hw/gpu.h"
 
 #include "video_core/gpu_debugger.h"
 
@@ -69,8 +69,8 @@ enum {
 
 /// Read a GSP GPU hardware register
 void ReadHWRegs(Service::Interface* self) {
-    static const u32 framebuffer_1[] = {LCD::PADDR_VRAM_TOP_LEFT_FRAME1, LCD::PADDR_VRAM_TOP_RIGHT_FRAME1};
-    static const u32 framebuffer_2[] = {LCD::PADDR_VRAM_TOP_LEFT_FRAME2, LCD::PADDR_VRAM_TOP_RIGHT_FRAME2};
+    static const u32 framebuffer_1[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME1, GPU::PADDR_VRAM_TOP_RIGHT_FRAME1};
+    static const u32 framebuffer_2[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME2, GPU::PADDR_VRAM_TOP_RIGHT_FRAME2};
 
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
@@ -85,13 +85,13 @@ void ReadHWRegs(Service::Interface* self) {
 
     // Top framebuffer 1 addresses
     case REG_FRAMEBUFFER_1:
-        LCD::SetFramebufferLocation(LCD::FRAMEBUFFER_LOCATION_VRAM);
+        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
         memcpy(dst, framebuffer_1, size);
         break;
 
     // Top framebuffer 2 addresses
     case REG_FRAMEBUFFER_2:
-        LCD::SetFramebufferLocation(LCD::FRAMEBUFFER_LOCATION_VRAM);
+        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
         memcpy(dst, framebuffer_2, size);
         break;
 
@@ -123,9 +123,9 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     case GXCommandId::SET_COMMAND_LIST_LAST:
-        LCD::Write<u32>(LCD::CommandListAddress, cmd_buff[1] >> 3);
-        LCD::Write<u32>(LCD::CommandListSize, cmd_buff[2] >> 3);
-        LCD::Write<u32>(LCD::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+        GPU::Write<u32>(GPU::CommandListAddress, cmd_buff[1] >> 3);
+        GPU::Write<u32>(GPU::CommandListSize, cmd_buff[2] >> 3);
+        GPU::Write<u32>(GPU::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
         break;
 
     case GXCommandId::SET_MEMORY_FILL:

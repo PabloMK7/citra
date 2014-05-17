@@ -42,8 +42,8 @@ set(SRCS    core.cpp
             hle/service/hid.cpp
             hle/service/service.cpp
             hle/service/srv.cpp
+            hw/gpu.cpp
             hw/hw.cpp
-            hw/lcd.cpp
             hw/ndma.cpp)
 
 set(HEADERS core.h
@@ -88,8 +88,8 @@ set(HEADERS core.h
             hle/service/hid.h
             hle/service/service.h
             hle/service/srv.h
+            hw/gpu.h
             hw/hw.h
-            hw/lcd.h
             hw/ndma.h)
 
 add_library(core STATIC ${SRCS} ${HEADERS})

@@ -8,12 +8,12 @@
 #include "core/core.h"
 #include "core/mem_map.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hw/lcd.h"
+#include "core/hw/gpu.h"
 
 #include "video_core/video_core.h"
 
 
-namespace LCD {
+namespace GPU {
 
 Registers g_regs;
 
@@ -61,7 +61,7 @@ const FramebufferLocation GetFramebufferLocation() {
     } else if ((g_regs.framebuffer_top_right_1 & ~Memory::FCRAM_MASK) == Memory::FCRAM_PADDR) {
         return FRAMEBUFFER_LOCATION_FCRAM;
     } else {
-        ERROR_LOG(LCD, "unknown framebuffer location!");
+        ERROR_LOG(GPU, "unknown framebuffer location!");
     }
     return FRAMEBUFFER_LOCATION_UNKNOWN;
 }
@@ -78,7 +78,7 @@ const u8* GetFramebufferPointer(const u32 address) {
     case FRAMEBUFFER_LOCATION_VRAM:
         return (const u8*)Memory::GetPointer(Memory::VirtualAddressFromPhysical_VRAM(address));
     default:
-        ERROR_LOG(LCD, "unknown framebuffer location");
+        ERROR_LOG(GPU, "unknown framebuffer location");
     }
     return NULL;
 }
@@ -123,7 +123,7 @@ inline void Read(T &var, const u32 addr) {
         break;
 
     default:
-        ERROR_LOG(LCD, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
+        ERROR_LOG(GPU, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
         break;
     }
 }
@@ -144,13 +144,13 @@ inline void Write(u32 addr, const T data) {
         if (g_regs.command_processing_enabled & 1)
         {
             // u32* buffer = (u32*)Memory::GetPointer(g_regs.command_list_address << 3);
-            ERROR_LOG(LCD, "Beginning %x bytes of commands from address %x", g_regs.command_list_size, g_regs.command_list_address << 3);
+            ERROR_LOG(GPU, "Beginning %x bytes of commands from address %x", g_regs.command_list_size, g_regs.command_list_address << 3);
             // TODO: Process command list!
         }
         break;
 
     default:
-        ERROR_LOG(LCD, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        ERROR_LOG(GPU, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
         break;
     }
 }
@@ -183,12 +183,12 @@ void Update() {
 void Init() {
     g_last_ticks = Core::g_app_core->GetTicks();
     SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
-    NOTICE_LOG(LCD, "initialized OK");
+    NOTICE_LOG(GPU, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(LCD, "shutdown OK");
+    NOTICE_LOG(GPU, "shutdown OK");
 }
 
 } // namespace
