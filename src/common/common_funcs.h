@@ -22,6 +22,11 @@ template<> struct CompileTimeAssert<true> {};
 #define b32(x)  (b16(x) | (b16(x) >>16) )
 #define ROUND_UP_POW2(x)    (b32(x - 1) + 1)
 
+#define MIN(a, b)   ((a)<(b)?(a):(b))
+#define MAX(a, b)   ((a)>(b)?(a):(b))
+
+#define CLAMP(x, min, max)  (((x) > max) ? max : (((x) < min) ? min : (x)))
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #ifndef _WIN32
