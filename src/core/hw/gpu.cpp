@@ -86,39 +86,39 @@ const u8* GetFramebufferPointer(const u32 address) {
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr) {
-    case REG_FRAMEBUFFER_TOP_LEFT_1:
+    case Registers::FramebufferTopLeft1:
         var = g_regs.framebuffer_top_left_1;
         break;
 
-    case REG_FRAMEBUFFER_TOP_LEFT_2:
+    case Registers::FramebufferTopLeft2:
         var = g_regs.framebuffer_top_left_2;
         break;
 
-    case REG_FRAMEBUFFER_TOP_RIGHT_1:
+    case Registers::FramebufferTopRight1:
         var = g_regs.framebuffer_top_right_1;
         break;
 
-    case REG_FRAMEBUFFER_TOP_RIGHT_2:
+    case Registers::FramebufferTopRight2:
         var = g_regs.framebuffer_top_right_2;
         break;
 
-    case REG_FRAMEBUFFER_SUB_LEFT_1:
+    case Registers::FramebufferSubLeft1:
         var = g_regs.framebuffer_sub_left_1;
         break;
 
-    case REG_FRAMEBUFFER_SUB_RIGHT_1:
+    case Registers::FramebufferSubRight1:
         var = g_regs.framebuffer_sub_right_1;
         break;
 
-    case CommandListSize:
+    case Registers::CommandListSize:
         var = g_regs.command_list_size;
         break;
 
-    case CommandListAddress:
+    case Registers::CommandListAddress:
         var = g_regs.command_list_address;
         break;
 
-    case ProcessCommandList:
+    case Registers::ProcessCommandList:
         var = g_regs.command_processing_enabled;
         break;
 
@@ -130,16 +130,16 @@ inline void Read(T &var, const u32 addr) {
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    switch (addr) {
-    case CommandListSize:
+    switch (static_cast<Registers::Id>(addr)) {
+    case Registers::CommandListSize:
         g_regs.command_list_size = data;
         break;
 
-    case CommandListAddress:
+    case Registers::CommandListAddress:
         g_regs.command_list_address = data;
         break;
 
-    case ProcessCommandList:
+    case Registers::ProcessCommandList:
         g_regs.command_processing_enabled = data;
         if (g_regs.command_processing_enabled & 1)
         {

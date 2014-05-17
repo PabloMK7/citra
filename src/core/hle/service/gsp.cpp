@@ -123,9 +123,9 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     case GXCommandId::SET_COMMAND_LIST_LAST:
-        GPU::Write<u32>(GPU::CommandListAddress, cmd_buff[1] >> 3);
-        GPU::Write<u32>(GPU::CommandListSize, cmd_buff[2] >> 3);
-        GPU::Write<u32>(GPU::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+        GPU::Write<u32>(GPU::Registers::CommandListAddress, cmd_buff[1] >> 3);
+        GPU::Write<u32>(GPU::Registers::CommandListSize, cmd_buff[2] >> 3);
+        GPU::Write<u32>(GPU::Registers::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
         break;
 
     case GXCommandId::SET_MEMORY_FILL:

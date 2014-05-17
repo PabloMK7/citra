@@ -9,6 +9,21 @@
 namespace GPU {
 
 struct Registers {
+    enum Id : u32 {
+        FramebufferTopLeft1     = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
+        FramebufferTopLeft2     = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
+        FramebufferTopRight1    = 0x1EF00494,   // Main LCD, first framebuffer for 3D right
+        FramebufferTopRight2    = 0x1EF00498,   // Main LCD, second framebuffer for 3D right
+        FramebufferSubLeft1     = 0x1EF00568,   // Sub LCD, first framebuffer
+        FramebufferSubLeft2     = 0x1EF0056C,   // Sub LCD, second framebuffer
+        FramebufferSubRight1    = 0x1EF00594,   // Sub LCD, unused first framebuffer
+        FramebufferSubRight2    = 0x1EF00598,   // Sub LCD, unused second framebuffer
+
+        CommandListSize         = 0x1EF018E0,
+        CommandListAddress      = 0x1EF018E8,
+        ProcessCommandList      = 0x1EF018F0,
+    };
+
     u32 framebuffer_top_left_1;
     u32 framebuffer_top_left_2;
     u32 framebuffer_top_right_1;
@@ -50,21 +65,6 @@ enum {
     PADDR_VRAM_TOP_RIGHT_FRAME2 = 0x182C8670,
     PADDR_VRAM_SUB_FRAME1       = 0x182118E0,
     PADDR_VRAM_SUB_FRAME2       = 0x18249CF0,
-};
-
-enum {
-    REG_FRAMEBUFFER_TOP_LEFT_1  = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
-    REG_FRAMEBUFFER_TOP_LEFT_2  = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
-    REG_FRAMEBUFFER_TOP_RIGHT_1 = 0x1EF00494,   // Main LCD, first framebuffer for 3D right
-    REG_FRAMEBUFFER_TOP_RIGHT_2 = 0x1EF00498,   // Main LCD, second framebuffer for 3D right
-    REG_FRAMEBUFFER_SUB_LEFT_1  = 0x1EF00568,   // Sub LCD, first framebuffer
-    REG_FRAMEBUFFER_SUB_LEFT_2  = 0x1EF0056C,   // Sub LCD, second framebuffer
-    REG_FRAMEBUFFER_SUB_RIGHT_1 = 0x1EF00594,   // Sub LCD, unused first framebuffer
-    REG_FRAMEBUFFER_SUB_RIGHT_2 = 0x1EF00598,   // Sub LCD, unused second framebuffer
-
-    CommandListSize         = 0x1EF018E0,
-    CommandListAddress      = 0x1EF018E8,
-    ProcessCommandList      = 0x1EF018F0,
 };
 
 /// Framebuffer location
