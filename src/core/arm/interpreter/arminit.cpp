@@ -23,8 +23,8 @@
 
 #include <math.h>
 
-#include "armdefs.h"
-#include "armemu.h"
+#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/interpreter/armemu.h"
 
 /***************************************************************************\
 *                 Definitions for the emulator architecture                 *
@@ -271,7 +271,7 @@ below line sould be in skyeye_mach_XXX.c 's XXX_mach_init function
 
 	/* Only initialse the coprocessor support once we
 	   know what kind of chip we are dealing with.  */
-	//ARMul_CoProInit (state); Commented out /bunnei
+	ARMul_CoProInit (state);
 
 }
 
@@ -318,7 +318,7 @@ ARMul_Reset (ARMul_State * state)
 	state->NumFcycles = 0;
 
 	//fprintf(stderr,"armul_reset 3: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);  
-	//mmu_reset (state); Commented out /bunnei
+	mmu_reset (state);
 	//fprintf(stderr,"armul_reset 4: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);  
 
 	//mem_reset (state); /* move to memory/ram.c */

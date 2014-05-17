@@ -172,18 +172,18 @@ typedef struct mmu_ops_s
 } mmu_ops_t;
 
 
-#include "core/arm/mmu/tlb.h"
-#include "core/arm/mmu/rb.h"
-#include "core/arm/mmu/wb.h"
-#include "core/arm/mmu/cache.h"
+#include "core/arm/interpreter/mmu/tlb.h"
+#include "core/arm/interpreter/mmu/rb.h"
+#include "core/arm/interpreter/mmu/wb.h"
+#include "core/arm/interpreter/mmu/cache.h"
 
 /*special process mmu.h*/
-//#include "core/arm/mmu/sa_mmu.h"
-//#include "core/arm/mmu/arm7100_mmu.h"
-//#include "core/arm/mmu/arm920t_mmu.h"
-//#include "core/arm/mmu/arm926ejs_mmu.h"
-#include "core/arm/mmu/arm1176jzf_s_mmu.h"
-//#include "core/arm/mmu/cortex_a9_mmu.h"
+#include "core/arm/interpreter/mmu/sa_mmu.h"
+//#include "core/arm/interpreter/mmu/arm7100_mmu.h"
+//#include "core/arm/interpreter/mmu/arm920t_mmu.h"
+//#include "core/arm/interpreter/mmu/arm926ejs_mmu.h"
+#include "core/arm/interpreter/mmu/arm1176jzf_s_mmu.h"
+//#include "core/arm/interpreter/mmu/cortex_a9_mmu.h"
 
 typedef struct mmu_state_t
 {
@@ -213,13 +213,13 @@ typedef struct mmu_state_t
 	ARMword copro_access;	// 15
 
 	mmu_ops_t ops;
-	//union
-	//{
-		//sa_mmu_t sa_mmu;
+	union
+	{
+		sa_mmu_t sa_mmu;
 		//arm7100_mmu_t arm7100_mmu;
 		//arm920t_mmu_t arm920t_mmu;
 		//arm926ejs_mmu_t arm926ejs_mmu;
-	//} u;
+	} u;
 } mmu_state_t;
 
 int mmu_init (ARMul_State * state);

@@ -23,17 +23,6 @@
 #include "armemu.h"
 #include "armos.h"
 
-void
-XScale_set_fsr_far(ARMul_State * state, ARMword fsr, ARMword _far)
-{
-    _dbg_assert_msg_(ARM11, false, "ImplementMe: XScale_set_fsr_far!");
-    //if (!state->is_XScale || (read_cp14_reg(10) & (1UL << 31)) == 0)
-    //    return;
-    //
-    //write_cp15_reg(state, 5, 0, 0, fsr);
-    //write_cp15_reg(state, 6, 0, 0, _far);
-}
-
 #define ARMul_Debug(x,y,z) 0 // Disabling this /bunnei
 
 //#include "skyeye_callback.h"
