@@ -12,6 +12,7 @@ add_definitions(-DSINGLETHREADED)
 add_definitions(${GCC_COMPILE_FLAGS})
 
 # dependency checking
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
 include(FindX11 REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -48,7 +49,6 @@ if(NOT DISABLE_QT4)
 endif()
 
 # generate git revision information
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REF_SPEC GIT_REV)
 git_describe(GIT_DESC --always --long --dirty)
