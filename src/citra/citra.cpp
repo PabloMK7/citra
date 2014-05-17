@@ -18,26 +18,24 @@
 int __cdecl main(int argc, char **argv) {
     std::string program_dir = File::GetCurrentDir();
 
-	LogManager::Init();
+    LogManager::Init();
 
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
-	System::Init(emu_window);
+    System::Init(emu_window);
 
     std::string boot_filename = "homebrew.elf";
     std::string error_str;
-    
+
     bool res = Loader::LoadFile(boot_filename, &error_str);
 
     if (!res) {
         ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
     }
 
-    for (;;) {
-        Core::SingleStep();
-    }
+    Core::RunLoop();
 
     delete emu_window;
 
-	return 0;
+    return 0;
 }

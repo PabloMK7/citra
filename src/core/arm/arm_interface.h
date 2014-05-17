@@ -17,12 +17,20 @@ public:
     ~ARM_Interface() {
     }
 
+    /**
+     * Runs the CPU for the given number of instructions
+     * @param num_instructions Number of instructions to run
+     */
+    void Run(int num_instructions) {
+        ExecuteInstructions(num_instructions);
+        m_num_instructions += num_instructions;
+    }
+
     /// Step CPU by one instruction
     void Step() {
-        ExecuteInstruction();
-        m_num_instructions++;
+        Run(1);
     }
- 
+
     /**
      * Set the Program Counter to an address
      * @param addr Address to set PC to
@@ -68,8 +76,11 @@ public:
 
 protected:
     
-    /// Execture next instruction
-    virtual void ExecuteInstruction() = 0;
+    /**
+     * Executes the given number of instructions
+     * @param num_instructions Number of instructions to executes
+     */
+    virtual void ExecuteInstructions(int num_instructions) = 0;
 
 private:
 

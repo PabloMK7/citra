@@ -56,8 +56,11 @@ public:
 
 protected:
 
-    /// Execture next instruction
-    void ExecuteInstruction();
+    /**
+     * Executes the given number of instructions
+     * @param num_instructions Number of instructions to executes
+     */
+    void ExecuteInstructions(int num_instructions);
 
 private:
 
