@@ -6,6 +6,9 @@
 
 #include "core/mem_map.h"
 
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/thread.h"
+
 #include "core/hle/function_wrappers.h"
 #include "core/hle/syscall.h"
 #include "core/hle/service/service.h"
@@ -140,19 +143,23 @@ Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void*
     return 0;
 }
 
-Result CreateThread(void* thread, u32 thread_priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
-    std::string thread_name;
+Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 stack_top, 
+    u32 processor_id) {
+    std::string name;
     if (Symbols::HasSymbol(entry_point)) {
         TSymbol symbol = Symbols::GetSymbol(entry_point);
-        thread_name = symbol.name;
+        name = symbol.name;
     } else {
         char buff[100];
-        sprintf(buff, "%s", "unk-%08X", entry_point);
-        thread_name = buff;
+        sprintf(buff, "%s", "unknown-%08X", entry_point);
+        name = buff;
     }
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, "
-        "stacktop=0x%08X, threadpriority=0x%08X, processorid=0x%08X", entry_point, 
-        thread_name.c_str(), arg, stack_top, thread_priority, processor_id);
+    DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
+        "threadpriority=0x%08X, processorid=0x%08X", entry_point, name.c_str(), arg, stack_top,
+        priority, processor_id);
+
+    Handle handle = __KernelCreateThread(name.c_str(), entry_point, priority, processor_id, 
+        stack_top);
 
     return 0;
 }
