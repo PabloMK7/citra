@@ -89,12 +89,53 @@ bool Load_DAT(std::string &filename) {
         * but for the sake of making it easier... we'll temporarily/hackishly
         * allow it. No sense in making a proper reader for this.
         */
-        u32 entrypoint = 0x080c3ee0; // write to same entrypoint as elf
-        u32 payload_offset = 0x6F4;
+        u32 entrypoint = 0x00100000; // write to same entrypoint as elf
+        u32 payload_offset = 0xA150;
         
         const u8 *src = &buffer[payload_offset];
         u8 *dst = Memory::GetPointer(entrypoint);
         u32 srcSize = size - payload_offset; //just load everything...
+        u32 *s = (u32*)src;
+        u32 *d = (u32*)dst;
+        for (int j = 0; j < (int)(srcSize + 3) / 4; j++)
+        {
+            *d++ = (*s++);
+        }
+        
+        Core::g_app_core->SetPC(entrypoint);
+
+        delete[] buffer;
+    }
+    else {
+        return false;
+    }
+    f.Close();
+
+    return true;
+}
+
+
+/// Loads a CTR BIN file extracted from an ExeFS
+bool Load_BIN(std::string &filename) {
+    std::string full_path = filename;
+    std::string path, file, extension;
+    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
+#if EMU_PLATFORM == PLATFORM_WINDOWS
+    path = ReplaceAll(path, "/", "\\");
+#endif
+    File::IOFile f(filename, "rb");
+
+    if (f.IsOpen()) {
+        u64 size = f.GetSize();
+        u8* buffer = new u8[size];
+
+        f.ReadBytes(buffer, size);
+
+        u32 entrypoint = 0x00100000; // Hardcoded, read from exheader
+        
+        const u8 *src = buffer;
+        u8 *dst = Memory::GetPointer(entrypoint);
+        u32 srcSize = size;
         u32 *s = (u32*)src;
         u32 *d = (u32*)dst;
         for (int j = 0; j < (int)(srcSize + 3) / 4; j++)
@@ -145,6 +186,9 @@ FileType IdentifyFile(std::string &filename) {
     else if (!strcasecmp(extension.c_str(), ".elf")) {
         return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
     }
+    else if (!strcasecmp(extension.c_str(), ".bin")) {
+        return FILETYPE_CTR_BIN;
+    }
     else if (!strcasecmp(extension.c_str(), ".dat")) {
         return FILETYPE_LAUNCHER_DAT;
     }
@@ -177,6 +221,9 @@ bool LoadFile(std::string &filename, std::string *error_string) {
 
     case FILETYPE_CTR_ELF:
         return Load_ELF(filename);
+
+    case FILETYPE_CTR_BIN:
+        return Load_BIN(filename);
 
     case FILETYPE_LAUNCHER_DAT:
         return Load_DAT(filename);
@@ -215,7 +262,7 @@ bool LoadFile(std::string &filename, std::string *error_string) {
     case FILETYPE_UNKNOWN:
     default:
         ERROR_LOG(LOADER, "Failed to identify file");
-        *error_string = "Failed to identify file";
+        *error_string = " Failed to identify file";
         break;
     }
     return false;

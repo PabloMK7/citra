@@ -10,6 +10,7 @@
 
 #include "common/common.h"
 #include "common/common_types.h"
+#include "core/mem_map.h"
 #include "core/hle/syscall.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,6 +22,15 @@ typedef s32 NativeUID;                          ///< Native handle for a service
 
 static const int kMaxPortSize           = 0x08; ///< Maximum size of a port name (8 characters)
 static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer of header
+
+/**
+ * Returns a pointer to the command buffer in kernel memory
+ * @param offset Optional offset into command buffer
+ * @return Pointer to command buffer
+ */
+inline static u32* GetCommandBuffer(const int offset=0) {
+    return (u32*)Memory::GetPointer(Memory::KERNEL_MEMORY_VADDR + kCommandHeaderOffset + offset);
+}
 
 class Manager;
 
@@ -81,7 +91,7 @@ public:
      * @return Return result of svcSendSyncRequest passed back to user app
      */
     Syscall::Result Sync() {
-        u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + kCommandHeaderOffset);
+        u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end()) {

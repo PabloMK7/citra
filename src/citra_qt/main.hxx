@@ -33,10 +33,11 @@ private:
     void closeEvent(QCloseEvent* event);
 
 private slots:
-	void OnStartGame();
-	void OnPauseGame();
-	void OnStopGame();
-	void OnMenuLoadFile();
+    void OnStartGame();
+    void OnPauseGame();
+    void OnStopGame();
+    void OnMenuLoadFile();
+    void OnMenuLoadSymbolMap();
     void OnOpenHotkeysDialog();
     void OnConfigure();
     void ToggleWindowMode();

@@ -42,7 +42,7 @@ LogManager::LogManager()
     m_Log[LogTypes::STREAMINGINTERFACE] = new LogContainer("Stream",            "StreamingInt");
     m_Log[LogTypes::DSPINTERFACE]       = new LogContainer("DSP",               "DSPInterface");
     m_Log[LogTypes::DVDINTERFACE]       = new LogContainer("DVD",               "DVDInterface");
-    m_Log[LogTypes::GPFIFO]             = new LogContainer("GP",                "GPFifo");
+    m_Log[LogTypes::GSP]                = new LogContainer("GSP",               "GSP");
     m_Log[LogTypes::EXPANSIONINTERFACE] = new LogContainer("EXI",               "ExpansionInt");
     m_Log[LogTypes::GDB_STUB]           = new LogContainer("GDB_STUB",          "GDB Stub");
     m_Log[LogTypes::AUDIO_INTERFACE]    = new LogContainer("AI",                "AudioInt");
@@ -66,7 +66,7 @@ LogManager::LogManager()
     m_Log[LogTypes::WII_IPC_FILEIO]     = new LogContainer("WII_IPC_FILEIO",    "WII IPC FILEIO");
     m_Log[LogTypes::RENDER]             = new LogContainer("RENDER",            "RENDER");
     m_Log[LogTypes::LCD]                = new LogContainer("LCD",               "LCD");
-    m_Log[LogTypes::WII_IPC_NET]        = new LogContainer("WII_IPC_NET",       "WII IPC NET");
+    m_Log[LogTypes::SVC]                = new LogContainer("SVC",               "Supervisor Call");
     m_Log[LogTypes::NDMA]               = new LogContainer("NDMA",              "NDMA");
     m_Log[LogTypes::HLE]                = new LogContainer("HLE",               "High Level Emulation");
     m_Log[LogTypes::HW]                 = new LogContainer("HW",                "Hardware");
@@ -147,7 +147,7 @@ LogContainer::LogContainer(const char* shortName, const char* fullName, bool ena
 {
     strncpy(m_fullName, fullName, 128);
     strncpy(m_shortName, shortName, 32);
-    m_level = LogTypes::LWARNING;
+    m_level = (LogTypes::LOG_LEVELS)MAX_LOGLEVEL;
 }
 
 // LogContainer

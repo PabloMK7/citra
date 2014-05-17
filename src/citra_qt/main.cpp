@@ -23,6 +23,7 @@
 #include "core/system.h"
 #include "core/loader.h"
 #include "core/core.h"
+#include "core/arm/disassembler/load_symbol_map.h"
 #include "version.h"
 
 
@@ -74,6 +75,7 @@ GMainWindow::GMainWindow()
 
     // Setup connections
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
+    connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
@@ -140,9 +142,15 @@ void GMainWindow::BootGame(const char* filename)
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS homebrew (*.elf *.dat)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS homebrew (*.elf *.dat *.bin)"));
     if (filename.size())
        BootGame(filename.toLatin1().data());
+}
+
+void GMainWindow::OnMenuLoadSymbolMap() {
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load symbol map"), QString(), tr("Symbol map (*)"));
+    if (filename.size())
+        LoadSymbolMap(filename.toLatin1().data());
 }
 
 void GMainWindow::OnStartGame()

@@ -18,7 +18,7 @@ void Initialize(Service::Interface* self) {
 
 void GetServiceHandle(Service::Interface* self) {
     Syscall::Result res = 0;
-    u32* cmd_buff = (u32*)HLE::GetPointer(HLE::CMD_BUFFER_ADDR + Service::kCommandHeaderOffset);
+    u32* cmd_buff = Service::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);

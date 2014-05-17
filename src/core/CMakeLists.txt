@@ -5,7 +5,9 @@ set(SRCS    core.cpp
             mem_map_funcs.cpp
             system.cpp
             arm/disassembler/arm_disasm.cpp
+            arm/disassembler/load_symbol_map.cpp
             arm/interpreter/arm_interpreter.cpp
+            arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
             arm/interpreter/armmmu.cpp
@@ -13,12 +15,24 @@ set(SRCS    core.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
-            arm/mmu/arm1176jzf_s_mmu.cpp
+            arm/interpreter/vfp/vfp.cpp
+            arm/interpreter/vfp/vfpdouble.cpp
+            arm/interpreter/vfp/vfpinstr.cpp
+            arm/interpreter/vfp/vfpsingle.cpp
+            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
+            arm/interpreter/mmu/cache.cpp
+            arm/interpreter/mmu/maverick.cpp
+            arm/interpreter/mmu/rb.cpp
+            arm/interpreter/mmu/sa_mmu.cpp
+            arm/interpreter/mmu/tlb.cpp
+            arm/interpreter/mmu/wb.cpp
+            arm/interpreter/mmu/xscale_copro.cpp
             elf/elf_reader.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
             hle/hle.cpp
-            hle/mrc.cpp
+            hle/config_mem.cpp
+            hle/coprocessor.cpp
             hle/syscall.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp

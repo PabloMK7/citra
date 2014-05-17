@@ -63,14 +63,7 @@ typedef struct tlb_s
 #define tlb_b_flag(tlb) \
     ((tlb)->perms & 0x4)
 
-#define  tlb_va_to_pa(tlb, va) \
-(\
- {\
-    ARMword mask = tlb_masks[tlb->mapping];      \
-    (tlb->phys_addr & mask) | (va & ~mask);\
- }\
-)
-
+#define  tlb_va_to_pa(tlb, va) ((tlb->phys_addr & tlb_masks[tlb->mapping]) | (va & ~tlb_masks[tlb->mapping]))
 fault_t
 check_access (ARMul_State * state, ARMword virt_addr, tlb_entry_t * tlb,
           int read);

@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#include "arm_interpreter.h"
+#include "core/arm/interpreter/arm_interpreter.h"
 
 const static cpu_config_t s_arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE

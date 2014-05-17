@@ -15,12 +15,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
-#include "armdefs.h"
-#include "armemu.h"
-
-//#include "ansidecl.h"
-#include "skyeye_defs.h"
-#include "core/hle/mrc.h"
+#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/interpreter/armemu.h"
+#include "core/arm/interpreter/skyeye_defs.h"
+#include "core/hle/coprocessor.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
@@ -127,8 +125,7 @@ ARMul_GetCPSR (ARMul_State * state)
 {
 	//chy 2003-08-20: below is from gdb20030716, maybe isn't suitable for system simulator
 	//return (CPSR | state->Cpsr); for gdb20030716
-    // NOTE(bunnei): Changed this from [now] commented out macro "CPSR"
-    return ((ECC | EINT | EMODE | (TFLAG << 5)));	//had be tested in old skyeye with gdb5.0-5.3
+	return (CPSR);		//had be tested in old skyeye with gdb5.0-5.3
 }
 
 /* This routine sets the value of the CPSR.  */
@@ -145,7 +142,7 @@ ARMul_SetCPSR (ARMul_State * state, ARMword value)
 
 void
 ARMul_FixCPSR (ARMul_State * state, ARMword instr, ARMword rhs)
-{  
+{
 	state->Cpsr = ARMul_GetCPSR (state);
 	//chy 2006-02-16 , should not consider system mode, don't conside 26bit mode
 	if (state->Mode != USER26MODE && state->Mode != USER32MODE ) {
@@ -500,8 +497,8 @@ ARMul_LDC (ARMul_State * state, ARMword instr, ARMword address)
 		return;
 	}
 
-	if (ADDREXCEPT (address))
-		INTERNALABORT (address);
+	//if (ADDREXCEPT (address))
+	//	INTERNALABORT (address);
 
 	cpab = (state->LDC[CPNum]) (state, ARMul_FIRST, instr, 0);
 	while (cpab == ARMul_BUSY) {
@@ -594,8 +591,8 @@ ARMul_STC (ARMul_State * state, ARMword instr, ARMword address)
 		return;
 	}
 
-	if (ADDREXCEPT (address) || VECTORACCESS (address))
-		INTERNALABORT (address);
+	//if (ADDREXCEPT (address) || VECTORACCESS (address))
+	//	INTERNALABORT (address);
 
 	cpab = (state->STC[CPNum]) (state, ARMul_FIRST, instr, &data);
 	while (cpab == ARMul_BUSY) {
@@ -739,39 +736,43 @@ ARMul_MRC (ARMul_State * state, ARMword instr)
 {
 	unsigned cpab;
 
-	ARMword result = HLE::CallMRC((HLE::ARM11_MRC_OPERATION)BITS(20, 27));
+	ARMword result = HLE::CallMRC(instr);
 
-	////printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
-	//if (!CP_ACCESS_ALLOWED (state, CPNum)) {
-	//	//chy 2004-07-19 should fix in the future????!!!!
-	//	//printf("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n",CPNum, instr);
-	//	ARMul_UndefInstr (state, instr);
-	//	return -1;
-	//}
+	if (result != -1) {
+		return result;
+	}
 
-	//cpab = (state->MRC[CPNum]) (state, ARMul_FIRST, instr, &result);
-	//while (cpab == ARMul_BUSY) {
-	//	ARMul_Icycles (state, 1, 0);
-	//	if (IntPending (state)) {
-	//		cpab = (state->MRC[CPNum]) (state, ARMul_INTERRUPT,
-	//					    instr, 0);
-	//		return (0);
-	//	}
-	//	else
-	//		cpab = (state->MRC[CPNum]) (state, ARMul_BUSY, instr,
-	//					    &result);
-	//}
-	//if (cpab == ARMul_CANT) {
-	//	printf ("SKYEYE ARMul_MRC,CANT UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
-	//	ARMul_Abort (state, ARMul_UndefinedInstrV);
-	//	/* Parent will destroy the flags otherwise.  */
-	//	result = ECC;
-	//}
-	//else {
-	//	BUSUSEDINCPCN;
-	//	ARMul_Ccycles (state, 1, 0);
-	//	ARMul_Icycles (state, 1, 0);
-	//}
+	//printf("SKYEYE ARMul_MRC, CPnum is %x, instr %x\n",CPNum, instr);
+	if (!CP_ACCESS_ALLOWED (state, CPNum)) {
+		//chy 2004-07-19 should fix in the future????!!!!
+		//printf("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n",CPNum, instr);
+		ARMul_UndefInstr (state, instr);
+		return -1;
+	}
+
+	cpab = (state->MRC[CPNum]) (state, ARMul_FIRST, instr, &result);
+	while (cpab == ARMul_BUSY) {
+		ARMul_Icycles (state, 1, 0);
+		if (IntPending (state)) {
+			cpab = (state->MRC[CPNum]) (state, ARMul_INTERRUPT,
+						    instr, 0);
+			return (0);
+		}
+		else
+			cpab = (state->MRC[CPNum]) (state, ARMul_BUSY, instr,
+						    &result);
+	}
+	if (cpab == ARMul_CANT) {
+		printf ("SKYEYE ARMul_MRC,CANT UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
+		ARMul_Abort (state, ARMul_UndefinedInstrV);
+		/* Parent will destroy the flags otherwise.  */
+		result = ECC;
+	}
+	else {
+		BUSUSEDINCPCN;
+		ARMul_Ccycles (state, 1, 0);
+		ARMul_Icycles (state, 1, 0);
+	}
 
 	return result;
 }
@@ -906,9 +907,7 @@ ARMul_ScheduleEvent (ARMul_State * state, unsigned int delay,
 		state->Now = ARMul_Time (state);
 	when = (state->Now + delay) % EVENTLISTSIZE;
 	event = (struct EventNode *) malloc (sizeof (struct EventNode));
-
 	_dbg_assert_msg_(ARM11, event, "SKYEYE:ARMul_ScheduleEvent: malloc event error\n");
-
 	event->func = what;
 	event->next = *(state->EventPtr + when);
 	*(state->EventPtr + when) = event;
