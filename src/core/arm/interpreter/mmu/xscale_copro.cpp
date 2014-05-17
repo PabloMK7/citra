@@ -412,7 +412,8 @@ unsigned xscale_cp15_write_reg (ARMul_State * state, unsigned reg,
 	return 0;
 }
 
-int xscale_cp15_init (ARMul_State * state)
+unsigned
+xscale_cp15_init (ARMul_State * state)
 {
 	xscale_mmu_desc_t *desc;
 	cache_desc_t *c_desc;
@@ -489,7 +490,8 @@ int xscale_cp15_init (ARMul_State * state)
 	return -1;
 }
 
-void xscale_cp15_exit (ARMul_State * state)
+unsigned
+xscale_cp15_exit (ARMul_State * state)
 {
 	//mmu_rb_exit(RB());
 	mmu_wb_exit (WB ());
@@ -498,6 +500,7 @@ void xscale_cp15_exit (ARMul_State * state)
 	mmu_tlb_exit (D_TLB ());
 	mmu_cache_exit (I_CACHE ());
 	mmu_tlb_exit (I_TLB ());
+	return 0;
 };
 
 
@@ -1372,17 +1375,17 @@ static int xscale_mmu_v2p_dbct (ARMul_State * state, ARMword virt_addr,
 //AJ2D--------------------------------------------------------------------------
 
 /*xscale mmu_ops_t*/
-mmu_ops_t xscale_mmu_ops = {
-	xscale_cp15_init,
-		xscale_cp15_exit,
-		xscale_mmu_read_byte,
-		xscale_mmu_write_byte,
-		xscale_mmu_read_halfword,
-		xscale_mmu_write_halfword,
-		xscale_mmu_read_word,
-		xscale_mmu_write_word,
-		xscale_mmu_load_instr, xscale_mmu_mcr, xscale_mmu_mrc,
-//teawater add for arm2x86 2005.06.24-------------------------------------------
-		xscale_mmu_v2p_dbct,
-//AJ2D--------------------------------------------------------------------------
-};
+//mmu_ops_t xscale_mmu_ops = {
+//	xscale_cp15_init,
+//		xscale_cp15_exit,
+//		xscale_mmu_read_byte,
+//		xscale_mmu_write_byte,
+//		xscale_mmu_read_halfword,
+//		xscale_mmu_write_halfword,
+//		xscale_mmu_read_word,
+//		xscale_mmu_write_word,
+//		xscale_mmu_load_instr, xscale_mmu_mcr, xscale_mmu_mrc,
+////teawater add for arm2x86 2005.06.24-------------------------------------------
+//		xscale_mmu_v2p_dbct,
+////AJ2D--------------------------------------------------------------------------
+//};

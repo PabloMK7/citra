@@ -84,8 +84,8 @@ void vfp_put_float(ARMul_State * state, int32_t val, unsigned int reg);
 uint64_t vfp_get_double(ARMul_State * state, unsigned int reg);
 void vfp_put_double(ARMul_State * state, uint64_t val, unsigned int reg);
 void vfp_raise_exceptions(ARMul_State * state, uint32_t exceptions, uint32_t inst, uint32_t fpscr);
-extern uint32_t vfp_single_cpdo(ARMul_State * state, uint32_t inst, uint32_t fpscr);
-extern uint32_t vfp_double_cpdo(ARMul_State * state, uint32_t inst, uint32_t fpscr);
+u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
+u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 
 /* MRC */
 inline void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);

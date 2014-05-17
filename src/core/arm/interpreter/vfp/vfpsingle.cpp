@@ -51,8 +51,9 @@
  * ===========================================================================
  */
 
-#include "vfp_helper.h"
-#include "asm_vfp.h"
+#include "core/arm/interpreter/vfp/vfp_helper.h"
+#include "core/arm/interpreter/vfp/asm_vfp.h"
+#include "core/arm/interpreter/vfp/vfp.h"
 
 static struct vfp_single vfp_single_default_qnan = {
 	//.exponent	= 255,
