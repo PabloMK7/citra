@@ -16,6 +16,7 @@
     <ClInclude Include="renderer_opengl\renderer_opengl.h">
       <Filter>renderer_opengl</Filter>
     </ClInclude>
+    <ClInclude Include="gpu_debugger.h" />
     <ClInclude Include="renderer_base.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="video_core.h" />

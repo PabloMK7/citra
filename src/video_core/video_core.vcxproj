@@ -24,10 +24,11 @@
     <ClCompile Include="video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gpu_debugger.h" />
     <ClInclude Include="renderer_base.h" />
-    <ClInclude Include="renderer_opengl\renderer_opengl.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="video_core.h" />
+    <ClInclude Include="renderer_opengl\renderer_opengl.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

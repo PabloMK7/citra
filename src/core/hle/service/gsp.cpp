@@ -16,6 +16,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Main graphics debugger object - TODO: Here is probably not the best place for this
+GraphicsDebugger g_debugger;
+
 /// GSP shared memory GX command buffer header
 union GX_CmdBufferHeader {
     u32 hex;
@@ -45,6 +48,9 @@ static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
 /// Finishes execution of a GSP command
 void GX_FinishCommand(u32 thread_id) {
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
+
+    g_debugger.GXCommandProcessed(GX_GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
+
     header->number_commands = header->number_commands - 1;
     // TODO: Increment header->index?
 }
