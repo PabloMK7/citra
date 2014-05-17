@@ -16,10 +16,9 @@ enum KernelIDType {
 };
 
 enum {
-    KERNELOBJECT_MAX_NAME_LENGTH = 255,
+    KERNEL_MAX_NAME_LENGTH      = 0x100,
+    KERNEL_DEFAULT_STACK_SIZE   = 0x4000,
 };
-
-#define KERNELOBJECT_MAX_NAME_LENGTH 31
 
 class KernelObjectPool;
 

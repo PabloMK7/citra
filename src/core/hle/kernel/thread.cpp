@@ -81,7 +81,7 @@ public:
 
     WaitType wait_type;
 
-    char name[KERNELOBJECT_MAX_NAME_LENGTH+1];
+    char name[KERNEL_MAX_NAME_LENGTH+1];
 };
 
 // Lists all thread ids that aren't deleted/etc.
@@ -165,7 +165,8 @@ void __KernelResetThread(Thread *t, s32 lowest_priority) {
 }
 
 /// Creates a new thread
-Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, s32 priority, s32 processor_id, u32 stack_top, int stack_size=0x4000) {
+Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, s32 priority, 
+    s32 processor_id, u32 stack_top, int stack_size) {
     static u32 _handle_count = 1;
     
     Thread *t = new Thread;
@@ -183,8 +184,8 @@ Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, 
     t->processor_id = processor_id;
     t->wait_type = WAITTYPE_NONE;
     
-    strncpy(t->name, name, KERNELOBJECT_MAX_NAME_LENGTH);
-    t->name[KERNELOBJECT_MAX_NAME_LENGTH] = '\0';
+    strncpy(t->name, name, KERNEL_MAX_NAME_LENGTH);
+    t->name[KERNEL_MAX_NAME_LENGTH] = '\0';
     
     return t;
 }
