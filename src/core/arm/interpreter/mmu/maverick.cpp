@@ -86,12 +86,12 @@ static union
 } reg_conv;
 
 static void
-printf_nothing (void *foo, ...)
+printf_nothing (const char *foo, ...)
 {
 }
 
 static void
-cirrus_not_implemented (char *insn)
+cirrus_not_implemented (const char *insn)
 {
 	fprintf (stderr, "Cirrus instruction '%s' not implemented.\n", insn);
 	fprintf (stderr, "aborting!\n");
