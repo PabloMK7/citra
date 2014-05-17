@@ -31,5 +31,5 @@ Handle __KernelSetupMainThread(s32 priority, int stack_size=KERNEL_DEFAULT_STACK
 void __KernelThreadingInit();
 void __KernelThreadingShutdown();
 
-/// Wait thread - on WaitSynchronization
+/// Put current thread in a wait state - on WaitSynchronization
 void __KernelWaitThread_Synchronization();

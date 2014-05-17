@@ -354,7 +354,7 @@ void __KernelReschedule(const char *reason) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Wait thread - on WaitSynchronization
+/// Put current thread in a wait state - on WaitSynchronization
 void __KernelWaitThread_Synchronization() {
     // TODO(bunnei): Just a placeholder function for now... FixMe
     __KernelWaitCurThread(WAITTYPE_SYNCH, "waitSynchronization called");
