@@ -21,20 +21,14 @@
 
 // Enums
 
-enum ThreadPriority {
-    THREADPRIO_HIGHEST = 0,
-    THREADPRIO_DEFAULT = 16,
-    THREADPRIO_LOWEST = 31,
-};
-
 enum ThreadStatus {
-    THREADSTATUS_RUNNING = 1,
-    THREADSTATUS_READY   = 2,
-    THREADSTATUS_WAIT    = 4,
-    THREADSTATUS_SUSPEND = 8,
-    THREADSTATUS_DORMANT = 16,
-    THREADSTATUS_DEAD    = 32,
-    THREADSTATUS_WAITSUSPEND = THREADSTATUS_WAIT | THREADSTATUS_SUSPEND
+    THREADSTATUS_RUNNING        = 1,
+    THREADSTATUS_READY          = 2,
+    THREADSTATUS_WAIT           = 4,
+    THREADSTATUS_SUSPEND        = 8,
+    THREADSTATUS_DORMANT        = 16,
+    THREADSTATUS_DEAD           = 32,
+    THREADSTATUS_WAITSUSPEND    = THREADSTATUS_WAIT | THREADSTATUS_SUSPEND
 };
 
 enum WaitType {
@@ -46,8 +40,6 @@ enum WaitType {
     WAITTYPE_VBLANK,
     WAITTYPE_MUTEX,
     WAITTYPE_SYNCH,
-    
-    NUM_WAITTYPES
 };
 
 typedef s32 Handle;
@@ -164,32 +156,6 @@ void __KernelResetThread(Thread *t, s32 lowest_priority) {
     t->wait_type = WAITTYPE_NONE;
 }
 
-/// Creates a new thread
-Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, s32 priority, 
-    s32 processor_id, u32 stack_top, int stack_size) {
-    static u32 _handle_count = 1;
-    
-    Thread *t = new Thread;
-    
-    handle = (_handle_count++);
-    
-    g_thread_queue.push_back(handle);
-    g_thread_ready_queue.prepare(priority);
-    
-    t->status = THREADSTATUS_DORMANT;
-    t->entry_point = entry_point;
-    t->stack_top = stack_top;
-    t->stack_size = stack_size;
-    t->initial_priority = t->current_priority = priority;
-    t->processor_id = processor_id;
-    t->wait_type = WAITTYPE_NONE;
-    
-    strncpy(t->name, name, KERNEL_MAX_NAME_LENGTH);
-    t->name[KERNEL_MAX_NAME_LENGTH] = '\0';
-    
-    return t;
-}
-
 /// Change a thread to "ready" state
 void __KernelChangeReadyState(Thread *t, bool ready) {
     Handle handle = t->GetHandle();
@@ -220,6 +186,79 @@ void __KernelChangeThreadState(Thread *t, ThreadStatus new_status) {
             printf("ERROR: Waittype none not allowed here\n");
         }
     }
+}
+
+/// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
+void __KernelCallThread(Thread *t) {
+    // Stop waiting
+    if (t->wait_type != WAITTYPE_NONE) {
+        t->wait_type = WAITTYPE_NONE;
+    }
+    __KernelChangeThreadState(t, THREADSTATUS_READY);
+}
+
+/// Creates a new thread
+Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, s32 priority,
+    s32 processor_id, u32 stack_top, int stack_size) {
+
+    Thread *t = new Thread;
+    
+    handle = g_kernel_objects.Create(t);
+    
+    g_thread_queue.push_back(handle);
+    g_thread_ready_queue.prepare(priority);
+    
+    t->status = THREADSTATUS_DORMANT;
+    t->entry_point = entry_point;
+    t->stack_top = stack_top;
+    t->stack_size = stack_size;
+    t->initial_priority = t->current_priority = priority;
+    t->processor_id = processor_id;
+    t->wait_type = WAITTYPE_NONE;
+    
+    strncpy(t->name, name, KERNEL_MAX_NAME_LENGTH);
+    t->name[KERNEL_MAX_NAME_LENGTH] = '\0';
+    
+    return t;
+}
+
+/// Creates a new thread - wrapper for external user
+Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority, s32 processor_id,
+    u32 stack_top, int stack_size) {
+    if (name == NULL) {
+        ERROR_LOG(KERNEL, "__KernelCreateThread(): NULL name");
+        return -1;
+    }
+    if ((u32)stack_size < 0x200) {
+        ERROR_LOG(KERNEL, "__KernelCreateThread(name=%s): invalid stack_size=0x%08X", name, 
+            stack_size);
+        return -1;
+    }
+    if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
+        s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
+        WARN_LOG(KERNEL, "__KernelCreateThread(name=%s): invalid priority=0x%08X, clamping to %08X",
+            name, priority, new_priority);
+        // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
+        // validity of this
+        priority = new_priority;
+    }
+    if (!Memory::GetPointer(entry_point)) {
+        ERROR_LOG(KERNEL, "__KernelCreateThread(name=%s): invalid entry %08x", name, entry_point);
+        return -1;
+    }
+    Handle handle;
+    Thread *t = __KernelCreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
+        stack_size);
+
+    HLE::EatCycles(32000);
+
+    // This won't schedule to the new thread, but it may to one woken from eating cycles.
+    // Technically, this should not eat all at once, and reschedule in the middle, but that's hard.
+    HLE::ReSchedule("thread created");
+
+    __KernelCallThread(t);
+    
+    return handle;
 }
 
 /// Switches CPU context to that of the specified thread
@@ -262,22 +301,13 @@ Thread *__KernelNextThread() {
     return g_kernel_objects.GetFast<Thread>(next);
 }
 
-/// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
-void __KernelCallThread(Thread *t) {
-    // Stop waiting
-    if (t->wait_type != WAITTYPE_NONE) {
-        t->wait_type = WAITTYPE_NONE;
-    }
-    __KernelChangeThreadState(t, THREADSTATUS_READY);
-}
-
 /// Sets up the primary application thread
 Handle __KernelSetupMainThread(s32 priority, int stack_size) {
     Handle handle;
     
     // Initialize new "main" thread
     Thread *t = __KernelCreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
-        0xFFFFFFFE, Memory::SCRATCHPAD_VADDR_END, stack_size);
+        THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
     
     __KernelResetThread(t, 0);
     
@@ -322,6 +352,15 @@ void __KernelReschedule(const char *reason) {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// Wait thread - on WaitSynchronization
+void __KernelWaitThread_Synchronization() {
+    // TODO(bunnei): Just a placeholder function for now... FixMe
+    __KernelWaitCurThread(WAITTYPE_SYNCH, "waitSynchronization called");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void __KernelThreadingInit() {
 }
