@@ -287,13 +287,13 @@ static u32 vfp_double_fneg(ARMul_State* state, int dd, int unused, int dm, u32 f
 static u32 vfp_double_fsqrt(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
 	pr_debug("In %s\n", __FUNCTION__);
-	struct vfp_double vdm, vdd;
+	struct vfp_double vdm, vdd, *vdp;
 	int ret, tm;
 
 	vfp_double_unpack(&vdm, vfp_get_double(state, dm));
 	tm = vfp_double_type(&vdm);
 	if (tm & (VFP_NAN|VFP_INFINITY)) {
-		struct vfp_double *vdp = &vdd;
+		vdp = &vdd;
 
 		if (tm & VFP_NAN)
 			ret = vfp_propagate_nan(vdp, &vdm, NULL, fpscr);
