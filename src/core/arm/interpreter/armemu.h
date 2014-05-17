@@ -17,9 +17,9 @@
 #ifndef __ARMEMU_H__
 #define __ARMEMU_H__
 
-#include "common/common.h"
-#include "armdefs.h"
-//#include "skyeye.h"
+
+#include "core/arm/interpreter/skyeye_defs.h"
+#include "core/arm/interpreter/armdefs.h"
 
 extern ARMword isize;
 
@@ -73,9 +73,7 @@ extern ARMword isize;
 #define ASSIGNT(res) state->TFlag = res
 #define INSN_SIZE (TFLAG ? 2 : 4)
 #else
-#define TBIT (1L << 5)
 #define INSN_SIZE 4
-#define TFLAG 0
 #endif
 
 /*add armv6 CPSR  feature*/
@@ -166,6 +164,7 @@ extern ARMword isize;
 #define PCWRAP(pc) ((pc) & R15PCBITS)
 #endif
 
+#define PC (state->Reg[15] & PCMASK)
 #define R15CCINTMODE (state->Reg[15] & (CCBITS | R15INTBITS | R15MODEBITS))
 #define R15INT (state->Reg[15] & R15INTBITS)
 #define R15INTPC (state->Reg[15] & (R15INTBITS | R15PCBITS))
@@ -180,11 +179,11 @@ extern ARMword isize;
 #define ER15INT (IFFLAGS << 26)
 #define EMODE (state->Mode)
 
-//#ifdef MODET
-//#define CPSR (ECC | EINT | EMODE | (TFLAG << 5))
-//#else
-//#define CPSR (ECC | EINT | EMODE)
-//#endif
+#ifdef MODET
+#define CPSR (ECC | EINT | EMODE | (TFLAG << 5))
+#else
+#define CPSR (ECC | EINT | EMODE)
+#endif
 
 #ifdef MODE32
 #define PATCHR15
@@ -240,12 +239,12 @@ extern ARMword isize;
     }									\
   while (0)
 
-//#ifndef MODE32
+#ifndef MODE32
 #define VECTORS 0x20
 #define LEGALADDR 0x03ffffff
 #define VECTORACCESS(address) (address < VECTORS && ARMul_MODE26BIT && state->prog32Sig)
 #define ADDREXCEPT(address)   (address > LEGALADDR && !state->data32Sig)
-//#endif
+#endif
 
 #define INTERNALABORT(address)			\
   do						\
@@ -421,9 +420,9 @@ extern ARMword isize;
      || (read_cp15_reg (15, 0, 1) & (1 << (CP))))
 */
 #define CP_ACCESS_ALLOWED(STATE, CP)			\
-	(((CP) >= 14)					\
-	|| (!(STATE)->is_XScale)				\
-	|| (xscale_cp15_cp_access_allowed(STATE, 15, CP)))
+    (   ((CP) >= 14)					\
+     || (! (STATE)->is_XScale)				\
+     || (xscale_cp15_cp_access_allowed(STATE,15,CP)))
 
 /* Macro to rotate n right by b bits.  */
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))
@@ -515,7 +514,7 @@ tdstate;
  * out-of-updated with the newer ISA.
  * -- Michael.Kang
  ********************************************************************************/
-#define UNDEF_WARNING ERROR_LOG(ARM11, "undefined or unpredicted behavior for arm instruction.\n");
+#define UNDEF_WARNING WARN_LOG(ARM11, "undefined or unpredicted behavior for arm instruction.\n");
 
 /* Macros to scrutinize instructions.  */
 #define UNDEF_Test UNDEF_WARNING
