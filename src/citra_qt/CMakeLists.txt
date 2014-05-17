@@ -2,6 +2,7 @@ set(SRCS
             bootmanager.cpp
             debugger/callstack.cpp
             debugger/disassembler.cpp
+            debugger/graphics.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
             hotkeys.cpp
@@ -38,6 +39,7 @@ qt4_wrap_cpp(MOC_SRCS
                         bootmanager.hxx
                         debugger/callstack.hxx
                         debugger/disassembler.hxx
+                        debugger/graphics.hxx
                         debugger/registers.hxx
                         debugger/ramview.hxx
                         hotkeys.hxx

@@ -130,6 +130,7 @@
     <ClCompile Include="config\controller_config.cpp" />
     <ClCompile Include="config\controller_config_util.cpp" />
     <ClCompile Include="debugger\callstack.cpp" />
+    <ClCompile Include="debugger\graphics.cpp" />
     <ClCompile Include="debugger\registers.cpp" />
     <ClCompile Include="debugger\disassembler.cpp" />
     <ClCompile Include="debugger\ramview.cpp" />
@@ -143,9 +144,10 @@
     <MOC Include="..\..\externals\qhexedit\qhexedit_p.h" />
     <MOC Include="..\..\externals\qhexedit\xbytearray.h" />
     <MOC Include="debugger\callstack.hxx" />
-    <MOC Include="debugger\registers.hxx" />
     <MOC Include="debugger\disassembler.hxx" />
+    <MOC Include="debugger\graphics.hxx" />
     <MOC Include="debugger\ramview.hxx" />
+    <MOC Include="debugger\registers.hxx" />
     <MOC Include="bootmanager.hxx" />
     <MOC Include="hotkeys.hxx" />
     <MOC Include="main.hxx" />

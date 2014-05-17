@@ -19,6 +19,7 @@
 #include "debugger/registers.hxx"
 #include "debugger/callstack.hxx"
 #include "debugger/ramview.hxx"
+#include "debugger/graphics.hxx"
 
 #include "core/system.h"
 #include "core/loader.h"
@@ -47,10 +48,15 @@ GMainWindow::GMainWindow()
     addDockWidget(Qt::RightDockWidgetArea, callstackWidget);
     callstackWidget->hide();
 
+    graphicsWidget = new GPUCommandStreamWidget(this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
+    callstackWidget->hide();
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());
+    debug_menu->addAction(graphicsWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half

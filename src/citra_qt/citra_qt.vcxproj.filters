@@ -36,10 +36,13 @@
     <ClCompile Include="debugger\callstack.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="debugger\ramview.cpp">
+    <ClCompile Include="debugger\disassembler.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="debugger\disassembler.cpp">
+    <ClCompile Include="debugger\graphics.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
+    <ClCompile Include="debugger\ramview.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="debugger\registers.cpp">
@@ -65,10 +68,13 @@
     <MOC Include="debugger\callstack.hxx">
       <Filter>debugger</Filter>
     </MOC>
-    <MOC Include="debugger\ramview.hxx">
+    <MOC Include="debugger\disassembler.hxx">
       <Filter>debugger</Filter>
     </MOC>
-    <MOC Include="debugger\disassembler.hxx">
+    <MOC Include="debugger\graphics.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="debugger\ramview.hxx">
       <Filter>debugger</Filter>
     </MOC>
     <MOC Include="debugger\registers.hxx">
