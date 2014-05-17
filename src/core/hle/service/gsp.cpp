@@ -12,23 +12,24 @@
 
 #include "core/hw/lcd.h"
 
+#include "video_core/gpu_debugger.h"
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// GSP shared memory GX command buffer header
 union GX_CmdBufferHeader {
     u32 hex;
 
-    // Current command index. This index is updated by GSP module after loading the command data, 
-    // right before the command is processed. When this index is updated by GSP module, the total 
+    // Current command index. This index is updated by GSP module after loading the command data,
+    // right before the command is processed. When this index is updated by GSP module, the total
     // commands field is decreased by one as well.
     BitField<0,8,u32>   index;
-    
+
     // Total commands to process, must not be value 0 when GSP module handles commands. This must be
-    // <=15 when writing a command to shared memory. This is incremented by the application when 
-    // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only 
+    // <=15 when writing a command to shared memory. This is incremented by the application when
+    // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only
     // used if this field is value 1.
     BitField<8,8,u32>   number_commands;
-
 };
 
 /// Gets the address of the start (header) of a command buffer in GSP shared memory
@@ -45,6 +46,7 @@ static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
 void GX_FinishCommand(u32 thread_id) {
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
     header->number_commands = header->number_commands - 1;
+    // TODO: Increment header->index?
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,10 +55,6 @@ void GX_FinishCommand(u32 thread_id) {
 namespace GSP_GPU {
 
 u32 g_thread_id = 0;
-
-enum {
-    CMD_GX_REQUEST_DMA  = 0x00000000,
-};
 
 enum {
     REG_FRAMEBUFFER_1   = 0x00400468,
@@ -72,7 +70,7 @@ void ReadHWRegs(Service::Interface* self) {
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
     u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
-    
+
     switch (reg_addr) {
 
     // NOTE: Calling SetFramebufferLocation here is a hack... Not sure the correct way yet to set 
@@ -101,25 +99,50 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
     u32 event_handle = cmd_buff[3]; // TODO(bunnei): Implement event handling
+
     cmd_buff[2] = g_thread_id;          // ThreadID
 }
+
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 void TriggerCmdReqQueue(Service::Interface* self) {
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(g_thread_id);
     u32* cmd_buff = (u32*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
 
-    switch (cmd_buff[0]) {
+    switch (static_cast<GXCommandId>(cmd_buff[0])) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
-    case CMD_GX_REQUEST_DMA:
+    case GXCommandId::REQUEST_DMA:
         memcpy(Memory::GetPointer(cmd_buff[2]), Memory::GetPointer(cmd_buff[1]), cmd_buff[3]);
         break;
+
+    case GXCommandId::SET_COMMAND_LIST_LAST:
+        LCD::Write<u32>(LCD::CommandListAddress, cmd_buff[1] >> 3);
+        LCD::Write<u32>(LCD::CommandListSize, cmd_buff[2] >> 3);
+        LCD::Write<u32>(LCD::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+        break;
+
+    case GXCommandId::SET_MEMORY_FILL:
+        break;
+
+    case GXCommandId::SET_DISPLAY_TRANSFER:
+        break;
+
+    case GXCommandId::SET_TEXTURE_COPY:
+        break;
+
+    case GXCommandId::SET_COMMAND_LIST_FIRST:
+    {
+        //u32* buf0_data = (u32*)Memory::GetPointer(cmd_buff[1]);
+        //u32* buf1_data = (u32*)Memory::GetPointer(cmd_buff[3]);
+        //u32* buf2_data = (u32*)Memory::GetPointer(cmd_buff[5]);
+        break;
+    }
 
     default:
         ERROR_LOG(GSP, "TriggerCmdReqQueue unknown command 0x%08X", cmd_buff[0]);
     }
-    
+
     GX_FinishCommand(g_thread_id);
 }
 
