@@ -327,13 +327,13 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand)
 
 static u32 vfp_single_fsqrt(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-	struct vfp_single vsm, vsd;
+	struct vfp_single vsm, vsd, *vsp;
 	int ret, tm;
 
 	vfp_single_unpack(&vsm, m);
 	tm = vfp_single_type(&vsm);
 	if (tm & (VFP_NAN|VFP_INFINITY)) {
-		struct vfp_single *vsp = &vsd;
+		vsp = &vsd;
 
 		if (tm & VFP_NAN)
 			ret = vfp_propagate_nan(vsp, &vsm, NULL, fpscr);
