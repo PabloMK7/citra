@@ -22,6 +22,7 @@ set(SRCS    break_points.cpp
 set(HEADS   atomic.h
             atomic_gcc.h
             atomic_win32.h
+            bit_field.h
             break_points.h
             chunk_file.h
             common_funcs.h

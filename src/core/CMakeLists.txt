@@ -49,6 +49,7 @@ set(HEADS   core.h
             mem_map.h
             system.h
             arm/disassembler/arm_disasm.h
+            arm/disassembler/load_symbol_map.h
             arm/interpreter/arm_interpreter.h
             arm/interpreter/arm_regformat.h
             arm/interpreter/armcpu.h
@@ -57,18 +58,23 @@ set(HEADS   core.h
             arm/interpreter/armmmu.h
             arm/interpreter/armos.h
             arm/interpreter/skyeye_defs.h
-            arm/mmu/arm1176jzf_s_mmu.h
-            arm/mmu/cache.h
-            arm/mmu/rb.h
-            arm/mmu/tlb.h
-            arm/mmu/wb.h
+            arm/interpreter/mmu/arm1176jzf_s_mmu.h
+            arm/interpreter/mmu/cache.h
+            arm/interpreter/mmu/rb.h
+            arm/interpreter/mmu/sa_mmu.h
+            arm/interpreter/mmu/tlb.h
+            arm/interpreter/mmu/wb.h
+            arm/interpreter/vfp/asm_vfp.h
+            arm/interpreter/vfp/vfp.h
+            arm/interpreter/vfp/vfp_helper.h
             elf/elf_reader.h
             elf/elf_types.h
             file_sys/directory_file_system.h
             file_sys/file_sys.h
             file_sys/meta_file_system.h
+            hle/config_mem.h
+            hle/coprocessor.h
             hle/hle.h
-            hle/mrc.h
             hle/syscall.h
             hle/function_wrappers.h
             hle/service/apt.h
