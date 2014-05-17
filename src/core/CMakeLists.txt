@@ -17,7 +17,7 @@ set(SRCS    core.cpp
             arm/interpreter/thumbemu.cpp
             arm/interpreter/vfp/vfp.cpp
             arm/interpreter/vfp/vfpdouble.cpp
-            arm/interpreter/vfp/vfpinsr.cpp
+            arm/interpreter/vfp/vfpinstr.cpp
             arm/interpreter/vfp/vfpsingle.cpp
             arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
             arm/interpreter/mmu/cache.cpp
