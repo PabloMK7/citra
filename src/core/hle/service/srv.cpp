@@ -16,6 +16,12 @@ void Initialize(Service::Interface* self) {
     NOTICE_LOG(OSHLE, "SRV::Sync - Initialize");
 }
 
+void GetProcSemaphore(Service::Interface* self) {
+    // Get process semaphore?
+    u32* cmd_buff = Service::GetCommandBuffer();
+    cmd_buff[3] = 0xDEADBEEF; // Return something... 0 == NULL, raises an exception
+}
+
 void GetServiceHandle(Service::Interface* self) {
     Syscall::Result res = 0;
     u32* cmd_buff = Service::GetCommandBuffer();
@@ -39,7 +45,7 @@ void GetServiceHandle(Service::Interface* self) {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010002, Initialize,        "Initialize"},
-    {0x00020000, NULL,              "GetProcSemaphore"},
+    {0x00020000, GetProcSemaphore,  "GetProcSemaphore"},
     {0x00030100, NULL,              "RegisterService"},
     {0x000400C0, NULL,              "UnregisterService"},
     {0x00050100, GetServiceHandle,  "GetServiceHandle"},
