@@ -83,7 +83,7 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
-    Core::g_app_core->SetReg(1, service->GetUID());
+    Core::g_app_core->SetReg(1, service->GetHandle());
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
     return 0;
 }
@@ -91,7 +91,7 @@ Result ConnectToPort(void* out, const char* port_name) {
 /// Synchronize to an OS service
 Result SendSyncRequest(Handle session) {
     DEBUG_LOG(SVC, "SendSyncRequest called session=0x%08X");
-    Service::Interface* service = Service::g_manager->FetchFromUID(session);
+    Service::Interface* service = Service::g_manager->FetchFromHandle(session);
     service->Sync();
     return 0;
 }

@@ -20,8 +20,6 @@
 
 namespace Service {
 
-typedef s32 NativeUID;                          ///< Native handle for a service
-
 static const int kMaxPortSize           = 0x08; ///< Maximum size of a port name (8 characters)
 static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer of header
 
@@ -56,11 +54,11 @@ public:
     };
 
     /**
-     * Gets the UID for the serice
-     * @return UID of service in native format
+     * Gets the Handle for the serice
+     * @return Handle of service in native format
      */
-    NativeUID GetUID() const {
-        return (NativeUID)m_uid;
+    Handle GetHandle() const {
+        return m_handle;
     }
 
     /**
@@ -73,7 +71,7 @@ public:
 
     /// Allocates a new handle for the service
     Handle NewHandle() {
-        Handle handle = (m_handles.size() << 16) | m_uid;
+        Handle handle = (m_handles.size() << 16) | m_handle;
         m_handles.push_back(handle);
         return handle;
     }
@@ -124,7 +122,7 @@ protected:
     }
 
 private:
-    u32 m_uid;
+    u32 m_handle;
     
     std::vector<Handle>    m_handles;
     std::map<u32, FunctionInfo>     m_functions;
@@ -145,7 +143,7 @@ public:
     void DeleteService(std::string port_name);
 
     /// Get a Service Interface from its UID
-    Interface* FetchFromUID(u32 uid);
+    Interface* FetchFromHandle(u32 uid);
 
     /// Get a Service Interface from its port
     Interface* FetchFromPortName(std::string port_name);
@@ -153,13 +151,13 @@ public:
 private:
 
     /// Convert an index into m_services vector into a UID
-    static u32 GetUIDFromIndex(const int index) {
+    static Handle GetHandleFromIndex(const int index) {
         return index | 0x10000000;
     }
 
     /// Convert a UID into an index into m_services
-    static int GetIndexFromUID(const u32 uid) {
-        return uid & 0x0FFFFFFF;
+    static int GetIndexFromHandle(const Handle handle) {
+        return handle & 0x0FFFFFFF;
     }
 
     std::vector<Interface*>     m_services;

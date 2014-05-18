@@ -32,27 +32,27 @@ Manager::~Manager() {
 /// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
     int index = m_services.size();
-    u32 new_uid = GetUIDFromIndex(index);
+    Handle handle = GetHandleFromIndex(index);
 
     m_services.push_back(service);
 
-    m_port_map[service->GetPortName()] = new_uid;
-    service->m_uid = new_uid;
+    m_port_map[service->GetPortName()] = handle;
+    service->m_handle = handle;
 }
 
 /// Removes a service from the manager, also frees memory
 void Manager::DeleteService(std::string port_name) {
     auto service = FetchFromPortName(port_name);
 
-    m_services.erase(m_services.begin() + GetIndexFromUID(service->m_uid));
+    m_services.erase(m_services.begin() + GetIndexFromHandle(service->m_handle));
     m_port_map.erase(port_name);
 
     delete service;
 }
 
-/// Get a Service Interface from its UID
-Interface* Manager::FetchFromUID(u32 uid) {
-    int index = GetIndexFromUID(uid);
+/// Get a Service Interface from its Handle
+Interface* Manager::FetchFromHandle(Handle handle) {
+    int index = GetIndexFromHandle(handle);
     if (index < (int)m_services.size()) {
         return m_services[index];
     }
@@ -65,7 +65,7 @@ Interface* Manager::FetchFromPortName(std::string port_name) {
     if (itr == m_port_map.end()) {
         return NULL;
     }
-    return FetchFromUID(itr->second);
+    return FetchFromHandle(itr->second);
 }
 
 

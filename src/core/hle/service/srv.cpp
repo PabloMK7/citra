@@ -30,10 +30,10 @@ void GetServiceHandle(Service::Interface* self) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
     NOTICE_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name.c_str(), 
-        service->GetUID());
+        service->GetHandle());
 
     if (NULL != service) {
-        cmd_buff[3] = service->GetUID();
+        cmd_buff[3] = service->GetHandle();
     } else {
         ERROR_LOG(OSHLE, "Service %s does not exist", port_name.c_str());
         res = -1;
