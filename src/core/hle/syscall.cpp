@@ -104,10 +104,20 @@ Result CloseHandle(Handle handle) {
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
-Result WaitSynchronization1(Handle handle, s64 nanoseconds) {
+Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
-        handle, nanoseconds);
+        handle, nano_seconds);
+    return 0;
+}
+
+/// Wait for the given handles to synchronize, timeout after the specified nanoseconds
+Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, s64 nano_seconds) {
+    s32* out = (s32*)_out;
+    Handle* handles = (Handle*)_handles;
+    // ImplementMe
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%d, nanoseconds=%d", 
+        handle_count, wait_all, nano_seconds);    
     return 0;
 }
 
@@ -226,7 +236,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x22,  NULL,                                       "ArbitrateAddress"},
     {0x23,  WrapI_U<CloseHandle>,                       "CloseHandle"},
     {0x24,  WrapI_US64<WaitSynchronization1>,           "WaitSynchronization1"},
-    {0x25,  NULL,                                       "WaitSynchronizationN"},
+    {0x25,  WrapI_VVUUS64<WaitSynchronizationN>,        "WaitSynchronizationN"},
     {0x26,  NULL,                                       "SignalAndWait"},
     {0x27,  NULL,                                       "DuplicateHandle"},
     {0x28,  NULL,                                       "GetSystemTick"},
