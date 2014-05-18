@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <initializer_list>
+#include <map>
+
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
@@ -32,6 +35,19 @@ union CommandHeader {
     BitField<16,  4, u32> parameter_mask;
     BitField<20, 11, u32> extra_data_length;
     BitField<31,  1, u32> group_commands;
+};
+
+static std::map<CommandId, const char*> command_names = {
+    {CommandId::ViewportSizeX, "ViewportSizeX" },
+    {CommandId::ViewportInvSizeX, "ViewportInvSizeX" },
+    {CommandId::ViewportSizeY, "ViewportSizeY" },
+    {CommandId::ViewportInvSizeY, "ViewportInvSizeY" },
+    {CommandId::ViewportCorner, "ViewportCorner" },
+    {CommandId::DepthBufferFormat, "DepthBufferFormat" },
+    {CommandId::ColorBufferFormat, "ColorBufferFormat" },
+    {CommandId::DepthBufferAddress, "DepthBufferAddress" },
+    {CommandId::ColorBufferAddress, "ColorBufferAddress" },
+    {CommandId::ColorBufferSize, "ColorBufferSize" },
 };
 
 }

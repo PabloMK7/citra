@@ -53,7 +53,7 @@ int GPUCommandListModel::rowCount(const QModelIndex& parent) const
 
 int GPUCommandListModel::columnCount(const QModelIndex& parent) const
 {
-    return 1;
+    return 2;
 }
 
 QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
@@ -68,7 +68,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
         const GraphicsDebugger::PicaCommandList& cmdlist = command_lists[item->index].second;
         u32 address = command_lists[item->index].first;
 
-        if (role == Qt::DisplayRole)
+        if (role == Qt::DisplayRole && index.column() == 0)
         {
             return QVariant(QString("0x%1 bytes at 0x%2").arg(cmdlist.size(), 0, 16).arg(address, 8, 16, QLatin1Char('0')));
         }
@@ -78,11 +78,17 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
         // index refers to a specific command
         const GraphicsDebugger::PicaCommandList& cmdlist = command_lists[item->parent->index].second;
         const GraphicsDebugger::PicaCommand& cmd = cmdlist[item->index];
+        const Pica::CommandHeader& header = cmd.GetHeader();
 
         if (role == Qt::DisplayRole) {
             QString content;
-            for (int j = 0; j < cmd.size(); ++j)
-                content.append(QString("%1 ").arg(cmd[j], 8, 16, QLatin1Char('0')));
+            if (index.column() == 0) {
+                content = Pica::command_names[header.cmd_id];
+                content.append(" ");
+            } else if (index.column() == 1) {
+                for (int j = 0; j < cmd.size(); ++j)
+                    content.append(QString("%1 ").arg(cmd[j], 8, 16, QLatin1Char('0')));
+            }
 
             return QVariant(content);
         }

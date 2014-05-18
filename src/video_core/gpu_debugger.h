@@ -100,6 +100,7 @@ public:
             auto& cmd = cmdlist.back();
 
             size_t size = 2 + header.extra_data_length;
+            size = (size + 1) / 2 * 2; // align to 8 bytes
             cmd.reserve(size);
             std::copy(parse_pointer, parse_pointer + size, std::back_inserter(cmd));
 
