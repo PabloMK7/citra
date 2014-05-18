@@ -42,8 +42,6 @@ enum WaitType {
     WAITTYPE_SYNCH,
 };
 
-typedef s32 Handle;
-
 class Thread : public KernelObject {
 public:
 

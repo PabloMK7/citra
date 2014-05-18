@@ -30,7 +30,7 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    Syscall::Result Sync();
+    Result Sync();
 
 };
 

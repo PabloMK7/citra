@@ -11,6 +11,8 @@
 #include "common/common.h"
 #include "common/common_types.h"
 #include "core/mem_map.h"
+
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/syscall.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,14 +72,14 @@ public:
     }
 
     /// Allocates a new handle for the service
-    Syscall::Handle NewHandle() {
-        Syscall::Handle handle = (m_handles.size() << 16) | m_uid;
+    Handle NewHandle() {
+        Handle handle = (m_handles.size() << 16) | m_uid;
         m_handles.push_back(handle);
         return handle;
     }
 
     /// Frees a handle from the service
-    void DeleteHandle(Syscall::Handle handle) {
+    void DeleteHandle(Handle handle) {
         for(auto iter = m_handles.begin(); iter != m_handles.end(); ++iter) {
             if(*iter == handle) {
                 m_handles.erase(iter);
@@ -90,7 +92,7 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    Syscall::Result Sync() {
+    Result Sync() {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
@@ -124,7 +126,7 @@ protected:
 private:
     u32 m_uid;
     
-    std::vector<Syscall::Handle>    m_handles;
+    std::vector<Handle>    m_handles;
     std::map<u32, FunctionInfo>     m_functions;
 };
 

@@ -23,7 +23,7 @@ void GetProcSemaphore(Service::Interface* self) {
 }
 
 void GetServiceHandle(Service::Interface* self) {
-    Syscall::Result res = 0;
+    Result res = 0;
     u32* cmd_buff = Service::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);

@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// SVC structures
+// SVC types
 
 struct MemoryInfo {
     u32 base_address;
@@ -31,13 +31,17 @@ struct ThreadContext {
     u32 fpexc;
 };
 
+enum ResetType {
+    RESETTYPE_ONESHOT,
+    RESETTYPE_STICKY,
+    RESETTYPE_PULSE,
+    RESETTYPE_MAX_BIT = (1u << 31),
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Syscall
 
 namespace Syscall {
-
-typedef u32 Handle;
-typedef s32 Result;
 
 void Register();
 

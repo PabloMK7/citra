@@ -6,7 +6,8 @@
 
 #include "common/common_types.h"
 
-typedef s32 Handle;
+typedef u32 Handle;
+typedef s32 Result;
 
 enum KernelIDType {
     KERNEL_ID_TYPE_THREAD       = 1,
