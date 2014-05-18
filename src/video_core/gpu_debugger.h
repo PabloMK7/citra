@@ -22,7 +22,8 @@ public:
     {
         Pica::CommandHeader& GetHeader()
         {
-            return *(Pica::CommandHeader*)&(front());
+            u32& val = at(1);
+            return *(Pica::CommandHeader*)&val;
         }
     };
 
@@ -90,14 +91,20 @@ public:
 
     void CommandListCalled(u32 address, u32* command_list, u32 size_in_words)
     {
-        // TODO: Decoding fun
-
-        // For now, just treating the whole command list as a single command
         PicaCommandList cmdlist;
-        cmdlist.push_back(PicaCommand());
-        auto& cmd = cmdlist[0];
-        cmd.reserve(size_in_words);
-        std::copy(command_list, command_list+size_in_words, std::back_inserter(cmd));
+        for (u32* parse_pointer = command_list; parse_pointer < command_list + size_in_words;)
+        {
+            const Pica::CommandHeader header = static_cast<Pica::CommandHeader>(parse_pointer[1]);
+
+            cmdlist.push_back(PicaCommand());
+            auto& cmd = cmdlist.back();
+
+            size_t size = 2 + header.extra_data_length;
+            cmd.reserve(size);
+            std::copy(parse_pointer, parse_pointer + size, std::back_inserter(cmd));
+
+            parse_pointer += size;
+        }
 
         auto obj = std::pair<u32,PicaCommandList>(address, cmdlist);
         auto it = std::find(command_lists.begin(), command_lists.end(), obj);

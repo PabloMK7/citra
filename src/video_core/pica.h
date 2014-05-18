@@ -24,6 +24,8 @@ enum class CommandId : u32
 };
 
 union CommandHeader {
+    CommandHeader(u32 h) : hex(h) {}
+
     u32 hex;
 
     BitField< 0, 16, CommandId> cmd_id;
