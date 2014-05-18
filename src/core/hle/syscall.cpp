@@ -3,6 +3,9 @@
 // Refer to the license.txt file included.  
 
 #include <map>
+#include <string>
+
+#include "common/symbols.h"
 
 #include "core/mem_map.h"
 
@@ -13,8 +16,6 @@
 #include "core/hle/syscall.h"
 #include "core/hle/service/service.h"
 #include "core/hle/kernel/thread.h"
-
-#include "common/symbols.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Syscall
@@ -81,7 +82,6 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* out, const char* port_name) {
-    
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
     Core::g_app_core->SetReg(1, service->GetUID());
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
@@ -116,8 +116,13 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
     // ImplementMe
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%d, nanoseconds=%d", 
-        handle_count, wait_all, nano_seconds);    
+    
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d %s", 
+        handle_count, (wait_all ? "true" : "false"), nano_seconds);
+    
+    for (int i = 0; i < handle_count; i++) {
+        DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
+    }
     return 0;
 }
 
@@ -125,7 +130,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 Result CreateAddressArbiter(void* arbiter) {
     // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
-    Core::g_app_core->SetReg(1, 0xDEADBEEF);
+    Core::g_app_core->SetReg(1, 0xFABBDADD);
     return 0;
 }
 
@@ -170,7 +175,8 @@ Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 st
 
     Handle handle = __KernelCreateThread(name.c_str(), entry_point, priority, processor_id, 
         stack_top);
-
+    Core::g_app_core->SetReg(1, 0xFEEDDEAF);
+    
     return 0;
 }
 
@@ -178,6 +184,7 @@ Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateMutex called initial_locked=%s", 
         initial_locked ? "true" : "false");
+    Core::g_app_core->SetReg(1, 0xF00D0BAD);
     return 0;
 }
 
@@ -195,6 +202,13 @@ Result QueryMemory(void *_info, void *_out, u32 addr) {
     MemoryInfo* info = (MemoryInfo*) _info;
     PageInfo* out = (PageInfo*) _out;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
+    return 0;
+}
+
+Result CreateEvent(void* _event, u32 reset_type) {
+    Handle* event = (Handle*)_event;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateEvent called reset_type=0x%08X", reset_type);
+    Core::g_app_core->SetReg(1, 0xBADC0DE0);
     return 0;
 }
 
@@ -222,7 +236,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x14,  WrapI_U<ReleaseMutex>,                      "ReleaseMutex"},
     {0x15,  NULL,                                       "CreateSemaphore"},
     {0x16,  NULL,                                       "ReleaseSemaphore"},
-    {0x17,  NULL,                                       "CreateEvent"},
+    {0x17,  WrapI_VU<CreateEvent>,                      "CreateEvent"},
     {0x18,  NULL,                                       "SignalEvent"},
     {0x19,  NULL,                                       "ClearEvent"},
     {0x1A,  NULL,                                       "CreateTimer"},
