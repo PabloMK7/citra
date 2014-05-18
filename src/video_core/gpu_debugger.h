@@ -11,11 +11,23 @@
 #include "common/log.h"
 
 #include "core/hle/service/gsp.h"
-
+#include "pica.h"
 
 class GraphicsDebugger
 {
 public:
+    // A few utility structs used to expose data
+    // A vector of commands represented by their raw byte sequence
+    struct PicaCommand : public std::vector<u32>
+    {
+        Pica::CommandHeader& GetHeader()
+        {
+            return *(Pica::CommandHeader*)&(front());
+        }
+    };
+
+    typedef std::vector<PicaCommand> PicaCommandList;
+
     // Base class for all objects which need to be notified about GPU events
     class DebuggerObserver
     {
@@ -38,6 +50,16 @@ public:
         {
             const GSP_GPU::GXCommand& cmd = observed->ReadGXCommandHistory(total_command_count-1);
             ERROR_LOG(GSP, "Received command: id=%x", cmd.id);
+        }
+
+        /**
+        * @param lst command list which triggered this call
+        * @param is_new true if the command list was called for the first time
+        * @todo figure out how to make sure called functions don't keep references around beyond their life time
+        */
+        virtual void CommandListCalled(const PicaCommandList& lst, bool is_new)
+        {
+            ERROR_LOG(GSP, "Command list called: %d", (int)is_new);
         }
 
     protected:
@@ -66,10 +88,37 @@ public:
                         } );
     }
 
+    void CommandListCalled(u32 address, u32* command_list, u32 size_in_words)
+    {
+        // TODO: Decoding fun
+
+        // For now, just treating the whole command list as a single command
+        PicaCommandList cmdlist;
+        cmdlist.push_back(PicaCommand());
+        auto& cmd = cmdlist[0];
+        cmd.reserve(size_in_words);
+        std::copy(command_list, command_list+size_in_words, std::back_inserter(cmd));
+
+        auto obj = std::pair<u32,PicaCommandList>(address, cmdlist);
+        auto it = std::find(command_lists.begin(), command_lists.end(), obj);
+        bool is_new = (it == command_lists.end());
+        if (is_new)
+            command_lists.push_back(obj);
+
+        ForEachObserver([&](DebuggerObserver* observer) {
+                            observer->CommandListCalled(obj.second, is_new);
+                        } );
+    }
+
     const GSP_GPU::GXCommand& ReadGXCommandHistory(int index) const
     {
         // TODO: Is this thread-safe?
         return gx_command_history[index];
+    }
+
+    const std::vector<std::pair<u32,PicaCommandList>>& GetCommandLists() const
+    {
+        return command_lists;
     }
 
     void RegisterObserver(DebuggerObserver* observer)
@@ -94,4 +143,7 @@ private:
     std::vector<DebuggerObserver*> observers;
 
     std::vector<GSP_GPU::GXCommand> gx_command_history;
+
+    // vector of pairs of command lists and their storage address
+    std::vector<std::pair<u32,PicaCommandList>> command_lists;
 };

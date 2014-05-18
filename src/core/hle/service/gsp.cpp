@@ -126,6 +126,10 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         GPU::Write<u32>(GPU::Registers::CommandListAddress, cmd_buff[1] >> 3);
         GPU::Write<u32>(GPU::Registers::CommandListSize, cmd_buff[2] >> 3);
         GPU::Write<u32>(GPU::Registers::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+
+        // TODO: Move this to GPU
+        // TODO: Not sure what units the size is measured in
+        g_debugger.CommandListCalled(cmd_buff[1], (u32*)Memory::GetPointer(cmd_buff[1]), cmd_buff[2]);
         break;
 
     case GXCommandId::SET_MEMORY_FILL:
