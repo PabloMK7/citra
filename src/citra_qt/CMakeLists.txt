@@ -3,6 +3,7 @@ set(SRCS
             debugger/callstack.cpp
             debugger/disassembler.cpp
             debugger/graphics.cpp
+            debugger/graphics_cmdlists.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
             hotkeys.cpp
@@ -40,6 +41,7 @@ qt4_wrap_cpp(MOC_SRCS
                         debugger/callstack.hxx
                         debugger/disassembler.hxx
                         debugger/graphics.hxx
+                        debugger/graphics_cmdlists.hxx
                         debugger/registers.hxx
                         debugger/ramview.hxx
                         hotkeys.hxx

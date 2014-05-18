@@ -57,7 +57,7 @@ public:
         * @param is_new true if the command list was called for the first time
         * @todo figure out how to make sure called functions don't keep references around beyond their life time
         */
-        virtual void CommandListCalled(const PicaCommandList& lst, bool is_new)
+        virtual void OnCommandListCalled(const PicaCommandList& lst, bool is_new)
         {
             ERROR_LOG(GSP, "Command list called: %d", (int)is_new);
         }
@@ -106,7 +106,7 @@ public:
             command_lists.push_back(obj);
 
         ForEachObserver([&](DebuggerObserver* observer) {
-                            observer->CommandListCalled(obj.second, is_new);
+                            observer->OnCommandListCalled(obj.second, is_new);
                         } );
     }
 

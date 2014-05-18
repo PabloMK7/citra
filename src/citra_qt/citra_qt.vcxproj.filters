@@ -42,6 +42,9 @@
     <ClCompile Include="debugger\graphics.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
+    <ClCompile Include="debugger\graphics_cmdlists.cpp">
+      <Filter>debugger</Filter>
+    </ClCompile>
     <ClCompile Include="debugger\ramview.cpp">
       <Filter>debugger</Filter>
     </ClCompile>
@@ -72,6 +75,9 @@
       <Filter>debugger</Filter>
     </MOC>
     <MOC Include="debugger\graphics.hxx">
+      <Filter>debugger</Filter>
+    </MOC>
+    <MOC Include="debugger\graphics_cmdlists.hxx">
       <Filter>debugger</Filter>
     </MOC>
     <MOC Include="debugger\ramview.hxx">

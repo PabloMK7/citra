@@ -131,6 +131,7 @@
     <ClCompile Include="config\controller_config_util.cpp" />
     <ClCompile Include="debugger\callstack.cpp" />
     <ClCompile Include="debugger\graphics.cpp" />
+    <ClCompile Include="debugger\graphics_cmdlists.cpp" />
     <ClCompile Include="debugger\registers.cpp" />
     <ClCompile Include="debugger\disassembler.cpp" />
     <ClCompile Include="debugger\ramview.cpp" />
@@ -146,6 +147,7 @@
     <MOC Include="debugger\callstack.hxx" />
     <MOC Include="debugger\disassembler.hxx" />
     <MOC Include="debugger\graphics.hxx" />
+    <MOC Include="debugger\graphics_cmdlists.hxx" />
     <MOC Include="debugger\ramview.hxx" />
     <MOC Include="debugger\registers.hxx" />
     <MOC Include="bootmanager.hxx" />

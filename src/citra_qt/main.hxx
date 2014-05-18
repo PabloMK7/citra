@@ -11,6 +11,7 @@ class DisassemblerWidget;
 class RegistersWidget;
 class CallstackWidget;
 class GPUCommandStreamWidget;
+class GPUCommandListWidget;
 
 class GMainWindow : public QMainWindow
 {
@@ -52,6 +53,7 @@ private:
     RegistersWidget* registersWidget;
     CallstackWidget* callstackWidget;
     GPUCommandStreamWidget* graphicsWidget;
+    GPUCommandListWidget* graphicsCommandsWidget;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_
