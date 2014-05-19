@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 2.6)
 
 project(citra)
 
-SET(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
+SET(CXX_COMPILE_FLAGS "-std=c++11 -fpermissive")
 
 # silence some spam
 add_definitions(-Wno-attributes)
 add_definitions(-DSINGLETHREADED)
-add_definitions(${GCC_COMPILE_FLAGS})
+add_definitions(${CXX_COMPILE_FLAGS})
 
 # dependency checking
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
@@ -21,14 +21,14 @@ pkg_search_module(GLFW REQUIRED glfw3)
 # corefoundation is required only on OSX
 IF (APPLE)
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
-    SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
-    SET(CMAKE_EXE_LINKER_FLAGS "-stdlib=libc++")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 ENDIF (APPLE)
 
 #external includes
 include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${GLEW_INCLUDE_DIR})
+include_directories(${GLEW_INCLUDE_PATH})
 
 # workaround for GLFW linking on OSX
 link_directories(${GLFW_LIBRARY_DIRS})
