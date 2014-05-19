@@ -19,7 +19,7 @@ set(SRCS    break_points.cpp
             timer.cpp
             utf8.cpp)
 
-set(HEADS   atomic.h
+set(HEADERS atomic.h
             atomic_gcc.h
             atomic_win32.h
             bit_field.h
@@ -58,4 +58,4 @@ set(HEADS   atomic.h
             timer.h
             utf8.h)
 
-add_library(common STATIC ${SRCS} ${HEADS})
+add_library(common STATIC ${SRCS} ${HEADERS})

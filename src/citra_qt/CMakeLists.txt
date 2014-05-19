@@ -8,7 +8,7 @@ set(SRCS
             main.cpp
             config/controller_config.cpp
             config/controller_config_util.cpp)
-set (HEADS
+set (HEADERS
             bootmanager.hxx
             debugger/callstack.hxx
             debugger/disassembler.hxx
@@ -49,7 +49,7 @@ qt4_wrap_cpp(MOC_SRCS
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(./)
 
-add_executable(citra-qt ${SRCS} ${HEADS} ${MOC_SRCS} ${UI_HDRS})
+add_executable(citra-qt ${SRCS} ${HEADERS} ${MOC_SRCS} ${UI_HDRS})
 if (APPLE)
     target_link_libraries(citra-qt core common video_core qhexedit iconv ${COREFOUNDATION_LIBRARY} ${QT_LIBRARIES} ${GLEW_LIBRARY} ${OPENGL_LIBRARIES})
 else()

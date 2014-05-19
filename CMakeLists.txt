@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 2.6)
 project(citra)
 
 SET(CMAKE_CXX_FLAGS "-std=c++11 -fpermissive")
-SET(CMAKE_CXX_FLAGS_DEBUG "-std=c++11 -fpermissive")
-SET(CMAKE_CXX_FLAGS_RELEASE "-std=c++11 -fpermissive")
 
 # silence some spam
 add_definitions(-Wno-attributes)
@@ -20,6 +18,7 @@ find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
+# corefoundation is required only on OSX
 IF (APPLE)
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
     SET(CMAKE_CXX_FLAGS "-stdlib=libc++")
@@ -31,7 +30,7 @@ include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 
-#use pkg_search_module library dirs
+# workaround for GLFW linking on OSX
 link_directories(${GLFW_LIBRARY_DIRS})
 
 option(DISABLE_QT4 "Disable Qt4 GUI" OFF)

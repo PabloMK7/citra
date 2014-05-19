@@ -43,7 +43,7 @@ set(SRCS    core.cpp
             hw/lcd.cpp
             hw/ndma.cpp)
 
-set(HEADS   core.h
+set(HEADERS core.h
             core_timing.h
             loader.h
             mem_map.h
@@ -86,4 +86,4 @@ set(HEADS   core.h
             hw/lcd.h
             hw/ndma.h)
 
-add_library(core STATIC ${SRCS} ${HEADS})
+add_library(core STATIC ${SRCS} ${HEADERS})
