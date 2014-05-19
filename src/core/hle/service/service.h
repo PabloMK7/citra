@@ -63,14 +63,16 @@ public:
     }
 
     /// Allocates a new handle for the service
-    Handle NewHandle() {
-        Handle handle = (m_handles.size() << 16) | 0;//m_handle;
+    Handle CreateHandle(KernelObject *obj) {
+        Handle handle = g_kernel_objects.Create(obj);
         m_handles.push_back(handle);
         return handle;
     }
 
     /// Frees a handle from the service
-    void DeleteHandle(Handle handle) {
+    template <class T>
+    void DeleteHandle(const Handle handle) {
+        g_kernel_objects.Destroy<T>(handle);
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 
@@ -111,8 +113,8 @@ protected:
 
 private:
 
-    std::vector<Handle>    m_handles;
-    std::map<u32, FunctionInfo>     m_functions;
+    std::vector<Handle>         m_handles;
+    std::map<u32, FunctionInfo> m_functions;
 
 };
 
