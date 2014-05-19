@@ -7,11 +7,14 @@
 #include "common/string_util.h"
 
 #include "core/hle/hle.h"
+
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
 #include "core/hle/service/gsp.h"
 #include "core/hle/service/hid.h"
 #include "core/hle/service/srv.h"
+
+#include "core/hle/kernel/kernel.h"
 
 namespace Service {
 
@@ -31,32 +34,21 @@ Manager::~Manager() {
 
 /// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
-    int index = m_services.size();
-    Handle handle = GetHandleFromIndex(index);
-
+    m_port_map[service->GetPortName()] = g_kernel_objects.Create(service);
     m_services.push_back(service);
-
-    m_port_map[service->GetPortName()] = handle;
-    service->m_handle = handle;
 }
 
 /// Removes a service from the manager, also frees memory
 void Manager::DeleteService(std::string port_name) {
-    auto service = FetchFromPortName(port_name);
-
-    m_services.erase(m_services.begin() + GetIndexFromHandle(service->m_handle));
+    Interface* service = FetchFromPortName(port_name);
+    m_services.erase(std::remove(m_services.begin(), m_services.end(), service), m_services.end());
     m_port_map.erase(port_name);
-
     delete service;
 }
 
 /// Get a Service Interface from its Handle
 Interface* Manager::FetchFromHandle(Handle handle) {
-    int index = GetIndexFromHandle(handle);
-    if (index < (int)m_services.size()) {
-        return m_services[index];
-    }
-    return NULL;
+    return g_kernel_objects.GetFast<Interface>(handle);
 }
 
 /// Get a Service Interface from its port

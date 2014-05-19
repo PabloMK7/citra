@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <string>
@@ -35,15 +36,15 @@ inline static u32* GetCommandBuffer(const int offset=0) {
 class Manager;
 
 /// Interface to a CTROS service
-class Interface : NonCopyable {
+class Interface  : public KernelObject {
     friend class Manager;
 public:
+    
+    const char *GetName() { return GetPortName(); }
+    const char *GetTypeName() { return GetPortName(); }
 
-    Interface() {
-    }
-
-    virtual ~Interface() {
-    }
+    static KernelIDType GetStaticIDType() { return KERNEL_ID_TYPE_THREAD; }
+    KernelIDType GetIDType() const { return KERNEL_ID_TYPE_THREAD; }
 
     typedef void (*Function)(Interface*);
 
@@ -54,36 +55,23 @@ public:
     };
 
     /**
-     * Gets the Handle for the serice
-     * @return Handle of service in native format
-     */
-    Handle GetHandle() const {
-        return m_handle;
-    }
-
-    /**
      * Gets the string name used by CTROS for a service
      * @return Port name of service
      */
-    virtual std::string GetPortName() const {
+    virtual const char *GetPortName() const {
         return "[UNKNOWN SERVICE PORT]";
     }
 
     /// Allocates a new handle for the service
     Handle NewHandle() {
-        Handle handle = (m_handles.size() << 16) | m_handle;
+        Handle handle = (m_handles.size() << 16) | 0;//m_handle;
         m_handles.push_back(handle);
         return handle;
     }
 
     /// Frees a handle from the service
     void DeleteHandle(Handle handle) {
-        for(auto iter = m_handles.begin(); iter != m_handles.end(); ++iter) {
-            if(*iter == handle) {
-                m_handles.erase(iter);
-                break;
-            }
-        }
+        m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 
     /**
@@ -96,12 +84,12 @@ public:
 
         if (itr == m_functions.end()) {
             ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
-                GetPortName().c_str(), cmd_buff[0]);
+                GetPortName(), cmd_buff[0]);
             return -1;
         }
         if (itr->second.func == NULL) {
             ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
-                GetPortName().c_str(), itr->second.name.c_str());
+                GetPortName(), itr->second.name.c_str());
             return -1;
         } 
 
@@ -122,10 +110,10 @@ protected:
     }
 
 private:
-    u32 m_handle;
-    
+
     std::vector<Handle>    m_handles;
     std::map<u32, FunctionInfo>     m_functions;
+
 };
 
 /// Simple class to manage accessing services from ports and UID handles
@@ -150,18 +138,9 @@ public:
 
 private:
 
-    /// Convert an index into m_services vector into a UID
-    static Handle GetHandleFromIndex(const int index) {
-        return index | 0x10000000;
-    }
-
-    /// Convert a UID into an index into m_services
-    static int GetIndexFromHandle(const Handle handle) {
-        return handle & 0x0FFFFFFF;
-    }
-
     std::vector<Interface*>     m_services;
     std::map<std::string, u32>  m_port_map;
+
 };
 
 /// Initialize ServiceManager

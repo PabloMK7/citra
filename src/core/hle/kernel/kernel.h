@@ -10,10 +10,11 @@ typedef u32 Handle;
 typedef s32 Result;
 
 enum KernelIDType {
-    KERNEL_ID_TYPE_THREAD       = 1,
-    KERNEL_ID_TYPE_SEMAPHORE    = 2,
-    KERNEL_ID_TYPE_MUTEX        = 3,
-    KERNEL_ID_TYPE_EVENT        = 4,
+    KERNEL_ID_TYPE_THREAD,
+    KERNEL_ID_TYPE_SEMAPHORE,
+    KERNEL_ID_TYPE_MUTEX,
+    KERNEL_ID_TYPE_EVENT,
+    KERNEL_ID_TYPE_SERVICE,
 };
 
 enum {
