@@ -89,9 +89,9 @@ Result ConnectToPort(void* out, const char* port_name) {
 }
 
 /// Synchronize to an OS service
-Result SendSyncRequest(Handle session) {
-    DEBUG_LOG(SVC, "SendSyncRequest called session=0x%08X");
-    Service::Interface* service = Service::g_manager->FetchFromHandle(session);
+Result SendSyncRequest(Handle handle) {
+    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
+    Service::Interface* service = Service::g_manager->FetchFromHandle(handle);
     service->Sync();
     return 0;
 }
