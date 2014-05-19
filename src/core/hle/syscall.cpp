@@ -120,7 +120,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d %s", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
     
-    for (int i = 0; i < handle_count; i++) {
+    for (u32 i = 0; i < handle_count; i++) {
         DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
     }
     return 0;
