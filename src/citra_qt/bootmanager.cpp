@@ -104,7 +104,7 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
     QGLFormat fmt;
     fmt.setProfile(QGLFormat::CoreProfile);
-    fmt.setVersion(4,1);
+    fmt.setVersion(3,2);
     fmt.setSampleBuffers(true);
     fmt.setSamples(4);
     

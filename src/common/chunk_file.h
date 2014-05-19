@@ -654,6 +654,7 @@ inline PointerWrapSection::~PointerWrapSection() {
 }
 
 
+// Commented out because it is currently unused, and breaks builds on OSX
 /*class CChunkFileReader
 {
 public:

@@ -20,13 +20,13 @@ void DumpTGA(std::string filename, int width, int height, u8* raw_data) {
     TGAHeader hdr;
     FILE* fout;
     u8 r, g, b;
-    
+
     memset(&hdr, 0, sizeof(hdr));
     hdr.datatypecode = 2; // uncompressed RGB
     hdr.bitsperpixel = 24; // 24 bpp
     hdr.width = width;
     hdr.height = height;
-    
+
     fout = fopen(filename.c_str(), "wb");
     fwrite(&hdr, sizeof(TGAHeader), 1, fout);
     for (int i = 0; i < height; i++) {
