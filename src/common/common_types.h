@@ -100,16 +100,17 @@ union t128 {
     __m128  a;              ///< 128-bit floating point (__m128 maps to the XMM[0-7] registers)
 };
 
+namespace common {
 /// Rectangle data structure
-class BasicRect {
+class Rect {
 public:
-    BasicRect(int x0=0, int y0=0, int x1=0, int y1=0) {
+    Rect(int x0=0, int y0=0, int x1=0, int y1=0) {
         x0_ = x0;
         y0_ = y0;
         x1_ = x1;
         y1_ = y1;
     }
-    ~BasicRect() { }
+    ~Rect() { }
 
     int x0_;    ///< Rect top left X-coordinate
     int y0_;    ///< Rect top left Y-coordinate
@@ -119,7 +120,8 @@ public:
     inline u32 width() const { return abs(x1_ - x0_); }
     inline u32 height() const { return abs(y1_ - y0_); }
 
-    inline bool operator == (const BasicRect& val) const {
+    inline bool operator == (const Rect& val) const {
         return (x0_ == val.x0_ && y0_ == val.y0_ && x1_ == val.x1_ && y1_ == val.y1_);
     }
 };
+}
