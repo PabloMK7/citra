@@ -132,11 +132,11 @@ Object* ObjectPool::CreateByIDType(int type) {
 }
 
 void Init() {
-    __KernelThreadingInit();
+    Kernel::ThreadingInit();
 }
 
 void Shutdown() {
-    __KernelThreadingShutdown();
+    Kernel::ThreadingShutdown();
 }
 
 } // namespace
@@ -147,7 +147,7 @@ bool __KernelLoadExec(u32 entry_point) {
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    Handle thread_id = __KernelSetupMainThread(0x30);
+    Handle thread_id = Kernel::SetupMainThread(0x30);
 
     return true;
 }

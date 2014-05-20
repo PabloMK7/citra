@@ -7,8 +7,6 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 
-class Thread;
-
 enum ThreadPriority {
     THREADPRIO_HIGHEST      = 0,
     THREADPRIO_DEFAULT      = 16,
@@ -21,18 +19,28 @@ enum ThreadProcessorId {
     THREADPROCESSORID_ALL   = 0xFFFFFFFC,
 };
 
+namespace Kernel {
+
 /// Creates a new thread - wrapper for external user
-Handle __KernelCreateThread(const char* name, u32 entry_point, s32 priority, 
-    s32 processor_id, u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
+Handle CreateThread(const char* name, u32 entry_point, s32 priority, s32 processor_id,
+    u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Sets up the primary application thread
-Handle __KernelSetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
+Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
-void __KernelReschedule(const char* reason);
+void Reschedule(const char* reason);
 
-void __KernelThreadingInit();
-void __KernelThreadingShutdown();
+/// Gets the current thread
+Handle GetCurrentThread();
 
 /// Put current thread in a wait state - on WaitSynchronization
-void __KernelWaitThread_Synchronization();
+void WaitThread_Synchronization();
+
+/// Initialize threading
+void ThreadingInit();
+
+/// Shutdown threading
+void ThreadingShutdown();
+
+} // namespace

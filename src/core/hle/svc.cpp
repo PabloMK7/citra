@@ -123,7 +123,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     for (u32 i = 0; i < handle_count; i++) {
         DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
     }
-    __KernelReschedule("WaitSynchronizationN");
+    Kernel::Reschedule("WaitSynchronizationN");
 
     return 0;
 }
@@ -175,7 +175,7 @@ Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 st
         "threadpriority=0x%08X, processorid=0x%08X", entry_point, name.c_str(), arg, stack_top,
         priority, processor_id);
 
-    Handle handle = __KernelCreateThread(name.c_str(), entry_point, priority, processor_id, 
+    Handle handle = Kernel::CreateThread(name.c_str(), entry_point, priority, processor_id, 
         stack_top);
     Core::g_app_core->SetReg(1, 0xFEEDDEAF);
     
