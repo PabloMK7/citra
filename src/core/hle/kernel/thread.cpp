@@ -45,8 +45,8 @@ enum WaitType {
 class Thread : public Kernel::Object {
 public:
 
-    const char *GetName() { return name; }
-    const char *GetTypeName() { return "Thread"; }
+    const char* GetName() { return name; }
+    const char* GetTypeName() { return "Thread"; }
 
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Thread; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Thread; }
@@ -85,11 +85,11 @@ Handle g_current_thread_handle;
 Thread* g_current_thread;
 
 
-inline Thread *__GetCurrentThread() {
+inline Thread* __GetCurrentThread() {
     return g_current_thread;
 }
 
-inline void __SetCurrentThread(Thread *t) {
+inline void __SetCurrentThread(Thread* t) {
     g_current_thread = t;
     g_current_thread_handle = t->GetHandle();
 }
@@ -97,7 +97,7 @@ inline void __SetCurrentThread(Thread *t) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Saves the current CPU context
-void __KernelSaveContext(ThreadContext &ctx) {
+void __KernelSaveContext(ThreadContext& ctx) {
     ctx.cpu_registers[0] = Core::g_app_core->GetReg(0);
     ctx.cpu_registers[1] = Core::g_app_core->GetReg(1);
     ctx.cpu_registers[2] = Core::g_app_core->GetReg(2);
@@ -118,7 +118,7 @@ void __KernelSaveContext(ThreadContext &ctx) {
 }
 
 /// Loads a CPU context
-void __KernelLoadContext(const ThreadContext &ctx) {
+void __KernelLoadContext(const ThreadContext& ctx) {
     Core::g_app_core->SetReg(0, ctx.cpu_registers[0]);
     Core::g_app_core->SetReg(1, ctx.cpu_registers[1]);
     Core::g_app_core->SetReg(2, ctx.cpu_registers[2]);
@@ -141,7 +141,7 @@ void __KernelLoadContext(const ThreadContext &ctx) {
 }
 
 /// Resets a thread
-void __KernelResetThread(Thread *t, s32 lowest_priority) {
+void __KernelResetThread(Thread* t, s32 lowest_priority) {
     memset(&t->context, 0, sizeof(ThreadContext));
 
     t->context.pc = t->entry_point;
@@ -155,7 +155,7 @@ void __KernelResetThread(Thread *t, s32 lowest_priority) {
 }
 
 /// Change a thread to "ready" state
-void __KernelChangeReadyState(Thread *t, bool ready) {
+void __KernelChangeReadyState(Thread* t, bool ready) {
     Handle handle = t->GetHandle();
     if (t->IsReady()) {
         if (!ready) {
@@ -172,7 +172,7 @@ void __KernelChangeReadyState(Thread *t, bool ready) {
 }
 
 /// Changes a threads state
-void __KernelChangeThreadState(Thread *t, ThreadStatus new_status) {
+void __KernelChangeThreadState(Thread* t, ThreadStatus new_status) {
     if (!t || t->status == new_status) {
         return;
     }
@@ -187,7 +187,7 @@ void __KernelChangeThreadState(Thread *t, ThreadStatus new_status) {
 }
 
 /// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
-void __KernelCallThread(Thread *t) {
+void __KernelCallThread(Thread* t) {
     // Stop waiting
     if (t->wait_type != WAITTYPE_NONE) {
         t->wait_type = WAITTYPE_NONE;
@@ -196,10 +196,10 @@ void __KernelCallThread(Thread *t) {
 }
 
 /// Creates a new thread
-Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, s32 priority,
+Thread* __KernelCreateThread(Handle& handle, const char* name, u32 entry_point, s32 priority,
     s32 processor_id, u32 stack_top, int stack_size) {
 
-    Thread *t = new Thread;
+    Thread* t = new Thread;
     
     handle = Kernel::g_object_pool.Create(t);
     
@@ -221,7 +221,7 @@ Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, 
 }
 
 /// Creates a new thread - wrapper for external user
-Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority, s32 processor_id,
+Handle __KernelCreateThread(const char* name, u32 entry_point, s32 priority, s32 processor_id,
     u32 stack_top, int stack_size) {
     if (name == NULL) {
         ERROR_LOG(KERNEL, "__KernelCreateThread(): NULL name");
@@ -245,7 +245,7 @@ Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority, s32
         return -1;
     }
     Handle handle;
-    Thread *t = __KernelCreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
+    Thread* t = __KernelCreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
         stack_size);
 
     HLE::EatCycles(32000);
@@ -260,8 +260,8 @@ Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority, s32
 }
 
 /// Switches CPU context to that of the specified thread
-void __KernelSwitchContext(Thread* t, const char *reason) {
-    Thread *cur = __GetCurrentThread();
+void __KernelSwitchContext(Thread* t, const char* reason) {
+    Thread* cur = __GetCurrentThread();
     
     // Save context for current thread
     if (cur) {
@@ -284,9 +284,9 @@ void __KernelSwitchContext(Thread* t, const char *reason) {
 }
 
 /// Gets the next thread that is ready to be run by priority
-Thread *__KernelNextThread() {
+Thread* __KernelNextThread() {
     Handle next;
-    Thread *cur = __GetCurrentThread();
+    Thread* cur = __GetCurrentThread();
     
     if (cur && cur->IsRunning()) {
         next = g_thread_ready_queue.pop_first_better(cur->current_priority);
@@ -304,13 +304,13 @@ Handle __KernelSetupMainThread(s32 priority, int stack_size) {
     Handle handle;
     
     // Initialize new "main" thread
-    Thread *t = __KernelCreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
+    Thread* t = __KernelCreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
         THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
     
     __KernelResetThread(t, 0);
     
     // If running another thread already, set it to "ready" state
-    Thread *cur = __GetCurrentThread();
+    Thread* cur = __GetCurrentThread();
     if (cur && cur->IsRunning()) {
         __KernelChangeReadyState(cur, true);
     }
@@ -326,7 +326,7 @@ Handle __KernelSetupMainThread(s32 priority, int stack_size) {
 /// Resumes a thread from waiting by marking it as "ready"
 void __KernelResumeThreadFromWait(Handle handle) {
     u32 error;
-    Thread *t = Kernel::g_object_pool.Get<Thread>(handle, error);
+    Thread* t = Kernel::g_object_pool.Get<Thread>(handle, error);
     if (t) {
         t->status &= ~THREADSTATUS_WAIT;
         if (!(t->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
@@ -336,15 +336,15 @@ void __KernelResumeThreadFromWait(Handle handle) {
 }
 
 /// Puts a thread in the wait state for the given type/reason
-void __KernelWaitCurThread(WaitType wait_type, const char *reason) {
-    Thread *t = __GetCurrentThread();
+void __KernelWaitCurThread(WaitType wait_type, const char* reason) {
+    Thread* t = __GetCurrentThread();
     t->wait_type = wait_type;
     __KernelChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
 }
 
 /// Reschedules to the next available thread (call after current thread is suspended)
-void __KernelReschedule(const char *reason) {
-    Thread *next = __KernelNextThread();
+void __KernelReschedule(const char* reason) {
+    Thread* next = __KernelNextThread();
     if (next > 0) {
         __KernelSwitchContext(next, reason);
     }
