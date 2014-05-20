@@ -82,6 +82,6 @@ protected:
 
 private:
 
-    ARMul_State* m_state;
+    ARMul_State* state;
 
 };

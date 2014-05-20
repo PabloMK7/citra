@@ -13,7 +13,7 @@
 class ARM_Interface : NonCopyable {
 public:
     ARM_Interface() {
-        m_num_instructions = 0;
+        num_instructions = 0;
     }
 
     ~ARM_Interface() {
@@ -25,7 +25,7 @@ public:
      */
     void Run(int num_instructions) {
         ExecuteInstructions(num_instructions);
-        m_num_instructions += num_instructions;
+        num_instructions += num_instructions;
     }
 
     /// Step CPU by one instruction
@@ -89,9 +89,9 @@ public:
      */
     virtual void LoadContext(const ThreadContext& ctx) = 0;
 
-    /// Getter for m_num_instructions
+    /// Getter for num_instructions
     u64 GetNumInstructions() {
-        return m_num_instructions;
+        return num_instructions;
     }
 
 protected:
@@ -104,6 +104,6 @@ protected:
 
 private:
 
-    u64 m_num_instructions; ///< Number of instructions executed
+    u64 num_instructions; ///< Number of instructions executed
 
 };
