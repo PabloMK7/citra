@@ -84,9 +84,6 @@
     <ClCompile Include="hle\hle.cpp">
       <Filter>hle</Filter>
     </ClCompile>
-    <ClCompile Include="hle\syscall.cpp">
-      <Filter>hle</Filter>
-    </ClCompile>
     <ClCompile Include="hle\service\service.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
@@ -162,6 +159,9 @@
     <ClCompile Include="hle\kernel\thread.cpp">
       <Filter>hle\kernel</Filter>
     </ClCompile>
+    <ClCompile Include="hle\svc.cpp">
+      <Filter>hle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -226,9 +226,6 @@
     <ClInclude Include="hle\service\service.h">
       <Filter>hle\service</Filter>
     </ClInclude>
-    <ClInclude Include="hle\syscall.h">
-      <Filter>hle</Filter>
-    </ClInclude>
     <ClInclude Include="hle\service\apt.h">
       <Filter>hle\service</Filter>
     </ClInclude>
@@ -288,6 +285,9 @@
     </ClInclude>
     <ClInclude Include="hle\kernel\thread.h">
       <Filter>hle\kernel</Filter>
+    </ClInclude>
+    <ClInclude Include="hle\svc.h">
+      <Filter>hle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

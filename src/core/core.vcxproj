@@ -175,7 +175,7 @@
     <ClCompile Include="hle\service\hid.cpp" />
     <ClCompile Include="hle\service\service.cpp" />
     <ClCompile Include="hle\service\srv.cpp" />
-    <ClCompile Include="hle\syscall.cpp" />
+    <ClCompile Include="hle\svc.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\lcd.cpp" />
     <ClCompile Include="hw\ndma.cpp" />
@@ -223,7 +223,7 @@
     <ClInclude Include="hle\service\hid.h" />
     <ClInclude Include="hle\service\service.h" />
     <ClInclude Include="hle\service\srv.h" />
-    <ClInclude Include="hle\syscall.h" />
+    <ClInclude Include="hle\svc.h" />
     <ClInclude Include="hw\hw.h" />
     <ClInclude Include="hw\lcd.h" />
     <ClInclude Include="hw\ndma.h" />

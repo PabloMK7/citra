@@ -13,14 +13,14 @@
 #include "core/hle/kernel/thread.h"
 
 #include "core/hle/function_wrappers.h"
-#include "core/hle/syscall.h"
+#include "core/hle/svc.h"
 #include "core/hle/service/service.h"
 #include "core/hle/kernel/thread.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Syscall
+// Namespace SVC
 
-namespace Syscall {
+namespace SVC {
 
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
@@ -123,6 +123,8 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     for (u32 i = 0; i < handle_count; i++) {
         DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
     }
+    __KernelReschedule("WaitSynchronizationN");
+
     return 0;
 }
 
@@ -212,7 +214,7 @@ Result CreateEvent(void* _event, u32 reset_type) {
     return 0;
 }
 
-const HLE::FunctionDef Syscall_Table[] = {
+const HLE::FunctionDef SVC_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
     {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
     {0x02,  WrapI_VVU<QueryMemory>,                     "QueryMemory"},
@@ -342,7 +344,7 @@ const HLE::FunctionDef Syscall_Table[] = {
 };
 
 void Register() {
-    HLE::RegisterModule("SyscallTable", ARRAY_SIZE(Syscall_Table), Syscall_Table);
+    HLE::RegisterModule("SVC_Table", ARRAY_SIZE(SVC_Table), SVC_Table);
 }
 
 } // namespace
