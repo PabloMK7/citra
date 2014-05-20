@@ -50,7 +50,7 @@ void EmuThread::run()
 
 void EmuThread::Stop()
 {
-	if (!isRunning())
+    if (!isRunning())
     {
         INFO_LOG(MASTER_LOG, "EmuThread::Stop called while emu thread wasn't running, returning...");
         return;
@@ -65,7 +65,7 @@ void EmuThread::Stop()
         terminate();
         wait(1000);
         if (isRunning())
-			WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");
+            WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");
     }
     INFO_LOG(MASTER_LOG, "EmuThread stopped");
 }
@@ -76,9 +76,8 @@ void EmuThread::Stop()
 class GGLWidgetInternal : public QGLWidget
 {
 public:
-    GGLWidgetInternal(GRenderWindow* parent) : QGLWidget(parent)
+    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(parent)
     {
-        setAutoBufferSwap(false);
         doneCurrent();
         parent_ = parent;
     }
@@ -106,8 +105,13 @@ EmuThread& GRenderWindow::GetEmuThread()
 GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this)
 {
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
-
-    child = new GGLWidgetInternal(this);
+    QGLFormat fmt;
+    fmt.setProfile(QGLFormat::CoreProfile);
+    fmt.setVersion(3,2);
+    fmt.setSampleBuffers(true);
+    fmt.setSamples(4);
+    
+    child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
     resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
@@ -147,12 +151,12 @@ void GRenderWindow::DoneCurrent()
 void GRenderWindow::PollEvents() {
     // TODO(ShizZy): Does this belong here? This is a reasonable place to update the window title
     //  from the main thread, but this should probably be in an event handler...
-	/*
-	static char title[128];
+    /*
+    static char title[128];
     sprintf(title, "%s (FPS: %02.02f)", window_title_.c_str(), 
         video_core::g_renderer->current_fps());
     setWindowTitle(title);
-	*/
+    */
 }
 
 void GRenderWindow::BackupGeometry()
@@ -185,26 +189,26 @@ QByteArray GRenderWindow::saveGeometry()
 
 void GRenderWindow::keyPressEvent(QKeyEvent* event)
 {
-	/*
-	bool key_processed = false;
+    /*
+    bool key_processed = false;
     for (unsigned int channel = 0; channel < 4 && controller_interface(); ++channel)
         if (controller_interface()->SetControllerStatus(channel, event->key(), input_common::GCController::PRESSED))
             key_processed = true;
 
     if (!key_processed)
         QWidget::keyPressEvent(event);
-	*/
+    */
 }
 
 void GRenderWindow::keyReleaseEvent(QKeyEvent* event)
 {
-	/*
-	bool key_processed = false;
+    /*
+    bool key_processed = false;
     for (unsigned int channel = 0; channel < 4 && controller_interface(); ++channel)
         if (controller_interface()->SetControllerStatus(channel, event->key(), input_common::GCController::RELEASED))
             key_processed = true;
 
     if (!key_processed)
         QWidget::keyPressEvent(event);
-	*/
+    */
 }

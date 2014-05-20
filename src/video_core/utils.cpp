@@ -8,7 +8,6 @@
 #include "video_core/utils.h"
 
 namespace VideoCore {
-
 /**
  * Dumps a texture to TGA
  * @param filename String filename to dump texture to
@@ -32,9 +31,9 @@ void DumpTGA(std::string filename, int width, int height, u8* raw_data) {
     fwrite(&hdr, sizeof(TGAHeader), 1, fout);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            r = raw_data[(4 * (i * width)) + (4 * j) + 0];
-            g = raw_data[(4 * (i * width)) + (4 * j) + 1];
-            b = raw_data[(4 * (i * width)) + (4 * j) + 2];
+            b = raw_data[(3 * (i * width)) + (3 * j) + 0];
+            g = raw_data[(3 * (i * width)) + (3 * j) + 1];
+            r = raw_data[(3 * (i * width)) + (3 * j) + 2];
             putc(b, fout);
             putc(g, fout);
             putc(r, fout);
@@ -42,5 +41,4 @@ void DumpTGA(std::string filename, int width, int height, u8* raw_data) {
     }
     fclose(fout);
 }
-
 } // namespace

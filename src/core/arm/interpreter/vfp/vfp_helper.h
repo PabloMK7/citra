@@ -50,7 +50,7 @@
 #define pr_info //printf
 #define pr_debug //printf
 
-static u32 fls(int x);
+static u32 vfp_fls(int x);
 #define do_div(n, base) {n/=base;}
 
 /* From vfpinstr.h */
@@ -508,7 +508,7 @@ struct op {
 	u32 flags;
 };
 
-static inline u32 fls(int x)
+static u32 vfp_fls(int x)
 {
 	int r = 32;
 

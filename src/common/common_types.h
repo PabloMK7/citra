@@ -62,7 +62,7 @@ typedef signed long long    s64;    ///< 64-bit signed int
 typedef float   f32;    ///< 32-bit floating point
 typedef double  f64;    ///< 64-bit floating point
 
-#include "common/swap.h"
+#include "common/common.h"
 
 /// Union for fast 16-bit type casting
 union t16 {
@@ -100,6 +100,7 @@ union t128 {
     __m128  a;              ///< 128-bit floating point (__m128 maps to the XMM[0-7] registers)
 };
 
+namespace common {
 /// Rectangle data structure
 class Rect {
 public:
@@ -123,3 +124,4 @@ public:
         return (x0_ == val.x0_ && y0_ == val.y0_ && x1_ == val.x1_ && y1_ == val.y1_);
     }
 };
+}

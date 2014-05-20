@@ -654,7 +654,8 @@ inline PointerWrapSection::~PointerWrapSection() {
 }
 
 
-class CChunkFileReader
+// Commented out because it is currently unused, and breaks builds on OSX
+/*class CChunkFileReader
 {
 public:
     enum Error {
@@ -869,6 +870,6 @@ private:
         int UncompressedSize;
         char GitVersion[32];
     };
-};
+}; */
 
 #endif  // _POINTERWRAP_H_

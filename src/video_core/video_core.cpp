@@ -30,6 +30,9 @@ void Start() {
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
+    // Known problem with GLEW prevents contexts above 2.x on OSX unless glewExperimental is enabled.
+    glewExperimental = GL_TRUE;
+
     g_emu_window = emu_window;
     g_emu_window->MakeCurrent();
     g_renderer = new RendererOpenGL();

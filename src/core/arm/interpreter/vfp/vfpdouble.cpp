@@ -69,9 +69,9 @@ static void vfp_double_dump(const char *str, struct vfp_double *d)
 
 static void vfp_double_normalise_denormal(struct vfp_double *vd)
 {
-	int bits = 31 - fls(vd->significand >> 32);
+	int bits = 31 - vfp_fls(vd->significand >> 32);
 	if (bits == 31)
-		bits = 63 - fls(vd->significand);
+		bits = 63 - vfp_fls(vd->significand);
 
 	vfp_double_dump("normalise_denormal: in", vd);
 
@@ -108,9 +108,9 @@ u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double *vd,
 	exponent = vd->exponent;
 	significand = vd->significand;
 
-	shift = 32 - fls(significand >> 32);
+	shift = 32 - vfp_fls(significand >> 32);
 	if (shift == 32)
-		shift = 64 - fls(significand);
+		shift = 64 - vfp_fls(significand);
 	if (shift) {
 		exponent -= shift;
 		significand <<= shift;
