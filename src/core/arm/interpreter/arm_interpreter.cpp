@@ -101,3 +101,39 @@ void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
     m_state->NumInstrsToExecute = num_instructions;
     ARMul_Emulate32(m_state);
 }
+
+/**
+ * Saves the current CPU context
+ * @param ctx Thread context to save
+ * @todo Do we need to save Reg[15] and NextInstr?
+ */
+void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
+    memcpy(ctx.cpu_registers, m_state->Reg, sizeof(ctx.cpu_registers));
+    memcpy(ctx.fpu_registers, m_state->ExtReg, sizeof(ctx.fpu_registers));
+
+    ctx.sp = m_state->Reg[13];
+    ctx.lr = m_state->Reg[14];
+    ctx.pc = m_state->pc;
+    ctx.cpsr = m_state->Cpsr;
+    
+    ctx.fpscr = m_state->VFP[1];
+    ctx.fpexc = m_state->VFP[2];
+}
+
+/**
+ * Loads a CPU context
+ * @param ctx Thread context to load
+ * @param Do we need to load Reg[15] and NextInstr?
+ */
+void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
+    memcpy(m_state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
+    memcpy(m_state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
+
+    m_state->Reg[13] = ctx.sp;
+    m_state->Reg[14] = ctx.lr;
+    m_state->pc = ctx.pc;
+    m_state->Cpsr = ctx.cpsr;
+
+    m_state->VFP[1] = ctx.fpscr;
+    m_state->VFP[2] = ctx.fpexc;
+}

@@ -7,6 +7,8 @@
 #include "common/common.h"
 #include "common/common_types.h"
 
+#include "core/hle/svc.h"
+
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
@@ -75,6 +77,18 @@ public:
      */
     virtual u64 GetTicks() const = 0;
 
+    /**
+     * Saves the current CPU context
+     * @param ctx Thread context to save
+     */
+    virtual void SaveContext(ThreadContext& ctx) = 0;
+
+    /**
+     * Loads a CPU context
+     * @param ctx Thread context to load
+     */
+    virtual void LoadContext(const ThreadContext& ctx) = 0;
+
     /// Getter for m_num_instructions
     u64 GetNumInstructions() {
         return m_num_instructions;
@@ -90,6 +104,6 @@ protected:
 
 private:
 
-    u64 m_num_instructions;                     ///< Number of instructions executed
+    u64 m_num_instructions; ///< Number of instructions executed
 
 };

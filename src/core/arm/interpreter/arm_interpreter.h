@@ -60,6 +60,18 @@ public:
      */
     u64 GetTicks() const;
 
+    /**
+     * Saves the current CPU context
+     * @param ctx Thread context to save
+     */
+    void SaveContext(ThreadContext& ctx);
+
+    /**
+     * Loads a CPU context
+     * @param ctx Thread context to load
+     */
+    void LoadContext(const ThreadContext& ctx);
+
 protected:
 
     /**

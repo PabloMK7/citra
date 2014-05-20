@@ -98,46 +98,12 @@ inline void __SetCurrentThread(Thread* t) {
 
 /// Saves the current CPU context
 void __KernelSaveContext(ThreadContext& ctx) {
-    ctx.cpu_registers[0] = Core::g_app_core->GetReg(0);
-    ctx.cpu_registers[1] = Core::g_app_core->GetReg(1);
-    ctx.cpu_registers[2] = Core::g_app_core->GetReg(2);
-    ctx.cpu_registers[3] = Core::g_app_core->GetReg(3);
-    ctx.cpu_registers[4] = Core::g_app_core->GetReg(4);
-    ctx.cpu_registers[5] = Core::g_app_core->GetReg(5);
-    ctx.cpu_registers[6] = Core::g_app_core->GetReg(6);
-    ctx.cpu_registers[7] = Core::g_app_core->GetReg(7);
-    ctx.cpu_registers[8] = Core::g_app_core->GetReg(8);
-    ctx.cpu_registers[9] = Core::g_app_core->GetReg(9);
-    ctx.cpu_registers[10] = Core::g_app_core->GetReg(10);
-    ctx.cpu_registers[11] = Core::g_app_core->GetReg(11);
-    ctx.cpu_registers[12] = Core::g_app_core->GetReg(12);
-    ctx.sp = Core::g_app_core->GetReg(13);
-    ctx.lr = Core::g_app_core->GetReg(14);
-    ctx.pc = Core::g_app_core->GetPC();
-    ctx.cpsr = Core::g_app_core->GetCPSR();
+    Core::g_app_core->SaveContext(ctx);
 }
 
 /// Loads a CPU context
 void __KernelLoadContext(const ThreadContext& ctx) {
-    Core::g_app_core->SetReg(0, ctx.cpu_registers[0]);
-    Core::g_app_core->SetReg(1, ctx.cpu_registers[1]);
-    Core::g_app_core->SetReg(2, ctx.cpu_registers[2]);
-    Core::g_app_core->SetReg(3, ctx.cpu_registers[3]);
-    Core::g_app_core->SetReg(4, ctx.cpu_registers[4]);
-    Core::g_app_core->SetReg(5, ctx.cpu_registers[5]);
-    Core::g_app_core->SetReg(6, ctx.cpu_registers[6]);
-    Core::g_app_core->SetReg(7, ctx.cpu_registers[7]);
-    Core::g_app_core->SetReg(8, ctx.cpu_registers[8]);
-    Core::g_app_core->SetReg(9, ctx.cpu_registers[9]);
-    Core::g_app_core->SetReg(10, ctx.cpu_registers[10]);
-    Core::g_app_core->SetReg(11, ctx.cpu_registers[11]);
-    Core::g_app_core->SetReg(12, ctx.cpu_registers[12]);
-    Core::g_app_core->SetReg(13, ctx.sp);
-    Core::g_app_core->SetReg(14, ctx.lr);
-    //Core::g_app_core->SetReg(15, ctx.pc);
-
-    Core::g_app_core->SetPC(ctx.pc);
-    Core::g_app_core->SetCPSR(ctx.cpsr);
+    Core::g_app_core->LoadContext(ctx);
 }
 
 /// Resets a thread
