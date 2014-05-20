@@ -36,15 +36,15 @@ inline static u32* GetCommandBuffer(const int offset=0) {
 class Manager;
 
 /// Interface to a CTROS service
-class Interface  : public KernelObject {
+class Interface  : public Kernel::Object {
     friend class Manager;
 public:
     
     const char *GetName() { return GetPortName(); }
     const char *GetTypeName() { return GetPortName(); }
 
-    static KernelIDType GetStaticIDType() { return KERNEL_ID_TYPE_THREAD; }
-    KernelIDType GetIDType() const { return KERNEL_ID_TYPE_THREAD; }
+    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
+    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Service; }
 
     typedef void (*Function)(Interface*);
 
@@ -63,8 +63,8 @@ public:
     }
 
     /// Allocates a new handle for the service
-    Handle CreateHandle(KernelObject *obj) {
-        Handle handle = g_kernel_objects.Create(obj);
+    Handle CreateHandle(Kernel::Object *obj) {
+        Handle handle = Kernel::g_object_pool.Create(obj);
         m_handles.push_back(handle);
         return handle;
     }
@@ -72,7 +72,7 @@ public:
     /// Frees a handle from the service
     template <class T>
     void DeleteHandle(const Handle handle) {
-        g_kernel_objects.Destroy<T>(handle);
+        g_object_pool.Destroy<T>(handle);
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 

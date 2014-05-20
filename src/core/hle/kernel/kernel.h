@@ -9,41 +9,50 @@
 typedef u32 Handle;
 typedef s32 Result;
 
-enum KernelIDType {
-    KERNEL_ID_TYPE_THREAD,
-    KERNEL_ID_TYPE_SEMAPHORE,
-    KERNEL_ID_TYPE_MUTEX,
-    KERNEL_ID_TYPE_EVENT,
-    KERNEL_ID_TYPE_SERVICE,
-};
+namespace Kernel {
 
+enum class HandleType : u32 {
+    Unknown         = 0,
+    Port            = 1,
+    Service         = 2,
+    Event           = 3,
+    Mutex           = 4,
+    SharedMemory    = 5,
+    Redirection     = 6,
+    Thread          = 7,
+    Process         = 8,
+    Arbiter         = 9,
+    File            = 10,
+    Semaphore       = 11,
+};
+    
 enum {
-    KERNEL_MAX_NAME_LENGTH      = 0x100,
-    KERNEL_DEFAULT_STACK_SIZE   = 0x4000,
+    MAX_NAME_LENGTH     = 0x100,
+    DEFAULT_STACK_SIZE  = 0x4000,
 };
 
-class KernelObjectPool;
+class ObjectPool;
 
-class KernelObject {
-    friend class KernelObjectPool;
+class Object : NonCopyable {
+    friend class ObjectPool;
     u32 handle;
 public:
-    virtual ~KernelObject() {}
+    virtual ~Object() {}
     Handle GetHandle() const { return handle; }
     virtual const char *GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual const char *GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
-    virtual KernelIDType GetIDType() const = 0;
+    virtual Kernel::HandleType GetHandleType() const = 0;
 };
 
-class KernelObjectPool {
+class ObjectPool : NonCopyable {
 public:
-    KernelObjectPool();
-    ~KernelObjectPool() {}
+    ObjectPool();
+    ~ObjectPool() {}
 
     // Allocates a handle within the range and inserts the object into the map.
-    Handle Create(KernelObject *obj, int range_bottom=INITIAL_NEXT_ID, int range_top=0x7FFFFFFF);
+    Handle Create(Object* obj, int range_bottom=INITIAL_NEXT_ID, int range_top=0x7FFFFFFF);
 
-    static KernelObject *CreateByIDType(int type);
+    static Object* CreateByIDType(int type);
 
     template <class T>
     u32 Destroy(Handle handle) {
@@ -71,7 +80,7 @@ public:
             // it just acted as a static case and everything worked. This means that we will never
             // see the Wrong type object error below, but we'll just have to live with that danger.
             T* t = static_cast<T*>(pool[handle - HANDLE_OFFSET]);
-            if (t == 0 || t->GetIDType() != T::GetStaticIDType()) {
+            if (t == 0 || t->GetHandleType() != T::GetStaticHandleType()) {
                 WARN_LOG(KERNEL, "Kernel: Wrong object type for %i (%08x)", handle, handle);
                 outError = 0;//T::GetMissingErrorCode();
                 return 0;
@@ -86,17 +95,17 @@ public:
     T *GetFast(Handle handle) {
         const Handle realHandle = handle - HANDLE_OFFSET;
         _dbg_assert_(KERNEL, realHandle >= 0 && realHandle < MAX_COUNT && occupied[realHandle]);
-        return static_cast<T *>(pool[realHandle]);
+        return static_cast<T*>(pool[realHandle]);
     }
 
     template <class T, typename ArgT>
-    void Iterate(bool func(T *, ArgT), ArgT arg) {
+    void Iterate(bool func(T*, ArgT), ArgT arg) {
         int type = T::GetStaticIDType();
         for (int i = 0; i < MAX_COUNT; i++)
         {
             if (!occupied[i])
                 continue;
-            T *t = static_cast<T *>(pool[i]);
+            T* t = static_cast<T*>(pool[i]);
             if (t->GetIDType() == type) {
                 if (!func(t, arg))
                     break;
@@ -104,33 +113,37 @@ public:
         }
     }
 
-    bool GetIDType(Handle handle, int *type) const {
+    bool GetIDType(Handle handle, HandleType* type) const {
         if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) || 
             !occupied[handle - HANDLE_OFFSET]) {
             ERROR_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
             return false;
         }
-        KernelObject *t = pool[handle - HANDLE_OFFSET];
-        *type = t->GetIDType();
+        Object* t = pool[handle - HANDLE_OFFSET];
+        *type = t->GetHandleType();
         return true;
     }
 
-    KernelObject *&operator [](Handle handle);
+    Object* &operator [](Handle handle);
     void List();
     void Clear();
     int GetCount();
 
 private:
+    
     enum {
         MAX_COUNT       = 0x1000,
         HANDLE_OFFSET   = 0x100,
         INITIAL_NEXT_ID = 0x10,
     };
-    KernelObject *pool[MAX_COUNT];
-    bool occupied[MAX_COUNT];
-    int next_id;
+
+    Object* pool[MAX_COUNT];
+    bool    occupied[MAX_COUNT];
+    int     next_id;
 };
 
-extern KernelObjectPool g_kernel_objects;
+extern ObjectPool g_object_pool;
+
+} // namespace
 
 bool __KernelLoadExec(u32 entry_point);

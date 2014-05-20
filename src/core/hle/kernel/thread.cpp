@@ -42,14 +42,14 @@ enum WaitType {
     WAITTYPE_SYNCH,
 };
 
-class Thread : public KernelObject {
+class Thread : public Kernel::Object {
 public:
 
     const char *GetName() { return name; }
     const char *GetTypeName() { return "Thread"; }
 
-    static KernelIDType GetStaticIDType() { return KERNEL_ID_TYPE_THREAD; }
-    KernelIDType GetIDType() const { return KERNEL_ID_TYPE_THREAD; }
+    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Thread; }
+    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Thread; }
 
     inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
     inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
@@ -71,7 +71,7 @@ public:
 
     WaitType wait_type;
 
-    char name[KERNEL_MAX_NAME_LENGTH+1];
+    char name[Kernel::MAX_NAME_LENGTH + 1];
 };
 
 // Lists all thread ids that aren't deleted/etc.
@@ -201,7 +201,7 @@ Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, 
 
     Thread *t = new Thread;
     
-    handle = g_kernel_objects.Create(t);
+    handle = Kernel::g_object_pool.Create(t);
     
     g_thread_queue.push_back(handle);
     g_thread_ready_queue.prepare(priority);
@@ -214,8 +214,8 @@ Thread *__KernelCreateThread(Handle &handle, const char *name, u32 entry_point, 
     t->processor_id = processor_id;
     t->wait_type = WAITTYPE_NONE;
     
-    strncpy(t->name, name, KERNEL_MAX_NAME_LENGTH);
-    t->name[KERNEL_MAX_NAME_LENGTH] = '\0';
+    strncpy(t->name, name, Kernel::MAX_NAME_LENGTH);
+    t->name[Kernel::MAX_NAME_LENGTH] = '\0';
     
     return t;
 }
@@ -296,7 +296,7 @@ Thread *__KernelNextThread() {
     if (next < 0) {
         return NULL;
     }
-    return g_kernel_objects.GetFast<Thread>(next);
+    return Kernel::g_object_pool.GetFast<Thread>(next);
 }
 
 /// Sets up the primary application thread
@@ -326,7 +326,7 @@ Handle __KernelSetupMainThread(s32 priority, int stack_size) {
 /// Resumes a thread from waiting by marking it as "ready"
 void __KernelResumeThreadFromWait(Handle handle) {
     u32 error;
-    Thread *t = g_kernel_objects.Get<Thread>(handle, error);
+    Thread *t = Kernel::g_object_pool.Get<Thread>(handle, error);
     if (t) {
         t->status &= ~THREADSTATUS_WAIT;
         if (!(t->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {

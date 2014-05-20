@@ -23,10 +23,10 @@ enum ThreadProcessorId {
 
 /// Creates a new thread - wrapper for external user
 Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority, 
-    s32 processor_id, u32 stack_top, int stack_size=KERNEL_DEFAULT_STACK_SIZE);
+    s32 processor_id, u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Sets up the primary application thread
-Handle __KernelSetupMainThread(s32 priority, int stack_size=KERNEL_DEFAULT_STACK_SIZE);
+Handle __KernelSetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void __KernelReschedule(const char *reason);

@@ -12,22 +12,16 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
-KernelObjectPool g_kernel_objects;
+namespace Kernel {
 
-void __KernelInit() {
-    __KernelThreadingInit();
-}
+ObjectPool g_object_pool;
 
-void __KernelShutdown() {
-    __KernelThreadingShutdown();
-}
-
-KernelObjectPool::KernelObjectPool() {
+ObjectPool::ObjectPool() {
     memset(occupied, 0, sizeof(bool) * MAX_COUNT);
     next_id = INITIAL_NEXT_ID;
 }
 
-Handle KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_top) {
+Handle ObjectPool::Create(Object* obj, int range_bottom, int range_top) {
     if (range_top > MAX_COUNT) {
         range_top = MAX_COUNT;
     }
@@ -46,8 +40,7 @@ Handle KernelObjectPool::Create(KernelObject *obj, int range_bottom, int range_t
     return 0;
 }
 
-bool KernelObjectPool::IsValid(Handle handle)
-{
+bool ObjectPool::IsValid(Handle handle) {
     int index = handle - HANDLE_OFFSET;
     if (index < 0)
         return false;
@@ -57,26 +50,24 @@ bool KernelObjectPool::IsValid(Handle handle)
     return occupied[index];
 }
 
-void KernelObjectPool::Clear()
-{
-    for (int i = 0; i < MAX_COUNT; i++)
-    {
+void ObjectPool::Clear() {
+    for (int i = 0; i < MAX_COUNT; i++) {
         //brutally clear everything, no validation
         if (occupied[i])
             delete pool[i];
         occupied[i] = false;
     }
-    memset(pool, 0, sizeof(KernelObject*)*MAX_COUNT);
+    memset(pool, 0, sizeof(Object*)*MAX_COUNT);
     next_id = INITIAL_NEXT_ID;
 }
 
-KernelObject *&KernelObjectPool::operator [](Handle handle)
+Object* &ObjectPool::operator [](Handle handle)
 {
     _dbg_assert_msg_(KERNEL, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
     return pool[handle - HANDLE_OFFSET];
 }
 
-void KernelObjectPool::List() {
+void ObjectPool::List() {
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i]) {
             if (pool[i]) {
@@ -87,18 +78,16 @@ void KernelObjectPool::List() {
     }
 }
 
-int KernelObjectPool::GetCount()
-{
+int ObjectPool::GetCount() {
     int count = 0;
-    for (int i = 0; i < MAX_COUNT; i++)
-    {
+    for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i])
             count++;
     }
     return count;
 }
 
-KernelObject *KernelObjectPool::CreateByIDType(int type) {
+Object* ObjectPool::CreateByIDType(int type) {
     // Used for save states.  This is ugly, but what other way is there?
     switch (type) {
     //case SCE_KERNEL_TMID_Alarm:
@@ -142,8 +131,18 @@ KernelObject *KernelObjectPool::CreateByIDType(int type) {
     }
 }
 
+void Init() {
+    __KernelThreadingInit();
+}
+
+void Shutdown() {
+    __KernelThreadingShutdown();
+}
+
+} // namespace
+
 bool __KernelLoadExec(u32 entry_point) {
-    __KernelInit();
+    Kernel::Init();
     
     Core::g_app_core->SetPC(entry_point);
 

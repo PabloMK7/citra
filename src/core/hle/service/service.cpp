@@ -34,7 +34,7 @@ Manager::~Manager() {
 
 /// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
-    m_port_map[service->GetPortName()] = g_kernel_objects.Create(service);
+    m_port_map[service->GetPortName()] = Kernel::g_object_pool.Create(service);
     m_services.push_back(service);
 }
 
@@ -48,7 +48,7 @@ void Manager::DeleteService(std::string port_name) {
 
 /// Get a Service Interface from its Handle
 Interface* Manager::FetchFromHandle(Handle handle) {
-    return g_kernel_objects.GetFast<Interface>(handle);
+    return Kernel::g_object_pool.GetFast<Interface>(handle);
 }
 
 /// Get a Service Interface from its port
