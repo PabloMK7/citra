@@ -23,7 +23,7 @@ void GetLockHandle(Service::Interface* self) {
 
     // TODO: This should be an actual mutex handle. Games will check that this is not non-zero 
     // (NULL), and fail if such. A faked non-zero value will at least enable further booting. 
-    cmd_buff[5] = 0xDEADBEEF;
+    cmd_buff[5] = 0x12345678;
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
