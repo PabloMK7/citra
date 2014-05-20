@@ -28,6 +28,9 @@ Handle __KernelCreateThread(const char *name, u32 entry_point, s32 priority,
 /// Sets up the primary application thread
 Handle __KernelSetupMainThread(s32 priority, int stack_size=KERNEL_DEFAULT_STACK_SIZE);
 
+/// Reschedules to the next available thread (call after current thread is suspended)
+void __KernelReschedule(const char *reason);
+
 void __KernelThreadingInit();
 void __KernelThreadingShutdown();
 
