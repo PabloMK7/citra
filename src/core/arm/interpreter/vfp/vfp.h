@@ -21,7 +21,7 @@
 #ifndef __VFP_H__
 #define __VFP_H__
 
-#define DBG(...) DEBUG_LOG(ARM11, __VA_ARGS__)
+#define DBG(...) //DEBUG_LOG(ARM11, __VA_ARGS__)
 
 #define vfpdebug //printf
 
