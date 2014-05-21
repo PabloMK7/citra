@@ -188,7 +188,7 @@ Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 st
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
     DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s", initial_locked ? "true" : "false");
-    Kernel::CreateMutex(*mutex, (bool)initial_locked);
+    *mutex = Kernel::CreateMutex((initial_locked != 0));
     Core::g_app_core->SetReg(1, *mutex);
     return 0;
 }

@@ -21,7 +21,8 @@ void Initialize(Service::Interface* self) {
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
-    cmd_buff[1] = Kernel::CreateMutex(cmd_buff[5], false);
+    cmd_buff[1] = 0; // No error
+    cmd_buff[5] = Kernel::CreateMutex(false);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

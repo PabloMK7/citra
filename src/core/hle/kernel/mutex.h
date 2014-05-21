@@ -21,6 +21,6 @@ Result ReleaseMutex(Handle handle);
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
  */
-Result CreateMutex(Handle& handle, bool initial_locked);
+Handle CreateMutex(bool initial_locked);
 
 } // namespace

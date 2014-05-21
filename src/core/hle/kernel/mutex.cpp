@@ -102,7 +102,7 @@ Result ReleaseMutex(Handle handle) {
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
  */
-Result CreateMutex(Handle& handle, bool initial_locked) {
+Mutex* CreateMutex(Handle& handle, bool initial_locked) {
     Mutex* mutex = new Mutex;
     handle = Kernel::g_object_pool.Create(mutex);
 
@@ -116,7 +116,17 @@ Result CreateMutex(Handle& handle, bool initial_locked) {
     } else {
         mutex->lock_thread = -1;
     }
-    return 0;
+    return mutex;
+}
+
+/**
+ * Creates a mutex
+ * @param initial_locked Specifies if the mutex should be locked initially
+ */
+Handle CreateMutex(bool initial_locked) {
+    Handle handle;
+    Mutex* mutex = CreateMutex(handle, initial_locked);
+    return handle;
 }
 
 } // namespace
