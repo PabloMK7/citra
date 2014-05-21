@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "common/common_types.h"
+#include "common/common.h"
 
 typedef u32 Handle;
 typedef s32 Result;
