@@ -10,7 +10,6 @@
 #include <string>
 
 #include "common/common.h"
-#include "common/common_types.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
