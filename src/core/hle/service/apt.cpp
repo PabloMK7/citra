@@ -3,9 +3,10 @@
 // Refer to the license.txt file included.
 
 
-#include "common/log.h"
+#include "common/common.h"
 
 #include "core/hle/hle.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/service/apt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,11 +20,8 @@ void Initialize(Service::Interface* self) {
 
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    u32 flags = cmd_buff[1];
-
-    // TODO: This should be an actual mutex handle. Games will check that this is not non-zero 
-    // (NULL), and fail if such. A faked non-zero value will at least enable further booting. 
-    cmd_buff[5] = 0x12345678;
+    u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
+    cmd_buff[1] = Kernel::CreateMutex(cmd_buff[5], false);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

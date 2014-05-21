@@ -169,6 +169,7 @@
     <ClCompile Include="hle\coprocessor.cpp" />
     <ClCompile Include="hle\hle.cpp" />
     <ClCompile Include="hle\kernel\kernel.cpp" />
+    <ClCompile Include="hle\kernel\mutex.cpp" />
     <ClCompile Include="hle\kernel\thread.cpp" />
     <ClCompile Include="hle\service\apt.cpp" />
     <ClCompile Include="hle\service\gsp.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="hle\function_wrappers.h" />
     <ClInclude Include="hle\hle.h" />
     <ClInclude Include="hle\kernel\kernel.h" />
+    <ClInclude Include="hle\kernel\mutex.h" />
     <ClInclude Include="hle\kernel\thread.h" />
     <ClInclude Include="hle\service\apt.h" />
     <ClInclude Include="hle\service\gsp.h" />

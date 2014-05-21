@@ -35,6 +35,7 @@ set(SRCS    core.cpp
             hle/coprocessor.cpp
             hle/svc.cpp
             hle/kernel/kernel.cpp
+            hle/kernel/mutex.cpp
             hle/kernel/thread.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp
