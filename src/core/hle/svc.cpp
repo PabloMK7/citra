@@ -162,8 +162,7 @@ Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void*
 }
 
 /// Creates a new thread
-Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 stack_top, 
-    u32 processor_id) {
+Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
     std::string name;
     if (Symbols::HasSymbol(entry_point)) {
         TSymbol symbol = Symbols::GetSymbol(entry_point);
@@ -177,9 +176,10 @@ Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 st
         "threadpriority=0x%08X, processorid=0x%08X", entry_point, name.c_str(), arg, stack_top,
         priority, processor_id);
 
-    Handle handle = Kernel::CreateThread(name.c_str(), entry_point, priority, processor_id, 
+    Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, processor_id,
         stack_top);
-    Core::g_app_core->SetReg(1, 0xFEEDDEAF);
+
+    Core::g_app_core->SetReg(1, thread);
     
     return 0;
 }
@@ -231,7 +231,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x05,  NULL,                                       "SetProcessAffinityMask"},
     {0x06,  NULL,                                       "GetProcessIdealProcessor"},
     {0x07,  NULL,                                       "SetProcessIdealProcessor"},
-    {0x08,  WrapI_VUUUUU<CreateThread>,                 "CreateThread"},
+    {0x08,  WrapI_UUUUU<CreateThread>,                  "CreateThread"},
     {0x09,  NULL,                                       "ExitThread"},
     {0x0A,  NULL,                                       "SleepThread"},
     {0x0B,  NULL,                                       "GetThreadPriority"},
