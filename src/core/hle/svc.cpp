@@ -10,6 +10,7 @@
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
 
 #include "core/hle/function_wrappers.h"
@@ -160,6 +161,7 @@ Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void*
     return 0;
 }
 
+/// Creates a new thread
 Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 stack_top, 
     u32 processor_id) {
     std::string name;
@@ -182,6 +184,7 @@ Result CreateThread(void* thread, u32 priority, u32 entry_point, u32 arg, u32 st
     return 0;
 }
 
+/// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateMutex called initial_locked=%s", 
@@ -190,16 +193,19 @@ Result CreateMutex(void* _mutex, u32 initial_locked) {
     return 0;
 }
 
+/// Release a mutex
 Result ReleaseMutex(Handle handle) {
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) ReleaseMutex called handle=0x%08X", handle);
     return 0;
 }
 
+/// Get current thread ID
 Result GetThreadId(void* thread_id, u32 thread) {
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
     return 0;
 }
 
+/// Query memory
 Result QueryMemory(void *_info, void *_out, u32 addr) {
     MemoryInfo* info = (MemoryInfo*) _info;
     PageInfo* out = (PageInfo*) _out;
@@ -207,6 +213,7 @@ Result QueryMemory(void *_info, void *_out, u32 addr) {
     return 0;
 }
 
+/// Create an event
 Result CreateEvent(void* _event, u32 reset_type) {
     Handle* event = (Handle*)_event;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateEvent called reset_type=0x%08X", reset_type);
