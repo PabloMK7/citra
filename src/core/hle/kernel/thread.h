@@ -31,6 +31,9 @@ Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule(const char* reason);
 
+/// Resumes a thread from waiting by marking it as "ready"
+void ResumeThreadFromWait(Handle handle);
+
 /// Gets the current thread
 Handle GetCurrentThread();
 

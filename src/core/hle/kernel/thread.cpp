@@ -200,8 +200,15 @@ Thread* __NextThread() {
     return Kernel::g_object_pool.GetFast<Thread>(next);
 }
 
+/// Puts a thread in the wait state for the given type/reason
+void __WaitCurThread(WaitType wait_type, const char* reason) {
+    Thread* t = __GetCurrentThread();
+    t->wait_type = wait_type;
+    __ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
+}
+
 /// Resumes a thread from waiting by marking it as "ready"
-void __ResumeThreadFromWait(Handle handle) {
+void ResumeThreadFromWait(Handle handle) {
     u32 error;
     Thread* t = Kernel::g_object_pool.Get<Thread>(handle, error);
     if (t) {
@@ -210,13 +217,6 @@ void __ResumeThreadFromWait(Handle handle) {
             __ChangeReadyState(t, true);
         }
     }
-}
-
-/// Puts a thread in the wait state for the given type/reason
-void __WaitCurThread(WaitType wait_type, const char* reason) {
-    Thread* t = __GetCurrentThread();
-    t->wait_type = wait_type;
-    __ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
 }
 
 /// Creates a new thread
