@@ -8,15 +8,16 @@
 #include "core/hle/kernel/kernel.h"
 
 enum ThreadPriority {
-    THREADPRIO_HIGHEST      = 0,
-    THREADPRIO_DEFAULT      = 16,
-    THREADPRIO_LOWEST       = 31,
+    THREADPRIO_HIGHEST      = 0,    ///< Highest thread priority
+    THREADPRIO_DEFAULT      = 16,   ///< Default thread priority for userland apps
+    THREADPRIO_LOW          = 31,   ///< Low range of thread priority for userland apps
+    THREADPRIO_LOWEST       = 63,   ///< Thread priority max checked by svcCreateThread
 };
 
 enum ThreadProcessorId {
-    THREADPROCESSORID_0     = 0xFFFFFFFE,
-    THREADPROCESSORID_1     = 0xFFFFFFFD,
-    THREADPROCESSORID_ALL   = 0xFFFFFFFC,
+    THREADPROCESSORID_0     = 0xFFFFFFFE,   ///< Enables core appcode
+    THREADPROCESSORID_1     = 0xFFFFFFFD,   ///< Enables core syscore
+    THREADPROCESSORID_ALL   = 0xFFFFFFFC,   ///< Enables both cores
 };
 
 namespace Kernel {

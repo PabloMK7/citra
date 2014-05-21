@@ -223,6 +223,9 @@ void ResumeThreadFromWait(Handle handle) {
 Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 priority,
     s32 processor_id, u32 stack_top, int stack_size) {
 
+    _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST), 
+        "CreateThread priority=%d, outside of allowable range!", priority)
+
     Thread* t = new Thread;
     
     handle = Kernel::g_object_pool.Create(t);
