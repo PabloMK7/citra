@@ -4548,7 +4548,7 @@ ARMul_Emulate26 (ARMul_State * state)
                 //    ARMul_OSHandleSWI (state, BITS (0, 23));
                 //    break;
                 //}
-                HLE::CallSyscall(instr);
+                HLE::CallSVC(instr);
                 ARMul_Abort (state, ARMul_SWIV);
                 break;
             }
