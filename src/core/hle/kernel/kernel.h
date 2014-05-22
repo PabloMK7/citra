@@ -144,6 +144,11 @@ private:
 
 extern ObjectPool g_object_pool;
 
-} // namespace
+/**
+ * Loads executable stored at specified address
+ * @entry_point Entry point in memory of loaded executable
+ * @return True on success, otherwise false
+ */
+bool LoadExec(u32 entry_point);
 
-bool __KernelLoadExec(u32 entry_point);
+} // namespace

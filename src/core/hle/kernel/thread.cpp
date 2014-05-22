@@ -64,28 +64,33 @@ Thread* g_current_thread;
 
 
 /// Gets the current thread
-inline Thread* __GetCurrentThread() {
+inline Thread* GetCurrentThread() {
     return g_current_thread;
 }
 
+/// Gets the current thread handle
+Handle GetCurrentThreadHandle() {
+    return GetCurrentThread()->GetHandle();
+}
+
 /// Sets the current thread
-inline void __SetCurrentThread(Thread* t) {
+inline void SetCurrentThread(Thread* t) {
     g_current_thread = t;
     g_current_thread_handle = t->GetHandle();
 }
 
 /// Saves the current CPU context
-void __SaveContext(ThreadContext& ctx) {
+void SaveContext(ThreadContext& ctx) {
     Core::g_app_core->SaveContext(ctx);
 }
 
 /// Loads a CPU context
-void __LoadContext(ThreadContext& ctx) {
+void LoadContext(ThreadContext& ctx) {
     Core::g_app_core->LoadContext(ctx);
 }
 
 /// Resets a thread
-void __ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
+void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     memset(&t->context, 0, sizeof(ThreadContext));
 
     t->context.cpu_registers[0] = arg;
@@ -101,7 +106,7 @@ void __ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
 }
 
 /// Change a thread to "ready" state
-void __ChangeReadyState(Thread* t, bool ready) {
+void ChangeReadyState(Thread* t, bool ready) {
     Handle handle = t->GetHandle();
     if (t->IsReady()) {
         if (!ready) {
@@ -118,11 +123,11 @@ void __ChangeReadyState(Thread* t, bool ready) {
 }
 
 /// Changes a threads state
-void __ChangeThreadState(Thread* t, ThreadStatus new_status) {
+void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     if (!t || t->status == new_status) {
         return;
     }
-    __ChangeReadyState(t, (new_status & THREADSTATUS_READY) != 0);
+    ChangeReadyState(t, (new_status & THREADSTATUS_READY) != 0);
     t->status = new_status;
     
     if (new_status == THREADSTATUS_WAIT) {
@@ -133,42 +138,42 @@ void __ChangeThreadState(Thread* t, ThreadStatus new_status) {
 }
 
 /// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
-void __CallThread(Thread* t) {
+void CallThread(Thread* t) {
     // Stop waiting
     if (t->wait_type != WAITTYPE_NONE) {
         t->wait_type = WAITTYPE_NONE;
     }
-    __ChangeThreadState(t, THREADSTATUS_READY);
+    ChangeThreadState(t, THREADSTATUS_READY);
 }
 
 /// Switches CPU context to that of the specified thread
-void __SwitchContext(Thread* t, const char* reason) {
-    Thread* cur = __GetCurrentThread();
+void SwitchContext(Thread* t, const char* reason) {
+    Thread* cur = GetCurrentThread();
     
     // Save context for current thread
     if (cur) {
-        __SaveContext(cur->context);
+        SaveContext(cur->context);
         
         if (cur->IsRunning()) {
-            __ChangeReadyState(cur, true);
+            ChangeReadyState(cur, true);
         }
     }
     // Load context of new thread
     if (t) {
-        __SetCurrentThread(t);
-        __ChangeReadyState(t, false);
+        SetCurrentThread(t);
+        ChangeReadyState(t, false);
         t->status = (t->status | THREADSTATUS_RUNNING) & ~THREADSTATUS_READY;
         t->wait_type = WAITTYPE_NONE;
-        __LoadContext(t->context);
+        LoadContext(t->context);
     } else {
-        __SetCurrentThread(NULL);
+        SetCurrentThread(NULL);
     }
 }
 
 /// Gets the next thread that is ready to be run by priority
-Thread* __NextThread() {
+Thread* NextThread() {
     Handle next;
-    Thread* cur = __GetCurrentThread();
+    Thread* cur = GetCurrentThread();
     
     if (cur && cur->IsRunning()) {
         next = g_thread_ready_queue.pop_first_better(cur->current_priority);
@@ -183,9 +188,9 @@ Thread* __NextThread() {
 
 /// Puts a thread in the wait state for the given type/reason
 void WaitCurThread(WaitType wait_type, const char* reason) {
-    Thread* t = __GetCurrentThread();
+    Thread* t = GetCurrentThread();
     t->wait_type = wait_type;
-    __ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
+    ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
 }
 
 /// Resumes a thread from waiting by marking it as "ready"
@@ -195,7 +200,7 @@ void ResumeThreadFromWait(Handle handle) {
     if (t) {
         t->status &= ~THREADSTATUS_WAIT;
         if (!(t->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
-            __ChangeReadyState(t, true);
+            ChangeReadyState(t, true);
         }
     }
 }
@@ -256,7 +261,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
     Thread* t = CreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
         stack_size);
 
-    __ResetThread(t, arg, 0);
+    ResetThread(t, arg, 0);
 
     HLE::EatCycles(32000);
 
@@ -264,14 +269,9 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
     // Technically, this should not eat all at once, and reschedule in the middle, but that's hard.
     HLE::ReSchedule("thread created");
 
-    __CallThread(t);
+    CallThread(t);
     
     return handle;
-}
-
-/// Gets the current thread
-Handle GetCurrentThread() {
-    return __GetCurrentThread()->GetHandle();
 }
 
 /// Sets up the primary application thread
@@ -282,33 +282,33 @@ Handle SetupMainThread(s32 priority, int stack_size) {
     Thread* t = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
         THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
     
-    __ResetThread(t, 0, 0);
+    ResetThread(t, 0, 0);
     
     // If running another thread already, set it to "ready" state
-    Thread* cur = __GetCurrentThread();
+    Thread* cur = GetCurrentThread();
     if (cur && cur->IsRunning()) {
-        __ChangeReadyState(cur, true);
+        ChangeReadyState(cur, true);
     }
     
     // Run new "main" thread
-    __SetCurrentThread(t);
+    SetCurrentThread(t);
     t->status = THREADSTATUS_RUNNING;
-    __LoadContext(t->context);
+    LoadContext(t->context);
 
     return handle;
 }
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule(const char* reason) {
-    Thread* prev = __GetCurrentThread();
-    Thread* next = __NextThread();
+    Thread* prev = GetCurrentThread();
+    Thread* next = NextThread();
     if (next > 0) {
-        __SwitchContext(next, reason);
+        SwitchContext(next, reason);
 
         // Hack - automatically change previous thread (which would have been in "wait" state) to
         // "ready" state, so that we can immediately resume to it when new thread yields. FixMe to
         // actually wait for whatever event it is supposed to be waiting on.
-        __ChangeReadyState(prev, true);
+        ChangeReadyState(prev, true);
     }
 }
 

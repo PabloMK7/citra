@@ -56,7 +56,7 @@ bool Load_ELF(std::string &filename) {
         elf_reader = new ElfReader(buffer);
         elf_reader->LoadInto(0x00100000);
 
-        __KernelLoadExec(elf_reader->GetEntryPoint());
+        Kernel::LoadExec(elf_reader->GetEntryPoint());
 
         delete[] buffer;
         delete elf_reader;
@@ -102,7 +102,7 @@ bool Load_DAT(std::string &filename) {
             *d++ = (*s++);
         }
         
-        __KernelLoadExec(entry_point);
+        Kernel::LoadExec(entry_point);
 
 
         delete[] buffer;
@@ -144,7 +144,7 @@ bool Load_BIN(std::string &filename) {
             *d++ = (*s++);
         }
         
-        __KernelLoadExec(entry_point);
+        Kernel::LoadExec(entry_point);
 
         delete[] buffer;
     }

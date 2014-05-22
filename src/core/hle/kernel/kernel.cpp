@@ -139,15 +139,20 @@ void Shutdown() {
     Kernel::ThreadingShutdown();
 }
 
-} // namespace
-
-bool __KernelLoadExec(u32 entry_point) {
-    Kernel::Init();
+/**
+ * Loads executable stored at specified address
+ * @entry_point Entry point in memory of loaded executable
+ * @return True on success, otherwise false
+ */
+bool LoadExec(u32 entry_point) {
+    Init();
     
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    Handle thread_id = Kernel::SetupMainThread(0x30);
+    Handle thread = Kernel::SetupMainThread(0x30);
 
     return true;
 }
+
+} // namespace

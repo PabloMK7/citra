@@ -59,8 +59,8 @@ void WaitCurThread(WaitType wait_type, const char* reason);
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
 
-/// Gets the current thread
-Handle GetCurrentThread();
+/// Gets the current thread handle
+Handle GetCurrentThreadHandle();
 
 /// Put current thread in a wait state - on WaitSynchronization
 void WaitThread_Synchronization();

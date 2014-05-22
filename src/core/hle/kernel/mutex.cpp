@@ -30,17 +30,17 @@ public:
 typedef std::multimap<Handle, Handle> MutexMap;
 static MutexMap g_mutex_held_locks;
 
-void __MutexAcquireLock(Mutex* mutex, Handle thread) {
+void MutexAcquireLock(Mutex* mutex, Handle thread) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex->GetHandle()));
     mutex->lock_thread = thread;
 }
 
-void __MutexAcquireLock(Mutex* mutex) {
-    Handle thread = GetCurrentThread();
-    __MutexAcquireLock(mutex, thread);
+void MutexAcquireLock(Mutex* mutex) {
+    Handle thread = GetCurrentThreadHandle();
+    MutexAcquireLock(mutex, thread);
 }
 
-void __MutexEraseLock(Mutex* mutex) {
+void MutexEraseLock(Mutex* mutex) {
     Handle handle = mutex->GetHandle();
     auto locked = g_mutex_held_locks.equal_range(mutex->lock_thread);
     for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
@@ -52,29 +52,29 @@ void __MutexEraseLock(Mutex* mutex) {
     mutex->lock_thread = -1;
 }
 
-bool __LockMutex(Mutex* mutex) {
+bool LockMutex(Mutex* mutex) {
     // Mutex alread locked?
     if (mutex->locked) {
         return false;
     }
-    __MutexAcquireLock(mutex);
+    MutexAcquireLock(mutex);
     return true;
 }
 
-bool __ReleaseMutexForThread(Mutex* mutex, Handle thread) {
-    __MutexAcquireLock(mutex, thread);
+bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
+    MutexAcquireLock(mutex, thread);
     Kernel::ResumeThreadFromWait(thread);
     return true;
 }
 
-bool __ReleaseMutex(Mutex* mutex) {
-    __MutexEraseLock(mutex);
+bool ReleaseMutex(Mutex* mutex) {
+    MutexEraseLock(mutex);
     bool woke_threads = false;
     auto iter = mutex->waiting_threads.begin();
 
     // Find the next waiting thread for the mutex...
     while (!woke_threads && !mutex->waiting_threads.empty()) {
-        woke_threads |= __ReleaseMutexForThread(mutex, *iter);
+        woke_threads |= ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
     // Reset mutex lock thread handle, nothing is waiting
@@ -91,7 +91,7 @@ bool __ReleaseMutex(Mutex* mutex) {
  */
 Result ReleaseMutex(Handle handle) {
     Mutex* mutex = Kernel::g_object_pool.GetFast<Mutex>(handle);
-    if (!__ReleaseMutex(mutex)) {
+    if (!ReleaseMutex(mutex)) {
         return -1;
     }
     return 0;
@@ -110,7 +110,7 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked) {
 
     // Acquire mutex with current thread if initialized as locked...
     if (mutex->locked) {
-        __MutexAcquireLock(mutex);
+        MutexAcquireLock(mutex);
 
     // Otherwise, reset lock thread handle
     } else {
