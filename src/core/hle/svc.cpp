@@ -109,6 +109,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
         handle, nano_seconds);
+    Kernel::Reschedule("WaitSynchronization1");
     return 0;
 }
 
@@ -172,14 +173,15 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
         sprintf(buff, "%s", "unknown-%08X", entry_point);
         name = buff;
     }
-    DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
-        "threadpriority=0x%08X, processorid=0x%08X", entry_point, name.c_str(), arg, stack_top,
-        priority, processor_id);
 
     Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, processor_id,
         stack_top);
 
     Core::g_app_core->SetReg(1, thread);
+
+    DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
+        "threadpriority=0x%08X, processorid=0x%08X : created handle 0x%08X", entry_point, 
+        name.c_str(), arg, stack_top, priority, processor_id, thread);
     
     return 0;
 }
@@ -187,9 +189,10 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 /// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
-    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s", initial_locked ? "true" : "false");
     *mutex = Kernel::CreateMutex((initial_locked != 0));
     Core::g_app_core->SetReg(1, *mutex);
+    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle 0x%08X", 
+        initial_locked ? "true" : "false", *mutex);
     return 0;
 }
 
