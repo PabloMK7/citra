@@ -147,9 +147,6 @@
     <ClCompile Include="arm\interpreter\mmu\wb.cpp">
       <Filter>arm\interpreter\mmu</Filter>
     </ClCompile>
-    <ClCompile Include="arm\interpreter\armcopro.cpp">
-      <Filter>arm</Filter>
-    </ClCompile>
     <ClCompile Include="arm\interpreter\mmu\maverick.cpp">
       <Filter>arm\interpreter\mmu</Filter>
     </ClCompile>
@@ -164,6 +161,9 @@
     </ClCompile>
     <ClCompile Include="hle\kernel\mutex.cpp">
       <Filter>hle\kernel</Filter>
+    </ClCompile>
+    <ClCompile Include="arm\interpreter\armcopro.cpp">
+      <Filter>arm\interpreter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
