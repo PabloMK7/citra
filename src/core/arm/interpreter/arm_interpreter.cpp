@@ -115,7 +115,7 @@ void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
     ctx.lr = state->Reg[14];
     ctx.pc = state->pc;
     ctx.cpsr = state->Cpsr;
-    
+
     ctx.fpscr = state->VFP[1];
     ctx.fpexc = state->VFP[2];
 }
@@ -136,4 +136,7 @@ void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
 
     state->VFP[1] = ctx.fpscr;
     state->VFP[2] = ctx.fpexc;
+
+    state->Reg[15] = ctx.pc;
+    state->NextInstr = RESUME;
 }
