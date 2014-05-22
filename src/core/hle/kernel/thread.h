@@ -51,7 +51,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
-void Reschedule(const char* reason);
+void Reschedule();
 
 /// Puts a thread in the wait state for the given type/reason
 void WaitCurThread(WaitType wait_type, const char* reason);

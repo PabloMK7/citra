@@ -147,7 +147,7 @@ void CallThread(Thread* t) {
 }
 
 /// Switches CPU context to that of the specified thread
-void SwitchContext(Thread* t, const char* reason) {
+void SwitchContext(Thread* t) {
     Thread* cur = GetCurrentThread();
     
     // Save context for current thread
@@ -299,11 +299,11 @@ Handle SetupMainThread(s32 priority, int stack_size) {
 }
 
 /// Reschedules to the next available thread (call after current thread is suspended)
-void Reschedule(const char* reason) {
+void Reschedule() {
     Thread* prev = GetCurrentThread();
     Thread* next = NextThread();
     if (next > 0) {
-        SwitchContext(next, reason);
+        SwitchContext(next);
 
         // Hack - automatically change previous thread (which would have been in "wait" state) to
         // "ready" state, so that we can immediately resume to it when new thread yields. FixMe to

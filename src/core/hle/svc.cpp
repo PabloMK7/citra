@@ -106,10 +106,9 @@ Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
         handle, nano_seconds);
-    Kernel::Reschedule("WaitSynchronization1");
+    Kernel::WaitCurThread(WAITTYPE_SYNCH, "WaitSynchronization1"); // TODO(bunnei): Is this correct?
     return 0;
 }
 
@@ -117,16 +116,14 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, s64 nano_seconds) {
     s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
-    // ImplementMe
-    
+
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d %s", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
-    
+
     for (u32 i = 0; i < handle_count; i++) {
         DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
     }
-    Kernel::Reschedule("WaitSynchronizationN");
-
+    Kernel::WaitCurThread(WAITTYPE_SYNCH, "WaitSynchronizationN"); // TODO(bunnei): Is this correct?
     return 0;
 }
 
@@ -174,7 +171,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
         name = buff;
     }
 
-    Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, processor_id,
+    Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, arg, processor_id,
         stack_top);
 
     Core::g_app_core->SetReg(1, thread);
