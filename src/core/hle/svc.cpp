@@ -108,7 +108,7 @@ Result CloseHandle(Handle handle) {
 Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
         handle, nano_seconds);
-    Kernel::WaitCurThread(WAITTYPE_SYNCH, "WaitSynchronization1"); // TODO(bunnei): Is this correct?
+    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     return 0;
 }
 
@@ -123,7 +123,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     for (u32 i = 0; i < handle_count; i++) {
         DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
     }
-    Kernel::WaitCurThread(WAITTYPE_SYNCH, "WaitSynchronizationN"); // TODO(bunnei): Is this correct?
+    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     return 0;
 }
 

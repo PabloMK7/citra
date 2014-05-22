@@ -53,8 +53,8 @@ Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule();
 
-/// Puts a thread in the wait state for the given type/reason
-void WaitCurThread(WaitType wait_type, const char* reason);
+/// Puts the current thread in the wait state for the given type
+void WaitCurrentThread(WaitType wait_type);
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);

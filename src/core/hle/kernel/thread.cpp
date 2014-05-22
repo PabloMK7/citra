@@ -186,8 +186,8 @@ Thread* NextThread() {
     return Kernel::g_object_pool.GetFast<Thread>(next);
 }
 
-/// Puts a thread in the wait state for the given type/reason
-void WaitCurThread(WaitType wait_type, const char* reason) {
+/// Puts the current thread in the wait state for the given type
+void WaitCurrentThread(WaitType wait_type) {
     Thread* t = GetCurrentThread();
     t->wait_type = wait_type;
     ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
