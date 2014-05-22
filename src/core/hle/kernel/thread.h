@@ -20,10 +20,31 @@ enum ThreadProcessorId {
     THREADPROCESSORID_ALL   = 0xFFFFFFFC,   ///< Enables both cores
 };
 
+enum ThreadStatus {
+    THREADSTATUS_RUNNING        = 1,
+    THREADSTATUS_READY          = 2,
+    THREADSTATUS_WAIT           = 4,
+    THREADSTATUS_SUSPEND        = 8,
+    THREADSTATUS_DORMANT        = 16,
+    THREADSTATUS_DEAD           = 32,
+    THREADSTATUS_WAITSUSPEND    = THREADSTATUS_WAIT | THREADSTATUS_SUSPEND
+};
+
+enum WaitType {
+    WAITTYPE_NONE,
+    WAITTYPE_SLEEP,
+    WAITTYPE_SEMA,
+    WAITTYPE_EVENTFLAG,
+    WAITTYPE_THREADEND,
+    WAITTYPE_VBLANK,
+    WAITTYPE_MUTEX,
+    WAITTYPE_SYNCH,
+};
+
 namespace Kernel {
 
 /// Creates a new thread - wrapper for external user
-Handle CreateThread(const char* name, u32 entry_point, s32 priority, s32 processor_id,
+Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
     u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Sets up the primary application thread
@@ -31,6 +52,9 @@ Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule(const char* reason);
+
+/// Puts a thread in the wait state for the given type/reason
+void WaitCurThread(WaitType wait_type, const char* reason);
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);

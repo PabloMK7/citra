@@ -21,27 +21,6 @@
 
 namespace Kernel {
 
-enum ThreadStatus {
-    THREADSTATUS_RUNNING        = 1,
-    THREADSTATUS_READY          = 2,
-    THREADSTATUS_WAIT           = 4,
-    THREADSTATUS_SUSPEND        = 8,
-    THREADSTATUS_DORMANT        = 16,
-    THREADSTATUS_DEAD           = 32,
-    THREADSTATUS_WAITSUSPEND    = THREADSTATUS_WAIT | THREADSTATUS_SUSPEND
-};
-
-enum WaitType {
-    WAITTYPE_NONE,
-    WAITTYPE_SLEEP,
-    WAITTYPE_SEMA,
-    WAITTYPE_EVENTFLAG,
-    WAITTYPE_THREADEND,
-    WAITTYPE_VBLANK,
-    WAITTYPE_MUTEX,
-    WAITTYPE_SYNCH,
-};
-
 class Thread : public Kernel::Object {
 public:
 
@@ -101,16 +80,18 @@ void __SaveContext(ThreadContext& ctx) {
 }
 
 /// Loads a CPU context
-void __LoadContext(const ThreadContext& ctx) {
+void __LoadContext(ThreadContext& ctx) {
     Core::g_app_core->LoadContext(ctx);
 }
 
 /// Resets a thread
-void __ResetThread(Thread* t, s32 lowest_priority) {
+void __ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     memset(&t->context, 0, sizeof(ThreadContext));
 
+    t->context.cpu_registers[0] = arg;
     t->context.pc = t->entry_point;
     t->context.sp = t->stack_top;
+    t->context.cpsr = 0x1F; // Usermode
     
     if (t->current_priority < lowest_priority) {
         t->current_priority = t->initial_priority;
@@ -201,7 +182,7 @@ Thread* __NextThread() {
 }
 
 /// Puts a thread in the wait state for the given type/reason
-void __WaitCurThread(WaitType wait_type, const char* reason) {
+void WaitCurThread(WaitType wait_type, const char* reason) {
     Thread* t = __GetCurrentThread();
     t->wait_type = wait_type;
     __ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
@@ -248,7 +229,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
 }
 
 /// Creates a new thread - wrapper for external user
-Handle CreateThread(const char* name, u32 entry_point, s32 priority, s32 processor_id,
+Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
     u32 stack_top, int stack_size) {
     if (name == NULL) {
         ERROR_LOG(KERNEL, "CreateThread(): NULL name");
@@ -275,6 +256,8 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, s32 process
     Thread* t = CreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
         stack_size);
 
+    __ResetThread(t, arg, 0);
+
     HLE::EatCycles(32000);
 
     // This won't schedule to the new thread, but it may to one woken from eating cycles.
@@ -299,7 +282,7 @@ Handle SetupMainThread(s32 priority, int stack_size) {
     Thread* t = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
         THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
     
-    __ResetThread(t, 0);
+    __ResetThread(t, 0, 0);
     
     // If running another thread already, set it to "ready" state
     Thread* cur = __GetCurrentThread();
@@ -317,18 +300,16 @@ Handle SetupMainThread(s32 priority, int stack_size) {
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule(const char* reason) {
+    Thread* prev = __GetCurrentThread();
     Thread* next = __NextThread();
     if (next > 0) {
         __SwitchContext(next, reason);
+
+        // Hack - automatically change previous thread (which would have been in "wait" state) to
+        // "ready" state, so that we can immediately resume to it when new thread yields. FixMe to
+        // actually wait for whatever event it is supposed to be waiting on.
+        __ChangeReadyState(prev, true);
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Put current thread in a wait state - on WaitSynchronization
-void WaitThread_Synchronization() {
-    // TODO(bunnei): Just a placeholder function for now... FixMe
-    __WaitCurThread(WAITTYPE_SYNCH, "waitSynchronization called");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
