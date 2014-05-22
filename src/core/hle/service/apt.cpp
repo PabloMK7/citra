@@ -23,6 +23,7 @@ void GetLockHandle(Service::Interface* self) {
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
     cmd_buff[1] = 0; // No error
     cmd_buff[5] = Kernel::CreateMutex(false);
+    DEBUG_LOG(KERNEL, "APT_U::GetLockHandle called : created handle 0x%08X", cmd_buff[5]);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
