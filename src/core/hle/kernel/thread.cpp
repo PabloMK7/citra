@@ -194,7 +194,7 @@ Thread* __NextThread() {
     } else  {
         next = g_thread_ready_queue.pop_first();
     }
-    if (next < 0) {
+    if (next == 0) {
         return NULL;
     }
     return Kernel::g_object_pool.GetFast<Thread>(next);
