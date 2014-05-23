@@ -71,7 +71,7 @@ public:
     /// Frees a handle from the service
     template <class T>
     void DeleteHandle(const Handle handle) {
-        g_object_pool.Destroy<T>(handle);
+        Kernel::g_object_pool.Destroy<T>(handle);
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 
