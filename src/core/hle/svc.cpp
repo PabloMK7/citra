@@ -84,7 +84,11 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
-    Core::g_app_core->SetReg(1, service->GetHandle());
+    if (service) {
+        Core::g_app_core->SetReg(1, service->GetHandle());
+    } else {
+        PanicYesNo("ConnectToPort called port_name=%s, but it is not implemented!", port_name);
+    }
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
     return 0;
 }
