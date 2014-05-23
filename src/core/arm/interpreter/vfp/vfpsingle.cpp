@@ -69,7 +69,7 @@ static void vfp_single_dump(const char *str, struct vfp_single *s)
 
 static void vfp_single_normalise_denormal(struct vfp_single *vs)
 {
-	int bits = 31 - fls(vs->significand);
+	int bits = 31 - vfp_fls(vs->significand);
 
 	vfp_single_dump("normalise_denormal: in", vs);
 
@@ -111,7 +111,7 @@ u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single *vs,
 	 * bit 31, so we have VFP_SINGLE_LOW_BITS + 1 below the least
 	 * significant bit.
 	 */
-	shift = 32 - fls(significand);
+	shift = 32 - vfp_fls(significand);
 	if (shift < 32 && shift) {
 		exponent -= shift;
 		significand <<= shift;

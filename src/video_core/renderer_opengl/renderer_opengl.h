@@ -28,7 +28,7 @@ public:
      * @param src_rect Source rectangle in XFB to copy
      * @param dst_rect Destination rectangle in output framebuffer to copy to
      */
-    void RenderXFB(const Rect& src_rect, const Rect& dst_rect);
+    void RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect);
 
     /** 
      * Set the emulator window to use for renderer
@@ -59,7 +59,7 @@ private:
      * @param out Pointer to output buffer with flipped framebuffer
      * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
      */
-    void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out);
+    void FlipFramebuffer(const u8* in, u8* out);
 
 
     EmuWindow*  m_render_window;                    ///< Handle to render window
