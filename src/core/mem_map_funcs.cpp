@@ -73,6 +73,10 @@ inline void _Read(T &var, const u32 addr) {
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
 
+    // System memory
+    } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
+        var = *((const T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK]);
+
     // Config memory
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
         ConfigMem::Read<T>(var, vaddr);
@@ -115,6 +119,10 @@ inline void _Write(u32 addr, const T data) {
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
 
+    // System memory
+    } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
+         *(T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK] = data;
+
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         *(T*)&g_vram[vaddr & VRAM_MASK] = data;
@@ -153,8 +161,12 @@ u8 *GetPointer(const u32 addr) {
         return g_heap + (vaddr & HEAP_MASK);
 
     // Shared memory
-    } else if ((vaddr > SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
+    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
         return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
+
+    // System memory
+    } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
+         return g_system_mem + (vaddr & SYSTEM_MEMORY_MASK);
 
     // VRAM
     } else if ((vaddr > VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {

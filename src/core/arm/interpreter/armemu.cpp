@@ -4478,8 +4478,7 @@ ARMul_Emulate26 (ARMul_State * state)
                                  isize) &
                                 R15PCBITS));
 #endif
-                    }
-                    else
+                    } else if (instr != 0xDEADC0DE) // thumbemu uses 0xDEADCODE for debugging to catch non updates 
                         ARMul_MCR (state, instr,
                                DEST);
                 }
@@ -4549,7 +4548,7 @@ ARMul_Emulate26 (ARMul_State * state)
                 //    ARMul_OSHandleSWI (state, BITS (0, 23));
                 //    break;
                 //}
-                HLE::CallSyscall(instr);
+                HLE::CallSVC(instr);
                 ARMul_Abort (state, ARMul_SWIV);
                 break;
             }

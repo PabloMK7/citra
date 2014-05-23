@@ -12,6 +12,8 @@
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
 
+#include "core/hle/kernel/thread.h"
+
 namespace Core {
 
 ARM_Disasm*     g_disasm    = NULL; ///< ARM disassembler
@@ -21,14 +23,17 @@ ARM_Interface*  g_sys_core  = NULL; ///< ARM11 system (OS) core
 /// Run the core CPU loop
 void RunLoop() {
     for (;;){
-        g_app_core->Run(10000);
+        g_app_core->Run(100);
         HW::Update();
+        Kernel::Reschedule();
     }
 }
 
 /// Step the CPU one instruction
 void SingleStep() {
     g_app_core->Step();
+    HW::Update();
+    Kernel::Reschedule();
 }
 
 /// Halt the core

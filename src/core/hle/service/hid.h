@@ -25,7 +25,7 @@ public:
      * Gets the string port name used by CTROS for the service
      * @return Port name of service
      */
-    std::string GetPortName() const {
+    const char *GetPortName() const {
         return "hid:USER";
     }
 
