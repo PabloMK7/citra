@@ -42,6 +42,7 @@ public:
     virtual const char *GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual const char *GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
+    virtual Result SyncRequest() = 0;
 };
 
 class ObjectPool : NonCopyable {

@@ -36,6 +36,11 @@ public:
     inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
 
+    /// Synchronize kernel object 
+    Result SyncRequest() {
+        return 0;
+    }
+
     ThreadContext context;
 
     u32 status;

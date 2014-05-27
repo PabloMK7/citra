@@ -23,6 +23,11 @@ public:
     bool locked;                                ///< Current locked state
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
+
+    /// Synchronize kernel object 
+    Result SyncRequest() {
+        return 0;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
