@@ -96,8 +96,8 @@ Result ConnectToPort(void* out, const char* port_name) {
 /// Synchronize to an OS service
 Result SendSyncRequest(Handle handle) {
     DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
-    Service::Interface* service = Service::g_manager->FetchFromHandle(handle);
-    service->Sync();
+    Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+    object->SyncRequest();
     return 0;
 }
 
