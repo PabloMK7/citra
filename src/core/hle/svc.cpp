@@ -84,19 +84,17 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
-    if (service) {
-        Core::g_app_core->SetReg(1, service->GetHandle());
-    } else {
-        PanicYesNo("ConnectToPort called port_name=%s, but it is not implemented!", port_name);
-    }
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
+    _assert_msg_(KERNEL, service, "ConnectToPort called, but service is not implemented!");
+    Core::g_app_core->SetReg(1, service->GetHandle());
     return 0;
 }
 
 /// Synchronize to an OS service
 Result SendSyncRequest(Handle handle) {
-    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
+    _assert_msg_(KERNEL, object, "SendSyncRequest called, but kernel object is NULL!");
     object->SyncRequest();
     return 0;
 }
