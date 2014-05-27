@@ -13,6 +13,7 @@ namespace Kernel {
 /**
  * Releases a mutex
  * @param handle Handle to mutex to release
+ * @return Result of operation, 0 on success, otherwise error code
  */
 Result ReleaseMutex(Handle handle);
 
@@ -20,6 +21,7 @@ Result ReleaseMutex(Handle handle);
  * Creates a mutex
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @return Handle to newly created object
  */
 Handle CreateMutex(bool initial_locked);
 
