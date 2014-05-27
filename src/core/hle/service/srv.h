@@ -22,7 +22,7 @@ public:
      * Gets the string name used by CTROS for the service
      * @return Port name of service
      */
-    std::string GetPortName() const {
+    const char *GetPortName() const {
         return "srv:";
     }
 
@@ -30,7 +30,7 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    Syscall::Result Sync();
+    Result Sync();
 
 };
 

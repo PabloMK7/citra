@@ -9,30 +9,30 @@ const static cpu_config_t s_arm11_cpu_info = {
 };
 
 ARM_Interpreter::ARM_Interpreter()  {
-    m_state = new ARMul_State;
+    state = new ARMul_State;
 
     ARMul_EmulateInit();
-    ARMul_NewState(m_state);
+    ARMul_NewState(state);
 
-    m_state->abort_model = 0;
-    m_state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
-    m_state->bigendSig = LOW;
+    state->abort_model = 0;
+    state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
+    state->bigendSig = LOW;
 
-    ARMul_SelectProcessor(m_state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
-    m_state->lateabtSig = LOW;
-    mmu_init(m_state);
+    ARMul_SelectProcessor(state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
+    state->lateabtSig = LOW;
+    mmu_init(state);
 
     // Reset the core to initial state
-    ARMul_Reset(m_state);
-    m_state->NextInstr = 0;
-    m_state->Emulate = 3;
+    ARMul_Reset(state);
+    state->NextInstr = 0;
+    state->Emulate = 3;
 
-    m_state->pc = m_state->Reg[15] = 0x00000000;
-    m_state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
+    state->pc = state->Reg[15] = 0x00000000;
+    state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
 }
 
 ARM_Interpreter::~ARM_Interpreter() {
-    delete m_state;
+    delete state;
 }
 
 /**
@@ -40,7 +40,7 @@ ARM_Interpreter::~ARM_Interpreter() {
  * @param addr Address to set PC to
  */
 void ARM_Interpreter::SetPC(u32 pc) {
-    m_state->pc = m_state->Reg[15] = pc;
+    state->pc = state->Reg[15] = pc;
 }
 
 /*
@@ -48,7 +48,7 @@ void ARM_Interpreter::SetPC(u32 pc) {
  * @return Returns current PC
  */
 u32 ARM_Interpreter::GetPC() const {
-    return m_state->pc;
+    return state->pc;
 }
 
 /**
@@ -57,7 +57,7 @@ u32 ARM_Interpreter::GetPC() const {
  * @return Returns the value in the register
  */
 u32 ARM_Interpreter::GetReg(int index) const {
-    return m_state->Reg[index];
+    return state->Reg[index];
 }
 
 /**
@@ -66,7 +66,7 @@ u32 ARM_Interpreter::GetReg(int index) const {
  * @param value Value to set register to
  */
 void ARM_Interpreter::SetReg(int index, u32 value) {
-    m_state->Reg[index] = value;
+    state->Reg[index] = value;
 }
 
 /**
@@ -74,7 +74,15 @@ void ARM_Interpreter::SetReg(int index, u32 value) {
  * @return Returns the value of the CPSR register
  */
 u32 ARM_Interpreter::GetCPSR() const {
-    return m_state->Cpsr;
+    return state->Cpsr;
+}
+
+/**
+ * Set the current CPSR register
+ * @param cpsr Value to set CPSR to
+ */
+void ARM_Interpreter::SetCPSR(u32 cpsr) {
+    state->Cpsr = cpsr;
 }
 
 /**
@@ -82,7 +90,7 @@ u32 ARM_Interpreter::GetCPSR() const {
  * @return Returns number of clock ticks
  */
 u64 ARM_Interpreter::GetTicks() const {
-    return ARMul_Time(m_state);
+    return ARMul_Time(state);
 }
 
 /**
@@ -90,6 +98,45 @@ u64 ARM_Interpreter::GetTicks() const {
  * @param num_instructions Number of instructions to executes
  */
 void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
-    m_state->NumInstrsToExecute = num_instructions;
-    ARMul_Emulate32(m_state);
+    state->NumInstrsToExecute = num_instructions;
+    ARMul_Emulate32(state);
+}
+
+/**
+ * Saves the current CPU context
+ * @param ctx Thread context to save
+ * @todo Do we need to save Reg[15] and NextInstr?
+ */
+void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
+    memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
+    memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
+
+    ctx.sp = state->Reg[13];
+    ctx.lr = state->Reg[14];
+    ctx.pc = state->pc;
+    ctx.cpsr = state->Cpsr;
+
+    ctx.fpscr = state->VFP[1];
+    ctx.fpexc = state->VFP[2];
+}
+
+/**
+ * Loads a CPU context
+ * @param ctx Thread context to load
+ * @param Do we need to load Reg[15] and NextInstr?
+ */
+void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
+    memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
+    memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
+
+    state->Reg[13] = ctx.sp;
+    state->Reg[14] = ctx.lr;
+    state->pc = ctx.pc;
+    state->Cpsr = ctx.cpsr;
+
+    state->VFP[1] = ctx.fpscr;
+    state->VFP[2] = ctx.fpexc;
+
+    state->Reg[15] = ctx.pc;
+    state->NextInstr = RESUME;
 }

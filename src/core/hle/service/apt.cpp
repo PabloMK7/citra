@@ -3,9 +3,10 @@
 // Refer to the license.txt file included.
 
 
-#include "common/log.h"
+#include "common/common.h"
 
 #include "core/hle/hle.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/service/apt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +20,10 @@ void Initialize(Service::Interface* self) {
 
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    cmd_buff[5] = 0x00000000; // TODO: This should be an actual mutex handle
+    u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
+    cmd_buff[1] = 0; // No error
+    cmd_buff[5] = Kernel::CreateMutex(false);
+    DEBUG_LOG(KERNEL, "APT_U::GetLockHandle called : created handle 0x%08X", cmd_buff[5]);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

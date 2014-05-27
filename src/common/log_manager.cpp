@@ -60,13 +60,13 @@ LogManager::LogManager()
     m_Log[LogTypes::LOADER]             = new LogContainer("Loader",            "Loader");
     m_Log[LogTypes::FILESYS]            = new LogContainer("FileSys",           "File System");
     m_Log[LogTypes::WII_IPC_HID]        = new LogContainer("WII_IPC_HID",       "WII IPC HID");
-    m_Log[LogTypes::WII_IPC_HLE]        = new LogContainer("WII_IPC_HLE",       "WII IPC HLE");
+    m_Log[LogTypes::KERNEL]             = new LogContainer("KERNEL",            "KERNEL HLE");
     m_Log[LogTypes::WII_IPC_DVD]        = new LogContainer("WII_IPC_DVD",       "WII IPC DVD");
     m_Log[LogTypes::WII_IPC_ES]         = new LogContainer("WII_IPC_ES",        "WII IPC ES");
     m_Log[LogTypes::WII_IPC_FILEIO]     = new LogContainer("WII_IPC_FILEIO",    "WII IPC FILEIO");
     m_Log[LogTypes::RENDER]             = new LogContainer("RENDER",            "RENDER");
     m_Log[LogTypes::LCD]                = new LogContainer("LCD",               "LCD");
-    m_Log[LogTypes::SVC]                = new LogContainer("SVC",               "Supervisor Call");
+    m_Log[LogTypes::SVC]                = new LogContainer("SVC",               "Supervisor Call HLE");
     m_Log[LogTypes::NDMA]               = new LogContainer("NDMA",              "NDMA");
     m_Log[LogTypes::HLE]                = new LogContainer("HLE",               "High Level Emulation");
     m_Log[LogTypes::HW]                 = new LogContainer("HW",                "Hardware");

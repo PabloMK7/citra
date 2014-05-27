@@ -11,6 +11,8 @@
 
 #include "video_core/video_core.h"
 
+#include "core/hle/kernel/thread.h"
+
 namespace LCD {
 
 Registers g_regs;
@@ -130,9 +132,11 @@ template void Write<u8>(u32 addr, const u8 data);
 void Update() {
     u64 current_ticks = Core::g_app_core->GetTicks();
 
+    // Fake a vertical blank
     if ((current_ticks - g_last_ticks) >= kFrameTicks) {
         g_last_ticks = current_ticks;
         VideoCore::g_renderer->SwapBuffers();
+        Kernel::WaitCurrentThread(WAITTYPE_VBLANK);
     }
 }
 

@@ -27,7 +27,7 @@ union GX_CmdBufferHeader {
     // <=15 when writing a command to shared memory. This is incremented by the application when 
     // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only 
     // used if this field is value 1.
-    BitField<8,8,u32>  number_commands;
+    BitField<8,8,u32>   number_commands;
 
 };
 
@@ -101,9 +101,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
     u32 event_handle = cmd_buff[3]; // TODO(bunnei): Implement event handling
-    
     cmd_buff[2] = g_thread_id;          // ThreadID
-    cmd_buff[4] = self->NewHandle();
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.

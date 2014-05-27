@@ -49,10 +49,28 @@ public:
     u32 GetCPSR() const;
 
     /**
+     * Set the current CPSR register
+     * @param cpsr Value to set CPSR to
+     */
+    void SetCPSR(u32 cpsr);
+
+    /**
      * Returns the number of clock ticks since the last reset
      * @return Returns number of clock ticks
      */
     u64 GetTicks() const;
+
+    /**
+     * Saves the current CPU context
+     * @param ctx Thread context to save
+     */
+    void SaveContext(ThreadContext& ctx);
+
+    /**
+     * Loads a CPU context
+     * @param ctx Thread context to load
+     */
+    void LoadContext(const ThreadContext& ctx);
 
 protected:
 
@@ -64,6 +82,6 @@ protected:
 
 private:
 
-    ARMul_State* m_state;
+    ARMul_State* state;
 
 };

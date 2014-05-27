@@ -3,17 +3,25 @@
 // Refer to the license.txt file included.  
 
 #include <map>
+#include <string>
+
+#include "common/symbols.h"
 
 #include "core/mem_map.h"
 
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/thread.h"
+
 #include "core/hle/function_wrappers.h"
-#include "core/hle/syscall.h"
+#include "core/hle/svc.h"
 #include "core/hle/service/service.h"
+#include "core/hle/kernel/thread.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Syscall
+// Namespace SVC
 
-namespace Syscall {
+namespace SVC {
 
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
@@ -26,7 +34,8 @@ enum MapMemoryPermission {
 };
 
 /// Map application or GSP heap memory
-Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+    u32* outaddr = (u32*)_outaddr;
     u32 virtual_address = 0x00000000;
 
     DEBUG_LOG(SVC, "ControlMemory called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
@@ -48,7 +57,9 @@ Result ControlMemory(u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissi
     default:
         ERROR_LOG(SVC, "ControlMemory unknown operation=0x%08X", operation);
     }
-
+    if (NULL != outaddr) {
+        *outaddr = virtual_address;
+    }
     Core::g_app_core->SetReg(1, virtual_address);
 
     return 0;
@@ -72,17 +83,20 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* out, const char* port_name) {
-    
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
-    Core::g_app_core->SetReg(1, service->GetUID());
+    if (service) {
+        Core::g_app_core->SetReg(1, service->GetHandle());
+    } else {
+        PanicYesNo("ConnectToPort called port_name=%s, but it is not implemented!", port_name);
+    }
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
     return 0;
 }
 
 /// Synchronize to an OS service
-Result SendSyncRequest(Handle session) {
-    DEBUG_LOG(SVC, "SendSyncRequest called session=0x%08X");
-    Service::Interface* service = Service::g_manager->FetchFromUID(session);
+Result SendSyncRequest(Handle handle) {
+    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
+    Service::Interface* service = Service::g_manager->FetchFromHandle(handle);
     service->Sync();
     return 0;
 }
@@ -95,10 +109,25 @@ Result CloseHandle(Handle handle) {
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
-Result WaitSynchronization1(Handle handle, s64 nanoseconds) {
-    // ImplementMe
+Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
-        handle, nanoseconds);
+        handle, nano_seconds);
+    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+    return 0;
+}
+
+/// Wait for the given handles to synchronize, timeout after the specified nanoseconds
+Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, s64 nano_seconds) {
+    s32* out = (s32*)_out;
+    Handle* handles = (Handle*)_handles;
+
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d %s", 
+        handle_count, (wait_all ? "true" : "false"), nano_seconds);
+
+    for (u32 i = 0; i < handle_count; i++) {
+        DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
+    }
+    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     return 0;
 }
 
@@ -106,7 +135,7 @@ Result WaitSynchronization1(Handle handle, s64 nanoseconds) {
 Result CreateAddressArbiter(void* arbiter) {
     // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
-    Core::g_app_core->SetReg(1, 0xDEADBEEF);
+    Core::g_app_core->SetReg(1, 0xFABBDADD);
     return 0;
 }
 
@@ -134,16 +163,79 @@ Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void*
     return 0;
 }
 
-const HLE::FunctionDef Syscall_Table[] = {
+/// Creates a new thread
+Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
+    std::string name;
+    if (Symbols::HasSymbol(entry_point)) {
+        TSymbol symbol = Symbols::GetSymbol(entry_point);
+        name = symbol.name;
+    } else {
+        char buff[100];
+        sprintf(buff, "%s", "unknown-%08X", entry_point);
+        name = buff;
+    }
+
+    Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, arg, processor_id,
+        stack_top);
+
+    Core::g_app_core->SetReg(1, thread);
+
+    DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
+        "threadpriority=0x%08X, processorid=0x%08X : created handle 0x%08X", entry_point, 
+        name.c_str(), arg, stack_top, priority, processor_id, thread);
+    
+    return 0;
+}
+
+/// Create a mutex
+Result CreateMutex(void* _mutex, u32 initial_locked) {
+    Handle* mutex = (Handle*)_mutex;
+    *mutex = Kernel::CreateMutex((initial_locked != 0));
+    Core::g_app_core->SetReg(1, *mutex);
+    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle 0x%08X", 
+        initial_locked ? "true" : "false", *mutex);
+    return 0;
+}
+
+/// Release a mutex
+Result ReleaseMutex(Handle handle) {
+    DEBUG_LOG(SVC, "ReleaseMutex called handle=0x%08X", handle);
+    Kernel::ReleaseMutex(handle);
+    return 0;
+}
+
+/// Get current thread ID
+Result GetThreadId(void* thread_id, u32 thread) {
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
+    return 0;
+}
+
+/// Query memory
+Result QueryMemory(void *_info, void *_out, u32 addr) {
+    MemoryInfo* info = (MemoryInfo*) _info;
+    PageInfo* out = (PageInfo*) _out;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
+    return 0;
+}
+
+/// Create an event
+Result CreateEvent(void* _event, u32 reset_type) {
+    Handle* event = (Handle*)_event;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateEvent called reset_type=0x%08X", reset_type);
+    Core::g_app_core->SetReg(1, 0xBADC0DE0);
+    return 0;
+}
+
+const HLE::FunctionDef SVC_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
-    {0x01,  WrapI_UUUUU<ControlMemory>,                 "ControlMemory"},
-    {0x02,  NULL,                                       "QueryMemory"},
+    {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
+    {0x02,  WrapI_VVU<QueryMemory>,                     "QueryMemory"},
     {0x03,  NULL,                                       "ExitProcess"},
     {0x04,  NULL,                                       "GetProcessAffinityMask"},
     {0x05,  NULL,                                       "SetProcessAffinityMask"},
     {0x06,  NULL,                                       "GetProcessIdealProcessor"},
     {0x07,  NULL,                                       "SetProcessIdealProcessor"},
-    {0x08,  NULL,                                       "CreateThread"},
+    {0x08,  WrapI_UUUUU<CreateThread>,                  "CreateThread"},
     {0x09,  NULL,                                       "ExitThread"},
     {0x0A,  NULL,                                       "SleepThread"},
     {0x0B,  NULL,                                       "GetThreadPriority"},
@@ -154,11 +246,11 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x10,  NULL,                                       "SetThreadIdealProcessor"},
     {0x11,  NULL,                                       "GetCurrentProcessorNumber"},
     {0x12,  NULL,                                       "Run"},
-    {0x13,  NULL,                                       "CreateMutex"},
-    {0x14,  NULL,                                       "ReleaseMutex"},
+    {0x13,  WrapI_VU<CreateMutex>,                      "CreateMutex"},
+    {0x14,  WrapI_U<ReleaseMutex>,                      "ReleaseMutex"},
     {0x15,  NULL,                                       "CreateSemaphore"},
     {0x16,  NULL,                                       "ReleaseSemaphore"},
-    {0x17,  NULL,                                       "CreateEvent"},
+    {0x17,  WrapI_VU<CreateEvent>,                      "CreateEvent"},
     {0x18,  NULL,                                       "SignalEvent"},
     {0x19,  NULL,                                       "ClearEvent"},
     {0x1A,  NULL,                                       "CreateTimer"},
@@ -172,7 +264,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x22,  NULL,                                       "ArbitrateAddress"},
     {0x23,  WrapI_U<CloseHandle>,                       "CloseHandle"},
     {0x24,  WrapI_US64<WaitSynchronization1>,           "WaitSynchronization1"},
-    {0x25,  NULL,                                       "WaitSynchronizationN"},
+    {0x25,  WrapI_VVUUS64<WaitSynchronizationN>,        "WaitSynchronizationN"},
     {0x26,  NULL,                                       "SignalAndWait"},
     {0x27,  NULL,                                       "DuplicateHandle"},
     {0x28,  NULL,                                       "GetSystemTick"},
@@ -190,7 +282,7 @@ const HLE::FunctionDef Syscall_Table[] = {
     {0x34,  NULL,                                       "OpenThread"},
     {0x35,  NULL,                                       "GetProcessId"},
     {0x36,  NULL,                                       "GetProcessIdOfThread"},
-    {0x37,  NULL,                                       "GetThreadId"},
+    {0x37,  WrapI_VU<GetThreadId>,                      "GetThreadId"},
     {0x38,  WrapI_VU<GetResourceLimit>,                 "GetResourceLimit"},
     {0x39,  NULL,                                       "GetResourceLimitLimitValues"},
     {0x3A,  WrapI_VUVI<GetResourceLimitCurrentValues>,  "GetResourceLimitCurrentValues"},
@@ -264,7 +356,7 @@ const HLE::FunctionDef Syscall_Table[] = {
 };
 
 void Register() {
-    HLE::RegisterModule("SyscallTable", ARRAY_SIZE(Syscall_Table), Syscall_Table);
+    HLE::RegisterModule("SVC_Table", ARRAY_SIZE(SVC_Table), SVC_Table);
 }
 
 } // namespace

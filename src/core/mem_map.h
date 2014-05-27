@@ -47,6 +47,12 @@ enum {
     EXEFS_CODE_VADDR_END    = (EXEFS_CODE_VADDR + EXEFS_CODE_SIZE),
     EXEFS_CODE_MASK         = 0x03FFFFFF,
 
+    // Region of FCRAM used by system
+    SYSTEM_MEMORY_SIZE      = 0x02C00000,   ///< 44MB
+    SYSTEM_MEMORY_VADDR     = 0x04000000,
+    SYSTEM_MEMORY_VADDR_END = (SYSTEM_MEMORY_VADDR + SYSTEM_MEMORY_SIZE),
+    SYSTEM_MEMORY_MASK      = 0x03FFFFFF,
+
     HEAP_SIZE               = FCRAM_SIZE,   ///< Application heap size
     //HEAP_PADDR              = HEAP_GSP_SIZE,
     //HEAP_PADDR_END          = (HEAP_PADDR + HEAP_SIZE),
@@ -116,6 +122,7 @@ extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_shared_mem;    ///< Shared memory
 extern u8* g_kernel_mem;    ///< Kernel memory
+extern u8* g_system_mem;    ///< System memory
 extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 
 void Init();

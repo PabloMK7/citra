@@ -34,7 +34,11 @@ struct ModuleDef {
 
 void RegisterModule(std::string name, int num_functions, const FunctionDef *func_table);
 
-void CallSyscall(u32 opcode);
+void CallSVC(u32 opcode);
+
+void EatCycles(u32 cycles);
+
+void ReSchedule(const char *reason);
 
 void Init();
 

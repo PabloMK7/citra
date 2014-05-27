@@ -40,6 +40,7 @@
     <ClInclude Include="symbols.h" />
     <ClInclude Include="scm_rev.h" />
     <ClInclude Include="bit_field.h" />
+    <ClInclude Include="thread_queue_list.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="break_points.cpp" />

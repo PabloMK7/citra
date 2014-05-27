@@ -33,7 +33,10 @@ set(SRCS    core.cpp
             hle/hle.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
-            hle/syscall.cpp
+            hle/svc.cpp
+            hle/kernel/kernel.cpp
+            hle/kernel/mutex.cpp
+            hle/kernel/thread.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
@@ -75,7 +78,10 @@ set(HEADERS core.h
             hle/config_mem.h
             hle/coprocessor.h
             hle/hle.h
-            hle/syscall.h
+            hle/svc.h
+            hle/kernel/kernel.h
+            hle/kernel/mutex.h
+            hle/kernel/thread.h
             hle/function_wrappers.h
             hle/service/apt.h
             hle/service/gsp.h

@@ -6,7 +6,7 @@
 
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
-#include "core/hle/syscall.h"
+#include "core/hle/svc.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,17 +15,17 @@ namespace HLE {
 
 static std::vector<ModuleDef> g_module_db;
 
-const FunctionDef* GetSyscallInfo(u32 opcode) {
+const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
-        ERROR_LOG(HLE,"Unknown syscall: 0x%02X", func_num); 
+        ERROR_LOG(HLE,"Unknown SVC: 0x%02X", func_num); 
         return NULL;
     }
     return &g_module_db[0].func_table[func_num];
 }
 
-void CallSyscall(u32 opcode) {
-    const FunctionDef *info = GetSyscallInfo(opcode);
+void CallSVC(u32 opcode) {
+    const FunctionDef *info = GetSVCInfo(opcode);
 
     if (!info) {
         return;
@@ -33,8 +33,19 @@ void CallSyscall(u32 opcode) {
     if (info->func) {
         info->func();
     } else {
-        ERROR_LOG(HLE, "Unimplemented SysCall function %s(..)", info->name.c_str());
+        ERROR_LOG(HLE, "Unimplemented SVC function %s(..)", info->name.c_str());
     }
+}
+
+void EatCycles(u32 cycles) {
+    // TODO: ImplementMe
+}
+
+void ReSchedule(const char *reason) {
+#ifdef _DEBUG
+    _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "ReSchedule: Invalid or too long reason.");
+#endif
+    // TODO: ImplementMe
 }
 
 void RegisterModule(std::string name, int num_functions, const FunctionDef* func_table) {
@@ -43,7 +54,7 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef* func
 }
 
 void RegisterAllModules() {
-    Syscall::Register();
+    SVC::Register();
 }
 
 void Init() {

@@ -5,6 +5,8 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
+#define LOGGING
+
 #define    NOTICE_LEVEL  1  // VERY important information that is NOT errors. Like startup and OSReports.
 #define    ERROR_LEVEL   2  // Critical errors 
 #define    WARNING_LEVEL 3  // Something is suspicious.
@@ -53,7 +55,7 @@ enum LOG_TYPE {
     WII_IPC_ES,
     WII_IPC_FILEIO,
     WII_IPC_HID,
-    WII_IPC_HLE,
+    KERNEL,
     SVC,
     NDMA,
     HLE,
