@@ -5,21 +5,28 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/srv.h"
 #include "core/hle/service/service.h"
-
+#include "core/hle/kernel/mutex.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SRV
 
 namespace SRV {
 
+Handle g_mutex = 0;
+
 void Initialize(Service::Interface* self) {
-    NOTICE_LOG(OSHLE, "SRV::Sync - Initialize");
+    DEBUG_LOG(OSHLE, "SRV::Initialize called");
+    if (!g_mutex) {
+        g_mutex = Kernel::CreateMutex(false);
+    }
 }
 
 void GetProcSemaphore(Service::Interface* self) {
+    DEBUG_LOG(OSHLE, "SRV::GetProcSemaphore called");
     // Get process semaphore?
     u32* cmd_buff = Service::GetCommandBuffer();
-    cmd_buff[3] = 0xDEADBEEF; // Return something... 0 == NULL, raises an exception
+    cmd_buff[1] = 0;        // No error
+    cmd_buff[3] = g_mutex;  // Return something... 0 == NULL, raises an exception
 }
 
 void GetServiceHandle(Service::Interface* self) {
