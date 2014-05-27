@@ -226,6 +226,13 @@ Result CreateEvent(void* _event, u32 reset_type) {
     return 0;
 }
 
+/// Duplicates a kernel handle
+Result DuplicateHandle(void* _out, Handle handle) {
+    Handle* out = (Handle*)_out;
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) DuplicateHandle called handle=0x%08X", handle);
+    return 0;
+}
+
 const HLE::FunctionDef SVC_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
     {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
@@ -266,7 +273,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x24,  WrapI_US64<WaitSynchronization1>,           "WaitSynchronization1"},
     {0x25,  WrapI_VVUUS64<WaitSynchronizationN>,        "WaitSynchronizationN"},
     {0x26,  NULL,                                       "SignalAndWait"},
-    {0x27,  NULL,                                       "DuplicateHandle"},
+    {0x27,  WrapI_VU<DuplicateHandle>,                  "DuplicateHandle"},
     {0x28,  NULL,                                       "GetSystemTick"},
     {0x29,  NULL,                                       "GetHandleInfo"},
     {0x2A,  NULL,                                       "GetSystemInfo"},
