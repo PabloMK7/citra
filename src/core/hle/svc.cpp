@@ -92,11 +92,18 @@ Result ConnectToPort(void* out, const char* port_name) {
 
 /// Synchronize to an OS service
 Result SendSyncRequest(Handle handle) {
+    bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+
     DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
     _assert_msg_(KERNEL, object, "SendSyncRequest called, but kernel object is NULL!");
-    object->SyncRequest();
-    return 0;
+
+    Result res = object->SyncRequest(&wait);
+    if (wait) {
+        Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+    }
+
+    return res;
 }
 
 /// Close a handle

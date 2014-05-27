@@ -47,7 +47,14 @@ public:
     virtual const char *GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual const char *GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
-    virtual Result SyncRequest() = 0;
+
+    /**
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    virtual Result SyncRequest(bool* wait) = 0;
+
 };
 
 class ObjectPool : NonCopyable {

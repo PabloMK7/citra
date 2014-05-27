@@ -24,8 +24,12 @@ public:
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
 
-    /// Synchronize kernel object 
-    Result SyncRequest() {
+    /**
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result SyncRequest(bool* wait) {
         return 0;
     }
 };

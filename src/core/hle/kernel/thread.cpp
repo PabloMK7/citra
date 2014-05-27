@@ -36,8 +36,12 @@ public:
     inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
 
-    /// Synchronize kernel object 
-    Result SyncRequest() {
+    /**
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result SyncRequest(bool* wait) {
         return 0;
     }
 

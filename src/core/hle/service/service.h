@@ -76,10 +76,11 @@ public:
     }
 
     /**
-     * Called when svcSendSyncRequest is called, loads command buffer and executes comand
-     * @return Return result of svcSendSyncRequest passed back to user app
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest() {
+    Result SyncRequest(bool* wait) {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
