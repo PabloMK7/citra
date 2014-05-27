@@ -79,7 +79,7 @@ public:
      * Called when svcSendSyncRequest is called, loads command buffer and executes comand
      * @return Return result of svcSendSyncRequest passed back to user app
      */
-    Result Sync() {
+    Result SyncRequest() {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
