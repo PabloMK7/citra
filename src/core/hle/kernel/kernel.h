@@ -11,6 +11,11 @@ typedef s32 Result;
 
 namespace Kernel {
 
+enum KernelHandle {
+    CurrentThread   = 0xFFFF8000,
+    CurrentProcess  = 0xFFFF8001,
+};
+
 enum class HandleType : u32 {
     Unknown         = 0,
     Port            = 1,
