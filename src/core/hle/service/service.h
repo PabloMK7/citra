@@ -100,6 +100,16 @@ public:
         return 0; // TODO: Implement return from actual function
     }
 
+    /**
+     * Wait for kernel object to synchronize
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result WaitSynchronization(bool* wait) {
+        // TODO(bunnei): ImplementMe
+        return 0;
+    }
+
 protected:
 
     /**
