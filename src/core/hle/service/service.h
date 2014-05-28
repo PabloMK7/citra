@@ -87,12 +87,12 @@ public:
         if (itr == m_functions.end()) {
             ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
                 GetPortName(), cmd_buff[0]);
-            return -1;
+            return 0; // TODO(bunnei): Hack - ignore error
         }
         if (itr->second.func == NULL) {
             ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
                 GetPortName(), itr->second.name.c_str());
-            return -1;
+            return 0; // TODO(bunnei): Hack - ignore error
         } 
 
         itr->second.func(this);
