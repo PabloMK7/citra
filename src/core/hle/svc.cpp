@@ -9,6 +9,7 @@
 
 #include "core/mem_map.h"
 
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
@@ -16,7 +17,6 @@
 #include "core/hle/function_wrappers.h"
 #include "core/hle/svc.h"
 #include "core/hle/service/service.h"
-#include "core/hle/kernel/thread.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SVC
@@ -95,7 +95,7 @@ Result SendSyncRequest(Handle handle) {
     bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X");
+    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X", handle);
     _assert_msg_(KERNEL, object, "SendSyncRequest called, but kernel object is NULL!");
 
     Result res = object->SyncRequest(&wait);
@@ -115,24 +115,62 @@ Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", 
-        handle, nano_seconds);
-    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-    return 0;
+    // TODO(bunnei): Do something with nano_seconds, currently ignoring this
+    bool wait = false;
+
+    Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+
+    DEBUG_LOG(SVC, "WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", handle, 
+        nano_seconds);
+    _assert_msg_(KERNEL, object, "WaitSynchronization1 called, but kernel object is NULL!");
+
+    Result res = object->WaitSynchronization(&wait);
+
+    if (wait) {
+        Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+    }
+
+    return res;
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, s64 nano_seconds) {
+Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, 
+    s64 nano_seconds) {
+    // TODO(bunnei): Do something with nano_seconds, currently ignoring this
+
     s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
+    bool unlock_all = true;
 
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d %s", 
+    DEBUG_LOG(SVC, "WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
 
+    // Iterate through each handle, synchronize kernel object
     for (u32 i = 0; i < handle_count; i++) {
-        DEBUG_LOG(SVC, "\thandle[%d]=0x%08X", i, handles[i]);
+        bool wait = false;
+        Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]); // 0 handle
+
+        _assert_msg_(KERNEL, object, "WaitSynchronizationN called handle=0x%08X, but kernel object "
+            "is NULL!", handles[i]);
+
+        Result res = object->WaitSynchronization(&wait);
+
+        if (!wait && !wait_all) {
+            Core::g_app_core->SetReg(1, i);
+            return 0;
+        } else {
+            unlock_all = false;
+        }
     }
+
+    if (wait_all && unlock_all) {
+        Core::g_app_core->SetReg(1, handle_count);
+        return 0;
+    }
+
+    // Set current thread to wait state if not all handles were unlocked
     Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+
     return 0;
 }
 
@@ -195,16 +233,17 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 /// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
-    *mutex = Kernel::CreateMutex((initial_locked != 0));
-    Core::g_app_core->SetReg(1, *mutex);
     DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle 0x%08X", 
         initial_locked ? "true" : "false", *mutex);
+    *mutex = Kernel::CreateMutex((initial_locked != 0));
+    Core::g_app_core->SetReg(1, *mutex);
     return 0;
 }
 
 /// Release a mutex
 Result ReleaseMutex(Handle handle) {
     DEBUG_LOG(SVC, "ReleaseMutex called handle=0x%08X", handle);
+    _assert_msg_(KERNEL, handle, "ReleaseMutex called, but handle is NULL!");
     Kernel::ReleaseMutex(handle);
     return 0;
 }
@@ -225,9 +264,10 @@ Result QueryMemory(void *_info, void *_out, u32 addr) {
 
 /// Create an event
 Result CreateEvent(void* _event, u32 reset_type) {
-    Handle* event = (Handle*)_event;
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateEvent called reset_type=0x%08X", reset_type);
-    Core::g_app_core->SetReg(1, 0xBADC0DE0);
+    Handle* evt = (Handle*)_event;
+    DEBUG_LOG(SVC, "CreateEvent called reset_type=0x%08X", reset_type);
+    *evt = Kernel::CreateEvent((ResetType)reset_type);
+    Core::g_app_core->SetReg(1, *evt);
     return 0;
 }
 
