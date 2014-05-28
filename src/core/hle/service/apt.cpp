@@ -6,6 +6,7 @@
 #include "common/common.h"
 
 #include "core/hle/hle.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/service/apt.h"
 
@@ -15,7 +16,16 @@
 namespace APT_U {
 
 void Initialize(Service::Interface* self) {
-    NOTICE_LOG(OSHLE, "APT_U::Sync - Initialize");
+    u32* cmd_buff = Service::GetCommandBuffer();
+    DEBUG_LOG(KERNEL, "APT_U::Sync - Initialize");
+    
+    cmd_buff[3] = Kernel::CreateEvent(RESETTYPE_ONESHOT); // APT menu event handle
+    cmd_buff[4] = Kernel::CreateEvent(RESETTYPE_ONESHOT); // APT pause event handle
+
+    Kernel::SetEventLocked(cmd_buff[3], true);
+    Kernel::SetEventLocked(cmd_buff[4], false); // Fire start event
+
+    cmd_buff[1] = 0; // No error
 }
 
 void GetLockHandle(Service::Interface* self) {
