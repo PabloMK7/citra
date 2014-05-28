@@ -31,6 +31,7 @@ public:
      */
     Result SyncRequest(bool* wait) {
         // TODO(bunnei): ImplementMe
+        locked = true;
         return 0;
     }
 
@@ -41,6 +42,7 @@ public:
      */
     Result WaitSynchronization(bool* wait) {
         // TODO(bunnei): ImplementMe
+        *wait = locked;
         return 0;
     }
 };
@@ -111,6 +113,9 @@ bool ReleaseMutex(Mutex* mutex) {
  */
 Result ReleaseMutex(Handle handle) {
     Mutex* mutex = Kernel::g_object_pool.GetFast<Mutex>(handle);
+
+    _assert_msg_(KERNEL, mutex, "ReleaseMutex tried to release a NULL mutex!");
+
     if (!ReleaseMutex(mutex)) {
         return -1;
     }
@@ -121,6 +126,7 @@ Result ReleaseMutex(Handle handle) {
  * Creates a mutex
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @return Pointer to new Mutex object
  */
 Mutex* CreateMutex(Handle& handle, bool initial_locked) {
     Mutex* mutex = new Mutex;
