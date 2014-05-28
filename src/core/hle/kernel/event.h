@@ -16,7 +16,7 @@ namespace Kernel {
  * @param handle Handle to event to change
  * @param locked Boolean locked value to set event
  */
-void SetEventLocked(const Handle handle, const bool locked)
+void SetEventLocked(const Handle handle, const bool locked);
 
 /**
  * Clears an event

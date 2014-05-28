@@ -34,6 +34,7 @@ set(SRCS    core.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
             hle/svc.cpp
+            hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
             hle/kernel/thread.cpp
