@@ -132,6 +132,11 @@ public:
 
     __forceinline operator T() const
     {
+        return Value();
+    }
+
+    __forceinline T Value() const
+    {
         if (std::numeric_limits<T>::is_signed)
         {
             std::size_t shift = 8 * sizeof(T)-bits;
