@@ -87,12 +87,20 @@ public:
         if (itr == m_functions.end()) {
             ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
                 GetPortName(), cmd_buff[0]);
-            return 0; // TODO(bunnei): Hack - ignore error
+
+            // TODO(bunnei): Hack - ignore error
+            u32* cmd_buff = Service::GetCommandBuffer();
+            cmd_buff[1] = 0;
+            return 0; 
         }
         if (itr->second.func == NULL) {
             ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
                 GetPortName(), itr->second.name.c_str());
-            return 0; // TODO(bunnei): Hack - ignore error
+
+            // TODO(bunnei): Hack - ignore error
+            u32* cmd_buff = Service::GetCommandBuffer();
+            cmd_buff[1] = 0;
+            return 0; 
         } 
 
         itr->second.func(this);
