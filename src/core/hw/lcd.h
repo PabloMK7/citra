@@ -8,6 +8,8 @@
 
 namespace LCD {
 
+static const u32 kFrameTicks = 268123480 / 60;  ///< 268MHz / 60 frames per second
+
 struct Registers {
     u32 framebuffer_top_left_1;
     u32 framebuffer_top_left_2;

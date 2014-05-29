@@ -17,8 +17,6 @@ namespace LCD {
 
 Registers g_regs;
 
-static const u32 kFrameTicks = 268123480 / 60;  ///< 268MHz / 60 frames per second
-
 u64 g_last_ticks = 0; ///< Last CPU ticks
 
 /**
