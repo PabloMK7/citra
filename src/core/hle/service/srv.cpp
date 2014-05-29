@@ -36,7 +36,7 @@ void GetServiceHandle(Service::Interface* self) {
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
-    NOTICE_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name.c_str(), 
+    DEBUG_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name.c_str(), 
         service->GetHandle());
 
     if (NULL != service) {
