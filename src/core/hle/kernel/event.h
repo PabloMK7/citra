@@ -15,8 +15,9 @@ namespace Kernel {
  * Changes whether an event is locked or not
  * @param handle Handle to event to change
  * @param locked Boolean locked value to set event
+ * @return Result of operation, 0 on success, otherwise error code
  */
-void SetEventLocked(const Handle handle, const bool locked);
+Result SetEventLocked(const Handle handle, const bool locked);
 
 /**
  * Clears an event
@@ -28,7 +29,7 @@ Result ClearEvent(Handle handle);
 /**
  * Creates an event
  * @param reset_type ResetType describing how to create event
- * @return Handle to newly created object
+ * @return Handle to newly created Event object
  */
 Handle CreateEvent(const ResetType reset_type);
 

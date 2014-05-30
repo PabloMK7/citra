@@ -54,11 +54,16 @@ public:
  * Changes whether an event is locked or not
  * @param handle Handle to event to change
  * @param locked Boolean locked value to set event
+ * @return Result of operation, 0 on success, otherwise error code
  */
-void SetEventLocked(const Handle handle, const bool locked) {
+Result SetEventLocked(const Handle handle, const bool locked) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
+    if (!evt) {
+        ERROR_LOG(KERNEL, "SetEventLocked called with unknown handle=0x%08X", handle);
+        return -1;
+    }
     evt->locked = locked;
-    return;
+    return 0;
 }
 
 /**
@@ -67,23 +72,22 @@ void SetEventLocked(const Handle handle, const bool locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 Result ClearEvent(Handle handle) {
-    ERROR_LOG(KERNEL, "Unimplemented function ClearEvent");
-    return 0;
+    return SetEventLocked(handle, true);
 }
 
 /**
  * Creates an event
  * @param handle Reference to handle for the newly created mutex
  * @param reset_type ResetType describing how to create event
- * @return Handle to newly created object
+ * @return Newly created Event object
  */
 Event* CreateEvent(Handle& handle, const ResetType reset_type) {
     Event* evt = new Event;
 
     handle = Kernel::g_object_pool.Create(evt);
 
+    evt->locked = true;
     evt->reset_type = evt->intitial_reset_type = reset_type;
-    evt->locked = false;
 
     return evt;
 }
@@ -91,7 +95,7 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type) {
 /**
  * Creates an event
  * @param reset_type ResetType describing how to create event
- * @return Handle to newly created object
+ * @return Handle to newly created Event object
  */
 Handle CreateEvent(const ResetType reset_type) {
     Handle handle;
