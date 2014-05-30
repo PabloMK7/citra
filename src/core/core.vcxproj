@@ -175,6 +175,7 @@
     <ClCompile Include="hle\service\apt.cpp" />
     <ClCompile Include="hle\service\gsp.cpp" />
     <ClCompile Include="hle\service\hid.cpp" />
+    <ClCompile Include="hle\service\ndm.cpp" />
     <ClCompile Include="hle\service\service.cpp" />
     <ClCompile Include="hle\service\srv.cpp" />
     <ClCompile Include="hle\svc.cpp" />
@@ -225,6 +226,7 @@
     <ClInclude Include="hle\service\apt.h" />
     <ClInclude Include="hle\service\gsp.h" />
     <ClInclude Include="hle\service\hid.h" />
+    <ClInclude Include="hle\service\ndm.h" />
     <ClInclude Include="hle\service\service.h" />
     <ClInclude Include="hle\service\srv.h" />
     <ClInclude Include="hle\svc.h" />

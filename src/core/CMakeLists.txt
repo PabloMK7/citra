@@ -41,6 +41,7 @@ set(SRCS    core.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
+            hle/service/ndm.cpp
             hle/service/service.cpp
             hle/service/srv.cpp
             hw/hw.cpp
