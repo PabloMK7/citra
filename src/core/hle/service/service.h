@@ -85,7 +85,7 @@ public:
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
+            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X", 
                 GetPortName(), cmd_buff[0]);
 
             // TODO(bunnei): Hack - ignore error
@@ -94,7 +94,7 @@ public:
             return 0; 
         }
         if (itr->second.func == NULL) {
-            ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
+            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s", 
                 GetPortName(), itr->second.name.c_str());
 
             // TODO(bunnei): Hack - ignore error
