@@ -758,3 +758,9 @@ template<int func(void*, void*, u32, u32, s64)> void WrapI_VVUUS64() {
     int retval = func(Memory::GetPointer(PARAM(5)), Memory::GetPointer(PARAM(1)), PARAM(2), PARAM(3), (((u64)PARAM(4) << 32) | PARAM(0)));
     RETURN(retval);
 }
+
+// TODO(bunne): Is this correct? Probably not
+template<int func(u32, u32, u32, u32, s64)> void WrapI_UUUUS64() {
+    int retval = func(PARAM(5), PARAM(1), PARAM(2), PARAM(3), (((u64)PARAM(4) << 32) | PARAM(0)));
+    RETURN(retval);
+}

@@ -35,7 +35,6 @@ enum MapMemoryPermission {
 
 /// Map application or GSP heap memory
 Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
-    u32* outaddr = (u32*)_outaddr;
     u32 virtual_address = 0x00000000;
 
     DEBUG_LOG(SVC, "ControlMemory called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
@@ -57,9 +56,7 @@ Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 si
     default:
         ERROR_LOG(SVC, "ControlMemory unknown operation=0x%08X", operation);
     }
-    if (NULL != outaddr) {
-        *outaddr = virtual_address;
-    }
+
     Core::g_app_core->SetReg(1, virtual_address);
 
     return 0;
@@ -82,7 +79,7 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-Result ConnectToPort(void* out, const char* port_name) {
+Result ConnectToPort(void* _out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
     DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
     _assert_msg_(KERNEL, service, "ConnectToPort called, but service is not implemented!");
@@ -128,6 +125,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     if (wait) {
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+        Kernel::Reschedule();
     }
 
     return res;
@@ -138,7 +136,6 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
 
-    s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
     bool unlock_all = true;
 
@@ -152,6 +149,8 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 
         _assert_msg_(KERNEL, object, "WaitSynchronizationN called handle=0x%08X, but kernel object "
             "is NULL!", handles[i]);
+
+        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X", i, handles[i]);
 
         Result res = object->WaitSynchronization(&wait);
 
@@ -170,15 +169,23 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 
     // Set current thread to wait state if not all handles were unlocked
     Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+    Kernel::Reschedule();
 
     return 0;
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
 Result CreateAddressArbiter(void* arbiter) {
-    // ImplementMe
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
     Core::g_app_core->SetReg(1, 0xFABBDADD);
+    return 0;
+}
+
+/// Arbitrate address
+Result ArbitrateAddress(Handle arbiter, u32 addr, u32 _type, u32 value, s64 nanoseconds) {
+    DEBUG_LOG(SVC, "(UNIMPLEMENTED) ArbitrateAddress called");
+    ArbitrationType type = (ArbitrationType)_type;
+    Memory::Write32(addr, type);
     return 0;
 }
 
@@ -199,7 +206,6 @@ Result GetResourceLimit(void* resource_limit, Handle process) {
 
 /// Get resource limit current values
 Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void* names, s32 name_count) {
-    //s64* values = (s64*)_values;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimitCurrentValues called resource_limit=%08X, names=%s, name_count=%d",
         resource_limit, names, name_count);
     Memory::Write32(Core::g_app_core->GetReg(0), 0); // Normmatt: Set used memory to 0 for now
@@ -224,7 +230,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
     Core::g_app_core->SetReg(1, thread);
 
     DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
-        "threadpriority=0x%08X, processorid=0x%08X : created handle 0x%08X", entry_point, 
+        "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point, 
         name.c_str(), arg, stack_top, priority, processor_id, thread);
     
     return 0;
@@ -232,11 +238,10 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 
 /// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
-    Handle* mutex = (Handle*)_mutex;
-    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle 0x%08X", 
-        initial_locked ? "true" : "false", *mutex);
-    *mutex = Kernel::CreateMutex((initial_locked != 0));
-    Core::g_app_core->SetReg(1, *mutex);
+    Handle mutex = Kernel::CreateMutex((initial_locked != 0));
+    Core::g_app_core->SetReg(1, mutex);
+    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle=0x%08X", 
+        initial_locked ? "true" : "false", mutex);
     return 0;
 }
 
@@ -256,18 +261,16 @@ Result GetThreadId(void* thread_id, u32 thread) {
 
 /// Query memory
 Result QueryMemory(void *_info, void *_out, u32 addr) {
-    MemoryInfo* info = (MemoryInfo*) _info;
-    PageInfo* out = (PageInfo*) _out;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
     return 0;
 }
 
 /// Create an event
 Result CreateEvent(void* _event, u32 reset_type) {
-    Handle* evt = (Handle*)_event;
-    DEBUG_LOG(SVC, "CreateEvent called reset_type=0x%08X", reset_type);
-    *evt = Kernel::CreateEvent((ResetType)reset_type);
-    Core::g_app_core->SetReg(1, *evt);
+    Handle evt = Kernel::CreateEvent((ResetType)reset_type);
+    Core::g_app_core->SetReg(1, evt);
+    DEBUG_LOG(SVC, "CreateEvent called reset_type=0x%08X : created handle=0x%08X", 
+        reset_type, evt);
     return 0;
 }
 
@@ -276,6 +279,13 @@ Result DuplicateHandle(void* _out, Handle handle) {
     Handle* out = (Handle*)_out;
     DEBUG_LOG(SVC, "(UNIMPLEMENTED) DuplicateHandle called handle=0x%08X", handle);
     return 0;
+}
+
+/// Clears an event
+Result ClearEvent(Handle evt) {
+    Result res = Kernel::ClearEvent(evt);
+    DEBUG_LOG(SVC, "ClearEvent called event=0x%08X", evt);
+    return res;
 }
 
 const HLE::FunctionDef SVC_Table[] = {
@@ -304,7 +314,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x16,  NULL,                                       "ReleaseSemaphore"},
     {0x17,  WrapI_VU<CreateEvent>,                      "CreateEvent"},
     {0x18,  NULL,                                       "SignalEvent"},
-    {0x19,  NULL,                                       "ClearEvent"},
+    {0x19,  WrapI_U<ClearEvent>,                        "ClearEvent"},
     {0x1A,  NULL,                                       "CreateTimer"},
     {0x1B,  NULL,                                       "SetTimer"},
     {0x1C,  NULL,                                       "CancelTimer"},
@@ -313,7 +323,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x1F,  WrapI_UUUU<MapMemoryBlock>,                 "MapMemoryBlock"},
     {0x20,  NULL,                                       "UnmapMemoryBlock"},
     {0x21,  WrapI_V<CreateAddressArbiter>,              "CreateAddressArbiter"},
-    {0x22,  NULL,                                       "ArbitrateAddress"},
+    {0x22,  WrapI_UUUUS64<ArbitrateAddress>,            "ArbitrateAddress"},
     {0x23,  WrapI_U<CloseHandle>,                       "CloseHandle"},
     {0x24,  WrapI_US64<WaitSynchronization1>,           "WaitSynchronization1"},
     {0x25,  WrapI_VVUUS64<WaitSynchronizationN>,        "WaitSynchronizationN"},
