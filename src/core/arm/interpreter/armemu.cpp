@@ -4533,23 +4533,7 @@ ARMul_Emulate26 (ARMul_State * state)
             case 0xfd:
             case 0xfe:
             case 0xff:
-                if (instr == ARMul_ABORTWORD
-                    && state->AbortAddr == pc) {
-                    /* A prefetch abort.  */
-                    XScale_set_fsr_far (state,
-                                ARMul_CP15_R5_MMU_EXCPT,
-                                pc);
-                    ARMul_Abort (state,
-                             ARMul_PrefetchAbortV);
-                    break;
-                }
-                //sky_pref_t* pref = get_skyeye_pref();
-                //if(pref->user_mode_sim){
-                //    ARMul_OSHandleSWI (state, BITS (0, 23));
-                //    break;
-                //}
                 HLE::CallSVC(instr);
-                ARMul_Abort (state, ARMul_SWIV);
                 break;
             }
         }
