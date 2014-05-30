@@ -7,11 +7,14 @@
 
 #define LOGGING
 
-#define    NOTICE_LEVEL  1  // VERY important information that is NOT errors. Like startup and OSReports.
-#define    ERROR_LEVEL   2  // Critical errors 
-#define    WARNING_LEVEL 3  // Something is suspicious.
-#define    INFO_LEVEL    4  // General information.
-#define    DEBUG_LEVEL   5  // Detailed debugging - might make things slow.
+enum {
+    OS_LEVEL,       // Printed by the emulated operating system
+    NOTICE_LEVEL,   // VERY important information that is NOT errors. Like startup and OSReports.
+    ERROR_LEVEL,    // Critical errors 
+    WARNING_LEVEL,  // Something is suspicious.
+    INFO_LEVEL,     // General information.
+    DEBUG_LEVEL,    // Detailed debugging - might make things slow.
+};
 
 namespace LogTypes
 {
@@ -70,6 +73,7 @@ enum LOG_TYPE {
 
 // FIXME: should this be removed?
 enum LOG_LEVELS {
+    LOS = OS_LEVEL,
     LNOTICE = NOTICE_LEVEL,
     LERROR = ERROR_LEVEL,
     LWARNING = WARNING_LEVEL,
@@ -82,8 +86,8 @@ enum LOG_LEVELS {
 
 }  // namespace
 
-void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type,
-        const char *file, int line, const char *fmt, ...)
+void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int line, 
+    const char* function, const char* fmt, ...)
 #ifdef __GNUC__
         __attribute__((format(printf, 5, 6)))
 #endif
@@ -97,16 +101,19 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type,
 #endif // loglevel
 #endif // logging
 
-#ifdef GEKKO
-#define GENERIC_LOG(t, v, ...)
-#else
+#ifdef _WIN32
+#ifndef __func__
+#define __func__ __FUNCTION__
+#endif
+#endif
+
 // Let the compiler optimize this out
 #define GENERIC_LOG(t, v, ...) { \
     if (v <= MAX_LOGLEVEL) \
-        GenericLog(v, t, __FILE__, __LINE__, __VA_ARGS__); \
+        GenericLog(v, t, __FILE__, __LINE__, __func__, __VA_ARGS__); \
     }
-#endif
 
+#define OS_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LOS, __VA_ARGS__) } while (0)
 #define ERROR_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LERROR, __VA_ARGS__) } while (0)
 #define WARN_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LWARNING, __VA_ARGS__) } while (0)
 #define NOTICE_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LNOTICE, __VA_ARGS__) } while (0)
