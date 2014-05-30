@@ -92,7 +92,7 @@ void ReadHWRegs(Service::Interface* self) {
         break;
 
     default:
-        ERROR_LOG(GSP, "ReadHWRegs unknown register read at address %08X", reg_addr);
+        ERROR_LOG(GSP, "unknown register read at address %08X", reg_addr);
     }
 
 }
@@ -117,7 +117,7 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     default:
-        ERROR_LOG(GSP, "TriggerCmdReqQueue unknown command 0x%08X", cmd_buff[0]);
+        ERROR_LOG(GSP, "unknown command 0x%08X", cmd_buff[0]);
     }
     
     GX_FinishCommand(g_thread_id);

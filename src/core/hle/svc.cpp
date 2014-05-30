@@ -37,7 +37,7 @@ enum MapMemoryPermission {
 Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
     u32 virtual_address = 0x00000000;
 
-    DEBUG_LOG(SVC, "ControlMemory called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
+    DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
         operation, addr0, addr1, size, permissions);
 
     switch (operation) {
@@ -54,7 +54,7 @@ Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 si
 
     // Unknown ControlMemory operation
     default:
-        ERROR_LOG(SVC, "ControlMemory unknown operation=0x%08X", operation);
+        ERROR_LOG(SVC, "unknown operation=0x%08X", operation);
     }
 
     Core::g_app_core->SetReg(1, virtual_address);
@@ -64,7 +64,7 @@ Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 si
 
 /// Maps a memory block to specified address
 Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherpermission) {
-    DEBUG_LOG(SVC, "MapMemoryBlock called memblock=0x08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
+    DEBUG_LOG(SVC, "called memblock=0x08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
         memblock, addr, mypermissions, otherpermission);
     switch (mypermissions) {
     case MEMORY_PERMISSION_NORMAL:
@@ -73,7 +73,7 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
         Memory::MapBlock_Shared(memblock, addr, mypermissions);
         break;
     default:
-        ERROR_LOG(OSHLE, "MapMemoryBlock unknown permissions=0x%08X", mypermissions);
+        ERROR_LOG(OSHLE, "unknown permissions=0x%08X", mypermissions);
     }
     return 0;
 }
@@ -81,8 +81,8 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* _out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
-    DEBUG_LOG(SVC, "ConnectToPort called port_name=%s", port_name);
-    _assert_msg_(KERNEL, service, "ConnectToPort called, but service is not implemented!");
+    DEBUG_LOG(SVC, "called port_name=%s", port_name);
+    _assert_msg_(KERNEL, service, "called, but service is not implemented!");
     Core::g_app_core->SetReg(1, service->GetHandle());
     return 0;
 }
@@ -92,8 +92,8 @@ Result SendSyncRequest(Handle handle) {
     bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "SendSyncRequest called handle=0x%08X", handle);
-    _assert_msg_(KERNEL, object, "SendSyncRequest called, but kernel object is NULL!");
+    DEBUG_LOG(SVC, "called handle=0x%08X", handle);
+    _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
 
     Result res = object->SyncRequest(&wait);
     if (wait) {
@@ -106,7 +106,7 @@ Result SendSyncRequest(Handle handle) {
 /// Close a handle
 Result CloseHandle(Handle handle) {
     // ImplementMe
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) CloseHandle called handle=0x%08X", handle);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
     return 0;
 }
 
@@ -117,9 +117,9 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "WaitSynchronization1 called handle=0x%08X, nanoseconds=%d", handle, 
+    DEBUG_LOG(SVC, "called handle=0x%08X, nanoseconds=%d", handle, 
         nano_seconds);
-    _assert_msg_(KERNEL, object, "WaitSynchronization1 called, but kernel object is NULL!");
+    _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
 
     Result res = object->WaitSynchronization(&wait);
 
@@ -139,7 +139,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     Handle* handles = (Handle*)_handles;
     bool unlock_all = true;
 
-    DEBUG_LOG(SVC, "WaitSynchronizationN called handle_count=%d, wait_all=%s, nanoseconds=%d", 
+    DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%d", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
 
     // Iterate through each handle, synchronize kernel object
@@ -147,7 +147,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
         bool wait = false;
         Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]); // 0 handle
 
-        _assert_msg_(KERNEL, object, "WaitSynchronizationN called handle=0x%08X, but kernel object "
+        _assert_msg_(KERNEL, object, "called handle=0x%08X, but kernel object "
             "is NULL!", handles[i]);
 
         DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X", i, handles[i]);
@@ -176,14 +176,14 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 
 /// Create an address arbiter (to allocate access to shared resources)
 Result CreateAddressArbiter(void* arbiter) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called");
     Core::g_app_core->SetReg(1, 0xFABBDADD);
     return 0;
 }
 
 /// Arbitrate address
 Result ArbitrateAddress(Handle arbiter, u32 addr, u32 _type, u32 value, s64 nanoseconds) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) ArbitrateAddress called");
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called");
     ArbitrationType type = (ArbitrationType)_type;
     Memory::Write32(addr, type);
     return 0;
@@ -199,14 +199,15 @@ Result GetResourceLimit(void* resource_limit, Handle process) {
     // With regards to proceess values:
     // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for 
     // the current KThread.
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimit called process=0x%08X", process);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called process=0x%08X", process);
     Core::g_app_core->SetReg(1, 0xDEADBEEF);
     return 0;
 }
 
 /// Get resource limit current values
-Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void* names, s32 name_count) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimitCurrentValues called resource_limit=%08X, names=%s, name_count=%d",
+Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void* names, 
+    s32 name_count) {
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%s, name_count=%d",
         resource_limit, names, name_count);
     Memory::Write32(Core::g_app_core->GetReg(0), 0); // Normmatt: Set used memory to 0 for now
     return 0;
@@ -229,7 +230,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 
     Core::g_app_core->SetReg(1, thread);
 
-    DEBUG_LOG(SVC, "CreateThread called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
+    DEBUG_LOG(SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point, 
         name.c_str(), arg, stack_top, priority, processor_id, thread);
     
@@ -240,28 +241,28 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle mutex = Kernel::CreateMutex((initial_locked != 0));
     Core::g_app_core->SetReg(1, mutex);
-    DEBUG_LOG(SVC, "CreateMutex called initial_locked=%s : created handle=0x%08X", 
+    DEBUG_LOG(SVC, "called initial_locked=%s : created handle=0x%08X", 
         initial_locked ? "true" : "false", mutex);
     return 0;
 }
 
 /// Release a mutex
 Result ReleaseMutex(Handle handle) {
-    DEBUG_LOG(SVC, "ReleaseMutex called handle=0x%08X", handle);
-    _assert_msg_(KERNEL, handle, "ReleaseMutex called, but handle is NULL!");
+    DEBUG_LOG(SVC, "called handle=0x%08X", handle);
+    _assert_msg_(KERNEL, handle, "called, but handle is NULL!");
     Kernel::ReleaseMutex(handle);
     return 0;
 }
 
 /// Get current thread ID
 Result GetThreadId(void* thread_id, u32 thread) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called thread=0x%08X", thread);
     return 0;
 }
 
 /// Query memory
 Result QueryMemory(void *_info, void *_out, u32 addr) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called addr=0x%08X", addr);
     return 0;
 }
 
@@ -269,7 +270,7 @@ Result QueryMemory(void *_info, void *_out, u32 addr) {
 Result CreateEvent(void* _event, u32 reset_type) {
     Handle evt = Kernel::CreateEvent((ResetType)reset_type);
     Core::g_app_core->SetReg(1, evt);
-    DEBUG_LOG(SVC, "CreateEvent called reset_type=0x%08X : created handle=0x%08X", 
+    DEBUG_LOG(SVC, "called reset_type=0x%08X : created handle=0x%08X", 
         reset_type, evt);
     return 0;
 }
@@ -277,14 +278,14 @@ Result CreateEvent(void* _event, u32 reset_type) {
 /// Duplicates a kernel handle
 Result DuplicateHandle(void* _out, Handle handle) {
     Handle* out = (Handle*)_out;
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) DuplicateHandle called handle=0x%08X", handle);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
     return 0;
 }
 
 /// Clears an event
 Result ClearEvent(Handle evt) {
     Result res = Kernel::ClearEvent(evt);
-    DEBUG_LOG(SVC, "ClearEvent called event=0x%08X", evt);
+    DEBUG_LOG(SVC, "called event=0x%08X", evt);
     return res;
 }
 

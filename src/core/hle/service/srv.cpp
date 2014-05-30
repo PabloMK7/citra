@@ -15,14 +15,14 @@ namespace SRV {
 Handle g_mutex = 0;
 
 void Initialize(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "SRV::Initialize called");
+    DEBUG_LOG(OSHLE, "called");
     if (!g_mutex) {
         g_mutex = Kernel::CreateMutex(false);
     }
 }
 
 void GetProcSemaphore(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "SRV::GetProcSemaphore called");
+    DEBUG_LOG(OSHLE, "called");
     // Get process semaphore?
     u32* cmd_buff = Service::GetCommandBuffer();
     cmd_buff[1] = 0;        // No error
@@ -36,7 +36,7 @@ void GetServiceHandle(Service::Interface* self) {
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
-    DEBUG_LOG(OSHLE, "SRV::Sync - GetHandle - port: %s, handle: 0x%08X", port_name.c_str(), 
+    DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), 
         service->GetHandle());
 
     if (NULL != service) {

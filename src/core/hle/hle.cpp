@@ -18,7 +18,7 @@ static std::vector<ModuleDef> g_module_db;
 const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
-        ERROR_LOG(HLE,"Unknown SVC: 0x%02X", func_num); 
+        ERROR_LOG(HLE,"unknown svc=0x%02X", func_num); 
         return NULL;
     }
     return &g_module_db[0].func_table[func_num];
@@ -33,7 +33,7 @@ void CallSVC(u32 opcode) {
     if (info->func) {
         info->func();
     } else {
-        ERROR_LOG(HLE, "Unimplemented SVC function %s(..)", info->name.c_str());
+        ERROR_LOG(HLE, "unimplemented SVC function %s(..)", info->name.c_str());
     }
 }
 
@@ -43,7 +43,7 @@ void EatCycles(u32 cycles) {
 
 void ReSchedule(const char *reason) {
 #ifdef _DEBUG
-    _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "ReSchedule: Invalid or too long reason.");
+    _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
 #endif
     // TODO: ImplementMe
 }

@@ -17,7 +17,7 @@ namespace APT_U {
 
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    DEBUG_LOG(KERNEL, "APT_U::Initialize called");
+    DEBUG_LOG(KERNEL, "called");
     
     cmd_buff[3] = Kernel::CreateEvent(RESETTYPE_ONESHOT); // APT menu event handle
     cmd_buff[4] = Kernel::CreateEvent(RESETTYPE_ONESHOT); // APT pause event handle
@@ -33,14 +33,14 @@ void GetLockHandle(Service::Interface* self) {
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
     cmd_buff[1] = 0; // No error
     cmd_buff[5] = Kernel::CreateMutex(false);
-    DEBUG_LOG(KERNEL, "APT_U::GetLockHandle called handle=0x%08X", cmd_buff[5]);
+    DEBUG_LOG(KERNEL, "called handle=0x%08X", cmd_buff[5]);
 }
 
 void Enable(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 unk = cmd_buff[1]; // TODO(bunnei): What is this field used for?
     cmd_buff[1] = 0; // No error
-    ERROR_LOG(KERNEL, "(UNIMPEMENTED) APT_U::Enable called unk=0x%08X", unk);
+    ERROR_LOG(KERNEL, "(UNIMPEMENTED) called unk=0x%08X", unk);
 }
 
 void InquireNotification(Service::Interface* self) {
@@ -48,7 +48,7 @@ void InquireNotification(Service::Interface* self) {
     u32 app_id = cmd_buff[2];
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = 0; // Signal type
-    ERROR_LOG(KERNEL, "(UNIMPEMENTED) APT_U::InquireNotification called app_id=0x%08X", app_id);
+    ERROR_LOG(KERNEL, "(UNIMPEMENTED) called app_id=0x%08X", app_id);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
