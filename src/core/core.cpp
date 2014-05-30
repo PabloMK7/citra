@@ -9,6 +9,7 @@
 #include "core/core.h"
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
+#include "core/hw/lcd.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
 
@@ -23,7 +24,7 @@ ARM_Interface*  g_sys_core  = NULL; ///< ARM11 system (OS) core
 /// Run the core CPU loop
 void RunLoop() {
     for (;;){
-        g_app_core->Run(100);
+        g_app_core->Run(LCD::kFrameTicks / 2);
         HW::Update();
         Kernel::Reschedule();
     }
@@ -31,9 +32,17 @@ void RunLoop() {
 
 /// Step the CPU one instruction
 void SingleStep() {
+    static int ticks = 0;
+
     g_app_core->Step();
-    HW::Update();
-    Kernel::Reschedule();
+    
+    if (ticks >= LCD::kFrameTicks / 2) {
+        HW::Update();
+        Kernel::Reschedule();
+        ticks = 0;
+    } else {
+        ticks++;
+    }
 }
 
 /// Halt the core
