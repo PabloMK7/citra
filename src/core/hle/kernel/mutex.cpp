@@ -8,6 +8,7 @@
 #include "common/common.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
@@ -92,10 +93,11 @@ bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
 bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
     bool woke_threads = false;
-    auto iter = mutex->waiting_threads.begin();
+    std::vector<Handle>::iterator iter;
 
     // Find the next waiting thread for the mutex...
     while (!woke_threads && !mutex->waiting_threads.empty()) {
+        iter = mutex->waiting_threads.begin();
         woke_threads |= ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
