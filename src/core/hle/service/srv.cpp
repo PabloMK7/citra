@@ -36,18 +36,14 @@ void GetServiceHandle(Service::Interface* self) {
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
-    DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), 
-        service->GetHandle());
-
     if (NULL != service) {
         cmd_buff[3] = service->GetHandle();
+        DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
-        ERROR_LOG(OSHLE, "Service %s does not exist", port_name.c_str());
+        ERROR_LOG(OSHLE, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
         res = -1;
     }
     cmd_buff[1] = res;
-
-    //return res;
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
