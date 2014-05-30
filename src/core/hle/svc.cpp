@@ -191,7 +191,7 @@ Result ArbitrateAddress(Handle arbiter, u32 addr, u32 _type, u32 value, s64 nano
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
 void OutputDebugString(const char* string) {
-    NOTICE_LOG(SVC, "## OSDEBUG: %08X %s", Core::g_app_core->GetPC(), string);
+    OS_LOG(SVC, "%s", string);
 }
 
 /// Get resource limit
