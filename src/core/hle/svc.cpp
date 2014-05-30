@@ -106,7 +106,7 @@ Result SendSyncRequest(Handle handle) {
 /// Close a handle
 Result CloseHandle(Handle handle) {
     // ImplementMe
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CloseHandle called handle=0x%08X", handle);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) CloseHandle called handle=0x%08X", handle);
     return 0;
 }
 
@@ -176,14 +176,14 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 
 /// Create an address arbiter (to allocate access to shared resources)
 Result CreateAddressArbiter(void* arbiter) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) CreateAddressArbiter called");
     Core::g_app_core->SetReg(1, 0xFABBDADD);
     return 0;
 }
 
 /// Arbitrate address
 Result ArbitrateAddress(Handle arbiter, u32 addr, u32 _type, u32 value, s64 nanoseconds) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) ArbitrateAddress called");
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) ArbitrateAddress called");
     ArbitrationType type = (ArbitrationType)_type;
     Memory::Write32(addr, type);
     return 0;
@@ -199,14 +199,14 @@ Result GetResourceLimit(void* resource_limit, Handle process) {
     // With regards to proceess values:
     // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for 
     // the current KThread.
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimit called process=0x%08X", process);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimit called process=0x%08X", process);
     Core::g_app_core->SetReg(1, 0xDEADBEEF);
     return 0;
 }
 
 /// Get resource limit current values
 Result GetResourceLimitCurrentValues(void* _values, Handle resource_limit, void* names, s32 name_count) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimitCurrentValues called resource_limit=%08X, names=%s, name_count=%d",
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetResourceLimitCurrentValues called resource_limit=%08X, names=%s, name_count=%d",
         resource_limit, names, name_count);
     Memory::Write32(Core::g_app_core->GetReg(0), 0); // Normmatt: Set used memory to 0 for now
     return 0;
@@ -255,13 +255,13 @@ Result ReleaseMutex(Handle handle) {
 
 /// Get current thread ID
 Result GetThreadId(void* thread_id, u32 thread) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) GetThreadId called thread=0x%08X", thread);
     return 0;
 }
 
 /// Query memory
 Result QueryMemory(void *_info, void *_out, u32 addr) {
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) QueryMemory called addr=0x%08X", addr);
     return 0;
 }
 
@@ -277,7 +277,7 @@ Result CreateEvent(void* _event, u32 reset_type) {
 /// Duplicates a kernel handle
 Result DuplicateHandle(void* _out, Handle handle) {
     Handle* out = (Handle*)_out;
-    DEBUG_LOG(SVC, "(UNIMPLEMENTED) DuplicateHandle called handle=0x%08X", handle);
+    ERROR_LOG(SVC, "(UNIMPLEMENTED) DuplicateHandle called handle=0x%08X", handle);
     return 0;
 }
 
