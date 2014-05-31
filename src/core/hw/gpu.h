@@ -22,6 +22,14 @@ struct Registers {
         FramebufferSubRight1    = 0x1EF00594,   // Sub LCD, unused first framebuffer
         FramebufferSubRight2    = 0x1EF00598,   // Sub LCD, unused second framebuffer
 
+        DisplayInputBufferAddr  = 0x1EF00C00,
+        DisplayOutputBufferAddr = 0x1EF00C04,
+        DisplayOutputBufferSize = 0x1EF00C08,
+        DisplayInputBufferSize  = 0x1EF00C0C,
+        DisplayTransferFlags    = 0x1EF00C10,
+        // Unknown??
+        DisplayTriggerTransfer  = 0x1EF00C18,
+
         CommandListSize         = 0x1EF018E0,
         CommandListAddress      = 0x1EF018E8,
         ProcessCommandList      = 0x1EF018F0,

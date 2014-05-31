@@ -176,10 +176,17 @@ void TriggerCmdReqQueue(Service::Interface* self) {
     case GXCommandId::SET_MEMORY_FILL:
         break;
 
+    // TODO: Check if texture copies are implemented correctly..
     case GXCommandId::SET_DISPLAY_TRANSFER:
-        break;
-
     case GXCommandId::SET_TEXTURE_COPY:
+        GPU::Write<u32>(GPU::Registers::DisplayInputBufferAddr, cmd_buff[1] >> 3);
+        GPU::Write<u32>(GPU::Registers::DisplayOutputBufferAddr, cmd_buff[2] >> 3);
+        GPU::Write<u32>(GPU::Registers::DisplayInputBufferSize, cmd_buff[3]);
+        GPU::Write<u32>(GPU::Registers::DisplayOutputBufferSize, cmd_buff[4]);
+        GPU::Write<u32>(GPU::Registers::DisplayTransferFlags, cmd_buff[5]);
+
+        // TODO: GPU::Registers::DisplayTriggerTransfer should be ORed with 1 for texture copies?
+        GPU::Write<u32>(GPU::Registers::DisplayTriggerTransfer, 1);
         break;
 
     case GXCommandId::SET_COMMAND_LIST_FIRST:
