@@ -108,6 +108,31 @@ inline void Read(T &var, const u32 addr) {
         var = g_regs.framebuffer_sub_right_1;
         break;
 
+    case Registers::DisplayInputBufferAddr:
+        var = g_regs.display_transfer.input_address;
+        break;
+
+    case Registers::DisplayOutputBufferAddr:
+        var = g_regs.display_transfer.output_address;
+        break;
+
+    case Registers::DisplayOutputBufferSize:
+        var = g_regs.display_transfer.output_size;
+        break;
+
+    case Registers::DisplayInputBufferSize:
+        var = g_regs.display_transfer.input_size;
+        break;
+
+    case Registers::DisplayTransferFlags:
+        var = g_regs.display_transfer.flags;
+        break;
+
+    // Not sure if this is supposed to be readable
+    case Registers::DisplayTriggerTransfer:
+        var = g_regs.display_transfer.trigger;
+        break;
+
     case Registers::CommandListSize:
         var = g_regs.command_list_size;
         break;
@@ -129,6 +154,33 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (static_cast<Registers::Id>(addr)) {
+    case Registers::DisplayInputBufferAddr:
+        g_regs.display_transfer.input_address = data;
+        break;
+
+    case Registers::DisplayOutputBufferAddr:
+        g_regs.display_transfer.output_address = data;
+        break;
+
+    case Registers::DisplayOutputBufferSize:
+        g_regs.display_transfer.output_size = data;
+        break;
+
+    case Registers::DisplayInputBufferSize:
+        g_regs.display_transfer.input_size = data;
+        break;
+
+    case Registers::DisplayTransferFlags:
+        g_regs.display_transfer.flags = data;
+        break;
+
+    case Registers::DisplayTriggerTransfer:
+        g_regs.display_transfer.trigger = data;
+        if (g_regs.display_transfer.trigger & 1) {
+            // TODO: Perform display transfer!
+        }
+        break;
+
     case Registers::CommandListSize:
         g_regs.command_list_size = data;
         break;

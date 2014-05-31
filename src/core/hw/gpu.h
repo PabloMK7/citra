@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "common/bit_field.h"
 
 namespace GPU {
 
@@ -43,6 +44,45 @@ struct Registers {
     u32 framebuffer_sub_left_2;
     u32 framebuffer_sub_right_1;
     u32 framebuffer_sub_right_2;
+
+    struct {
+        u32 input_address;
+        u32 output_address;
+
+        inline u32 GetPhysicalInputAddress() const {
+            return input_address * 8;
+        }
+
+        inline u32 GetPhysicalOutputAddress() const {
+            return output_address * 8;
+        }
+
+        union {
+            u32 output_size;
+
+            BitField< 0, 16, u32> output_width;
+            BitField<16, 16, u32> output_height;
+        };
+
+        union {
+            u32 input_size;
+
+            BitField< 0, 16, u32> input_width;
+            BitField<16, 16, u32> input_height;
+        };
+
+        union {
+            u32 flags;
+
+            BitField< 0, 1, u32> flip_data;
+            BitField< 8, 3, u32> input_format;
+            BitField<12, 3, u32> output_format;
+            BitField<16, 1, u32> output_tiled;
+        };
+
+        u32 unknown;
+        u32 trigger;
+    } display_transfer;
 
     u32 command_list_size;
     u32 command_list_address;
