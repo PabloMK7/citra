@@ -189,5 +189,6 @@ private:
     static_assert(position < 8 * sizeof(T), "Invalid position");
     static_assert(bits <= 8 * sizeof(T), "Invalid number of bits");
     static_assert(bits > 0, "Invalid number of bits");
+    static_assert(std::is_standard_layout<T>::value, "Invalid base type");
 };
 #pragma pack()
