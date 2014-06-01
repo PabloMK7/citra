@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project(citra)
 
-SET(CXX_COMPILE_FLAGS "-std=c++11 -fpermissive")
+SET(CXX_COMPILE_FLAGS "-std=c++11")
 
 # silence some spam
 add_definitions(-Wno-attributes)
