@@ -25,7 +25,7 @@ public:
      */
     void Run(int num_instructions) {
         ExecuteInstructions(num_instructions);
-        num_instructions += num_instructions;
+        this->num_instructions += num_instructions;
     }
 
     /// Step CPU by one instruction
