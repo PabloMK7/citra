@@ -8,6 +8,7 @@
 
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/service/gsp.h"
 
 #include "core/hw/lcd.h"
@@ -52,6 +53,7 @@ void GX_FinishCommand(u32 thread_id) {
 
 namespace GSP_GPU {
 
+Handle g_event_handle = 0;
 u32 g_thread_id = 0;
 
 enum {
@@ -100,7 +102,20 @@ void ReadHWRegs(Service::Interface* self) {
 void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
-    u32 event_handle = cmd_buff[3]; // TODO(bunnei): Implement event handling
+    u32 event_handle = cmd_buff[3];
+
+    _assert_msg_(GSP, event_handle, "called, but event is NULL!");
+
+    g_event_handle = event_handle;
+
+    Kernel::SetEventLocked(event_handle, false);
+
+    // Hack - This function will permanently set the state of the GSP event such that GPU command 
+    // synchronization barriers always passthrough. Correct solution would be to set this after the 
+    // GPU as processed all queued up commands, but due to the emulator being single-threaded they
+    // will always be ready.
+    Kernel::SetPermanentLock(event_handle, true);
+
     cmd_buff[2] = g_thread_id;          // ThreadID
 }
 
