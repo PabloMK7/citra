@@ -47,11 +47,6 @@ Handle g_shared_memory = 0;
 
 u32 g_thread_id = 0;
 
-enum {
-    REG_FRAMEBUFFER_1   = 0x00400468,
-    REG_FRAMEBUFFER_2   = 0x00400494,
-};
-
 /// Gets a pointer to the start (header) of a command buffer in GSP shared memory
 static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
     return Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * 0x200) + offset);
@@ -67,38 +62,62 @@ void GX_FinishCommand(u32 thread_id) {
     // TODO: Increment header->index?
 }
 
-/// Read a GSP GPU hardware register
-void ReadHWRegs(Service::Interface* self) {
-    static const u32 framebuffer_1[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME1, GPU::PADDR_VRAM_TOP_RIGHT_FRAME1};
-    static const u32 framebuffer_2[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME2, GPU::PADDR_VRAM_TOP_RIGHT_FRAME2};
-
+/// Write a GSP GPU hardware register
+void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
-    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
 
-    switch (reg_addr) {
-
-    // NOTE: Calling SetFramebufferLocation here is a hack... Not sure the correct way yet to set 
-    // whether the framebuffers should be in VRAM or GSP heap, but from what I understand, if the 
-    // user application is reading from either of these registers, then its going to be in VRAM.
-
-    // Top framebuffer 1 addresses
-    case REG_FRAMEBUFFER_1:
-        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
-        memcpy(dst, framebuffer_1, size);
-        break;
-
-    // Top framebuffer 2 addresses
-    case REG_FRAMEBUFFER_2:
-        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
-        memcpy(dst, framebuffer_2, size);
-        break;
-
-    default:
-        ERROR_LOG(GSP, "unknown register read at address %08X", reg_addr);
+    // TODO: Return proper error codes
+    if (reg_addr + size >= 0x420000) {
+        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        return;
     }
 
+    // size should be word-aligned
+    if ((size % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        return;
+    }
+
+    u32* src = (u32*)Memory::GetPointer(cmd_buff[0x4]);
+
+    while (size > 0) {
+        GPU::Write<u32>(reg_addr + 0x1EB00000, *src);
+
+        size -= 4;
+        ++src;
+        reg_addr += 4;
+    }
+}
+
+/// Read a GSP GPU hardware register
+void ReadHWRegs(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+    u32 reg_addr = cmd_buff[1];
+    u32 size = cmd_buff[2];
+
+    // TODO: Return proper error codes
+    if (reg_addr + size >= 0x420000) {
+        ERROR_LOG(GPU, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        return;
+    }
+
+    // size should be word-aligned
+    if ((size % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        return;
+    }
+
+    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
+
+    while (size > 0) {
+        GPU::Read<u32>(*dst, reg_addr + 0x1EB00000);
+
+        size -= 4;
+        ++dst;
+        reg_addr += 4;
+    }
 }
 
 /**
@@ -179,7 +198,7 @@ void TriggerCmdReqQueue(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, nullptr,                       "WriteHWRegs"},
+    {0x00010082, WriteHWRegs,                   "WriteHWRegs"},
     {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
     {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
