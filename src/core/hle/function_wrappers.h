@@ -642,6 +642,10 @@ template<void func(const char*)> void WrapV_C() {
     func(Memory::GetCharPointer(PARAM(0)));
 }
 
+template<void func(s64)> void WrapV_S64() {
+    func(((s64)PARAM(1) << 32) | PARAM(0));
+}
+
 template<void func(const char *, int)> void WrapV_CI() {
     func(Memory::GetCharPointer(PARAM(0)), PARAM(1));
 }
