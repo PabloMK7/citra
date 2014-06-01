@@ -89,7 +89,7 @@ enum LOG_LEVELS {
 void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int line, 
     const char* function, const char* fmt, ...)
 #ifdef __GNUC__
-        __attribute__((format(printf, 5, 6)))
+        __attribute__((format(printf, 6, 7)))
 #endif
         ;
 
