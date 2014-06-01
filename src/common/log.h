@@ -94,10 +94,10 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int 
         ;
 
 #if defined LOGGING || defined _DEBUG || defined DEBUGFAST
-#define MAX_LOGLEVEL DEBUG_LEVEL
+#define MAX_LOGLEVEL LDEBUG
 #else
 #ifndef MAX_LOGLEVEL
-#define MAX_LOGLEVEL WARNING_LEVEL
+#define MAX_LOGLEVEL LWARNING
 #endif // loglevel
 #endif // logging
 
@@ -109,7 +109,7 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int 
 
 // Let the compiler optimize this out
 #define GENERIC_LOG(t, v, ...) { \
-    if (v <= MAX_LOGLEVEL) \
+    if (v <= LogTypes::MAX_LOGLEVEL) \
         GenericLog(v, t, __FILE__, __LINE__, __func__, __VA_ARGS__); \
     }
 

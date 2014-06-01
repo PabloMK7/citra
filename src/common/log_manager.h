@@ -97,7 +97,7 @@ private:
     ~LogManager();
 public:
 
-    static u32 GetMaxLevel() { return MAX_LOGLEVEL;    }
+    static u32 GetMaxLevel() { return LogTypes::MAX_LOGLEVEL;    }
 
     void Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, int line, 
         const char* function, const char *fmt, va_list args);
