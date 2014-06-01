@@ -23,6 +23,7 @@ public:
     ResetType reset_type;           ///< Current ResetType
 
     bool locked;                    ///< Current locked state
+    bool permanent_locked;          ///< Hack - to set event permanent state (for easy passthrough)
 
     /**
      * Synchronize kernel object 
@@ -31,7 +32,7 @@ public:
      */
     Result SyncRequest(bool* wait) {
         // TODO(bunnei): ImplementMe
-        ERROR_LOG(KERNEL, "Unimplemented function Event::SyncRequest");
+        ERROR_LOG(KERNEL, "(UMIMPLEMENTED) call");
         return 0;
     }
 
@@ -43,7 +44,7 @@ public:
     Result WaitSynchronization(bool* wait) {
         // TODO(bunnei): ImplementMe
         *wait = locked;
-        if (reset_type != RESETTYPE_STICKY) {
+        if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
             locked = true;
         }
         return 0;
@@ -59,10 +60,28 @@ public:
 Result SetEventLocked(const Handle handle, const bool locked) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
     if (!evt) {
-        ERROR_LOG(KERNEL, "SetEventLocked called with unknown handle=0x%08X", handle);
+        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
         return -1;
     }
-    evt->locked = locked;
+    if (!evt->permanent_locked) {
+        evt->locked = locked;
+    }
+    return 0;
+}
+
+/**
+ * Hackish function to set an events permanent lock state, used to pass through synch blocks
+ * @param handle Handle to event to change
+ * @param permanent_locked Boolean permanent locked value to set event
+ * @return Result of operation, 0 on success, otherwise error code
+ */
+Result SetPermanentLock(Handle handle, const bool permanent_locked) {
+    Event* evt = g_object_pool.GetFast<Event>(handle);
+    if (!evt) {
+        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
+        return -1;
+    }
+    evt->permanent_locked = permanent_locked;
     return 0;
 }
 
@@ -87,6 +106,7 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type) {
     handle = Kernel::g_object_pool.Create(evt);
 
     evt->locked = true;
+    evt->permanent_locked = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
 
     return evt;
