@@ -323,11 +323,29 @@ void Reschedule() {
     Thread* prev = GetCurrentThread();
     Thread* next = NextThread();
     if (next > 0) {
+        INFO_LOG(KERNEL, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
+
         SwitchContext(next);
 
         // Hack - automatically change previous thread (which would have been in "wait" state) to
         // "ready" state, so that we can immediately resume to it when new thread yields. FixMe to
         // actually wait for whatever event it is supposed to be waiting on.
+
+        ChangeReadyState(prev, true);
+    } else {
+        INFO_LOG(KERNEL, "no ready threads, staying on 0x%08X", prev->GetHandle());
+
+        // Hack - no other threads are available, so decrement current PC to the last instruction, 
+        // and then resume current thread. This should always be called on a blocking instruction 
+        // (e.g. svcWaitSynchronization), and the result should be that the instruction is repeated
+        // until it no longer blocks. 
+
+        // TODO(bunnei): A better solution: Have the CPU switch to an idle thread
+
+        ThreadContext ctx;
+        SaveContext(ctx);
+        ctx.pc -= 4;
+        LoadContext(ctx);
         ChangeReadyState(prev, true);
     }
 }
