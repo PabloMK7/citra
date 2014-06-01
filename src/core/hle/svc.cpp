@@ -126,6 +126,14 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     if (wait) {
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
         Kernel::Reschedule();
+
+        // Context switch - Function blocked, is not actually returning (will be "called" again)
+
+        // TODO(bunnei): This saves handle to R0 so that it's correctly reloaded on context switch
+        // (otherwise R0 will be set to whatever is returned, and handle will be invalid when this
+        // thread is resumed). There is probably a better way of keeping track of state so that we
+        // don't necessarily have to do this.
+        return (Result)PARAM(0);
     }
 
     return res;
@@ -171,7 +179,13 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     Kernel::Reschedule();
 
-    return 0;
+    // Context switch - Function blocked, is not actually returning (will be "called" again)
+
+    // TODO(bunnei): This saves handle to R0 so that it's correctly reloaded on context switch
+    // (otherwise R0 will be set to whatever is returned, and handle will be invalid when this
+    // thread is resumed). There is probably a better way of keeping track of state so that we
+    // don't necessarily have to do this.
+    return (Result)PARAM(0);
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
@@ -289,6 +303,11 @@ Result ClearEvent(Handle evt) {
     return res;
 }
 
+/// Sleep the current thread
+void SleepThread(s64 nanoseconds) {
+    DEBUG_LOG(SVC, "called nanoseconds=%d", nanoseconds);
+}
+
 const HLE::FunctionDef SVC_Table[] = {
     {0x00,  NULL,                                       "Unknown"},
     {0x01,  WrapI_VUUUUU<ControlMemory>,                "ControlMemory"},
@@ -300,7 +319,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x07,  NULL,                                       "SetProcessIdealProcessor"},
     {0x08,  WrapI_UUUUU<CreateThread>,                  "CreateThread"},
     {0x09,  NULL,                                       "ExitThread"},
-    {0x0A,  NULL,                                       "SleepThread"},
+    {0x0A,  WrapV_S64<SleepThread>,                     "SleepThread"},
     {0x0B,  NULL,                                       "GetThreadPriority"},
     {0x0C,  NULL,                                       "SetThreadPriority"},
     {0x0D,  NULL,                                       "GetThreadAffinityMask"},
