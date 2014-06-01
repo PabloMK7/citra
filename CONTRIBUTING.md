@@ -1,5 +1,4 @@
 # Contributing
-
 Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits. They aren't very strict rules since we want to be flexible and we understand that under certain circumstances some of them can be counterproductive. Just try to follow as many of them as possible:
 
 ### General Rules
@@ -11,18 +10,16 @@ Citra is a brand new project, so we have a great opportunity to keep things clea
 
 ### Naming Rules
 * Functions
- * CamelCase, `_` may also be used for clarity (e.g. `ARM_InitCore`)
+ * CamelCase, "_" may also be used for clarity (e.g. ARM_InitCore)
 * Variables
- * lower\_case\_underscored
- * Prefix `g_` if global
- * Prefix `_` if internal
- * Prefix `__` if ultra internal
+ * lower_case_underscored
+ * Prefix "g_" if global
 * Classes
- * CamelCase, `_` may also be used for clarity (e.g. `OGL_VideoInterface`)
+ * CamelCase, "_" may also be used for clarity (e.g. OGL_VideoInterface)
 * Files/Folders
- * lower\_case\_underscored
+ * lower_case_underscored
 * Namespaces
- * CamelCase, `_` may also be used for clarity (e.g. `ARM_InitCore`)
+ * CamelCase, "_" may also be used for clarity (e.g. ARM_InitCore)
 
 ### Indentation/Whitespace Style
 Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spaces instead.
@@ -88,15 +85,13 @@ void FooBar() {
     case 3:
         DoSomething(var);
         return;
-        // Always break, even after a return
-        break;
  
     default:
         // Yes, even break for the last case
         break;
     }
  
-    std::string
+    std::vector
         you_can_declare,
         a_few,
         variables,
