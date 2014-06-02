@@ -147,7 +147,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wait_all, 
     s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
-
+    s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
     bool unlock_all = true;
 
@@ -167,7 +167,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
         Result res = object->WaitSynchronization(&wait);
 
         if (!wait && !wait_all) {
-            Core::g_app_core->SetReg(1, i);
+            *out = i;
             return 0;
         } else {
             unlock_all = false;
@@ -175,7 +175,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     }
 
     if (wait_all && unlock_all) {
-        Core::g_app_core->SetReg(1, handle_count);
+        *out = handle_count;
         return 0;
     }
 

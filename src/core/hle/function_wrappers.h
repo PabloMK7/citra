@@ -766,7 +766,9 @@ template<int func(u32, s64)> void WrapI_US64() {
 }
 
 template<int func(void*, void*, u32, u32, s64)> void WrapI_VVUUS64() {
-    int retval = func(Memory::GetPointer(PARAM(5)), Memory::GetPointer(PARAM(1)), PARAM(2), PARAM(3), (((u64)PARAM(4) << 32) | PARAM(0)));
+    u32 param_1 = 0;
+    int retval = func(&param_1, Memory::GetPointer(PARAM(1)), PARAM(2), PARAM(3), (((u64)PARAM(4) << 32) | PARAM(0)));
+    Core::g_app_core->SetReg(1, param_1);
     RETURN(retval);
 }
 
