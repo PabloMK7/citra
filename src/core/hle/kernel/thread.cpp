@@ -294,6 +294,51 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
     return handle;
 }
 
+/// Get the priority of the thread specified by handle
+u32 GetThreadPriority(const Handle handle) {
+    Thread* thread = g_object_pool.GetFast<Thread>(handle);
+    _assert_msg_(KERNEL, thread, "called, but thread is NULL!");
+    return thread->current_priority;
+}
+
+/// Set the priority of the thread specified by handle
+Result SetThreadPriority(Handle handle, s32 priority) {
+    Thread* thread = NULL;
+    if (!handle) {
+        thread = GetCurrentThread(); // TODO(bunnei): Is this correct behavior?
+    } else {
+        thread = g_object_pool.GetFast<Thread>(handle);
+    }
+    _assert_msg_(KERNEL, thread, "called, but thread is NULL!");
+
+    // If priority is invalid, clamp to valid range
+    if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
+        s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
+        WARN_LOG(KERNEL, "invalid priority=0x%08X, clamping to %08X", priority, new_priority);
+        // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
+        // validity of this
+        priority = new_priority;
+    }
+
+    // Change thread priority
+    s32 old = thread->current_priority;
+    g_thread_ready_queue.remove(old, handle);
+    thread->current_priority = priority;
+    g_thread_ready_queue.prepare(thread->current_priority);
+
+    // Change thread status to "ready" and push to ready queue
+    if (thread->IsRunning()) {
+        thread->status = (thread->status & ~THREADSTATUS_RUNNING) | THREADSTATUS_READY;
+    }
+    if (thread->IsReady()) {
+        g_thread_ready_queue.push_back(thread->current_priority, handle);
+    }
+
+    HLE::EatCycles(450);
+
+    return 0;
+}
+
 /// Sets up the primary application thread
 Handle SetupMainThread(s32 priority, int stack_size) {
     Handle handle;

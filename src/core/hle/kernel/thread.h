@@ -65,6 +65,12 @@ Handle GetCurrentThreadHandle();
 /// Put current thread in a wait state - on WaitSynchronization
 void WaitThread_Synchronization();
 
+/// Get the priority of the thread specified by handle
+u32 GetThreadPriority(const Handle handle);
+
+/// Set the priority of the thread specified by handle
+Result SetThreadPriority(Handle handle, s32 priority);
+
 /// Initialize threading
 void ThreadingInit();
 

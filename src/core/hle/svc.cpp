@@ -258,6 +258,18 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
     return 0;
 }
 
+/// Gets the priority for the specified thread
+Result GetThreadPriority(void* _priority, Handle handle) {
+    s32* priority = (s32*)_priority;
+    *priority = Kernel::GetThreadPriority(handle);
+    return 0;
+}
+
+/// Sets the priority for the specified thread
+Result SetThreadPriority(Handle handle, s32 priority) {
+    return Kernel::SetThreadPriority(handle, priority);
+}
+
 /// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
     Handle* mutex = (Handle*)_mutex;
@@ -299,7 +311,18 @@ Result CreateEvent(void* _event, u32 reset_type) {
 /// Duplicates a kernel handle
 Result DuplicateHandle(void* _out, Handle handle) {
     Handle* out = (Handle*)_out;
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
+    ERROR_LOG(SVC, "called handle=0x%08X", handle);
+
+    // Translate kernel handles -> real handles
+    if (handle == Kernel::CurrentThread) {
+        handle = Kernel::GetCurrentThreadHandle();
+    }
+    _assert_msg_(KERNEL, (handle != Kernel::CurrentProcess),
+        "(UNIMPLEMENTED) process handle duplication!");
+    
+    // TODO(bunnei): FixMe - This is a hack to return the handle that we were asked to duplicate.
+    *out = handle;
+
     return 0;
 }
 
@@ -327,8 +350,8 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x08,  WrapI_UUUUU<CreateThread>,                  "CreateThread"},
     {0x09,  NULL,                                       "ExitThread"},
     {0x0A,  WrapV_S64<SleepThread>,                     "SleepThread"},
-    {0x0B,  NULL,                                       "GetThreadPriority"},
-    {0x0C,  NULL,                                       "SetThreadPriority"},
+    {0x0B,  WrapI_VU<GetThreadPriority>,                "GetThreadPriority"},
+    {0x0C,  WrapI_UI<SetThreadPriority>,                "SetThreadPriority"},
     {0x0D,  NULL,                                       "GetThreadAffinityMask"},
     {0x0E,  NULL,                                       "SetThreadAffinityMask"},
     {0x0F,  NULL,                                       "GetThreadIdealProcessor"},
