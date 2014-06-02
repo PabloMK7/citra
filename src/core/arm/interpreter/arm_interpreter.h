@@ -72,6 +72,9 @@ public:
      */
     void LoadContext(const ThreadContext& ctx);
 
+    /// Prepare core for thread reschedule (if needed to correctly handle state)
+    void PrepareReschedule();
+
 protected:
 
     /**

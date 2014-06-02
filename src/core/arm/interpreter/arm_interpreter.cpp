@@ -140,3 +140,8 @@ void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
     state->Reg[15] = ctx.pc;
     state->NextInstr = RESUME;
 }
+
+/// Prepare core for thread reschedule (if needed to correctly handle state)
+void ARM_Interpreter::PrepareReschedule() {
+    state->NumInstrsToExecute = 0;
+}

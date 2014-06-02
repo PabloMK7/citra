@@ -89,6 +89,9 @@ public:
      */
     virtual void LoadContext(const ThreadContext& ctx) = 0;
 
+    /// Prepare core for thread reschedule (if needed to correctly handle state)
+    virtual void PrepareReschedule() = 0;
+
     /// Getter for num_instructions
     u64 GetNumInstructions() {
         return num_instructions;
