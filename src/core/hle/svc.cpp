@@ -311,7 +311,7 @@ Result CreateEvent(void* _event, u32 reset_type) {
 /// Duplicates a kernel handle
 Result DuplicateHandle(void* _out, Handle handle) {
     Handle* out = (Handle*)_out;
-    ERROR_LOG(SVC, "called handle=0x%08X", handle);
+    DEBUG_LOG(SVC, "called handle=0x%08X", handle);
 
     // Translate kernel handles -> real handles
     if (handle == Kernel::CurrentThread) {
