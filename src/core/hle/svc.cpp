@@ -34,8 +34,8 @@ enum MapMemoryPermission {
 };
 
 /// Map application or GSP heap memory
-Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
-    u32 virtual_address = 0x00000000;
+Result ControlMemory(void* _out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+    u32* out_addr = (u32*)_out_addr;
 
     DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
         operation, addr0, addr1, size, permissions);
@@ -44,21 +44,18 @@ Result ControlMemory(void* _outaddr, u32 operation, u32 addr0, u32 addr1, u32 si
 
     // Map normal heap memory
     case MEMORY_OPERATION_HEAP:
-        virtual_address = Memory::MapBlock_Heap(size, operation, permissions);
+        *out_addr = Memory::MapBlock_Heap(size, operation, permissions);
         break;
 
     // Map GSP heap memory
     case MEMORY_OPERATION_GSP_HEAP:
-        virtual_address = Memory::MapBlock_HeapGSP(size, operation, permissions);
+        *out_addr = Memory::MapBlock_HeapGSP(size, operation, permissions);
         break;
 
     // Unknown ControlMemory operation
     default:
         ERROR_LOG(SVC, "unknown operation=0x%08X", operation);
     }
-
-    Core::g_app_core->SetReg(1, virtual_address);
-
     return 0;
 }
 
@@ -80,10 +77,14 @@ Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherper
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
 Result ConnectToPort(void* _out, const char* port_name) {
+    Handle* out = (Handle*)_out;
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
+
     DEBUG_LOG(SVC, "called port_name=%s", port_name);
     _assert_msg_(KERNEL, service, "called, but service is not implemented!");
-    Core::g_app_core->SetReg(1, service->GetHandle());
+
+    *out = service->GetHandle();
+
     return 0;
 }
 
@@ -209,12 +210,13 @@ void OutputDebugString(const char* string) {
 }
 
 /// Get resource limit
-Result GetResourceLimit(void* resource_limit, Handle process) {
+Result GetResourceLimit(void* _resource_limit, Handle process) {
     // With regards to proceess values:
     // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for 
     // the current KThread.
+    Handle* resource_limit = (Handle*)_resource_limit;
+    *resource_limit = 0xDEADBEEF;
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called process=0x%08X", process);
-    Core::g_app_core->SetReg(1, 0xDEADBEEF);
     return 0;
 }
 
@@ -253,10 +255,10 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 
 /// Create a mutex
 Result CreateMutex(void* _mutex, u32 initial_locked) {
-    Handle mutex = Kernel::CreateMutex((initial_locked != 0));
-    Core::g_app_core->SetReg(1, mutex);
+    Handle* mutex = (Handle*)_mutex;
+    *mutex = Kernel::CreateMutex((initial_locked != 0));
     DEBUG_LOG(SVC, "called initial_locked=%s : created handle=0x%08X", 
-        initial_locked ? "true" : "false", mutex);
+        initial_locked ? "true" : "false", *mutex);
     return 0;
 }
 
@@ -282,10 +284,10 @@ Result QueryMemory(void *_info, void *_out, u32 addr) {
 
 /// Create an event
 Result CreateEvent(void* _event, u32 reset_type) {
-    Handle evt = Kernel::CreateEvent((ResetType)reset_type);
-    Core::g_app_core->SetReg(1, evt);
+    Handle* evt = (Handle*)_event;
+    *evt = Kernel::CreateEvent((ResetType)reset_type);
     DEBUG_LOG(SVC, "called reset_type=0x%08X : created handle=0x%08X", 
-        reset_type, evt);
+        reset_type, *evt);
     return 0;
 }
 
