@@ -37,7 +37,7 @@ void CallSVC(u32 opcode);
 
 void EatCycles(u32 cycles);
 
-void ReSchedule(const char *reason);
+void Reschedule(const char *reason);
 
 void Init();
 

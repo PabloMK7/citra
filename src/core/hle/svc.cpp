@@ -125,8 +125,11 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     Result res = object->WaitSynchronization(&wait);
 
     if (wait) {
+        // Set current thread to wait state if handle was not unlocked
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-        Kernel::Reschedule();
+
+        // Check for next thread to schedule
+        HLE::Reschedule(__func__);
 
         // Context switch - Function blocked, is not actually returning (will be "called" again)
 
@@ -178,7 +181,9 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
 
     // Set current thread to wait state if not all handles were unlocked
     Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-    Kernel::Reschedule();
+    
+    // Check for next thread to schedule
+    HLE::Reschedule(__func__);
 
     // Context switch - Function blocked, is not actually returning (will be "called" again)
 

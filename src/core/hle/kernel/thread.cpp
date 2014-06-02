@@ -285,11 +285,11 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 
     HLE::EatCycles(32000);
 
+    CallThread(t);
+
     // This won't schedule to the new thread, but it may to one woken from eating cycles.
     // Technically, this should not eat all at once, and reschedule in the middle, but that's hard.
-    HLE::ReSchedule("thread created");
-
-    CallThread(t);
+    //HLE::Reschedule("thread created");
     
     return handle;
 }

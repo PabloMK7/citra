@@ -163,6 +163,7 @@ private:
 };
 
 extern ObjectPool g_object_pool;
+extern Handle g_main_thread;
 
 /**
  * Loads executable stored at specified address
