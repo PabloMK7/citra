@@ -16,6 +16,7 @@ namespace Kernel {
 class Mutex : public Object {
 public:
     const char* GetTypeName() { return "Mutex"; }
+    const char* GetName() { return name.c_str(); }
 
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Mutex; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Mutex; }
@@ -24,6 +25,7 @@ public:
     bool locked;                                ///< Current locked state
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
+    std::string name;                           ///< Name of mutex (optional)
 
     /**
      * Synchronize kernel object 
@@ -128,13 +130,15 @@ Result ReleaseMutex(Handle handle) {
  * Creates a mutex
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @param name Optional name of mutex
  * @return Pointer to new Mutex object
  */
-Mutex* CreateMutex(Handle& handle, bool initial_locked) {
+Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string name) {
     Mutex* mutex = new Mutex;
     handle = Kernel::g_object_pool.Create(mutex);
 
     mutex->locked = mutex->initial_locked = initial_locked;
+    mutex->name = name;
 
     // Acquire mutex with current thread if initialized as locked...
     if (mutex->locked) {
@@ -150,10 +154,12 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked) {
 /**
  * Creates a mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @param name Optional name of mutex
+ * @return Handle to newly created object
  */
-Handle CreateMutex(bool initial_locked) {
+Handle CreateMutex(bool initial_locked, std::string name) {
     Handle handle;
-    Mutex* mutex = CreateMutex(handle, initial_locked);
+    Mutex* mutex = CreateMutex(handle, initial_locked, name);
     return handle;
 }
 

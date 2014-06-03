@@ -20,8 +20,9 @@ Result ReleaseMutex(Handle handle);
 /**
  * Creates a mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @param name Optional name of mutex
  * @return Handle to newly created object
  */
-Handle CreateMutex(bool initial_locked);
+Handle CreateMutex(bool initial_locked, const std::string name="Unknown");
 
 } // namespace

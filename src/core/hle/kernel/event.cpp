@@ -15,6 +15,7 @@ namespace Kernel {
 class Event : public Object {
 public:
     const char* GetTypeName() { return "Event"; }
+    const char* GetName() { return name.c_str(); }
 
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Event; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Event; }
@@ -24,6 +25,7 @@ public:
 
     bool locked;                    ///< Current locked state
     bool permanent_locked;          ///< Hack - to set event permanent state (for easy passthrough)
+    std::string name;               ///< Name of event (optional)
 
     /**
      * Synchronize kernel object 
@@ -98,9 +100,10 @@ Result ClearEvent(Handle handle) {
  * Creates an event
  * @param handle Reference to handle for the newly created mutex
  * @param reset_type ResetType describing how to create event
+ * @param name Optional name of event
  * @return Newly created Event object
  */
-Event* CreateEvent(Handle& handle, const ResetType reset_type) {
+Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string name) {
     Event* evt = new Event;
 
     handle = Kernel::g_object_pool.Create(evt);
@@ -108,6 +111,7 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type) {
     evt->locked = true;
     evt->permanent_locked = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
+    evt->name = name;
 
     return evt;
 }
@@ -115,11 +119,12 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type) {
 /**
  * Creates an event
  * @param reset_type ResetType describing how to create event
+ * @param name Optional name of event
  * @return Handle to newly created Event object
  */
-Handle CreateEvent(const ResetType reset_type) {
+Handle CreateEvent(const ResetType reset_type, const std::string name) {
     Handle handle;
-    Event* evt = CreateEvent(handle, reset_type);
+    Event* evt = CreateEvent(handle, reset_type, name);
     return handle;
 }
 

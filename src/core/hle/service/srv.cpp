@@ -17,7 +17,7 @@ Handle g_mutex = 0;
 void Initialize(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
     if (!g_mutex) {
-        g_mutex = Kernel::CreateMutex(false);
+        g_mutex = Kernel::CreateMutex(true, "SRV:Lock");
     }
 }
 
