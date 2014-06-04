@@ -14,6 +14,15 @@ static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of i
 
 struct Registers {
     enum Id : u32 {
+        MemoryFillStart1          = 0x1EF00010,
+        MemoryFillEnd1            = 0x1EF00014,
+        MemoryFillSize1           = 0x1EF00018,
+        MemoryFillValue1          = 0x1EF0001C,
+        MemoryFillStart2          = 0x1EF00020,
+        MemoryFillEnd2            = 0x1EF00024,
+        MemoryFillSize2           = 0x1EF00028,
+        MemoryFillValue2          = 0x1EF0002C,
+
         FramebufferTopSize        = 0x1EF0045C,
         FramebufferTopLeft1       = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
         FramebufferTopLeft2       = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
@@ -52,6 +61,23 @@ struct Registers {
         RGB5A1 = 3,
         RGBA4  = 4,
     };
+
+    struct MemoryFillConfig {
+        u32 address_start;
+        u32 address_end; // ?
+        u32 size;
+        u32 value; // ?
+
+        inline u32 GetStartAddress() const {
+            return address_start * 8;
+        }
+
+        inline u32 GetEndAddress() const {
+            return address_end * 8;
+        }
+    };
+
+    MemoryFillConfig memory_fill[2];
 
     // TODO: Move these into the framebuffer struct
     u32 framebuffer_top_left_1;

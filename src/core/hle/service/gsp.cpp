@@ -174,6 +174,14 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     case GXCommandId::SET_MEMORY_FILL:
+        GPU::Write<u32>(GPU::Registers::MemoryFillStart1, cmd_buff[1] >> 3);
+        GPU::Write<u32>(GPU::Registers::MemoryFillEnd1, cmd_buff[3] >> 3);
+        GPU::Write<u32>(GPU::Registers::MemoryFillSize1, cmd_buff[3] - cmd_buff[1]);
+        GPU::Write<u32>(GPU::Registers::MemoryFillValue1, cmd_buff[2]);
+        GPU::Write<u32>(GPU::Registers::MemoryFillStart2, cmd_buff[4] >> 3);
+        GPU::Write<u32>(GPU::Registers::MemoryFillEnd2, cmd_buff[6] >> 3);
+        GPU::Write<u32>(GPU::Registers::MemoryFillSize2, cmd_buff[6] - cmd_buff[4]);
+        GPU::Write<u32>(GPU::Registers::MemoryFillValue2, cmd_buff[5]);
         break;
 
     // TODO: Check if texture copies are implemented correctly..

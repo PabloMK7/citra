@@ -84,6 +84,26 @@ const u8* GetFramebufferPointer(const u32 address) {
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr) {
+    case Registers::MemoryFillStart1:
+    case Registers::MemoryFillStart2:
+        var = g_regs.memory_fill[(addr - Registers::MemoryFillStart1) / 0x10].address_start;
+        break;
+
+    case Registers::MemoryFillEnd1:
+    case Registers::MemoryFillEnd2:
+        var = g_regs.memory_fill[(addr - Registers::MemoryFillEnd1) / 0x10].address_end;
+        break;
+
+    case Registers::MemoryFillSize1:
+    case Registers::MemoryFillSize2:
+        var = g_regs.memory_fill[(addr - Registers::MemoryFillSize1) / 0x10].size;
+        break;
+
+    case Registers::MemoryFillValue1:
+    case Registers::MemoryFillValue2:
+        var = g_regs.memory_fill[(addr - Registers::MemoryFillValue1) / 0x10].value;
+        break;
+
     case Registers::FramebufferTopSize:
         var = g_regs.top_framebuffer.size;
         break;
@@ -194,6 +214,40 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (static_cast<Registers::Id>(addr)) {
+    case Registers::MemoryFillStart1:
+    case Registers::MemoryFillStart2:
+        g_regs.memory_fill[(addr - Registers::MemoryFillStart1) / 0x10].address_start = data;
+        break;
+
+    case Registers::MemoryFillEnd1:
+    case Registers::MemoryFillEnd2:
+        g_regs.memory_fill[(addr - Registers::MemoryFillEnd1) / 0x10].address_end = data;
+        break;
+
+    case Registers::MemoryFillSize1:
+    case Registers::MemoryFillSize2:
+        g_regs.memory_fill[(addr - Registers::MemoryFillSize1) / 0x10].size = data;
+        break;
+
+    case Registers::MemoryFillValue1:
+    case Registers::MemoryFillValue2:
+    {
+        Registers::MemoryFillConfig& config = g_regs.memory_fill[(addr - Registers::MemoryFillValue1) / 0x10];
+        config.value = data;
+
+        // TODO: Not sure if this check should be done at GSP level instead
+        if (config.address_start) {
+            // TODO: Not sure if this algorithm is correct, particularly because it doesn't use the size member at all
+            u32* start = (u32*)Memory::GetPointer(config.GetStartAddress());
+            u32* end = (u32*)Memory::GetPointer(config.GetEndAddress());
+            for (u32* ptr = start; ptr < end; ++ptr)
+                *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
+
+            DEBUG_LOG(GPU, "MemoryFill from %x to %x", config.GetStartAddress(), config.GetEndAddress());
+        }
+        break;
+    }
+
     // TODO: Framebuffer registers!!
     case Registers::FramebufferTopSwapBuffers:
         g_regs.top_framebuffer.active_fb = data;
@@ -240,8 +294,6 @@ inline void Write(u32 addr, const T data) {
                        g_regs.display_transfer.output_width * 4);
             }
 
-            // Clear previous contents until we implement proper buffer clearing
-            memset(source_pointer, 0x20, g_regs.display_transfer.input_width*g_regs.display_transfer.input_height*4);
             DEBUG_LOG(GPU, "DisplayTriggerTransfer: %x bytes from %x(%xx%x)-> %x(%xx%x), dst format %x",
                       g_regs.display_transfer.output_height * g_regs.display_transfer.output_width * 4,
                       g_regs.display_transfer.GetPhysicalInputAddress(), (int)g_regs.display_transfer.input_width, (int)g_regs.display_transfer.input_height,
