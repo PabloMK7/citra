@@ -4456,6 +4456,7 @@ ARMul_Emulate26 (ARMul_State * state)
                     }
                 /* Drop through.  */
 
+            case 0xe0:
             case 0xe4:
             case 0xe6:
             case 0xe8:
@@ -4489,7 +4490,6 @@ ARMul_Emulate26 (ARMul_State * state)
 
 
                 /* Co-Processor Register Transfers (MRC) and Data Ops.  */
-            case 0xe0:
             case 0xe1:
             case 0xe3:
             case 0xe5:
