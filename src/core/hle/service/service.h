@@ -115,6 +115,7 @@ public:
      */
     Result WaitSynchronization(bool* wait) {
         // TODO(bunnei): ImplementMe
+        ERROR_LOG(OSHLE, "unimplemented function");
         return 0;
     }
 
