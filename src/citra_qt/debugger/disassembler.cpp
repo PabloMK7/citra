@@ -48,7 +48,7 @@ void DisassemblerWidget::Init()
     unsigned int curInstAddr = base_addr;
     char result[255];
 
-    for (int i = 0; i < 10000; i++) // fixed for now
+    for (int i = 0; i < 20000; i++) // fixed for now
     {
         disasm->disasm(curInstAddr, Memory::Read32(curInstAddr), result);
         model->setItem(i, 0, new QStandardItem(QString("0x%1").arg((uint)(curInstAddr), 8, 16, QLatin1Char('0'))));
