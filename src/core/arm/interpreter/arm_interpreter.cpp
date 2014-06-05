@@ -118,6 +118,9 @@ void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
 
     ctx.fpscr = state->VFP[1];
     ctx.fpexc = state->VFP[2];
+
+    ctx.reg_15 = state->Reg[15];
+    ctx.mode = state->NextInstr;
 }
 
 /**
@@ -137,8 +140,8 @@ void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
     state->VFP[1] = ctx.fpscr;
     state->VFP[2] = ctx.fpexc;
 
-    state->Reg[15] = ctx.pc;
-    state->NextInstr = RESUME;
+    state->Reg[15] = ctx.reg_15;
+    state->NextInstr = ctx.mode;
 }
 
 /// Prepare core for thread reschedule (if needed to correctly handle state)
