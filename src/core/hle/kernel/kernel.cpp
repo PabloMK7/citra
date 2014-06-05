@@ -151,7 +151,7 @@ bool LoadExec(u32 entry_point) {
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    g_main_thread = Kernel::SetupMainThread(THREADPRIO_DEFAULT);
+    g_main_thread = Kernel::SetupMainThread(0x30);
 
     return true;
 }
