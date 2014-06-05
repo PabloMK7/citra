@@ -98,7 +98,7 @@ u64 ARM_Interpreter::GetTicks() const {
  * @param num_instructions Number of instructions to executes
  */
 void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
-    state->NumInstrsToExecute = num_instructions;
+    state->NumInstrsToExecute = num_instructions - 1;
     ARMul_Emulate32(state);
 }
 
