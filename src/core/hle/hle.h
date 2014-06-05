@@ -16,6 +16,8 @@
 
 namespace HLE {
 
+extern bool g_reschedule;   ///< If true, immediately reschedules the CPU to a new thread
+
 typedef u32 Addr;
 typedef void (*Func)();
 

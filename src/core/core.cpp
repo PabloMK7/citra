@@ -13,6 +13,7 @@
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
 
+#include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Core {
@@ -36,7 +37,7 @@ void SingleStep() {
 
     g_app_core->Step();
     
-    if (ticks >= LCD::kFrameTicks / 2) {
+    if ((ticks >= LCD::kFrameTicks / 2) || HLE::g_reschedule) {
         HW::Update();
         Kernel::Reschedule();
         ticks = 0;

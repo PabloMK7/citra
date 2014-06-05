@@ -16,6 +16,8 @@ namespace HLE {
 
 static std::vector<ModuleDef> g_module_db;
 
+bool g_reschedule = false;  ///< If true, immediately reschedules the CPU to a new thread
+
 const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
@@ -47,6 +49,7 @@ void Reschedule(const char *reason) {
     _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
 #endif
     Core::g_app_core->PrepareReschedule();
+    g_reschedule = true;
 }
 
 void RegisterModule(std::string name, int num_functions, const FunctionDef* func_table) {
