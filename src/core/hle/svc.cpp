@@ -90,12 +90,12 @@ Result ConnectToPort(void* _out, const char* port_name) {
 
 /// Synchronize to an OS service
 Result SendSyncRequest(Handle handle) {
-    bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
     DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName());
 
+    bool wait = false;
     Result res = object->SyncRequest(&wait);
     if (wait) {
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
