@@ -8,7 +8,8 @@
 
 namespace LCD {
 
-static const u32 kFrameTicks = 268123480 / 60;  ///< 268MHz / 60 frames per second
+static const u32 kFrameCycles   = 268123480 / 60;   ///< 268MHz / 60 frames per second
+static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of instructions/frame
 
 struct Registers {
     u32 framebuffer_top_left_1;
