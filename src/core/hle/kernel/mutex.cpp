@@ -122,7 +122,7 @@ bool ReleaseMutex(Mutex* mutex) {
 Result ReleaseMutex(Handle handle) {
     Mutex* mutex = Kernel::g_object_pool.GetFast<Mutex>(handle);
 
-    _assert_msg_(KERNEL, (mutex != NULL), "ReleaseMutex tried to release a NULL mutex!");
+    _assert_msg_(KERNEL, (mutex != nullptr), "ReleaseMutex tried to release a nullptr mutex!");
 
     if (!ReleaseMutex(mutex)) {
         return -1;

@@ -26,7 +26,7 @@ void GetProcSemaphore(Service::Interface* self) {
     // Get process semaphore?
     u32* cmd_buff = Service::GetCommandBuffer();
     cmd_buff[1] = 0;        // No error
-    cmd_buff[3] = g_mutex;  // Return something... 0 == NULL, raises an exception
+    cmd_buff[3] = g_mutex;  // Return something... 0 == nullptr, raises an exception
 }
 
 void GetServiceHandle(Service::Interface* self) {
@@ -36,7 +36,7 @@ void GetServiceHandle(Service::Interface* self) {
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
-    if (NULL != service) {
+    if (nullptr != service) {
         cmd_buff[3] = service->GetHandle();
         DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
@@ -49,8 +49,8 @@ void GetServiceHandle(Service::Interface* self) {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010002, Initialize,        "Initialize"},
     {0x00020000, GetProcSemaphore,  "GetProcSemaphore"},
-    {0x00030100, NULL,              "RegisterService"},
-    {0x000400C0, NULL,              "UnregisterService"},
+    {0x00030100, nullptr,           "RegisterService"},
+    {0x000400C0, nullptr,           "UnregisterService"},
     {0x00050100, GetServiceHandle,  "GetServiceHandle"},
 };
 

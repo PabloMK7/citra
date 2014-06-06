@@ -128,7 +128,7 @@ Object* ObjectPool::CreateByIDType(int type) {
 
     default:
         ERROR_LOG(COMMON, "Unable to load state: could not find object type %d.", type);
-        return NULL;
+        return nullptr;
     }
 }
 

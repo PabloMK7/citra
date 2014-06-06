@@ -18,10 +18,10 @@
 
 namespace Core {
 
-u64             g_last_ticks    = 0;    ///< Last CPU ticks
-ARM_Disasm*     g_disasm        = NULL; ///< ARM disassembler
-ARM_Interface*  g_app_core      = NULL; ///< ARM11 application core
-ARM_Interface*  g_sys_core      = NULL; ///< ARM11 system (OS) core
+u64             g_last_ticks    = 0;        ///< Last CPU ticks
+ARM_Disasm*     g_disasm        = nullptr;  ///< ARM disassembler
+ARM_Interface*  g_app_core      = nullptr;  ///< ARM11 application core
+ARM_Interface*  g_sys_core      = nullptr;  ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop() {

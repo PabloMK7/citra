@@ -93,7 +93,7 @@ public:
             cmd_buff[1] = 0;
             return 0; 
         }
-        if (itr->second.func == NULL) {
+        if (itr->second.func == nullptr) {
             ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s", 
                 GetPortName(), itr->second.name.c_str());
 

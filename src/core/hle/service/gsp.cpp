@@ -104,7 +104,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32 flags = cmd_buff[1];
     u32 event_handle = cmd_buff[3];
 
-    _assert_msg_(GSP, (event_handle != 0), "called, but event is NULL!");
+    _assert_msg_(GSP, (event_handle != 0), "called, but event is nullptr!");
 
     g_event_handle = event_handle;
 
@@ -139,36 +139,36 @@ void TriggerCmdReqQueue(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, NULL,                          "WriteHWRegs"},
-    {0x00020084, NULL,                          "WriteHWRegsWithMask"},
-    {0x00030082, NULL,                          "WriteHWRegRepeat"},
+    {0x00010082, nullptr,                       "WriteHWRegs"},
+    {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
+    {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
-    {0x00050200, NULL,                          "SetBufferSwap"},
-    {0x00060082, NULL,                          "SetCommandList"},
-    {0x000700C2, NULL,                          "RequestDma"},
-    {0x00080082, NULL,                          "FlushDataCache"},
-    {0x00090082, NULL,                          "InvalidateDataCache"},
-    {0x000A0044, NULL,                          "RegisterInterruptEvents"},
-    {0x000B0040, NULL,                          "SetLcdForceBlack"},
+    {0x00050200, nullptr,                       "SetBufferSwap"},
+    {0x00060082, nullptr,                       "SetCommandList"},
+    {0x000700C2, nullptr,                       "RequestDma"},
+    {0x00080082, nullptr,                       "FlushDataCache"},
+    {0x00090082, nullptr,                       "InvalidateDataCache"},
+    {0x000A0044, nullptr,                       "RegisterInterruptEvents"},
+    {0x000B0040, nullptr,                       "SetLcdForceBlack"},
     {0x000C0000, TriggerCmdReqQueue,            "TriggerCmdReqQueue"},
-    {0x000D0140, NULL,                          "SetDisplayTransfer"},
-    {0x000E0180, NULL,                          "SetTextureCopy"},
-    {0x000F0200, NULL,                          "SetMemoryFill"},
-    {0x00100040, NULL,                          "SetAxiConfigQoSMode"},
-    {0x00110040, NULL,                          "SetPerfLogMode"},
-    {0x00120000, NULL,                          "GetPerfLog"},
+    {0x000D0140, nullptr,                       "SetDisplayTransfer"},
+    {0x000E0180, nullptr,                       "SetTextureCopy"},
+    {0x000F0200, nullptr,                       "SetMemoryFill"},
+    {0x00100040, nullptr,                       "SetAxiConfigQoSMode"},
+    {0x00110040, nullptr,                       "SetPerfLogMode"},
+    {0x00120000, nullptr,                       "GetPerfLog"},
     {0x00130042, RegisterInterruptRelayQueue,   "RegisterInterruptRelayQueue"},
-    {0x00140000, NULL,                          "UnregisterInterruptRelayQueue"},
-    {0x00150002, NULL,                          "TryAcquireRight"},
-    {0x00160042, NULL,                          "AcquireRight"},
-    {0x00170000, NULL,                          "ReleaseRight"},
-    {0x00180000, NULL,                          "ImportDisplayCaptureInfo"},
-    {0x00190000, NULL,                          "SaveVramSysArea"},
-    {0x001A0000, NULL,                          "RestoreVramSysArea"},
-    {0x001B0000, NULL,                          "ResetGpuCore"},
-    {0x001C0040, NULL,                          "SetLedForceOff"},
-    {0x001D0040, NULL,                          "SetTestCommand"},
-    {0x001E0080, NULL,                          "SetInternalPriorities"},
+    {0x00140000, nullptr,                       "UnregisterInterruptRelayQueue"},
+    {0x00150002, nullptr,                       "TryAcquireRight"},
+    {0x00160042, nullptr,                       "AcquireRight"},
+    {0x00170000, nullptr,                       "ReleaseRight"},
+    {0x00180000, nullptr,                       "ImportDisplayCaptureInfo"},
+    {0x00190000, nullptr,                       "SaveVramSysArea"},
+    {0x001A0000, nullptr,                       "RestoreVramSysArea"},
+    {0x001B0000, nullptr,                       "ResetGpuCore"},
+    {0x001C0040, nullptr,                       "SetLedForceOff"},
+    {0x001D0040, nullptr,                       "SetTestCommand"},
+    {0x001E0080, nullptr,                       "SetInternalPriorities"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

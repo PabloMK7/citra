@@ -19,7 +19,7 @@
 
 namespace Service {
 
-Manager* g_manager = NULL;  ///< Service manager
+Manager* g_manager = nullptr;  ///< Service manager
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Service Manager class
@@ -56,7 +56,7 @@ Interface* Manager::FetchFromHandle(Handle handle) {
 Interface* Manager::FetchFromPortName(std::string port_name) {
     auto itr = m_port_map.find(port_name);
     if (itr == m_port_map.end()) {
-        return NULL;
+        return nullptr;
     }
     return FetchFromHandle(itr->second);
 }

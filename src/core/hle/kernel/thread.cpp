@@ -223,7 +223,7 @@ void SwitchContext(Thread* t) {
         t->wait_type = WAITTYPE_NONE;
         LoadContext(t->context);
     } else {
-        SetCurrentThread(NULL);
+        SetCurrentThread(nullptr);
     }
 }
 
@@ -238,7 +238,7 @@ Thread* NextThread() {
         next = g_thread_ready_queue.pop_first();
     }
     if (next == 0) {
-        return NULL;
+        return nullptr;
     }
     return Kernel::g_object_pool.GetFast<Thread>(next);
 }
@@ -312,8 +312,8 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
 Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
     u32 stack_top, int stack_size) {
 
-    if (name == NULL) {
-        ERROR_LOG(KERNEL, "CreateThread(): NULL name");
+    if (name == nullptr) {
+        ERROR_LOG(KERNEL, "CreateThread(): nullptr name");
         return -1;
     }
     if ((u32)stack_size < 0x200) {
@@ -353,19 +353,19 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 /// Get the priority of the thread specified by handle
 u32 GetThreadPriority(const Handle handle) {
     Thread* thread = g_object_pool.GetFast<Thread>(handle);
-    _assert_msg_(KERNEL, (thread != NULL), "called, but thread is NULL!");
+    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
     return thread->current_priority;
 }
 
 /// Set the priority of the thread specified by handle
 Result SetThreadPriority(Handle handle, s32 priority) {
-    Thread* thread = NULL;
+    Thread* thread = nullptr;
     if (!handle) {
         thread = GetCurrentThread(); // TODO(bunnei): Is this correct behavior?
     } else {
         thread = g_object_pool.GetFast<Thread>(handle);
     }
-    _assert_msg_(KERNEL, (thread != NULL), "called, but thread is NULL!");
+    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
 
     // If priority is invalid, clamp to valid range
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {

@@ -13,11 +13,11 @@
 namespace HID_User {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000A0000, NULL, "GetIPCHandles"},
-    {0x00110000, NULL, "EnableAccelerometer"},
-    {0x00130000, NULL, "EnableGyroscopeLow"},
-    {0x00150000, NULL, "GetGyroscopeLowRawToDpsCoefficient"},
-    {0x00160000, NULL, "GetGyroscopeLowCalibrateParam"},
+    {0x000A0000, nullptr, "GetIPCHandles"},
+    {0x00110000, nullptr, "EnableAccelerometer"},
+    {0x00130000, nullptr, "EnableGyroscopeLow"},
+    {0x00150000, nullptr, "GetGyroscopeLowRawToDpsCoefficient"},
+    {0x00160000, nullptr, "GetGyroscopeLowCalibrateParam"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

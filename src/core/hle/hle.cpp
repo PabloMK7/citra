@@ -22,7 +22,7 @@ const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
         ERROR_LOG(HLE,"unknown svc=0x%02X", func_num); 
-        return NULL;
+        return nullptr;
     }
     return &g_module_db[0].func_table[func_num];
 }
