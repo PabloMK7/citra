@@ -81,7 +81,7 @@ Result ConnectToPort(void* _out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
     DEBUG_LOG(SVC, "called port_name=%s", port_name);
-    _assert_msg_(KERNEL, service, "called, but service is not implemented!");
+    _assert_msg_(KERNEL, (service != NULL), "called, but service is not implemented!");
 
     *out = service->GetHandle();
 
@@ -93,7 +93,7 @@ Result SendSyncRequest(Handle handle) {
     bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
+    _assert_msg_(KERNEL, (object != NULL), "called, but kernel object is NULL!");
     DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName());
 
     Result res = object->SyncRequest(&wait);
@@ -122,7 +122,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%d", handle, object->GetTypeName(), 
             object->GetName(), nano_seconds);
 
-    _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
+    _assert_msg_(KERNEL, (object != NULL), "called, but kernel object is NULL!");
 
     Result res = object->WaitSynchronization(&wait);
 
@@ -150,9 +150,9 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     // Iterate through each handle, synchronize kernel object
     for (u32 i = 0; i < handle_count; i++) {
         bool wait = false;
-        Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]); // 0 handle
+        Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]);
 
-        _assert_msg_(KERNEL, object, "called handle=0x%08X, but kernel object "
+        _assert_msg_(KERNEL, (object != NULL), "called handle=0x%08X, but kernel object "
             "is NULL!", handles[i]);
 
         DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName(), 
@@ -278,7 +278,7 @@ Result CreateMutex(void* _mutex, u32 initial_locked) {
 /// Release a mutex
 Result ReleaseMutex(Handle handle) {
     DEBUG_LOG(SVC, "called handle=0x%08X", handle);
-    _assert_msg_(KERNEL, handle, "called, but handle is NULL!");
+    _assert_msg_(KERNEL, (handle != 0), "called, but handle is NULL!");
     Kernel::ReleaseMutex(handle);
     return 0;
 }

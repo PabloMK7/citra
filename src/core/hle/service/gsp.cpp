@@ -104,7 +104,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32 flags = cmd_buff[1];
     u32 event_handle = cmd_buff[3];
 
-    _assert_msg_(GSP, event_handle, "called, but event is NULL!");
+    _assert_msg_(GSP, (event_handle != 0), "called, but event is NULL!");
 
     g_event_handle = event_handle;
 

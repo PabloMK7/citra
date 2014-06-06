@@ -353,7 +353,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 /// Get the priority of the thread specified by handle
 u32 GetThreadPriority(const Handle handle) {
     Thread* thread = g_object_pool.GetFast<Thread>(handle);
-    _assert_msg_(KERNEL, thread, "called, but thread is NULL!");
+    _assert_msg_(KERNEL, (thread != NULL), "called, but thread is NULL!");
     return thread->current_priority;
 }
 
@@ -365,7 +365,7 @@ Result SetThreadPriority(Handle handle, s32 priority) {
     } else {
         thread = g_object_pool.GetFast<Thread>(handle);
     }
-    _assert_msg_(KERNEL, thread, "called, but thread is NULL!");
+    _assert_msg_(KERNEL, (thread != NULL), "called, but thread is NULL!");
 
     // If priority is invalid, clamp to valid range
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
