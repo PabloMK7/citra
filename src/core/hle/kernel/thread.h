@@ -34,7 +34,7 @@ enum WaitType {
     WAITTYPE_NONE,
     WAITTYPE_SLEEP,
     WAITTYPE_SEMA,
-    WAITTYPE_EVENTFLAG,
+    WAITTYPE_EVENT,
     WAITTYPE_THREADEND,
     WAITTYPE_VBLANK,
     WAITTYPE_MUTEX,
@@ -53,14 +53,17 @@ Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule();
 
-/// Puts the current thread in the wait state for the given type
-void WaitCurrentThread(WaitType wait_type);
+/// Stops the current thread
+void StopThread(Handle thread, const char* reason);
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
 
 /// Gets the current thread handle
 Handle GetCurrentThreadHandle();
+
+/// Puts the current thread in the wait state for the given type
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
 
 /// Put current thread in a wait state - on WaitSynchronization
 void WaitThread_Synchronization();

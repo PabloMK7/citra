@@ -3,12 +3,14 @@
 // Refer to the license.txt file included.  
 
 #include <map>
+#include <algorithm>
 #include <vector>
 
 #include "common/common.h"
 
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
@@ -20,12 +22,13 @@ public:
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Event; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Event; }
 
-    ResetType intitial_reset_type;  ///< ResetType specified at Event initialization
-    ResetType reset_type;           ///< Current ResetType
+    ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
+    ResetType reset_type;                   ///< Current ResetType
 
-    bool locked;                    ///< Current locked state
-    bool permanent_locked;          ///< Hack - to set event permanent state (for easy passthrough)
-    std::string name;               ///< Name of event (optional)
+    bool locked;                            ///< Event signal wait
+    bool permanent_locked;                  ///< Hack - to set event permanent state (for easy passthrough)
+    std::vector<Handle> waiting_threads;    ///< Threads that are waiting for the event
+    std::string name;                       ///< Name of event (optional)
 
     /**
      * Synchronize kernel object 
@@ -44,14 +47,36 @@ public:
      * @return Result of operation, 0 on success, otherwise error code
      */
     Result WaitSynchronization(bool* wait) {
-        // TODO(bunnei): ImplementMe
         *wait = locked;
+        if (locked) {
+            Handle thread = GetCurrentThreadHandle();
+            if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
+                waiting_threads.push_back(thread);
+            }
+            Kernel::WaitCurrentThread(WAITTYPE_EVENT);
+        }
         if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
             locked = true;
         }
         return 0;
     }
 };
+
+/**
+ * Hackish function to set an events permanent lock state, used to pass through synch blocks
+ * @param handle Handle to event to change
+ * @param permanent_locked Boolean permanent locked value to set event
+ * @return Result of operation, 0 on success, otherwise error code
+ */
+Result SetPermanentLock(Handle handle, const bool permanent_locked) {
+    Event* evt = g_object_pool.GetFast<Event>(handle);
+    if (!evt) {
+        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
+        return -1;
+    }
+    evt->permanent_locked = permanent_locked;
+    return 0;
+}
 
 /**
  * Changes whether an event is locked or not
@@ -72,18 +97,32 @@ Result SetEventLocked(const Handle handle, const bool locked) {
 }
 
 /**
- * Hackish function to set an events permanent lock state, used to pass through synch blocks
- * @param handle Handle to event to change
- * @param permanent_locked Boolean permanent locked value to set event
+ * Signals an event
+ * @param handle Handle to event to signal
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result SetPermanentLock(Handle handle, const bool permanent_locked) {
+Result SignalEvent(const Handle handle) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
     if (!evt) {
         ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
         return -1;
     }
-    evt->permanent_locked = permanent_locked;
+    // Resume threads waiting for event to signal
+    bool event_caught = false;
+    for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
+        ResumeThreadFromWait( evt->waiting_threads[i]);
+
+        // If any thread is signalled awake by this event, assume the event was "caught" and reset 
+        // the event. This will result in the next thread waiting on the event to block. Otherwise,
+        // the event will not be reset, and the next thread to call WaitSynchronization on it will
+        // not block. Not sure if this is correct behavior, but it seems to work.
+        event_caught = true;
+    }
+    evt->waiting_threads.clear();
+
+    if (!evt->permanent_locked) {
+        evt->locked = event_caught;
+    }
     return 0;
 }
 
@@ -93,7 +132,15 @@ Result SetPermanentLock(Handle handle, const bool permanent_locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 Result ClearEvent(Handle handle) {
-    return SetEventLocked(handle, true);
+    Event* evt = g_object_pool.GetFast<Event>(handle);
+    if (!evt) {
+        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
+        return -1;
+    }
+    if (!evt->permanent_locked) {
+        evt->locked = true;
+    }
+    return 0;
 }
 
 /**

@@ -93,8 +93,8 @@ Result SendSyncRequest(Handle handle) {
     bool wait = false;
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "called handle=0x%08X", handle);
     _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName());
 
     Result res = object->SyncRequest(&wait);
     if (wait) {
@@ -115,29 +115,21 @@ Result CloseHandle(Handle handle) {
 Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool wait = false;
+    bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "called handle=0x%08X, nanoseconds=%d", handle, 
-        nano_seconds);
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%d", handle, object->GetTypeName(), 
+            object->GetName(), nano_seconds);
+
     _assert_msg_(KERNEL, object, "called, but kernel object is NULL!");
 
     Result res = object->WaitSynchronization(&wait);
 
+    // Check for next thread to schedule
     if (wait) {
-        // Set current thread to wait state if handle was not unlocked
-        Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-
-        // Check for next thread to schedule
         HLE::Reschedule(__func__);
-
-        // Context switch - Function blocked, is not actually returning (will be "called" again)
-
-        // TODO(bunnei): This saves handle to R0 so that it's correctly reloaded on context switch
-        // (otherwise R0 will be set to whatever is returned, and handle will be invalid when this
-        // thread is resumed). There is probably a better way of keeping track of state so that we
-        // don't necessarily have to do this.
-        return (Result)PARAM(0);
+        return 0;
     }
 
     return res;
@@ -150,6 +142,7 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
     s32* out = (s32*)_out;
     Handle* handles = (Handle*)_handles;
     bool unlock_all = true;
+    bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
     DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%d", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
@@ -162,7 +155,8 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
         _assert_msg_(KERNEL, object, "called handle=0x%08X, but kernel object "
             "is NULL!", handles[i]);
 
-        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X", i, handles[i]);
+        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName(), 
+            object->GetName());
 
         Result res = object->WaitSynchronization(&wait);
 
@@ -179,19 +173,10 @@ Result WaitSynchronizationN(void* _out, void* _handles, u32 handle_count, u32 wa
         return 0;
     }
 
-    // Set current thread to wait state if not all handles were unlocked
-    Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-    
     // Check for next thread to schedule
     HLE::Reschedule(__func__);
 
-    // Context switch - Function blocked, is not actually returning (will be "called" again)
-
-    // TODO(bunnei): This saves handle to R0 so that it's correctly reloaded on context switch
-    // (otherwise R0 will be set to whatever is returned, and handle will be invalid when this
-    // thread is resumed). There is probably a better way of keeping track of state so that we
-    // don't necessarily have to do this.
-    return (Result)PARAM(0);
+    return 0;
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
@@ -255,6 +240,17 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point, 
         name.c_str(), arg, stack_top, priority, processor_id, thread);
     
+    return 0;
+}
+
+/// Called when a thread exits
+u32 ExitThread() {
+    Handle thread = Kernel::GetCurrentThreadHandle();
+
+    DEBUG_LOG(SVC, "called, pc=0x%08X", Core::g_app_core->GetPC()); // PC = 0x0010545C
+
+    Kernel::StopThread(thread, __func__);
+    HLE::Reschedule(__func__);
     return 0;
 }
 
@@ -326,6 +322,13 @@ Result DuplicateHandle(void* _out, Handle handle) {
     return 0;
 }
 
+/// Signals an event
+Result SignalEvent(Handle evt) {
+    Result res = Kernel::SignalEvent(evt);
+    DEBUG_LOG(SVC, "called event=0x%08X", evt);
+    return res;
+}
+
 /// Clears an event
 Result ClearEvent(Handle evt) {
     Result res = Kernel::ClearEvent(evt);
@@ -348,7 +351,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x06,  NULL,                                       "GetProcessIdealProcessor"},
     {0x07,  NULL,                                       "SetProcessIdealProcessor"},
     {0x08,  WrapI_UUUUU<CreateThread>,                  "CreateThread"},
-    {0x09,  NULL,                                       "ExitThread"},
+    {0x09,  WrapU_V<ExitThread>,                        "ExitThread"},
     {0x0A,  WrapV_S64<SleepThread>,                     "SleepThread"},
     {0x0B,  WrapI_VU<GetThreadPriority>,                "GetThreadPriority"},
     {0x0C,  WrapI_UI<SetThreadPriority>,                "SetThreadPriority"},
@@ -363,7 +366,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x15,  NULL,                                       "CreateSemaphore"},
     {0x16,  NULL,                                       "ReleaseSemaphore"},
     {0x17,  WrapI_VU<CreateEvent>,                      "CreateEvent"},
-    {0x18,  NULL,                                       "SignalEvent"},
+    {0x18,  WrapI_U<SignalEvent>,                       "SignalEvent"},
     {0x19,  WrapI_U<ClearEvent>,                        "ClearEvent"},
     {0x1A,  NULL,                                       "CreateTimer"},
     {0x1B,  NULL,                                       "SetTimer"},

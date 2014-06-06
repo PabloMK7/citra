@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <list>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <string>
@@ -52,7 +53,14 @@ public:
      * @return Result of operation, 0 on success, otherwise error code
      */
     Result WaitSynchronization(bool* wait) {
-        // TODO(bunnei): ImplementMe
+        if (status != THREADSTATUS_DORMANT) {
+            Handle thread = GetCurrentThreadHandle();
+            if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
+                waiting_threads.push_back(thread);
+            }
+            WaitCurrentThread(WAITTYPE_THREADEND, this->GetHandle());
+            *wait = true;
+        }
         return 0;
     }
 
@@ -69,6 +77,9 @@ public:
     s32 processor_id;
 
     WaitType wait_type;
+    Handle wait_handle;
+
+    std::vector<Handle> waiting_threads;
 
     char name[Kernel::MAX_NAME_LENGTH + 1];
 };
@@ -81,7 +92,6 @@ Common::ThreadQueueList<Handle> g_thread_ready_queue;
 
 Handle g_current_thread_handle;
 Thread* g_current_thread;
-
 
 /// Gets the current thread
 inline Thread* GetCurrentThread() {
@@ -114,15 +124,15 @@ void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     memset(&t->context, 0, sizeof(ThreadContext));
 
     t->context.cpu_registers[0] = arg;
-    t->context.pc = t->entry_point;
+    t->context.pc = t->context.cpu_registers[15] = t->entry_point;
     t->context.sp = t->stack_top;
     t->context.cpsr = 0x1F; // Usermode
     
     if (t->current_priority < lowest_priority) {
         t->current_priority = t->initial_priority;
     }
-        
     t->wait_type = WAITTYPE_NONE;
+    t->wait_handle = 0;
 }
 
 /// Change a thread to "ready" state
@@ -142,6 +152,43 @@ void ChangeReadyState(Thread* t, bool ready) {
     }
 }
 
+/// Verify that a thread has not been released from waiting
+inline bool VerifyWait(const Handle& thread, WaitType type, Handle handle) {
+    Handle wait_id = 0;
+    Thread *t = g_object_pool.GetFast<Thread>(thread);
+    if (t) {
+        if (type == t->wait_type && handle == t->wait_handle) {
+            return true;
+        }
+    } else {
+        ERROR_LOG(KERNEL, "thread 0x%08X does not exist", thread);
+    }
+    return false;
+}
+
+/// Stops the current thread
+void StopThread(Handle thread, const char* reason) {
+    u32 error;
+    Thread *t = g_object_pool.Get<Thread>(thread, error);
+    if (t) {
+        ChangeReadyState(t, false);
+        t->status = THREADSTATUS_DORMANT;
+        for (size_t i = 0; i < t->waiting_threads.size(); ++i) {
+            const Handle waiting_thread = t->waiting_threads[i];
+            if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, thread)) {
+                ResumeThreadFromWait(waiting_thread);
+            }
+        }
+        t->waiting_threads.clear();
+
+        // Stopped threads are never waiting.
+        t->wait_type = WAITTYPE_NONE;
+        t->wait_handle = 0;
+    } else {
+        ERROR_LOG(KERNEL, "thread 0x%08X does not exist", thread);
+    }
+}
+
 /// Changes a threads state
 void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     if (!t || t->status == new_status) {
@@ -152,7 +199,7 @@ void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     
     if (new_status == THREADSTATUS_WAIT) {
         if (t->wait_type == WAITTYPE_NONE) {
-            printf("ERROR: Waittype none not allowed here\n");
+            ERROR_LOG(KERNEL, "Waittype none not allowed");
         }
     }
 }
@@ -207,9 +254,10 @@ Thread* NextThread() {
 }
 
 /// Puts the current thread in the wait state for the given type
-void WaitCurrentThread(WaitType wait_type) {
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
     Thread* t = GetCurrentThread();
     t->wait_type = wait_type;
+    t->wait_handle = wait_handle;
     ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
 }
 
@@ -225,6 +273,22 @@ void ResumeThreadFromWait(Handle handle) {
     }
 }
 
+/// Prints the thread queue for debugging purposes
+void DebugThreadQueue() {
+    Thread* thread = GetCurrentThread();
+    if (!thread) {
+        return;
+    }
+    INFO_LOG(KERNEL, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
+    for (u32 i = 0; i < g_thread_queue.size(); i++) {
+        Handle handle = g_thread_queue[i];
+        s32 priority = g_thread_ready_queue.contains(handle);
+        if (priority != -1) {
+            INFO_LOG(KERNEL, "0x%02X 0x%08X", priority, handle);
+        }
+    }
+}
+
 /// Creates a new thread
 Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 priority,
     s32 processor_id, u32 stack_top, int stack_size) {
@@ -233,12 +297,12 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
         "CreateThread priority=%d, outside of allowable range!", priority)
 
     Thread* t = new Thread;
-    
+
     handle = Kernel::g_object_pool.Create(t);
-    
+
     g_thread_queue.push_back(handle);
     g_thread_ready_queue.prepare(priority);
-    
+
     t->status = THREADSTATUS_DORMANT;
     t->entry_point = entry_point;
     t->stack_top = stack_top;
@@ -246,16 +310,18 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     t->initial_priority = t->current_priority = priority;
     t->processor_id = processor_id;
     t->wait_type = WAITTYPE_NONE;
-    
+    t->wait_handle = 0;
+
     strncpy(t->name, name, Kernel::MAX_NAME_LENGTH);
     t->name[Kernel::MAX_NAME_LENGTH] = '\0';
-    
+
     return t;
 }
 
 /// Creates a new thread - wrapper for external user
 Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
     u32 stack_top, int stack_size) {
+
     if (name == NULL) {
         ERROR_LOG(KERNEL, "CreateThread(): NULL name");
         return -1;
@@ -289,7 +355,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 
     // This won't schedule to the new thread, but it may to one woken from eating cycles.
     // Technically, this should not eat all at once, and reschedule in the middle, but that's hard.
-    //HLE::Reschedule("thread created");
+    //HLE::Reschedule(__func__);
     
     return handle;
 }
@@ -363,35 +429,24 @@ Handle SetupMainThread(s32 priority, int stack_size) {
     return handle;
 }
 
+
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule() {
     Thread* prev = GetCurrentThread();
     Thread* next = NextThread();
+    HLE::g_reschedule = false;
     if (next > 0) {
         INFO_LOG(KERNEL, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
-
+        
         SwitchContext(next);
 
-        // Hack - automatically change previous thread (which would have been in "wait" state) to
-        // "ready" state, so that we can immediately resume to it when new thread yields. FixMe to
-        // actually wait for whatever event it is supposed to be waiting on.
-
-        ChangeReadyState(prev, true);
-    } else {
-        INFO_LOG(KERNEL, "no ready threads, staying on 0x%08X", prev->GetHandle());
-
-        // Hack - no other threads are available, so decrement current PC to the last instruction, 
-        // and then resume current thread. This should always be called on a blocking instruction 
-        // (e.g. svcWaitSynchronization), and the result should be that the instruction is repeated
-        // until it no longer blocks. 
-
-        // TODO(bunnei): A better solution: Have the CPU switch to an idle thread
-
-        ThreadContext ctx;
-        SaveContext(ctx);
-        ctx.pc -= 4;
-        LoadContext(ctx);
-        ChangeReadyState(prev, true);
+        // Hack - There is no mechanism yet to waken the primary thread if it has been put to sleep
+        // by a simulated VBLANK thread switch. So, we'll just immediately set it to "ready" again.
+        // This results in the current thread yielding on a VBLANK once, and then it will be 
+        // immediately placed back in the queue for execution.
+        if (prev->wait_type == WAITTYPE_VBLANK) {
+            ResumeThreadFromWait(prev->GetHandle());
+        }
     }
 }
 

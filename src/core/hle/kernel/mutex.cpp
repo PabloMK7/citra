@@ -46,6 +46,11 @@ public:
     Result WaitSynchronization(bool* wait) {
         // TODO(bunnei): ImplementMe
         *wait = locked;
+
+        if (locked) {
+            Kernel::WaitCurrentThread(WAITTYPE_MUTEX);
+        }
+
         return 0;
     }
 };

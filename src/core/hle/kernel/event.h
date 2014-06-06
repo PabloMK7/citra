@@ -28,6 +28,13 @@ Result SetEventLocked(const Handle handle, const bool locked);
 Result SetPermanentLock(Handle handle, const bool permanent_locked);
 
 /**
+ * Signals an event
+ * @param handle Handle to event to signal
+ * @return Result of operation, 0 on success, otherwise error code
+ */
+Result SignalEvent(const Handle handle);
+
+/**
  * Clears an event
  * @param handle Handle to event to clear
  * @return Result of operation, 0 on success, otherwise error code
