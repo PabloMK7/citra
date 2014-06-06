@@ -139,7 +139,7 @@ Result ClearEvent(Handle handle) {
  * @param name Optional name of event
  * @return Newly created Event object
  */
-Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string name) {
+Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
     Event* evt = new Event;
 
     handle = Kernel::g_object_pool.Create(evt);
@@ -158,7 +158,7 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string
  * @param name Optional name of event
  * @return Handle to newly created Event object
  */
-Handle CreateEvent(const ResetType reset_type, const std::string name) {
+Handle CreateEvent(const ResetType reset_type, const std::string& name) {
     Handle handle;
     Event* evt = CreateEvent(handle, reset_type, name);
     return handle;

@@ -47,6 +47,6 @@ Result ClearEvent(Handle handle);
  * @param name Optional name of event
  * @return Handle to newly created Event object
  */
-Handle CreateEvent(const ResetType reset_type, const std::string name="Unknown");
+Handle CreateEvent(const ResetType reset_type, const std::string& name="Unknown");
 
 } // namespace

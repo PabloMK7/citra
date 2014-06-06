@@ -137,7 +137,7 @@ Result ReleaseMutex(Handle handle) {
  * @param name Optional name of mutex
  * @return Pointer to new Mutex object
  */
-Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string name) {
+Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
     Mutex* mutex = new Mutex;
     handle = Kernel::g_object_pool.Create(mutex);
 
@@ -161,7 +161,7 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string name) 
  * @param name Optional name of mutex
  * @return Handle to newly created object
  */
-Handle CreateMutex(bool initial_locked, std::string name) {
+Handle CreateMutex(bool initial_locked, const std::string& name) {
     Handle handle;
     Mutex* mutex = CreateMutex(handle, initial_locked, name);
     return handle;
