@@ -25,7 +25,7 @@ ARM_Interface*  g_sys_core  = NULL; ///< ARM11 system (OS) core
 /// Run the core CPU loop
 void RunLoop() {
     for (;;){
-        g_app_core->Run(LCD::kFrameTicks / 2);
+        g_app_core->Run(LCD::kFrameTicks / 3);
         HW::Update();
         Kernel::Reschedule();
     }
@@ -37,7 +37,7 @@ void SingleStep() {
 
     g_app_core->Step();
     
-    if ((ticks >= LCD::kFrameTicks / 2) || HLE::g_reschedule) {
+    if ((ticks >= LCD::kFrameTicks / 3) || HLE::g_reschedule) {
         HW::Update();
         Kernel::Reschedule();
         ticks = 0;
