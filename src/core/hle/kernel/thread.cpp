@@ -146,12 +146,11 @@ void ChangeReadyState(Thread* t, bool ready) {
 inline bool VerifyWait(const Handle& thread, WaitType type, Handle handle) {
     Handle wait_id = 0;
     Thread *t = g_object_pool.GetFast<Thread>(thread);
-    if (t) {
-        if (type == t->wait_type && handle == t->wait_handle) {
-            return true;
-        }
+    if (t != nullptr && type == t->wait_type && handle == t->wait_handle) {
+        return true;
     } else {
         ERROR_LOG(KERNEL, "thread 0x%08X does not exist", thread);
+        return false;
     }
     return false;
 }
