@@ -25,10 +25,10 @@ namespace Kernel {
 class Thread : public Kernel::Object {
 public:
 
-    const char* GetName() { return name; }
-    const char* GetTypeName() { return "Thread"; }
+    const char* GetName() const { return name; }
+    const char* GetTypeName() const { return "Thread"; }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Thread; }
+    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Thread; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Thread; }
 
     inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }

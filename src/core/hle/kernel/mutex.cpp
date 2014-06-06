@@ -15,10 +15,10 @@ namespace Kernel {
 
 class Mutex : public Object {
 public:
-    const char* GetTypeName() { return "Mutex"; }
-    const char* GetName() { return name.c_str(); }
+    const char* GetTypeName() const { return "Mutex"; }
+    const char* GetName() const { return name.c_str(); }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Mutex; }
+    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Mutex; }
 
     bool initial_locked;                        ///< Initial lock state when mutex was created

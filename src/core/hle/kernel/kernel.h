@@ -44,8 +44,8 @@ class Object : NonCopyable {
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
-    virtual const char* GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
-    virtual const char* GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
+    virtual const char* GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
+    virtual const char* GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**

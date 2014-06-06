@@ -16,10 +16,10 @@ namespace Kernel {
 
 class Event : public Object {
 public:
-    const char* GetTypeName() { return "Event"; }
-    const char* GetName() { return name.c_str(); }
+    const char* GetTypeName() const { return "Event"; }
+    const char* GetName() const { return name.c_str(); }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Event; }
+    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Event; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Event; }
 
     ResetType intitial_reset_type;          ///< ResetType specified at Event initialization

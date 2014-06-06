@@ -39,8 +39,8 @@ class Interface  : public Kernel::Object {
     friend class Manager;
 public:
     
-    const char *GetName() { return GetPortName(); }
-    const char *GetTypeName() { return GetPortName(); }
+    const char *GetName() const { return GetPortName(); }
+    const char *GetTypeName() const { return GetPortName(); }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Service; }
