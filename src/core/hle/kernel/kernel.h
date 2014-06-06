@@ -53,7 +53,10 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    virtual Result SyncRequest(bool* wait) = 0;
+    virtual Result SyncRequest(bool* wait) {
+        ERROR_LOG(KERNEL, "(UNIMPLEMENTED)");
+        return -1;
+    }
 
     /**
      * Wait for kernel object to synchronize
@@ -61,7 +64,6 @@ public:
      * @return Result of operation, 0 on success, otherwise error code
      */
     virtual Result WaitSynchronization(bool* wait) = 0;
-
 };
 
 class ObjectPool : NonCopyable {

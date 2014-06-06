@@ -31,17 +31,6 @@ public:
     std::string name;                       ///< Name of event (optional)
 
     /**
-     * Synchronize kernel object 
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result SyncRequest(bool* wait) {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(KERNEL, "(UMIMPLEMENTED) call");
-        return 0;
-    }
-
-    /**
      * Wait for kernel object to synchronize
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
