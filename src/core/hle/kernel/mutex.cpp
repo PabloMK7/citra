@@ -100,11 +100,10 @@ bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
 bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
     bool woke_threads = false;
-    std::vector<Handle>::iterator iter;
 
     // Find the next waiting thread for the mutex...
     while (!woke_threads && !mutex->waiting_threads.empty()) {
-        iter = mutex->waiting_threads.begin();
+        std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
         woke_threads |= ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
