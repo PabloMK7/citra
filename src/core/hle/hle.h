@@ -37,8 +37,6 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef *func
 
 void CallSVC(u32 opcode);
 
-void EatCycles(u32 cycles);
-
 void Reschedule(const char *reason);
 
 void Init();

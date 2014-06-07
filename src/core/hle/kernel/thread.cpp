@@ -337,15 +337,8 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
         stack_size);
 
     ResetThread(t, arg, 0);
-
-    HLE::EatCycles(32000);
-
     CallThread(t);
 
-    // This won't schedule to the new thread, but it may to one woken from eating cycles.
-    // Technically, this should not eat all at once, and reschedule in the middle, but that's hard.
-    //HLE::Reschedule(__func__);
-    
     return handle;
 }
 
@@ -388,8 +381,6 @@ Result SetThreadPriority(Handle handle, s32 priority) {
     if (thread->IsReady()) {
         g_thread_ready_queue.push_back(thread->current_priority, handle);
     }
-
-    HLE::EatCycles(450);
 
     return 0;
 }

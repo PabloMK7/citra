@@ -40,10 +40,6 @@ void CallSVC(u32 opcode) {
     }
 }
 
-void EatCycles(u32 cycles) {
-    // TODO: ImplementMe
-}
-
 void Reschedule(const char *reason) {
 #ifdef _DEBUG
     _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
