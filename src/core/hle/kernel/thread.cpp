@@ -145,7 +145,7 @@ void ChangeReadyState(Thread* t, bool ready) {
 /// Verify that a thread has not been released from waiting
 inline bool VerifyWait(const Handle& thread, WaitType type, Handle handle) {
     Handle wait_id = 0;
-    Thread *t = g_object_pool.GetFast<Thread>(thread);
+    Thread* t = g_object_pool.GetFast<Thread>(thread);
     if (t != nullptr && type == t->wait_type && handle == t->wait_handle) {
         return true;
     } else {
@@ -158,7 +158,7 @@ inline bool VerifyWait(const Handle& thread, WaitType type, Handle handle) {
 /// Stops the current thread
 void StopThread(Handle thread, const char* reason) {
     u32 error;
-    Thread *t = g_object_pool.Get<Thread>(thread, error);
+    Thread* t = g_object_pool.Get<Thread>(thread, error);
     if (t) {
         ChangeReadyState(t, false);
         t->status = THREADSTATUS_DORMANT;
