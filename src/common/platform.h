@@ -47,7 +47,7 @@
 #define EMU_PLATFORM PLATFORM_WINDOWS
 
 #elif defined( __APPLE__ ) || defined( __APPLE_CC__ )
-#define EMU_PLATFORM PLATFORM_MAXOSX
+#define EMU_PLATFORM PLATFORM_MACOSX
 
 #elif defined(__linux__)
 #define EMU_PLATFORM PLATFORM_LINUX

@@ -28,8 +28,13 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	
+#if EMU_PLATFORM == PLATFORM_MACOSX
+    // GLFW on OSX requires these window hints to be set to create a 3.2+ GL context.
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
+	
     m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth, 
         (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), 
         m_window_title.c_str(), NULL, NULL);
