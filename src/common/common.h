@@ -96,8 +96,6 @@ private:
 
 // Windows compatibility
 #ifndef _WIN32
-#include <limits.h>
-#define MAX_PATH PATH_MAX
 #ifdef _LP64
 #define _M_X64 1
 #else
