@@ -143,16 +143,14 @@ void ChangeReadyState(Thread* t, bool ready) {
 }
 
 /// Verify that a thread has not been released from waiting
-inline bool VerifyWait(const Handle& thread, WaitType type, Handle handle) {
-    Handle wait_id = 0;
-    Thread* t = g_object_pool.GetFast<Thread>(thread);
-    if (t != nullptr && type == t->wait_type && handle == t->wait_handle) {
-        return true;
-    } else {
-        ERROR_LOG(KERNEL, "thread 0x%08X does not exist", thread);
+inline bool VerifyWait(const Handle& handle, WaitType type, Handle wait_handle) {
+    Thread* thread = g_object_pool.GetFast<Thread>(handle);
+    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
+
+    if (type != thread->wait_type || wait_handle != thread->wait_handle) 
         return false;
-    }
-    return false;
+
+    return true;
 }
 
 /// Stops the current thread
