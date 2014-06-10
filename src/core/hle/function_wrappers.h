@@ -10,6 +10,9 @@
 
 namespace HLE {
 
+#define PARAM(n)    Core::g_app_core->GetReg(n)
+#define RETURN(n)   Core::g_app_core->SetReg(0, n)
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type s32
 
@@ -104,5 +107,8 @@ template<void func(s64)> void Wrap() {
 template<void func(const char*)> void Wrap() {
     func(Memory::GetCharPointer(PARAM(0)));
 }
+
+#undef PARAM
+#undef RETURN
 
 } // namespace HLE
