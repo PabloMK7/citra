@@ -154,26 +154,23 @@ inline bool VerifyWait(const Handle& handle, WaitType type, Handle wait_handle) 
 }
 
 /// Stops the current thread
-void StopThread(Handle thread, const char* reason) {
-    u32 error;
-    Thread* t = g_object_pool.Get<Thread>(thread, error);
-    if (t) {
-        ChangeReadyState(t, false);
-        t->status = THREADSTATUS_DORMANT;
-        for (size_t i = 0; i < t->waiting_threads.size(); ++i) {
-            const Handle waiting_thread = t->waiting_threads[i];
-            if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, thread)) {
-                ResumeThreadFromWait(waiting_thread);
-            }
+void StopThread(Handle handle, const char* reason) {
+    Thread* thread = g_object_pool.GetFast<Thread>(handle);
+    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
+    
+    ChangeReadyState(thread, false);
+    thread->status = THREADSTATUS_DORMANT;
+    for (size_t i = 0; i < thread->waiting_threads.size(); ++i) {
+        const Handle waiting_thread = thread->waiting_threads[i];
+        if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, handle)) {
+            ResumeThreadFromWait(waiting_thread);
         }
-        t->waiting_threads.clear();
-
-        // Stopped threads are never waiting.
-        t->wait_type = WAITTYPE_NONE;
-        t->wait_handle = 0;
-    } else {
-        ERROR_LOG(KERNEL, "thread 0x%08X does not exist", thread);
     }
+    thread->waiting_threads.clear();
+
+    // Stopped threads are never waiting.
+    thread->wait_type = WAITTYPE_NONE;
+    thread->wait_handle = 0;
 }
 
 /// Changes a threads state
@@ -242,20 +239,20 @@ Thread* NextThread() {
 
 /// Puts the current thread in the wait state for the given type
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
-    Thread* t = GetCurrentThread();
-    t->wait_type = wait_type;
-    t->wait_handle = wait_handle;
-    ChangeThreadState(t, ThreadStatus(THREADSTATUS_WAIT | (t->status & THREADSTATUS_SUSPEND)));
+    Thread* thread = GetCurrentThread();
+    thread->wait_type = wait_type;
+    thread->wait_handle = wait_handle;
+    ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle) {
     u32 error;
-    Thread* t = Kernel::g_object_pool.Get<Thread>(handle, error);
-    if (t) {
-        t->status &= ~THREADSTATUS_WAIT;
-        if (!(t->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
-            ChangeReadyState(t, true);
+    Thread* thread = Kernel::g_object_pool.Get<Thread>(handle, error);
+    if (thread) {
+        thread->status &= ~THREADSTATUS_WAIT;
+        if (!(thread->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
+            ChangeReadyState(thread, true);
         }
     }
 }
@@ -283,26 +280,26 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST), 
         "CreateThread priority=%d, outside of allowable range!", priority)
 
-    Thread* t = new Thread;
+    Thread* thread = new Thread;
 
-    handle = Kernel::g_object_pool.Create(t);
+    handle = Kernel::g_object_pool.Create(thread);
 
     g_thread_queue.push_back(handle);
     g_thread_ready_queue.prepare(priority);
 
-    t->status = THREADSTATUS_DORMANT;
-    t->entry_point = entry_point;
-    t->stack_top = stack_top;
-    t->stack_size = stack_size;
-    t->initial_priority = t->current_priority = priority;
-    t->processor_id = processor_id;
-    t->wait_type = WAITTYPE_NONE;
-    t->wait_handle = 0;
+    thread->status = THREADSTATUS_DORMANT;
+    thread->entry_point = entry_point;
+    thread->stack_top = stack_top;
+    thread->stack_size = stack_size;
+    thread->initial_priority = thread->current_priority = priority;
+    thread->processor_id = processor_id;
+    thread->wait_type = WAITTYPE_NONE;
+    thread->wait_handle = 0;
 
-    strncpy(t->name, name, Kernel::MAX_NAME_LENGTH);
-    t->name[Kernel::MAX_NAME_LENGTH] = '\0';
+    strncpy(thread->name, name, Kernel::MAX_NAME_LENGTH);
+    thread->name[Kernel::MAX_NAME_LENGTH] = '\0';
 
-    return t;
+    return thread;
 }
 
 /// Creates a new thread - wrapper for external user
@@ -331,11 +328,11 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
         return -1;
     }
     Handle handle;
-    Thread* t = CreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
+    Thread* thread = CreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
         stack_size);
 
-    ResetThread(t, arg, 0);
-    CallThread(t);
+    ResetThread(thread, arg, 0);
+    CallThread(thread);
 
     return handle;
 }
@@ -388,10 +385,10 @@ Handle SetupMainThread(s32 priority, int stack_size) {
     Handle handle;
     
     // Initialize new "main" thread
-    Thread* t = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
+    Thread* thread = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
         THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
     
-    ResetThread(t, 0, 0);
+    ResetThread(thread, 0, 0);
     
     // If running another thread already, set it to "ready" state
     Thread* cur = GetCurrentThread();
@@ -400,9 +397,9 @@ Handle SetupMainThread(s32 priority, int stack_size) {
     }
     
     // Run new "main" thread
-    SetCurrentThread(t);
-    t->status = THREADSTATUS_RUNNING;
-    LoadContext(t->context);
+    SetCurrentThread(thread);
+    thread->status = THREADSTATUS_RUNNING;
+    LoadContext(thread->context);
 
     return handle;
 }
