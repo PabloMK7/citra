@@ -59,10 +59,8 @@ public:
  */
 Result SetPermanentLock(Handle handle, const bool permanent_locked) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
-    if (!evt) {
-        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
-        return -1;
-    }
+    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+
     evt->permanent_locked = permanent_locked;
     return 0;
 }
@@ -75,10 +73,8 @@ Result SetPermanentLock(Handle handle, const bool permanent_locked) {
  */
 Result SetEventLocked(const Handle handle, const bool locked) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
-    if (!evt) {
-        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
-        return -1;
-    }
+    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+
     if (!evt->permanent_locked) {
         evt->locked = locked;
     }
@@ -92,10 +88,8 @@ Result SetEventLocked(const Handle handle, const bool locked) {
  */
 Result SignalEvent(const Handle handle) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
-    if (!evt) {
-        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
-        return -1;
-    }
+    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+
     // Resume threads waiting for event to signal
     bool event_caught = false;
     for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
@@ -122,10 +116,8 @@ Result SignalEvent(const Handle handle) {
  */
 Result ClearEvent(Handle handle) {
     Event* evt = g_object_pool.GetFast<Event>(handle);
-    if (!evt) {
-        ERROR_LOG(KERNEL, "called with unknown handle=0x%08X", handle);
-        return -1;
-    }
+    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+
     if (!evt->permanent_locked) {
         evt->locked = true;
     }
