@@ -87,7 +87,6 @@ inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 #define __stdcall
 #define __cdecl
 
-#define LONG long
 #define BOOL bool
 #define DWORD u32
 
@@ -97,7 +96,6 @@ inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 
 // TODO: Hacks..
 #include <limits.h>
-#define MAX_PATH PATH_MAX
 
 #include <strings.h>
 #define stricmp(str1, str2) strcasecmp(str1, str2)
