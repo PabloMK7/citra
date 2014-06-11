@@ -20,9 +20,9 @@ public:
     // A vector of commands represented by their raw byte sequence
     struct PicaCommand : public std::vector<u32>
     {
-        Pica::CommandHeader& GetHeader()
+        const Pica::CommandHeader& GetHeader() const
         {
-            u32& val = at(1);
+            const u32& val = at(1);
             return *(Pica::CommandHeader*)&val;
         }
     };
@@ -64,7 +64,7 @@ public:
         }
 
     protected:
-        GraphicsDebugger* GetDebugger()
+        const GraphicsDebugger* GetDebugger() const
         {
             return observed;
         }
