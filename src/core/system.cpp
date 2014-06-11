@@ -8,6 +8,7 @@
 #include "core/system.h"
 #include "core/hw/hw.h"
 #include "core/hle/hle.h"
+#include "core/hle/kernel/kernel.h"
 
 #include "video_core/video_core.h"
 
@@ -26,6 +27,7 @@ void Init(EmuWindow* emu_window) {
     HLE::Init();
     CoreTiming::Init();
     VideoCore::Init(emu_window);
+    Kernel::Init();
 }
 
 void RunLoopFor(int cycles) {
@@ -42,6 +44,7 @@ void Shutdown() {
     HLE::Shutdown();
     CoreTiming::Shutdown();
     VideoCore::Shutdown();
+    Kernel::Shutdown();
     g_ctr_file_system.Shutdown();
 }
 

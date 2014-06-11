@@ -132,12 +132,16 @@ Object* ObjectPool::CreateByIDType(int type) {
     }
 }
 
+/// Initialize the kernel
 void Init() {
     Kernel::ThreadingInit();
 }
 
+/// Shutdown the kernel
 void Shutdown() {
     Kernel::ThreadingShutdown();
+
+    g_object_pool.Clear(); // Free all kernel objects
 }
 
 /**

@@ -167,6 +167,12 @@ private:
 extern ObjectPool g_object_pool;
 extern Handle g_main_thread;
 
+/// Initialize the kernel
+void Init();
+
+/// Shutdown the kernel
+void Shutdown();
+
 /**
  * Loads executable stored at specified address
  * @entry_point Entry point in memory of loaded executable
