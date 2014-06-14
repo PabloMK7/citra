@@ -12,13 +12,14 @@
 #include "core/hle/service/apt.h"
 #include "core/hle/service/gsp.h"
 #include "core/hle/service/hid.h"
+#include "core/hle/service/ndm.h"
 #include "core/hle/service/srv.h"
 
 #include "core/hle/kernel/kernel.h"
 
 namespace Service {
 
-Manager* g_manager = NULL;  ///< Service manager
+Manager* g_manager = nullptr;  ///< Service manager
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Service Manager class
@@ -55,7 +56,7 @@ Interface* Manager::FetchFromHandle(Handle handle) {
 Interface* Manager::FetchFromPortName(std::string port_name) {
     auto itr = m_port_map.find(port_name);
     if (itr == m_port_map.end()) {
-        return NULL;
+        return nullptr;
     }
     return FetchFromHandle(itr->second);
 }
@@ -72,14 +73,15 @@ void Init() {
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new GSP_GPU::Interface);
     g_manager->AddService(new HID_User::Interface);
+    g_manager->AddService(new NDM_U::Interface);
 
-    NOTICE_LOG(HLE, "Services initialized OK");
+    NOTICE_LOG(HLE, "initialized OK");
 }
 
 /// Shutdown ServiceManager
 void Shutdown() {
     delete g_manager;
-    NOTICE_LOG(HLE, "Services shutdown OK");
+    NOTICE_LOG(HLE, "shutdown OK");
 }
 
 

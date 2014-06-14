@@ -11,6 +11,11 @@ typedef s32 Result;
 
 namespace Kernel {
 
+enum KernelHandle {
+    CurrentThread   = 0xFFFF8000,
+    CurrentProcess  = 0xFFFF8001,
+};
+
 enum class HandleType : u32 {
     Unknown         = 0,
     Port            = 1,
@@ -39,9 +44,26 @@ class Object : NonCopyable {
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
-    virtual const char *GetTypeName() { return "[BAD KERNEL OBJECT TYPE]"; }
-    virtual const char *GetName() { return "[UNKNOWN KERNEL OBJECT]"; }
+    virtual const char* GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
+    virtual const char* GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
+
+    /**
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    virtual Result SyncRequest(bool* wait) {
+        ERROR_LOG(KERNEL, "(UNIMPLEMENTED)");
+        return -1;
+    }
+
+    /**
+     * Wait for kernel object to synchronize
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    virtual Result WaitSynchronization(bool* wait) = 0;
 };
 
 class ObjectPool : NonCopyable {
@@ -143,6 +165,13 @@ private:
 };
 
 extern ObjectPool g_object_pool;
+extern Handle g_main_thread;
+
+/// Initialize the kernel
+void Init();
+
+/// Shutdown the kernel
+void Shutdown();
 
 /**
  * Loads executable stored at specified address

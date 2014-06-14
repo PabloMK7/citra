@@ -25,7 +25,7 @@ s32 CallMRC(u32 instruction) {
         return GetThreadCommandBuffer();
 
     default:
-        //DEBUG_LOG(OSHLE, "unknown MRC call 0x%08X", instruction);
+        DEBUG_LOG(OSHLE, "unknown MRC call 0x%08X", instruction);
         break;
     }
     return -1;

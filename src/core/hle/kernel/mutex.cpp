@@ -8,21 +8,51 @@
 #include "common/common.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
 class Mutex : public Object {
 public:
-    const char* GetTypeName() { return "Mutex"; }
+    const char* GetTypeName() const { return "Mutex"; }
+    const char* GetName() const { return name.c_str(); }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::Mutex; }
+    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Mutex; }
 
     bool initial_locked;                        ///< Initial lock state when mutex was created
     bool locked;                                ///< Current locked state
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
+    std::string name;                           ///< Name of mutex (optional)
+
+    /**
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result SyncRequest(bool* wait) {
+        // TODO(bunnei): ImplementMe
+        locked = true;
+        return 0;
+    }
+
+    /**
+     * Wait for kernel object to synchronize
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result WaitSynchronization(bool* wait) {
+        // TODO(bunnei): ImplementMe
+        *wait = locked;
+
+        if (locked) {
+            Kernel::WaitCurrentThread(WAITTYPE_MUTEX);
+        }
+
+        return 0;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,10 +100,10 @@ bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
 bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
     bool woke_threads = false;
-    auto iter = mutex->waiting_threads.begin();
 
     // Find the next waiting thread for the mutex...
     while (!woke_threads && !mutex->waiting_threads.empty()) {
+        std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
         woke_threads |= ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
@@ -91,6 +121,9 @@ bool ReleaseMutex(Mutex* mutex) {
  */
 Result ReleaseMutex(Handle handle) {
     Mutex* mutex = Kernel::g_object_pool.GetFast<Mutex>(handle);
+
+    _assert_msg_(KERNEL, (mutex != nullptr), "ReleaseMutex tried to release a nullptr mutex!");
+
     if (!ReleaseMutex(mutex)) {
         return -1;
     }
@@ -101,12 +134,15 @@ Result ReleaseMutex(Handle handle) {
  * Creates a mutex
  * @param handle Reference to handle for the newly created mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @param name Optional name of mutex
+ * @return Pointer to new Mutex object
  */
-Mutex* CreateMutex(Handle& handle, bool initial_locked) {
+Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
     Mutex* mutex = new Mutex;
     handle = Kernel::g_object_pool.Create(mutex);
 
     mutex->locked = mutex->initial_locked = initial_locked;
+    mutex->name = name;
 
     // Acquire mutex with current thread if initialized as locked...
     if (mutex->locked) {
@@ -122,10 +158,12 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked) {
 /**
  * Creates a mutex
  * @param initial_locked Specifies if the mutex should be locked initially
+ * @param name Optional name of mutex
+ * @return Handle to newly created object
  */
-Handle CreateMutex(bool initial_locked) {
+Handle CreateMutex(bool initial_locked, const std::string& name) {
     Handle handle;
-    Mutex* mutex = CreateMutex(handle, initial_locked);
+    Mutex* mutex = CreateMutex(handle, initial_locked, name);
     return handle;
 }
 

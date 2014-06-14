@@ -2,8 +2,6 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#pragma once
-
 #include <string.h>
 
 #include "common/common.h"
@@ -14,6 +12,7 @@
 
 namespace Kernel {
 
+Handle g_main_thread = 0;
 ObjectPool g_object_pool;
 
 ObjectPool::ObjectPool() {
@@ -127,16 +126,20 @@ Object* ObjectPool::CreateByIDType(int type) {
 
     default:
         ERROR_LOG(COMMON, "Unable to load state: could not find object type %d.", type);
-        return NULL;
+        return nullptr;
     }
 }
 
+/// Initialize the kernel
 void Init() {
     Kernel::ThreadingInit();
 }
 
+/// Shutdown the kernel
 void Shutdown() {
     Kernel::ThreadingShutdown();
+
+    g_object_pool.Clear(); // Free all kernel objects
 }
 
 /**
@@ -150,7 +153,7 @@ bool LoadExec(u32 entry_point) {
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    Handle thread = Kernel::SetupMainThread(0x30);
+    g_main_thread = Kernel::SetupMainThread(0x30);
 
     return true;
 }

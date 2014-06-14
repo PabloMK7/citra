@@ -39,8 +39,8 @@ class Interface  : public Kernel::Object {
     friend class Manager;
 public:
     
-    const char *GetName() { return GetPortName(); }
-    const char *GetTypeName() { return GetPortName(); }
+    const char *GetName() const { return GetPortName(); }
+    const char *GetTypeName() const { return GetPortName(); }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Service; }
@@ -76,27 +76,47 @@ public:
     }
 
     /**
-     * Called when svcSendSyncRequest is called, loads command buffer and executes comand
-     * @return Return result of svcSendSyncRequest passed back to user app
+     * Synchronize kernel object 
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
      */
-    Result Sync() {
+    Result SyncRequest(bool* wait) {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "Unknown/unimplemented function: port = %s, command = 0x%08X!", 
+            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X", 
                 GetPortName(), cmd_buff[0]);
-            return -1;
+
+            // TODO(bunnei): Hack - ignore error
+            u32* cmd_buff = Service::GetCommandBuffer();
+            cmd_buff[1] = 0;
+            return 0; 
         }
-        if (itr->second.func == NULL) {
-            ERROR_LOG(OSHLE, "Unimplemented function: port = %s, name = %s!", 
+        if (itr->second.func == nullptr) {
+            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s", 
                 GetPortName(), itr->second.name.c_str());
-            return -1;
+
+            // TODO(bunnei): Hack - ignore error
+            u32* cmd_buff = Service::GetCommandBuffer();
+            cmd_buff[1] = 0;
+            return 0; 
         } 
 
         itr->second.func(this);
 
         return 0; // TODO: Implement return from actual function
+    }
+
+    /**
+     * Wait for kernel object to synchronize
+     * @param wait Boolean wait set if current thread should wait as a result of sync operation
+     * @return Result of operation, 0 on success, otherwise error code
+     */
+    Result WaitSynchronization(bool* wait) {
+        // TODO(bunnei): ImplementMe
+        ERROR_LOG(OSHLE, "unimplemented function");
+        return 0;
     }
 
 protected:

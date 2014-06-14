@@ -259,14 +259,17 @@ void ConsoleListener::Log(LogTypes::LOG_LEVELS Level, const char *Text)
 
     switch (Level)
     {
+    case OS_LEVEL: // light yellow
+        Color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+        break;
     case NOTICE_LEVEL: // light green
         Color = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
         break;
     case ERROR_LEVEL: // light red
         Color = FOREGROUND_RED | FOREGROUND_INTENSITY;
         break;
-    case WARNING_LEVEL: // light yellow
-        Color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+    case WARNING_LEVEL: // light purple
+        Color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
         break;
     case INFO_LEVEL: // cyan
         Color = FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
@@ -278,15 +281,8 @@ void ConsoleListener::Log(LogTypes::LOG_LEVELS Level, const char *Text)
         Color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
         break;
     }
-    if (strlen(Text) > 10)
-    {
-        // First 10 chars white
-        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-        WriteConsole(hConsole, Text, 10, &cCharsWritten, NULL);
-        Text += 10;
-    }
     SetConsoleTextAttribute(hConsole, Color);
-    WriteConsole(hConsole, Text, (DWORD)strlen(Text), &cCharsWritten, NULL);
+    printf(Text);
 #else
     char ColorAttr[16] = "";
     char ResetAttr[16] = "";

@@ -5,19 +5,18 @@
 #include "common/log.h"
 
 #include "core/hle/hle.h"
-#include "core/hle/service/hid.h"
+#include "core/hle/service/ndm.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_User
+// Namespace NDM_U
 
-namespace HID_User {
+namespace NDM_U {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000A0000, nullptr, "GetIPCHandles"},
-    {0x00110000, nullptr, "EnableAccelerometer"},
-    {0x00130000, nullptr, "EnableGyroscopeLow"},
-    {0x00150000, nullptr, "GetGyroscopeLowRawToDpsCoefficient"},
-    {0x00160000, nullptr, "GetGyroscopeLowCalibrateParam"},
+    {0x00060040, nullptr, "SuspendDaemons"},
+    {0x00080040, nullptr, "DisableWifiUsage"},
+    {0x00090000, nullptr, "EnableWifiUsage"},
+    {0x00140040, nullptr, "OverrideDefaultDaemons"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

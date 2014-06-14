@@ -29,6 +29,10 @@ struct ThreadContext {
     u32 fpu_registers[32];
     u32 fpscr;
     u32 fpexc;
+
+    // These are not part of native ThreadContext, but needed by emu
+    u32 reg_15;
+    u32 mode;
 };
 
 enum ResetType {
@@ -36,6 +40,15 @@ enum ResetType {
     RESETTYPE_STICKY,
     RESETTYPE_PULSE,
     RESETTYPE_MAX_BIT = (1u << 31),
+};
+
+enum ArbitrationType {
+    ARBITRATIONTYPE_SIGNAL,
+    ARBITRATIONTYPE_WAIT_IF_LESS_THAN,
+    ARBITRATIONTYPE_DECREMENT_AND_WAIT_IF_LESS_THAN,
+    ARBITRATIONTYPE_WAIT_IF_LESS_THAN_WITH_TIMEOUT,
+    ARBITRATIONTYPE_DECREMENT_AND_WAIT_IF_LESS_THAN_WITH_TIMEOUT,
+    ARBITRATIONTYPE_MAX_BIT = (1u << 31)
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

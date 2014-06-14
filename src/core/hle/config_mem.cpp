@@ -55,7 +55,7 @@ inline void Read(T &var, const u32 addr) {
         break;
 
     default:
-        ERROR_LOG(HLE, "unknown ConfigMem::Read%d @ 0x%08X", sizeof(var) * 8, addr);
+        ERROR_LOG(HLE, "unknown addr=0x%08X", addr);
     }
 }
 

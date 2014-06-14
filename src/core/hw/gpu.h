@@ -8,6 +8,9 @@
 
 namespace GPU {
 
+static const u32 kFrameCycles   = 268123480 / 60;   ///< 268MHz / 60 frames per second
+static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of instructions/frame
+
 struct Registers {
     enum Id : u32 {
         FramebufferTopLeft1     = 0x1EF00468,   // Main LCD, first framebuffer for 3D left

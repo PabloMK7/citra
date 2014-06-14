@@ -9,13 +9,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define PARAM(n)        Core::g_app_core->GetReg(n)
-#define PARAM64(n)      (Core::g_app_core->GetReg(n) | ((u64)Core::g_app_core->GetReg(n + 1) << 32))
-#define RETURN(n)       Core::g_app_core->SetReg(0, n)
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 namespace HLE {
+
+extern bool g_reschedule;   ///< If true, immediately reschedules the CPU to a new thread
 
 typedef u32 Addr;
 typedef void (*Func)();
@@ -36,9 +32,7 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef *func
 
 void CallSVC(u32 opcode);
 
-void EatCycles(u32 cycles);
-
-void ReSchedule(const char *reason);
+void Reschedule(const char *reason);
 
 void Init();
 

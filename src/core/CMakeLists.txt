@@ -34,12 +34,14 @@ set(SRCS    core.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
             hle/svc.cpp
+            hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
             hle/kernel/thread.cpp
             hle/service/apt.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
+            hle/service/ndm.cpp
             hle/service/service.cpp
             hle/service/srv.cpp
             hw/gpu.cpp

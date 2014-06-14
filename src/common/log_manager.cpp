@@ -10,14 +10,16 @@
 #include "common/thread.h"
 #include "common/file_util.h"
 
-void GenericLog(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, 
-        const char *file, int line, const char* fmt, ...)
+void GenericLog(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, int line, 
+    const char* function, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    if (LogManager::GetInstance())
+
+    if (LogManager::GetInstance()) {
         LogManager::GetInstance()->Log(level, type,
-            file, line, fmt, args);
+            file, line, function, fmt, args);
+    }
     va_end(args);
 }
 
@@ -88,6 +90,8 @@ LogManager::LogManager()
             m_Log[i]->AddListener(m_debuggerLog);
 #endif
     }
+
+    m_consoleLog->Open();
 }
 
 LogManager::~LogManager()
@@ -107,8 +111,8 @@ LogManager::~LogManager()
     delete m_debuggerLog;
 }
 
-void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, 
-    const char *file, int line, const char *format, va_list args)
+void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, 
+    int line, const char* function, const char *fmt, va_list args)
 {
     char temp[MAX_MSGLEN];
     char msg[MAX_MSGLEN * 2];
@@ -117,17 +121,15 @@ void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type,
     if (!log->IsEnabled() || level > log->GetLevel() || ! log->HasListeners())
         return;
 
-    CharArrayFromFormatV(temp, MAX_MSGLEN, format, args);
+    CharArrayFromFormatV(temp, MAX_MSGLEN, fmt, args);
 
-    static const char level_to_char[7] = "-NEWID";
-    sprintf(msg, "%s %s:%u %c[%s]: %s\n",
-        Common::Timer::GetTimeFormatted().c_str(),
-        file, line, level_to_char[(int)level],
-        log->GetShortName(), temp);
+    static const char level_to_char[7] = "ONEWID";
+    sprintf(msg, "%s %s:%u %c[%s] %s: %s\n", Common::Timer::GetTimeFormatted().c_str(), file, line, 
+        level_to_char[(int)level], log->GetShortName(), function, temp);
+    
 #ifdef ANDROID
     Host_SysMessage(msg);    
 #endif
-    printf(msg); // TODO(ShizZy): RemoveMe when I no longer need this
     log->Trigger(level, msg);
 }
 
@@ -147,7 +149,7 @@ LogContainer::LogContainer(const char* shortName, const char* fullName, bool ena
 {
     strncpy(m_fullName, fullName, 128);
     strncpy(m_shortName, shortName, 32);
-    m_level = (LogTypes::LOG_LEVELS)MAX_LOGLEVEL;
+    m_level = LogTypes::MAX_LOGLEVEL;
 }
 
 // LogContainer
