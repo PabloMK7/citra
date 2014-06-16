@@ -8,33 +8,11 @@
 #include "core/loader.h"
 #include "core/system.h"
 #include "core/core.h"
-#include "core/file_sys/directory_file_system.h"
 #include "core/elf/elf_reader.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Loads an extracted CXI from a directory
-bool LoadDirectory_CXI(std::string &filename) {
-    std::string full_path = filename;
-    std::string path, file, extension;
-    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-    path = ReplaceAll(path, "/", "\\");
-#endif
-    DirectoryFileSystem *fs = new DirectoryFileSystem(&System::g_ctr_file_system, path);
-    System::g_ctr_file_system.Mount("fs:", fs);
-
-    std::string final_name = "fs:/" + file + extension;
-    File::IOFile f(filename, "rb");
-
-    if (f.IsOpen()) {
-        // TODO(ShizZy): read here to memory....
-    }
-    ERROR_LOG(TIME, "Unimplemented function!");
-    return true;
-}
 
 /// Loads a CTR ELF file
 bool Load_ELF(std::string &filename) {
@@ -67,54 +45,6 @@ bool Load_ELF(std::string &filename) {
 
     return true;
 }
-
-/// Loads a Launcher DAT file
-bool Load_DAT(std::string &filename) {
-    std::string full_path = filename;
-    std::string path, file, extension;
-    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-    path = ReplaceAll(path, "/", "\\");
-#endif
-    File::IOFile f(filename, "rb");
-
-    if (f.IsOpen()) {
-        u64 size = f.GetSize();
-        u8* buffer = new u8[size];
-
-        f.ReadBytes(buffer, size);
-
-        /**
-        * (mattvail) We shouldn't really support this type of file
-        * but for the sake of making it easier... we'll temporarily/hackishly
-        * allow it. No sense in making a proper reader for this.
-        */
-        u32 entry_point = 0x00100000; // write to same entrypoint as elf
-        u32 payload_offset = 0xA150;
-        
-        const u8 *src = &buffer[payload_offset];
-        u8 *dst = Memory::GetPointer(entry_point);
-        u32 srcSize = size - payload_offset; //just load everything...
-        u32 *s = (u32*)src;
-        u32 *d = (u32*)dst;
-        for (int j = 0; j < (int)(srcSize + 3) / 4; j++)
-        {
-            *d++ = (*s++);
-        }
-        
-        Kernel::LoadExec(entry_point);
-
-
-        delete[] buffer;
-    }
-    else {
-        return false;
-    }
-    f.Close();
-
-    return true;
-}
-
 
 /// Loads a CTR BIN file extracted from an ExeFS
 bool Load_BIN(std::string &filename) {
@@ -228,12 +158,6 @@ bool LoadFile(std::string &filename, std::string *error_string) {
 
     case FILETYPE_CTR_BIN:
         return Load_BIN(filename);
-
-    case FILETYPE_LAUNCHER_DAT:
-        return Load_DAT(filename);
-
-    case FILETYPE_DIRECTORY_CXI:
-        return LoadDirectory_CXI(filename);
 
     case FILETYPE_ERROR:
         ERROR_LOG(LOADER, "Could not read file");
