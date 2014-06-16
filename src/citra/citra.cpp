@@ -8,7 +8,7 @@
 
 #include "core/system.h"
 #include "core/core.h"
-#include "core/loader.h"
+#include "core/loader/loader.h"
 
 #include "citra/emu_window/emu_window_glfw.h"
 

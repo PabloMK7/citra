@@ -8,7 +8,7 @@
 
 #include "common/symbols.h"
 #include "core/mem_map.h"
-#include "core/elf/elf_reader.h"
+#include "core/loader/elf_reader.h"
 
 //void bswap(Elf32_Word &w) {w = Common::swap32(w);}
 //void bswap(Elf32_Half &w) {w = Common::swap16(w);}

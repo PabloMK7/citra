@@ -23,9 +23,10 @@
 #include "debugger/graphics_cmdlists.hxx"
 
 #include "core/system.h"
-#include "core/loader.h"
 #include "core/core.h"
+#include "core/loader/loader.h"
 #include "core/arm/disassembler/load_symbol_map.h"
+
 #include "version.h"
 
 
