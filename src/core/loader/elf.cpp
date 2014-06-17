@@ -5,65 +5,17 @@
 #include <string>
 
 #include "common/common.h"
-
+#include "common/file_util.h"
 #include "common/symbols.h"
+
 #include "core/mem_map.h"
 #include "core/loader/elf.h"
+#include "core/hle/kernel/kernel.h"
 
-//void bswap(Elf32_Word &w) {w = Common::swap32(w);}
-//void bswap(Elf32_Half &w) {w = Common::swap16(w);}
-
-#define bswap(w) w // Dirty bswap disable for now... 3DS is little endian, anyway
-
-static void byteswapHeader(Elf32_Ehdr &ELF_H)
-{
-    bswap(ELF_H.e_type);
-    bswap(ELF_H.e_machine);
-    bswap(ELF_H.e_ehsize);
-    bswap(ELF_H.e_phentsize);
-    bswap(ELF_H.e_phnum);
-    bswap(ELF_H.e_shentsize);
-    bswap(ELF_H.e_shnum);
-    bswap(ELF_H.e_shstrndx);
-    bswap(ELF_H.e_version);
-    bswap(ELF_H.e_entry);
-    bswap(ELF_H.e_phoff);
-    bswap(ELF_H.e_shoff);
-    bswap(ELF_H.e_flags);
-}
-
-static void byteswapSegment(Elf32_Phdr &sec)
-{
-    bswap(sec.p_align);
-    bswap(sec.p_filesz);
-    bswap(sec.p_flags);
-    bswap(sec.p_memsz);
-    bswap(sec.p_offset);
-    bswap(sec.p_paddr);
-    bswap(sec.p_vaddr);
-    bswap(sec.p_type);
-}
-
-static void byteswapSection(Elf32_Shdr &sec)
-{
-    bswap(sec.sh_addr);
-    bswap(sec.sh_addralign);
-    bswap(sec.sh_entsize);
-    bswap(sec.sh_flags);
-    bswap(sec.sh_info);
-    bswap(sec.sh_link);
-    bswap(sec.sh_name);
-    bswap(sec.sh_offset);
-    bswap(sec.sh_size);
-    bswap(sec.sh_type);
-}
-
-ElfReader::ElfReader(void *ptr)
-{
+ElfReader::ElfReader(void *ptr) {
     base = (char*)ptr;
     base32 = (u32 *)ptr;
     header = (Elf32_Ehdr*)ptr;
-    byteswapHeader(*header);
 
     segments = (Elf32_Phdr *)(base + header->e_phoff);
     sections = (Elf32_Shdr *)(base + header->e_shoff);
@@ -73,8 +25,7 @@ ElfReader::ElfReader(void *ptr)
     LoadSymbols();
 }
 
-const char *ElfReader::GetSectionName(int section) const
-{
+const char *ElfReader::GetSectionName(int section) const {
     if (sections[section].sh_type == SHT_NULL)
         return nullptr;
 
@@ -87,8 +38,7 @@ const char *ElfReader::GetSectionName(int section) const
         return nullptr;
 }
 
-bool ElfReader::LoadInto(u32 vaddr)
-{
+bool ElfReader::LoadInto(u32 vaddr) {
     DEBUG_LOG(MASTER_LOG, "String section: %i", header->e_shstrndx);
 
     // Should we relocate?
@@ -188,3 +138,48 @@ bool ElfReader::LoadSymbols()
 
     return hasSymbols;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Loader namespace
+
+namespace Loader {
+
+/**
+ * Loads an ELF file
+ * @param filename String filename of ELF file
+ * @param error_string Pointer to string to put error message if an error has occurred
+ * @return True on success, otherwise false
+ */
+bool Load_ELF(std::string& filename, std::string* error_string) {
+    std::string full_path = filename;
+    std::string path, file, extension;
+    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
+#if EMU_PLATFORM == PLATFORM_WINDOWS
+    path = ReplaceAll(path, "/", "\\");
+#endif
+    File::IOFile f(filename, "rb");
+
+    if (f.IsOpen()) {
+        u32 size = (u32)f.GetSize();
+        u8* buffer = new u8[size];
+        ElfReader* elf_reader = NULL;
+
+        f.ReadBytes(buffer, size);
+
+        elf_reader = new ElfReader(buffer);
+        elf_reader->LoadInto(0x00100000);
+
+        Kernel::LoadExec(elf_reader->GetEntryPoint());
+
+        delete[] buffer;
+        delete elf_reader;
+    } else {
+        *error_string = "Unable to open ELF file!";
+        return false;
+    }
+    f.Close();
+
+    return true;
+}
+
+} // namespace Loader

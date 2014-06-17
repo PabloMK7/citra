@@ -329,3 +329,18 @@ public:
         return bRelocate;
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Loader namespace
+
+namespace Loader {
+
+/**
+ * Loads an ELF file
+ * @param filename String filename of ELF file
+ * @param error_string Pointer to string to put error message if an error has occurred
+ * @return True on success, otherwise false
+ */
+bool Load_ELF(std::string& filename, std::string* error_string);
+
+} // namespace Loader

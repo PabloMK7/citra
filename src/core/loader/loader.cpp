@@ -2,97 +2,13 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common/common_types.h"
-#include "common/file_util.h"
-
 #include "core/loader/loader.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/system.h"
-#include "core/core.h"
-#include "core/hle/kernel/kernel.h"
-#include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Loads a CTR ELF file
-bool Load_ELF(std::string &filename) {
-    std::string full_path = filename;
-    std::string path, file, extension;
-    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-    path = ReplaceAll(path, "/", "\\");
-#endif
-    File::IOFile f(filename, "rb");
-
-    if (f.IsOpen()) {
-        u64 size = f.GetSize();
-        u8* buffer = new u8[size];
-        ElfReader* elf_reader = NULL;
-
-        f.ReadBytes(buffer, size);
-
-        elf_reader = new ElfReader(buffer);
-        elf_reader->LoadInto(0x00100000);
-
-        Kernel::LoadExec(elf_reader->GetEntryPoint());
-
-        delete[] buffer;
-        delete elf_reader;
-    } else {
-        return false;
-    }
-    f.Close();
-
-    return true;
-}
-
-/// Loads a CTR BIN file extracted from an ExeFS
-bool Load_BIN(std::string &filename) {
-    std::string full_path = filename;
-    std::string path, file, extension;
-    SplitPath(ReplaceAll(full_path, "\\", "/"), &path, &file, &extension);
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-    path = ReplaceAll(path, "/", "\\");
-#endif
-    File::IOFile f(filename, "rb");
-
-    if (f.IsOpen()) {
-        u64 size = f.GetSize();
-        u8* buffer = new u8[size];
-
-        f.ReadBytes(buffer, size);
-
-        u32 entry_point = 0x00100000; // Hardcoded, read from exheader
-        
-        const u8 *src = buffer;
-        u8 *dst = Memory::GetPointer(entry_point);
-        u32 srcSize = size;
-        u32 *s = (u32*)src;
-        u32 *d = (u32*)dst;
-        for (int j = 0; j < (int)(srcSize + 3) / 4; j++)
-        {
-            *d++ = (*s++);
-        }
-        
-        Kernel::LoadExec(entry_point);
-
-        delete[] buffer;
-    }
-    else {
-        return false;
-    }
-    f.Close();
-
-    return true;
-}
-
 namespace Loader {
-
-bool IsBootableDirectory() {
-    ERROR_LOG(TIME, "Unimplemented function!");
-    return true;
-}
 
 /**
  * Identifies the type of a bootable file
@@ -107,15 +23,7 @@ FileType IdentifyFile(std::string &filename) {
     }
     std::string extension = filename.size() >= 5 ? filename.substr(filename.size() - 4) : "";
 
-    if (File::IsDirectory(filename)) {
-        if (IsBootableDirectory()) {
-            return FILETYPE_DIRECTORY_CXI;
-        }
-        else {
-            return FILETYPE_NORMAL_DIRECTORY;
-        }
-    }
-    else if (!strcasecmp(extension.c_str(), ".elf")) {
+    if (!strcasecmp(extension.c_str(), ".elf")) {
         return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
     }
     else if (!strcasecmp(extension.c_str(), ".axf")) {
@@ -126,24 +34,6 @@ FileType IdentifyFile(std::string &filename) {
     }
     else if (!strcasecmp(extension.c_str(), ".cci")) {
         return FILETYPE_CTR_CCI; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (!strcasecmp(extension.c_str(), ".bin")) {
-        return FILETYPE_CTR_BIN;
-    }
-    else if (!strcasecmp(extension.c_str(), ".dat")) {
-        return FILETYPE_LAUNCHER_DAT;
-    }
-    else if (!strcasecmp(extension.c_str(), ".zip")) {
-        return FILETYPE_ARCHIVE_ZIP;
-    }
-    else if (!strcasecmp(extension.c_str(), ".rar")) {
-        return FILETYPE_ARCHIVE_RAR;
-    }
-    else if (!strcasecmp(extension.c_str(), ".r00")) {
-        return FILETYPE_ARCHIVE_RAR;
-    }
-    else if (!strcasecmp(extension.c_str(), ".r01")) {
-        return FILETYPE_ARCHIVE_RAR;
     }
     return FILETYPE_UNKNOWN;
 }
@@ -161,10 +51,7 @@ bool LoadFile(std::string &filename, std::string *error_string) {
     switch (IdentifyFile(filename)) {
 
     case FILETYPE_CTR_ELF:
-        return Load_ELF(filename);
-
-    case FILETYPE_CTR_BIN:
-        return Load_BIN(filename);
+        return Loader::Load_ELF(filename, error_string);
 
     case FILETYPE_CTR_CXI:
     case FILETYPE_CTR_CCI:
@@ -175,29 +62,6 @@ bool LoadFile(std::string &filename, std::string *error_string) {
         *error_string = "Error reading file";
         break;
 
-    case FILETYPE_ARCHIVE_RAR:
-#ifdef WIN32
-        *error_string = "RAR file detected (Require WINRAR)";
-#else
-        *error_string = "RAR file detected (Require UnRAR)";
-#endif
-        break;
-
-    case FILETYPE_ARCHIVE_ZIP:
-#ifdef WIN32
-        *error_string = "ZIP file detected (Require WINRAR)";
-#else
-        *error_string = "ZIP file detected (Require UnRAR)";
-#endif
-        break;
-
-    case FILETYPE_NORMAL_DIRECTORY:
-        ERROR_LOG(LOADER, "Just a directory.");
-        *error_string = "Just a directory.";
-        break;
-
-    case FILETYPE_UNKNOWN_BIN:
-    case FILETYPE_UNKNOWN_ELF:
     case FILETYPE_UNKNOWN:
     default:
         ERROR_LOG(LOADER, "Failed to identify file");
@@ -207,4 +71,4 @@ bool LoadFile(std::string &filename, std::string *error_string) {
     return false;
 }
 
-} // namespace
+} // namespace Loader

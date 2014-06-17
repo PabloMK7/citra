@@ -7,6 +7,7 @@
 #include "common/common.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// Loader namespace
 
 namespace Loader {
 
@@ -19,22 +20,8 @@ enum FileType {
     FILETYPE_CTR_ELF,
     FILETYPE_CTR_BIN,
 
-    FILETYPE_LAUNCHER_DAT,
-
-    FILETYPE_DIRECTORY_CXI,
-    
-    FILETYPE_UNKNOWN_BIN,
-    FILETYPE_UNKNOWN_ELF,
-    
-    FILETYPE_ARCHIVE_RAR,
-    FILETYPE_ARCHIVE_ZIP,
-    
-    FILETYPE_NORMAL_DIRECTORY,
-    
     FILETYPE_UNKNOWN
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Identifies the type of a bootable file
