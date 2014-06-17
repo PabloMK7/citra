@@ -312,20 +312,14 @@ bool Load_NCCH(std::string& filename, std::string* error_string) {
 
                 // Load compressed executable...
                 if (i == 0 && is_compressed) {
-                    u32 decompressed_size = LZSS_GetDecompressedSize(buffer, 
+                    u32 decompressed_size = LZSS_GetDecompressedSize(buffer,
                         exefs_header.section[i].size);
-                    u8* decompressed_buffer = new u8[decompressed_size];
 
-                    if (!LZSS_Decompress(buffer, exefs_header.section[i].size, decompressed_buffer,
+                    if (!LZSS_Decompress(buffer, exefs_header.section[i].size,
+                        Memory::GetPointer(exheader_header.codeset_info.text.address),
                         decompressed_size, error_string)) {
                         return false;
                     }
-                    // Load .code section into memory...
-                    LoadBuffer(exheader_header.codeset_info.text.address, decompressed_buffer,
-                        decompressed_size);
-
-                    delete[] decompressed_buffer;
-
                 // Load uncompressed executable...
                 } else {
                     // Load .code section into memory...
