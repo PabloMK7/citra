@@ -173,6 +173,9 @@
     <ClCompile Include="loader\loader.cpp">
       <Filter>loader</Filter>
     </ClCompile>
+    <ClCompile Include="loader\ncch.cpp">
+      <Filter>loader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -309,6 +312,9 @@
       <Filter>loader</Filter>
     </ClInclude>
     <ClInclude Include="loader\loader.h">
+      <Filter>loader</Filter>
+    </ClInclude>
+    <ClInclude Include="loader\ncch.h">
       <Filter>loader</Filter>
     </ClInclude>
   </ItemGroup>

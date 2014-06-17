@@ -183,6 +183,7 @@
     <ClCompile Include="hw\ndma.cpp" />
     <ClCompile Include="loader\elf_reader.cpp" />
     <ClCompile Include="loader\loader.cpp" />
+    <ClCompile Include="loader\ncch.cpp" />
     <ClCompile Include="mem_map.cpp" />
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="loader\elf_reader.h" />
     <ClInclude Include="loader\elf_types.h" />
     <ClInclude Include="loader\loader.h" />
+    <ClInclude Include="loader\ncch.h" />
     <ClInclude Include="mem_map.h" />
     <ClInclude Include="system.h" />
   </ItemGroup>

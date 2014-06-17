@@ -2,6 +2,7 @@ set(SRCS    core.cpp
             core_timing.cpp
             loader/elf_reader.cpp
             loader/loader.cpp
+            loader/ncch.cpp
             mem_map.cpp
             mem_map_funcs.cpp
             system.cpp
@@ -53,6 +54,7 @@ set(HEADERS core.h
             loader/elf_reader.h
             loader/elf_types.h
             loader/loader.h
+            loader/ncch.h
             mem_map.h
             system.h
             arm/disassembler/arm_disasm.h

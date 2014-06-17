@@ -7,6 +7,7 @@
 
 #include "core/loader/loader.h"
 #include "core/loader/elf_reader.h"
+#include "core/loader/ncch.h"
 #include "core/system.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
@@ -164,6 +165,10 @@ bool LoadFile(std::string &filename, std::string *error_string) {
 
     case FILETYPE_CTR_BIN:
         return Load_BIN(filename);
+
+    case FILETYPE_CTR_CXI:
+    case FILETYPE_CTR_CCI:
+        return Loader::Load_NCCH(filename, error_string);
 
     case FILETYPE_ERROR:
         ERROR_LOG(LOADER, "Could not read file");
