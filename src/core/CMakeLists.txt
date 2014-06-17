@@ -1,6 +1,6 @@
 set(SRCS    core.cpp
             core_timing.cpp
-            loader/elf_reader.cpp
+            loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
             mem_map.cpp
@@ -51,8 +51,7 @@ set(SRCS    core.cpp
 
 set(HEADERS core.h
             core_timing.h
-            loader/elf_reader.h
-            loader/elf_types.h
+            loader/elf.h
             loader/loader.h
             loader/ncch.h
             mem_map.h

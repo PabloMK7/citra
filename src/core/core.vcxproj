@@ -181,7 +181,7 @@
     <ClCompile Include="hw\gpu.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\ndma.cpp" />
-    <ClCompile Include="loader\elf_reader.cpp" />
+    <ClCompile Include="loader\elf.cpp" />
     <ClCompile Include="loader\loader.cpp" />
     <ClCompile Include="loader\ncch.cpp" />
     <ClCompile Include="mem_map.cpp" />
@@ -232,8 +232,7 @@
     <ClInclude Include="hw\gpu.h" />
     <ClInclude Include="hw\hw.h" />
     <ClInclude Include="hw\ndma.h" />
-    <ClInclude Include="loader\elf_reader.h" />
-    <ClInclude Include="loader\elf_types.h" />
+    <ClInclude Include="loader\elf.h" />
     <ClInclude Include="loader\loader.h" />
     <ClInclude Include="loader\ncch.h" />
     <ClInclude Include="mem_map.h" />

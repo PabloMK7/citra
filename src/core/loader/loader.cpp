@@ -6,7 +6,7 @@
 #include "common/file_util.h"
 
 #include "core/loader/loader.h"
-#include "core/loader/elf_reader.h"
+#include "core/loader/elf.h"
 #include "core/loader/ncch.h"
 #include "core/system.h"
 #include "core/core.h"
