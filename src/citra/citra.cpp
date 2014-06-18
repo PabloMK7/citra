@@ -16,28 +16,21 @@
 
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
-    std::string program_dir = File::GetCurrentDir();
-
     LogManager::Init();
 
+    if (argc < 2) {
+        ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
+        return -1;
+    }
+
+    std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
     System::Init(emu_window);
 
-    std::string boot_filename;
-
-    if (argc < 2) {
-        ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
-    }
-    else {
-        boot_filename = argv[1];
-    }
-    std::string error_str;
-
-    bool res = Loader::LoadFile(boot_filename, &error_str);
-
-    if (!res) {
-        ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
+    if (Loader::ResultStatus::Success != Loader::LoadFile(boot_filename)) {
+        ERROR_LOG(BOOT, "Failed to load ROM!");
+        return -1;
     }
 
     Core::RunLoop();

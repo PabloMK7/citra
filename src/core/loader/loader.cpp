@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "core/loader/loader.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
@@ -16,59 +18,60 @@ namespace Loader {
  * @todo (ShizZy) this function sucks... make it actually check file contents etc.
  * @return FileType of file
  */
-FileType IdentifyFile(std::string &filename) {
+const FileType IdentifyFile(const std::string &filename) {
     if (filename.size() == 0) {
         ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
-        return FILETYPE_ERROR;
+        return FileType::Error;
     }
     std::string extension = filename.size() >= 5 ? filename.substr(filename.size() - 4) : "";
 
     if (!strcasecmp(extension.c_str(), ".elf")) {
-        return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
+        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
     }
     else if (!strcasecmp(extension.c_str(), ".axf")) {
-        return FILETYPE_CTR_ELF; // TODO(bunnei): Do some filetype checking :p
+        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
     }
     else if (!strcasecmp(extension.c_str(), ".cxi")) {
-        return FILETYPE_CTR_CXI; // TODO(bunnei): Do some filetype checking :p
+        return FileType::CXI; // TODO(bunnei): Do some filetype checking :p
     }
     else if (!strcasecmp(extension.c_str(), ".cci")) {
-        return FILETYPE_CTR_CCI; // TODO(bunnei): Do some filetype checking :p
+        return FileType::CCI; // TODO(bunnei): Do some filetype checking :p
     }
-    return FILETYPE_UNKNOWN;
+    return FileType::Unknown;
 }
 
 /**
  * Identifies and loads a bootable file
  * @param filename String filename of bootable file
- * @param error_string Point to string to put error message if an error has occurred
- * @return True on success, otherwise false
+ * @return ResultStatus result of function
  */
-bool LoadFile(std::string &filename, std::string *error_string) {
-    INFO_LOG(LOADER, "Identifying file...");
+const ResultStatus LoadFile(std::string& filename) {
+    INFO_LOG(LOADER, "Loading file %s...", filename.c_str());
 
-    // Note that this can modify filename!
     switch (IdentifyFile(filename)) {
 
-    case FILETYPE_CTR_ELF:
-        return Loader::Load_ELF(filename, error_string);
-
-    case FILETYPE_CTR_CXI:
-    case FILETYPE_CTR_CCI:
-        return Loader::Load_NCCH(filename, error_string);
-
-    case FILETYPE_ERROR:
-        ERROR_LOG(LOADER, "Could not read file");
-        *error_string = "Error reading file";
-        break;
-
-    case FILETYPE_UNKNOWN:
-    default:
-        ERROR_LOG(LOADER, "Failed to identify file");
-        *error_string = " Failed to identify file";
-        break;
+    // Standard ELF file format...
+    case FileType::ELF: {
+        return AppLoader_ELF(filename).Load();
     }
-    return false;
+
+    // NCCH/NCSD container formats...
+    case FileType::CXI:
+    case FileType::CCI: {
+        return AppLoader_NCCH(filename).Load();
+    }
+
+    // Error occurred durring IdentifyFile...
+    case FileType::Error:
+
+    // IdentifyFile could know identify file type...
+    case FileType::Unknown:
+
+    default:
+        return ResultStatus::ErrorInvalidFormat;
+    }
+
+    return ResultStatus::Error;
 }
 
 } // namespace Loader
