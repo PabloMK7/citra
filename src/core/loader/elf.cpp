@@ -265,35 +265,24 @@ bool ElfReader::LoadInto(u32 vaddr) {
     } else {
         DEBUG_LOG(MASTER_LOG, "Prerelocated executable");
     }
-
     INFO_LOG(MASTER_LOG, "%i segments:", header->e_phnum);
 
     // First pass : Get the bits into RAM
-    u32 segmentVAddr[32];
-    u32 baseAddress = relocate ? vaddr : 0;
+    u32 segment_addr[32];
+    u32 base_addr = relocate ? vaddr : 0;
 
     for (int i = 0; i < header->e_phnum; i++) {
         Elf32_Phdr *p = segments + i;
-
-        INFO_LOG(MASTER_LOG, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr, p->p_filesz, p->p_memsz);
+        INFO_LOG(MASTER_LOG, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr, 
+            p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
-            segmentVAddr[i] = baseAddress + p->p_vaddr;
-            u32 writeAddr = segmentVAddr[i];
-
-            const u8 *src = GetSegmentPtr(i);
-            u8 *dst = Memory::GetPointer(writeAddr);
-            u32 srcSize = p->p_filesz;
-            u32 dstSize = p->p_memsz;
-            u32 *s = (u32*)src;
-            u32 *d = (u32*)dst;
-            for (int j = 0; j < (int)(srcSize + 3) / 4; j++) {
-                *d++ = (*s++);
-            }
-            INFO_LOG(MASTER_LOG, "Loadable Segment Copied to %08x, size %08x", writeAddr, p->p_memsz);
+            segment_addr[i] = base_addr + p->p_vaddr;
+            memcpy(Memory::GetPointer(segment_addr[i]), GetSegmentPtr(i), p->p_filesz);
+            INFO_LOG(MASTER_LOG, "Loadable Segment Copied to %08x, size %08x", segment_addr[i], 
+                p->p_memsz);
         }
     }
-
     INFO_LOG(MASTER_LOG, "Done loading.");
     return true;
 }
