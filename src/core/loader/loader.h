@@ -30,6 +30,7 @@ enum class ResultStatus {
     ErrorInvalidFormat,
     ErrorNotImplemented,
     ErrorNotLoaded,
+    ErrorNotUsed,
     ErrorAlreadyLoaded,
 };
 

@@ -159,12 +159,13 @@ public:
 private:
 
     /**
-     * Reads an application section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
+     * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
      * @param file Handle to file to read from
      * @param name Name of section to read out of NCCH file
      * @param buffer Buffer to read section into.
+     * @return ResultStatus result of function
      */
-    const ResultStatus LoadSection(File::IOFile& file, const char* name, 
+    const ResultStatus LoadSectionExeFS(File::IOFile& file, const char* name, 
         std::vector<u8>& buffer);
 
     /**

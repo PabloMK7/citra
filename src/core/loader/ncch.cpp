@@ -15,8 +15,8 @@
 
 namespace Loader {
 
-const int kExeFs_MaxSections    = 8;        ///< Maximum number of sections (files) in an ExeFs
-const int kExeFs_BlockSize      = 0x200;    ///< Size of ExeFS blocks (in bytes)
+static const int kMaxSections   = 8;        ///< Maximum number of sections (files) in an ExeFs
+static const int kBlockSize     = 0x200;    ///< Size of ExeFS blocks (in bytes)
 
 /**
  * Get the decompressed size of an LZSS compressed ExeFS file
@@ -132,22 +132,24 @@ const ResultStatus AppLoader_NCCH::LoadExec() const {
 }
 
 /**
- * Reads an application section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
+ * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
  * @param file Handle to file to read from
  * @param name Name of section to read out of NCCH file
  * @param buffer Buffer to read section into.
  */
-const ResultStatus AppLoader_NCCH::LoadSection(File::IOFile& file, const char* name, 
+const ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const char* name, 
     std::vector<u8>& buffer) {
-    // Iterate through the ExeFs archive until we find the .code file...
-    for (int i = 0; i < kExeFs_MaxSections; i++) {
-        INFO_LOG(LOADER, "ExeFS section %d:", i);
-        INFO_LOG(LOADER, "    name:   %s", exefs_header.section[i].name);
-        INFO_LOG(LOADER, "    offset: 0x%08X", exefs_header.section[i].offset);
-        INFO_LOG(LOADER, "    size:   0x%08X", exefs_header.section[i].size);
 
-        // Load the .code section (executable code)...
+    // Iterate through the ExeFs archive until we find the .code file...
+    for (int i = 0; i < kMaxSections; i++) {
+
+        // Load the specified section...
         if (strcmp((const char*)exefs_header.section[i].name, name) == 0) {
+            INFO_LOG(LOADER, "ExeFS section %d:", i);
+            INFO_LOG(LOADER, "    name:   %s", exefs_header.section[i].name);
+            INFO_LOG(LOADER, "    offset: 0x%08X", exefs_header.section[i].offset);
+            INFO_LOG(LOADER, "    size:   0x%08X", exefs_header.section[i].size);
+
             s64 section_offset = (exefs_header.section[i].offset + exefs_offset + 
                 sizeof(ExeFs_Header) + ncch_offset);
             file.Seek(section_offset, 0);
@@ -173,7 +175,7 @@ const ResultStatus AppLoader_NCCH::LoadSection(File::IOFile& file, const char* n
             return ResultStatus::Success;
         }
     }
-    return ResultStatus::Error;
+    return ResultStatus::ErrorNotUsed;
 } 
 
 /**
@@ -206,7 +208,8 @@ const ResultStatus AppLoader_NCCH::Load() {
         if (0 != memcmp(&ncch_header.magic, "NCCH", 4))
             return ResultStatus::ErrorInvalidFormat;
 
-        // Read ExHeader
+        // Read ExHeader...
+
         file.ReadBytes(&exheader_header, sizeof(ExHeader_Header));
 
         is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
@@ -216,9 +219,10 @@ const ResultStatus AppLoader_NCCH::Load() {
         INFO_LOG(LOADER, "Code compressed: %s", is_compressed ? "yes" : "no");
         INFO_LOG(LOADER, "Entry point:     0x%08X", entry_point);
 
-        // Read ExeFS
-        exefs_offset = ncch_header.exefs_offset * kExeFs_BlockSize;
-        u32 exefs_size = ncch_header.exefs_size * kExeFs_BlockSize;
+        // Read ExeFS...
+
+        exefs_offset = ncch_header.exefs_offset * kBlockSize;
+        u32 exefs_size = ncch_header.exefs_size * kBlockSize;
 
         INFO_LOG(LOADER, "ExeFS offset:    0x%08X", exefs_offset);
         INFO_LOG(LOADER, "ExeFS size:      0x%08X", exefs_size);
@@ -226,11 +230,12 @@ const ResultStatus AppLoader_NCCH::Load() {
         file.Seek(exefs_offset + ncch_offset, 0);
         file.ReadBytes(&exefs_header, sizeof(ExeFs_Header));
 
-        // TODO(bunnei): Check ResultStatus here...
-        LoadSection(file, ".code", code);
-        LoadSection(file, ".icon", icon);
-        LoadSection(file, ".banner", banner);
-        LoadSection(file, ".logo", logo);
+        // TODO(bunnei): Check ResultStatus of these...
+
+        LoadSectionExeFS(file, ".code", code);
+        LoadSectionExeFS(file, "banner", banner);
+        LoadSectionExeFS(file, "icon", icon);
+        LoadSectionExeFS(file, "logo", logo);
 
         is_loaded = true; // Set state to loaded
 
