@@ -342,7 +342,7 @@ bool ElfReader::LoadSymbols() {
 namespace Loader {
 
 /// AppLoader_ELF constructor
-AppLoader_ELF::AppLoader_ELF(std::string& filename) : is_loaded(false) {
+AppLoader_ELF::AppLoader_ELF(const std::string& filename) : is_loaded(false) {
     this->filename = filename;
 }
 
@@ -356,7 +356,7 @@ AppLoader_ELF::~AppLoader_ELF() {
  * @todo Move NCSD parsing out of here and create a separate function for loading these
  * @return True on success, otherwise false
  */
-const ResultStatus AppLoader_ELF::Load() {
+ResultStatus AppLoader_ELF::Load() {
     INFO_LOG(LOADER, "Loading ELF file %s...", filename.c_str());
 
     if (is_loaded)

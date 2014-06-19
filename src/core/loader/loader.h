@@ -44,7 +44,7 @@ public:
      * Load the application
      * @return ResultStatus result of function
      */
-    virtual const ResultStatus Load() = 0;
+    virtual ResultStatus Load() = 0;
 
     /**
      * Get the code (typically .code section) of the application
@@ -109,13 +109,13 @@ protected:
  * @param filename String filename of bootable file
  * @return FileType of file
  */
-const FileType IdentifyFile(const std::string &filename);
+FileType IdentifyFile(const std::string &filename);
 
 /**
  * Identifies and loads a bootable file
  * @param filename String filename of bootable file
  * @return ResultStatus result of function
  */
-const ResultStatus LoadFile(std::string& filename);
+ResultStatus LoadFile(const std::string& filename);
 
 } // namespace

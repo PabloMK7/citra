@@ -102,7 +102,7 @@ bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 
 // AppLoader_NCCH class
 
 /// AppLoader_NCCH constructor
-AppLoader_NCCH::AppLoader_NCCH(std::string& filename) {
+AppLoader_NCCH::AppLoader_NCCH(const std::string& filename) {
     this->filename = filename;
     is_loaded = false;
     is_compressed = false;
@@ -119,7 +119,7 @@ AppLoader_NCCH::~AppLoader_NCCH() {
  * Loads .code section into memory for booting
  * @return ResultStatus result of function
  */
-const ResultStatus AppLoader_NCCH::LoadExec() const {
+ResultStatus AppLoader_NCCH::LoadExec() const {
     if (!is_loaded) 
         return ResultStatus::ErrorNotLoaded;
 
@@ -137,7 +137,7 @@ const ResultStatus AppLoader_NCCH::LoadExec() const {
  * @param name Name of section to read out of NCCH file
  * @param buffer Buffer to read section into.
  */
-const ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const char* name, 
+ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const char* name, 
     std::vector<u8>& buffer) {
 
     // Iterate through the ExeFs archive until we find the .code file...
@@ -183,7 +183,7 @@ const ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const ch
  * @param file Handle to file to read from
  * @return ResultStatus result of function
  */
-const ResultStatus AppLoader_NCCH::LoadRomFS(File::IOFile& file) {
+ResultStatus AppLoader_NCCH::LoadRomFS(File::IOFile& file) {
     // Check if the NCCH has a RomFS...
     if (ncch_header.romfs_offset != 0 && ncch_header.romfs_size != 0) {
         u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
@@ -210,7 +210,7 @@ const ResultStatus AppLoader_NCCH::LoadRomFS(File::IOFile& file) {
  * @todo Move NCSD parsing out of here and create a separate function for loading these
  * @return True on success, otherwise false
  */
-const ResultStatus AppLoader_NCCH::Load() {
+ResultStatus AppLoader_NCCH::Load() {
     INFO_LOG(LOADER, "Loading NCCH file %s...", filename.c_str());
 
     if (is_loaded)

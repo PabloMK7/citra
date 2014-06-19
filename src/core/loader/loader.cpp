@@ -18,7 +18,7 @@ namespace Loader {
  * @todo (ShizZy) this function sucks... make it actually check file contents etc.
  * @return FileType of file
  */
-const FileType IdentifyFile(const std::string &filename) {
+FileType IdentifyFile(const std::string &filename) {
     if (filename.size() == 0) {
         ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
         return FileType::Error;
@@ -45,7 +45,7 @@ const FileType IdentifyFile(const std::string &filename) {
  * @param filename String filename of bootable file
  * @return ResultStatus result of function
  */
-const ResultStatus LoadFile(std::string& filename) {
+ResultStatus LoadFile(const std::string& filename) {
     INFO_LOG(LOADER, "Loading file %s...", filename.c_str());
 
     switch (IdentifyFile(filename)) {

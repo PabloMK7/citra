@@ -147,14 +147,14 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class AppLoader_NCCH : public AppLoader {
 public:
-    AppLoader_NCCH(std::string& filename);
+    AppLoader_NCCH(const std::string& filename);
     ~AppLoader_NCCH();
 
     /**
      * Load the application
      * @return ResultStatus result of function
      */
-    const ResultStatus Load();
+    ResultStatus Load();
 
 private:
 
@@ -165,21 +165,20 @@ private:
      * @param buffer Buffer to read section into.
      * @return ResultStatus result of function
      */
-    const ResultStatus LoadSectionExeFS(File::IOFile& file, const char* name, 
-        std::vector<u8>& buffer);
+    ResultStatus LoadSectionExeFS(File::IOFile& file, const char* name, std::vector<u8>& buffer);
 
     /**
      * Reads RomFS of an NCCH file into AppLoader
      * @param file Handle to file to read from
      * @return ResultStatus result of function
      */
-    const ResultStatus LoadRomFS(File::IOFile& file);
+    ResultStatus LoadRomFS(File::IOFile& file);
 
     /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
-    const ResultStatus LoadExec() const;
+    ResultStatus LoadExec() const;
 
     std::string     filename;
     bool            is_loaded;
