@@ -179,6 +179,32 @@ const ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const ch
 } 
 
 /**
+ * Reads RomFS of an NCCH file into AppLoader
+ * @param file Handle to file to read from
+ * @return ResultStatus result of function
+ */
+const ResultStatus AppLoader_NCCH::LoadRomFS(File::IOFile& file) {
+    // Check if the NCCH has a RomFS...
+    if (ncch_header.romfs_offset != 0 && ncch_header.romfs_size != 0) {
+        u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
+        u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
+
+        INFO_LOG(LOADER, "RomFS offset:    0x%08X", romfs_offset);
+        INFO_LOG(LOADER, "RomFS size:      0x%08X", romfs_size);
+
+        romfs.resize(romfs_size);
+
+        file.Seek(romfs_offset, 0);
+        file.ReadBytes(&romfs[0], romfs_size);
+
+        return ResultStatus::Success;
+    } else {
+        NOTICE_LOG(LOADER, "RomFS unused");
+    }
+    return ResultStatus::ErrorNotUsed;
+}
+
+/**
  * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
  * @param error_string Pointer to string to put error message if an error has occurred
  * @todo Move NCSD parsing out of here and create a separate function for loading these
@@ -193,7 +219,6 @@ const ResultStatus AppLoader_NCCH::Load() {
     File::IOFile file(filename, "rb");
 
     if (file.IsOpen()) {
-        NCCH_Header ncch_header;
         file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
 
         // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
@@ -236,6 +261,8 @@ const ResultStatus AppLoader_NCCH::Load() {
         LoadSectionExeFS(file, "banner", banner);
         LoadSectionExeFS(file, "icon", icon);
         LoadSectionExeFS(file, "logo", logo);
+
+        LoadRomFS(file);
 
         is_loaded = true; // Set state to loaded
 

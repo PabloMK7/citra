@@ -169,6 +169,13 @@ private:
         std::vector<u8>& buffer);
 
     /**
+     * Reads RomFS of an NCCH file into AppLoader
+     * @param file Handle to file to read from
+     * @return ResultStatus result of function
+     */
+    const ResultStatus LoadRomFS(File::IOFile& file);
+
+    /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
@@ -182,6 +189,7 @@ private:
     u32             ncch_offset; // Offset to NCCH header, can be 0 or after NCSD header
     u32             exefs_offset;
     
+    NCCH_Header     ncch_header;
     ExeFs_Header    exefs_header;
     ExHeader_Header exheader_header;
 };
