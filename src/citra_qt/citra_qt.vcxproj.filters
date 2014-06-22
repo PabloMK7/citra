@@ -95,9 +95,6 @@
     <ClInclude Include="config\controller_config_util.hxx">
       <Filter>config</Filter>
     </ClInclude>
-    <ClInclude Include="ui_controller_config.h">
-      <Filter>config</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <UIC Include="hotkeys.ui" />
