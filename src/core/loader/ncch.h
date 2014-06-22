@@ -156,35 +156,66 @@ public:
      */
     ResultStatus Load();
 
+    /**
+     * Get the code (typically .code section) of the application
+     * @param error ResultStatus result of function
+     * @return Reference to code buffer
+     */
+    const std::vector<u8>& ReadCode(ResultStatus& error);
+
+    /**
+     * Get the icon (typically icon section) of the application
+     * @param error ResultStatus result of function
+     * @return Reference to icon buffer
+     */
+    const std::vector<u8>& ReadIcon(ResultStatus& error);
+
+    /**
+     * Get the banner (typically banner section) of the application
+     * @param error ResultStatus result of function
+     * @return Reference to banner buffer
+     */
+    const std::vector<u8>& ReadBanner(ResultStatus& error);
+
+    /**
+     * Get the logo (typically logo section) of the application
+     * @param error ResultStatus result of function
+     * @return Reference to logo buffer
+     */
+    const std::vector<u8>& ReadLogo(ResultStatus& error);
+
+    /**
+     * Get the RomFs archive of the application
+     * @param error ResultStatus result of function
+     * @return Reference to RomFs archive buffer
+     */
+    const std::vector<u8>& ReadRomFS(ResultStatus& error);
+
 private:
 
     /**
      * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
-     * @param file Handle to file to read from
      * @param name Name of section to read out of NCCH file
-     * @param buffer Buffer to read section into.
-     * @return ResultStatus result of function
+     * @param buffer Vector to read data into
+     * @param error ResultStatus result of function
+     * @return Reference to buffer of data that was read
      */
-    ResultStatus LoadSectionExeFS(File::IOFile& file, const char* name, std::vector<u8>& buffer);
-
-    /**
-     * Reads RomFS of an NCCH file into AppLoader
-     * @param file Handle to file to read from
-     * @return ResultStatus result of function
-     */
-    ResultStatus LoadRomFS(File::IOFile& file);
+    const std::vector<u8>& LoadSectionExeFS(const char* name, std::vector<u8>& buffer, 
+        ResultStatus& error);
 
     /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
-    ResultStatus LoadExec() const;
+    ResultStatus LoadExec();
 
+    File::IOFile    file;
     std::string     filename;
+
     bool            is_loaded;
     bool            is_compressed;
-    u32             entry_point;
 
+    u32             entry_point;
     u32             ncch_offset; // Offset to NCCH header, can be 0 or after NCSD header
     u32             exefs_offset;
     

@@ -51,37 +51,37 @@ public:
      * @param error ResultStatus result of function
      * @return Reference to code buffer
      */
-    virtual const std::vector<u8>& GetCode(ResultStatus& error) const {
+    virtual const std::vector<u8>& ReadCode(ResultStatus& error) const {
         error = ResultStatus::ErrorNotImplemented;
         return code;
     }
 
     /**
-     * Get the icon (typically .icon section) of the application
+     * Get the icon (typically icon section) of the application
      * @param error ResultStatus result of function
      * @return Reference to icon buffer
      */
-    virtual const std::vector<u8>& GetIcon(ResultStatus& error) const {
+    virtual const std::vector<u8>& ReadIcon(ResultStatus& error) const {
         error = ResultStatus::ErrorNotImplemented;
         return icon;
     }
 
     /**
-     * Get the banner (typically .banner section) of the application
+     * Get the banner (typically banner section) of the application
      * @param error ResultStatus result of function
      * @return Reference to banner buffer
      */
-    virtual const std::vector<u8>& GetBanner(ResultStatus& error) const {
+    virtual const std::vector<u8>& ReadBanner(ResultStatus& error) const {
         error = ResultStatus::ErrorNotImplemented;
         return banner;
     }
 
     /**
-     * Get the logo (typically .logo section) of the application
+     * Get the logo (typically logo section) of the application
      * @param error ResultStatus result of function
      * @return Reference to logo buffer
      */
-    virtual const std::vector<u8>& GetLogo(ResultStatus& error) const {
+    virtual const std::vector<u8>& ReadLogo(ResultStatus& error) const {
         error = ResultStatus::ErrorNotImplemented;
         return logo;
     }
@@ -91,7 +91,7 @@ public:
      * @param error ResultStatus result of function
      * @return Reference to RomFs archive buffer
      */
-    virtual const std::vector<u8>& GetRomFs(ResultStatus error) const {
+    virtual const std::vector<u8>& ReadRomFS(ResultStatus& error) const {
         error = ResultStatus::ErrorNotImplemented;
         return romfs;
     }

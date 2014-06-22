@@ -113,36 +113,39 @@ AppLoader_NCCH::AppLoader_NCCH(const std::string& filename) {
 
 /// AppLoader_NCCH destructor
 AppLoader_NCCH::~AppLoader_NCCH() {
+    if (file.IsOpen())
+        file.Close();
 }
 
 /**
  * Loads .code section into memory for booting
  * @return ResultStatus result of function
  */
-ResultStatus AppLoader_NCCH::LoadExec() const {
+ResultStatus AppLoader_NCCH::LoadExec() {
     if (!is_loaded) 
         return ResultStatus::ErrorNotLoaded;
 
-    for (std::vector<u8>::size_type i = 0; i != code.size(); i++) {
-        Memory::Write8(entry_point + i, code[i]);
+    ResultStatus res;
+    code = ReadCode(res);
+
+    if (ResultStatus::Success == res) {
+        Memory::WriteBlock(entry_point, &code[0], code.size());
+        Kernel::LoadExec(entry_point);
     }
-    Kernel::LoadExec(entry_point);
-    
-    return ResultStatus::Success;
+    return res;
 }
 
 /**
  * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
- * @param file Handle to file to read from
  * @param name Name of section to read out of NCCH file
- * @param buffer Buffer to read section into.
+ * @param buffer Vector to read data into
+ * @param error ResultStatus result of function
+ * @return Reference to buffer of data that was read
  */
-ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const char* name, 
-    std::vector<u8>& buffer) {
-
+const std::vector<u8>& AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer, 
+    ResultStatus& error) {
     // Iterate through the ExeFs archive until we find the .code file...
     for (int i = 0; i < kMaxSections; i++) {
-
         // Load the specified section...
         if (strcmp((const char*)exefs_header.section[i].name, name) == 0) {
             INFO_LOG(LOADER, "ExeFS section %d:", i);
@@ -161,48 +164,26 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(File::IOFile& file, const char* na
                 file.ReadBytes(&temp_buffer[0], exefs_header.section[i].size);
 
                 // Decompress .code section...
-                u32 decompressed_size = LZSS_GetDecompressedSize(&temp_buffer[0], exefs_header.section[i].size);
+                u32 decompressed_size = LZSS_GetDecompressedSize(&temp_buffer[0], 
+                    exefs_header.section[i].size);
                 buffer.resize(decompressed_size);
-                if (!LZSS_Decompress(&temp_buffer[0], exefs_header.section[i].size, &buffer[0], 
+                if (!LZSS_Decompress(&temp_buffer[0], exefs_header.section[i].size, &buffer[0],
                     decompressed_size)) {
-                    return ResultStatus::ErrorInvalidFormat;
+                    error = ResultStatus::ErrorInvalidFormat;
+                    return buffer;
                 }
             // Section is uncompressed...
             } else {
                 buffer.resize(exefs_header.section[i].size);
                 file.ReadBytes(&buffer[0], exefs_header.section[i].size);
             }
-            return ResultStatus::Success;
+            error = ResultStatus::Success;
+            return buffer;
         }
     }
-    return ResultStatus::ErrorNotUsed;
+    error = ResultStatus::ErrorNotUsed;
+    return buffer;
 } 
-
-/**
- * Reads RomFS of an NCCH file into AppLoader
- * @param file Handle to file to read from
- * @return ResultStatus result of function
- */
-ResultStatus AppLoader_NCCH::LoadRomFS(File::IOFile& file) {
-    // Check if the NCCH has a RomFS...
-    if (ncch_header.romfs_offset != 0 && ncch_header.romfs_size != 0) {
-        u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
-        u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
-
-        INFO_LOG(LOADER, "RomFS offset:    0x%08X", romfs_offset);
-        INFO_LOG(LOADER, "RomFS size:      0x%08X", romfs_size);
-
-        romfs.resize(romfs_size);
-
-        file.Seek(romfs_offset, 0);
-        file.ReadBytes(&romfs[0], romfs_size);
-
-        return ResultStatus::Success;
-    } else {
-        NOTICE_LOG(LOADER, "RomFS unused");
-    }
-    return ResultStatus::ErrorNotUsed;
-}
 
 /**
  * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
@@ -216,7 +197,7 @@ ResultStatus AppLoader_NCCH::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    File::IOFile file(filename, "rb");
+    file = File::IOFile(filename, "rb");
 
     if (file.IsOpen()) {
         file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
@@ -255,15 +236,6 @@ ResultStatus AppLoader_NCCH::Load() {
         file.Seek(exefs_offset + ncch_offset, 0);
         file.ReadBytes(&exefs_header, sizeof(ExeFs_Header));
 
-        // TODO(bunnei): Check ResultStatus of these...
-
-        LoadSectionExeFS(file, ".code", code);
-        LoadSectionExeFS(file, "banner", banner);
-        LoadSectionExeFS(file, "icon", icon);
-        LoadSectionExeFS(file, "logo", logo);
-
-        LoadRomFS(file);
-
         is_loaded = true; // Set state to loaded
 
         LoadExec(); // Load the executable into memory for booting
@@ -271,6 +243,70 @@ ResultStatus AppLoader_NCCH::Load() {
         return ResultStatus::Success;
     }
     return ResultStatus::Error;
+}
+
+/**
+ * Get the code (typically .code section) of the application
+ * @param error ResultStatus result of function
+ * @return Reference to code buffer
+ */
+const std::vector<u8>& AppLoader_NCCH::ReadCode(ResultStatus& error) {
+    return LoadSectionExeFS(".code", code, error);
+}
+
+/**
+ * Get the icon (typically icon section) of the application
+ * @param error ResultStatus result of function
+ * @return Reference to icon buffer
+ */
+const std::vector<u8>& AppLoader_NCCH::ReadIcon(ResultStatus& error) {
+    return LoadSectionExeFS("icon", icon, error);
+}
+
+/**
+ * Get the banner (typically banner section) of the application
+ * @param error ResultStatus result of function
+ * @return Reference to banner buffer
+ */
+const std::vector<u8>& AppLoader_NCCH::ReadBanner(ResultStatus& error) {
+    return LoadSectionExeFS("banner", banner, error);
+}
+
+/**
+ * Get the logo (typically logo section) of the application
+ * @param error ResultStatus result of function
+ * @return Reference to logo buffer
+ */
+const std::vector<u8>& AppLoader_NCCH::ReadLogo(ResultStatus& error) {
+    return LoadSectionExeFS("logo", logo, error);
+}
+
+/**
+ * Get the RomFs archive of the application
+ * @param error ResultStatus result of function
+ * @return Reference to RomFs archive buffer
+ */
+const std::vector<u8>& AppLoader_NCCH::ReadRomFS(ResultStatus& error) {
+    // Check if the NCCH has a RomFS...
+    if (ncch_header.romfs_offset != 0 && ncch_header.romfs_size != 0) {
+        u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
+        u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
+
+        INFO_LOG(LOADER, "RomFS offset:    0x%08X", romfs_offset);
+        INFO_LOG(LOADER, "RomFS size:      0x%08X", romfs_size);
+
+        romfs.resize(romfs_size);
+
+        file.Seek(romfs_offset, 0);
+        file.ReadBytes(&romfs[0], romfs_size);
+
+        error = ResultStatus::Success;
+        return romfs;
+    } else {
+        NOTICE_LOG(LOADER, "RomFS unused");
+    }
+    error = ResultStatus::ErrorNotUsed;
+    return romfs;
 }
 
 } // namespace Loader
