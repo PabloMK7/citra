@@ -1,4 +1,4 @@
-#include "../ui_registers.h"
+#include "ui_registers.h"
 
 #include <QDockWidget>
 #include <QTreeWidgetItem>

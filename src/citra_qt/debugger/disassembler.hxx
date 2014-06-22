@@ -1,5 +1,5 @@
 #include <QDockWidget>
-#include "../ui_disassembler.h"
+#include "ui_disassembler.h"
 
 #include "common/common.h"
 #include "common/break_points.h"

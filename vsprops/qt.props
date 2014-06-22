@@ -7,7 +7,7 @@
     <QtBinaryDir>$(QTDIR)\bin\</QtBinaryDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(QtIncludeDir);$(QtIncludeDir)QtGui;$(QtIncludeDir)QtCore;$(QtIncludeDir)Qt;$(QtIncludeDir)QtOpenGL;$(QtIncludeDir)QtANGLE;$(QtIncludeDir)QtWidgets;$(IncludePath)</IncludePath>
+    <IncludePath>$(QtIncludeDir);$(QtIncludeDir)QtGui;$(QtIncludeDir)QtCore;$(QtIncludeDir)Qt;$(QtIncludeDir)QtOpenGL;$(QtIncludeDir)QtANGLE;$(QtIncludeDir)QtWidgets;$(ProjectDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(QtLibraryDir);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>

@@ -25,3 +25,6 @@ bin/
 
 # Generated source files
 src/common/scm_rev.cpp
+
+# Generated header files
+src/citra_qt/ui_*.h
