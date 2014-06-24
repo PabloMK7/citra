@@ -78,6 +78,9 @@ public:
 
     void GXCommandProcessed(u8* command_data)
     {
+        if (observers.empty())
+            return;
+
         gx_command_history.push_back(GSP_GPU::GXCommand());
         GSP_GPU::GXCommand& cmd = gx_command_history[gx_command_history.size()-1];
 
@@ -91,6 +94,9 @@ public:
 
     void CommandListCalled(u32 address, u32* command_list, u32 size_in_words)
     {
+        if (observers.empty())
+            return;
+
         PicaCommandList cmdlist;
         for (u32* parse_pointer = command_list; parse_pointer < command_list + size_in_words;)
         {
