@@ -162,7 +162,6 @@
     <ClCompile Include="arm\interpreter\vfp\vfpsingle.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="core_timing.cpp" />
-    <ClCompile Include="elf\elf_reader.cpp" />
     <ClCompile Include="file_sys\directory_file_system.cpp" />
     <ClCompile Include="file_sys\meta_file_system.cpp" />
     <ClCompile Include="hle\config_mem.cpp" />
@@ -182,7 +181,9 @@
     <ClCompile Include="hw\gpu.cpp" />
     <ClCompile Include="hw\hw.cpp" />
     <ClCompile Include="hw\ndma.cpp" />
-    <ClCompile Include="loader.cpp" />
+    <ClCompile Include="loader\elf.cpp" />
+    <ClCompile Include="loader\loader.cpp" />
+    <ClCompile Include="loader\ncch.cpp" />
     <ClCompile Include="mem_map.cpp" />
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
@@ -210,8 +211,6 @@
     <ClInclude Include="arm\interpreter\vfp\vfp_helper.h" />
     <ClInclude Include="core.h" />
     <ClInclude Include="core_timing.h" />
-    <ClInclude Include="elf\elf_reader.h" />
-    <ClInclude Include="elf\elf_types.h" />
     <ClInclude Include="file_sys\directory_file_system.h" />
     <ClInclude Include="file_sys\file_sys.h" />
     <ClInclude Include="file_sys\meta_file_system.h" />
@@ -233,7 +232,9 @@
     <ClInclude Include="hw\gpu.h" />
     <ClInclude Include="hw\hw.h" />
     <ClInclude Include="hw\ndma.h" />
-    <ClInclude Include="loader.h" />
+    <ClInclude Include="loader\elf.h" />
+    <ClInclude Include="loader\loader.h" />
+    <ClInclude Include="loader\ncch.h" />
     <ClInclude Include="mem_map.h" />
     <ClInclude Include="system.h" />
   </ItemGroup>

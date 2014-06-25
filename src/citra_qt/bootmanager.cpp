@@ -5,7 +5,7 @@
 #include "bootmanager.hxx"
 
 #include "core/core.h"
-#include "core/loader.h"
+#include "core/loader/loader.h"
 #include "core/hw/hw.h"
 
 #include "video_core/video_core.h"

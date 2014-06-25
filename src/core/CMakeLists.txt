@@ -1,6 +1,8 @@
 set(SRCS    core.cpp
             core_timing.cpp
-            loader.cpp
+            loader/elf.cpp
+            loader/loader.cpp
+            loader/ncch.cpp
             mem_map.cpp
             mem_map_funcs.cpp
             system.cpp
@@ -27,7 +29,6 @@ set(SRCS    core.cpp
             arm/interpreter/mmu/tlb.cpp
             arm/interpreter/mmu/wb.cpp
             arm/interpreter/mmu/xscale_copro.cpp
-            elf/elf_reader.cpp
             file_sys/directory_file_system.cpp
             file_sys/meta_file_system.cpp
             hle/hle.cpp
@@ -50,7 +51,9 @@ set(SRCS    core.cpp
 
 set(HEADERS core.h
             core_timing.h
-            loader.h
+            loader/elf.h
+            loader/loader.h
+            loader/ncch.h
             mem_map.h
             system.h
             arm/disassembler/arm_disasm.h
@@ -72,8 +75,6 @@ set(HEADERS core.h
             arm/interpreter/vfp/asm_vfp.h
             arm/interpreter/vfp/vfp.h
             arm/interpreter/vfp/vfp_helper.h
-            elf/elf_reader.h
-            elf/elf_types.h
             file_sys/directory_file_system.h
             file_sys/file_sys.h
             file_sys/meta_file_system.h

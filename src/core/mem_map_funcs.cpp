@@ -293,4 +293,16 @@ void Write64(const u32 addr, const u64 data) {
     _Write<u64_le>(addr, data);
 }
 
+void WriteBlock(const u32 addr, const u8* data, const int size) {
+    int offset = 0;
+    while (offset < (size & ~3))
+        Write32(addr + offset, *(u32*)&data[offset += 4]);
+
+    if (size & 2)
+        Write16(addr + offset, *(u16*)&data[offset += 2]);
+
+    if (size & 1)
+        Write8(addr + offset, data[offset]);
+}
+
 } // namespace

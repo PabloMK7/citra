@@ -16,9 +16,6 @@
     <Filter Include="hw">
       <UniqueIdentifier>{d1158fc4-3e0f-431f-9d3b-f30bbfeb4ad5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="elf">
-      <UniqueIdentifier>{7ae34319-6d72-4d12-bc62-9b438ba9241f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="hle">
       <UniqueIdentifier>{8b62769e-3e2a-4a57-a7bc-b3b2933c2bc7}</UniqueIdentifier>
     </Filter>
@@ -33,6 +30,9 @@
     </Filter>
     <Filter Include="hle\kernel">
       <UniqueIdentifier>{8089d94b-5faa-43dc-854b-ffd2fa2e7fe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="loader">
+      <UniqueIdentifier>{491d5558-5f3a-4283-8ba4-0a58b1984e37}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -72,11 +72,7 @@
     <ClCompile Include="hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
-    <ClCompile Include="elf\elf_reader.cpp">
-      <Filter>elf</Filter>
-    </ClCompile>
     <ClCompile Include="core.cpp" />
-    <ClCompile Include="loader.cpp" />
     <ClCompile Include="mem_map.cpp" />
     <ClCompile Include="mem_map_funcs.cpp" />
     <ClCompile Include="system.cpp" />
@@ -171,6 +167,15 @@
     <ClCompile Include="hle\service\ndm.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="loader\loader.cpp">
+      <Filter>loader</Filter>
+    </ClCompile>
+    <ClCompile Include="loader\ncch.cpp">
+      <Filter>loader</Filter>
+    </ClCompile>
+    <ClCompile Include="loader\elf.cpp">
+      <Filter>loader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -212,18 +217,11 @@
     <ClInclude Include="hw\hw.h">
       <Filter>hw</Filter>
     </ClInclude>
-    <ClInclude Include="elf\elf_reader.h">
-      <Filter>elf</Filter>
-    </ClInclude>
-    <ClInclude Include="elf\elf_types.h">
-      <Filter>elf</Filter>
-    </ClInclude>
     <ClInclude Include="arm\arm_interface.h">
       <Filter>arm</Filter>
     </ClInclude>
     <ClInclude Include="core.h" />
     <ClInclude Include="core_timing.h" />
-    <ClInclude Include="loader.h" />
     <ClInclude Include="mem_map.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="hle\hle.h">
@@ -306,6 +304,15 @@
     </ClInclude>
     <ClInclude Include="hle\service\ndm.h">
       <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="loader\loader.h">
+      <Filter>loader</Filter>
+    </ClInclude>
+    <ClInclude Include="loader\ncch.h">
+      <Filter>loader</Filter>
+    </ClInclude>
+    <ClInclude Include="loader\elf.h">
+      <Filter>loader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

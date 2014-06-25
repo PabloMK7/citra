@@ -139,6 +139,8 @@ void Write8(const u32 addr, const u8 data);
 void Write16(const u32 addr, const u16 data);
 void Write32(const u32 addr, const u32 data);
 
+void WriteBlock(const u32 addr, const u8* data, const int size);
+
 u8* GetPointer(const u32 Address);
 
 /**

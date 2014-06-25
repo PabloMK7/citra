@@ -23,9 +23,10 @@
 #include "debugger/graphics_cmdlists.hxx"
 
 #include "core/system.h"
-#include "core/loader.h"
 #include "core/core.h"
+#include "core/loader/loader.h"
 #include "core/arm/disassembler/load_symbol_map.h"
+
 #include "version.h"
 
 
@@ -134,11 +135,8 @@ void GMainWindow::BootGame(const char* filename)
 
     // Load a game or die...
     std::string boot_filename = filename;
-    std::string error_str;
-    bool res = Loader::LoadFile(boot_filename, &error_str);
-
-    if (!res) {
-        ERROR_LOG(BOOT, "Failed to load ROM: %s", error_str.c_str());
+    if (Loader::ResultStatus::Success != Loader::LoadFile(boot_filename)) {
+        ERROR_LOG(BOOT, "Failed to load ROM!");
     }
 
     disasmWidget->Init();
