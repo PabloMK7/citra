@@ -63,12 +63,6 @@
     <ClCompile Include="arm\interpreter\thumbemu.cpp">
       <Filter>arm\interpreter</Filter>
     </ClCompile>
-    <ClCompile Include="file_sys\directory_file_system.cpp">
-      <Filter>file_sys</Filter>
-    </ClCompile>
-    <ClCompile Include="file_sys\meta_file_system.cpp">
-      <Filter>file_sys</Filter>
-    </ClCompile>
     <ClCompile Include="hw\hw.cpp">
       <Filter>hw</Filter>
     </ClCompile>
@@ -205,13 +199,7 @@
     <ClInclude Include="arm\interpreter\skyeye_defs.h">
       <Filter>arm\interpreter</Filter>
     </ClInclude>
-    <ClInclude Include="file_sys\directory_file_system.h">
-      <Filter>file_sys</Filter>
-    </ClInclude>
     <ClInclude Include="file_sys\file_sys.h">
-      <Filter>file_sys</Filter>
-    </ClInclude>
-    <ClInclude Include="file_sys\meta_file_system.h">
       <Filter>file_sys</Filter>
     </ClInclude>
     <ClInclude Include="hw\hw.h">

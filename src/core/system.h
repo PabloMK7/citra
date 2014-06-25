@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/emu_window.h"
-#include "core/file_sys/meta_file_system.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +23,6 @@ typedef enum {
 } State;
 
 extern volatile State g_state;
-extern MetaFileSystem g_ctr_file_system;
 
 void UpdateState(State state);
 void Init(EmuWindow* emu_window);

@@ -15,7 +15,6 @@
 namespace System {
 
 volatile State g_state;
-MetaFileSystem g_ctr_file_system;
 
 void UpdateState(State state) {
 }
@@ -45,7 +44,6 @@ void Shutdown() {
     CoreTiming::Shutdown();
     VideoCore::Shutdown();
     Kernel::Shutdown();
-    g_ctr_file_system.Shutdown();
 }
 
 } // namespace
