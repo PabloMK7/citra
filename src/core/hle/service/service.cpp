@@ -10,6 +10,7 @@
 
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
+#include "core/hle/service/fs.h"
 #include "core/hle/service/gsp.h"
 #include "core/hle/service/hid.h"
 #include "core/hle/service/ndm.h"
@@ -71,6 +72,7 @@ void Init() {
     
     g_manager->AddService(new SRV::Interface);
     g_manager->AddService(new APT_U::Interface);
+    g_manager->AddService(new FS_User::Interface);
     g_manager->AddService(new GSP_GPU::Interface);
     g_manager->AddService(new HID_User::Interface);
     g_manager->AddService(new NDM_U::Interface);

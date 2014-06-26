@@ -39,6 +39,7 @@ set(SRCS    core.cpp
             hle/kernel/mutex.cpp
             hle/kernel/thread.cpp
             hle/service/apt.cpp
+            hle/service/fs.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
             hle/service/ndm.cpp
@@ -85,6 +86,7 @@ set(HEADERS core.h
             hle/kernel/thread.h
             hle/function_wrappers.h
             hle/service/apt.h
+            hle/service/fs.h
             hle/service/gsp.h
             hle/service/hid.h
             hle/service/service.h

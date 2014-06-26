@@ -171,6 +171,7 @@
     <ClCompile Include="hle\kernel\mutex.cpp" />
     <ClCompile Include="hle\kernel\thread.cpp" />
     <ClCompile Include="hle\service\apt.cpp" />
+    <ClCompile Include="hle\service\fs.cpp" />
     <ClCompile Include="hle\service\gsp.cpp" />
     <ClCompile Include="hle\service\hid.cpp" />
     <ClCompile Include="hle\service\ndm.cpp" />
@@ -221,6 +222,7 @@
     <ClInclude Include="hle\kernel\mutex.h" />
     <ClInclude Include="hle\kernel\thread.h" />
     <ClInclude Include="hle\service\apt.h" />
+    <ClInclude Include="hle\service\fs.h" />
     <ClInclude Include="hle\service\gsp.h" />
     <ClInclude Include="hle\service\hid.h" />
     <ClInclude Include="hle\service\ndm.h" />
