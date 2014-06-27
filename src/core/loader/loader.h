@@ -48,60 +48,48 @@ public:
 
     /**
      * Get the code (typically .code section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to code buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    virtual const std::vector<u8>& ReadCode(ResultStatus& error) const {
-        error = ResultStatus::ErrorNotImplemented;
-        return code;
+    virtual ResultStatus ReadCode(std::vector<u8>& buffer) {
+        return ResultStatus::ErrorNotImplemented;
     }
 
     /**
      * Get the icon (typically icon section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to icon buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    virtual const std::vector<u8>& ReadIcon(ResultStatus& error) const {
-        error = ResultStatus::ErrorNotImplemented;
-        return icon;
+    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) {
+        return ResultStatus::ErrorNotImplemented;
     }
 
     /**
      * Get the banner (typically banner section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to banner buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    virtual const std::vector<u8>& ReadBanner(ResultStatus& error) const {
-        error = ResultStatus::ErrorNotImplemented;
-        return banner;
+    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) {
+        return ResultStatus::ErrorNotImplemented;
     }
 
     /**
      * Get the logo (typically logo section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to logo buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    virtual const std::vector<u8>& ReadLogo(ResultStatus& error) const {
-        error = ResultStatus::ErrorNotImplemented;
-        return logo;
+    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) {
+        return ResultStatus::ErrorNotImplemented;
     }
 
     /**
-     * Get the RomFs archive of the application
-     * @param error ResultStatus result of function
-     * @return Reference to RomFs archive buffer
+     * Get the RomFS of the application
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    virtual const std::vector<u8>& ReadRomFS(ResultStatus& error) const {
-        error = ResultStatus::ErrorNotImplemented;
-        return romfs;
+    virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) {
+        return ResultStatus::ErrorNotImplemented;
     }
-
-protected:
-    std::vector<u8> code;   ///< ExeFS .code section
-    std::vector<u8> icon;   ///< ExeFS .icon section
-    std::vector<u8> banner; ///< ExeFS .banner section
-    std::vector<u8> logo;   ///< ExeFS .logo section
-    std::vector<u8> romfs;  ///< RomFs archive
 };
 
 /**
