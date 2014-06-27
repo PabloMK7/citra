@@ -4,9 +4,11 @@
 
 #include <memory>
 
+#include "core/file_sys/archive_romfs.h"
 #include "core/loader/loader.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
+#include "core/hle/kernel/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,14 +53,20 @@ ResultStatus LoadFile(const std::string& filename) {
     switch (IdentifyFile(filename)) {
 
     // Standard ELF file format...
-    case FileType::ELF: {
+    case FileType::ELF:
         return AppLoader_ELF(filename).Load();
-    }
 
     // NCCH/NCSD container formats...
     case FileType::CXI:
     case FileType::CCI: {
-        return AppLoader_NCCH(filename).Load();
+        AppLoader_NCCH app_loader(filename);
+
+        // Load application and RomFS
+        if (ResultStatus::Success == app_loader.Load()) {
+            Kernel::CreateArchive(new FileSys::Archive_RomFS(app_loader), "RomFS");
+            return ResultStatus::Success;
+        }
+        break;
     }
 
     // Error occurred durring IdentifyFile...
@@ -70,7 +78,6 @@ ResultStatus LoadFile(const std::string& filename) {
     default:
         return ResultStatus::ErrorInvalidFormat;
     }
-
     return ResultStatus::Error;
 }
 

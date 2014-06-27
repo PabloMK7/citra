@@ -7,6 +7,7 @@
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/file_sys/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
@@ -14,10 +15,18 @@
 namespace Kernel {
 
 /**
- * Creates an archive
- * @param name Optional name of archive
- * @return Handle to newly created archive object
+ * Opens an archive
+ * @param id_code IdCode of the archive to open
+ * @return Handle to archive if it exists, otherwise a null handle (0)
  */
-Handle CreateArchive(const std::string& name="Unknown");
+Handle OpenArchive(FileSys::Archive::IdCode id_code);
+
+/**
+ * Creates an Archive
+ * @param backend File system backend interface to the archive
+ * @param name Optional name of Archive
+ * @return Handle to newly created Archive object
+ */
+Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
 
 } // namespace FileSys

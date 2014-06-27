@@ -162,6 +162,7 @@
     <ClCompile Include="arm\interpreter\vfp\vfpsingle.cpp" />
     <ClCompile Include="core.cpp" />
     <ClCompile Include="core_timing.cpp" />
+    <ClCompile Include="file_sys\archive_romfs.cpp" />
     <ClCompile Include="hle\config_mem.cpp" />
     <ClCompile Include="hle\coprocessor.cpp" />
     <ClCompile Include="hle\hle.cpp" />
@@ -211,7 +212,8 @@
     <ClInclude Include="arm\interpreter\vfp\vfp_helper.h" />
     <ClInclude Include="core.h" />
     <ClInclude Include="core_timing.h" />
-    <ClInclude Include="file_sys\file_sys.h" />
+    <ClInclude Include="file_sys\archive.h" />
+    <ClInclude Include="file_sys\archive_romfs.h" />
     <ClInclude Include="hle\config_mem.h" />
     <ClInclude Include="hle\coprocessor.h" />
     <ClInclude Include="hle\function_wrappers.h" />

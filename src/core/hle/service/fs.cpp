@@ -2,11 +2,12 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-
 #include "common/common.h"
 
+#include "core/loader/loader.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/fs.h"
+#include "core/hle/kernel/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
@@ -15,8 +16,34 @@ namespace FS_User {
 
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    DEBUG_LOG(KERNEL, "called");
     cmd_buff[1] = 0; // No error
+    DEBUG_LOG(KERNEL, "called");
+}
+
+void OpenFileDirectly(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    FileSys::Archive::IdCode arch_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+
+    // TODO(bunnei): Properly implement use of these...
+    //u32 transaction       = cmd_buff[1];
+    //u32 arch_lowpath_type = cmd_buff[3];
+    //u32 arch_lowpath_sz   = cmd_buff[4];
+    //u32 file_lowpath_type = cmd_buff[5];
+    //u32 file_lowpath_sz   = cmd_buff[6];
+    //u32 flags             = cmd_buff[7];
+    //u32 attr              = cmd_buff[8];
+    //u32 arch_lowpath_desc = cmd_buff[9];
+    //u32 arch_lowpath_ptr  = cmd_buff[10];
+    //u32 file_lowpath_desc = cmd_buff[11];
+    //u32 file_lowpath_ptr  = cmd_buff[12];
+
+    Handle handle = Kernel::OpenArchive(arch_id);
+    if (0 != handle) {
+        cmd_buff[1] = 0; // No error
+        cmd_buff[3] = handle;
+    }
+    DEBUG_LOG(KERNEL, "called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -24,7 +51,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x040100C4, nullptr,               "Control"},
     {0x08010002, Initialize,            "Initialize"},
     {0x080201C2, nullptr,               "OpenFile"},
-    {0x08030204, nullptr,               "OpenFileDirectly"},
+    {0x08030204, OpenFileDirectly,      "OpenFileDirectly"},
     {0x08040142, nullptr,               "DeleteFile"},
     {0x08050244, nullptr,               "RenameFile"},
     {0x08060142, nullptr,               "DeleteDirectory"},

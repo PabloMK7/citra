@@ -8,6 +8,7 @@ set(SRCS    core.cpp
             system.cpp
             arm/disassembler/arm_disasm.cpp
             arm/disassembler/load_symbol_map.cpp
+            file_sys/archive_romfs.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
@@ -75,7 +76,8 @@ set(HEADERS core.h
             arm/interpreter/vfp/asm_vfp.h
             arm/interpreter/vfp/vfp.h
             arm/interpreter/vfp/vfp_helper.h
-            file_sys/file_sys.h
+            file_sys/archive.h
+            file_sys/archive_romfs.h
             hle/config_mem.h
             hle/coprocessor.h
             hle/hle.h

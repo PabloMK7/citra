@@ -176,6 +176,9 @@
     <ClCompile Include="hle\service\fs.cpp">
       <Filter>hle\service</Filter>
     </ClCompile>
+    <ClCompile Include="file_sys\archive_romfs.cpp">
+      <Filter>file_sys</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arm\disassembler\arm_disasm.h">
@@ -204,9 +207,6 @@
     </ClInclude>
     <ClInclude Include="arm\interpreter\skyeye_defs.h">
       <Filter>arm\interpreter</Filter>
-    </ClInclude>
-    <ClInclude Include="file_sys\file_sys.h">
-      <Filter>file_sys</Filter>
     </ClInclude>
     <ClInclude Include="hw\hw.h">
       <Filter>hw</Filter>
@@ -313,6 +313,12 @@
     </ClInclude>
     <ClInclude Include="hle\service\fs.h">
       <Filter>hle\service</Filter>
+    </ClInclude>
+    <ClInclude Include="file_sys\archive.h">
+      <Filter>file_sys</Filter>
+    </ClInclude>
+    <ClInclude Include="file_sys\archive_romfs.h">
+      <Filter>file_sys</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
