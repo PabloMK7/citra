@@ -161,35 +161,35 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadCode(std::vector<u8>& buffer);
+    ResultStatus ReadCode(std::vector<u8>& buffer) const;
 
     /**
      * Get the icon (typically icon section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadIcon(std::vector<u8>& buffer);
+    ResultStatus ReadIcon(std::vector<u8>& buffer) const;
 
     /**
      * Get the banner (typically banner section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadBanner(std::vector<u8>& buffer);
+    ResultStatus ReadBanner(std::vector<u8>& buffer) const;
 
     /**
      * Get the logo (typically logo section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadLogo(std::vector<u8>& buffer);
+    ResultStatus ReadLogo(std::vector<u8>& buffer) const;
 
     /**
      * Get the RomFS of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::vector<u8>& buffer);
+    ResultStatus ReadRomFS(std::vector<u8>& buffer) const;
 
 private:
 
@@ -199,15 +199,14 @@ private:
      * @param buffer Vector to read data into
      * @return ResultStatus result of function
      */
-    ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer);
+    ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const;
 
     /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
-    ResultStatus LoadExec();
+    ResultStatus LoadExec() const;
 
-    File::IOFile    file;
     std::string     filename;
 
     bool            is_loaded;

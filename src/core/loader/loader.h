@@ -51,7 +51,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadCode(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadCode(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -60,7 +60,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -69,7 +69,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -78,7 +78,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -87,7 +87,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) {
+    virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
 };

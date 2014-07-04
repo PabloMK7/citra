@@ -11,7 +11,7 @@
 
 namespace FileSys {
 
-Archive_RomFS::Archive_RomFS(Loader::AppLoader& app_loader) {
+Archive_RomFS::Archive_RomFS(const Loader::AppLoader& app_loader) {
     // Load the RomFS from the app
     if (Loader::ResultStatus::Success != app_loader.ReadRomFS(raw_data)) {
         WARN_LOG(FILESYS, "Unable to read RomFS!");
