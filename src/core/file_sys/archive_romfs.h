@@ -20,13 +20,13 @@ namespace FileSys {
 class Archive_RomFS final : public Archive {
 public:
     Archive_RomFS(const Loader::AppLoader& app_loader);
-    ~Archive_RomFS();
+    ~Archive_RomFS() override;
 
     /**
      * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
      * @return IdCode of the archive
      */
-    IdCode GetIdCode() const { return IdCode::RomFS; };
+    IdCode GetIdCode() const override { return IdCode::RomFS; };
 
     /**
      * Read data from the archive
@@ -35,13 +35,13 @@ public:
      * @param buffer Buffer to read data into
      * @return Number of bytes read
      */
-    size_t Read(const u64 offset, const u32 length, u8* buffer) const;
+    size_t Read(const u64 offset, const u32 length, u8* buffer) const override;
 
     /**
      * Get the size of the archive in bytes
      * @return Size of the archive in bytes
      */
-    size_t GetSize() const;
+    size_t GetSize() const override;
 
 private:
     std::vector<u8> raw_data;

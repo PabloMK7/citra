@@ -148,48 +148,48 @@ namespace Loader {
 class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(const std::string& filename);
-    ~AppLoader_NCCH();
+    ~AppLoader_NCCH() override;
 
     /**
      * Load the application
      * @return ResultStatus result of function
      */
-    ResultStatus Load();
+    ResultStatus Load() override;
 
     /**
      * Get the code (typically .code section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadCode(std::vector<u8>& buffer) const;
+    ResultStatus ReadCode(std::vector<u8>& buffer) const override;
 
     /**
      * Get the icon (typically icon section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadIcon(std::vector<u8>& buffer) const;
+    ResultStatus ReadIcon(std::vector<u8>& buffer) const override;
 
     /**
      * Get the banner (typically banner section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadBanner(std::vector<u8>& buffer) const;
+    ResultStatus ReadBanner(std::vector<u8>& buffer) const override;
 
     /**
      * Get the logo (typically logo section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadLogo(std::vector<u8>& buffer) const;
+    ResultStatus ReadLogo(std::vector<u8>& buffer) const override;
 
     /**
      * Get the RomFS of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::vector<u8>& buffer) const;
+    ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
 
 private:
 
