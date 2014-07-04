@@ -29,4 +29,10 @@ Handle OpenArchive(FileSys::Archive::IdCode id_code);
  */
 Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
 
+/// Initialize archives
+void ArchiveInit();
+
+/// Shutdown archives
+void ArchiveShutdown();
+
 } // namespace FileSys

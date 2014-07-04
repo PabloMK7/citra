@@ -144,4 +144,14 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name) {
     return handle;
 }
 
+/// Initialize archives
+void ArchiveInit() {
+    g_archive_map.clear();
+}
+
+/// Shutdown archives
+void ArchiveShutdown() {
+    g_archive_map.clear();
+}
+
 } // namespace Kernel
