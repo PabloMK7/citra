@@ -145,7 +145,7 @@ struct ExHeader_Header{
 namespace Loader {
 
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
-class AppLoader_NCCH : public AppLoader {
+class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(const std::string& filename);
     ~AppLoader_NCCH();

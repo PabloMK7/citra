@@ -17,7 +17,7 @@
 namespace FileSys {
 
 /// File system interface to the RomFS archive
-class Archive_RomFS : public Archive {
+class Archive_RomFS final : public Archive {
 public:
     Archive_RomFS(const Loader::AppLoader& app_loader);
     ~Archive_RomFS();
