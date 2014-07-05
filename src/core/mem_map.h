@@ -150,14 +150,6 @@ void WriteBlock(const u32 addr, const u8* data, const int size);
 u8* GetPointer(const u32 Address);
 
 /**
- * Maps a block of memory in shared memory
- * @param handle Handle to map memory block for
- * @param addr Address to map memory block to
- * @param permissions Memory map permissions
- */
-u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) ;
-
-/**
  * Maps a block of memory on the heap
  * @param size Size of block in bytes
  * @param operation Memory map operation type

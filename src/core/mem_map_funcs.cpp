@@ -178,28 +178,6 @@ u8 *GetPointer(const u32 addr) {
 }
 
 /**
- * Maps a block of memory in shared memory
- * @param handle Handle to map memory block for
- * @param addr Address to map memory block to
- * @param permissions Memory map permissions
- */
-u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) {
-    MemoryBlock block;
-    
-    block.handle        = handle;
-    block.base_address  = addr;
-    block.permissions   = permissions;
-    
-    if (g_shared_map.size() > 0) {
-        const MemoryBlock last_block = g_shared_map.rbegin()->second;
-        block.address = last_block.address + last_block.size;
-    }
-    g_shared_map[block.GetVirtualAddress()] = block;
-
-    return block.GetVirtualAddress();
-}
-
-/**
  * Maps a block of memory on the heap
  * @param size Size of block in bytes
  * @param operation Memory map operation type
