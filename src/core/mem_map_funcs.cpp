@@ -41,7 +41,7 @@ u32 _VirtualAddress(const u32 addr) {
 }
 
 template <typename T>
-inline void _Read(T &var, const u32 addr) {
+inline void Read(T &var, const u32 addr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
@@ -91,7 +91,7 @@ inline void _Read(T &var, const u32 addr) {
 }
 
 template <typename T>
-inline void _Write(u32 addr, const T data) {
+inline void Write(u32 addr, const T data) {
     u32 vaddr = _VirtualAddress(addr);
     
     // Kernel memory command buffer
@@ -247,25 +247,25 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
 
 u8 Read8(const u32 addr) {
     u8 _var = 0;
-    _Read<u8>(_var, addr);
+    Read<u8>(_var, addr);
     return (u8)_var;
 }
 
 u16 Read16(const u32 addr) {
     u16_le _var = 0;
-    _Read<u16_le>(_var, addr);
+    Read<u16_le>(_var, addr);
     return (u16)_var;
 }
 
 u32 Read32(const u32 addr) {
     u32_le _var = 0;
-    _Read<u32_le>(_var, addr);
+    Read<u32_le>(_var, addr);
     return _var;
 }
 
 u64 Read64(const u32 addr) {
     u64_le _var = 0;
-    _Read<u64_le>(_var, addr);
+    Read<u64_le>(_var, addr);
     return _var;
 }
 
@@ -278,19 +278,19 @@ u32 Read16_ZX(const u32 addr) {
 }
 
 void Write8(const u32 addr, const u8 data) {
-    _Write<u8>(addr, data);
+    Write<u8>(addr, data);
 }
 
 void Write16(const u32 addr, const u16 data) {
-    _Write<u16_le>(addr, data);
+    Write<u16_le>(addr, data);
 }
 
 void Write32(const u32 addr, const u32 data) {
-    _Write<u32_le>(addr, data);
+    Write<u32_le>(addr, data);
 }
 
 void Write64(const u32 addr, const u64 data) {
-    _Write<u64_le>(addr, data);
+    Write<u64_le>(addr, data);
 }
 
 void WriteBlock(const u32 addr, const u8* data, const int size) {

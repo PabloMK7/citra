@@ -128,6 +128,12 @@ extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 void Init();
 void Shutdown();
 
+template <typename T>
+inline void Read(T &var, const u32 addr);
+
+template <typename T>
+inline void Write(u32 addr, const T data);
+
 u8 Read8(const u32 addr);
 u16 Read16(const u32 addr);
 u32 Read32(const u32 addr);
