@@ -29,11 +29,6 @@ enum ControlMemoryOperation {
     MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
 };
 
-enum MapMemoryPermission {
-    MEMORY_PERMISSION_UNMAP     = 0x00000000,
-    MEMORY_PERMISSION_NORMAL    = 0x00000001,
-};
-
 /// Map application or GSP heap memory
 Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
     DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
@@ -62,11 +57,15 @@ Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 siz
 Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
     DEBUG_LOG(SVC, "called memblock=0x08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
         handle, addr, permissions, other_permissions);
-    switch (permissions) {
-    case MEMORY_PERMISSION_NORMAL:
-    case MEMORY_PERMISSION_NORMAL + 1:
-    case MEMORY_PERMISSION_NORMAL + 2:
-        Kernel::MapSharedMemory(handle, addr, permissions, other_permissions);
+
+    Kernel::MemoryPermission permissions_type = static_cast<Kernel::MemoryPermission>(permissions);
+    switch (permissions_type) {
+    case Kernel::MemoryPermission::Read:
+    case Kernel::MemoryPermission::Write:
+    case Kernel::MemoryPermission::ReadWrite:
+    case Kernel::MemoryPermission::DontCare:
+        Kernel::MapSharedMemory(handle, addr, permissions_type, 
+            static_cast<Kernel::MemoryPermission>(other_permissions));
         break;
     default:
         ERROR_LOG(OSHLE, "unknown permissions=0x%08X", permissions);

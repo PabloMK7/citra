@@ -27,10 +27,10 @@ public:
         return 0;
     }
 
-    u32 base_address;       ///< Address of shared memory block in RAM
-    u32 permissions;        ///< Permissions of shared memory block (specified by SVC field)
-    u32 other_permissions;  ///< Other permissions of shared memory block (specified by SVC field)
-    std::string name;       ///< Name of shared memory object (optional)
+    u32 base_address;                   ///< Address of shared memory block in RAM
+    MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
+    MemoryPermission other_permissions; ///< Other permissions of shared memory block (SVC field)
+    std::string name;                   ///< Name of shared memory object (optional)
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,11 +67,21 @@ Handle CreateSharedMemory(const std::string& name) {
  * @param other_permissions Memory block map other permissions (specified by SVC field)
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result MapSharedMemory(u32 handle, u32 address, u32 permissions, u32 other_permissions) {
+Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions, 
+    MemoryPermission other_permissions) {
+
+    if (address < Memory::SHARED_MEMORY_VADDR || address >= Memory::SHARED_MEMORY_VADDR_END) {
+        ERROR_LOG(KERNEL, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
+            handle);
+        return -1;
+    }
     SharedMemory* shared_memory = Kernel::g_object_pool.GetFast<SharedMemory>(handle);
+    _assert_msg_(KERNEL, (shared_memory != nullptr), "handle 0x%08X is not valid!", handle);
+
     shared_memory->base_address = address;
     shared_memory->permissions = permissions;
     shared_memory->other_permissions = other_permissions;
+
     return 0;
 }
 
@@ -84,6 +94,7 @@ Result MapSharedMemory(u32 handle, u32 address, u32 permissions, u32 other_permi
 u8* GetSharedMemoryPointer(Handle handle, u32 offset) {
     SharedMemory* shared_memory = Kernel::g_object_pool.GetFast<SharedMemory>(handle);
     _assert_msg_(KERNEL, (shared_memory != nullptr), "handle 0x%08X is not valid!", handle);
+
     if (0 != shared_memory->base_address)
         return Memory::GetPointer(shared_memory->base_address + offset);
 
