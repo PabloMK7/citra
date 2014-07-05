@@ -157,7 +157,12 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
                 // Section is compressed...
                 if (i == 0 && is_compressed) {
                     // Read compressed .code section...
-                    std::unique_ptr<u8[]> temp_buffer(new u8[exefs_header.section[i].size]);
+                    std::unique_ptr<u8[]> temp_buffer;
+                    try {
+                        temp_buffer.reset(new u8[exefs_header.section[i].size]);
+                    } catch (std::bad_alloc&) {
+                        return ResultStatus::ErrorMemoryAllocationFailed;
+                    }
                     file.ReadBytes(&temp_buffer[0], exefs_header.section[i].size);
 
                     // Decompress .code section...

@@ -32,6 +32,7 @@ enum class ResultStatus {
     ErrorNotLoaded,
     ErrorNotUsed,
     ErrorAlreadyLoaded,
+    ErrorMemoryAllocationFailed,
 };
 
 /// Interface for loading an application
