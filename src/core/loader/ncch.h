@@ -145,51 +145,51 @@ struct ExHeader_Header{
 namespace Loader {
 
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
-class AppLoader_NCCH : public AppLoader {
+class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(const std::string& filename);
-    ~AppLoader_NCCH();
+    ~AppLoader_NCCH() override;
 
     /**
      * Load the application
      * @return ResultStatus result of function
      */
-    ResultStatus Load();
+    ResultStatus Load() override;
 
     /**
      * Get the code (typically .code section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to code buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& ReadCode(ResultStatus& error);
+    ResultStatus ReadCode(std::vector<u8>& buffer) const override;
 
     /**
      * Get the icon (typically icon section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to icon buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& ReadIcon(ResultStatus& error);
+    ResultStatus ReadIcon(std::vector<u8>& buffer) const override;
 
     /**
      * Get the banner (typically banner section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to banner buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& ReadBanner(ResultStatus& error);
+    ResultStatus ReadBanner(std::vector<u8>& buffer) const override;
 
     /**
      * Get the logo (typically logo section) of the application
-     * @param error ResultStatus result of function
-     * @return Reference to logo buffer
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& ReadLogo(ResultStatus& error);
+    ResultStatus ReadLogo(std::vector<u8>& buffer) const override;
 
     /**
-     * Get the RomFs archive of the application
-     * @param error ResultStatus result of function
-     * @return Reference to RomFs archive buffer
+     * Get the RomFS of the application
+     * @param buffer Reference to buffer to store data
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& ReadRomFS(ResultStatus& error);
+    ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
 
 private:
 
@@ -197,19 +197,16 @@ private:
      * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
      * @param name Name of section to read out of NCCH file
      * @param buffer Vector to read data into
-     * @param error ResultStatus result of function
-     * @return Reference to buffer of data that was read
+     * @return ResultStatus result of function
      */
-    const std::vector<u8>& LoadSectionExeFS(const char* name, std::vector<u8>& buffer, 
-        ResultStatus& error);
+    ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const;
 
     /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
-    ResultStatus LoadExec();
+    ResultStatus LoadExec() const;
 
-    File::IOFile    file;
     std::string     filename;
 
     bool            is_loaded;

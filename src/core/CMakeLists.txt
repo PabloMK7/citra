@@ -8,6 +8,7 @@ set(SRCS    core.cpp
             system.cpp
             arm/disassembler/arm_disasm.cpp
             arm/disassembler/load_symbol_map.cpp
+            file_sys/archive_romfs.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
@@ -29,17 +30,17 @@ set(SRCS    core.cpp
             arm/interpreter/mmu/tlb.cpp
             arm/interpreter/mmu/wb.cpp
             arm/interpreter/mmu/xscale_copro.cpp
-            file_sys/directory_file_system.cpp
-            file_sys/meta_file_system.cpp
             hle/hle.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
             hle/svc.cpp
+            hle/kernel/archive.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
             hle/kernel/thread.cpp
             hle/service/apt.cpp
+            hle/service/fs.cpp
             hle/service/gsp.cpp
             hle/service/hid.cpp
             hle/service/ndm.cpp
@@ -75,18 +76,19 @@ set(HEADERS core.h
             arm/interpreter/vfp/asm_vfp.h
             arm/interpreter/vfp/vfp.h
             arm/interpreter/vfp/vfp_helper.h
-            file_sys/directory_file_system.h
-            file_sys/file_sys.h
-            file_sys/meta_file_system.h
+            file_sys/archive.h
+            file_sys/archive_romfs.h
             hle/config_mem.h
             hle/coprocessor.h
             hle/hle.h
             hle/svc.h
+            hle/kernel/archive.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
             hle/kernel/thread.h
             hle/function_wrappers.h
             hle/service/apt.h
+            hle/service/fs.h
             hle/service/gsp.h
             hle/service/hid.h
             hle/service/service.h

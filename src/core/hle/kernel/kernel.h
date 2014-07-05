@@ -29,6 +29,7 @@ enum class HandleType : u32 {
     Arbiter         = 9,
     File            = 10,
     Semaphore       = 11,
+    Archive         = 12,
 };
     
 enum {

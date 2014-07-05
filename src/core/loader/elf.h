@@ -13,16 +13,16 @@
 namespace Loader {
 
 /// Loads an ELF/AXF file
-class AppLoader_ELF : public AppLoader {
+class AppLoader_ELF final : public AppLoader {
 public:
     AppLoader_ELF(const std::string& filename);
-    ~AppLoader_ELF();
+    ~AppLoader_ELF() override;
 
     /**
      * Load the bootable file
      * @return ResultStatus result of function
      */
-    ResultStatus Load();
+    ResultStatus Load() override;
 
 private:
     std::string filename;

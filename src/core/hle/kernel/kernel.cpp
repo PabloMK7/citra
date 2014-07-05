@@ -9,6 +9,7 @@
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/archive.h"
 
 namespace Kernel {
 
@@ -133,11 +134,13 @@ Object* ObjectPool::CreateByIDType(int type) {
 /// Initialize the kernel
 void Init() {
     Kernel::ThreadingInit();
+    Kernel::ArchiveInit();
 }
 
 /// Shutdown the kernel
 void Shutdown() {
     Kernel::ThreadingShutdown();
+    Kernel::ArchiveShutdown();
 
     g_object_pool.Clear(); // Free all kernel objects
 }

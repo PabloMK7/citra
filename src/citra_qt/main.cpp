@@ -152,7 +152,7 @@ void GMainWindow::BootGame(const char* filename)
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS homebrew (*.elf *.axf *.dat *.bin)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.elf *.axf *.cci *.cxi)"));
     if (filename.size())
        BootGame(filename.toLatin1().data());
 }
