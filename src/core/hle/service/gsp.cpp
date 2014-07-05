@@ -9,6 +9,7 @@
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/gsp.h"
 
 #include "core/hw/gpu.h"
@@ -36,14 +37,24 @@ union GX_CmdBufferHeader {
     BitField<8,8,u32>   number_commands;
 };
 
-/// Gets the address of the start (header) of a command buffer in GSP shared memory
-static inline u32 GX_GetCmdBufferAddress(u32 thread_id) {
-    return (0x10002000 + 0x800 + (thread_id * 0x200));
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Namespace GSP_GPU
+
+namespace GSP_GPU {
+
+Handle g_event = 0;
+Handle g_shared_memory = 0;
+
+u32 g_thread_id = 0;
+
+enum {
+    REG_FRAMEBUFFER_1   = 0x00400468,
+    REG_FRAMEBUFFER_2   = 0x00400494,
+};
 
 /// Gets a pointer to the start (header) of a command buffer in GSP shared memory
 static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
-    return Memory::GetPointer(GX_GetCmdBufferAddress(thread_id) + offset);
+    return Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * 0x200) + offset);
 }
 
 /// Finishes execution of a GSP command
@@ -55,19 +66,6 @@ void GX_FinishCommand(u32 thread_id) {
     header->number_commands = header->number_commands - 1;
     // TODO: Increment header->index?
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace GSP_GPU
-
-namespace GSP_GPU {
-
-Handle g_event_handle = 0;
-u32 g_thread_id = 0;
-
-enum {
-    REG_FRAMEBUFFER_1   = 0x00400468,
-    REG_FRAMEBUFFER_2   = 0x00400494,
-};
 
 /// Read a GSP GPU hardware register
 void ReadHWRegs(Service::Interface* self) {
@@ -103,24 +101,34 @@ void ReadHWRegs(Service::Interface* self) {
 
 }
 
+/**
+ * GSP_GPU::RegisterInterruptRelayQueue service function
+ *  Inputs:
+ *      1 : "Flags" field, purpose is unknown
+ *      3 : Handle to GSP synchronization event
+ *  Outputs:
+ *      0 : Result of function, 0 on success, otherwise error code
+ *      2 : Thread index into GSP command buffer
+ *      4 : Handle to GSP shared memory
+ */
 void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
-    u32 event_handle = cmd_buff[3];
+    g_event = cmd_buff[3];
 
-    _assert_msg_(GSP, (event_handle != 0), "called, but event is nullptr!");
+    _assert_msg_(GSP, (g_event != 0), "handle is not valid!");
 
-    g_event_handle = event_handle;
-
-    Kernel::SetEventLocked(event_handle, false);
+    Kernel::SetEventLocked(g_event, false);
 
     // Hack - This function will permanently set the state of the GSP event such that GPU command 
     // synchronization barriers always passthrough. Correct solution would be to set this after the 
     // GPU as processed all queued up commands, but due to the emulator being single-threaded they
     // will always be ready.
-    Kernel::SetPermanentLock(event_handle, true);
+    Kernel::SetPermanentLock(g_event, true);
 
-    cmd_buff[2] = g_thread_id;          // ThreadID
+    cmd_buff[0] = 0;                // Result - no error
+    cmd_buff[2] = g_thread_id;      // ThreadID
+    cmd_buff[4] = g_shared_memory;  // GSP shared memory
 }
 
 
@@ -208,6 +216,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    g_shared_memory = Kernel::CreateSharedMemory("GSPSharedMem");
 }
 
 Interface::~Interface() {

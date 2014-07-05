@@ -128,6 +128,12 @@ extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 void Init();
 void Shutdown();
 
+template <typename T>
+inline void Read(T &var, const u32 addr);
+
+template <typename T>
+inline void Write(u32 addr, const T data);
+
 u8 Read8(const u32 addr);
 u16 Read16(const u32 addr);
 u32 Read32(const u32 addr);
@@ -142,14 +148,6 @@ void Write32(const u32 addr, const u32 data);
 void WriteBlock(const u32 addr, const u8* data, const int size);
 
 u8* GetPointer(const u32 Address);
-
-/**
- * Maps a block of memory in shared memory
- * @param handle Handle to map memory block for
- * @param addr Address to map memory block to
- * @param permissions Memory map permissions
- */
-u32 MapBlock_Shared(u32 handle, u32 addr,u32 permissions) ;
 
 /**
  * Maps a block of memory on the heap

@@ -12,6 +12,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 
 #include "core/hle/function_wrappers.h"
@@ -26,11 +27,6 @@ namespace SVC {
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
     MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
-};
-
-enum MapMemoryPermission {
-    MEMORY_PERMISSION_UNMAP     = 0x00000000,
-    MEMORY_PERMISSION_NORMAL    = 0x00000001,
 };
 
 /// Map application or GSP heap memory
@@ -58,17 +54,21 @@ Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 siz
 }
 
 /// Maps a memory block to specified address
-Result MapMemoryBlock(Handle memblock, u32 addr, u32 mypermissions, u32 otherpermission) {
+Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
     DEBUG_LOG(SVC, "called memblock=0x08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
-        memblock, addr, mypermissions, otherpermission);
-    switch (mypermissions) {
-    case MEMORY_PERMISSION_NORMAL:
-    case MEMORY_PERMISSION_NORMAL + 1:
-    case MEMORY_PERMISSION_NORMAL + 2:
-        Memory::MapBlock_Shared(memblock, addr, mypermissions);
+        handle, addr, permissions, other_permissions);
+
+    Kernel::MemoryPermission permissions_type = static_cast<Kernel::MemoryPermission>(permissions);
+    switch (permissions_type) {
+    case Kernel::MemoryPermission::Read:
+    case Kernel::MemoryPermission::Write:
+    case Kernel::MemoryPermission::ReadWrite:
+    case Kernel::MemoryPermission::DontCare:
+        Kernel::MapSharedMemory(handle, addr, permissions_type, 
+            static_cast<Kernel::MemoryPermission>(other_permissions));
         break;
     default:
-        ERROR_LOG(OSHLE, "unknown permissions=0x%08X", mypermissions);
+        ERROR_LOG(OSHLE, "unknown permissions=0x%08X", permissions);
     }
     return 0;
 }

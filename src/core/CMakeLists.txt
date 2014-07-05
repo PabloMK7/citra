@@ -38,6 +38,7 @@ set(SRCS    core.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
+            hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/apt.cpp
             hle/service/fs.cpp
@@ -85,6 +86,7 @@ set(HEADERS core.h
             hle/kernel/archive.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
+            hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/function_wrappers.h
             hle/service/apt.h
