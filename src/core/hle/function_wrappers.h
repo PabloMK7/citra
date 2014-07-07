@@ -39,9 +39,16 @@ template<s32 func(s32*, u32*, s32, bool, s64)> void Wrap() {
     RETURN(retval);
 }
 
-// TODO(bunnei): Is this correct? Probably not
+// TODO(bunnei): Is this correct? Probably not - Last parameter looks wrong for ArbitrateAddress
 template<s32 func(u32, u32, u32, u32, s64)> void Wrap() {
-    RETURN(func(PARAM(5), PARAM(1), PARAM(2), PARAM(3), (((s64)PARAM(4) << 32) | PARAM(0))));
+    RETURN(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3), (((s64)PARAM(5) << 32) | PARAM(4))));
+}
+
+template<s32 func(u32*)> void Wrap(){
+    u32 param_1 = 0;
+    u32 retval = func(&param_1);
+    Core::g_app_core->SetReg(1, param_1);
+    RETURN(retval);
 }
 
 template<s32 func(u32, s64)> void Wrap() {
