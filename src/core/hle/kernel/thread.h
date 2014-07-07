@@ -39,6 +39,7 @@ enum WaitType {
     WAITTYPE_VBLANK,
     WAITTYPE_MUTEX,
     WAITTYPE_SYNCH,
+    WAITTYPE_ARB,
 };
 
 namespace Kernel {
@@ -58,6 +59,12 @@ void StopThread(Handle thread, const char* reason);
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
+
+/// Arbitrate the highest priority thread that is waiting
+Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address);
+
+/// Arbitrate all threads currently waiting...
+void ArbitrateAllThreads(u32 arbiter, u32 address);
 
 /// Gets the current thread handle
 Handle GetCurrentThreadHandle();
