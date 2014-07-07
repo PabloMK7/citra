@@ -9,6 +9,7 @@
 
 #include "core/mem_map.h"
 
+#include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
@@ -175,18 +176,19 @@ Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wa
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
-Result CreateAddressArbiter(void* arbiter) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) called");
-    Core::g_app_core->SetReg(1, 0xFABBDADD);
+Result CreateAddressArbiter(u32* arbiter) {
+    DEBUG_LOG(SVC, "called");
+    Handle handle = Kernel::CreateAddressArbiter();
+    *arbiter = handle;
     return 0;
 }
 
 /// Arbitrate address
-Result ArbitrateAddress(Handle arbiter, u32 addr, u32 _type, u32 value, s64 nanoseconds) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) called");
-    ArbitrationType type = (ArbitrationType)_type;
-    Memory::Write32(addr, type);
-    return 0;
+Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
+    DEBUG_LOG(SVC, "called arbiter=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X, "
+        "nanoseconds=%d", arbiter, address, type, value, nanoseconds);
+    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address, 
+        value);
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
