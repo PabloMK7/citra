@@ -166,6 +166,7 @@
     <ClCompile Include="hle\config_mem.cpp" />
     <ClCompile Include="hle\coprocessor.cpp" />
     <ClCompile Include="hle\hle.cpp" />
+    <ClCompile Include="hle\kernel\address_arbiter.cpp" />
     <ClCompile Include="hle\kernel\archive.cpp" />
     <ClCompile Include="hle\kernel\event.cpp" />
     <ClCompile Include="hle\kernel\kernel.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="hle\coprocessor.h" />
     <ClInclude Include="hle\function_wrappers.h" />
     <ClInclude Include="hle\hle.h" />
+    <ClInclude Include="hle\kernel\address_arbiter.h" />
     <ClInclude Include="hle\kernel\archive.h" />
     <ClInclude Include="hle\kernel\event.h" />
     <ClInclude Include="hle\kernel\kernel.h" />

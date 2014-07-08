@@ -34,6 +34,7 @@ set(SRCS    core.cpp
             hle/config_mem.cpp
             hle/coprocessor.cpp
             hle/svc.cpp
+            hle/kernel/address_arbiter.cpp
             hle/kernel/archive.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
@@ -83,6 +84,7 @@ set(HEADERS core.h
             hle/coprocessor.h
             hle/hle.h
             hle/svc.h
+            hle/kernel/address_arbiter.h
             hle/kernel/archive.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h

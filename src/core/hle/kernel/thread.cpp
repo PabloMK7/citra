@@ -188,6 +188,43 @@ void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     }
 }
 
+/// Arbitrate the highest priority thread that is waiting
+Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
+    Handle highest_priority_thread = 0;
+    s32 priority = THREADPRIO_LOWEST;
+
+    // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
+    for (const auto& handle : g_thread_queue) {
+
+        // TODO(bunnei): Verify arbiter address...
+        if (!VerifyWait(handle, WAITTYPE_ARB, arbiter))
+            continue;
+
+        Thread* thread = g_object_pool.GetFast<Thread>(handle);
+        if(thread->current_priority <= priority) {
+            highest_priority_thread = handle;
+            priority = thread->current_priority;
+        }
+    }
+    // If a thread was arbitrated, resume it
+    if (0 != highest_priority_thread)
+        ResumeThreadFromWait(highest_priority_thread);
+
+    return highest_priority_thread;
+}
+
+/// Arbitrate all threads currently waiting
+void ArbitrateAllThreads(u32 arbiter, u32 address) {
+    
+    // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
+    for (const auto& handle : g_thread_queue) {
+
+        // TODO(bunnei): Verify arbiter address...
+        if (VerifyWait(handle, WAITTYPE_ARB, arbiter))
+            ResumeThreadFromWait(handle);
+    }
+}
+
 /// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
 void CallThread(Thread* t) {
     // Stop waiting

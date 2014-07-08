@@ -26,7 +26,7 @@ enum class HandleType : u32 {
     Redirection     = 6,
     Thread          = 7,
     Process         = 8,
-    Arbiter         = 9,
+    AddressArbiter  = 9,
     File            = 10,
     Semaphore       = 11,
     Archive         = 12,
