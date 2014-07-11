@@ -51,23 +51,35 @@ enum {
     TOP_WIDTH           = 400,
     BOTTOM_WIDTH        = 320,
 
-    // Physical addresses in FCRAM used by ARM9 applications - these are correct for real hardware 
-    PADDR_FRAMEBUFFER_SEL       = 0x20184E59,
-    PADDR_TOP_LEFT_FRAME1       = 0x20184E60,
+    // Physical addresses in FCRAM (chosen arbitrarily)
+    PADDR_TOP_LEFT_FRAME1       = 0x201D4C00,
+    PADDR_TOP_LEFT_FRAME2       = 0x202D4C00,
+    PADDR_TOP_RIGHT_FRAME1      = 0x203D4C00,
+    PADDR_TOP_RIGHT_FRAME2      = 0x204D4C00,
+    PADDR_SUB_FRAME1            = 0x205D4C00,
+    PADDR_SUB_FRAME2            = 0x206D4C00,
+    // Physical addresses in FCRAM used by ARM9 applications
+/*    PADDR_TOP_LEFT_FRAME1       = 0x20184E60,
     PADDR_TOP_LEFT_FRAME2       = 0x201CB370,
     PADDR_TOP_RIGHT_FRAME1      = 0x20282160,
     PADDR_TOP_RIGHT_FRAME2      = 0x202C8670,
     PADDR_SUB_FRAME1            = 0x202118E0,
-    PADDR_SUB_FRAME2            = 0x20249CF0,
+    PADDR_SUB_FRAME2            = 0x20249CF0,*/
 
-    // Physical addresses in VRAM - I'm not sure how these are actually allocated (so not real)
-    PADDR_VRAM_FRAMEBUFFER_SEL  = 0x18184E59,
-    PADDR_VRAM_TOP_LEFT_FRAME1  = 0x18184E60,
-    PADDR_VRAM_TOP_LEFT_FRAME2  = 0x181CB370,
+    // Physical addresses in VRAM
+    // TODO: These should just be deduced from the ones above
+    PADDR_VRAM_TOP_LEFT_FRAME1  = 0x181D4C00,
+    PADDR_VRAM_TOP_LEFT_FRAME2  = 0x182D4C00,
+    PADDR_VRAM_TOP_RIGHT_FRAME1 = 0x183D4C00,
+    PADDR_VRAM_TOP_RIGHT_FRAME2 = 0x184D4C00,
+    PADDR_VRAM_SUB_FRAME1       = 0x185D4C00,
+    PADDR_VRAM_SUB_FRAME2       = 0x186D4C00,
+    // Physical addresses in VRAM used by ARM9 applications
+/*    PADDR_VRAM_TOP_LEFT_FRAME2  = 0x181CB370,
     PADDR_VRAM_TOP_RIGHT_FRAME1 = 0x18282160,
     PADDR_VRAM_TOP_RIGHT_FRAME2 = 0x182C8670,
     PADDR_VRAM_SUB_FRAME1       = 0x182118E0,
-    PADDR_VRAM_SUB_FRAME2       = 0x18249CF0,
+    PADDR_VRAM_SUB_FRAME2       = 0x18249CF0,*/
 };
 
 /// Framebuffer location
