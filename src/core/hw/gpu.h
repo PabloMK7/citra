@@ -14,14 +14,23 @@ static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of i
 
 struct Registers {
     enum Id : u32 {
-        FramebufferTopLeft1     = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
-        FramebufferTopLeft2     = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
-        FramebufferTopRight1    = 0x1EF00494,   // Main LCD, first framebuffer for 3D right
-        FramebufferTopRight2    = 0x1EF00498,   // Main LCD, second framebuffer for 3D right
-        FramebufferSubLeft1     = 0x1EF00568,   // Sub LCD, first framebuffer
-        FramebufferSubLeft2     = 0x1EF0056C,   // Sub LCD, second framebuffer
-        FramebufferSubRight1    = 0x1EF00594,   // Sub LCD, unused first framebuffer
-        FramebufferSubRight2    = 0x1EF00598,   // Sub LCD, unused second framebuffer
+        FramebufferTopSize        = 0x1EF0045C,
+        FramebufferTopLeft1       = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
+        FramebufferTopLeft2       = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
+        FramebufferTopFormat      = 0x1EF00470,
+        FramebufferTopSwapBuffers = 0x1EF00478,
+        FramebufferTopStride      = 0x1EF00490,   // framebuffer row stride?
+        FramebufferTopRight1      = 0x1EF00494,   // Main LCD, first framebuffer for 3D right
+        FramebufferTopRight2      = 0x1EF00498,   // Main LCD, second framebuffer for 3D right
+
+        FramebufferSubSize        = 0x1EF0055C,
+        FramebufferSubLeft1       = 0x1EF00568,   // Sub LCD, first framebuffer
+        FramebufferSubLeft2       = 0x1EF0056C,   // Sub LCD, second framebuffer
+        FramebufferSubFormat      = 0x1EF00570,
+        FramebufferSubSwapBuffers = 0x1EF00578,
+        FramebufferSubStride      = 0x1EF00590,   // framebuffer row stride?
+        FramebufferSubRight1      = 0x1EF00594,   // Sub LCD, unused first framebuffer
+        FramebufferSubRight2      = 0x1EF00598,   // Sub LCD, unused second framebuffer
 
         DisplayInputBufferAddr  = 0x1EF00C00,
         DisplayOutputBufferAddr = 0x1EF00C04,
@@ -36,6 +45,15 @@ struct Registers {
         ProcessCommandList      = 0x1EF018F0,
     };
 
+    enum class FramebufferFormat : u32 {
+        RGBA8  = 0,
+        RGB8   = 1,
+        RGB565 = 2,
+        RGB5A1 = 3,
+        RGBA4  = 4,
+    };
+
+    // TODO: Move these into the framebuffer struct
     u32 framebuffer_top_left_1;
     u32 framebuffer_top_left_2;
     u32 framebuffer_top_right_1;
@@ -44,6 +62,31 @@ struct Registers {
     u32 framebuffer_sub_left_2;
     u32 framebuffer_sub_right_1;
     u32 framebuffer_sub_right_2;
+
+    struct FrameBufferConfig {
+        union {
+            u32 size;
+
+            BitField< 0, 16, u32> width;
+            BitField<16, 16, u32> height;
+        };
+
+        union {
+            u32 format;
+
+            BitField< 0, 3, FramebufferFormat> color_format;
+        };
+
+        union {
+            u32 active_fb;
+
+            BitField<0, 1, u32> second_fb_active;
+        };
+
+        u32 stride;
+    };
+    FrameBufferConfig top_framebuffer;
+    FrameBufferConfig sub_framebuffer;
 
     struct {
         u32 input_address;
@@ -75,8 +118,8 @@ struct Registers {
             u32 flags;
 
             BitField< 0, 1, u32> flip_data;
-            BitField< 8, 3, u32> input_format;
-            BitField<12, 3, u32> output_format;
+            BitField< 8, 3, FramebufferFormat> input_format;
+            BitField<12, 3, FramebufferFormat> output_format;
             BitField<16, 1, u32> output_tiled;
         };
 

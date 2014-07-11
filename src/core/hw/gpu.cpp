@@ -84,12 +84,28 @@ const u8* GetFramebufferPointer(const u32 address) {
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr) {
+    case Registers::FramebufferTopSize:
+        var = g_regs.top_framebuffer.size;
+        break;
+
     case Registers::FramebufferTopLeft1:
         var = g_regs.framebuffer_top_left_1;
         break;
 
     case Registers::FramebufferTopLeft2:
         var = g_regs.framebuffer_top_left_2;
+        break;
+
+    case Registers::FramebufferTopFormat:
+        var = g_regs.top_framebuffer.format;
+        break;
+
+    case Registers::FramebufferTopSwapBuffers:
+        var = g_regs.top_framebuffer.active_fb;
+        break;
+
+    case Registers::FramebufferTopStride:
+        var = g_regs.top_framebuffer.stride;
         break;
 
     case Registers::FramebufferTopRight1:
@@ -100,12 +116,36 @@ inline void Read(T &var, const u32 addr) {
         var = g_regs.framebuffer_top_right_2;
         break;
 
+    case Registers::FramebufferSubSize:
+        var = g_regs.sub_framebuffer.size;
+        break;
+
     case Registers::FramebufferSubLeft1:
         var = g_regs.framebuffer_sub_left_1;
         break;
 
     case Registers::FramebufferSubRight1:
         var = g_regs.framebuffer_sub_right_1;
+        break;
+
+    case Registers::FramebufferSubFormat:
+        var = g_regs.sub_framebuffer.format;
+        break;
+
+    case Registers::FramebufferSubSwapBuffers:
+        var = g_regs.sub_framebuffer.active_fb;
+        break;
+
+    case Registers::FramebufferSubStride:
+        var = g_regs.sub_framebuffer.stride;
+        break;
+
+    case Registers::FramebufferSubLeft2:
+        var = g_regs.framebuffer_sub_left_2;
+        break;
+
+    case Registers::FramebufferSubRight2:
+        var = g_regs.framebuffer_sub_right_2;
         break;
 
     case Registers::DisplayInputBufferAddr:
@@ -154,6 +194,17 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (static_cast<Registers::Id>(addr)) {
+    // TODO: Framebuffer registers!!
+    case Registers::FramebufferTopSwapBuffers:
+        g_regs.top_framebuffer.active_fb = data;
+        // TODO: Not sure if this should only be done upon a change!
+        break;
+
+    case Registers::FramebufferSubSwapBuffers:
+        g_regs.sub_framebuffer.active_fb = data;
+        // TODO: Not sure if this should only be done upon a change!
+        break;
+
     case Registers::DisplayInputBufferAddr:
         g_regs.display_transfer.input_address = data;
         break;
@@ -195,7 +246,7 @@ inline void Write(u32 addr, const T data) {
                       g_regs.display_transfer.output_height * g_regs.display_transfer.output_width * 4,
                       g_regs.display_transfer.GetPhysicalInputAddress(), (int)g_regs.display_transfer.input_width, (int)g_regs.display_transfer.input_height,
                       g_regs.display_transfer.GetPhysicalOutputAddress(), (int)g_regs.display_transfer.output_width, (int)g_regs.display_transfer.output_height,
-                      (int)g_regs.display_transfer.output_format);
+                      (int)g_regs.display_transfer.output_format.Value());
         }
         break;
 
