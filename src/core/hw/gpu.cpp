@@ -177,7 +177,25 @@ inline void Write(u32 addr, const T data) {
     case Registers::DisplayTriggerTransfer:
         g_regs.display_transfer.trigger = data;
         if (g_regs.display_transfer.trigger & 1) {
-            // TODO: Perform display transfer!
+            u8* source_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalInputAddress());
+            u8* dest_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalOutputAddress());
+
+
+            // TODO: Perform display transfer correctly!
+            for (int y = 0; y < g_regs.display_transfer.output_height; ++y) {
+                // TODO: Copy size is just guesswork!
+                memcpy(dest_pointer + y * g_regs.display_transfer.output_width * 4,
+                       source_pointer + y * g_regs.display_transfer.input_width * 4,
+                       g_regs.display_transfer.output_width * 4);
+            }
+
+            // Clear previous contents until we implement proper buffer clearing
+            memset(source_pointer, 0x20, g_regs.display_transfer.input_width*g_regs.display_transfer.input_height*4);
+            DEBUG_LOG(GPU, "DisplayTriggerTransfer: %x bytes from %x(%xx%x)-> %x(%xx%x), dst format %x",
+                      g_regs.display_transfer.output_height * g_regs.display_transfer.output_width * 4,
+                      g_regs.display_transfer.GetPhysicalInputAddress(), (int)g_regs.display_transfer.input_width, (int)g_regs.display_transfer.input_height,
+                      g_regs.display_transfer.GetPhysicalOutputAddress(), (int)g_regs.display_transfer.output_width, (int)g_regs.display_transfer.output_height,
+                      (int)g_regs.display_transfer.output_format);
         }
         break;
 
