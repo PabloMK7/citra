@@ -353,7 +353,22 @@ void Update() {
 /// Initialize hardware
 void Init() {
     g_last_ticks = Core::g_app_core->GetTicks();
-    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
+//    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
+    SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
+
+    // TODO: Width should be 240 instead?
+    g_regs.top_framebuffer.width = 480;
+    g_regs.top_framebuffer.height = 400;
+    g_regs.top_framebuffer.stride = 480*3;
+    g_regs.top_framebuffer.color_format = Registers::FramebufferFormat::RGB8;
+    g_regs.top_framebuffer.active_fb = 0;
+
+    g_regs.sub_framebuffer.width = 480;
+    g_regs.sub_framebuffer.height = 400;
+    g_regs.sub_framebuffer.stride = 480*3;
+    g_regs.sub_framebuffer.color_format = Registers::FramebufferFormat::RGB8;
+    g_regs.sub_framebuffer.active_fb = 0;
+
     NOTICE_LOG(GPU, "initialized OK");
 }
 
