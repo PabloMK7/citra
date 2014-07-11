@@ -290,13 +290,54 @@ inline void Write(u32 addr, const T data) {
             u8* source_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalInputAddress());
             u8* dest_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalOutputAddress());
 
-
-            // TODO: Perform display transfer correctly!
             for (int y = 0; y < g_regs.display_transfer.output_height; ++y) {
-                // TODO: Copy size is just guesswork!
-                memcpy(dest_pointer + y * g_regs.display_transfer.output_width * 4,
-                       source_pointer + y * g_regs.display_transfer.input_width * 4,
-                       g_regs.display_transfer.output_width * 4);
+                // TODO: Why does the register seem to hold twice the framebuffer width?
+                for (int x = 0; x < g_regs.display_transfer.output_width / 2; ++x) {
+                    int source[4] = { 0, 0, 0, 0}; // rgba;
+
+                    switch (g_regs.display_transfer.input_format) {
+                    case Registers::FramebufferFormat::RGBA8:
+                    {
+                        // TODO: Most likely got the component order messed up.
+                        u8* srcptr = source_pointer + x * 4 + y * g_regs.display_transfer.input_width * 4 / 2;
+                        source[0] = srcptr[0]; // blue
+                        source[1] = srcptr[1]; // green
+                        source[2] = srcptr[2]; // red
+                        source[3] = srcptr[3]; // alpha
+                        break;
+                    }
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown source framebuffer format %x", (int)g_regs.display_transfer.input_format.Value());
+                        break;
+                    }
+
+                    switch (g_regs.display_transfer.output_format) {
+                    /*case Registers::FramebufferFormat::RGBA8:
+                    {
+                        // TODO: Untested
+                        u8* dstptr = (u32*)(dest_pointer + x * 4 + y * g_regs.display_transfer.output_width * 4);
+                        dstptr[0] = source[0];
+                        dstptr[1] = source[1];
+                        dstptr[2] = source[2];
+                        dstptr[3] = source[3];
+                        break;
+                    }*/
+
+                    case Registers::FramebufferFormat::RGB8:
+                    {
+                        u8* dstptr = dest_pointer + x * 3 + y * g_regs.display_transfer.output_width * 3 / 2;
+                        dstptr[0] = source[0]; // blue
+                        dstptr[1] = source[1]; // green
+                        dstptr[2] = source[2]; // red
+                        break;
+                    }
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown destination framebuffer format %x", static_cast<int>(g_regs.display_transfer.output_format.Value()));
+                        break;
+                    }
+                }
             }
 
             DEBUG_LOG(GPU, "DisplayTriggerTransfer: %x bytes from %x(%xx%x)-> %x(%xx%x), dst format %x",
