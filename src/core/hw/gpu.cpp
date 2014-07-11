@@ -53,15 +53,27 @@ void SetFramebufferLocation(const FramebufferLocation mode) {
  * Gets the location of the framebuffers
  * @return Location of framebuffers as FramebufferLocation enum
  */
-const FramebufferLocation GetFramebufferLocation() {
-    if ((g_regs.framebuffer_top_right_1 & ~Memory::VRAM_MASK) == Memory::VRAM_PADDR) {
+FramebufferLocation GetFramebufferLocation(u32 address) {
+    if ((address & ~Memory::VRAM_MASK) == Memory::VRAM_PADDR) {
         return FRAMEBUFFER_LOCATION_VRAM;
-    } else if ((g_regs.framebuffer_top_right_1 & ~Memory::FCRAM_MASK) == Memory::FCRAM_PADDR) {
+    } else if ((address & ~Memory::FCRAM_MASK) == Memory::FCRAM_PADDR) {
         return FRAMEBUFFER_LOCATION_FCRAM;
     } else {
         ERROR_LOG(GPU, "unknown framebuffer location!");
     }
     return FRAMEBUFFER_LOCATION_UNKNOWN;
+}
+
+u32 GetFramebufferAddr(const u32 address) {
+    switch (GetFramebufferLocation(address)) {
+    case FRAMEBUFFER_LOCATION_FCRAM:
+        return Memory::VirtualAddressFromPhysical_FCRAM(address);
+    case FRAMEBUFFER_LOCATION_VRAM:
+        return Memory::VirtualAddressFromPhysical_VRAM(address);
+    default:
+        ERROR_LOG(GPU, "unknown framebuffer location");
+    }
+    return 0;
 }
 
 /**
@@ -70,15 +82,8 @@ const FramebufferLocation GetFramebufferLocation() {
  * @return Returns const pointer to raw framebuffer
  */
 const u8* GetFramebufferPointer(const u32 address) {
-    switch (GetFramebufferLocation()) {
-    case FRAMEBUFFER_LOCATION_FCRAM:
-        return (const u8*)Memory::GetPointer(Memory::VirtualAddressFromPhysical_FCRAM(address));
-    case FRAMEBUFFER_LOCATION_VRAM:
-        return (const u8*)Memory::GetPointer(Memory::VirtualAddressFromPhysical_VRAM(address));
-    default:
-        ERROR_LOG(GPU, "unknown framebuffer location");
-    }
-    return NULL;
+    u32 addr = GetFramebufferAddr(address);
+    return (addr != 0) ? Memory::GetPointer(addr) : nullptr;
 }
 
 template <typename T>

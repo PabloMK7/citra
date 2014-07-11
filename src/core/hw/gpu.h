@@ -219,10 +219,12 @@ void SetFramebufferLocation(const FramebufferLocation mode);
  */
 const u8* GetFramebufferPointer(const u32 address);
 
+u32 GetFramebufferAddr(const u32 address);
+
 /**
  * Gets the location of the framebuffers
  */
-const FramebufferLocation GetFramebufferLocation();
+FramebufferLocation GetFramebufferLocation(u32 address);
 
 template <typename T>
 inline void Read(T &var, const u32 addr);
