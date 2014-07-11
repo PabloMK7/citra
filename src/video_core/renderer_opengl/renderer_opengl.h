@@ -84,7 +84,6 @@ private:
     // "Flipped" framebuffers translate scanlines from native 3DS left-to-right to top-to-bottom
     // as OpenGL expects them in a texture. There probably is a more efficient way of doing this:
 
-    u8 m_xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4]; 
-    u8 m_xfb_bottom_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopWidth * 4];   
-
+    u8 m_xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopHeight * 4];
+    u8 m_xfb_bottom_flipped[VideoCore::kScreenBottomWidth * VideoCore::kScreenBottomHeight * 4];
 };

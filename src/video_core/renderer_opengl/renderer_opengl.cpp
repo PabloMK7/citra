@@ -124,7 +124,7 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
     // Update textures with contents of XFB in RAM - bottom
     glBindTexture(GL_TEXTURE_2D, m_xfb_texture_bottom);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight,
-        GL_RGB, GL_UNSIGNED_BYTE, m_xfb_bottom_flipped);
+        GL_BGR, GL_UNSIGNED_BYTE, m_xfb_bottom_flipped);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Render target is destination framebuffer
