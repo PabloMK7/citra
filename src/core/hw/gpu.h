@@ -6,53 +6,30 @@
 
 #include "common/common_types.h"
 #include "common/bit_field.h"
+#include "common/register_set.h"
 
 namespace GPU {
 
 static const u32 kFrameCycles   = 268123480 / 60;   ///< 268MHz / 60 frames per second
 static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of instructions/frame
 
-struct Registers {
+// MMIO region 0x1EFxxxxx
+struct Regs {
     enum Id : u32 {
-        MemoryFillStart1          = 0x1EF00010,
-        MemoryFillEnd1            = 0x1EF00014,
-        MemoryFillSize1           = 0x1EF00018,
-        MemoryFillValue1          = 0x1EF0001C,
-        MemoryFillStart2          = 0x1EF00020,
-        MemoryFillEnd2            = 0x1EF00024,
-        MemoryFillSize2           = 0x1EF00028,
-        MemoryFillValue2          = 0x1EF0002C,
+        MemoryFill                = 0x00004, // + 5,6,7; second block at 8-11
 
-        FramebufferTopSize        = 0x1EF0045C,
-        FramebufferTopLeft1       = 0x1EF00468,   // Main LCD, first framebuffer for 3D left
-        FramebufferTopLeft2       = 0x1EF0046C,   // Main LCD, second framebuffer for 3D left
-        FramebufferTopFormat      = 0x1EF00470,
-        FramebufferTopSwapBuffers = 0x1EF00478,
-        FramebufferTopStride      = 0x1EF00490,   // framebuffer row stride?
-        FramebufferTopRight1      = 0x1EF00494,   // Main LCD, first framebuffer for 3D right
-        FramebufferTopRight2      = 0x1EF00498,   // Main LCD, second framebuffer for 3D right
+        FramebufferTop            = 0x00117, // + 11a,11b,11c,11d(?),11e...126
+        FramebufferBottom         = 0x00157, // + 15a,15b,15c,15d(?),15e...166
 
-        FramebufferSubSize        = 0x1EF0055C,
-        FramebufferSubLeft1       = 0x1EF00568,   // Sub LCD, first framebuffer
-        FramebufferSubLeft2       = 0x1EF0056C,   // Sub LCD, second framebuffer
-        FramebufferSubFormat      = 0x1EF00570,
-        FramebufferSubSwapBuffers = 0x1EF00578,
-        FramebufferSubStride      = 0x1EF00590,   // framebuffer row stride?
-        FramebufferSubRight1      = 0x1EF00594,   // Sub LCD, unused first framebuffer
-        FramebufferSubRight2      = 0x1EF00598,   // Sub LCD, unused second framebuffer
+        DisplayTransfer           = 0x00300, // + 301,302,303,304,305,306
 
-        DisplayInputBufferAddr  = 0x1EF00C00,
-        DisplayOutputBufferAddr = 0x1EF00C04,
-        DisplayOutputBufferSize = 0x1EF00C08,
-        DisplayInputBufferSize  = 0x1EF00C0C,
-        DisplayTransferFlags    = 0x1EF00C10,
-        // Unknown??
-        DisplayTriggerTransfer  = 0x1EF00C18,
+        CommandProcessor          = 0x00638, // + 63a,63c
 
-        CommandListSize         = 0x1EF018E0,
-        CommandListAddress      = 0x1EF018E8,
-        ProcessCommandList      = 0x1EF018F0,
+        NumIds                    = 0x01000
     };
+
+    template<Id id>
+    union Struct;
 
     enum class FramebufferFormat : u32 {
         RGBA8  = 0,
@@ -62,7 +39,11 @@ struct Registers {
         RGBA4  = 4,
     };
 
-    struct MemoryFillConfig {
+};
+
+template<>
+union Regs::Struct<Regs::MemoryFill> {
+    struct {
         u32 address_start;
         u32 address_end; // ?
         u32 size;
@@ -75,21 +56,15 @@ struct Registers {
         inline u32 GetEndAddress() const {
             return address_end * 8;
         }
-    };
+    } data;
+};
+static_assert(sizeof(Regs::Struct<Regs::MemoryFill>) == 0x10, "Structure size and register block length don't match");
 
-    MemoryFillConfig memory_fill[2];
+template<>
+union Regs::Struct<Regs::FramebufferTop> {
+    using Format = Regs::FramebufferFormat;
 
-    // TODO: Move these into the framebuffer struct
-    u32 framebuffer_top_left_1;
-    u32 framebuffer_top_left_2;
-    u32 framebuffer_top_right_1;
-    u32 framebuffer_top_right_2;
-    u32 framebuffer_sub_left_1;
-    u32 framebuffer_sub_left_2;
-    u32 framebuffer_sub_right_1;
-    u32 framebuffer_sub_right_2;
-
-    struct FrameBufferConfig {
+    struct {
         union {
             u32 size;
 
@@ -97,11 +72,18 @@ struct Registers {
             BitField<16, 16, u32> height;
         };
 
+        u32 pad0[2];
+
+        u32 address_left1;
+        u32 address_left2;
+
         union {
             u32 format;
 
-            BitField< 0, 3, FramebufferFormat> color_format;
+            BitField< 0, 3, Format> color_format;
         };
+
+        u32 pad1;
 
         union {
             u32 active_fb;
@@ -109,10 +91,24 @@ struct Registers {
             BitField<0, 1, u32> second_fb_active;
         };
 
+        u32 pad2[5];
+
         u32 stride;
-    };
-    FrameBufferConfig top_framebuffer;
-    FrameBufferConfig sub_framebuffer;
+
+        u32 address_right1;
+        u32 address_right2;
+    } data;
+};
+template<>
+union Regs::Struct<Regs::FramebufferBottom> {
+    using Type = decltype(Regs::Struct<Regs::FramebufferTop>::data);
+    Type data;
+};
+static_assert(sizeof(Regs::Struct<Regs::FramebufferTop>) == 0x40, "Structure size and register block length don't match");
+
+template<>
+union Regs::Struct<Regs::DisplayTransfer> {
+    using Format = Regs::FramebufferFormat;
 
     struct {
         u32 input_address;
@@ -144,21 +140,31 @@ struct Registers {
             u32 flags;
 
             BitField< 0, 1, u32> flip_data;
-            BitField< 8, 3, FramebufferFormat> input_format;
-            BitField<12, 3, FramebufferFormat> output_format;
+            BitField< 8, 3, Format> input_format;
+            BitField<12, 3, Format> output_format;
             BitField<16, 1, u32> output_tiled;
         };
 
         u32 unknown;
         u32 trigger;
-    } display_transfer;
-
-    u32 command_list_size;
-    u32 command_list_address;
-    u32 command_processing_enabled;
+    } data;
 };
+static_assert(sizeof(Regs::Struct<Regs::DisplayTransfer>) == 0x1C, "Structure size and register block length don't match");
 
-extern Registers g_regs;
+template<>
+union Regs::Struct<Regs::CommandProcessor> {
+    struct {
+        u32 size;
+        u32 pad0;
+        u32 address;
+        u32 pad1;
+        u32 trigger;
+    } data;
+};
+static_assert(sizeof(Regs::Struct<Regs::CommandProcessor>) == 0x14, "Structure size and register block length don't match");
+
+
+extern RegisterSet<u32, Regs> g_regs;
 
 enum {
     TOP_ASPECT_X        = 0x5,
@@ -208,7 +214,7 @@ enum FramebufferLocation {
 
 /**
  * Sets whether the framebuffers are in the GSP heap (FCRAM) or VRAM
- * @param 
+ * @param
  */
 void SetFramebufferLocation(const FramebufferLocation mode);
 

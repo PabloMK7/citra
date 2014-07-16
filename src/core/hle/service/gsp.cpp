@@ -139,8 +139,8 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     Kernel::SetEventLocked(g_event, false);
 
-    // Hack - This function will permanently set the state of the GSP event such that GPU command 
-    // synchronization barriers always passthrough. Correct solution would be to set this after the 
+    // Hack - This function will permanently set the state of the GSP event such that GPU command
+    // synchronization barriers always passthrough. Correct solution would be to set this after the
     // GPU as processed all queued up commands, but due to the emulator being single-threaded they
     // will always be ready.
     Kernel::SetPermanentLock(g_event, true);
@@ -153,6 +153,12 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 void TriggerCmdReqQueue(Service::Interface* self) {
+
+    // Utility function to convert register ID to address
+    auto WriteGPURegister = [](u32 id, u32 data) {
+        GPU::Write<u32>(0x1EF00000 + 4 * id, data);
+    };
+
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(g_thread_id);
     u32* cmd_buff = (u32*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
 
@@ -164,9 +170,9 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     case GXCommandId::SET_COMMAND_LIST_LAST:
-        GPU::Write<u32>(GPU::Registers::CommandListAddress, cmd_buff[1] >> 3);
-        GPU::Write<u32>(GPU::Registers::CommandListSize, cmd_buff[2] >> 3);
-        GPU::Write<u32>(GPU::Registers::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+        WriteGPURegister(GPU::Regs::CommandProcessor + 2, cmd_buff[1] >> 3); // command list data address
+        WriteGPURegister(GPU::Regs::CommandProcessor, cmd_buff[2] >> 3);     // command list address
+        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1);                // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
 
         // TODO: Move this to GPU
         // TODO: Not sure what units the size is measured in
@@ -174,27 +180,28 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
 
     case GXCommandId::SET_MEMORY_FILL:
-        GPU::Write<u32>(GPU::Registers::MemoryFillStart1, cmd_buff[1] >> 3);
-        GPU::Write<u32>(GPU::Registers::MemoryFillEnd1, cmd_buff[3] >> 3);
-        GPU::Write<u32>(GPU::Registers::MemoryFillSize1, cmd_buff[3] - cmd_buff[1]);
-        GPU::Write<u32>(GPU::Registers::MemoryFillValue1, cmd_buff[2]);
-        GPU::Write<u32>(GPU::Registers::MemoryFillStart2, cmd_buff[4] >> 3);
-        GPU::Write<u32>(GPU::Registers::MemoryFillEnd2, cmd_buff[6] >> 3);
-        GPU::Write<u32>(GPU::Registers::MemoryFillSize2, cmd_buff[6] - cmd_buff[4]);
-        GPU::Write<u32>(GPU::Registers::MemoryFillValue2, cmd_buff[5]);
+        WriteGPURegister(GPU::Regs::MemoryFill, cmd_buff[1] >> 3);              // Start 1
+        WriteGPURegister(GPU::Regs::MemoryFill + 1, cmd_buff[3] >> 3);          // End 1
+        WriteGPURegister(GPU::Regs::MemoryFill + 2, cmd_buff[3] - cmd_buff[1]); // Size 1
+        WriteGPURegister(GPU::Regs::MemoryFill + 3, cmd_buff[2]);               // Value 1
+
+        WriteGPURegister(GPU::Regs::MemoryFill + 4, cmd_buff[4] >> 3);          // Start 2
+        WriteGPURegister(GPU::Regs::MemoryFill + 5, cmd_buff[6] >> 3);          // End 2
+        WriteGPURegister(GPU::Regs::MemoryFill + 6, cmd_buff[6] - cmd_buff[4]); // Size 2
+        WriteGPURegister(GPU::Regs::MemoryFill + 7, cmd_buff[5]);               // Value 2
         break;
 
     // TODO: Check if texture copies are implemented correctly..
     case GXCommandId::SET_DISPLAY_TRANSFER:
     case GXCommandId::SET_TEXTURE_COPY:
-        GPU::Write<u32>(GPU::Registers::DisplayInputBufferAddr, cmd_buff[1] >> 3);
-        GPU::Write<u32>(GPU::Registers::DisplayOutputBufferAddr, cmd_buff[2] >> 3);
-        GPU::Write<u32>(GPU::Registers::DisplayInputBufferSize, cmd_buff[3]);
-        GPU::Write<u32>(GPU::Registers::DisplayOutputBufferSize, cmd_buff[4]);
-        GPU::Write<u32>(GPU::Registers::DisplayTransferFlags, cmd_buff[5]);
+        WriteGPURegister(GPU::Regs::DisplayTransfer, cmd_buff[1] >> 3);     // input buffer address
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 1, cmd_buff[2] >> 3); // output buffer address
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 3, cmd_buff[3]);      // input buffer size
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 2, cmd_buff[4]);      // output buffer size
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 4, cmd_buff[5]);      // transfer flags
 
-        // TODO: GPU::Registers::DisplayTriggerTransfer should be ORed with 1 for texture copies?
-        GPU::Write<u32>(GPU::Registers::DisplayTriggerTransfer, 1);
+        // TODO: Should this only be ORed with 1 for texture copies?
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 6, 1);                // trigger transfer
         break;
 
     case GXCommandId::SET_COMMAND_LIST_FIRST:

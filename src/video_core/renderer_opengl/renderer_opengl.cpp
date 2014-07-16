@@ -12,8 +12,8 @@
 
 /// RendererOpenGL constructor
 RendererOpenGL::RendererOpenGL() {
-    memset(m_fbo, 0, sizeof(m_fbo));  
-    memset(m_fbo_rbo, 0, sizeof(m_fbo_rbo));  
+    memset(m_fbo, 0, sizeof(m_fbo));
+    memset(m_fbo_rbo, 0, sizeof(m_fbo_rbo));
     memset(m_fbo_depth_buffers, 0, sizeof(m_fbo_depth_buffers));
 
     m_resolution_width = max(VideoCore::kScreenTopWidth, VideoCore::kScreenBottomWidth);
@@ -35,7 +35,7 @@ void RendererOpenGL::SwapBuffers() {
     m_render_window->MakeCurrent();
 
     // EFB->XFB copy
-    // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some 
+    // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some
     // register write We're also treating both framebuffers as a single one in OpenGL.
     common::Rect framebuffer_size(0, 0, m_resolution_width, m_resolution_height);
     RenderXFB(framebuffer_size, framebuffer_size);
@@ -71,24 +71,26 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
     }
 }
 
-/** 
+/**
  * Renders external framebuffer (XFB)
  * @param src_rect Source rectangle in XFB to copy
  * @param dst_rect Destination rectangle in output framebuffer to copy to
  */
 void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect) {
 
-    const u32 active_fb_top = (GPU::g_regs.top_framebuffer.active_fb == 1)
-                                ? GPU::g_regs.framebuffer_top_left_2
-                                : GPU::g_regs.framebuffer_top_left_1;
-    const u32 active_fb_sub = (GPU::g_regs.sub_framebuffer.active_fb == 1)
-                                ? GPU::g_regs.framebuffer_sub_left_2
-                                : GPU::g_regs.framebuffer_sub_left_1;
+    const auto& framebuffer_top = GPU::g_regs.Get<GPU::Regs::FramebufferTop>();
+    const auto& framebuffer_sub = GPU::g_regs.Get<GPU::Regs::FramebufferBottom>();
+    const u32 active_fb_top = (framebuffer_top.data.active_fb == 1)
+                                ? framebuffer_top.data.address_left2
+                                : framebuffer_top.data.address_left1;
+    const u32 active_fb_sub = (framebuffer_sub.data.active_fb == 1)
+                                ? framebuffer_sub.data.address_left2
+                                : framebuffer_sub.data.address_left1;
 
     DEBUG_LOG(GPU, "RenderXFB: %x bytes from %x(%xx%x), fmt %x",
-              GPU::g_regs.top_framebuffer.stride * GPU::g_regs.top_framebuffer.height,
-              GPU::GetFramebufferAddr(GPU::g_regs.framebuffer_top_left_1), (int)GPU::g_regs.top_framebuffer.width,
-              (int)GPU::g_regs.top_framebuffer.height, (int)GPU::g_regs.top_framebuffer.format);
+              framebuffer_top.data.stride * framebuffer_top.data.height,
+              GPU::GetFramebufferAddr(active_fb_top), (int)framebuffer_top.data.width,
+              (int)framebuffer_top.data.height, (int)framebuffer_top.data.format);
 
     // TODO: This should consider the GPU registers for framebuffer width, height and stride.
     FlipFramebuffer(GPU::GetFramebufferPointer(active_fb_top), m_xfb_top_flipped);
@@ -112,7 +114,7 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     // Blit
-    glBlitFramebuffer(src_rect.x0_, src_rect.y0_, src_rect.x1_, src_rect.y1_, 
+    glBlitFramebuffer(src_rect.x0_, src_rect.y0_, src_rect.x1_, src_rect.y1_,
                       dst_rect.x0_, dst_rect.y1_, dst_rect.x1_, dst_rect.y0_,
                       GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
@@ -138,7 +140,7 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
 
     // Blit
     int offset = (VideoCore::kScreenTopWidth - VideoCore::kScreenBottomWidth) / 2;
-    glBlitFramebuffer(0,0, VideoCore::kScreenBottomWidth, VideoCore::kScreenBottomHeight, 
+    glBlitFramebuffer(0,0, VideoCore::kScreenBottomWidth, VideoCore::kScreenBottomHeight,
                       offset, VideoCore::kScreenBottomHeight, VideoCore::kScreenBottomWidth + offset, 0,
                       GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
@@ -147,7 +149,7 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
 
 /// Initialize the FBO
 void RendererOpenGL::InitFramebuffer() {
-    // TODO(bunnei): This should probably be implemented with the top screen and bottom screen as 
+    // TODO(bunnei): This should probably be implemented with the top screen and bottom screen as
     // separate framebuffers
 
     // Init the FBOs
@@ -160,12 +162,12 @@ void RendererOpenGL::InitFramebuffer() {
     for (int i = 0; i < kMaxFramebuffers; i++) {
         // Generate color buffer storage
         glBindRenderbuffer(GL_RENDERBUFFER, m_fbo_rbo[i]);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, VideoCore::kScreenTopWidth, 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, VideoCore::kScreenTopWidth,
             VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
 
         // Generate depth buffer storage
         glBindRenderbuffer(GL_RENDERBUFFER, m_fbo_depth_buffers[i]);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, VideoCore::kScreenTopWidth, 
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, VideoCore::kScreenTopWidth,
             VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
 
         // Attach the buffers
@@ -181,7 +183,7 @@ void RendererOpenGL::InitFramebuffer() {
         } else {
             ERROR_LOG(RENDER, "couldn't create OpenGL frame buffer");
             exit(1);
-        } 
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind our frame buffer(s)
 
@@ -189,8 +191,8 @@ void RendererOpenGL::InitFramebuffer() {
     // -------------------------------
 
     // Create XFB textures
-    glGenTextures(1, &m_xfb_texture_top);  
-    glGenTextures(1, &m_xfb_texture_bottom);  
+    glGenTextures(1, &m_xfb_texture_top);
+    glGenTextures(1, &m_xfb_texture_bottom);
 
     // Alocate video memorry for XFB textures
     glBindTexture(GL_TEXTURE_2D, m_xfb_texture_top);
@@ -206,13 +208,13 @@ void RendererOpenGL::InitFramebuffer() {
     // Create the FBO and attach color/depth textures
     glGenFramebuffers(1, &m_xfb_top); // Generate framebuffer
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_xfb_top);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
         m_xfb_texture_top, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glGenFramebuffers(1, &m_xfb_bottom); // Generate framebuffer
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_xfb_bottom);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
         m_xfb_texture_bottom, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -228,7 +230,7 @@ void RendererOpenGL::RenderFramebuffer() {
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     // Blit
-    glBlitFramebuffer(0, 0, m_resolution_width, m_resolution_height, 0, 0, m_resolution_width, 
+    glBlitFramebuffer(0, 0, m_resolution_width, m_resolution_height, 0, 0, m_resolution_width,
         m_resolution_height, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
     // Update the FPS count
@@ -244,7 +246,7 @@ void RendererOpenGL::RenderFramebuffer() {
 void RendererOpenGL::UpdateFramerate() {
 }
 
-/** 
+/**
  * Set the emulator window to use for renderer
  * @param window EmuWindow handle to emulator window to use for rendering
  */
@@ -278,7 +280,7 @@ void RendererOpenGL::Init() {
 
     GLenum err = glewInit();
     if (GLEW_OK != err) {
-        ERROR_LOG(RENDER, "Failed to initialize GLEW! Error message: \"%s\". Exiting...", 
+        ERROR_LOG(RENDER, "Failed to initialize GLEW! Error message: \"%s\". Exiting...",
             glewGetErrorString(err));
         exit(-1);
     }

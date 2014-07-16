@@ -15,37 +15,47 @@
 
 namespace GPU {
 
-Registers g_regs;
+RegisterSet<u32, Regs> g_regs;
 
 u64 g_last_ticks = 0; ///< Last CPU ticks
 
 /**
  * Sets whether the framebuffers are in the GSP heap (FCRAM) or VRAM
- * @param 
+ * @param
  */
 void SetFramebufferLocation(const FramebufferLocation mode) {
     switch (mode) {
     case FRAMEBUFFER_LOCATION_FCRAM:
-        g_regs.framebuffer_top_left_1   = PADDR_TOP_LEFT_FRAME1;
-        g_regs.framebuffer_top_left_2   = PADDR_TOP_LEFT_FRAME2;
-        g_regs.framebuffer_top_right_1  = PADDR_TOP_RIGHT_FRAME1;
-        g_regs.framebuffer_top_right_2  = PADDR_TOP_RIGHT_FRAME2;
-        g_regs.framebuffer_sub_left_1   = PADDR_SUB_FRAME1;
-        //g_regs.framebuffer_sub_left_2  = unknown;
-        g_regs.framebuffer_sub_right_1  = PADDR_SUB_FRAME2;
-        //g_regs.framebufferr_sub_right_2 = unknown;
+    {
+        auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
+        auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
+
+        framebuffer_top.data.address_left1  = PADDR_TOP_LEFT_FRAME1;
+        framebuffer_top.data.address_left2  = PADDR_TOP_LEFT_FRAME2;
+        framebuffer_top.data.address_right1 = PADDR_TOP_RIGHT_FRAME1;
+        framebuffer_top.data.address_right2 = PADDR_TOP_RIGHT_FRAME2;
+        framebuffer_sub.data.address_left1  = PADDR_SUB_FRAME1;
+        //framebuffer_sub.data.address_left2  = unknown;
+        framebuffer_sub.data.address_right1 = PADDR_SUB_FRAME2;
+        //framebuffer_sub.data.address_right2 = unknown;
         break;
+    }
 
     case FRAMEBUFFER_LOCATION_VRAM:
-        g_regs.framebuffer_top_left_1   = PADDR_VRAM_TOP_LEFT_FRAME1;
-        g_regs.framebuffer_top_left_2   = PADDR_VRAM_TOP_LEFT_FRAME2;
-        g_regs.framebuffer_top_right_1  = PADDR_VRAM_TOP_RIGHT_FRAME1;
-        g_regs.framebuffer_top_right_2  = PADDR_VRAM_TOP_RIGHT_FRAME2;
-        g_regs.framebuffer_sub_left_1   = PADDR_VRAM_SUB_FRAME1;
-        //g_regs.framebuffer_sub_left_2  = unknown;
-        g_regs.framebuffer_sub_right_1  = PADDR_VRAM_SUB_FRAME2;
-        //g_regs.framebufferr_sub_right_2 = unknown;
+    {
+        auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
+        auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
+
+        framebuffer_top.data.address_left1  = PADDR_VRAM_TOP_LEFT_FRAME1;
+        framebuffer_top.data.address_left2  = PADDR_VRAM_TOP_LEFT_FRAME2;
+        framebuffer_top.data.address_right1 = PADDR_VRAM_TOP_RIGHT_FRAME1;
+        framebuffer_top.data.address_right2 = PADDR_VRAM_TOP_RIGHT_FRAME2;
+        framebuffer_sub.data.address_left1  = PADDR_VRAM_SUB_FRAME1;
+        //framebuffer_sub.data.address_left2  = unknown;
+        framebuffer_sub.data.address_right1 = PADDR_VRAM_SUB_FRAME2;
+        //framebuffer_sub.data.address_right2 = unknown;
         break;
+    }
     }
 }
 
@@ -87,219 +97,73 @@ const u8* GetFramebufferPointer(const u32 address) {
 }
 
 template <typename T>
-inline void Read(T &var, const u32 addr) {
-    switch (addr) {
-    case Registers::MemoryFillStart1:
-    case Registers::MemoryFillStart2:
-        var = g_regs.memory_fill[(addr - Registers::MemoryFillStart1) / 0x10].address_start;
-        break;
+inline void Read(T &var, const u32 raw_addr) {
+    u32 addr = raw_addr - 0x1EF00000;
+    int index = addr / 4;
 
-    case Registers::MemoryFillEnd1:
-    case Registers::MemoryFillEnd2:
-        var = g_regs.memory_fill[(addr - Registers::MemoryFillEnd1) / 0x10].address_end;
-        break;
-
-    case Registers::MemoryFillSize1:
-    case Registers::MemoryFillSize2:
-        var = g_regs.memory_fill[(addr - Registers::MemoryFillSize1) / 0x10].size;
-        break;
-
-    case Registers::MemoryFillValue1:
-    case Registers::MemoryFillValue2:
-        var = g_regs.memory_fill[(addr - Registers::MemoryFillValue1) / 0x10].value;
-        break;
-
-    case Registers::FramebufferTopSize:
-        var = g_regs.top_framebuffer.size;
-        break;
-
-    case Registers::FramebufferTopLeft1:
-        var = g_regs.framebuffer_top_left_1;
-        break;
-
-    case Registers::FramebufferTopLeft2:
-        var = g_regs.framebuffer_top_left_2;
-        break;
-
-    case Registers::FramebufferTopFormat:
-        var = g_regs.top_framebuffer.format;
-        break;
-
-    case Registers::FramebufferTopSwapBuffers:
-        var = g_regs.top_framebuffer.active_fb;
-        break;
-
-    case Registers::FramebufferTopStride:
-        var = g_regs.top_framebuffer.stride;
-        break;
-
-    case Registers::FramebufferTopRight1:
-        var = g_regs.framebuffer_top_right_1;
-        break;
-
-    case Registers::FramebufferTopRight2:
-        var = g_regs.framebuffer_top_right_2;
-        break;
-
-    case Registers::FramebufferSubSize:
-        var = g_regs.sub_framebuffer.size;
-        break;
-
-    case Registers::FramebufferSubLeft1:
-        var = g_regs.framebuffer_sub_left_1;
-        break;
-
-    case Registers::FramebufferSubRight1:
-        var = g_regs.framebuffer_sub_right_1;
-        break;
-
-    case Registers::FramebufferSubFormat:
-        var = g_regs.sub_framebuffer.format;
-        break;
-
-    case Registers::FramebufferSubSwapBuffers:
-        var = g_regs.sub_framebuffer.active_fb;
-        break;
-
-    case Registers::FramebufferSubStride:
-        var = g_regs.sub_framebuffer.stride;
-        break;
-
-    case Registers::FramebufferSubLeft2:
-        var = g_regs.framebuffer_sub_left_2;
-        break;
-
-    case Registers::FramebufferSubRight2:
-        var = g_regs.framebuffer_sub_right_2;
-        break;
-
-    case Registers::DisplayInputBufferAddr:
-        var = g_regs.display_transfer.input_address;
-        break;
-
-    case Registers::DisplayOutputBufferAddr:
-        var = g_regs.display_transfer.output_address;
-        break;
-
-    case Registers::DisplayOutputBufferSize:
-        var = g_regs.display_transfer.output_size;
-        break;
-
-    case Registers::DisplayInputBufferSize:
-        var = g_regs.display_transfer.input_size;
-        break;
-
-    case Registers::DisplayTransferFlags:
-        var = g_regs.display_transfer.flags;
-        break;
-
-    // Not sure if this is supposed to be readable
-    case Registers::DisplayTriggerTransfer:
-        var = g_regs.display_transfer.trigger;
-        break;
-
-    case Registers::CommandListSize:
-        var = g_regs.command_list_size;
-        break;
-
-    case Registers::CommandListAddress:
-        var = g_regs.command_list_address;
-        break;
-
-    case Registers::ProcessCommandList:
-        var = g_regs.command_processing_enabled;
-        break;
-
-    default:
+    // Reads other than u32 are untested, so I'd rather have them abort than silently fail
+    if (index >= Regs::NumIds || !std::is_same<T,u32>::value)
+    {
         ERROR_LOG(GPU, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
-        break;
+        return;
     }
+
+    var = g_regs[static_cast<Regs::Id>(addr / 4)];
 }
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    switch (static_cast<Registers::Id>(addr)) {
-    case Registers::MemoryFillStart1:
-    case Registers::MemoryFillStart2:
-        g_regs.memory_fill[(addr - Registers::MemoryFillStart1) / 0x10].address_start = data;
-        break;
+    addr -= 0x1EF00000;
+    int index = addr / 4;
 
-    case Registers::MemoryFillEnd1:
-    case Registers::MemoryFillEnd2:
-        g_regs.memory_fill[(addr - Registers::MemoryFillEnd1) / 0x10].address_end = data;
-        break;
-
-    case Registers::MemoryFillSize1:
-    case Registers::MemoryFillSize2:
-        g_regs.memory_fill[(addr - Registers::MemoryFillSize1) / 0x10].size = data;
-        break;
-
-    case Registers::MemoryFillValue1:
-    case Registers::MemoryFillValue2:
+    // Writes other than u32 are untested, so I'd rather have them abort than silently fail
+    if (index >= Regs::NumIds || !std::is_same<T,u32>::value)
     {
-        Registers::MemoryFillConfig& config = g_regs.memory_fill[(addr - Registers::MemoryFillValue1) / 0x10];
-        config.value = data;
+        ERROR_LOG(GPU, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        return;
+    }
+
+    g_regs[static_cast<Regs::Id>(index)] = data;
+
+    switch (static_cast<Regs::Id>(index)) {
+
+    // Memory fills are triggered once the fill value is written.
+    // NOTE: This is not verified.
+    case Regs::MemoryFill + 3:
+    case Regs::MemoryFill + 7:
+    {
+        const auto& config = g_regs.Get<Regs::MemoryFill>(static_cast<Regs::Id>(index - 3));
 
         // TODO: Not sure if this check should be done at GSP level instead
-        if (config.address_start) {
+        if (config.data.address_start) {
             // TODO: Not sure if this algorithm is correct, particularly because it doesn't use the size member at all
-            u32* start = (u32*)Memory::GetPointer(config.GetStartAddress());
-            u32* end = (u32*)Memory::GetPointer(config.GetEndAddress());
+            u32* start = (u32*)Memory::GetPointer(config.data.GetStartAddress());
+            u32* end = (u32*)Memory::GetPointer(config.data.GetEndAddress());
             for (u32* ptr = start; ptr < end; ++ptr)
-                *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
+                *ptr = bswap32(config.data.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
-            DEBUG_LOG(GPU, "MemoryFill from %x to %x", config.GetStartAddress(), config.GetEndAddress());
+            DEBUG_LOG(GPU, "MemoryFill from %x to %x", config.data.GetStartAddress(), config.data.GetEndAddress());
         }
         break;
     }
 
-    // TODO: Framebuffer registers!!
-    case Registers::FramebufferTopSwapBuffers:
-        g_regs.top_framebuffer.active_fb = data;
-        // TODO: Not sure if this should only be done upon a change!
-        break;
+    case Regs::DisplayTransfer + 6:
+    {
+        const auto& config = g_regs.Get<Regs::DisplayTransfer>();
+        if (config.data.trigger & 1) {
+            u8* source_pointer = Memory::GetPointer(config.data.GetPhysicalInputAddress());
+            u8* dest_pointer = Memory::GetPointer(config.data.GetPhysicalOutputAddress());
 
-    case Registers::FramebufferSubSwapBuffers:
-        g_regs.sub_framebuffer.active_fb = data;
-        // TODO: Not sure if this should only be done upon a change!
-        break;
-
-    case Registers::DisplayInputBufferAddr:
-        g_regs.display_transfer.input_address = data;
-        break;
-
-    case Registers::DisplayOutputBufferAddr:
-        g_regs.display_transfer.output_address = data;
-        break;
-
-    case Registers::DisplayOutputBufferSize:
-        g_regs.display_transfer.output_size = data;
-        break;
-
-    case Registers::DisplayInputBufferSize:
-        g_regs.display_transfer.input_size = data;
-        break;
-
-    case Registers::DisplayTransferFlags:
-        g_regs.display_transfer.flags = data;
-        break;
-
-    case Registers::DisplayTriggerTransfer:
-        g_regs.display_transfer.trigger = data;
-        if (g_regs.display_transfer.trigger & 1) {
-            u8* source_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalInputAddress());
-            u8* dest_pointer = Memory::GetPointer(g_regs.display_transfer.GetPhysicalOutputAddress());
-
-            for (int y = 0; y < g_regs.display_transfer.output_height; ++y) {
+            for (int y = 0; y < config.data.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
-                for (int x = 0; x < g_regs.display_transfer.output_width / 2; ++x) {
+                for (int x = 0; x < config.data.output_width / 2; ++x) {
                     int source[4] = { 0, 0, 0, 0}; // rgba;
 
-                    switch (g_regs.display_transfer.input_format) {
-                    case Registers::FramebufferFormat::RGBA8:
+                    switch (config.data.input_format) {
+                    case Regs::FramebufferFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* srcptr = source_pointer + x * 4 + y * g_regs.display_transfer.input_width * 4 / 2;
+                        u8* srcptr = source_pointer + x * 4 + y * config.data.input_width * 4 / 2;
                         source[0] = srcptr[0]; // blue
                         source[1] = srcptr[1]; // green
                         source[2] = srcptr[2]; // red
@@ -308,15 +172,15 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown source framebuffer format %x", (int)g_regs.display_transfer.input_format.Value());
+                        ERROR_LOG(GPU, "Unknown source framebuffer format %x", config.data.input_format.Value());
                         break;
                     }
 
-                    switch (g_regs.display_transfer.output_format) {
-                    /*case Registers::FramebufferFormat::RGBA8:
+                    switch (config.data.output_format) {
+                    /*case Regs::FramebufferFormat::RGBA8:
                     {
                         // TODO: Untested
-                        u8* dstptr = (u32*)(dest_pointer + x * 4 + y * g_regs.display_transfer.output_width * 4);
+                        u8* dstptr = (u32*)(dest_pointer + x * 4 + y * config.data.output_width * 4);
                         dstptr[0] = source[0];
                         dstptr[1] = source[1];
                         dstptr[2] = source[2];
@@ -324,9 +188,9 @@ inline void Write(u32 addr, const T data) {
                         break;
                     }*/
 
-                    case Registers::FramebufferFormat::RGB8:
+                    case Regs::FramebufferFormat::RGB8:
                     {
-                        u8* dstptr = dest_pointer + x * 3 + y * g_regs.display_transfer.output_width * 3 / 2;
+                        u8* dstptr = dest_pointer + x * 3 + y * config.data.output_width * 3 / 2;
                         dstptr[0] = source[0]; // blue
                         dstptr[1] = source[1]; // green
                         dstptr[2] = source[2]; // red
@@ -334,40 +198,34 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown destination framebuffer format %x", static_cast<int>(g_regs.display_transfer.output_format.Value()));
+                        ERROR_LOG(GPU, "Unknown destination framebuffer format %x", config.data.output_format.Value());
                         break;
                     }
                 }
             }
 
             DEBUG_LOG(GPU, "DisplayTriggerTransfer: %x bytes from %x(%xx%x)-> %x(%xx%x), dst format %x",
-                      g_regs.display_transfer.output_height * g_regs.display_transfer.output_width * 4,
-                      g_regs.display_transfer.GetPhysicalInputAddress(), (int)g_regs.display_transfer.input_width, (int)g_regs.display_transfer.input_height,
-                      g_regs.display_transfer.GetPhysicalOutputAddress(), (int)g_regs.display_transfer.output_width, (int)g_regs.display_transfer.output_height,
-                      (int)g_regs.display_transfer.output_format.Value());
+                      config.data.output_height * config.data.output_width * 4,
+                      config.data.GetPhysicalInputAddress(), (int)config.data.input_width, (int)config.data.input_height,
+                      config.data.GetPhysicalOutputAddress(), (int)config.data.output_width, (int)config.data.output_height,
+                      config.data.output_format.Value());
         }
         break;
+    }
 
-    case Registers::CommandListSize:
-        g_regs.command_list_size = data;
-        break;
-
-    case Registers::CommandListAddress:
-        g_regs.command_list_address = data;
-        break;
-
-    case Registers::ProcessCommandList:
-        g_regs.command_processing_enabled = data;
-        if (g_regs.command_processing_enabled & 1)
+    case Regs::CommandProcessor + 4:
+    {
+        const auto& config = g_regs.Get<Regs::CommandProcessor>();
+        if (config.data.trigger & 1)
         {
-            // u32* buffer = (u32*)Memory::GetPointer(g_regs.command_list_address << 3);
-            ERROR_LOG(GPU, "Beginning %x bytes of commands from address %x", g_regs.command_list_size, g_regs.command_list_address << 3);
+            // u32* buffer = (u32*)Memory::GetPointer(config.data.address << 3);
+            ERROR_LOG(GPU, "Beginning %x bytes of commands from address %x", config.data.size, config.data.address << 3);
             // TODO: Process command list!
         }
         break;
+    }
 
     default:
-        ERROR_LOG(GPU, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
         break;
     }
 }
@@ -402,18 +260,20 @@ void Init() {
 //    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
     SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
 
+    auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
+    auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
     // TODO: Width should be 240 instead?
-    g_regs.top_framebuffer.width = 480;
-    g_regs.top_framebuffer.height = 400;
-    g_regs.top_framebuffer.stride = 480*3;
-    g_regs.top_framebuffer.color_format = Registers::FramebufferFormat::RGB8;
-    g_regs.top_framebuffer.active_fb = 0;
+    framebuffer_top.data.width = 480;
+    framebuffer_top.data.height = 400;
+    framebuffer_top.data.stride = 480*3;
+    framebuffer_top.data.color_format = Regs::FramebufferFormat::RGB8;
+    framebuffer_top.data.active_fb = 0;
 
-    g_regs.sub_framebuffer.width = 480;
-    g_regs.sub_framebuffer.height = 400;
-    g_regs.sub_framebuffer.stride = 480*3;
-    g_regs.sub_framebuffer.color_format = Registers::FramebufferFormat::RGB8;
-    g_regs.sub_framebuffer.active_fb = 0;
+    framebuffer_sub.data.width = 480;
+    framebuffer_sub.data.height = 400;
+    framebuffer_sub.data.stride = 480*3;
+    framebuffer_sub.data.color_format = Regs::FramebufferFormat::RGB8;
+    framebuffer_sub.data.active_fb = 0;
 
     NOTICE_LOG(GPU, "initialized OK");
 }
