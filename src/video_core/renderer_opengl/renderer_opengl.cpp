@@ -61,10 +61,11 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
     int in_coord = 0;
     for (int x = 0; x < VideoCore::kScreenTopWidth; x++) {
         for (int y = VideoCore::kScreenTopHeight-1; y >= 0; y--) {
+            // TODO: Properly support other framebuffer formats
             int out_coord = (x + y * VideoCore::kScreenTopWidth) * 3;
-            out[out_coord] = in[in_coord];
-            out[out_coord + 1] = in[in_coord + 1];
-            out[out_coord + 2] = in[in_coord + 2];
+            out[out_coord] = in[in_coord];         // blue?
+            out[out_coord + 1] = in[in_coord + 1]; // green?
+            out[out_coord + 2] = in[in_coord + 2]; // red?
             in_coord+=3;
         }
     }
@@ -77,6 +78,12 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
  */
 void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect) {
 
+    DEBUG_LOG(GPU, "RenderXFB: %x bytes from %x(%xx%x), fmt %x",
+              GPU::g_regs.top_framebuffer.stride * GPU::g_regs.top_framebuffer.height,
+              GPU::GetFramebufferAddr(GPU::g_regs.framebuffer_top_left_1), (int)GPU::g_regs.top_framebuffer.width,
+              (int)GPU::g_regs.top_framebuffer.height, (int)GPU::g_regs.top_framebuffer.format);
+
+    // TODO: This should consider the GPU registers for framebuffer width, height and stride.
     FlipFramebuffer(GPU::GetFramebufferPointer(GPU::g_regs.framebuffer_top_left_1), m_xfb_top_flipped);
     FlipFramebuffer(GPU::GetFramebufferPointer(GPU::g_regs.framebuffer_sub_left_1), m_xfb_bottom_flipped);
 
