@@ -142,7 +142,7 @@ public:
 
     __forceinline BitField& operator=(T val)
     {
-        storage = (storage & ~GetMask()) | ((val << position) & GetMask());
+        storage = (storage & ~GetMask()) | (((StorageType)val << position) & GetMask());
         return *this;
     }
 
