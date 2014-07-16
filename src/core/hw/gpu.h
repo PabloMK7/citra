@@ -29,7 +29,7 @@ struct Regs {
     };
 
     template<Id id>
-    union Struct;
+    struct Struct;
 
     enum class FramebufferFormat : u32 {
         RGBA8  = 0,
@@ -38,128 +38,118 @@ struct Regs {
         RGB5A1 = 3,
         RGBA4  = 4,
     };
-
 };
 
 template<>
-union Regs::Struct<Regs::MemoryFill> {
-    struct {
-        u32 address_start;
-        u32 address_end; // ?
-        u32 size;
-        u32 value; // ?
+struct Regs::Struct<Regs::MemoryFill> {
+    u32 address_start;
+    u32 address_end; // ?
+    u32 size;
+    u32 value; // ?
 
-        inline u32 GetStartAddress() const {
-            return address_start * 8;
-        }
+    inline u32 GetStartAddress() const {
+        return address_start * 8;
+    }
 
-        inline u32 GetEndAddress() const {
-            return address_end * 8;
-        }
-    } data;
+    inline u32 GetEndAddress() const {
+        return address_end * 8;
+    }
 };
 static_assert(sizeof(Regs::Struct<Regs::MemoryFill>) == 0x10, "Structure size and register block length don't match");
 
 template<>
-union Regs::Struct<Regs::FramebufferTop> {
+struct Regs::Struct<Regs::FramebufferTop> {
     using Format = Regs::FramebufferFormat;
 
-    struct {
-        union {
-            u32 size;
+    union {
+        u32 size;
 
-            BitField< 0, 16, u32> width;
-            BitField<16, 16, u32> height;
-        };
+        BitField< 0, 16, u32> width;
+        BitField<16, 16, u32> height;
+    };
 
-        u32 pad0[2];
+    u32 pad0[2];
 
-        u32 address_left1;
-        u32 address_left2;
+    u32 address_left1;
+    u32 address_left2;
 
-        union {
-            u32 format;
+    union {
+        u32 format;
 
-            BitField< 0, 3, Format> color_format;
-        };
+        BitField< 0, 3, Format> color_format;
+    };
 
-        u32 pad1;
+    u32 pad1;
 
-        union {
-            u32 active_fb;
+    union {
+        u32 active_fb;
 
-            BitField<0, 1, u32> second_fb_active;
-        };
+        BitField<0, 1, u32> second_fb_active;
+    };
 
-        u32 pad2[5];
+    u32 pad2[5];
 
-        u32 stride;
+    u32 stride;
 
-        u32 address_right1;
-        u32 address_right2;
-    } data;
+    u32 address_right1;
+    u32 address_right2;
 };
+
 template<>
-union Regs::Struct<Regs::FramebufferBottom> {
-    using Type = decltype(Regs::Struct<Regs::FramebufferTop>::data);
-    Type data;
+struct Regs::Struct<Regs::FramebufferBottom> : public Regs::Struct<Regs::FramebufferTop> {
 };
 static_assert(sizeof(Regs::Struct<Regs::FramebufferTop>) == 0x40, "Structure size and register block length don't match");
 
 template<>
-union Regs::Struct<Regs::DisplayTransfer> {
+struct Regs::Struct<Regs::DisplayTransfer> {
     using Format = Regs::FramebufferFormat;
 
-    struct {
-        u32 input_address;
-        u32 output_address;
+    u32 input_address;
+    u32 output_address;
 
-        inline u32 GetPhysicalInputAddress() const {
-            return input_address * 8;
-        }
+    inline u32 GetPhysicalInputAddress() const {
+        return input_address * 8;
+    }
 
-        inline u32 GetPhysicalOutputAddress() const {
-            return output_address * 8;
-        }
+    inline u32 GetPhysicalOutputAddress() const {
+        return output_address * 8;
+    }
 
-        union {
-            u32 output_size;
+    union {
+        u32 output_size;
 
-            BitField< 0, 16, u32> output_width;
-            BitField<16, 16, u32> output_height;
-        };
+        BitField< 0, 16, u32> output_width;
+        BitField<16, 16, u32> output_height;
+    };
 
-        union {
-            u32 input_size;
+    union {
+        u32 input_size;
 
-            BitField< 0, 16, u32> input_width;
-            BitField<16, 16, u32> input_height;
-        };
+        BitField< 0, 16, u32> input_width;
+        BitField<16, 16, u32> input_height;
+    };
 
-        union {
-            u32 flags;
+    union {
+        u32 flags;
 
-            BitField< 0, 1, u32> flip_data;
-            BitField< 8, 3, Format> input_format;
-            BitField<12, 3, Format> output_format;
-            BitField<16, 1, u32> output_tiled;
-        };
+        BitField< 0, 1, u32> flip_data;
+        BitField< 8, 3, Format> input_format;
+        BitField<12, 3, Format> output_format;
+        BitField<16, 1, u32> output_tiled;
+    };
 
-        u32 unknown;
-        u32 trigger;
-    } data;
+    u32 unknown;
+    u32 trigger;
 };
 static_assert(sizeof(Regs::Struct<Regs::DisplayTransfer>) == 0x1C, "Structure size and register block length don't match");
 
 template<>
-union Regs::Struct<Regs::CommandProcessor> {
-    struct {
-        u32 size;
-        u32 pad0;
-        u32 address;
-        u32 pad1;
-        u32 trigger;
-    } data;
+struct Regs::Struct<Regs::CommandProcessor> {
+    u32 size;
+    u32 pad0;
+    u32 address;
+    u32 pad1;
+    u32 trigger;
 };
 static_assert(sizeof(Regs::Struct<Regs::CommandProcessor>) == 0x14, "Structure size and register block length don't match");
 
