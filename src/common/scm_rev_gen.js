@@ -6,8 +6,15 @@ var cmd_revision    = " rev-parse HEAD";
 var cmd_describe    = " describe --always --long --dirty";
 var cmd_branch      = " rev-parse --abbrev-ref HEAD";
 
+var git_search_paths = {
+    "git.cmd": 1,
+    "git": 1,
+    "C:\\Program Files (x86)\\Git\\bin\\git.exe": 1,
+    "C:\\Program Files\\Git\\bin\\git.exe": 1
+};
+
 function GetGitExe() {
-    for (var gitexe in { "git.cmd": 1, "git": 1 }) {
+    for (var gitexe in git_search_paths) {
         try {
             wshShell.Exec(gitexe);
             return gitexe;
