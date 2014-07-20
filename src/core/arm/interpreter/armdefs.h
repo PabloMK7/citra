@@ -70,13 +70,6 @@
 #define LOWHIGH 1
 #define HIGHLOW 2
 
-#ifndef u8
-#define u8      unsigned char
-#define u16     unsigned short
-#define u32     unsigned int
-#define u64     unsigned long long
-#endif /*u8 */
-
 //teawater add DBCT_TEST_SPEED 2005.10.04---------------------------------------
 #include <signal.h>
 
