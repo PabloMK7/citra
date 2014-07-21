@@ -185,8 +185,6 @@ Result CreateAddressArbiter(u32* arbiter) {
 
 /// Arbitrate address
 Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
-    DEBUG_LOG(SVC, "called arbiter=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X, "
-        "nanoseconds=%d", arbiter, address, type, value, nanoseconds);
     return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address, 
         value);
 }
