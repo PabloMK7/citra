@@ -50,7 +50,7 @@ public:
         virtual void GXCommandProcessed(int total_command_count)
         {
             const GSP_GPU::GXCommand& cmd = observed->ReadGXCommandHistory(total_command_count-1);
-            ERROR_LOG(GSP, "Received command: id=%x", cmd.id);
+            ERROR_LOG(GSP, "Received command: id=%x", (int)cmd.id.Value());
         }
 
         /**
@@ -84,8 +84,7 @@ public:
         gx_command_history.push_back(GSP_GPU::GXCommand());
         GSP_GPU::GXCommand& cmd = gx_command_history[gx_command_history.size()-1];
 
-        const int cmd_length = sizeof(GSP_GPU::GXCommand);
-        memcpy(cmd.data, command_data, cmd_length);
+        memcpy(&cmd, command_data, sizeof(GSP_GPU::GXCommand));
 
         ForEachObserver([this](DebuggerObserver* observer) {
                           observer->GXCommandProcessed(this->gx_command_history.size());

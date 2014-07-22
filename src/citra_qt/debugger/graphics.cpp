@@ -28,22 +28,24 @@ QVariant GPUCommandStreamItemModel::data(const QModelIndex& index, int role) con
     const GSP_GPU::GXCommand& command = GetDebugger()->ReadGXCommandHistory(command_index);
     if (role == Qt::DisplayRole)
     {
-        std::map<GSP_GPU::GXCommandId, const char*> command_names;
-        command_names[GSP_GPU::GXCommandId::REQUEST_DMA] = "REQUEST_DMA";
-        command_names[GSP_GPU::GXCommandId::SET_COMMAND_LIST_FIRST] = "SET_COMMAND_LIST_FIRST";
-        command_names[GSP_GPU::GXCommandId::SET_MEMORY_FILL] = "SET_MEMORY_FILL";
-        command_names[GSP_GPU::GXCommandId::SET_DISPLAY_TRANSFER] = "SET_DISPLAY_TRANSFER";
-        command_names[GSP_GPU::GXCommandId::SET_TEXTURE_COPY] = "SET_TEXTURE_COPY";
-        command_names[GSP_GPU::GXCommandId::SET_COMMAND_LIST_LAST] = "SET_COMMAND_LIST_LAST";
-        QString str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9").arg(command_names[static_cast<GSP_GPU::GXCommandId>(command.id)])
-                        .arg(command.data[0], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[1], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[2], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[3], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[4], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[5], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[6], 8, 16, QLatin1Char('0'))
-                        .arg(command.data[7], 8, 16, QLatin1Char('0'));
+        std::map<GSP_GPU::GXCommandId, const char*> command_names = {
+            { GSP_GPU::GXCommandId::REQUEST_DMA, "REQUEST_DMA" },
+            { GSP_GPU::GXCommandId::SET_COMMAND_LIST_FIRST, "SET_COMMAND_LIST_FIRST" },
+            { GSP_GPU::GXCommandId::SET_MEMORY_FILL, "SET_MEMORY_FILL" },
+            { GSP_GPU::GXCommandId::SET_DISPLAY_TRANSFER, "SET_DISPLAY_TRANSFER" },
+            { GSP_GPU::GXCommandId::SET_TEXTURE_COPY, "SET_TEXTURE_COPY" },
+            { GSP_GPU::GXCommandId::SET_COMMAND_LIST_LAST, "SET_COMMAND_LIST_LAST" }
+        };
+        const u32* command_data = reinterpret_cast<const u32*>(&command);
+        QString str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9").arg(command_names[command.id])
+                        .arg(command_data[0], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[1], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[2], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[3], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[4], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[5], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[6], 8, 16, QLatin1Char('0'))
+                        .arg(command_data[7], 8, 16, QLatin1Char('0'));
         return QVariant(str);
     }
     else

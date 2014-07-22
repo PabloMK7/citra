@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "common/bit_field.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -12,21 +13,50 @@
 namespace GSP_GPU {
 
 enum class GXCommandId : u32 {
-    REQUEST_DMA            = 0x00000000,
-    SET_COMMAND_LIST_LAST  = 0x00000001,
-    SET_MEMORY_FILL        = 0x01000102, // TODO: Confirm?
-    SET_DISPLAY_TRANSFER   = 0x00000003,
-    SET_TEXTURE_COPY       = 0x00000004,
-    SET_COMMAND_LIST_FIRST = 0x00000005,
+    REQUEST_DMA            = 0x00,
+    SET_COMMAND_LIST_LAST  = 0x01,
+    SET_MEMORY_FILL        = 0x02,
+    SET_DISPLAY_TRANSFER   = 0x03,
+    SET_TEXTURE_COPY       = 0x04,
+    SET_COMMAND_LIST_FIRST = 0x05,
 };
 
-union GXCommand {
-    struct {
-        GXCommandId id;
+struct GXCommand {
+    BitField<0, 8, GXCommandId> id;
+
+    union {
+        struct {
+            u32 source_address;
+            u32 dest_address;
+            u32 size;
+        } dma_request;
+
+        struct {
+            u32 address;
+            u32 size;
+        } set_command_list_last;
+
+        struct {
+            u32 start1;
+            u32 value1;
+            u32 end1;
+            u32 start2;
+            u32 value2;
+            u32 end2;
+        } memory_fill;
+
+        struct {
+            u32 in_buffer_address;
+            u32 out_buffer_address;
+            u32 in_buffer_size;
+            u32 out_buffer_size;
+            u32 flags;
+        } image_copy;
+
+        u8 raw_data[0x1C];
     };
-
-    u32 data[0x20];
 };
+static_assert(sizeof(GXCommand) == 0x20, "GXCommand struct has incorrect size");
 
 /// Interface to "srv:" service
 class Interface : public Service::Interface {

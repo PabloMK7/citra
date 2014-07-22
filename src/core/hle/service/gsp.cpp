@@ -160,60 +160,72 @@ void TriggerCmdReqQueue(Service::Interface* self) {
     };
 
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(g_thread_id);
-    u32* cmd_buff = (u32*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
+    auto& command = *(const GXCommand*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
 
-    switch (static_cast<GXCommandId>(cmd_buff[0])) {
+    switch (command.id) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case GXCommandId::REQUEST_DMA:
-        memcpy(Memory::GetPointer(cmd_buff[2]), Memory::GetPointer(cmd_buff[1]), cmd_buff[3]);
+        memcpy(Memory::GetPointer(command.dma_request.dest_address),
+               Memory::GetPointer(command.dma_request.source_address),
+               command.dma_request.size);
         break;
 
     case GXCommandId::SET_COMMAND_LIST_LAST:
-        WriteGPURegister(GPU::Regs::CommandProcessor + 2, cmd_buff[1] >> 3); // command list data address
-        WriteGPURegister(GPU::Regs::CommandProcessor, cmd_buff[2] >> 3);     // command list address
-        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1);                // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
+    {
+        auto& params = command.set_command_list_last;
+        WriteGPURegister(GPU::Regs::CommandProcessor + 2, params.address >> 3);
+        WriteGPURegister(GPU::Regs::CommandProcessor, params.size >> 3);
+        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1); // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
 
         // TODO: Move this to GPU
         // TODO: Not sure what units the size is measured in
-        g_debugger.CommandListCalled(cmd_buff[1], (u32*)Memory::GetPointer(cmd_buff[1]), cmd_buff[2]);
+        g_debugger.CommandListCalled(params.address,
+                                     (u32*)Memory::GetPointer(params.address),
+                                     params.size);
         break;
+    }
 
     case GXCommandId::SET_MEMORY_FILL:
-        WriteGPURegister(GPU::Regs::MemoryFill, cmd_buff[1] >> 3);              // Start 1
-        WriteGPURegister(GPU::Regs::MemoryFill + 1, cmd_buff[3] >> 3);          // End 1
-        WriteGPURegister(GPU::Regs::MemoryFill + 2, cmd_buff[3] - cmd_buff[1]); // Size 1
-        WriteGPURegister(GPU::Regs::MemoryFill + 3, cmd_buff[2]);               // Value 1
+    {
+        auto& params = command.memory_fill;
+        WriteGPURegister(GPU::Regs::MemoryFill, params.start1 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 1, params.end1 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 2, params.end1 - params.start1);
+        WriteGPURegister(GPU::Regs::MemoryFill + 3, params.value1);
 
-        WriteGPURegister(GPU::Regs::MemoryFill + 4, cmd_buff[4] >> 3);          // Start 2
-        WriteGPURegister(GPU::Regs::MemoryFill + 5, cmd_buff[6] >> 3);          // End 2
-        WriteGPURegister(GPU::Regs::MemoryFill + 6, cmd_buff[6] - cmd_buff[4]); // Size 2
-        WriteGPURegister(GPU::Regs::MemoryFill + 7, cmd_buff[5]);               // Value 2
+        WriteGPURegister(GPU::Regs::MemoryFill + 4, params.start2 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 5, params.end2 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 6, params.end2 - params.start2);
+        WriteGPURegister(GPU::Regs::MemoryFill + 7, params.value2);
         break;
+    }
 
     // TODO: Check if texture copies are implemented correctly..
     case GXCommandId::SET_DISPLAY_TRANSFER:
     case GXCommandId::SET_TEXTURE_COPY:
-        WriteGPURegister(GPU::Regs::DisplayTransfer, cmd_buff[1] >> 3);     // input buffer address
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 1, cmd_buff[2] >> 3); // output buffer address
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 3, cmd_buff[3]);      // input buffer size
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 2, cmd_buff[4]);      // output buffer size
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 4, cmd_buff[5]);      // transfer flags
+    {
+        auto& params = command.image_copy;
+        WriteGPURegister(GPU::Regs::DisplayTransfer, params.in_buffer_address >> 3);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 1, params.out_buffer_address >> 3);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 3, params.in_buffer_size);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 2, params.out_buffer_size);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 4, params.flags);
 
         // TODO: Should this only be ORed with 1 for texture copies?
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 6, 1);                // trigger transfer
+        // trigger transfer
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 6, 1);
         break;
+    }
 
     case GXCommandId::SET_COMMAND_LIST_FIRST:
     {
-        //u32* buf0_data = (u32*)Memory::GetPointer(cmd_buff[1]);
-        //u32* buf1_data = (u32*)Memory::GetPointer(cmd_buff[3]);
-        //u32* buf2_data = (u32*)Memory::GetPointer(cmd_buff[5]);
+        // TODO
         break;
     }
 
     default:
-        ERROR_LOG(GSP, "unknown command 0x%08X", cmd_buff[0]);
+        ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
 
     GX_FinishCommand(g_thread_id);
