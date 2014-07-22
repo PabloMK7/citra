@@ -5,28 +5,30 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/srv.h"
 #include "core/hle/service/service.h"
-#include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/event.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SRV
 
 namespace SRV {
 
-Handle g_mutex = 0;
+Handle g_event_handle = 0;
 
 void Initialize(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
-    if (!g_mutex) {
-        g_mutex = Kernel::CreateMutex(true, "SRV:Lock");
-    }
 }
 
 void GetProcSemaphore(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
-    // Get process semaphore?
+
     u32* cmd_buff = Service::GetCommandBuffer();
-    cmd_buff[1] = 0;        // No error
-    cmd_buff[3] = g_mutex;  // Return something... 0 == nullptr, raises an exception
+
+    // TODO(bunnei): Change to a semaphore once these have been implemented
+    g_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "SRV:Event");
+    Kernel::SetEventLocked(g_event_handle, false);
+
+    cmd_buff[1] = 0; // No error
+    cmd_buff[3] = g_event_handle;
 }
 
 void GetServiceHandle(Service::Interface* self) {
