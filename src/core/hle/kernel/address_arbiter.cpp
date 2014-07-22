@@ -54,6 +54,7 @@ Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 va
                 ArbitrateHighestPriorityThread(handle, address);
         }
         HLE::Reschedule(__func__);
+        break;
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
@@ -61,6 +62,7 @@ Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 va
             Kernel::WaitCurrentThread(WAITTYPE_ARB, handle);
             HLE::Reschedule(__func__);
         }
+        break;
 
     default:
         ERROR_LOG(KERNEL, "unknown type=%d", type);
