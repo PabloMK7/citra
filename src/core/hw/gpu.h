@@ -84,11 +84,14 @@ struct Regs::Struct<Regs::FramebufferTop> {
     union {
         u32 active_fb;
 
+        // 0: Use parameters ending with "1"
+        // 1: Use parameters ending with "2"
         BitField<0, 1, u32> second_fb_active;
     };
 
     u32 pad2[5];
 
+    // Distance between two pixel rows, in bytes
     u32 stride;
 
     u32 address_right1;
@@ -132,23 +135,32 @@ struct Regs::Struct<Regs::DisplayTransfer> {
     union {
         u32 flags;
 
-        BitField< 0, 1, u32> flip_data;
+        BitField< 0, 1, u32> flip_data;        // flips input data horizontally (TODO) if true
         BitField< 8, 3, Format> input_format;
         BitField<12, 3, Format> output_format;
-        BitField<16, 1, u32> output_tiled;
+        BitField<16, 1, u32> output_tiled;     // stores output in a tiled format
     };
 
     u32 unknown;
+
+    // it seems that writing to this field triggers the display transfer
     u32 trigger;
 };
 static_assert(sizeof(Regs::Struct<Regs::DisplayTransfer>) == 0x1C, "Structure size and register block length don't match");
 
 template<>
 struct Regs::Struct<Regs::CommandProcessor> {
+    // command list size
     u32 size;
+
     u32 pad0;
+
+    // command list address
     u32 address;
+
     u32 pad1;
+
+    // it seems that writing to this field triggers command list processing
     u32 trigger;
 };
 static_assert(sizeof(Regs::Struct<Regs::CommandProcessor>) == 0x14, "Structure size and register block length don't match");
