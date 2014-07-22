@@ -157,17 +157,19 @@ inline void Write(u32 addr, const T data) {
             for (int y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
                 for (int x = 0; x < config.output_width / 2; ++x) {
-                    int source[4] = { 0, 0, 0, 0}; // rgba;
+                    struct {
+                        int r, g, b, a;
+                    } source_color = { 0, 0, 0, 0 };
 
                     switch (config.input_format) {
                     case Regs::FramebufferFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
                         u8* srcptr = source_pointer + x * 4 + y * config.input_width * 4 / 2;
-                        source[0] = srcptr[0]; // blue
-                        source[1] = srcptr[1]; // green
-                        source[2] = srcptr[2]; // red
-                        source[3] = srcptr[3]; // alpha
+                        source_color.r = srcptr[0]; // blue
+                        source_color.g = srcptr[1]; // green
+                        source_color.b = srcptr[2]; // red
+                        source_color.a = srcptr[3]; // alpha
                         break;
                     }
 
@@ -181,19 +183,20 @@ inline void Write(u32 addr, const T data) {
                     {
                         // TODO: Untested
                         u8* dstptr = (u32*)(dest_pointer + x * 4 + y * config.output_width * 4);
-                        dstptr[0] = source[0];
-                        dstptr[1] = source[1];
-                        dstptr[2] = source[2];
-                        dstptr[3] = source[3];
+                        dstptr[0] = source_color.r;
+                        dstptr[1] = source_color.g;
+                        dstptr[2] = source_color.b;
+                        dstptr[3] = source_color.a;
                         break;
                     }*/
 
                     case Regs::FramebufferFormat::RGB8:
                     {
+                        // TODO: Most likely got the component order messed up.
                         u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3 / 2;
-                        dstptr[0] = source[0]; // blue
-                        dstptr[1] = source[1]; // green
-                        dstptr[2] = source[2]; // red
+                        dstptr[0] = source_color.r; // blue
+                        dstptr[1] = source_color.g; // green
+                        dstptr[2] = source_color.b; // red
                         break;
                     }
 
