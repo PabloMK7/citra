@@ -39,16 +39,32 @@ QVariant DisassemblerModel::data(const QModelIndex& index, int role) const {
             static char result[255];
 
             u32 address = base_address + index.row() * 4;
-            ARM_Disasm::disasm(address, Memory::Read32(address), result);
+            u32 instr = Memory::Read32(address);
+            ARM_Disasm::disasm(address, instr, result);
 
             if (index.column() == 0) {
                 return QString("0x%1").arg((uint)(address), 8, 16, QLatin1Char('0'));
             } else if (index.column() == 1) {
                 return QString::fromLatin1(result);
-            } else if (index.column() == 2 && Symbols::HasSymbol(address)) {
-                TSymbol symbol = Symbols::GetSymbol(address);
-                return QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
-                                              .arg(symbol.size / 4); // divide by 4 to get instruction count
+            } else if (index.column() == 2) {
+                if(Symbols::HasSymbol(address)) {
+                    TSymbol symbol = Symbols::GetSymbol(address);
+                    return QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
+                                                  .arg(symbol.size / 4); // divide by 4 to get instruction count
+                } else if (ARM_Disasm::decode(instr) == OP_BL) {
+                    u32 offset = instr & 0xFFFFFF;
+
+                    // Sign-extend the 24-bit offset
+                    if ((offset >> 23) & 1)
+                        offset |= 0xFF000000;
+
+                    // Pre-compute the left-shift and the prefetch offset
+                    offset <<= 2;
+                    offset += 8;
+
+                    TSymbol symbol = Symbols::GetSymbol(address + offset);
+                    return QString("    --> %1").arg(QString::fromStdString(symbol.name));
+                }
             }
 
             break;
