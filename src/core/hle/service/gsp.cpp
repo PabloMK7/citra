@@ -171,6 +171,9 @@ void TriggerCmdReqQueue(Service::Interface* self) {
                command.dma_request.size);
         break;
 
+    // ctrulib homebrew sends all relevant command list data with this command,
+    // hence we do all "interesting" stuff here and do nothing in SET_COMMAND_LIST_FIRST.
+    // TODO: This will need some rework in the future.
     case GXCommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
@@ -186,6 +189,8 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
     }
 
+    // It's assumed that the two "blocks" behave equivalently.
+    // Presumably this is done simply to allow two memory fills to run in parallel.
     case GXCommandId::SET_MEMORY_FILL:
     {
         auto& params = command.memory_fill;
@@ -218,9 +223,10 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         break;
     }
 
+    // TODO: Figure out what exactly SET_COMMAND_LIST_FIRST and SET_COMMAND_LIST_LAST
+    //       are supposed to do.
     case GXCommandId::SET_COMMAND_LIST_FIRST:
     {
-        // TODO
         break;
     }
 

@@ -15,9 +15,17 @@ namespace GSP_GPU {
 enum class GXCommandId : u32 {
     REQUEST_DMA            = 0x00,
     SET_COMMAND_LIST_LAST  = 0x01,
+
+    // Fills a given memory range with a particular value
     SET_MEMORY_FILL        = 0x02,
+
+    // Copies an image and optionally performs color-conversion or scaling.
+    // This is highly similar to the GameCube's EFB copy feature
     SET_DISPLAY_TRANSFER   = 0x03,
+
+    // Conceptionally similar to SET_DISPLAY_TRANSFER and presumable uses the same hardware path
     SET_TEXTURE_COPY       = 0x04,
+
     SET_COMMAND_LIST_FIRST = 0x05,
 };
 
