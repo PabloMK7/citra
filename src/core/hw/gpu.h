@@ -235,10 +235,10 @@ u32 GetFramebufferAddr(const u32 address);
 FramebufferLocation GetFramebufferLocation(u32 address);
 
 template <typename T>
-inline void Read(T &var, const u32 addr);
+void Read(T &var, const u32 addr);
 
 template <typename T>
-inline void Write(u32 addr, const T data);
+void Write(u32 addr, const T data);
 
 /// Update hardware
 void Update();
