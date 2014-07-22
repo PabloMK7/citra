@@ -53,7 +53,6 @@ Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 va
             for(int i = 0; i < value; i++)
                 ArbitrateHighestPriorityThread(handle, address);
         }
-        HLE::Reschedule(__func__);
         break;
 
     // Wait current thread (acquire the arbiter)...
