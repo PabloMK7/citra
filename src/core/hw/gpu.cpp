@@ -142,7 +142,7 @@ inline void Write(u32 addr, const T data) {
             for (u32* ptr = start; ptr < end; ++ptr)
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
-            DEBUG_LOG(GPU, "MemoryFill from %x to %x", config.GetStartAddress(), config.GetEndAddress());
+            DEBUG_LOG(GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
         }
         break;
     }
@@ -207,7 +207,7 @@ inline void Write(u32 addr, const T data) {
                 }
             }
 
-            DEBUG_LOG(GPU, "DisplayTriggerTransfer: %x bytes from %x(%xx%x)-> %x(%xx%x), dst format %x",
+            DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%dx%d)-> 0x%08x(%dx%d), dst format %x",
                       config.output_height * config.output_width * 4,
                       config.GetPhysicalInputAddress(), (int)config.input_width, (int)config.input_height,
                       config.GetPhysicalOutputAddress(), (int)config.output_width, (int)config.output_height,
@@ -222,7 +222,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger & 1)
         {
             // u32* buffer = (u32*)Memory::GetPointer(config.address << 3);
-            ERROR_LOG(GPU, "Beginning %x bytes of commands from address %x", config.size, config.address << 3);
+            ERROR_LOG(GPU, "Beginning 0x%08x bytes of commands from address 0x%08x", config.size, config.address << 3);
             // TODO: Process command list!
         }
         break;
