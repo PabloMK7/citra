@@ -82,7 +82,9 @@ const BreakPoints& DisassemblerModel::GetBreakPoints() const {
 }
 
 void DisassemblerModel::ParseFromAddress(unsigned int address) {
-    const unsigned int chunk_size = 1000*1000; // 10*1000*1000 is critical
+
+    // NOTE: A too large value causes lagging when scrolling the disassembly
+    const unsigned int chunk_size = 1000*500;
 
     // If we haven't loaded anything yet, initialize base address to the parameter address
     if (code_size == 0)
