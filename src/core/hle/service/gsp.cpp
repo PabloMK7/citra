@@ -47,11 +47,6 @@ Handle g_shared_memory = 0;
 
 u32 g_thread_id = 0;
 
-enum {
-    REG_FRAMEBUFFER_1   = 0x00400468,
-    REG_FRAMEBUFFER_2   = 0x00400494,
-};
-
 /// Gets a pointer to the start (header) of a command buffer in GSP shared memory
 static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
     return Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * 0x200) + offset);
@@ -67,38 +62,62 @@ void GX_FinishCommand(u32 thread_id) {
     // TODO: Increment header->index?
 }
 
-/// Read a GSP GPU hardware register
-void ReadHWRegs(Service::Interface* self) {
-    static const u32 framebuffer_1[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME1, GPU::PADDR_VRAM_TOP_RIGHT_FRAME1};
-    static const u32 framebuffer_2[] = {GPU::PADDR_VRAM_TOP_LEFT_FRAME2, GPU::PADDR_VRAM_TOP_RIGHT_FRAME2};
-
+/// Write a GSP GPU hardware register
+void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
-    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
 
-    switch (reg_addr) {
-
-    // NOTE: Calling SetFramebufferLocation here is a hack... Not sure the correct way yet to set 
-    // whether the framebuffers should be in VRAM or GSP heap, but from what I understand, if the 
-    // user application is reading from either of these registers, then its going to be in VRAM.
-
-    // Top framebuffer 1 addresses
-    case REG_FRAMEBUFFER_1:
-        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
-        memcpy(dst, framebuffer_1, size);
-        break;
-
-    // Top framebuffer 2 addresses
-    case REG_FRAMEBUFFER_2:
-        GPU::SetFramebufferLocation(GPU::FRAMEBUFFER_LOCATION_VRAM);
-        memcpy(dst, framebuffer_2, size);
-        break;
-
-    default:
-        ERROR_LOG(GSP, "unknown register read at address %08X", reg_addr);
+    // TODO: Return proper error codes
+    if (reg_addr + size >= 0x420000) {
+        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        return;
     }
 
+    // size should be word-aligned
+    if ((size % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        return;
+    }
+
+    u32* src = (u32*)Memory::GetPointer(cmd_buff[0x4]);
+
+    while (size > 0) {
+        GPU::Write<u32>(reg_addr + 0x1EB00000, *src);
+
+        size -= 4;
+        ++src;
+        reg_addr += 4;
+    }
+}
+
+/// Read a GSP GPU hardware register
+void ReadHWRegs(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+    u32 reg_addr = cmd_buff[1];
+    u32 size = cmd_buff[2];
+
+    // TODO: Return proper error codes
+    if (reg_addr + size >= 0x420000) {
+        ERROR_LOG(GPU, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        return;
+    }
+
+    // size should be word-aligned
+    if ((size % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        return;
+    }
+
+    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
+
+    while (size > 0) {
+        GPU::Read<u32>(*dst, reg_addr + 0x1EB00000);
+
+        size -= 4;
+        ++dst;
+        reg_addr += 4;
+    }
 }
 
 /**
@@ -120,8 +139,8 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     Kernel::SetEventLocked(g_event, false);
 
-    // Hack - This function will permanently set the state of the GSP event such that GPU command 
-    // synchronization barriers always passthrough. Correct solution would be to set this after the 
+    // Hack - This function will permanently set the state of the GSP event such that GPU command
+    // synchronization barriers always passthrough. Correct solution would be to set this after the
     // GPU as processed all queued up commands, but due to the emulator being single-threaded they
     // will always be ready.
     Kernel::SetPermanentLock(g_event, true);
@@ -134,52 +153,92 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 void TriggerCmdReqQueue(Service::Interface* self) {
-    GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(g_thread_id);
-    u32* cmd_buff = (u32*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
 
-    switch (static_cast<GXCommandId>(cmd_buff[0])) {
+    // Utility function to convert register ID to address
+    auto WriteGPURegister = [](u32 id, u32 data) {
+        GPU::Write<u32>(0x1EF00000 + 4 * id, data);
+    };
+
+    GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(g_thread_id);
+    auto& command = *(const GXCommand*)GX_GetCmdBufferPointer(g_thread_id, 0x20 + (header->index * 0x20));
+
+    switch (command.id) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case GXCommandId::REQUEST_DMA:
-        memcpy(Memory::GetPointer(cmd_buff[2]), Memory::GetPointer(cmd_buff[1]), cmd_buff[3]);
+        memcpy(Memory::GetPointer(command.dma_request.dest_address),
+               Memory::GetPointer(command.dma_request.source_address),
+               command.dma_request.size);
         break;
 
+    // ctrulib homebrew sends all relevant command list data with this command,
+    // hence we do all "interesting" stuff here and do nothing in SET_COMMAND_LIST_FIRST.
+    // TODO: This will need some rework in the future.
     case GXCommandId::SET_COMMAND_LIST_LAST:
-        GPU::Write<u32>(GPU::Registers::CommandListAddress, cmd_buff[1] >> 3);
-        GPU::Write<u32>(GPU::Registers::CommandListSize, cmd_buff[2] >> 3);
-        GPU::Write<u32>(GPU::Registers::ProcessCommandList, 1); // TODO: Not sure if we are supposed to always write this
+    {
+        auto& params = command.set_command_list_last;
+        WriteGPURegister(GPU::Regs::CommandProcessor + 2, params.address >> 3);
+        WriteGPURegister(GPU::Regs::CommandProcessor, params.size >> 3);
+        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1); // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
 
         // TODO: Move this to GPU
         // TODO: Not sure what units the size is measured in
-        g_debugger.CommandListCalled(cmd_buff[1], (u32*)Memory::GetPointer(cmd_buff[1]), cmd_buff[2]);
+        g_debugger.CommandListCalled(params.address,
+                                     (u32*)Memory::GetPointer(params.address),
+                                     params.size);
         break;
+    }
 
+    // It's assumed that the two "blocks" behave equivalently.
+    // Presumably this is done simply to allow two memory fills to run in parallel.
     case GXCommandId::SET_MEMORY_FILL:
-        break;
+    {
+        auto& params = command.memory_fill;
+        WriteGPURegister(GPU::Regs::MemoryFill, params.start1 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 1, params.end1 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 2, params.end1 - params.start1);
+        WriteGPURegister(GPU::Regs::MemoryFill + 3, params.value1);
 
+        WriteGPURegister(GPU::Regs::MemoryFill + 4, params.start2 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 5, params.end2 >> 3);
+        WriteGPURegister(GPU::Regs::MemoryFill + 6, params.end2 - params.start2);
+        WriteGPURegister(GPU::Regs::MemoryFill + 7, params.value2);
+        break;
+    }
+
+    // TODO: Check if texture copies are implemented correctly..
     case GXCommandId::SET_DISPLAY_TRANSFER:
-        break;
-
     case GXCommandId::SET_TEXTURE_COPY:
-        break;
+    {
+        auto& params = command.image_copy;
+        WriteGPURegister(GPU::Regs::DisplayTransfer, params.in_buffer_address >> 3);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 1, params.out_buffer_address >> 3);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 3, params.in_buffer_size);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 2, params.out_buffer_size);
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 4, params.flags);
 
+        // TODO: Should this only be ORed with 1 for texture copies?
+        // trigger transfer
+        WriteGPURegister(GPU::Regs::DisplayTransfer + 6, 1);
+        break;
+    }
+
+    // TODO: Figure out what exactly SET_COMMAND_LIST_FIRST and SET_COMMAND_LIST_LAST
+    //       are supposed to do.
     case GXCommandId::SET_COMMAND_LIST_FIRST:
     {
-        //u32* buf0_data = (u32*)Memory::GetPointer(cmd_buff[1]);
-        //u32* buf1_data = (u32*)Memory::GetPointer(cmd_buff[3]);
-        //u32* buf2_data = (u32*)Memory::GetPointer(cmd_buff[5]);
         break;
     }
 
     default:
-        ERROR_LOG(GSP, "unknown command 0x%08X", cmd_buff[0]);
+        ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
 
     GX_FinishCommand(g_thread_id);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, nullptr,                       "WriteHWRegs"},
+    {0x00010082, WriteHWRegs,                   "WriteHWRegs"},
     {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
     {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},

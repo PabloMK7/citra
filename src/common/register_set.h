@@ -34,7 +34,7 @@
 /*
  * Standardized way to define a group of registers and corresponding data structures. To define
  * a new register set, first define struct containing an enumeration called "Id" containing
- * all register IDs and a template union called "Struct". Specialize the Struct union for any
+ * all register IDs and a template struct called "Struct". Specialize the Struct struct for any
  * register ID which needs to be accessed in a specialized way. You can then declare the object
  * containing all register values using the RegisterSet<BaseType, DefiningStruct> type, where
  * BaseType is the underlying type of each register (e.g. u32).
@@ -54,7 +54,7 @@
  *
  *         // declare register definition structures
  *         template<Id id>
- *         union Struct;
+ *         struct Struct;
  *     };
  *
  *     // Define register set object
@@ -62,9 +62,11 @@
  *
  *     // define register definition structures
  *     template<>
- *     union Regs::Struct<Regs::Value1> {
- *         BitField<0, 4, u32> some_field;
- *         BitField<4, 3, u32> some_other_field;
+ *     struct Regs::Struct<Regs::Value1> {
+ *         union {
+ *             BitField<0, 4, u32> some_field;
+ *             BitField<4, 3, u32> some_other_field;
+ *         };
  *     };
  *
  * Usage in external code (within SomeNamespace scope):
@@ -77,7 +79,7 @@
  *
  *
  * @tparam BaseType Base type used for storing individual registers, e.g. u32
- * @tparam RegDefinition Class defining an enumeration called "Id" and a template<Id id> union, as described above.
+ * @tparam RegDefinition Class defining an enumeration called "Id" and a template<Id id> struct, as described above.
  * @note RegDefinition::Id needs to have an enum value called NumIds defining the number of registers to be allocated.
  */
 template<typename BaseType, typename RegDefinition>
