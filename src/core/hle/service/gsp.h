@@ -12,7 +12,19 @@
 
 namespace GSP_GPU {
 
-enum class GXCommandId : u32 {
+/// GSP interrupt ID
+enum class InterruptId : u8 {
+    PSC0    = 0x00,
+    PSC1    = 0x01,
+    PDC0    = 0x02, // Seems called every vertical screen line
+    PDC1    = 0x03, // Seems called every frame
+    PPF     = 0x04,
+    P3D     = 0x05,
+    DMA     = 0x06,
+};
+
+/// GSP command ID
+enum class CommandId : u32 {
     REQUEST_DMA            = 0x00,
     SET_COMMAND_LIST_LAST  = 0x01,
 
@@ -29,18 +41,47 @@ enum class GXCommandId : u32 {
     SET_COMMAND_LIST_FIRST = 0x05,
 };
 
-enum class GXInterruptId : u8 {
-    PSC0    = 0x00,
-    PSC1    = 0x01,
-    PDC0    = 0x02, // Seems called every vertical screen line
-    PDC1    = 0x03, // Seems called every frame
-    PPF     = 0x04,
-    P3D     = 0x05,
-    DMA     = 0x06,
+/// GSP thread interrupt queue header
+struct InterruptQueue {
+    union {
+        u32 hex;
+
+        // Index of last interrupt in the queue
+        BitField<0,8,u32>   index;
+
+        // Number of interrupts remaining to be processed by the userland code
+        BitField<8,8,u32>   number_interrupts;
+
+        // Error code - zero on success, otherwise an error has occurred
+        BitField<16,8,u32>  error_code;
+    };
+
+    u32 unk0;
+    u32 unk1;
+
+    InterruptId slot[0x34];   ///< Interrupt ID slots
+};
+static_assert(sizeof(InterruptQueue) == 0x40, "InterruptQueue struct has incorrect size");
+
+/// GSP shared memory GX command buffer header
+union CmdBufferHeader {
+    u32 hex;
+
+    // Current command index. This index is updated by GSP module after loading the command data,
+    // right before the command is processed. When this index is updated by GSP module, the total
+    // commands field is decreased by one as well.
+    BitField<0,8,u32>   index;
+
+    // Total commands to process, must not be value 0 when GSP module handles commands. This must be
+    // <=15 when writing a command to shared memory. This is incremented by the application when
+    // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only
+    // used if this field is value 1.
+    BitField<8,8,u32>   number_commands;
 };
 
-struct GXCommand {
-    BitField<0, 8, GXCommandId> id;
+/// GSP command
+struct Command {
+    BitField<0, 8, CommandId> id;
 
     union {
         struct {
@@ -74,7 +115,7 @@ struct GXCommand {
         u8 raw_data[0x1C];
     };
 };
-static_assert(sizeof(GXCommand) == 0x20, "GXCommand struct has incorrect size");
+static_assert(sizeof(Command) == 0x20, "Command struct has incorrect size");
 
 /// Interface to "srv:" service
 class Interface : public Service::Interface {
@@ -98,6 +139,6 @@ public:
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
  */
-void SignalInterrupt(GXInterruptId interrupt_id);
+void SignalInterrupt(InterruptId interrupt_id);
 
 } // namespace

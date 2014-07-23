@@ -11,52 +11,12 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/gsp.h"
-
 #include "core/hw/gpu.h"
 
 #include "video_core/gpu_debugger.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;
-
-/// GSP thread interrupt queue header
-struct GX_InterruptQueue {
-    union {
-        u32 hex;
-
-        // Index of last interrupt in the queue
-        BitField<0,8,u32>   index;
-
-        // Number of interrupts remaining to be processed by the userland code
-        BitField<8,8,u32>   number_interrupts;
-
-        // Error code - zero on success, otherwise an error has occurred
-        BitField<16,8,u32>  error_code;
-    };
-
-    u32 unk0;
-    u32 unk1;
-
-    GSP_GPU::GXInterruptId slot[0x34];   ///< Interrupt ID slots
-};
-
-/// GSP shared memory GX command buffer header
-union GX_CmdBufferHeader {
-    u32 hex;
-
-    // Current command index. This index is updated by GSP module after loading the command data,
-    // right before the command is processed. When this index is updated by GSP module, the total
-    // commands field is decreased by one as well.
-    BitField<0,8,u32>   index;
-
-    // Total commands to process, must not be value 0 when GSP module handles commands. This must be
-    // <=15 when writing a command to shared memory. This is incremented by the application when
-    // writing a command to shared memory, after increasing this value TriggerCmdReqQueue is only
-    // used if this field is value 1.
-    BitField<8,8,u32>   number_commands;
-};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace GSP_GPU
@@ -69,15 +29,15 @@ Handle g_shared_memory = 0;
 u32 g_thread_id = 1;
 
 /// Gets a pointer to the start (header) of a command buffer in GSP shared memory
-static inline u8* GX_GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
+static inline u8* GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
     if (0 == g_shared_memory) return nullptr;
 
     return Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * 0x200) + offset);
 }
 
 /// Gets a pointer to the start (header) of a command buffer in GSP shared memory
-static inline GX_InterruptQueue* GetInterruptQueue(u32 thread_id) {
-    return (GX_InterruptQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(GX_InterruptQueue) * thread_id);
+static inline InterruptQueue* GetInterruptQueue(u32 thread_id) {
+    return (InterruptQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(InterruptQueue) * thread_id);
 }
 
 /// Write a GSP GPU hardware register
@@ -166,7 +126,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
  */
-void SignalInterrupt(GXInterruptId interrupt_id) {
+void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == GSP_GPU::g_event) {
         WARN_LOG(GSP, "cannot synchronize until GSP event has been created!");
         return;
@@ -176,7 +136,7 @@ void SignalInterrupt(GXInterruptId interrupt_id) {
         return;
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
-        GX_InterruptQueue* interrupt_queue = GetInterruptQueue(thread_id);
+        InterruptQueue* interrupt_queue = GetInterruptQueue(thread_id);
         interrupt_queue->number_interrupts = interrupt_queue->number_interrupts + 1;
         
         u8 next = interrupt_queue->index;
@@ -190,24 +150,24 @@ void SignalInterrupt(GXInterruptId interrupt_id) {
 }
 
 /// Executes the next GSP command
-void ExecuteCommand(int thread_id, int command_index) {
+void ExecuteCommand(u32 thread_id, u32 command_index) {
 
     // Utility function to convert register ID to address
     auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
     };
 
-    GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
-    auto& command = *(const GXCommand*)GX_GetCmdBufferPointer(thread_id, (command_index + 1) * 0x20);
+    CmdBufferHeader* header = (CmdBufferHeader*)GetCmdBufferPointer(thread_id);
+    auto& command = *(const Command*)GetCmdBufferPointer(thread_id, (command_index + 1) * 0x20);
 
-    g_debugger.GXCommandProcessed(GX_GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
+    g_debugger.GXCommandProcessed(GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
 
     NOTICE_LOG(GSP, "decoding command 0x%08X", (int)command.id.Value());
 
     switch (command.id) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
-    case GXCommandId::REQUEST_DMA:
+    case CommandId::REQUEST_DMA:
         memcpy(Memory::GetPointer(command.dma_request.dest_address),
                Memory::GetPointer(command.dma_request.source_address),
                command.dma_request.size);
@@ -216,7 +176,7 @@ void ExecuteCommand(int thread_id, int command_index) {
     // ctrulib homebrew sends all relevant command list data with this command,
     // hence we do all "interesting" stuff here and do nothing in SET_COMMAND_LIST_FIRST.
     // TODO: This will need some rework in the future.
-    case GXCommandId::SET_COMMAND_LIST_LAST:
+    case CommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
         WriteGPURegister(GPU::Regs::CommandProcessor + 2, params.address >> 3);
@@ -228,13 +188,13 @@ void ExecuteCommand(int thread_id, int command_index) {
         g_debugger.CommandListCalled(params.address,
                                      (u32*)Memory::GetPointer(params.address),
                                      params.size);
-        SignalInterrupt(GXInterruptId::P3D);
+        SignalInterrupt(InterruptId::P3D);
         break;
     }
 
     // It's assumed that the two "blocks" behave equivalently.
     // Presumably this is done simply to allow two memory fills to run in parallel.
-    case GXCommandId::SET_MEMORY_FILL:
+    case CommandId::SET_MEMORY_FILL:
     {
         auto& params = command.memory_fill;
         WriteGPURegister(GPU::Regs::MemoryFill, params.start1 >> 3);
@@ -250,18 +210,18 @@ void ExecuteCommand(int thread_id, int command_index) {
     }
 
     // TODO: Check if texture copies are implemented correctly..
-    case GXCommandId::SET_DISPLAY_TRANSFER:
+    case CommandId::SET_DISPLAY_TRANSFER:
         // TODO(bunnei): Signalling all of these interrupts here is totally wrong, but it seems to
         // work well enough for running demos. Need to figure out how these all work and trigger
         // them correctly.
-        SignalInterrupt(GXInterruptId::PSC0);
-        SignalInterrupt(GXInterruptId::PSC1);
-        SignalInterrupt(GXInterruptId::PPF);
-        SignalInterrupt(GXInterruptId::P3D);
-        SignalInterrupt(GXInterruptId::DMA);
+        SignalInterrupt(InterruptId::PSC0);
+        SignalInterrupt(InterruptId::PSC1);
+        SignalInterrupt(InterruptId::PPF);
+        SignalInterrupt(InterruptId::P3D);
+        SignalInterrupt(InterruptId::DMA);
         break;
 
-    case GXCommandId::SET_TEXTURE_COPY:
+    case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.image_copy;
         WriteGPURegister(GPU::Regs::DisplayTransfer, params.in_buffer_address >> 3);
@@ -278,7 +238,7 @@ void ExecuteCommand(int thread_id, int command_index) {
 
     // TODO: Figure out what exactly SET_COMMAND_LIST_FIRST and SET_COMMAND_LIST_LAST
     //       are supposed to do.
-    case GXCommandId::SET_COMMAND_LIST_FIRST:
+    case CommandId::SET_COMMAND_LIST_FIRST:
     {
         break;
     }
@@ -294,11 +254,11 @@ void ExecuteCommand(int thread_id, int command_index) {
 void TriggerCmdReqQueue(Service::Interface* self) {
 
     // Iterate through each thread's command queue...
-    for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
-        GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
+    for (u32 thread_id = 0; thread_id < 0x4; ++thread_id) {
+        CmdBufferHeader* header = (CmdBufferHeader*)GetCmdBufferPointer(thread_id);
 
         // Iterate through each command...
-        for (int command_index = 0; command_index < header->number_commands; ++command_index) {
+        for (u32 command_index = 0; command_index < header->number_commands; ++command_index) {
             ExecuteCommand(thread_id, command_index);
         }
     }

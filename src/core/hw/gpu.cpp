@@ -256,7 +256,7 @@ void Update() {
 
     // Synchronize line...
     if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks / 400) {
-        GSP_GPU::SignalInterrupt(GSP_GPU::GXInterruptId::PDC0);
+        GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
         g_cur_line++;
         g_last_ticks = current_ticks;
     }
@@ -264,7 +264,7 @@ void Update() {
     // Synchronize frame...
     if (g_cur_line >= 400) {
         g_cur_line = 0;
-        GSP_GPU::SignalInterrupt(GSP_GPU::GXInterruptId::PDC1);
+        GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
         VideoCore::g_renderer->SwapBuffers();
         Kernel::WaitCurrentThread(WAITTYPE_VBLANK);
         HLE::Reschedule(__func__);
