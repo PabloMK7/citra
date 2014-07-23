@@ -23,21 +23,23 @@ GraphicsDebugger g_debugger;
 
 namespace GSP_GPU {
 
-Handle g_event = 0;
-Handle g_shared_memory = 0;
+Handle g_interrupt_event = 0;   ///< Handle to event triggered when GSP interrupt has been signalled
+Handle g_shared_memory = 0;     ///< Handle to GSP shared memorys
+u32 g_thread_id = 1;            ///< Thread index into interrupt relay queue, 1 is arbitrary
 
-u32 g_thread_id = 1;
+/// Gets a pointer to a thread command buffer in GSP shared memory
+static inline u8* GetCommandBuffer(u32 thread_id) {
+    if (0 == g_shared_memory)
+        return nullptr;
 
-/// Gets a pointer to the start (header) of a command buffer in GSP shared memory
-static inline u8* GetCmdBufferPointer(u32 thread_id, u32 offset=0) {
-    if (0 == g_shared_memory) return nullptr;
-
-    return Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * 0x200) + offset);
+    return Kernel::GetSharedMemoryPointer(g_shared_memory, 
+        0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
-/// Gets a pointer to the start (header) of a command buffer in GSP shared memory
-static inline InterruptQueue* GetInterruptQueue(u32 thread_id) {
-    return (InterruptQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(InterruptQueue) * thread_id);
+/// Gets a pointer to the interrupt relay queue for a given thread index
+static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
+    return (InterruptRelayQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory,
+        sizeof(InterruptRelayQueue) * thread_id);
 }
 
 /// Write a GSP GPU hardware register
@@ -111,15 +113,15 @@ void ReadHWRegs(Service::Interface* self) {
 void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
-    g_event = cmd_buff[3];
+    g_interrupt_event = cmd_buff[3];
     g_shared_memory = Kernel::CreateSharedMemory("GSPSharedMem");
 
-    _assert_msg_(GSP, (g_event != 0), "handle is not valid!");
+    _assert_msg_(GSP, (g_interrupt_event != 0), "handle is not valid!");
 
     cmd_buff[2] = g_thread_id++; // ThreadID
     cmd_buff[4] = g_shared_memory; // GSP shared memory
 
-    Kernel::SignalEvent(GSP_GPU::g_event); // TODO(bunnei): Is this correct?
+    Kernel::SignalEvent(g_interrupt_event); // TODO(bunnei): Is this correct?
 }
 
 /**
@@ -127,7 +129,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
  * @param interrupt_id ID of interrupt that is being signalled
  */
 void SignalInterrupt(InterruptId interrupt_id) {
-    if (0 == GSP_GPU::g_event) {
+    if (0 == g_interrupt_event) {
         WARN_LOG(GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
@@ -136,33 +138,25 @@ void SignalInterrupt(InterruptId interrupt_id) {
         return;
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
-        InterruptQueue* interrupt_queue = GetInterruptQueue(thread_id);
-        interrupt_queue->number_interrupts = interrupt_queue->number_interrupts + 1;
-        
-        u8 next = interrupt_queue->index;
-        next += interrupt_queue->number_interrupts;
-        next = next % 0x34;
+        InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
+        interrupt_relay_queue->number_interrupts = interrupt_relay_queue->number_interrupts + 1;
 
-        interrupt_queue->slot[next] = interrupt_id;
-        interrupt_queue->error_code = 0x0; // No error
+        u8 next = interrupt_relay_queue->index;
+        next += interrupt_relay_queue->number_interrupts;
+        next = next % 0x34; // 0x34 is the number of interrupt slots
+
+        interrupt_relay_queue->slot[next] = interrupt_id;
+        interrupt_relay_queue->error_code = 0x0; // No error
     }
-    Kernel::SignalEvent(GSP_GPU::g_event);
+    Kernel::SignalEvent(g_interrupt_event);
 }
 
 /// Executes the next GSP command
-void ExecuteCommand(u32 thread_id, u32 command_index) {
-
+void ExecuteCommand(const Command& command) {
     // Utility function to convert register ID to address
     auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
     };
-
-    CmdBufferHeader* header = (CmdBufferHeader*)GetCmdBufferPointer(thread_id);
-    auto& command = *(const Command*)GetCmdBufferPointer(thread_id, (command_index + 1) * 0x20);
-
-    g_debugger.GXCommandProcessed(GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
-
-    NOTICE_LOG(GSP, "decoding command 0x%08X", (int)command.id.Value());
 
     switch (command.id) {
 
@@ -181,7 +175,9 @@ void ExecuteCommand(u32 thread_id, u32 command_index) {
         auto& params = command.set_command_list_last;
         WriteGPURegister(GPU::Regs::CommandProcessor + 2, params.address >> 3);
         WriteGPURegister(GPU::Regs::CommandProcessor, params.size >> 3);
-        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1); // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
+
+        // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
+        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1);
 
         // TODO: Move this to GPU
         // TODO: Not sure what units the size is measured in
@@ -246,20 +242,24 @@ void ExecuteCommand(u32 thread_id, u32 command_index) {
     default:
         ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
-
-    header->number_commands = header->number_commands - 1; // Indicates that command has completed
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 void TriggerCmdReqQueue(Service::Interface* self) {
 
     // Iterate through each thread's command queue...
-    for (u32 thread_id = 0; thread_id < 0x4; ++thread_id) {
-        CmdBufferHeader* header = (CmdBufferHeader*)GetCmdBufferPointer(thread_id);
+    for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
+        CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(thread_id);
 
         // Iterate through each command...
-        for (u32 command_index = 0; command_index < header->number_commands; ++command_index) {
-            ExecuteCommand(thread_id, command_index);
+        for (unsigned i = 0; i < command_buffer->number_commands; ++i) {
+            g_debugger.GXCommandProcessed((u8*)&command_buffer->commands[i]);
+
+            // Decode and execute command
+            ExecuteCommand(command_buffer->commands[i]);
+
+            // Indicates that command has completed
+            command_buffer->number_commands = command_buffer->number_commands - 1;
         }
     }
 }
@@ -303,7 +303,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 
-    g_event = 0;
+    g_interrupt_event = 0;
     g_shared_memory = 0;
     g_thread_id = 1;
 }
