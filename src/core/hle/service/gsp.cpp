@@ -80,17 +80,6 @@ static inline GX_InterruptQueue* GetInterruptQueue(u32 thread_id) {
     return (GX_InterruptQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(GX_InterruptQueue) * thread_id);
 }
 
-/// Finishes execution of a GSP command
-void GX_FinishCommand(u32 thread_id) {
-    GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
-
-    g_debugger.GXCommandProcessed(GX_GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
-
-    header->number_commands = 0;
-
-    // TODO: Increment header->index?
-}
-
 /// Write a GSP GPU hardware register
 void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
@@ -211,6 +200,8 @@ void ExecuteCommand(int thread_id, int command_index) {
     GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
     auto& command = *(const GXCommand*)GX_GetCmdBufferPointer(thread_id, (command_index + 1) * 0x20);
 
+    g_debugger.GXCommandProcessed(GX_GetCmdBufferPointer(thread_id, 0x20 + (header->index * 0x20)));
+
     NOTICE_LOG(GSP, "decoding command 0x%08X", (int)command.id.Value());
 
     switch (command.id) {
@@ -295,10 +286,13 @@ void ExecuteCommand(int thread_id, int command_index) {
     default:
         ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
+
+    header->number_commands = header->number_commands - 1; // Indicates that command has completed
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 void TriggerCmdReqQueue(Service::Interface* self) {
+
     // Iterate through each thread's command queue...
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
         GX_CmdBufferHeader* header = (GX_CmdBufferHeader*)GX_GetCmdBufferPointer(thread_id);
@@ -307,8 +301,6 @@ void TriggerCmdReqQueue(Service::Interface* self) {
         for (int command_index = 0; command_index < header->number_commands; ++command_index) {
             ExecuteCommand(thread_id, command_index);
         }
-
-        GX_FinishCommand(thread_id);
     }
 }
 
