@@ -168,7 +168,7 @@ u8 *GetPointer(const u32 addr) {
          return g_system_mem + (vaddr & SYSTEM_MEMORY_MASK);
 
     // VRAM
-    } else if ((vaddr > VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
+    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         return g_vram + (vaddr & VRAM_MASK);
 
     } else {
