@@ -1,5 +1,3 @@
-#include <QtGui>
-
 #include "disassembler.hxx"
 
 #include "../bootmanager.hxx"
@@ -14,14 +12,161 @@
 #include "core/arm/interpreter/armdefs.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
+DisassemblerModel::DisassemblerModel(QObject* parent) : QAbstractItemModel(parent), base_address(0), code_size(0), program_counter(0), selection(QModelIndex()) {
+
+}
+
+QModelIndex DisassemblerModel::index(int row, int column, const QModelIndex& parent) const {
+    return createIndex(row, column);
+}
+
+QModelIndex DisassemblerModel::parent(const QModelIndex& child) const {
+    return QModelIndex();
+}
+
+int DisassemblerModel::columnCount(const QModelIndex& parent) const {
+    return 3;
+}
+
+int DisassemblerModel::rowCount(const QModelIndex& parent) const {
+    return code_size;
+}
+
+QVariant DisassemblerModel::data(const QModelIndex& index, int role) const {
+    switch (role) {
+        case Qt::DisplayRole:
+        {
+            static char result[255];
+
+            u32 address = base_address + index.row() * 4;
+            u32 instr = Memory::Read32(address);
+            ARM_Disasm::disasm(address, instr, result);
+
+            if (index.column() == 0) {
+                return QString("0x%1").arg((uint)(address), 8, 16, QLatin1Char('0'));
+            } else if (index.column() == 1) {
+                return QString::fromLatin1(result);
+            } else if (index.column() == 2) {
+                if(Symbols::HasSymbol(address)) {
+                    TSymbol symbol = Symbols::GetSymbol(address);
+                    return QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
+                                                  .arg(symbol.size / 4); // divide by 4 to get instruction count
+                } else if (ARM_Disasm::decode(instr) == OP_BL) {
+                    u32 offset = instr & 0xFFFFFF;
+
+                    // Sign-extend the 24-bit offset
+                    if ((offset >> 23) & 1)
+                        offset |= 0xFF000000;
+
+                    // Pre-compute the left-shift and the prefetch offset
+                    offset <<= 2;
+                    offset += 8;
+
+                    TSymbol symbol = Symbols::GetSymbol(address + offset);
+                    return QString("    --> %1").arg(QString::fromStdString(symbol.name));
+                }
+            }
+
+            break;
+        }
+
+        case Qt::BackgroundRole:
+        {
+            unsigned int address = base_address + 4 * index.row();
+
+            if (breakpoints.IsAddressBreakPoint(address))
+                return QBrush(QColor(0xFF, 0xC0, 0xC0));
+            else if (address == program_counter)
+                return QBrush(QColor(0xC0, 0xC0, 0xFF));
+
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return QVariant();
+}
+
+QModelIndex DisassemblerModel::IndexFromAbsoluteAddress(unsigned int address) const {
+    return index((address - base_address) / 4, 0);
+}
+
+const BreakPoints& DisassemblerModel::GetBreakPoints() const {
+    return breakpoints;
+}
+
+void DisassemblerModel::ParseFromAddress(unsigned int address) {
+
+    // NOTE: A too large value causes lagging when scrolling the disassembly
+    const unsigned int chunk_size = 1000*500;
+
+    // If we haven't loaded anything yet, initialize base address to the parameter address
+    if (code_size == 0)
+        base_address = address;
+
+    // If the new area is already loaded, just continue
+    if (base_address + code_size > address + chunk_size && base_address <= address)
+        return;
+
+    // Insert rows before currently loaded data
+    if (base_address > address) {
+        unsigned int num_rows = (address - base_address) / 4;
+
+        beginInsertRows(QModelIndex(), 0, num_rows);
+        code_size += num_rows;
+        base_address = address;
+
+        endInsertRows();
+    }
+
+    // Insert rows after currently loaded data
+    if (base_address + code_size < address + chunk_size) {
+        unsigned int num_rows = (base_address + chunk_size - code_size - address) / 4;
+
+        beginInsertRows(QModelIndex(), 0, num_rows);
+        code_size += num_rows;
+        endInsertRows();
+    }
+
+    SetNextInstruction(address);
+}
+
+void DisassemblerModel::OnSelectionChanged(const QModelIndex& new_selection) {
+    selection = new_selection;
+}
+
+void DisassemblerModel::OnSetOrUnsetBreakpoint() {
+    if (!selection.isValid())
+        return;
+
+    unsigned int address = base_address + selection.row() * 4;
+
+    if (breakpoints.IsAddressBreakPoint(address)) {
+        breakpoints.Remove(address);
+    } else {
+        breakpoints.Add(address);
+    }
+
+    emit dataChanged(selection, selection);
+}
+
+void DisassemblerModel::SetNextInstruction(unsigned int address) {
+    QModelIndex cur_index = IndexFromAbsoluteAddress(program_counter);
+    QModelIndex prev_index = IndexFromAbsoluteAddress(address);
+
+    program_counter = address;
+
+    emit dataChanged(cur_index, cur_index);
+    emit dataChanged(prev_index, prev_index);
+}
+
 DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
 {
     disasm_ui.setupUi(this);
 
-	breakpoints = new BreakPoints();
-
-    model = new QStandardItemModel(this);
-    model->setColumnCount(3);
+    model = new DisassemblerModel(this);
     disasm_ui.treeView->setModel(model);
 
     RegisterHotkey("Disassembler", "Start/Stop", QKeySequence(Qt::Key_F5), Qt::ApplicationShortcut);
@@ -29,68 +174,31 @@ DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread& emu_thread) :
     RegisterHotkey("Disassembler", "Step into", QKeySequence(Qt::Key_F11), Qt::ApplicationShortcut);
     RegisterHotkey("Disassembler", "Set Breakpoint", QKeySequence(Qt::Key_F9), Qt::ApplicationShortcut);
 
-    connect(disasm_ui.button_breakpoint, SIGNAL(clicked()), this, SLOT(OnSetBreakpoint()));
+    connect(disasm_ui.button_breakpoint, SIGNAL(clicked()), model, SLOT(OnSetOrUnsetBreakpoint()));
     connect(disasm_ui.button_step, SIGNAL(clicked()), this, SLOT(OnStep()));
     connect(disasm_ui.button_pause, SIGNAL(clicked()), this, SLOT(OnPause()));
     connect(disasm_ui.button_continue, SIGNAL(clicked()), this, SLOT(OnContinue()));
 
+    connect(disasm_ui.treeView->selectionModel(), SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+            model, SLOT(OnSelectionChanged(const QModelIndex&)));
+
     connect(GetHotkey("Disassembler", "Start/Stop", this), SIGNAL(activated()), this, SLOT(OnToggleStartStop()));
     connect(GetHotkey("Disassembler", "Step", this), SIGNAL(activated()), this, SLOT(OnStep()));
     connect(GetHotkey("Disassembler", "Step into", this), SIGNAL(activated()), this, SLOT(OnStepInto()));
-    connect(GetHotkey("Disassembler", "Set Breakpoint", this), SIGNAL(activated()), this, SLOT(OnSetBreakpoint()));
+    connect(GetHotkey("Disassembler", "Set Breakpoint", this), SIGNAL(activated()), model, SLOT(OnSetOrUnsetBreakpoint()));
 }
 
 void DisassemblerWidget::Init()
 {
-    ARM_Disasm* disasm = new ARM_Disasm();
+    model->ParseFromAddress(Core::g_app_core->GetPC());
 
-    base_addr = Core::g_app_core->GetPC();
-    unsigned int curInstAddr = base_addr;
-    char result[255];
-
-    for (int i = 0; i < 20000; i++) // fixed for now
-    {
-        disasm->disasm(curInstAddr, Memory::Read32(curInstAddr), result);
-        model->setItem(i, 0, new QStandardItem(QString("0x%1").arg((uint)(curInstAddr), 8, 16, QLatin1Char('0'))));
-        model->setItem(i, 1, new QStandardItem(QString(result)));
-        if (Symbols::HasSymbol(curInstAddr))
-        {
-            TSymbol symbol = Symbols::GetSymbol(curInstAddr);
-            model->setItem(i, 2, new QStandardItem(QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
-                                                                          .arg(symbol.size / 4))); // divide by 4 to get instruction count
-
-        }
-        curInstAddr += 4;
-    }
     disasm_ui.treeView->resizeColumnToContents(0);
     disasm_ui.treeView->resizeColumnToContents(1);
     disasm_ui.treeView->resizeColumnToContents(2);
 
-    QModelIndex model_index = model->index(0, 0);
+    QModelIndex model_index = model->IndexFromAbsoluteAddress(Core::g_app_core->GetPC());
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
-}
-
-void DisassemblerWidget::OnSetBreakpoint()
-{
-    int selected_row = SelectedRow();
-
-    if (selected_row == -1)
-        return;
-	
-    u32 address = base_addr + (selected_row * 4);
-    if (breakpoints->IsAddressBreakPoint(address))
-    {
-		breakpoints->Remove(address);
-        model->item(selected_row, 0)->setBackground(QBrush());
-        model->item(selected_row, 1)->setBackground(QBrush());
-    }
-    else
-    {
-        breakpoints->Add(address);
-        model->item(selected_row, 0)->setBackground(QBrush(QColor(0xFF, 0x99, 0x99)));
-        model->item(selected_row, 1)->setBackground(QBrush(QColor(0xFF, 0x99, 0x99)));
-    }
 }
 
 void DisassemblerWidget::OnContinue()
@@ -112,6 +220,9 @@ void DisassemblerWidget::OnStepInto()
 void DisassemblerWidget::OnPause()
 {
     emu_thread.SetCpuRunning(false);
+
+    // TODO: By now, the CPU might not have actually stopped...
+    model->SetNextInstruction(Core::g_app_core->GetPC());
 }
 
 void DisassemblerWidget::OnToggleStartStop()
@@ -123,13 +234,15 @@ void DisassemblerWidget::OnCPUStepped()
 {
     ARMword next_instr = Core::g_app_core->GetPC();
 
-    if (breakpoints->IsAddressBreakPoint(next_instr))
+    // TODO: Make BreakPoints less crappy (i.e. const-correct) so that this doesn't need a const_cast.
+    if (const_cast<BreakPoints&>(model->GetBreakPoints()).IsAddressBreakPoint(next_instr))
     {
         emu_thread.SetCpuRunning(false);
     }
 
-    unsigned int index = (next_instr - base_addr) / 4;
-    QModelIndex model_index = model->index(index, 0);
+    model->SetNextInstruction(next_instr);
+
+    QModelIndex model_index = model->IndexFromAbsoluteAddress(next_instr);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
@@ -140,5 +253,5 @@ int DisassemblerWidget::SelectedRow()
     if (!index.isValid())
         return -1;
 
-    return model->itemFromIndex(disasm_ui.treeView->selectionModel()->currentIndex())->row();
+    return disasm_ui.treeView->selectionModel()->currentIndex().row();
 }

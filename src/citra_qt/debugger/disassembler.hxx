@@ -1,3 +1,4 @@
+#include <QAbstractItemModel>
 #include <QDockWidget>
 #include "ui_disassembler.h"
 
@@ -5,8 +6,40 @@
 #include "common/break_points.h"
 
 class QAction;
-class QStandardItemModel;
 class EmuThread;
+
+class DisassemblerModel : public QAbstractItemModel
+{
+    Q_OBJECT
+
+public:
+    DisassemblerModel(QObject* parent);
+
+    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex& child) const override;
+    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+
+    QModelIndex IndexFromAbsoluteAddress(unsigned int address) const;
+    const BreakPoints& GetBreakPoints() const;
+
+public slots:
+    void ParseFromAddress(unsigned int address);
+    void OnSelectionChanged(const QModelIndex&);
+    void OnSetOrUnsetBreakpoint();
+    void SetNextInstruction(unsigned int address);
+
+private:
+    unsigned int base_address;
+    unsigned int code_size;
+    unsigned int program_counter;
+
+    QModelIndex selection;
+
+    // TODO: Make BreakPoints less crappy (i.e. const-correct) so that this needn't be mutable.
+    mutable BreakPoints breakpoints;
+};
 
 class DisassemblerWidget : public QDockWidget
 {
@@ -18,7 +51,6 @@ public:
     void Init();
 
 public slots:
-    void OnSetBreakpoint();
     void OnContinue();
     void OnStep();
     void OnStepInto();
@@ -32,11 +64,10 @@ private:
     int SelectedRow();
 
     Ui::DockWidget disasm_ui;
-    QStandardItemModel* model;
+
+    DisassemblerModel* model;
 
     u32 base_addr;
-
-	BreakPoints* breakpoints;
 
     EmuThread& emu_thread;
 };
