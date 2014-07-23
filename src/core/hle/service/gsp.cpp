@@ -32,7 +32,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
     if (0 == g_shared_memory)
         return nullptr;
 
-    return Kernel::GetSharedMemoryPointer(g_shared_memory, 
+    return Kernel::GetSharedMemoryPointer(g_shared_memory,
         0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
@@ -205,8 +205,16 @@ void ExecuteCommand(const Command& command) {
         break;
     }
 
-    // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_DISPLAY_TRANSFER:
+    {
+        auto& params = command.image_copy;
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), params.in_buffer_address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), params.out_buffer_address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
+
         // TODO(bunnei): Signalling all of these interrupts here is totally wrong, but it seems to
         // work well enough for running demos. Need to figure out how these all work and trigger
         // them correctly.
@@ -216,7 +224,9 @@ void ExecuteCommand(const Command& command) {
         SignalInterrupt(InterruptId::P3D);
         SignalInterrupt(InterruptId::DMA);
         break;
+    }
 
+    // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.image_copy;
@@ -226,8 +236,7 @@ void ExecuteCommand(const Command& command) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
 
-        // TODO: Should this only be ORed with 1 for texture copies?
-        // trigger transfer
+        // TODO: Should this register be set to 1 or should instead its value be OR-ed with 1?
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }
