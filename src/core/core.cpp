@@ -26,21 +26,25 @@ ARM_Interface*  g_sys_core      = nullptr;  ///< ARM11 system (OS) core
 /// Run the core CPU loop
 void RunLoop() {
     for (;;){
-        g_app_core->Run(GPU::kFrameTicks);
+        // This function loops for 100 instructions in the CPU before trying to update hardware.
+        // This is a little bit faster than SingleStep, and should be pretty much equivalent. The 
+        // number of instructions chosen is fairly arbitrary, however a large number will more 
+        // drastically affect the frequency of GSP interrupts and likely break things. The point of
+        // this is to just loop in the CPU for more than 1 instruction to reduce overhead and make
+        // it a little bit faster...
+        g_app_core->Run(100);
         HW::Update();
-        Kernel::Reschedule();
+        if (HLE::g_reschedule) {
+            Kernel::Reschedule();
+        }
     }
 }
 
 /// Step the CPU one instruction
 void SingleStep() {
     g_app_core->Step();
-
-    // Update and reschedule after approx. 1 frame
-    u64 current_ticks = Core::g_app_core->GetTicks();
-    if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks || HLE::g_reschedule) {
-        g_last_ticks = current_ticks;
-        HW::Update();
+    HW::Update();
+    if (HLE::g_reschedule) {
         Kernel::Reschedule();
     }
 }

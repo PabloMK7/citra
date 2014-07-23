@@ -7,7 +7,11 @@
 
 #include "core/core.h"
 #include "core/mem_map.h"
+
+#include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/service/gsp.h"
+
 #include "core/hw/gpu.h"
 
 #include "video_core/video_core.h"
@@ -17,7 +21,8 @@ namespace GPU {
 
 RegisterSet<u32, Regs> g_regs;
 
-u64 g_last_ticks = 0; ///< Last CPU ticks
+u32 g_cur_line = 0;     ///< Current vertical screen line
+u64 g_last_ticks = 0;   ///< Last CPU ticks
 
 /**
  * Sets whether the framebuffers are in the GSP heap (FCRAM) or VRAM
@@ -249,17 +254,28 @@ template void Write<u8>(u32 addr, const u8 data);
 void Update() {
     u64 current_ticks = Core::g_app_core->GetTicks();
 
-    // Fake a vertical blank
-    if ((current_ticks - g_last_ticks) >= kFrameTicks) {
+    // Synchronize line...
+    if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks / 400) {
+        GSP_GPU::SignalInterrupt(GSP_GPU::GXInterruptId::PDC0);
+        g_cur_line++;
         g_last_ticks = current_ticks;
+    }
+
+    // Synchronize frame...
+    if (g_cur_line >= 400) {
+        g_cur_line = 0;
+        GSP_GPU::SignalInterrupt(GSP_GPU::GXInterruptId::PDC1);
         VideoCore::g_renderer->SwapBuffers();
         Kernel::WaitCurrentThread(WAITTYPE_VBLANK);
+        HLE::Reschedule(__func__);
     }
 }
 
 /// Initialize hardware
 void Init() {
+    g_cur_line = 0;
     g_last_ticks = Core::g_app_core->GetTicks();
+
 //    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
     SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
 

@@ -29,6 +29,16 @@ enum class GXCommandId : u32 {
     SET_COMMAND_LIST_FIRST = 0x05,
 };
 
+enum class GXInterruptId : u8 {
+    PSC0    = 0x00,
+    PSC1    = 0x01,
+    PDC0    = 0x02, // Seems called every vertical screen line
+    PDC1    = 0x03, // Seems called every frame
+    PPF     = 0x04,
+    P3D     = 0x05,
+    DMA     = 0x06,
+};
+
 struct GXCommand {
     BitField<0, 8, GXCommandId> id;
 
@@ -83,5 +93,11 @@ public:
     }
 
 };
+
+/**
+ * Signals that the specified interrupt type has occurred to userland code
+ * @param interrupt_id ID of interrupt that is being signalled
+ */
+void SignalInterrupt(GXInterruptId interrupt_id);
 
 } // namespace
