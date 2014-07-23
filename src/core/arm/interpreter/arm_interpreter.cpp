@@ -12,6 +12,8 @@ ARM_Interpreter::ARM_Interpreter()  {
     state = new ARMul_State;
 
     ARMul_EmulateInit();
+    memset(state, 0, sizeof(ARMul_State));
+
     ARMul_NewState(state);
 
     state->abort_model = 0;
@@ -23,12 +25,14 @@ ARM_Interpreter::ARM_Interpreter()  {
     mmu_init(state);
 
     // Reset the core to initial state
+    ARMul_CoProInit(state); 
     ARMul_Reset(state);
-    state->NextInstr = 0;
+    state->NextInstr = RESUME;
     state->Emulate = 3;
 
     state->pc = state->Reg[15] = 0x00000000;
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
+    state->servaddr = 0xFFFF0000;
 }
 
 ARM_Interpreter::~ARM_Interpreter() {

@@ -18,10 +18,12 @@
 #define __ARMEMU_H__
 
 
-#include "core/arm/interpreter/skyeye_defs.h"
-#include "core/arm/interpreter/armdefs.h"
+#include "armdefs.h"
+//#include "skyeye.h"
 
-extern ARMword isize;
+//extern ARMword isize;
+
+#define DEBUG(...) DEBUG_LOG(ARM11, __VA_ARGS__)
 
 /* Condition code values.  */
 #define EQ 0
@@ -228,17 +230,6 @@ extern ARMword isize;
     }									\
   while (0)
 
-#define SETABORT_SKIPBRANCH(i, m, d)						\
-  do									\
-    { 									\
-      int SETABORT_mode = (m);						\
-									\
-      ARMul_SetSPSR (state, SETABORT_mode, ARMul_GetCPSR (state));	\
-      ARMul_SetCPSR (state, ((ARMul_GetCPSR (state) & ~(EMODE | TBIT))	\
-			     | (i) | SETABORT_mode));			\
-    }									\
-  while (0)
-
 #ifndef MODE32
 #define VECTORS 0x20
 #define LEGALADDR 0x03ffffff
@@ -306,7 +297,7 @@ extern ARMword isize;
       if (! state->is_v4)					\
         {							\
 	  /* A standard PC inc and an S cycle.  */		\
-	  state->Reg[15] += isize;				\
+      state->Reg[15] += INSN_SIZE;				\
 	  state->NextInstr = (state->NextInstr & 0xff) | 2;	\
 	}							\
     }								\
@@ -320,7 +311,7 @@ extern ARMword isize;
       else						\
 	{						\
 	  /* A standard PC inc and an N cycle.  */	\
-	  state->Reg[15] += isize;			\
+      state->Reg[15] += INSN_SIZE;			\
 	  state->NextInstr |= 3;			\
 	}						\
     }							\
@@ -330,7 +321,7 @@ extern ARMword isize;
   do				\
     {				\
       /* A standard PC inc.  */	\
-      state->Reg[15] += isize;	\
+      state->Reg[15] += INSN_SIZE;	\
       state->NextInstr |= 2;	\
     }				\
   while (0)
@@ -420,9 +411,7 @@ extern ARMword isize;
      || (read_cp15_reg (15, 0, 1) & (1 << (CP))))
 */
 #define CP_ACCESS_ALLOWED(STATE, CP)			\
-    (   ((CP) >= 14)					\
-     || (! (STATE)->is_XScale)				\
-     || (xscale_cp15_cp_access_allowed(STATE,15,CP)))
+    (   ((CP) >= 14)	)				\
 
 /* Macro to rotate n right by b bits.  */
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))
