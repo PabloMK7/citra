@@ -24,7 +24,7 @@ public:
      * @return Port name of service
      */
     const char *GetPortName() const {
-        return "Ufs:";
+        return "fs:USER";
     }
 };
 
