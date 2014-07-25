@@ -105,6 +105,40 @@ void ReadHWRegs(Service::Interface* self) {
     }
 }
 
+void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+    u32 base_address = 0x400000;
+    if (info.active_fb == 0) {
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left1), 4, &info.address_left);
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right1), 4, &info.address_right);
+    } else {
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left2), 4, &info.address_left);
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right2), 4, &info.address_right);
+    }
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].stride), 4, &info.stride);
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].color_format), 4, &info.format);
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].active_fb), 4, &info.shown_fb);
+}
+
+/**
+ * GSP_GPU::SetBufferSwap service function
+ *
+ * Updates GPU display framebuffer configuration using the specified parameters.
+ *
+ *  Inputs:
+ *      1 : Screen ID (0 = top screen, 1 = bottom screen)
+ *      2-7 : FrameBufferInfo structure
+ *  Outputs:
+ *      1: Result code
+ */
+void SetBufferSwap(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+    u32 screen_id = cmd_buff[1];
+    FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
+    SetBufferSwap(screen_id, *fb_info);
+
+    cmd_buff[1] = 0; // No error
+}
+
 /**
  * GSP_GPU::RegisterInterruptRelayQueue service function
  *  Inputs:
@@ -283,7 +317,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
     {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
-    {0x00050200, nullptr,                       "SetBufferSwap"},
+    {0x00050200, SetBufferSwap,                 "SetBufferSwap"},
     {0x00060082, nullptr,                       "SetCommandList"},
     {0x000700C2, nullptr,                       "RequestDma"},
     {0x00080082, nullptr,                       "FlushDataCache"},
