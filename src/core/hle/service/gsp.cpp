@@ -42,33 +42,38 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
         sizeof(InterruptRelayQueue) * thread_id);
 }
 
+void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+    // TODO: Return proper error codes
+    if (base_address + size_in_bytes >= 0x420000) {
+        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)",
+                  base_address, size_in_bytes);
+        return;
+    }
+
+    // size should be word-aligned
+    if ((size_in_bytes % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size_in_bytes);
+        return;
+    }
+
+    while (size_in_bytes > 0) {
+        GPU::Write<u32>(base_address + 0x1EB00000, *data);
+
+        size_in_bytes -= 4;
+        ++data;
+        base_address += 4;
+    }
+}
+
 /// Write a GSP GPU hardware register
 void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
-    // TODO: Return proper error codes
-    if (reg_addr + size >= 0x420000) {
-        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
-        return;
-    }
-
-    // size should be word-aligned
-    if ((size % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
-        return;
-    }
-
     u32* src = (u32*)Memory::GetPointer(cmd_buff[0x4]);
 
-    while (size > 0) {
-        GPU::Write<u32>(reg_addr + 0x1EB00000, *src);
-
-        size -= 4;
-        ++src;
-        reg_addr += 4;
-    }
+    WriteHWRegs(reg_addr, size, src);
 }
 
 /// Read a GSP GPU hardware register
