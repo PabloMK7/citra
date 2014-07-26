@@ -64,7 +64,7 @@ struct Regs {
 
         inline u32 GetBaseAddress() const {
             // TODO: Ugly, should fix PhysicalToVirtualAddress instead
-            return (base_address * 8) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
+            return DecodeAddressRegister(base_address) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
         }
 
         // Descriptor for internal vertex attributes
@@ -110,12 +110,12 @@ struct Regs {
         }
 
         inline int GetNumElements(int n) const {
-            int sizes[] = {
+            u64 sizes[] = {
                 size0, size1, size2, size3,
                 size4, size5, size6, size7,
                 size8, size9, size10, size11
             };
-            return sizes[n]+1;
+            return (int)sizes[n]+1;
         }
 
         inline int GetElementSizeInBytes(int n) const {
@@ -128,7 +128,7 @@ struct Regs {
         }
 
         inline int GetNumTotalAttributes() const {
-            return num_extra_attributes+1;
+            return (int)num_extra_attributes+1;
         }
 
         // Attribute loaders map the source vertex data to input attributes
@@ -158,12 +158,12 @@ struct Regs {
             };
 
             inline int GetComponent(int n) const {
-                int components[] = {
+                u64 components[] = {
                     comp0, comp1, comp2, comp3,
                     comp4, comp5, comp6, comp7,
                     comp8, comp9, comp10, comp11
                 };
-                return components[n];
+                return (int)components[n];
             }
         } attribute_loaders[12];
     } vertex_attributes;
@@ -180,7 +180,16 @@ struct Regs {
         };
     } index_array;
 
-    INSERT_PADDING_WORDS(0xd8);
+    // Number of vertices to render
+    u32 num_vertices;
+
+    INSERT_PADDING_WORDS(0x5);
+
+    // These two trigger rendering of triangles
+    u32 trigger_draw;
+    u32 trigger_draw_indexed;
+
+    INSERT_PADDING_WORDS(0xd0);
 
 #undef INSERT_PADDING_WORDS_HELPER1
 #undef INSERT_PADDING_WORDS_HELPER2
@@ -207,6 +216,9 @@ struct Regs {
         ADD_FIELD(viewport_size_y);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
+        ADD_FIELD(num_vertices);
+        ADD_FIELD(trigger_draw);
+        ADD_FIELD(trigger_draw_indexed);
 
         #undef ADD_FIELD
         #endif // _MSC_VER
@@ -249,6 +261,9 @@ ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
+ASSERT_REG_POSITION(num_vertices, 0x228);
+ASSERT_REG_POSITION(trigger_draw, 0x22e);
+ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
