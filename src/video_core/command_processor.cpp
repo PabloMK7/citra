@@ -2,9 +2,10 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "pica.h"
 #include "command_processor.h"
 #include "math.h"
+#include "pica.h"
+#include "vertex_shader.h"
 
 
 namespace Pica {
@@ -12,6 +13,14 @@ namespace Pica {
 Regs registers;
 
 namespace CommandProcessor {
+
+static int float_regs_counter = 0;
+
+static u32 uniform_write_buffer[4];
+
+// Used for VSLoadProgramData and VSLoadSwizzleData
+static u32 vs_binary_write_offset = 0;
+static u32 vs_swizzle_write_offset = 0;
 
 static inline void WritePicaReg(u32 id, u32 value) {
     u32 old_value = registers[id];
@@ -67,9 +76,7 @@ static inline void WritePicaReg(u32 id, u32 value) {
                 }
 
                 // Initialize data for the current vertex
-                struct {
-                    Math::Vec4<float24> attr[16];
-                } input;
+                VertexShader::InputVertex input;
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
@@ -87,7 +94,7 @@ static inline void WritePicaReg(u32 id, u32 value) {
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
-                // TODO: Run vertex data through vertex shader
+                VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes());
 
                 if (is_indexed) {
                     // TODO: Add processed vertex to vertex cache!
@@ -95,6 +102,97 @@ static inline void WritePicaReg(u32 id, u32 value) {
 
                 // TODO: Submit vertex to primitive assembly
             }
+            break;
+        }
+
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[2], 0x2c3):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[3], 0x2c4):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[4], 0x2c5):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[5], 0x2c6):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[6], 0x2c7):
+        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[7], 0x2c8):
+        {
+            auto& uniform_setup = registers.vs_uniform_setup;
+
+            // TODO: Does actual hardware indeed keep an intermediate buffer or does
+            //       it directly write the values?
+            uniform_write_buffer[float_regs_counter++] = value;
+
+            // Uniforms are written in a packed format such that 4 float24 values are encoded in
+            // three 32-bit numbers. We write to internal memory once a full such vector is
+            // written.
+            if ((float_regs_counter >= 4 && uniform_setup.IsFloat32()) ||
+                (float_regs_counter >= 3 && !uniform_setup.IsFloat32())) {
+                float_regs_counter = 0;
+
+                auto& uniform = VertexShader::GetFloatUniform(uniform_setup.index);
+
+                if (uniform_setup.index > 95) {
+                    ERROR_LOG(GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
+                    break;
+                }
+
+                // NOTE: The destination component order indeed is "backwards"
+                if (uniform_setup.IsFloat32()) {
+                    for (auto i : {0,1,2,3})
+                        uniform[3 - i] = float24::FromFloat32(*(float*)(&uniform_write_buffer[i]));
+                } else {
+                    // TODO: Untested
+                    uniform.w = float24::FromRawFloat24(uniform_write_buffer[0] >> 8);
+                    uniform.z = float24::FromRawFloat24(((uniform_write_buffer[0] & 0xFF)<<16) | ((uniform_write_buffer[1] >> 16) & 0xFFFF));
+                    uniform.y = float24::FromRawFloat24(((uniform_write_buffer[1] & 0xFFFF)<<8) | ((uniform_write_buffer[2] >> 24) & 0xFF));
+                    uniform.x = float24::FromRawFloat24(uniform_write_buffer[2] & 0xFFFFFF);
+                }
+
+                DEBUG_LOG(GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
+                          uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
+                          uniform.w.ToFloat32());
+
+                // TODO: Verify that this actually modifies the register!
+                uniform_setup.index = uniform_setup.index + 1;
+            }
+            break;
+        }
+
+        // Seems to be used to reset the write pointer for VSLoadProgramData
+        case PICA_REG_INDEX(vs_program.begin_load):
+            vs_binary_write_offset = 0;
+            break;
+
+        // Load shader program code
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[0], 0x2cc):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[1], 0x2cd):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[2], 0x2ce):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[3], 0x2cf):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[4], 0x2d0):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[5], 0x2d1):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[6], 0x2d2):
+        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[7], 0x2d3):
+        {
+            VertexShader::SubmitShaderMemoryChange(vs_binary_write_offset, value);
+            vs_binary_write_offset++;
+            break;
+        }
+
+        // Seems to be used to reset the write pointer for VSLoadSwizzleData
+        case PICA_REG_INDEX(vs_swizzle_patterns.begin_load):
+            vs_swizzle_write_offset = 0;
+            break;
+
+        // Load swizzle pattern data
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[0], 0x2d6):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[1], 0x2d7):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[2], 0x2d8):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[3], 0x2d9):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[4], 0x2da):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[5], 0x2db):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[6], 0x2dc):
+        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[7], 0x2dd):
+        {
+            VertexShader::SubmitSwizzleDataChange(vs_swizzle_write_offset, value);
+            vs_swizzle_write_offset++;
             break;
         }
 

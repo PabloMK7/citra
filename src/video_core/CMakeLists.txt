@@ -1,5 +1,6 @@
 set(SRCS    command_processor.cpp
             utils.cpp
+            vertex_shader.cpp
             video_core.cpp
             renderer_opengl/renderer_opengl.cpp)
 
@@ -8,6 +9,7 @@ set(HEADERS command_processor.h
             utils.h
             video_core.h
             renderer_base.h
+            vertex_shader.h
             video_core.h
             renderer_opengl/renderer_opengl.h)
 

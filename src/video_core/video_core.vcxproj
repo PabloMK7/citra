@@ -22,6 +22,7 @@
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
     <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="utils.cpp" />
+    <ClCompile Include="vertex_shader.cpp" />
     <ClCompile Include="video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +32,7 @@
     <ClInclude Include="pica.h" />
     <ClInclude Include="renderer_base.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="vertex_shader.h" />
     <ClInclude Include="video_core.h" />
     <ClInclude Include="renderer_opengl\renderer_opengl.h" />
   </ItemGroup>

@@ -50,7 +50,39 @@ struct Regs {
     INSERT_PADDING_WORDS(0x1);
     BitField<0, 24, u32> viewport_size_y;
 
-    INSERT_PADDING_WORDS(0x1bc);
+    INSERT_PADDING_WORDS(0xc);
+
+    union {
+        // Maps components of output vertex attributes to semantics
+        enum Semantic : u32
+        {
+            POSITION_X   =  0,
+            POSITION_Y   =  1,
+            POSITION_Z   =  2,
+            POSITION_W   =  3,
+
+            COLOR_R      =  8,
+            COLOR_G      =  9,
+            COLOR_B      = 10,
+            COLOR_A      = 11,
+
+            TEXCOORD0_U  = 12,
+            TEXCOORD0_V  = 13,
+            TEXCOORD1_U  = 14,
+            TEXCOORD1_V  = 15,
+            TEXCOORD2_U  = 22,
+            TEXCOORD2_V  = 23,
+
+            INVALID      = 31,
+        };
+
+        BitField< 0, 5, Semantic> map_x;
+        BitField< 8, 5, Semantic> map_y;
+        BitField<16, 5, Semantic> map_z;
+        BitField<24, 5, Semantic> map_w;
+    } vs_output_attributes[7];
+
+    INSERT_PADDING_WORDS(0x1a9);
 
     struct {
         enum class Format : u64 {
@@ -133,7 +165,7 @@ struct Regs {
 
         // Attribute loaders map the source vertex data to input attributes
         // This e.g. allows to load different attributes from different memory locations
-        struct Loader {
+        struct {
             // Source attribute data offset from the base address
             u32 data_offset;
 
@@ -189,7 +221,90 @@ struct Regs {
     u32 trigger_draw;
     u32 trigger_draw_indexed;
 
-    INSERT_PADDING_WORDS(0xd0);
+    INSERT_PADDING_WORDS(0x8a);
+
+    // Offset to shader program entry point (in words)
+    BitField<0, 16, u32> vs_main_offset;
+
+    union {
+        BitField< 0, 4, u64> attribute0_register;
+        BitField< 4, 4, u64> attribute1_register;
+        BitField< 8, 4, u64> attribute2_register;
+        BitField<12, 4, u64> attribute3_register;
+        BitField<16, 4, u64> attribute4_register;
+        BitField<20, 4, u64> attribute5_register;
+        BitField<24, 4, u64> attribute6_register;
+        BitField<28, 4, u64> attribute7_register;
+        BitField<32, 4, u64> attribute8_register;
+        BitField<36, 4, u64> attribute9_register;
+        BitField<40, 4, u64> attribute10_register;
+        BitField<44, 4, u64> attribute11_register;
+        BitField<48, 4, u64> attribute12_register;
+        BitField<52, 4, u64> attribute13_register;
+        BitField<56, 4, u64> attribute14_register;
+        BitField<60, 4, u64> attribute15_register;
+
+        int GetRegisterForAttribute(int attribute_index) {
+            u64 fields[] = {
+                attribute0_register,  attribute1_register,  attribute2_register,  attribute3_register,
+                attribute4_register,  attribute5_register,  attribute6_register,  attribute7_register,
+                attribute8_register,  attribute9_register,  attribute10_register, attribute11_register,
+                attribute12_register, attribute13_register, attribute14_register, attribute15_register,
+            };
+            return (int)fields[attribute_index];
+        }
+    } vs_input_register_map;
+
+    INSERT_PADDING_WORDS(0x3);
+
+    struct {
+        enum Format : u32
+        {
+            FLOAT24 = 0,
+            FLOAT32 = 1
+        };
+
+        bool IsFloat32() const {
+            return format == FLOAT32;
+        }
+
+        union {
+            // Index of the next uniform to write to
+            // TODO: ctrulib uses 8 bits for this, however that seems to yield lots of invalid indices
+            BitField<0, 7, u32> index;
+
+            BitField<31, 1, Format> format;
+        };
+
+        // Writing to these registers sets the "current" uniform.
+        // TODO: It's not clear how the hardware stores what the "current" uniform is.
+        u32 set_value[8];
+
+    } vs_uniform_setup;
+
+    INSERT_PADDING_WORDS(0x2);
+
+    struct {
+        u32 begin_load;
+
+        // Writing to these registers sets the "current" word in the shader program.
+        // TODO: It's not clear how the hardware stores what the "current" word is.
+        u32 set_word[8];
+    } vs_program;
+
+    INSERT_PADDING_WORDS(0x1);
+
+    // This register group is used to load an internal table of swizzling patterns,
+    // which are indexed by each shader instruction to specify vector component swizzling.
+    struct {
+        u32 begin_load;
+
+        // Writing to these registers sets the "current" swizzle pattern in the table.
+        // TODO: It's not clear how the hardware stores what the "current" swizzle pattern is.
+        u32 set_word[8];
+    } vs_swizzle_patterns;
+
+    INSERT_PADDING_WORDS(0x22);
 
 #undef INSERT_PADDING_WORDS_HELPER1
 #undef INSERT_PADDING_WORDS_HELPER2
@@ -219,6 +334,11 @@ struct Regs {
         ADD_FIELD(num_vertices);
         ADD_FIELD(trigger_draw);
         ADD_FIELD(trigger_draw_indexed);
+        ADD_FIELD(vs_main_offset);
+        ADD_FIELD(vs_input_register_map);
+        ADD_FIELD(vs_uniform_setup);
+        ADD_FIELD(vs_program);
+        ADD_FIELD(vs_swizzle_patterns);
 
         #undef ADD_FIELD
         #endif // _MSC_VER
@@ -259,17 +379,25 @@ private:
 
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
+ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
+ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
+ASSERT_REG_POSITION(vs_main_offset, 0x2ba);
+ASSERT_REG_POSITION(vs_input_register_map, 0x2bb);
+ASSERT_REG_POSITION(vs_uniform_setup, 0x2c0);
+ASSERT_REG_POSITION(vs_program, 0x2cb);
+ASSERT_REG_POSITION(vs_swizzle_patterns, 0x2d5);
 
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
 
 // The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value anyway.
-static_assert(sizeof(Regs) == 0x300 * sizeof(u32), "Invalid total size of register set");
+static_assert(sizeof(Regs) <= 0x300 * sizeof(u32), "Register set structure larger than it should be");
+static_assert(sizeof(Regs) >= 0x300 * sizeof(u32), "Register set structure smaller than it should be");
 
 extern Regs registers; // TODO: Not sure if we want to have one global instance for this
 
@@ -346,7 +474,6 @@ private:
     // TODO: Perform proper arithmetic on this!
     float value;
 };
-
 
 union CommandHeader {
     CommandHeader(u32 h) : hex(h) {}
