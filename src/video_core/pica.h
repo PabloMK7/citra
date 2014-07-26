@@ -11,6 +11,8 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
+#include "core/mem_map.h"
+
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name
@@ -50,7 +52,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x1bc);
 
-    union {
+    struct {
         enum class Format : u64 {
             BYTE = 0,
             UBYTE = 1,
@@ -58,36 +60,127 @@ struct Regs {
             FLOAT = 3,
         };
 
-        BitField< 0,  2, Format> format0;
-        BitField< 2,  2, u64> size0;      // number of elements minus 1
-        BitField< 4,  2, Format> format1;
-        BitField< 6,  2, u64> size1;
-        BitField< 8,  2, Format> format2;
-        BitField<10,  2, u64> size2;
-        BitField<12,  2, Format> format3;
-        BitField<14,  2, u64> size3;
-        BitField<16,  2, Format> format4;
-        BitField<18,  2, u64> size4;
-        BitField<20,  2, Format> format5;
-        BitField<22,  2, u64> size5;
-        BitField<24,  2, Format> format6;
-        BitField<26,  2, u64> size6;
-        BitField<28,  2, Format> format7;
-        BitField<30,  2, u64> size7;
-        BitField<32,  2, Format> format8;
-        BitField<34,  2, u64> size8;
-        BitField<36,  2, Format> format9;
-        BitField<38,  2, u64> size9;
-        BitField<40,  2, Format> format10;
-        BitField<42,  2, u64> size10;
-        BitField<44,  2, Format> format11;
-        BitField<46,  2, u64> size11;
+        BitField<0, 29, u32> base_address;
 
-        BitField<48, 12, u64> attribute_mask;
-        BitField<60,  4, u64> num_attributes; // number of total attributes minus 1
-    } vertex_descriptor;
+        inline u32 GetBaseAddress() const {
+            // TODO: Ugly, should fix PhysicalToVirtualAddress instead
+            return (base_address * 8) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
+        }
 
-    INSERT_PADDING_WORDS(0xfe);
+        // Descriptor for internal vertex attributes
+        union {
+            BitField< 0,  2, Format> format0; // size of one element
+            BitField< 2,  2, u64> size0;      // number of elements minus 1
+            BitField< 4,  2, Format> format1;
+            BitField< 6,  2, u64> size1;
+            BitField< 8,  2, Format> format2;
+            BitField<10,  2, u64> size2;
+            BitField<12,  2, Format> format3;
+            BitField<14,  2, u64> size3;
+            BitField<16,  2, Format> format4;
+            BitField<18,  2, u64> size4;
+            BitField<20,  2, Format> format5;
+            BitField<22,  2, u64> size5;
+            BitField<24,  2, Format> format6;
+            BitField<26,  2, u64> size6;
+            BitField<28,  2, Format> format7;
+            BitField<30,  2, u64> size7;
+            BitField<32,  2, Format> format8;
+            BitField<34,  2, u64> size8;
+            BitField<36,  2, Format> format9;
+            BitField<38,  2, u64> size9;
+            BitField<40,  2, Format> format10;
+            BitField<42,  2, u64> size10;
+            BitField<44,  2, Format> format11;
+            BitField<46,  2, u64> size11;
+
+            BitField<48, 12, u64> attribute_mask;
+
+            // number of total attributes minus 1
+            BitField<60,  4, u64> num_extra_attributes;
+        };
+
+        inline Format GetFormat(int n) const {
+            Format formats[] = {
+                format0, format1, format2, format3,
+                format4, format5, format6, format7,
+                format8, format9, format10, format11
+            };
+            return formats[n];
+        }
+
+        inline int GetNumElements(int n) const {
+            int sizes[] = {
+                size0, size1, size2, size3,
+                size4, size5, size6, size7,
+                size8, size9, size10, size11
+            };
+            return sizes[n]+1;
+        }
+
+        inline int GetElementSizeInBytes(int n) const {
+            return (GetFormat(n) == Format::FLOAT) ? 4 :
+                (GetFormat(n) == Format::SHORT) ? 2 : 1;
+        }
+
+        inline int GetStride(int n) const {
+            return GetNumElements(n) * GetElementSizeInBytes(n);
+        }
+
+        inline int GetNumTotalAttributes() const {
+            return num_extra_attributes+1;
+        }
+
+        // Attribute loaders map the source vertex data to input attributes
+        // This e.g. allows to load different attributes from different memory locations
+        struct Loader {
+            // Source attribute data offset from the base address
+            u32 data_offset;
+
+            union {
+                BitField< 0, 4, u64> comp0;
+                BitField< 4, 4, u64> comp1;
+                BitField< 8, 4, u64> comp2;
+                BitField<12, 4, u64> comp3;
+                BitField<16, 4, u64> comp4;
+                BitField<20, 4, u64> comp5;
+                BitField<24, 4, u64> comp6;
+                BitField<28, 4, u64> comp7;
+                BitField<32, 4, u64> comp8;
+                BitField<36, 4, u64> comp9;
+                BitField<40, 4, u64> comp10;
+                BitField<44, 4, u64> comp11;
+
+                // bytes for a single vertex in this loader
+                BitField<48, 8, u64> byte_count;
+
+                BitField<60, 4, u64> component_count;
+            };
+
+            inline int GetComponent(int n) const {
+                int components[] = {
+                    comp0, comp1, comp2, comp3,
+                    comp4, comp5, comp6, comp7,
+                    comp8, comp9, comp10, comp11
+                };
+                return components[n];
+            }
+        } attribute_loaders[12];
+    } vertex_attributes;
+
+    struct {
+        enum IndexFormat : u32 {
+            BYTE = 0,
+            SHORT = 1,
+        };
+
+        union {
+            BitField<0, 31, u32> offset; // relative to base attribute address
+            BitField<31, 1, IndexFormat> format;
+        };
+    } index_array;
+
+    INSERT_PADDING_WORDS(0xd8);
 
 #undef INSERT_PADDING_WORDS_HELPER1
 #undef INSERT_PADDING_WORDS_HELPER2
@@ -112,7 +205,8 @@ struct Regs {
 
         ADD_FIELD(viewport_size_x);
         ADD_FIELD(viewport_size_y);
-        ADD_FIELD(vertex_descriptor);
+        ADD_FIELD(vertex_attributes);
+        ADD_FIELD(index_array);
 
         #undef ADD_FIELD
         #endif // _MSC_VER
@@ -153,7 +247,8 @@ private:
 
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
-ASSERT_REG_POSITION(vertex_descriptor, 0x200);
+ASSERT_REG_POSITION(vertex_attributes, 0x200);
+ASSERT_REG_POSITION(index_array, 0x227);
 
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
