@@ -9,6 +9,7 @@
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp">
       <Filter>renderer_opengl</Filter>
     </ClCompile>
+    <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="video_core.cpp" />
   </ItemGroup>
@@ -16,6 +17,7 @@
     <ClInclude Include="renderer_opengl\renderer_opengl.h">
       <Filter>renderer_opengl</Filter>
     </ClInclude>
+    <ClInclude Include="command_processor.h" />
     <ClInclude Include="gpu_debugger.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="pica.h" />

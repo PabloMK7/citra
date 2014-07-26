@@ -14,6 +14,7 @@
 
 #include "core/hw/gpu.h"
 
+#include "video_core/command_processor.h"
 #include "video_core/video_core.h"
 
 
@@ -143,14 +144,15 @@ inline void Write(u32 addr, const T data) {
         break;
     }
 
+    // Seems like writing to this register triggers processing
     case GPU_REG_INDEX(command_processor_config.trigger):
     {
         const auto& config = g_regs.command_processor_config;
         if (config.trigger & 1)
         {
-            // u32* buffer = (u32*)Memory::GetPointer(config.GetPhysicalAddress());
-            ERROR_LOG(GPU, "Beginning 0x%08x bytes of commands from address 0x%08x", config.size, config.GetPhysicalAddress());
-            // TODO: Process command list!
+            u32* buffer = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalAddress()));
+            u32 size = config.size << 3;
+            Pica::CommandProcessor::ProcessCommandList(buffer, size);
         }
         break;
     }

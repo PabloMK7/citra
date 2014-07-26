@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
+    <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="command_processor.h" />
     <ClInclude Include="gpu_debugger.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="pica.h" />

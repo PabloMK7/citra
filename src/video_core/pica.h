@@ -161,6 +161,8 @@ ASSERT_REG_POSITION(vertex_descriptor, 0x200);
 // The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value anyway.
 static_assert(sizeof(Regs) == 0x300 * sizeof(u32), "Invalid total size of register set");
 
+extern Regs registers; // TODO: Not sure if we want to have one global instance for this
+
 
 struct float24 {
     static float24 FromFloat32(float val) {
