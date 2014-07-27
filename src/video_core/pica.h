@@ -161,6 +161,81 @@ ASSERT_REG_POSITION(vertex_descriptor, 0x200);
 // The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value anyway.
 static_assert(sizeof(Regs) == 0x300 * sizeof(u32), "Invalid total size of register set");
 
+
+struct float24 {
+    static float24 FromFloat32(float val) {
+        float24 ret;
+        ret.value = val;
+        return ret;
+    }
+
+    // 16 bit mantissa, 7 bit exponent, 1 bit sign
+    // TODO: No idea if this works as intended
+    static float24 FromRawFloat24(u32 hex) {
+        float24 ret;
+        if ((hex & 0xFFFFFF) == 0) {
+            ret.value = 0;
+        } else {
+            u32 mantissa = hex & 0xFFFF;
+            u32 exponent = (hex >> 16) & 0x7F;
+            u32 sign = hex >> 23;
+            ret.value = powf(2.0f, (float)exponent-63.0f) * (1.0f + mantissa * powf(2.0f, -16.f));
+            if (sign)
+                ret.value = -ret.value;
+        }
+        return ret;
+    }
+
+    // Not recommended for anything but logging
+    float ToFloat32() const {
+        return value;
+    }
+
+    float24 operator * (const float24& flt) const {
+        return float24::FromFloat32(ToFloat32() * flt.ToFloat32());
+    }
+
+    float24 operator / (const float24& flt) const {
+        return float24::FromFloat32(ToFloat32() / flt.ToFloat32());
+    }
+
+    float24 operator + (const float24& flt) const {
+        return float24::FromFloat32(ToFloat32() + flt.ToFloat32());
+    }
+
+    float24 operator - (const float24& flt) const {
+        return float24::FromFloat32(ToFloat32() - flt.ToFloat32());
+    }
+
+    float24 operator - () const {
+        return float24::FromFloat32(-ToFloat32());
+    }
+
+    bool operator < (const float24& flt) const {
+        return ToFloat32() < flt.ToFloat32();
+    }
+
+    bool operator > (const float24& flt) const {
+        return ToFloat32() > flt.ToFloat32();
+    }
+
+    bool operator >= (const float24& flt) const {
+        return ToFloat32() >= flt.ToFloat32();
+    }
+
+    bool operator <= (const float24& flt) const {
+        return ToFloat32() <= flt.ToFloat32();
+    }
+
+private:
+    float24() = default;
+
+    // Stored as a regular float, merely for convenience
+    // TODO: Perform proper arithmetic on this!
+    float value;
+};
+
+
 union CommandHeader {
     CommandHeader(u32 h) : hex(h) {}
 
