@@ -23,6 +23,7 @@
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="primitive_assembly.cpp" />
+    <ClCompile Include="rasterizer.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="vertex_shader.cpp" />
     <ClCompile Include="video_core.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="math.h" />
     <ClInclude Include="pica.h" />
     <ClInclude Include="primitive_assembly.h" />
+    <ClInclude Include="rasterizer.h" />
     <ClInclude Include="renderer_base.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vertex_shader.h" />

@@ -6,6 +6,7 @@
 
 #include "clipper.h"
 #include "pica.h"
+#include "rasterizer.h"
 #include "vertex_shader.h"
 
 namespace Pica {
@@ -168,7 +169,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
                   vtx1.screenpos.x.ToFloat32(), vtx1.screenpos.y.ToFloat32(), vtx1.screenpos.z.ToFloat32(),
                   vtx2.screenpos.x.ToFloat32(), vtx2.screenpos.y.ToFloat32(), vtx2.screenpos.z.ToFloat32());
 
-        // TODO: Send triangle to rasterizer
+        Rasterizer::ProcessTriangle(vtx0, vtx1, vtx2);
     }
 }
 

@@ -94,7 +94,55 @@ struct Regs {
         BitField<16, 16, u32> y;
     } viewport_corner;
 
-    INSERT_PADDING_WORDS(0x197);
+    INSERT_PADDING_WORDS(0xa7);
+
+    struct {
+        enum ColorFormat : u32 {
+            RGBA8    = 0,
+            RGB8     = 1,
+            RGBA5551 = 2,
+            RGB565   = 3,
+            RGBA4    = 4,
+        };
+
+        INSERT_PADDING_WORDS(0x6);
+
+        u32 depth_format;
+        u32 color_format;
+
+        INSERT_PADDING_WORDS(0x4);
+
+        u32 depth_buffer_address;
+        u32 color_buffer_address;
+
+        union {
+            // Apparently, the framebuffer width is stored as expected,
+            // while the height is stored as the actual height minus one.
+            // Hence, don't access these fields directly but use the accessors
+            // GetWidth() and GetHeight() instead.
+            BitField< 0, 11, u32> width;
+            BitField<12, 10, u32> height;
+        };
+
+        INSERT_PADDING_WORDS(0x1);
+
+        inline u32 GetColorBufferAddress() const {
+            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(color_buffer_address));
+        }
+        inline u32 GetDepthBufferAddress() const {
+            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(depth_buffer_address));
+        }
+
+        inline u32 GetWidth() const {
+            return width;
+        }
+
+        inline u32 GetHeight() const {
+            return height + 1;
+        }
+    } framebuffer;
+
+    INSERT_PADDING_WORDS(0xe0);
 
     struct {
         enum class Format : u64 {
@@ -355,6 +403,7 @@ struct Regs {
         ADD_FIELD(viewport_depth_range);
         ADD_FIELD(viewport_depth_far_plane);
         ADD_FIELD(viewport_corner);
+        ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
         ADD_FIELD(num_vertices);
@@ -411,6 +460,7 @@ ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
+ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);
