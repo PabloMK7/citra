@@ -1,11 +1,13 @@
-set(SRCS    command_processor.cpp
+set(SRCS    clipper.cpp
+            command_processor.cpp
             primitive_assembly.cpp
             utils.cpp
             vertex_shader.cpp
             video_core.cpp
             renderer_opengl/renderer_opengl.cpp)
 
-set(HEADERS command_processor.h
+set(HEADERS clipper.h
+            command_processor.h
             math.h
             primitive_assembly.h
             utils.h

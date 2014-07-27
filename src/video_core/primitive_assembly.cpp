@@ -2,6 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include "clipper.h"
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
@@ -23,8 +24,7 @@ void SubmitVertex(OutputVertex& vtx)
             } else {
                 buffer_index = 0;
 
-                // TODO
-                // Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
+                Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
             }
             break;
 
@@ -32,8 +32,7 @@ void SubmitVertex(OutputVertex& vtx)
             if (buffer_index == 2) {
                 buffer_index = 0;
 
-                // TODO
-                // Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
+                Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
 
                 buffer[1] = vtx;
             } else {

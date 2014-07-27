@@ -50,7 +50,12 @@ struct Regs {
     INSERT_PADDING_WORDS(0x1);
     BitField<0, 24, u32> viewport_size_y;
 
-    INSERT_PADDING_WORDS(0xc);
+    INSERT_PADDING_WORDS(0x9);
+
+    BitField<0, 24, u32> viewport_depth_range; // float24
+    BitField<0, 24, u32> viewport_depth_far_plane; // float24
+
+    INSERT_PADDING_WORDS(0x1);
 
     union {
         // Maps components of output vertex attributes to semantics
@@ -82,7 +87,14 @@ struct Regs {
         BitField<24, 5, Semantic> map_w;
     } vs_output_attributes[7];
 
-    INSERT_PADDING_WORDS(0x1a9);
+    INSERT_PADDING_WORDS(0x11);
+
+    union {
+        BitField< 0, 16, u32> x;
+        BitField<16, 16, u32> y;
+    } viewport_corner;
+
+    INSERT_PADDING_WORDS(0x197);
 
     struct {
         enum class Format : u64 {
@@ -340,6 +352,9 @@ struct Regs {
 
         ADD_FIELD(viewport_size_x);
         ADD_FIELD(viewport_size_y);
+        ADD_FIELD(viewport_depth_range);
+        ADD_FIELD(viewport_depth_far_plane);
+        ADD_FIELD(viewport_corner);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
         ADD_FIELD(num_vertices);
@@ -391,8 +406,11 @@ private:
 
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
+ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
+ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
+ASSERT_REG_POSITION(viewport_corner, 0x68);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);

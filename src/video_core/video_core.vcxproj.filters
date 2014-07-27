@@ -9,6 +9,7 @@
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp">
       <Filter>renderer_opengl</Filter>
     </ClCompile>
+    <ClCompile Include="clipper.cpp" />
     <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="primitive_assembly.cpp" />
     <ClCompile Include="utils.cpp" />
@@ -19,6 +20,7 @@
     <ClInclude Include="renderer_opengl\renderer_opengl.h">
       <Filter>renderer_opengl</Filter>
     </ClInclude>
+    <ClInclude Include="clipper.h" />
     <ClInclude Include="command_processor.h" />
     <ClInclude Include="gpu_debugger.h" />
     <ClInclude Include="math.h" />
