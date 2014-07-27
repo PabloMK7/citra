@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gpu_debugger.h" />
+    <ClInclude Include="math.h" />
     <ClInclude Include="pica.h" />
     <ClInclude Include="renderer_base.h" />
     <ClInclude Include="utils.h" />
