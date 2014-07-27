@@ -1,4 +1,5 @@
 set(SRCS    command_processor.cpp
+            primitive_assembly.cpp
             utils.cpp
             vertex_shader.cpp
             video_core.cpp
@@ -6,6 +7,7 @@ set(SRCS    command_processor.cpp
 
 set(HEADERS command_processor.h
             math.h
+            primitive_assembly.h
             utils.h
             video_core.h
             renderer_base.h

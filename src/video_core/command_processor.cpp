@@ -5,6 +5,7 @@
 #include "command_processor.h"
 #include "math.h"
 #include "pica.h"
+#include "primitive_assembly.h"
 #include "vertex_shader.h"
 
 
@@ -100,7 +101,7 @@ static inline void WritePicaReg(u32 id, u32 value) {
                     // TODO: Add processed vertex to vertex cache!
                 }
 
-                // TODO: Submit vertex to primitive assembly
+                PrimitiveAssembly::SubmitVertex(output);
             }
             break;
         }
