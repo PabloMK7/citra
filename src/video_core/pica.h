@@ -45,7 +45,7 @@ struct Regs {
     INSERT_PADDING_WORDS(0x41);
 
     BitField<0, 24, u32> viewport_size_x;
-    INSERT_PADDING_WORDS(1);
+    INSERT_PADDING_WORDS(0x1);
     BitField<0, 24, u32> viewport_size_y;
 
     INSERT_PADDING_WORDS(0x1bc);

@@ -17,36 +17,43 @@ std::map<u32, MemoryBlock> g_heap_map;
 std::map<u32, MemoryBlock> g_heap_gsp_map;
 std::map<u32, MemoryBlock> g_shared_map;
 
-/// Convert a physical address (or firmware-specific virtual address) to primary virtual address
-u32 _VirtualAddress(const u32 addr) {
-    // Our memory interface read/write functions assume virtual addresses. Put any physical address 
-    // to virtual address translations here. This is obviously quite hacky... But we're not doing 
-    // any MMU emulation yet or anything
-    if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
-        return VirtualAddressFromPhysical_FCRAM(addr);
-
-    // Virtual address mapping FW0B
-    } else if ((addr >= FCRAM_VADDR_FW0B) && (addr < FCRAM_VADDR_FW0B_END)) {
-        return VirtualAddressFromPhysical_FCRAM(addr);
-
-    // Hardware IO
-    // TODO(bunnei): FixMe
-    // This isn't going to work... The physical address of HARDWARE_IO conflicts with the virtual 
-    // address of shared memory.
-    //} else if ((addr >= HARDWARE_IO_PADDR) && (addr < HARDWARE_IO_PADDR_END)) {
-    //    return (addr + 0x0EB00000);
-
+/// Convert a physical address to virtual address
+u32 PhysicalToVirtualAddress(const u32 addr) {
+    // Our memory interface read/write functions assume virtual addresses. Put any physical address
+    // to virtual address translations here. This is quite hacky, but necessary until we implement
+    // proper MMU emulation.
+    // TODO: Screw it, I'll let bunnei figure out how to do this properly.
+    if ((addr >= VRAM_PADDR) && (addr < VRAM_PADDR_END)) {
+        return addr - VRAM_PADDR + VRAM_VADDR;
+    }else if ((addr >= FCRAM_PADDR) && (addr < FCRAM_PADDR_END)) {
+        return addr - FCRAM_PADDR + FCRAM_VADDR;
     }
+
+    ERROR_LOG(MEMMAP, "Unknown physical address @ 0x%08x", addr);
+    return addr;
+}
+
+/// Convert a physical address to virtual address
+u32 VirtualToPhysicalAddress(const u32 addr) {
+    // Our memory interface read/write functions assume virtual addresses. Put any physical address
+    // to virtual address translations here. This is quite hacky, but necessary until we implement
+    // proper MMU emulation.
+    // TODO: Screw it, I'll let bunnei figure out how to do this properly.
+    if ((addr >= VRAM_VADDR) && (addr < VRAM_VADDR_END)) {
+        return addr - 0x07000000;
+    } else if ((addr >= FCRAM_VADDR) && (addr < FCRAM_VADDR_END)) {
+        return addr - FCRAM_VADDR + FCRAM_PADDR;
+    }
+
+    ERROR_LOG(MEMMAP, "Unknown virtual address @ 0x%08x", addr);
     return addr;
 }
 
 template <typename T>
-inline void Read(T &var, const u32 addr) {
+inline void Read(T &var, const u32 vaddr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
-
-    const u32 vaddr = _VirtualAddress(addr);
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
@@ -91,9 +98,8 @@ inline void Read(T &var, const u32 addr) {
 }
 
 template <typename T>
-inline void Write(u32 addr, const T data) {
-    u32 vaddr = _VirtualAddress(addr);
-    
+inline void Write(u32 vaddr, const T data) {
+
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
         *(T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK] = data;
@@ -133,16 +139,14 @@ inline void Write(u32 addr, const T data) {
     //    _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
     //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
     //    _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
-    
+
     // Error out...
     } else {
         ERROR_LOG(MEMMAP, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, vaddr);
     }
 }
 
-u8 *GetPointer(const u32 addr) {
-    const u32 vaddr = _VirtualAddress(addr);
-
+u8 *GetPointer(const u32 vaddr) {
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
         return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
@@ -185,12 +189,12 @@ u8 *GetPointer(const u32 addr) {
  */
 u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
-    
+
     block.base_address  = HEAP_VADDR;
     block.size          = size;
     block.operation     = operation;
     block.permissions   = permissions;
-    
+
     if (g_heap_map.size() > 0) {
         const MemoryBlock last_block = g_heap_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
@@ -208,12 +212,12 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
-    
+
     block.base_address  = HEAP_GSP_VADDR;
     block.size          = size;
     block.operation     = operation;
     block.permissions   = permissions;
-    
+
     if (g_heap_gsp_map.size() > 0) {
         const MemoryBlock last_block = g_heap_gsp_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
