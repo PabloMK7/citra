@@ -83,7 +83,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
         if (role == Qt::DisplayRole) {
             QString content;
             if (index.column() == 0) {
-                content = Pica::command_names[header.cmd_id];
+                content = QString::fromLatin1(Pica::Regs::GetCommandName(header.cmd_id).c_str());
                 content.append(" ");
             } else if (index.column() == 1) {
                 for (int j = 0; j < cmd.size(); ++j)

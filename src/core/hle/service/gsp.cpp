@@ -173,11 +173,11 @@ void ExecuteCommand(const Command& command) {
     case CommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
-        WriteGPURegister(GPU::Regs::CommandProcessor + 2, params.address >> 3);
-        WriteGPURegister(GPU::Regs::CommandProcessor, params.size >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), params.address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size >> 3);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
-        WriteGPURegister(GPU::Regs::CommandProcessor + 4, 1);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
 
         // TODO: Move this to GPU
         // TODO: Not sure what units the size is measured in
@@ -193,15 +193,15 @@ void ExecuteCommand(const Command& command) {
     case CommandId::SET_MEMORY_FILL:
     {
         auto& params = command.memory_fill;
-        WriteGPURegister(GPU::Regs::MemoryFill, params.start1 >> 3);
-        WriteGPURegister(GPU::Regs::MemoryFill + 1, params.end1 >> 3);
-        WriteGPURegister(GPU::Regs::MemoryFill + 2, params.end1 - params.start1);
-        WriteGPURegister(GPU::Regs::MemoryFill + 3, params.value1);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_start), params.start1 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_end), params.end1 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].size), params.end1 - params.start1);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].value), params.value1);
 
-        WriteGPURegister(GPU::Regs::MemoryFill + 4, params.start2 >> 3);
-        WriteGPURegister(GPU::Regs::MemoryFill + 5, params.end2 >> 3);
-        WriteGPURegister(GPU::Regs::MemoryFill + 6, params.end2 - params.start2);
-        WriteGPURegister(GPU::Regs::MemoryFill + 7, params.value2);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_start), params.start2 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), params.end2 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
         break;
     }
 
@@ -220,15 +220,15 @@ void ExecuteCommand(const Command& command) {
     case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.image_copy;
-        WriteGPURegister(GPU::Regs::DisplayTransfer, params.in_buffer_address >> 3);
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 1, params.out_buffer_address >> 3);
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 3, params.in_buffer_size);
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 2, params.out_buffer_size);
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 4, params.flags);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), params.in_buffer_address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), params.out_buffer_address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
 
         // TODO: Should this only be ORed with 1 for texture copies?
         // trigger transfer
-        WriteGPURegister(GPU::Regs::DisplayTransfer + 6, 1);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }
 
