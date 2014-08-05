@@ -278,6 +278,11 @@ struct ARMul_State
     unsigned int NumScycles, NumNcycles, NumIcycles, NumCcycles, NumFcycles;    /* emulated cycles used */
     unsigned long long NumInstrs;    /* the number of instructions executed */
     unsigned NumInstrsToExecute;
+
+    ARMword currentexaddr;
+    ARMword currentexval;
+    ARMword servaddr;
+
     unsigned NextInstr;
     unsigned VectorCatch;    /* caught exception mask */
     unsigned CallDebug;    /* set to call the debugger */
