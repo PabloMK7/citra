@@ -21,8 +21,8 @@ namespace GPU {
 
 RegisterSet<u32, Regs> g_regs;
 
-u32 g_cur_line = 0;     ///< Current vertical screen line
-u64 g_last_ticks = 0;   ///< Last CPU ticks
+u32 g_cur_line = 0;         ///< Current vertical screen line
+u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
 
 /**
  * Sets whether the framebuffers are in the GSP heap (FCRAM) or VRAM
@@ -256,10 +256,10 @@ void Update() {
     u64 current_ticks = Core::g_app_core->GetTicks();
 
     // Synchronize line...
-    if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
+    if ((current_ticks - g_last_line_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
         GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
         g_cur_line++;
-        g_last_ticks = current_ticks;
+        g_last_line_ticks = current_ticks;
     }
 
     // Synchronize frame...
@@ -275,7 +275,7 @@ void Update() {
 /// Initialize hardware
 void Init() {
     g_cur_line = 0;
-    g_last_ticks = Core::g_app_core->GetTicks();
+    g_last_line_ticks = Core::g_app_core->GetTicks();
 
 //    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
     SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
