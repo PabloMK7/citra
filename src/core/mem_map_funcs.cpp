@@ -232,6 +232,13 @@ u8 Read8(const u32 addr) {
 u16 Read16(const u32 addr) {
     u16_le data = 0;
     Read<u16_le>(data, addr);
+
+    // Check for 16-bit unaligned memory reads...
+    if (addr & 1) {
+        // TODO(bunnei): Implement 16-bit unaligned memory reads
+        ERROR_LOG(MEMMAP, "16-bit unaligned memory reads are not implemented!");
+    }
+
     return (u16)data;
 }
 
