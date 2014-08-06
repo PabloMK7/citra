@@ -49,7 +49,7 @@ public:
         */
         virtual void GXCommandProcessed(int total_command_count)
         {
-            const GSP_GPU::GXCommand& cmd = observed->ReadGXCommandHistory(total_command_count-1);
+            const GSP_GPU::Command& cmd = observed->ReadGXCommandHistory(total_command_count-1);
             ERROR_LOG(GSP, "Received command: id=%x", (int)cmd.id.Value());
         }
 
@@ -81,10 +81,10 @@ public:
         if (observers.empty())
             return;
 
-        gx_command_history.push_back(GSP_GPU::GXCommand());
-        GSP_GPU::GXCommand& cmd = gx_command_history[gx_command_history.size()-1];
+        gx_command_history.push_back(GSP_GPU::Command());
+        GSP_GPU::Command& cmd = gx_command_history[gx_command_history.size()-1];
 
-        memcpy(&cmd, command_data, sizeof(GSP_GPU::GXCommand));
+        memcpy(&cmd, command_data, sizeof(GSP_GPU::Command));
 
         ForEachObserver([this](DebuggerObserver* observer) {
                           observer->GXCommandProcessed(this->gx_command_history.size());
@@ -123,7 +123,7 @@ public:
                         } );
     }
 
-    const GSP_GPU::GXCommand& ReadGXCommandHistory(int index) const
+    const GSP_GPU::Command& ReadGXCommandHistory(int index) const
     {
         // TODO: Is this thread-safe?
         return gx_command_history[index];
@@ -155,7 +155,7 @@ private:
 
     std::vector<DebuggerObserver*> observers;
 
-    std::vector<GSP_GPU::GXCommand> gx_command_history;
+    std::vector<GSP_GPU::Command> gx_command_history;
 
     // vector of pairs of command lists and their storage address
     std::vector<std::pair<u32,PicaCommandList>> command_lists;

@@ -42,7 +42,6 @@ void EmuThread::run()
                     emit CPUStepped();
             }
         }
-        HW::Update();
     }
 
     Core::Stop();

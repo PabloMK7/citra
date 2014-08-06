@@ -48,7 +48,7 @@ public:
         *wait = locked;
 
         if (locked) {
-            Kernel::WaitCurrentThread(WAITTYPE_MUTEX);
+            Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
         }
 
         return 0;

@@ -69,7 +69,11 @@ void ArbitrateAllThreads(u32 arbiter, u32 address);
 /// Gets the current thread handle
 Handle GetCurrentThreadHandle();
 
-/// Puts the current thread in the wait state for the given type
+/**
+ * Puts the current thread in the wait state for the given type
+ * @param wait_type Type of wait
+ * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
 
 /// Put current thread in a wait state - on WaitSynchronization

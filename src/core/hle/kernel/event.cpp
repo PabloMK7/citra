@@ -42,7 +42,7 @@ public:
             if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
                 waiting_threads.push_back(thread);
             }
-            Kernel::WaitCurrentThread(WAITTYPE_EVENT);
+            Kernel::WaitCurrentThread(WAITTYPE_EVENT, GetHandle());
         }
         if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
             locked = true;
