@@ -274,7 +274,11 @@ Thread* NextThread() {
     return Kernel::g_object_pool.GetFast<Thread>(next);
 }
 
-/// Puts the current thread in the wait state for the given type
+/**
+ * Puts the current thread in the wait state for the given type
+ * @param wait_type Type of wait
+ * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
     Thread* thread = GetCurrentThread();
     thread->wait_type = wait_type;
