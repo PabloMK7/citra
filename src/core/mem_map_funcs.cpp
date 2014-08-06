@@ -252,12 +252,6 @@ u32 Read32(const u32 addr) {
     return (u32)data;
 }
 
-u64 Read64(const u32 addr) {
-    u64_le data = 0;
-    Read<u64_le>(data, addr);
-    return data;
-}
-
 u32 Read8_ZX(const u32 addr) {
     return (u32)Read8(addr);
 }
