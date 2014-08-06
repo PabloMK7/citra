@@ -224,27 +224,39 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
 }
 
 u8 Read8(const u32 addr) {
-    u8 _var = 0;
-    Read<u8>(_var, addr);
-    return (u8)_var;
+    u8 data = 0;
+    Read<u8>(data, addr);
+    return (u8)data;
 }
 
 u16 Read16(const u32 addr) {
-    u16_le _var = 0;
-    Read<u16_le>(_var, addr);
-    return (u16)_var;
+    u16_le data = 0;
+    Read<u16_le>(data, addr);
+
+    // Check for 16-bit unaligned memory reads...
+    if (addr & 1) {
+        // TODO(bunnei): Implement 16-bit unaligned memory reads
+        ERROR_LOG(MEMMAP, "16-bit unaligned memory reads are not implemented!");
+    }
+
+    return (u16)data;
 }
 
 u32 Read32(const u32 addr) {
-    u32_le _var = 0;
-    Read<u32_le>(_var, addr);
-    return _var;
-}
+    u32_le data = 0;
+    Read<u32_le>(data, addr);
 
-u64 Read64(const u32 addr) {
-    u64_le _var = 0;
-    Read<u64_le>(_var, addr);
-    return _var;
+    // Check for 32-bit unaligned memory reads...
+    if (addr & 3) {
+        // ARM allows for unaligned memory reads, however older ARM architectures read out memory
+        // from unaligned addresses in a shifted way. Our ARM CPU core (SkyEye) corrects for this,
+        // so therefore expects the memory to be read out in this manner.
+        // TODO(bunnei): Determine if this is necessary - perhaps it is OK to remove this from both
+        // SkyEye and here?
+        int shift = (addr & 3) * 8;
+        data = (data << shift) | (data >> (32 - shift));
+    }
+    return (u32)data;
 }
 
 u32 Read8_ZX(const u32 addr) {
