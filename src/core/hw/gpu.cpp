@@ -252,17 +252,18 @@ template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
 void Update() {
+    auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
     u64 current_ticks = Core::g_app_core->GetTicks();
 
     // Synchronize line...
-    if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks / 400) {
+    if ((current_ticks - g_last_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
         GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
         g_cur_line++;
         g_last_ticks = current_ticks;
     }
 
     // Synchronize frame...
-    if (g_cur_line >= 400) {
+    if (g_cur_line >= framebuffer_top.height) {
         g_cur_line = 0;
         GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
         VideoCore::g_renderer->SwapBuffers();
