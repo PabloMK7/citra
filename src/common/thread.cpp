@@ -7,7 +7,7 @@
 
 #ifdef __APPLE__
 #include <mach/mach.h>
-#elif defined BSD4_4
+#elif defined(BSD4_4) || defined(__OpenBSD__)
 #include <pthread_np.h>
 #endif
 
@@ -123,6 +123,8 @@ void SetCurrentThreadName(const char* szThreadName)
 {
 #ifdef __APPLE__
     pthread_setname_np(szThreadName);
+#elif defined(__OpenBSD__)
+    pthread_set_name_np(pthread_self(), szThreadName);
 #else
     pthread_setname_np(pthread_self(), szThreadName);
 #endif
