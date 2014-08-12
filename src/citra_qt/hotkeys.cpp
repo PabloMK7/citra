@@ -21,14 +21,14 @@ void SaveHotkeys(QSettings& settings)
 {
     settings.beginGroup("Shortcuts");
 
-    for (HotkeyGroupMap::iterator group = hotkey_groups.begin(); group != hotkey_groups.end(); ++group)
+    for (auto group : hotkey_groups)
     {
-        settings.beginGroup(group->first);
-        for (HotkeyMap::iterator hotkey = group->second.begin(); hotkey != group->second.end(); ++hotkey)
+        settings.beginGroup(group.first);
+        for (auto hotkey : group.second)
         {
-            settings.beginGroup(hotkey->first);
-            settings.setValue(QString("KeySeq"), hotkey->second.keyseq.toString());
-            settings.setValue(QString("Context"), hotkey->second.context);
+            settings.beginGroup(hotkey.first);
+            settings.setValue(QString("KeySeq"), hotkey.second.keyseq.toString());
+            settings.setValue(QString("Context"), hotkey.second.context);
             settings.endGroup();
         }
         settings.endGroup();
@@ -42,17 +42,17 @@ void LoadHotkeys(QSettings& settings)
 
     // Make sure NOT to use a reference here because it would become invalid once we call beginGroup()
     QStringList groups = settings.childGroups();
-    for (QList<QString>::iterator group = groups.begin(); group != groups.end(); ++group)
+    for (auto group : groups)
     {
-        settings.beginGroup(*group);
+        settings.beginGroup(group);
 
         QStringList hotkeys = settings.childGroups();
-        for (QList<QString>::iterator hotkey = hotkeys.begin(); hotkey != hotkeys.end(); ++hotkey)
+        for (auto hotkey : hotkeys)
         {
-            settings.beginGroup(*hotkey);
+            settings.beginGroup(hotkey);
 
             // RegisterHotkey assigns default keybindings, so use old values as default parameters
-            Hotkey& hk = hotkey_groups[*group][*hotkey];
+            Hotkey& hk = hotkey_groups[group][hotkey];
             hk.keyseq = QKeySequence::fromString(settings.value("KeySeq", hk.keyseq.toString()).toString());
             hk.context = (Qt::ShortcutContext)settings.value("Context", hk.context).toInt();
             if (hk.shortcut)
@@ -91,13 +91,13 @@ GHotkeysDialog::GHotkeysDialog(QWidget* parent): QDialog(parent)
 {
     ui.setupUi(this);
 
-    for (HotkeyGroupMap::iterator group = hotkey_groups.begin(); group != hotkey_groups.end(); ++group)
+    for (auto group : hotkey_groups)
     {
-        QTreeWidgetItem* toplevel_item = new QTreeWidgetItem(QStringList(group->first));
-        for (HotkeyMap::iterator hotkey = group->second.begin(); hotkey != group->second.end(); ++hotkey)
+        QTreeWidgetItem* toplevel_item = new QTreeWidgetItem(QStringList(group.first));
+        for (auto hotkey : group.second)
         {
             QStringList columns;
-            columns << hotkey->first << hotkey->second.keyseq.toString();
+            columns << hotkey.first << hotkey.second.keyseq.toString();
             QTreeWidgetItem* item = new QTreeWidgetItem(columns);
             toplevel_item->addChild(item);
         }
