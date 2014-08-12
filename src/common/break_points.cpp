@@ -9,32 +9,29 @@
 #include <sstream>
 #include <algorithm>
 
-bool BreakPoints::IsAddressBreakPoint(u32 _iAddress)
+bool BreakPoints::IsAddressBreakPoint(u32 iAddress)
 {
-    for (TBreakPoints::iterator i = m_BreakPoints.begin(); i != m_BreakPoints.end(); ++i)
-        if (i->iAddress == _iAddress)
-            return true;
-    return false;
+    auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    return it != m_BreakPoints.end();
 }
 
-bool BreakPoints::IsTempBreakPoint(u32 _iAddress)
+bool BreakPoints::IsTempBreakPoint(u32 iAddress)
 {
-    for (TBreakPoints::iterator i = m_BreakPoints.begin(); i != m_BreakPoints.end(); ++i)
-        if (i->iAddress == _iAddress && i->bTemporary)
-            return true;
-    return false;
+    auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress && bp.bTemporary; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    return it != m_BreakPoints.end();
 }
 
 BreakPoints::TBreakPointsStr BreakPoints::GetStrings() const
 {
     TBreakPointsStr bps;
-    for (TBreakPoints::const_iterator i = m_BreakPoints.begin();
-        i != m_BreakPoints.end(); ++i)
+    for (auto breakpoint : m_BreakPoints)
     {
-        if (!i->bTemporary)
+        if (!breakpoint.bTemporary)
         {
             std::stringstream bp;
-            bp << std::hex << i->iAddress << " " << (i->bOn ? "n" : "");
+            bp << std::hex << breakpoint.iAddress << " " << (breakpoint.bOn ? "n" : "");
             bps.push_back(bp.str());
         }
     }
@@ -44,13 +41,13 @@ BreakPoints::TBreakPointsStr BreakPoints::GetStrings() const
 
 void BreakPoints::AddFromStrings(const TBreakPointsStr& bps)
 {
-    for (TBreakPointsStr::const_iterator i = bps.begin(); i != bps.end(); ++i)
+    for (auto bps_item : bps)
     {
         TBreakPoint bp;
         std::stringstream bpstr;
-        bpstr << std::hex << *i;
+        bpstr << std::hex << bps_item;
         bpstr >> bp.iAddress;
-        bp.bOn = i->find("n") != i->npos;
+        bp.bOn = bps_item.find("n") != bps_item.npos;
         bp.bTemporary = false;
         Add(bp);
     }
@@ -84,16 +81,10 @@ void BreakPoints::Add(u32 em_address, bool temp)
 
 void BreakPoints::Remove(u32 em_address)
 {
-    for (TBreakPoints::iterator i = m_BreakPoints.begin(); i != m_BreakPoints.end(); ++i)
-    {
-        if (i->iAddress == em_address)
-        {
-            m_BreakPoints.erase(i);
-            //if (jit)
-            //    jit->GetBlockCache()->InvalidateICache(em_address, 4);
-            return;
-        }
-    }
+    auto cond = [&em_address](const TBreakPoint& bp) { return bp.iAddress == em_address; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    if (it != m_BreakPoints.end())
+        m_BreakPoints.erase(it);
 }
 
 void BreakPoints::Clear()
@@ -107,21 +98,23 @@ void BreakPoints::Clear()
     //        }
     //    );
     //}
-    
+
     m_BreakPoints.clear();
 }
 
 MemChecks::TMemChecksStr MemChecks::GetStrings() const
 {
     TMemChecksStr mcs;
-    for (TMemChecks::const_iterator i = m_MemChecks.begin();
-        i != m_MemChecks.end(); ++i)
+    for (auto memcheck : m_MemChecks)
     {
         std::stringstream mc;
-        mc << std::hex << i->StartAddress;
-        mc << " " << (i->bRange ? i->EndAddress : i->StartAddress) << " " <<
-            (i->bRange ? "n" : "") << (i->OnRead ? "r" : "") <<
-            (i->OnWrite ? "w" : "") << (i->Log ? "l" : "") << (i->Break ? "p" : "");
+        mc << std::hex << memcheck.StartAddress;
+        mc << " " << (memcheck.bRange ? memcheck.EndAddress : memcheck.StartAddress) << " "
+            << (memcheck.bRange  ? "n" : "")
+            << (memcheck.OnRead  ? "r" : "")
+            << (memcheck.OnWrite ? "w" : "")
+            << (memcheck.Log     ? "l" : "")
+            << (memcheck.Break   ? "p" : "");
         mcs.push_back(mc.str());
     }
 
@@ -130,17 +123,17 @@ MemChecks::TMemChecksStr MemChecks::GetStrings() const
 
 void MemChecks::AddFromStrings(const TMemChecksStr& mcs)
 {
-    for (TMemChecksStr::const_iterator i = mcs.begin(); i != mcs.end(); ++i)
+    for (auto mcs_item : mcs)
     {
         TMemCheck mc;
         std::stringstream mcstr;
-        mcstr << std::hex << *i;
+        mcstr << std::hex << mcs_item;
         mcstr >> mc.StartAddress;
-        mc.bRange    = i->find("n") != i->npos;
-        mc.OnRead    = i->find("r") != i->npos;
-        mc.OnWrite    = i->find("w") != i->npos;
-        mc.Log        = i->find("l") != i->npos;
-        mc.Break    = i->find("p") != i->npos;
+        mc.bRange   = mcs_item.find("n") != mcs_item.npos;
+        mc.OnRead   = mcs_item.find("r") != mcs_item.npos;
+        mc.OnWrite  = mcs_item.find("w") != mcs_item.npos;
+        mc.Log      = mcs_item.find("l") != mcs_item.npos;
+        mc.Break    = mcs_item.find("p") != mcs_item.npos;
         if (mc.bRange)
             mcstr >> mc.EndAddress;
         else
@@ -149,27 +142,23 @@ void MemChecks::AddFromStrings(const TMemChecksStr& mcs)
     }
 }
 
-void MemChecks::Add(const TMemCheck& _rMemoryCheck)
+void MemChecks::Add(const TMemCheck& rMemoryCheck)
 {
-    if (GetMemCheck(_rMemoryCheck.StartAddress) == 0)
-        m_MemChecks.push_back(_rMemoryCheck);
+    if (GetMemCheck(rMemoryCheck.StartAddress) == 0)
+        m_MemChecks.push_back(rMemoryCheck);
 }
 
-void MemChecks::Remove(u32 _Address)
+void MemChecks::Remove(u32 Address)
 {
-    for (TMemChecks::iterator i = m_MemChecks.begin(); i != m_MemChecks.end(); ++i)
-    {
-        if (i->StartAddress == _Address)
-        {
-            m_MemChecks.erase(i);
-            return;
-        }
-    }
+    auto cond = [&Address](const TMemCheck& mc) { return mc.StartAddress == Address; };
+    auto it   = std::find_if(m_MemChecks.begin(), m_MemChecks.end(), cond);
+    if (it != m_MemChecks.end())
+        m_MemChecks.erase(it);
 }
 
 TMemCheck *MemChecks::GetMemCheck(u32 address)
 {
-    for (TMemChecks::iterator i = m_MemChecks.begin(); i != m_MemChecks.end(); ++i)
+    for (auto i = m_MemChecks.begin(); i != m_MemChecks.end(); ++i)
     {
         if (i->bRange)
         {
