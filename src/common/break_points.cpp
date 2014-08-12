@@ -9,19 +9,21 @@
 #include <sstream>
 #include <algorithm>
 
-bool BreakPoints::IsAddressBreakPoint(u32 _iAddress)
+bool BreakPoints::IsAddressBreakPoint(u32 iAddress)
 {
-    for (auto breakpoint : m_BreakPoints)
-        if (breakpoint.iAddress == _iAddress)
-            return true;
+    auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    if (it != m_BreakPoints.end())
+        return true;
     return false;
 }
 
-bool BreakPoints::IsTempBreakPoint(u32 _iAddress)
+bool BreakPoints::IsTempBreakPoint(u32 iAddress)
 {
-    for (auto breakpoint : m_BreakPoints)
-        if (breakpoint.iAddress == _iAddress && breakpoint.bTemporary)
-            return true;
+    auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress && bp.bTemporary; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    if (it != m_BreakPoints.end())
+        return true;
     return false;
 }
 
@@ -83,16 +85,10 @@ void BreakPoints::Add(u32 em_address, bool temp)
 
 void BreakPoints::Remove(u32 em_address)
 {
-    for (auto i = m_BreakPoints.begin(); i != m_BreakPoints.end(); ++i)
-    {
-        if (i->iAddress == em_address)
-        {
-            m_BreakPoints.erase(i);
-            //if (jit)
-            //    jit->GetBlockCache()->InvalidateICache(em_address, 4);
-            return;
-        }
-    }
+    auto cond = [&em_address](const TBreakPoint& bp) { return bp.iAddress == em_address; };
+    auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
+    if (it != m_BreakPoints.end())
+        m_BreakPoints.erase(it);
 }
 
 void BreakPoints::Clear()
@@ -106,7 +102,7 @@ void BreakPoints::Clear()
     //        }
     //    );
     //}
-    
+
     m_BreakPoints.clear();
 }
 
@@ -118,10 +114,10 @@ MemChecks::TMemChecksStr MemChecks::GetStrings() const
         std::stringstream mc;
         mc << std::hex << memcheck.StartAddress;
         mc << " " << (memcheck.bRange ? memcheck.EndAddress : memcheck.StartAddress) << " "
-            << (memcheck.bRange  ? "n" : "") 
-            << (memcheck.OnRead  ? "r" : "") 
-            << (memcheck.OnWrite ? "w" : "") 
-            << (memcheck.Log     ? "l" : "") 
+            << (memcheck.bRange  ? "n" : "")
+            << (memcheck.OnRead  ? "r" : "")
+            << (memcheck.OnWrite ? "w" : "")
+            << (memcheck.Log     ? "l" : "")
             << (memcheck.Break   ? "p" : "");
         mcs.push_back(mc.str());
     }
@@ -150,22 +146,18 @@ void MemChecks::AddFromStrings(const TMemChecksStr& mcs)
     }
 }
 
-void MemChecks::Add(const TMemCheck& _rMemoryCheck)
+void MemChecks::Add(const TMemCheck& rMemoryCheck)
 {
-    if (GetMemCheck(_rMemoryCheck.StartAddress) == 0)
-        m_MemChecks.push_back(_rMemoryCheck);
+    if (GetMemCheck(rMemoryCheck.StartAddress) == 0)
+        m_MemChecks.push_back(rMemoryCheck);
 }
 
-void MemChecks::Remove(u32 _Address)
+void MemChecks::Remove(u32 Address)
 {
-    for (auto i = m_MemChecks.begin(); i != m_MemChecks.end(); ++i)
-    {
-        if (i->StartAddress == _Address)
-        {
-            m_MemChecks.erase(i);
-            return;
-        }
-    }
+    auto cond = [&Address](const TMemCheck& mc) { return mc.StartAddress == Address; };
+    auto it   = std::find_if(m_MemChecks.begin(), m_MemChecks.end(), cond);
+    if (it != m_MemChecks.end())
+        m_MemChecks.erase(it);
 }
 
 TMemCheck *MemChecks::GetMemCheck(u32 address)
