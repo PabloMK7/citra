@@ -11,6 +11,8 @@
 #include "common/log.h"
 
 #include "core/hle/service/gsp.h"
+
+#include "command_processor.h"
 #include "pica.h"
 
 class GraphicsDebugger
@@ -20,10 +22,10 @@ public:
     // A vector of commands represented by their raw byte sequence
     struct PicaCommand : public std::vector<u32>
     {
-        const Pica::CommandHeader& GetHeader() const
+        const Pica::CommandProcessor::CommandHeader& GetHeader() const
         {
             const u32& val = at(1);
-            return *(Pica::CommandHeader*)&val;
+            return *(Pica::CommandProcessor::CommandHeader*)&val;
         }
     };
 
@@ -99,7 +101,7 @@ public:
         PicaCommandList cmdlist;
         for (u32* parse_pointer = command_list; parse_pointer < command_list + size_in_words;)
         {
-            const Pica::CommandHeader header = static_cast<Pica::CommandHeader>(parse_pointer[1]);
+            const Pica::CommandProcessor::CommandHeader& header = *(Pica::CommandProcessor::CommandHeader*)(&parse_pointer[1]);
 
             cmdlist.push_back(PicaCommand());
             auto& cmd = cmdlist.back();

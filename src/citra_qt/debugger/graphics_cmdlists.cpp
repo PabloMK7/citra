@@ -78,7 +78,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
         // index refers to a specific command
         const GraphicsDebugger::PicaCommandList& cmdlist = command_lists[item->parent->index].second;
         const GraphicsDebugger::PicaCommand& cmd = cmdlist[item->index];
-        const Pica::CommandHeader& header = cmd.GetHeader();
+        const Pica::CommandProcessor::CommandHeader& header = cmd.GetHeader();
 
         if (role == Qt::DisplayRole) {
             QString content;

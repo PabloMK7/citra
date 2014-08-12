@@ -32,7 +32,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
     if (0 == g_shared_memory)
         return nullptr;
 
-    return Kernel::GetSharedMemoryPointer(g_shared_memory, 
+    return Kernel::GetSharedMemoryPointer(g_shared_memory,
         0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
@@ -173,7 +173,7 @@ void ExecuteCommand(const Command& command) {
     case CommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), params.address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), Memory::VirtualToPhysicalAddress(params.address) >> 3);
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size >> 3);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
@@ -193,20 +193,28 @@ void ExecuteCommand(const Command& command) {
     case CommandId::SET_MEMORY_FILL:
     {
         auto& params = command.memory_fill;
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_start), params.start1 >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_end), params.end1 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_start), Memory::VirtualToPhysicalAddress(params.start1) >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_end), Memory::VirtualToPhysicalAddress(params.end1) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].size), params.end1 - params.start1);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].value), params.value1);
 
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_start), params.start2 >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), params.end2 >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_start), Memory::VirtualToPhysicalAddress(params.start2) >> 3);
+        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
         break;
     }
 
-    // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_DISPLAY_TRANSFER:
+    {
+        auto& params = command.image_copy;
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
+
         // TODO(bunnei): Signalling all of these interrupts here is totally wrong, but it seems to
         // work well enough for running demos. Need to figure out how these all work and trigger
         // them correctly.
@@ -216,18 +224,19 @@ void ExecuteCommand(const Command& command) {
         SignalInterrupt(InterruptId::P3D);
         SignalInterrupt(InterruptId::DMA);
         break;
+    }
 
+    // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.image_copy;
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), params.in_buffer_address >> 3);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), params.out_buffer_address >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
 
-        // TODO: Should this only be ORed with 1 for texture copies?
-        // trigger transfer
+        // TODO: Should this register be set to 1 or should instead its value be OR-ed with 1?
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }

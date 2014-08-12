@@ -81,20 +81,20 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
     const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
     const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
     const u32 active_fb_top = (framebuffer_top.active_fb == 1)
-                                ? framebuffer_top.address_left2
-                                : framebuffer_top.address_left1;
+                                ? Memory::PhysicalToVirtualAddress(framebuffer_top.address_left2)
+                                : Memory::PhysicalToVirtualAddress(framebuffer_top.address_left1);
     const u32 active_fb_sub = (framebuffer_sub.active_fb == 1)
-                                ? framebuffer_sub.address_left2
-                                : framebuffer_sub.address_left1;
+                                ? Memory::PhysicalToVirtualAddress(framebuffer_sub.address_left2)
+                                : Memory::PhysicalToVirtualAddress(framebuffer_sub.address_left1);
 
     DEBUG_LOG(GPU, "RenderXFB: 0x%08x bytes from 0x%08x(%dx%d), fmt %x",
               framebuffer_top.stride * framebuffer_top.height,
-              GPU::GetFramebufferAddr(active_fb_top), (int)framebuffer_top.width,
+              active_fb_top, (int)framebuffer_top.width,
               (int)framebuffer_top.height, (int)framebuffer_top.format);
 
     // TODO: This should consider the GPU registers for framebuffer width, height and stride.
-    FlipFramebuffer(GPU::GetFramebufferPointer(active_fb_top), m_xfb_top_flipped);
-    FlipFramebuffer(GPU::GetFramebufferPointer(active_fb_sub), m_xfb_bottom_flipped);
+    FlipFramebuffer(Memory::GetPointer(active_fb_top), m_xfb_top_flipped);
+    FlipFramebuffer(Memory::GetPointer(active_fb_sub), m_xfb_bottom_flipped);
 
     // Blit the top framebuffer
     // ------------------------

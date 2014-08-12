@@ -20,14 +20,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
+    <ClCompile Include="clipper.cpp" />
+    <ClCompile Include="command_processor.cpp" />
+    <ClCompile Include="primitive_assembly.cpp" />
+    <ClCompile Include="rasterizer.cpp" />
     <ClCompile Include="utils.cpp" />
+    <ClCompile Include="vertex_shader.cpp" />
     <ClCompile Include="video_core.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clipper.h" />
+    <ClInclude Include="command_processor.h" />
     <ClInclude Include="gpu_debugger.h" />
+    <ClInclude Include="math.h" />
     <ClInclude Include="pica.h" />
+    <ClInclude Include="primitive_assembly.h" />
+    <ClInclude Include="rasterizer.h" />
     <ClInclude Include="renderer_base.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="vertex_shader.h" />
     <ClInclude Include="video_core.h" />
     <ClInclude Include="renderer_opengl\renderer_opengl.h" />
   </ItemGroup>

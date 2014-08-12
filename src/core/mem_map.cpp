@@ -72,14 +72,14 @@ void Init() {
 
     g_base = MemoryMap_Setup(g_views, kNumMemViews, flags, &g_arena);
 
-    NOTICE_LOG(MEMMAP, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_heap, 
+    NOTICE_LOG(MEMMAP, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_heap,
         g_physical_fcram);
 }
 
 void Shutdown() {
     u32 flags = 0;
     MemoryMap_Shutdown(g_views, kNumMemViews, flags, &g_arena);
-    
+
     g_arena.ReleaseSpace();
     g_base = NULL;
 

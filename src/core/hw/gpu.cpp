@@ -14,6 +14,7 @@
 
 #include "core/hw/gpu.h"
 
+#include "video_core/command_processor.h"
 #include "video_core/video_core.h"
 
 
@@ -23,83 +24,6 @@ Regs g_regs;
 
 u32 g_cur_line = 0;         ///< Current vertical screen line
 u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
-
-/**
- * Sets whether the framebuffers are in the GSP heap (FCRAM) or VRAM
- * @param
- */
-void SetFramebufferLocation(const FramebufferLocation mode) {
-    switch (mode) {
-    case FRAMEBUFFER_LOCATION_FCRAM:
-    {
-        auto& framebuffer_top = g_regs.framebuffer_config[0];
-        auto& framebuffer_sub = g_regs.framebuffer_config[1];
-
-        framebuffer_top.address_left1  = PADDR_TOP_LEFT_FRAME1;
-        framebuffer_top.address_left2  = PADDR_TOP_LEFT_FRAME2;
-        framebuffer_top.address_right1 = PADDR_TOP_RIGHT_FRAME1;
-        framebuffer_top.address_right2 = PADDR_TOP_RIGHT_FRAME2;
-        framebuffer_sub.address_left1  = PADDR_SUB_FRAME1;
-        //framebuffer_sub.address_left2  = unknown;
-        framebuffer_sub.address_right1 = PADDR_SUB_FRAME2;
-        //framebuffer_sub.address_right2 = unknown;
-        break;
-    }
-
-    case FRAMEBUFFER_LOCATION_VRAM:
-    {
-        auto& framebuffer_top = g_regs.framebuffer_config[0];
-        auto& framebuffer_sub = g_regs.framebuffer_config[1];
-
-        framebuffer_top.address_left1  = PADDR_VRAM_TOP_LEFT_FRAME1;
-        framebuffer_top.address_left2  = PADDR_VRAM_TOP_LEFT_FRAME2;
-        framebuffer_top.address_right1 = PADDR_VRAM_TOP_RIGHT_FRAME1;
-        framebuffer_top.address_right2 = PADDR_VRAM_TOP_RIGHT_FRAME2;
-        framebuffer_sub.address_left1  = PADDR_VRAM_SUB_FRAME1;
-        //framebuffer_sub.address_left2  = unknown;
-        framebuffer_sub.address_right1 = PADDR_VRAM_SUB_FRAME2;
-        //framebuffer_sub.address_right2 = unknown;
-        break;
-    }
-    }
-}
-
-/**
- * Gets the location of the framebuffers
- * @return Location of framebuffers as FramebufferLocation enum
- */
-FramebufferLocation GetFramebufferLocation(u32 address) {
-    if ((address & ~Memory::VRAM_MASK) == Memory::VRAM_PADDR) {
-        return FRAMEBUFFER_LOCATION_VRAM;
-    } else if ((address & ~Memory::FCRAM_MASK) == Memory::FCRAM_PADDR) {
-        return FRAMEBUFFER_LOCATION_FCRAM;
-    } else {
-        ERROR_LOG(GPU, "unknown framebuffer location!");
-    }
-    return FRAMEBUFFER_LOCATION_UNKNOWN;
-}
-
-u32 GetFramebufferAddr(const u32 address) {
-    switch (GetFramebufferLocation(address)) {
-    case FRAMEBUFFER_LOCATION_FCRAM:
-        return Memory::VirtualAddressFromPhysical_FCRAM(address);
-    case FRAMEBUFFER_LOCATION_VRAM:
-        return Memory::VirtualAddressFromPhysical_VRAM(address);
-    default:
-        ERROR_LOG(GPU, "unknown framebuffer location");
-    }
-    return 0;
-}
-
-/**
- * Gets a read-only pointer to a framebuffer in memory
- * @param address Physical address of framebuffer
- * @return Returns const pointer to raw framebuffer
- */
-const u8* GetFramebufferPointer(const u32 address) {
-    u32 addr = GetFramebufferAddr(address);
-    return (addr != 0) ? Memory::GetPointer(addr) : nullptr;
-}
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -141,8 +65,8 @@ inline void Write(u32 addr, const T data) {
         // TODO: Not sure if this check should be done at GSP level instead
         if (config.address_start) {
             // TODO: Not sure if this algorithm is correct, particularly because it doesn't use the size member at all
-            u32* start = (u32*)Memory::GetPointer(config.GetStartAddress());
-            u32* end = (u32*)Memory::GetPointer(config.GetEndAddress());
+            u32* start = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetStartAddress()));
+            u32* end = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetEndAddress()));
             for (u32* ptr = start; ptr < end; ++ptr)
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
@@ -155,8 +79,8 @@ inline void Write(u32 addr, const T data) {
     {
         const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
-            u8* source_pointer = Memory::GetPointer(config.GetPhysicalInputAddress());
-            u8* dest_pointer = Memory::GetPointer(config.GetPhysicalOutputAddress());
+            u8* source_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
+            u8* dest_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
             for (int y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
@@ -220,14 +144,15 @@ inline void Write(u32 addr, const T data) {
         break;
     }
 
+    // Seems like writing to this register triggers processing
     case GPU_REG_INDEX(command_processor_config.trigger):
     {
         const auto& config = g_regs.command_processor_config;
         if (config.trigger & 1)
         {
-            // u32* buffer = (u32*)Memory::GetPointer(config.GetPhysicalAddress());
-            ERROR_LOG(GPU, "Beginning 0x%08x bytes of commands from address 0x%08x", config.size, config.GetPhysicalAddress());
-            // TODO: Process command list!
+            u32* buffer = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalAddress()));
+            u32 size = config.size << 3;
+            Pica::CommandProcessor::ProcessCommandList(buffer, size);
         }
         break;
     }
@@ -276,11 +201,22 @@ void Init() {
     g_cur_line = 0;
     g_last_line_ticks = Core::g_app_core->GetTicks();
 
-//    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
-    SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
-
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];
+
+    // Setup default framebuffer addresses (located in VRAM)
+    // .. or at least these are the ones used by system applets.
+    // There's probably a smarter way to come up with addresses
+    // like this which does not require hardcoding.
+    framebuffer_top.address_left1  = 0x181E6000;
+    framebuffer_top.address_left2  = 0x1822C800;
+    framebuffer_top.address_right1 = 0x18273000;
+    framebuffer_top.address_right2 = 0x182B9800;
+    framebuffer_sub.address_left1  = 0x1848F000;
+    //framebuffer_sub.address_left2  = unknown;
+    framebuffer_sub.address_right1 = 0x184C7800;
+    //framebuffer_sub.address_right2 = unknown;
+
     // TODO: Width should be 240 instead?
     framebuffer_top.width = 480;
     framebuffer_top.height = 400;

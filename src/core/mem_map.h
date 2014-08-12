@@ -14,7 +14,6 @@ namespace Memory {
 enum {
     BOOTROM_SIZE            = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
     MPCORE_PRIV_SIZE        = 0x00002000,   ///< MPCore private memory region size
-    VRAM_SIZE               = 0x00600000,   ///< VRAM size
     DSP_SIZE                = 0x00080000,   ///< DSP memory size
     AXI_WRAM_SIZE           = 0x00080000,   ///< AXI WRAM size
 
@@ -23,8 +22,6 @@ enum {
     FCRAM_PADDR_END         = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
     FCRAM_VADDR             = 0x08000000,                       ///< FCRAM virtual address
     FCRAM_VADDR_END         = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
-    FCRAM_VADDR_FW0B        = 0xF0000000,                       ///< FCRAM adress for firmare FW0B
-    FCRAM_VADDR_FW0B_END    = (FCRAM_VADDR_FW0B + FCRAM_SIZE),  ///< FCRAM adress end for FW0B
     FCRAM_MASK              = (FCRAM_SIZE - 1),                 ///< FCRAM mask
 
     SHARED_MEMORY_SIZE      = 0x04000000,   ///< Shared memory size
@@ -73,6 +70,7 @@ enum {
     HARDWARE_IO_PADDR_END   = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
     HARDWARE_IO_VADDR_END   = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
 
+    VRAM_SIZE               = 0x00600000,
     VRAM_PADDR              = 0x18000000,
     VRAM_VADDR              = 0x1F000000,
     VRAM_PADDR_END          = (VRAM_PADDR + VRAM_SIZE),
@@ -112,7 +110,7 @@ struct MemoryBlock {
 
 // In 64-bit, this might point to "high memory" (above the 32-bit limit),
 // so be sure to load it into a 64-bit register.
-extern u8 *g_base; 
+extern u8 *g_base;
 
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
@@ -147,7 +145,7 @@ void Write32(const u32 addr, const u32 data);
 
 void WriteBlock(const u32 addr, const u8* data, const int size);
 
-u8* GetPointer(const u32 Address);
+u8* GetPointer(const u32 virtual_address);
 
 /**
  * Maps a block of memory on the heap
@@ -169,16 +167,10 @@ inline const char* GetCharPointer(const u32 address) {
     return (const char *)GetPointer(address);
 }
 
-inline const u32 VirtualAddressFromPhysical_FCRAM(const u32 address) {
-    return ((address & FCRAM_MASK) | FCRAM_VADDR);
-}
+/// Converts a physical address to virtual address
+u32 PhysicalToVirtualAddress(const u32 addr);
 
-inline const u32 VirtualAddressFromPhysical_IO(const u32 address) {
-    return (address + 0x0EB00000);
-}
-
-inline const u32 VirtualAddressFromPhysical_VRAM(const u32 address) {
-    return (address + 0x07000000);
-}
+/// Converts a virtual address to physical address
+u32 VirtualToPhysicalAddress(const u32 addr);
 
 } // namespace
