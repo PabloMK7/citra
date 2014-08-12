@@ -13,18 +13,14 @@ bool BreakPoints::IsAddressBreakPoint(u32 iAddress)
 {
     auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress; };
     auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
-    if (it != m_BreakPoints.end())
-        return true;
-    return false;
+    return it != m_BreakPoints.end();
 }
 
 bool BreakPoints::IsTempBreakPoint(u32 iAddress)
 {
     auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress && bp.bTemporary; };
     auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
-    if (it != m_BreakPoints.end())
-        return true;
-    return false;
+    return it != m_BreakPoints.end();
 }
 
 BreakPoints::TBreakPointsStr BreakPoints::GetStrings() const
