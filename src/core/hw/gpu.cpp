@@ -19,7 +19,7 @@
 
 namespace GPU {
 
-RegisterSet<u32, Regs> g_regs;
+Regs g_regs;
 
 u32 g_cur_line = 0;         ///< Current vertical screen line
 u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
@@ -32,8 +32,8 @@ void SetFramebufferLocation(const FramebufferLocation mode) {
     switch (mode) {
     case FRAMEBUFFER_LOCATION_FCRAM:
     {
-        auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
-        auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
+        auto& framebuffer_top = g_regs.framebuffer_config[0];
+        auto& framebuffer_sub = g_regs.framebuffer_config[1];
 
         framebuffer_top.address_left1  = PADDR_TOP_LEFT_FRAME1;
         framebuffer_top.address_left2  = PADDR_TOP_LEFT_FRAME2;
@@ -48,8 +48,8 @@ void SetFramebufferLocation(const FramebufferLocation mode) {
 
     case FRAMEBUFFER_LOCATION_VRAM:
     {
-        auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
-        auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
+        auto& framebuffer_top = g_regs.framebuffer_config[0];
+        auto& framebuffer_sub = g_regs.framebuffer_config[1];
 
         framebuffer_top.address_left1  = PADDR_VRAM_TOP_LEFT_FRAME1;
         framebuffer_top.address_left2  = PADDR_VRAM_TOP_LEFT_FRAME2;
@@ -107,13 +107,12 @@ inline void Read(T &var, const u32 raw_addr) {
     int index = addr / 4;
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
-    if (index >= Regs::NumIds || !std::is_same<T,u32>::value)
-    {
+    if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
         ERROR_LOG(GPU, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
         return;
     }
 
-    var = g_regs[static_cast<Regs::Id>(addr / 4)];
+    var = g_regs[addr / 4];
 }
 
 template <typename T>
@@ -122,22 +121,22 @@ inline void Write(u32 addr, const T data) {
     int index = addr / 4;
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
-    if (index >= Regs::NumIds || !std::is_same<T,u32>::value)
-    {
+    if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
         ERROR_LOG(GPU, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
         return;
     }
 
-    g_regs[static_cast<Regs::Id>(index)] = data;
+    g_regs[index] = data;
 
-    switch (static_cast<Regs::Id>(index)) {
+    switch (index) {
 
     // Memory fills are triggered once the fill value is written.
     // NOTE: This is not verified.
-    case Regs::MemoryFill + 3:
-    case Regs::MemoryFill + 7:
+    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[0].value, 0x00004 + 0x3):
+    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[1].value, 0x00008 + 0x3):
     {
-        const auto& config = g_regs.Get<Regs::MemoryFill>(static_cast<Regs::Id>(index - 3));
+        const bool is_second_filler = (index != GPU_REG_INDEX(memory_fill_config[0].value));
+        const auto& config = g_regs.memory_fill_config[is_second_filler];
 
         // TODO: Not sure if this check should be done at GSP level instead
         if (config.address_start) {
@@ -152,9 +151,9 @@ inline void Write(u32 addr, const T data) {
         break;
     }
 
-    case Regs::DisplayTransfer + 6:
+    case GPU_REG_INDEX(display_transfer_config.trigger):
     {
-        const auto& config = g_regs.Get<Regs::DisplayTransfer>();
+        const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
             u8* source_pointer = Memory::GetPointer(config.GetPhysicalInputAddress());
             u8* dest_pointer = Memory::GetPointer(config.GetPhysicalOutputAddress());
@@ -221,13 +220,13 @@ inline void Write(u32 addr, const T data) {
         break;
     }
 
-    case Regs::CommandProcessor + 4:
+    case GPU_REG_INDEX(command_processor_config.trigger):
     {
-        const auto& config = g_regs.Get<Regs::CommandProcessor>();
+        const auto& config = g_regs.command_processor_config;
         if (config.trigger & 1)
         {
-            // u32* buffer = (u32*)Memory::GetPointer(config.address << 3);
-            ERROR_LOG(GPU, "Beginning 0x%08x bytes of commands from address 0x%08x", config.size, config.address << 3);
+            // u32* buffer = (u32*)Memory::GetPointer(config.GetPhysicalAddress());
+            ERROR_LOG(GPU, "Beginning 0x%08x bytes of commands from address 0x%08x", config.size, config.GetPhysicalAddress());
             // TODO: Process command list!
         }
         break;
@@ -252,7 +251,7 @@ template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
 void Update() {
-    auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
+    auto& framebuffer_top = g_regs.framebuffer_config[0];
     u64 current_ticks = Core::g_app_core->GetTicks();
 
     // Synchronize line...
@@ -280,8 +279,8 @@ void Init() {
 //    SetFramebufferLocation(FRAMEBUFFER_LOCATION_FCRAM);
     SetFramebufferLocation(FRAMEBUFFER_LOCATION_VRAM);
 
-    auto& framebuffer_top = g_regs.Get<Regs::FramebufferTop>();
-    auto& framebuffer_sub = g_regs.Get<Regs::FramebufferBottom>();
+    auto& framebuffer_top = g_regs.framebuffer_config[0];
+    auto& framebuffer_sub = g_regs.framebuffer_config[1];
     // TODO: Width should be 240 instead?
     framebuffer_top.width = 480;
     framebuffer_top.height = 400;

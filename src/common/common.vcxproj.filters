@@ -29,7 +29,6 @@
     <ClInclude Include="memory_util.h" />
     <ClInclude Include="msg_handler.h" />
     <ClInclude Include="platform.h" />
-    <ClInclude Include="register_set.h" />
     <ClInclude Include="std_condition_variable.h" />
     <ClInclude Include="std_mutex.h" />
     <ClInclude Include="std_thread.h" />

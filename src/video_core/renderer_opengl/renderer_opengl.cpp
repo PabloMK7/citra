@@ -78,8 +78,8 @@ void RendererOpenGL::FlipFramebuffer(const u8* in, u8* out) {
  */
 void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect) {
 
-    const auto& framebuffer_top = GPU::g_regs.Get<GPU::Regs::FramebufferTop>();
-    const auto& framebuffer_sub = GPU::g_regs.Get<GPU::Regs::FramebufferBottom>();
+    const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
+    const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
     const u32 active_fb_top = (framebuffer_top.active_fb == 1)
                                 ? framebuffer_top.address_left2
                                 : framebuffer_top.address_left1;
