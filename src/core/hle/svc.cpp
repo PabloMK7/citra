@@ -56,7 +56,7 @@ Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 siz
 
 /// Maps a memory block to specified address
 Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
-    DEBUG_LOG(SVC, "called memblock=0x08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
+    DEBUG_LOG(SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
         handle, addr, permissions, other_permissions);
 
     Kernel::MemoryPermission permissions_type = static_cast<Kernel::MemoryPermission>(permissions);
