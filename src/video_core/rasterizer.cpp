@@ -78,10 +78,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     u16 max_x = std::max({vtxpos[0].x, vtxpos[1].x, vtxpos[2].x});
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
 
-    min_x = min_x & Fix12P4::IntMask();
-    min_y = min_y & Fix12P4::IntMask();
-    max_x = (max_x + Fix12P4::FracMask()) & Fix12P4::IntMask();
-    max_y = (max_y + Fix12P4::FracMask()) & Fix12P4::IntMask();
+    min_x &= Fix12P4::IntMask();
+    min_y &= Fix12P4::IntMask();
+    max_x = ((max_x + Fix12P4::FracMask()) & Fix12P4::IntMask());
+    max_y = ((max_y + Fix12P4::FracMask()) & Fix12P4::IntMask());
 
     // Triangle filling rules: Pixels on the right-sided edge or on flat bottom edges are not
     // drawn. Pixels on any other triangle border are drawn. This is implemented with three bias
@@ -112,10 +112,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             auto orient2d = [](const Math::Vec2<Fix12P4>& vtx1,
                                const Math::Vec2<Fix12P4>& vtx2,
                                const Math::Vec2<Fix12P4>& vtx3) {
-                const auto vec1 = (vtx2.Cast<int>() - vtx1.Cast<int>()).Append(0);
-                const auto vec2 = (vtx3.Cast<int>() - vtx1.Cast<int>()).Append(0);
+                const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
+                const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
                 // TODO: There is a very small chance this will overflow for sizeof(int) == 4
-                return Cross(vec1, vec2).z;
+                return Math::Cross(vec1, vec2).z;
             };
 
             int w0 = bias0 + orient2d(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
@@ -143,15 +143,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             //
             // The generalization to three vertices is straightforward in baricentric coordinates.
             auto GetInterpolatedAttribute = [&](float24 attr0, float24 attr1, float24 attr2) {
-                auto attr_over_w = Math::MakeVec3(attr0 / v0.pos.w,
-                                                  attr1 / v1.pos.w,
-                                                  attr2 / v2.pos.w);
-                auto w_inverse   = Math::MakeVec3(float24::FromFloat32(1.f) / v0.pos.w,
-                                                  float24::FromFloat32(1.f) / v1.pos.w,
-                                                  float24::FromFloat32(1.f) / v2.pos.w);
-                auto baricentric_coordinates = Math::MakeVec3(float24::FromFloat32(w0),
-                                                              float24::FromFloat32(w1),
-                                                              float24::FromFloat32(w2));
+                auto attr_over_w = Math::MakeVec(attr0 / v0.pos.w,
+                                                 attr1 / v1.pos.w,
+                                                 attr2 / v2.pos.w);
+                auto w_inverse   = Math::MakeVec(float24::FromFloat32(1.f) / v0.pos.w,
+                                                 float24::FromFloat32(1.f) / v1.pos.w,
+                                                 float24::FromFloat32(1.f) / v2.pos.w);
+                auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(w0),
+                                                             float24::FromFloat32(w1),
+                                                             float24::FromFloat32(w2));
 
                 float24 interpolated_attr_over_w = Math::Dot(attr_over_w, baricentric_coordinates);
                 float24 interpolated_w_inverse   = Math::Dot(w_inverse,   baricentric_coordinates);

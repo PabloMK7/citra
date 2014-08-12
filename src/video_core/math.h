@@ -39,6 +39,13 @@ template<typename T> class Vec2;
 template<typename T> class Vec3;
 template<typename T> class Vec4;
 
+template<typename T>
+static inline Vec2<T> MakeVec(const T& x, const T& y);
+template<typename T>
+static inline Vec3<T> MakeVec(const T& x, const T& y, const T& z);
+template<typename T>
+static inline Vec4<T> MakeVec(const T& x, const T& y, const T& z, const T& w);
+
 
 template<typename T>
 class Vec2 {
@@ -68,34 +75,34 @@ public:
         a[0] = x; a[1] = y;
     }
 
-    Vec2 operator +(const Vec2& other) const
+    Vec2<decltype(T{}+T{})> operator +(const Vec2& other) const
     {
-        return Vec2(x+other.x, y+other.y);
+        return MakeVec(x+other.x, y+other.y);
     }
     void operator += (const Vec2 &other)
     {
         x+=other.x; y+=other.y;
     }
-    Vec2 operator -(const Vec2& other) const
+    Vec2<decltype(T{}-T{})> operator -(const Vec2& other) const
     {
-        return Vec2(x-other.x, y-other.y);
+        return MakeVec(x-other.x, y-other.y);
     }
     void operator -= (const Vec2& other)
     {
         x-=other.x; y-=other.y;
     }
-    Vec2 operator -() const
+    Vec2<decltype(-T{})> operator -() const
     {
-        return Vec2(-x,-y);
+        return MakeVec(-x,-y);
     }
-    Vec2 operator * (const Vec2& other) const
+    Vec2<decltype(T{}*T{})> operator * (const Vec2& other) const
     {
-        return Vec2(x*other.x, y*other.y);
+        return MakeVec(x*other.x, y*other.y);
     }
     template<typename V>
-    Vec2 operator * (const V& f) const
+    Vec2<decltype(T{}*V{})> operator * (const V& f) const
     {
-        return Vec2(x*f,y*f);
+        return MakeVec(x*f,y*f);
     }
     template<typename V>
     void operator *= (const V& f)
@@ -103,9 +110,9 @@ public:
         x*=f; y*=f;
     }
     template<typename V>
-    Vec2 operator / (const V& f) const
+    Vec2<decltype(T{}/V{})> operator / (const V& f) const
     {
-        return Vec2(x/f,y/f);
+        return MakeVec(x/f,y/f);
     }
     template<typename V>
     void operator /= (const V& f)
@@ -152,20 +159,9 @@ public:
     const T& t() const { return y; }
 
     // swizzlers - create a subvector of specific components
-    Vec2 yx() const { return Vec2(y, x); }
-    Vec2 vu() const { return Vec2(y, x); }
-    Vec2 ts() const { return Vec2(y, x); }
-
-    // Inserters to add new elements to effectively create larger vectors containing this Vec2
-    Vec3<T> InsertBeforeX(const T& value) {
-        return Vec3<T>(value, x, y);
-    }
-    Vec3<T> InsertBeforeY(const T& value) {
-        return Vec3<T>(x, value, y);
-    }
-    Vec3<T> Append(const T& value) {
-        return Vec3<T>(x, y, value);
-    }
+    const Vec2 yx() const { return Vec2(y, x); }
+    const Vec2 vu() const { return Vec2(y, x); }
+    const Vec2 ts() const { return Vec2(y, x); }
 };
 
 template<typename T, typename V>
@@ -193,7 +189,7 @@ public:
 
     template<typename T2>
     Vec3<T2> Cast() const {
-        return Vec3<T2>((T2)x, (T2)y, (T2)z);
+        return MakeVec<T2>((T2)x, (T2)y, (T2)z);
     }
 
     // Only implemented for T=int and T=float
@@ -202,7 +198,7 @@ public:
 
     static Vec3 AssignToAll(const T& f)
     {
-        return Vec3<T>(f, f, f);
+        return MakeVec(f, f, f);
     }
 
     void Write(T a[3])
@@ -210,34 +206,34 @@ public:
         a[0] = x; a[1] = y; a[2] = z;
     }
 
-    Vec3 operator +(const Vec3 &other) const
+    Vec3<decltype(T{}+T{})> operator +(const Vec3 &other) const
     {
-        return Vec3(x+other.x, y+other.y, z+other.z);
+        return MakeVec(x+other.x, y+other.y, z+other.z);
     }
     void operator += (const Vec3 &other)
     {
         x+=other.x; y+=other.y; z+=other.z;
     }
-    Vec3 operator -(const Vec3 &other) const
+    Vec3<decltype(T{}-T{})> operator -(const Vec3 &other) const
     {
-        return Vec3(x-other.x, y-other.y, z-other.z);
+        return MakeVec(x-other.x, y-other.y, z-other.z);
     }
     void operator -= (const Vec3 &other)
     {
         x-=other.x; y-=other.y; z-=other.z;
     }
-    Vec3 operator -() const
+    Vec3<decltype(-T{})> operator -() const
     {
-        return Vec3(-x,-y,-z);
+        return MakeVec(-x,-y,-z);
     }
-    Vec3 operator * (const Vec3 &other) const
+    Vec3<decltype(T{}*T{})> operator * (const Vec3 &other) const
     {
-        return Vec3(x*other.x, y*other.y, z*other.z);
+        return MakeVec(x*other.x, y*other.y, z*other.z);
     }
     template<typename V>
-    Vec3 operator * (const V& f) const
+    Vec3<decltype(T{}*V{})> operator * (const V& f) const
     {
-        return Vec3(x*f,y*f,z*f);
+        return MakeVec(x*f,y*f,z*f);
     }
     template<typename V>
     void operator *= (const V& f)
@@ -245,9 +241,9 @@ public:
         x*=f; y*=f; z*=f;
     }
     template<typename V>
-    Vec3 operator / (const V& f) const
+    Vec3<decltype(T{}/V{})> operator / (const V& f) const
     {
-        return Vec3(x/f,y/f,z/f);
+        return MakeVec(x/f,y/f,z/f);
     }
     template<typename V>
     void operator /= (const V& f)
@@ -310,7 +306,7 @@ public:
     // swizzlers - create a subvector of specific components
     // e.g. Vec2 uv() { return Vec2(x,y); }
     // _DEFINE_SWIZZLER2 defines a single such function, DEFINE_SWIZZLER2 defines all of them for all component names (x<->r) and permutations (xy<->yx)
-#define _DEFINE_SWIZZLER2(a, b, name) Vec2<T> name() const { return Vec2<T>(a, b); }
+#define _DEFINE_SWIZZLER2(a, b, name) const Vec2<T> name() const { return Vec2<T>(a, b); }
 #define DEFINE_SWIZZLER2(a, b, a2, b2, a3, b3, a4, b4) \
     _DEFINE_SWIZZLER2(a, b, a##b); \
     _DEFINE_SWIZZLER2(a, b, a2##b2); \
@@ -326,20 +322,6 @@ public:
     DEFINE_SWIZZLER2(y, z, g, b, v, w, t, q);
 #undef DEFINE_SWIZZLER2
 #undef _DEFINE_SWIZZLER2
-
-    // Inserters to add new elements to effectively create larger vectors containing this Vec2
-    Vec4<T> InsertBeforeX(const T& value) {
-        return Vec4<T>(value, x, y, z);
-    }
-    Vec4<T> InsertBeforeY(const T& value) {
-        return Vec4<T>(x, value, y, z);
-    }
-    Vec4<T> InsertBeforeZ(const T& value) {
-        return Vec4<T>(x, y, value, z);
-    }
-    Vec4<T> Append(const T& value) {
-        return Vec4<T>(x, y, z, value);
-    }
 };
 
 template<typename T, typename V>
@@ -383,34 +365,34 @@ public:
         a[0] = x; a[1] = y; a[2] = z; a[3] = w;
     }
 
-    Vec4 operator +(const Vec4& other) const
+    Vec4<decltype(T{}+T{})> operator +(const Vec4& other) const
     {
-        return Vec4(x+other.x, y+other.y, z+other.z, w+other.w);
+        return MakeVec(x+other.x, y+other.y, z+other.z, w+other.w);
     }
     void operator += (const Vec4& other)
     {
         x+=other.x; y+=other.y; z+=other.z; w+=other.w;
     }
-    Vec4 operator -(const Vec4 &other) const
+    Vec4<decltype(T{}-T{})> operator -(const Vec4 &other) const
     {
-        return Vec4(x-other.x, y-other.y, z-other.z, w-other.w);
+        return MakeVec(x-other.x, y-other.y, z-other.z, w-other.w);
     }
     void operator -= (const Vec4 &other)
     {
         x-=other.x; y-=other.y; z-=other.z; w-=other.w;
     }
-    Vec4 operator -() const
+    Vec4<decltype(-T{})> operator -() const
     {
-        return Vec4(-x,-y,-z,-w);
+        return MakeVec(-x,-y,-z,-w);
     }
-    Vec4 operator * (const Vec4 &other) const
+    Vec4<decltype(T{}*T{})> operator * (const Vec4 &other) const
     {
-        return Vec4(x*other.x, y*other.y, z*other.z, w*other.w);
+        return MakeVec(x*other.x, y*other.y, z*other.z, w*other.w);
     }
     template<typename V>
-    Vec4 operator * (const V& f) const
+    Vec4<decltype(T{}*V{})> operator * (const V& f) const
     {
-        return Vec4(x*f,y*f,z*f,w*f);
+        return MakeVec(x*f,y*f,z*f,w*f);
     }
     template<typename V>
     void operator *= (const V& f)
@@ -418,9 +400,9 @@ public:
         x*=f; y*=f; z*=f; w*=f;
     }
     template<typename V>
-    Vec4 operator / (const V& f) const
+    Vec4<decltype(T{}/V{})> operator / (const V& f) const
     {
-        return Vec4(x/f,y/f,z/f,w/f);
+        return MakeVec(x/f,y/f,z/f,w/f);
     }
     template<typename V>
     void operator /= (const V& f)
@@ -469,7 +451,7 @@ public:
     // swizzlers - create a subvector of specific components
     // e.g. Vec2 uv() { return Vec2(x,y); }
     // _DEFINE_SWIZZLER2 defines a single such function, DEFINE_SWIZZLER2 defines all of them for all component names (x<->r) and permutations (xy<->yx)
-#define _DEFINE_SWIZZLER2(a, b, name) Vec2<T> name() const { return Vec2<T>(a, b); }
+#define _DEFINE_SWIZZLER2(a, b, name) const Vec2<T> name() const { return Vec2<T>(a, b); }
 #define DEFINE_SWIZZLER2(a, b, a2, b2) \
     _DEFINE_SWIZZLER2(a, b, a##b); \
     _DEFINE_SWIZZLER2(a, b, a2##b2); \
@@ -485,7 +467,7 @@ public:
 #undef DEFINE_SWIZZLER2
 #undef _DEFINE_SWIZZLER2
 
-#define _DEFINE_SWIZZLER3(a, b, c, name) Vec3<T> name() const { return Vec3<T>(a, b, c); }
+#define _DEFINE_SWIZZLER3(a, b, c, name) const Vec3<T> name() const { return Vec3<T>(a, b, c); }
 #define DEFINE_SWIZZLER3(a, b, c, a2, b2, c2) \
     _DEFINE_SWIZZLER3(a, b, c, a##b##c); \
     _DEFINE_SWIZZLER3(a, c, b, a##c##b); \
@@ -510,69 +492,121 @@ public:
 
 
 template<typename T, typename V>
-Vec4<T> operator * (const V& f, const Vec4<T>& vec)
+Vec4<decltype(V{}*T{})> operator * (const V& f, const Vec4<T>& vec)
 {
-    return Vec4<T>(f*vec.x,f*vec.y,f*vec.z,f*vec.w);
+    return MakeVec(f*vec.x,f*vec.y,f*vec.z,f*vec.w);
 }
 
 typedef Vec4<float> Vec4f;
 
 
 template<typename T>
-static inline T Dot(const Vec2<T>& a, const Vec2<T>& b)
+static inline decltype(T{}*T{}+T{}*T{}) Dot(const Vec2<T>& a, const Vec2<T>& b)
 {
     return a.x*b.x + a.y*b.y;
 }
 
 template<typename T>
-static inline T Dot(const Vec3<T>& a, const Vec3<T>& b)
+static inline decltype(T{}*T{}+T{}*T{}) Dot(const Vec3<T>& a, const Vec3<T>& b)
 {
     return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
 template<typename T>
-static inline T Dot(const Vec4<T>& a, const Vec4<T>& b)
+static inline decltype(T{}*T{}+T{}*T{}) Dot(const Vec4<T>& a, const Vec4<T>& b)
 {
     return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
 }
 
 template<typename T>
-static inline Vec3<T> Cross(const Vec3<T>& a, const Vec3<T>& b)
+static inline Vec3<decltype(T{}*T{}-T{}*T{})> Cross(const Vec3<T>& a, const Vec3<T>& b)
 {
-    return Vec3<T>(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+    return MakeVec(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
 }
 
 // linear interpolation via float: 0.0=begin, 1.0=end
 template<typename X>
-static inline X Lerp(const X& begin, const X& end, const float t)
+static inline decltype(X{}*float{}+X{}*float{}) Lerp(const X& begin, const X& end, const float t)
 {
     return begin*(1.f-t) + end*t;
 }
 
 // linear interpolation via int: 0=begin, base=end
 template<typename X, int base>
-static inline X LerpInt(const X& begin, const X& end, const int t)
+static inline decltype((X{}*int{}+X{}*int{}) / base) LerpInt(const X& begin, const X& end, const int t)
 {
     return (begin*(base-t) + end*t) / base;
 }
 
 // Utility vector factories
 template<typename T>
-static inline Vec2<T> MakeVec2(const T& x, const T& y)
+static inline Vec2<T> MakeVec(const T& x, const T& y)
 {
     return Vec2<T>{x, y};
 }
 
 template<typename T>
-static inline Vec3<T> MakeVec3(const T& x, const T& y, const T& z)
+static inline Vec3<T> MakeVec(const T& x, const T& y, const T& z)
 {
     return Vec3<T>{x, y, z};
 }
 
 template<typename T>
-static inline Vec4<T> MakeVec4(const T& x, const T& y, const T& z, const T& w)
+static inline Vec4<T> MakeVec(const T& x, const T& y, const Vec2<T>& zw)
+{
+    return MakeVec(x, y, zw[0], zw[1]);
+}
+
+template<typename T>
+static inline Vec3<T> MakeVec(const Vec2<T>& xy, const T& z)
+{
+    return MakeVec(xy[0], xy[1], z);
+}
+
+template<typename T>
+static inline Vec3<T> MakeVec(const T& x, const Vec2<T>& yz)
+{
+    return MakeVec(x, yz[0], yz[1]);
+}
+
+template<typename T>
+static inline Vec4<T> MakeVec(const T& x, const T& y, const T& z, const T& w)
 {
     return Vec4<T>{x, y, z, w};
 }
+
+template<typename T>
+static inline Vec4<T> MakeVec(const Vec2<T>& xy, const T& z, const T& w)
+{
+    return MakeVec(xy[0], xy[1], z, w);
+}
+
+template<typename T>
+static inline Vec4<T> MakeVec(const T& x, const Vec2<T>& yz, const T& w)
+{
+    return MakeVec(x, yz[0], yz[1], w);
+}
+
+// NOTE: This has priority over "Vec2<Vec2<T>> MakeVec(const Vec2<T>& x, const Vec2<T>& y)".
+//       Even if someone wanted to use an odd object like Vec2<Vec2<T>>, the compiler would error
+//       out soon enough due to misuse of the returned structure.
+template<typename T>
+static inline Vec4<T> MakeVec(const Vec2<T>& xy, const Vec2<T>& zw)
+{
+    return MakeVec(xy[0], xy[1], zw[0], zw[1]);
+}
+
+template<typename T>
+static inline Vec4<T> MakeVec(const Vec3<T>& xyz, const T& w)
+{
+    return MakeVec(xyz[0], xyz[1], xyz[2], w);
+}
+
+template<typename T>
+static inline Vec4<T> MakeVec(const T& x, const Vec2<T>& yzw)
+{
+    return MakeVec(x, yzw[0], yzw[1], yzw[2]);
+}
+
 
 } // namespace

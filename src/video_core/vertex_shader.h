@@ -27,7 +27,6 @@ struct OutputVertex {
     Math::Vec4<float24> dummy; // quaternions (not implemented, yet)
     Math::Vec4<float24> color;
     Math::Vec2<float24> tc0;
-    float24 tc0_v;
 
     // Padding for optimal alignment
     float24 pad[14];
@@ -36,6 +35,7 @@ struct OutputVertex {
 
     // position after perspective divide
     Math::Vec3<float24> screenpos;
+    float24 pad2;
 
     // Linear interpolation
     // factor: 0=this, 1=vtx
@@ -59,6 +59,7 @@ struct OutputVertex {
     }
 };
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
+static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
 union Instruction {
     enum class OpCode : u32 {
