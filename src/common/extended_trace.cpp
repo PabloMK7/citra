@@ -173,20 +173,16 @@ static BOOL GetFunctionInfoFromAddresses( ULONG fnAddress, ULONG stackAddress, L
         PCSTR2LPTSTR( lpszNonUnicodeUnDSymbol, lpszUnDSymbol );
 
         // I am just smarter than the symbol file :)
-        if ( _tcscmp(lpszUnDSymbol, _T("_WinMain@16")) == 0 )
+        if (_tcscmp(lpszUnDSymbol, _T("_WinMain@16")) == 0)
             _tcscpy(lpszUnDSymbol, _T("WinMain(HINSTANCE,HINSTANCE,LPCTSTR,int)"));
-        else
-            if ( _tcscmp(lpszUnDSymbol, _T("_main")) == 0 )
-                _tcscpy(lpszUnDSymbol, _T("main(int,TCHAR * *)"));
-            else
-                if ( _tcscmp(lpszUnDSymbol, _T("_mainCRTStartup")) == 0 )
-                    _tcscpy(lpszUnDSymbol, _T("mainCRTStartup()"));
-                else
-                    if ( _tcscmp(lpszUnDSymbol, _T("_wmain")) == 0 )
-                        _tcscpy(lpszUnDSymbol, _T("wmain(int,TCHAR * *,TCHAR * *)"));
-                    else
-                        if ( _tcscmp(lpszUnDSymbol, _T("_wmainCRTStartup")) == 0 )
-                            _tcscpy(lpszUnDSymbol, _T("wmainCRTStartup()"));
+        else if (_tcscmp(lpszUnDSymbol, _T("_main")) == 0)
+            _tcscpy(lpszUnDSymbol, _T("main(int,TCHAR * *)"));
+        else if (_tcscmp(lpszUnDSymbol, _T("_mainCRTStartup")) == 0)
+            _tcscpy(lpszUnDSymbol, _T("mainCRTStartup()"));
+        else if (_tcscmp(lpszUnDSymbol, _T("_wmain")) == 0)
+            _tcscpy(lpszUnDSymbol, _T("wmain(int,TCHAR * *,TCHAR * *)"));
+        else if (_tcscmp(lpszUnDSymbol, _T("_wmainCRTStartup")) == 0)
+            _tcscpy(lpszUnDSymbol, _T("wmainCRTStartup()"));
 
         lpszSymbol[0] = _T('\0');
 
