@@ -549,8 +549,6 @@ struct float24 {
     }
 
 private:
-    float24() = default;
-
     // Stored as a regular float, merely for convenience
     // TODO: Perform proper arithmetic on this!
     float value;
