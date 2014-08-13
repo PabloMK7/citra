@@ -31,10 +31,9 @@ void Start() {
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
 
-#if EMU_PLATFORM == PLATFORM_MACOSX
-    // Known problem with GLEW prevents contexts above 2.x on OSX unless glewExperimental is enabled.
+    // Required in order for GLFW to work on Linux, 
+    // or for GL contexts above 2.x on OS X
     glewExperimental = GL_TRUE;
-#endif
 
     g_emu_window = emu_window;
     g_emu_window->MakeCurrent();
