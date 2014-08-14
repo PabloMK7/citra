@@ -24,9 +24,14 @@ static u32 uniform_write_buffer[4];
 static u32 vs_binary_write_offset = 0;
 static u32 vs_swizzle_write_offset = 0;
 
-static inline void WritePicaReg(u32 id, u32 value) {
+static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
+
+    if (id >= registers.NumIds())
+        return;
+
+    // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
     u32 old_value = registers[id];
-    registers[id] = value;
+    registers[id] = (old_value & ~mask) | (value & mask);
 
     switch(id) {
         // It seems like these trigger vertex rendering
@@ -215,14 +220,17 @@ static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
 
     u32* read_pointer = (u32*)first_command_word;
 
-    // TODO: Take parameter mask into consideration!
+    const u32 write_mask = ((header.parameter_mask & 0x1) ? (0xFFu <<  0) : 0u) |
+                           ((header.parameter_mask & 0x2) ? (0xFFu <<  8) : 0u) |
+                           ((header.parameter_mask & 0x4) ? (0xFFu << 16) : 0u) |
+                           ((header.parameter_mask & 0x8) ? (0xFFu << 24) : 0u);
 
-    WritePicaReg(header.cmd_id, *read_pointer);
+    WritePicaReg(header.cmd_id, *read_pointer, write_mask);
     read_pointer += 2;
 
     for (int i = 1; i < 1+header.extra_data_length; ++i) {
         u32 cmd = header.cmd_id + ((header.group_commands) ? i : 0);
-        WritePicaReg(cmd, *read_pointer);
+        WritePicaReg(cmd, *read_pointer, write_mask);
         ++read_pointer;
     }
 
