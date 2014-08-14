@@ -230,11 +230,6 @@ void ExecuteCommand(const Command& command, u32 thread_id) {
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
 
-        // TODO: Move this to GPU
-        // TODO: Not sure what units the size is measured in
-        g_debugger.CommandListCalled(params.address,
-                                     (u32*)Memory::GetPointer(params.address),
-                                     params.size);
         SignalInterrupt(InterruptId::P3D);
         break;
     }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <vector>
 
 #include "video_core/pica.h"
@@ -37,6 +38,26 @@ private:
 
 void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
                 u32 main_offset, const Regs::VSOutputAttributes* output_attributes);
+
+
+// Utility class to log Pica commands.
+struct PicaTrace {
+    struct Write : public std::pair<u32,u32> {
+		Write(u32 id, u32 value) : std::pair<u32,u32>(id, value) {}
+
+        u32& Id() { return first; }
+        const u32& Id() const { return first; }
+
+        u32& Value() { return second; }
+        const u32& Value() const { return second; }
+    };
+    std::vector<Write> writes;
+};
+
+void StartPicaTracing();
+bool IsPicaTracing();
+void OnPicaRegWrite(u32 id, u32 value);
+std::unique_ptr<PicaTrace> FinishPicaTracing();
 
 } // namespace
 

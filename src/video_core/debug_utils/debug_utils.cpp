@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <mutex>
 #include <string>
 
 #include "video_core/pica.h"
@@ -258,6 +259,60 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     for (auto& chunk : writing_queue) {
         file.write((char*)chunk.pointer, chunk.size);
     }
+}
+
+static std::unique_ptr<PicaTrace> pica_trace;
+static std::mutex pica_trace_mutex;
+static int is_pica_tracing = false;
+
+void StartPicaTracing()
+{
+    if (is_pica_tracing) {
+        ERROR_LOG(GPU, "StartPicaTracing called even though tracing already running!");
+        return;
+    }
+
+    pica_trace_mutex.lock();
+    pica_trace = std::unique_ptr<PicaTrace>(new PicaTrace);
+
+    is_pica_tracing = true;
+    pica_trace_mutex.unlock();
+}
+
+bool IsPicaTracing()
+{
+    return is_pica_tracing;
+}
+
+void OnPicaRegWrite(u32 id, u32 value)
+{
+    // Double check for is_pica_tracing to avoid pointless locking overhead
+    if (!is_pica_tracing)
+        return;
+
+    std::unique_lock<std::mutex> lock(pica_trace_mutex);
+
+    if (!is_pica_tracing)
+        return;
+
+    pica_trace->writes.push_back({id, value});
+}
+
+std::unique_ptr<PicaTrace> FinishPicaTracing()
+{
+    if (!is_pica_tracing) {
+        ERROR_LOG(GPU, "FinishPicaTracing called even though tracing already running!");
+        return {};
+    }
+
+    // signalize that no further tracing should be performed
+    is_pica_tracing = false;
+
+    // Wait until running tracing is finished
+    pica_trace_mutex.lock();
+    std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
+    pica_trace_mutex.unlock();
+    return std::move(ret);
 }
 
 } // namespace
