@@ -65,26 +65,32 @@ static void ProcessShaderCode(VertexShaderState& state) {
         const Instruction& instr = *(const Instruction*)state.program_counter;
         state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + (state.program_counter - shader_memory));
 
-        const float24* src1_ = (instr.common.src1 < 0x10) ? state.input_register_table[instr.common.src1]
-                             : (instr.common.src1 < 0x20) ? &state.temporary_registers[instr.common.src1-0x10].x
-                             : (instr.common.src1 < 0x80) ? &shader_uniforms.f[instr.common.src1-0x20].x
+        const float24* src1_ = (instr.common.src1 < 0x10) ? state.input_register_table[instr.common.src1.GetIndex()]
+                             : (instr.common.src1 < 0x20) ? &state.temporary_registers[instr.common.src1.GetIndex()].x
+                             : (instr.common.src1 < 0x80) ? &shader_uniforms.f[instr.common.src1.GetIndex()].x
                              : nullptr;
-        const float24* src2_ = (instr.common.src2 < 0x10) ? state.input_register_table[instr.common.src2]
-                             : &state.temporary_registers[instr.common.src2-0x10].x;
-        // TODO: Unsure about the limit values
-        float24* dest = (instr.common.dest <= 0x1C) ? state.output_register_table[instr.common.dest]
-                             : (instr.common.dest <= 0x3C) ? nullptr
-                             : (instr.common.dest <= 0x7C) ? &state.temporary_registers[(instr.common.dest-0x40)/4][instr.common.dest%4]
-                             : nullptr;
+        const float24* src2_ = (instr.common.src2 < 0x10) ? state.input_register_table[instr.common.src2.GetIndex()]
+                             : &state.temporary_registers[instr.common.src2.GetIndex()].x;
+        float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
+                      : (instr.common.dest < 0x10) ? nullptr
+                      : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
+                      : nullptr;
 
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
+        const bool negate_src1 = swizzle.negate;
 
-        const float24 src1[4] = {
+        float24 src1[4] = {
             src1_[(int)swizzle.GetSelectorSrc1(0)],
             src1_[(int)swizzle.GetSelectorSrc1(1)],
             src1_[(int)swizzle.GetSelectorSrc1(2)],
             src1_[(int)swizzle.GetSelectorSrc1(3)],
         };
+        if (negate_src1) {
+            src1[0] = src1[0] * float24::FromFloat32(-1);
+            src1[1] = src1[1] * float24::FromFloat32(-1);
+            src1[2] = src1[2] * float24::FromFloat32(-1);
+            src1[3] = src1[3] * float24::FromFloat32(-1);
+        }
         const float24 src2[4] = {
             src2_[(int)swizzle.GetSelectorSrc2(0)],
             src2_[(int)swizzle.GetSelectorSrc2(1)],
