@@ -4,6 +4,7 @@
 
 #include "pica.h"
 #include "vertex_shader.h"
+#include "debug_utils/debug_utils.h"
 #include <core/mem_map.h>
 #include <common/file_util.h>
 
@@ -50,6 +51,11 @@ struct VertexShaderState {
     };
     u32 call_stack[8]; // TODO: What is the maximal call stack depth?
     u32* call_stack_pointer;
+
+    struct {
+        u32 max_offset; // maximum program counter ever reached
+        u32 max_opdesc_id; // maximum swizzle pattern index ever used
+    } debug;
 };
 
 static void ProcessShaderCode(VertexShaderState& state) {
@@ -57,6 +63,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
         bool increment_pc = true;
         bool exit_loop = false;
         const Instruction& instr = *(const Instruction*)state.program_counter;
+        state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + (state.program_counter - shader_memory));
 
         const float24* src1_ = (instr.common.src1 < 0x10) ? state.input_register_table[instr.common.src1]
                              : (instr.common.src1 < 0x20) ? &state.temporary_registers[instr.common.src1-0x10].x
@@ -88,6 +95,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
         switch (instr.opcode) {
             case Instruction::OpCode::ADD:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -100,6 +108,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case Instruction::OpCode::MUL:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -113,6 +122,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             case Instruction::OpCode::DP3:
             case Instruction::OpCode::DP4:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 float24 dot = float24::FromFloat32(0.f);
                 int num_components = (instr.opcode == Instruction::OpCode::DP3) ? 3 : 4;
                 for (int i = 0; i < num_components; ++i)
@@ -130,6 +140,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             // Reciprocal
             case Instruction::OpCode::RCP:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -145,6 +156,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             // Reciprocal Square Root
             case Instruction::OpCode::RSQ:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -159,6 +171,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case Instruction::OpCode::MOV:
             {
+                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -212,6 +225,8 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
 
     const u32* main = &shader_memory[registers.vs_main_offset];
     state.program_counter = (u32*)main;
+    state.debug.max_offset = 0;
+    state.debug.max_opdesc_id = 0;
 
     // Setup input register table
     const auto& attribute_register_map = registers.vs_input_register_map;
@@ -255,6 +270,9 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
     state.call_stack_pointer = &state.call_stack[0];
 
     ProcessShaderCode(state);
+    DebugUtils::DumpShader(shader_memory, state.debug.max_offset, swizzle_data,
+                           state.debug.max_opdesc_id, registers.vs_main_offset,
+                           registers.vs_output_attributes);
 
     DEBUG_LOG(GPU, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
         ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),

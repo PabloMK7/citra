@@ -57,7 +57,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x1);
 
-    union {
+    union VSOutputAttributes {
         // Maps components of output vertex attributes to semantics
         enum Semantic : u32
         {
