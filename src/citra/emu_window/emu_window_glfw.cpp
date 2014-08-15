@@ -6,7 +6,6 @@
 
 #include "video_core/video_core.h"
 
-#include "citra/citra.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
 static void OnKeyEvent(GLFWwindow* win, int key, int action) {

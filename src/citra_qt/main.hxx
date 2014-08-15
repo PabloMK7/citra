@@ -30,7 +30,7 @@ public:
     ~GMainWindow();
 
 private:
-    void BootGame(const char* filename);
+    void BootGame(std::string filename);
 
     void closeEvent(QCloseEvent* event);
 

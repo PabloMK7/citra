@@ -17,13 +17,15 @@
 #define APP_TITLE       APP_NAME " " APP_VERSION
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
-EmuThread::EmuThread(GRenderWindow* render_window) : exec_cpu_step(false), cpu_running(false), render_window(render_window)
+EmuThread::EmuThread(GRenderWindow* render_window) : 
+    exec_cpu_step(false), cpu_running(false), 
+    render_window(render_window), filename("")
 {
 }
 
-void EmuThread::SetFilename(const char* filename)
+void EmuThread::SetFilename(std::string filename)
 {
-    strcpy(this->filename, filename);
+    this->filename = filename;
 }
 
 void EmuThread::run()
