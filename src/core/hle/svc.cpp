@@ -330,6 +330,11 @@ void SleepThread(s64 nanoseconds) {
     DEBUG_LOG(SVC, "called nanoseconds=%d", nanoseconds);
 }
 
+/// This returns the total CPU ticks elapsed since the CPU was powered-on
+s64 GetSystemTick() {
+    return (s64)Core::g_app_core->GetTicks();
+}
+
 const HLE::FunctionDef SVC_Table[] = {
     {0x00, nullptr,                         "Unknown"},
     {0x01, HLE::Wrap<ControlMemory>,        "ControlMemory"},
@@ -371,7 +376,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x25, HLE::Wrap<WaitSynchronizationN>, "WaitSynchronizationN"},
     {0x26, nullptr,                         "SignalAndWait"},
     {0x27, HLE::Wrap<DuplicateHandle>,      "DuplicateHandle"},
-    {0x28, nullptr,                         "GetSystemTick"},
+    {0x28, HLE::Wrap<GetSystemTick>,        "GetSystemTick"},
     {0x29, nullptr,                         "GetHandleInfo"},
     {0x2A, nullptr,                         "GetSystemInfo"},
     {0x2B, nullptr,                         "GetProcessInfo"},
