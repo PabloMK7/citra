@@ -1,7 +1,6 @@
 set(SRCS    citra.cpp
             emu_window/emu_window_glfw.cpp)
-set(HEADERS citra.h
-            resource.h)
+set(HEADERS resource.h)
 
 # NOTE: This is a workaround for CMake bug 0006976 (missing X11_xf86vmode_LIB variable)
 if (NOT X11_xf86vmode_LIB)

@@ -203,7 +203,6 @@
     <ClCompile Include="emu_window\emu_window_glfw.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="citra.h" />
     <ClInclude Include="emu_window\emu_window_glfw.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

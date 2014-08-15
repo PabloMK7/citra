@@ -12,7 +12,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="citra.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="emu_window\emu_window_glfw.h">
       <Filter>emu_window</Filter>
