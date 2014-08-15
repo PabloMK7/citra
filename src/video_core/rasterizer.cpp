@@ -165,12 +165,132 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
             };
 
+            // Texture environment - consists of 6 stages of color and alpha combining.
+            //
+            // Color combiners take three input color values from some source (e.g. interpolated
+            // vertex color, texture color, previous stage, etc), perform some very simple
+            // operations on each of them (e.g. inversion) and then calculate the output color
+            // with some basic arithmetic. Alpha combiners can be configured separately but work
+            // analogously.
+            Math::Vec4<u8> combiner_output;
+            for (auto tev_stage : registers.GetTevStages()) {
+                using Source = Regs::TevStageConfig::Source;
+                using ColorModifier = Regs::TevStageConfig::ColorModifier;
+                using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
+                using Operation = Regs::TevStageConfig::Operation;
+
+                auto GetColorSource = [&](Source source) -> Math::Vec3<u8> {
+                    switch (source) {
+                    case Source::PrimaryColor:
+                        return primary_color.rgb();
+
+                    case Source::Constant:
+                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
+
+                    case Source::Previous:
+                        return combiner_output.rgb();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown color combiner source %d\n", (int)source);
+                        return {};
+                    }
+                };
+
+                auto GetAlphaSource = [&](Source source) -> u8 {
+                    switch (source) {
+                    case Source::PrimaryColor:
+                        return primary_color.a();
+
+                    case Source::Constant:
+                        return tev_stage.const_a;
+
+                    case Source::Previous:
+                        return combiner_output.a();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown alpha combiner source %d\n", (int)source);
+                        return 0;
+                    }
+                };
+
+                auto GetColorModifier = [](ColorModifier factor, const Math::Vec3<u8>& values) -> Math::Vec3<u8> {
+                    switch (factor)
+                    {
+                    case ColorModifier::SourceColor:
+                        return values;
+                    default:
+                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        return {};
+                    }
+                };
+
+                auto GetAlphaModifier = [](AlphaModifier factor, u8 value) -> u8 {
+                    switch (factor) {
+                    case AlphaModifier::SourceAlpha:
+                        return value;
+                    default:
+                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        return 0;
+                    }
+                };
+
+                auto ColorCombine = [](Operation op, const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
+                    switch (op) {
+                    case Operation::Replace:
+                        return input[0];
+
+                    case Operation::Modulate:
+                        return ((input[0] * input[1]) / 255).Cast<u8>();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown color combiner operation %d\n", (int)op);
+                        return {};
+                    }
+                };
+
+                auto AlphaCombine = [](Operation op, const std::array<u8,3>& input) -> u8 {
+                    switch (op) {
+                    case Operation::Replace:
+                        return input[0];
+
+                    case Operation::Modulate:
+                        return input[0] * input[1] / 255;
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        return 0;
+                    }
+                };
+
+                // color combiner
+                // NOTE: Not sure if the alpha combiner might use the color output of the previous
+                //       stage as input. Hence, we currently don't directly write the result to
+                //       combiner_output.rgb(), but instead store it in a temporary variable until
+                //       alpha combining has been done.
+                Math::Vec3<u8> color_result[3] = {
+                    GetColorModifier(tev_stage.color_modifier1, GetColorSource(tev_stage.color_source1)),
+                    GetColorModifier(tev_stage.color_modifier2, GetColorSource(tev_stage.color_source2)),
+                    GetColorModifier(tev_stage.color_modifier3, GetColorSource(tev_stage.color_source3))
+                };
+                auto color_output = ColorCombine(tev_stage.color_op, color_result);
+
+                // alpha combiner
+                std::array<u8,3> alpha_result = {
+                    GetAlphaModifier(tev_stage.alpha_modifier1, GetAlphaSource(tev_stage.alpha_source1)),
+                    GetAlphaModifier(tev_stage.alpha_modifier2, GetAlphaSource(tev_stage.alpha_source2)),
+                    GetAlphaModifier(tev_stage.alpha_modifier3, GetAlphaSource(tev_stage.alpha_source3))
+                };
+                auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
+
+                combiner_output = Math::MakeVec(color_output, alpha_output);
+            }
+
             u16 z = (u16)(((float)v0.screenpos[2].ToFloat32() * w0 +
                            (float)v1.screenpos[2].ToFloat32() * w1 +
                            (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum); // TODO: Shouldn't need to multiply by 65536?
             SetDepth(x >> 4, y >> 4, z);
 
-            DrawPixel(x >> 4, y >> 4, primary_color);
+            DrawPixel(x >> 4, y >> 4, combiner_output);
         }
     }
 }

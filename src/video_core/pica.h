@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <initializer_list>
 #include <map>
@@ -133,7 +134,97 @@ struct Regs {
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
 
-    INSERT_PADDING_WORDS(0x81);
+    INSERT_PADDING_WORDS(0x31);
+
+    // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
+    struct TevStageConfig {
+        enum class Source : u32 {
+            PrimaryColor           = 0x0,
+            Texture0               = 0x3,
+            Texture1               = 0x4,
+            Texture2               = 0x5,
+            Texture3               = 0x6,
+            // 0x7-0xc = primary color??
+            Constant               = 0xe,
+            Previous               = 0xf,
+        };
+
+        enum class ColorModifier : u32 {
+            SourceColor         = 0,
+            OneMinusSourceColor = 1,
+            SourceAlpha         = 2,
+            OneMinusSourceAlpha = 3,
+
+            // Other values seem to be non-standard extensions
+        };
+
+        enum class AlphaModifier : u32 {
+            SourceAlpha         = 0,
+            OneMinusSourceAlpha = 1,
+
+            // Other values seem to be non-standard extensions
+        };
+
+        enum class Operation : u32 {
+            Replace         = 0,
+            Modulate        = 1,
+            Add             = 2,
+            AddSigned       = 3,
+            Lerp            = 4,
+            Subtract        = 5,
+        };
+
+        union {
+            BitField< 0, 4, Source> color_source1;
+            BitField< 4, 4, Source> color_source2;
+            BitField< 8, 4, Source> color_source3;
+            BitField<16, 4, Source> alpha_source1;
+            BitField<20, 4, Source> alpha_source2;
+            BitField<24, 4, Source> alpha_source3;
+        };
+
+        union {
+            BitField< 0, 4, ColorModifier> color_modifier1;
+            BitField< 4, 4, ColorModifier> color_modifier2;
+            BitField< 8, 4, ColorModifier> color_modifier3;
+            BitField<12, 3, AlphaModifier> alpha_modifier1;
+            BitField<16, 3, AlphaModifier> alpha_modifier2;
+            BitField<20, 3, AlphaModifier> alpha_modifier3;
+        };
+
+        union {
+            BitField< 0, 4, Operation> color_op;
+            BitField<16, 4, Operation> alpha_op;
+        };
+
+        union {
+            BitField< 0, 8, u32> const_r;
+            BitField< 8, 8, u32> const_g;
+            BitField<16, 8, u32> const_b;
+            BitField<24, 8, u32> const_a;
+        };
+
+        INSERT_PADDING_WORDS(0x1);
+    };
+
+    TevStageConfig tev_stage0;
+    INSERT_PADDING_WORDS(0x3);
+    TevStageConfig tev_stage1;
+    INSERT_PADDING_WORDS(0x3);
+    TevStageConfig tev_stage2;
+    INSERT_PADDING_WORDS(0x3);
+    TevStageConfig tev_stage3;
+    INSERT_PADDING_WORDS(0x13);
+    TevStageConfig tev_stage4;
+    INSERT_PADDING_WORDS(0x3);
+    TevStageConfig tev_stage5;
+    INSERT_PADDING_WORDS(0x13);
+
+    const std::array<Regs::TevStageConfig,6> GetTevStages() const {
+        return { tev_stage0, tev_stage1,
+                 tev_stage2, tev_stage3,
+                 tev_stage4, tev_stage5 };
+    };
 
     struct {
         enum ColorFormat : u32 {
@@ -444,6 +535,12 @@ struct Regs {
         ADD_FIELD(viewport_corner);
         ADD_FIELD(texture0);
         ADD_FIELD(texture0_format);
+        ADD_FIELD(tev_stage0);
+        ADD_FIELD(tev_stage1);
+        ADD_FIELD(tev_stage2);
+        ADD_FIELD(tev_stage3);
+        ADD_FIELD(tev_stage4);
+        ADD_FIELD(tev_stage5);
         ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
@@ -503,6 +600,12 @@ ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
+ASSERT_REG_POSITION(tev_stage0, 0xc0);
+ASSERT_REG_POSITION(tev_stage1, 0xc8);
+ASSERT_REG_POSITION(tev_stage2, 0xd0);
+ASSERT_REG_POSITION(tev_stage3, 0xd8);
+ASSERT_REG_POSITION(tev_stage4, 0xf0);
+ASSERT_REG_POSITION(tev_stage5, 0xf8);
 ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
