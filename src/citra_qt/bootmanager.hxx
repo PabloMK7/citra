@@ -17,7 +17,7 @@ public:
      * @param filename
      * @warning Only call when not running!
      */
-    void SetFilename(const char* filename);
+    void SetFilename(std::string filename);
 
     /**
      * Start emulation (on new thread)
@@ -62,7 +62,7 @@ private:
 
     EmuThread(GRenderWindow* render_window);
 
-    char filename[MAX_PATH];
+    std::string filename;
 
     bool exec_cpu_step;
     bool cpu_running;

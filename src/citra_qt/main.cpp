@@ -123,7 +123,7 @@ GMainWindow::~GMainWindow()
         delete render_window;
 }
 
-void GMainWindow::BootGame(const char* filename)
+void GMainWindow::BootGame(std::string filename)
 {
     NOTICE_LOG(MASTER_LOG, "citra starting...\n");
 
@@ -134,8 +134,7 @@ void GMainWindow::BootGame(const char* filename)
     }
 
     // Load a game or die...
-    std::string boot_filename = filename;
-    if (Loader::ResultStatus::Success != Loader::LoadFile(boot_filename)) {
+    if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
         ERROR_LOG(BOOT, "Failed to load ROM!");
     }
 
