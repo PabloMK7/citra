@@ -19,6 +19,7 @@
 
 #include "common/memory_util.h"
 #include "common/mem_arena.h"
+#include "common/string_util.h"
 
 #ifndef _WIN32
 #include <sys/stat.h>
@@ -98,15 +99,7 @@ int ashmem_unpin_region(int fd, size_t offset, size_t len)
 #endif  // Android
 
 
-
-#ifndef _WIN32
-// do not make this "static"
-#if defined(MAEMO) || defined(MEEGO_EDITION_HARMATTAN)
-std::string ram_temp_file = "/home/user/gc_mem.tmp";
-#else
-std::string ram_temp_file = "/tmp/gc_mem.tmp";
-#endif
-#elif !defined(_XBOX)
+#if defined(_WIN32) && !defined(_XBOX)
 SYSTEM_INFO sysInfo;
 #endif
 
@@ -145,20 +138,26 @@ void MemArena::GrabLowMemSpace(size_t size)
         return;
     }
 #else
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    fd = open(ram_temp_file.c_str(), O_RDWR | O_CREAT, mode);
-    if (fd < 0)
+    // Try to find a non-existing filename for our shared memory.
+    // In most cases the first one will be available, but it's nicer to search
+    // a bit more.
+    for (int i = 0; i < 10000; i++)
     {
-        ERROR_LOG(MEMMAP, "Failed to grab memory space as a file: %s of size: %08x  errno: %d", ram_temp_file.c_str(), (int)size, (int)(errno));
-        return;
+        std::string file_name = StringFromFormat("/citramem.%d", i);
+        fd = shm_open(file_name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600);
+        if (fd != -1)
+        {
+            shm_unlink(file_name.c_str());
+            break;
+        }
+        else if (errno != EEXIST)
+        {
+            ERROR_LOG(MEMMAP, "shm_open failed: %s", strerror(errno));
+            return;
+        }
     }
-    // delete immediately, we keep the fd so it still lives
-    unlink(ram_temp_file.c_str());
-    if (ftruncate(fd, size) != 0)
-    {
-        ERROR_LOG(MEMMAP, "Failed to ftruncate %d to size %08x", (int)fd, (int)size);
-    }
-    return;
+    if (ftruncate(fd, size) < 0)
+        ERROR_LOG(MEMMAP, "Failed to allocate low memory space");
 #endif
 }
 
@@ -198,12 +197,12 @@ void *MemArena::CreateView(s64 offset, size_t size, void *base)
 #elif defined(__FreeBSD__)
         MAP_NOSYNC |
 #endif
-        ((base == 0) ? 0 : MAP_FIXED), fd, offset);
+        ((base == nullptr) ? 0 : MAP_FIXED), fd, offset);
 
     if (retval == MAP_FAILED)
     {
-        NOTICE_LOG(MEMMAP, "mmap on %s (fd: %d) failed", ram_temp_file.c_str(), (int)fd);
-        return 0;
+        NOTICE_LOG(MEMMAP, "mmap failed");
+        return nullptr;
     }
     return retval;
 #endif
