@@ -94,7 +94,46 @@ struct Regs {
         BitField<16, 16, u32> y;
     } viewport_corner;
 
-    INSERT_PADDING_WORDS(0xa7);
+    INSERT_PADDING_WORDS(0x18);
+
+    struct TextureConfig {
+        INSERT_PADDING_WORDS(0x1);
+
+        union {
+            BitField< 0, 16, u32> height;
+            BitField<16, 16, u32> width;
+        };
+
+        INSERT_PADDING_WORDS(0x2);
+
+        u32 address;
+
+        u32 GetPhysicalAddress() {
+            return DecodeAddressRegister(address) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
+        }
+
+        // texture1 and texture2 store the texture format directly after the address
+        // whereas texture0 inserts some additional flags inbetween.
+        // Hence, we store the format separately so that all other parameters can be described
+        // in a single structure.
+    };
+
+    enum class TextureFormat : u32 {
+        RGBA8        =  0,
+        RGB8         =  1,
+        RGBA5551     =  2,
+        RGB565       =  3,
+        RGBA4        =  4,
+
+        // TODO: Support for the other formats is not implemented, yet.
+        // Seems like they are luminance formats and compressed textures.
+    };
+
+    TextureConfig texture0;
+    INSERT_PADDING_WORDS(0x8);
+    BitField<0, 4, TextureFormat> texture0_format;
+
+    INSERT_PADDING_WORDS(0x81);
 
     struct {
         enum ColorFormat : u32 {
@@ -403,6 +442,8 @@ struct Regs {
         ADD_FIELD(viewport_depth_range);
         ADD_FIELD(viewport_depth_far_plane);
         ADD_FIELD(viewport_corner);
+        ADD_FIELD(texture0);
+        ADD_FIELD(texture0_format);
         ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
@@ -460,6 +501,8 @@ ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
+ASSERT_REG_POSITION(texture0, 0x81);
+ASSERT_REG_POSITION(texture0_format, 0x8e);
 ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);

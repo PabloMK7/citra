@@ -59,6 +59,8 @@ bool IsPicaTracing();
 void OnPicaRegWrite(u32 id, u32 value);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
+void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data);
+
 } // namespace
 
 } // namespace

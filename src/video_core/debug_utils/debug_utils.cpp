@@ -3,9 +3,16 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <map>
 #include <fstream>
 #include <mutex>
 #include <string>
+
+#ifdef HAVE_PNG
+#include <png.h>
+#endif
+
+#include "common/file_util.h"
 
 #include "video_core/pica.h"
 
@@ -313,6 +320,130 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
     pica_trace_mutex.unlock();
     return std::move(ret);
+}
+
+void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
+    // NOTE: Permanently enabling this just trashes hard disks for no reason.
+    //       Hence, this is currently disabled.
+    return;
+
+#ifndef HAVE_PNG
+	return;
+#else
+	if (!data)
+        return;
+
+    // Write data to file
+    static int dump_index = 0;
+    std::string filename = std::string("texture_dump") + std::to_string(++dump_index) + std::string(".png");
+    u32 row_stride = texture_config.width * 3;
+
+    u8* buf;
+
+    char title[] = "Citra texture dump";
+    char title_key[] = "Title";
+    png_structp png_ptr = nullptr;
+    png_infop info_ptr = nullptr;
+
+    // Open file for writing (binary mode)
+    File::IOFile fp(filename, "wb");
+
+    // Initialize write structure
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (png_ptr == nullptr) {
+        ERROR_LOG(GPU, "Could not allocate write struct\n");
+        goto finalise;
+
+    }
+
+    // Initialize info structure
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == nullptr) {
+        ERROR_LOG(GPU, "Could not allocate info struct\n");
+        goto finalise;
+    }
+
+    // Setup Exception handling
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        ERROR_LOG(GPU, "Error during png creation\n");
+        goto finalise;
+    }
+
+    png_init_io(png_ptr, fp.GetHandle());
+
+    // Write header (8 bit colour depth)
+    png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height,
+        8, PNG_COLOR_TYPE_RGB /*_ALPHA*/, PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_text title_text;
+    title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+    title_text.key = title_key;
+    title_text.text = title;
+    png_set_text(png_ptr, info_ptr, &title_text, 1);
+
+    png_write_info(png_ptr, info_ptr);
+
+    buf = new u8[row_stride * texture_config.height];
+    for (int y = 0; y < texture_config.height; ++y) {
+        for (int x = 0; x < texture_config.width; ++x) {
+            // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+            // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+            // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+            // texels are laid out in a 2x2 subtile like this:
+            // 2 3
+            // 0 1
+            //
+            // The full 8x8 tile has the texels arranged like this:
+            //
+            // 42 43 46 47 58 59 62 63
+            // 40 41 44 45 56 57 60 61
+            // 34 35 38 39 50 51 54 55
+            // 32 33 36 37 48 49 52 53
+            // 10 11 14 15 26 27 30 31
+            // 08 09 12 13 24 25 28 29
+            // 02 03 06 07 18 19 22 23
+            // 00 01 04 05 16 17 20 21
+            int texel_index_within_tile = 0;
+            for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
+                int sub_tile_width = 1 << block_size_index;
+                int sub_tile_height = 1 << block_size_index;
+
+                int sub_tile_index = (x & sub_tile_width) << block_size_index;
+                sub_tile_index += 2 * ((y & sub_tile_height) << block_size_index);
+                texel_index_within_tile += sub_tile_index;
+            }
+
+            const int block_width = 8;
+            const int block_height = 8;
+
+            int coarse_x = (x / block_width) * block_width;
+            int coarse_y = (y / block_height) * block_height;
+
+            u8* source_ptr = (u8*)data + coarse_x * block_height * 3 + coarse_y * row_stride + texel_index_within_tile * 3;
+            buf[3 * x + y * row_stride    ] = source_ptr[2];
+            buf[3 * x + y * row_stride + 1] = source_ptr[1];
+            buf[3 * x + y * row_stride + 2] = source_ptr[0];
+        }
+    }
+
+    // Write image data
+    for (auto y = 0; y < texture_config.height; ++y)
+    {
+        u8* row_ptr = (u8*)buf + y * row_stride;
+        u8* ptr = row_ptr;
+        png_write_row(png_ptr, row_ptr);
+    }
+
+    delete[] buf;
+
+    // End write
+    png_write_end(png_ptr, nullptr);
+
+finalise:
+    if (info_ptr != nullptr) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    if (png_ptr != nullptr) png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
+#endif
 }
 
 } // namespace

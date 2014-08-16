@@ -9,6 +9,11 @@ add_definitions(-Wno-attributes)
 add_definitions(-DSINGLETHREADED)
 add_definitions(${CXX_COMPILE_FLAGS})
 
+find_package(PNG)
+if (PNG_FOUND)
+    add_definitions(-DHAVE_PNG)
+endif ()
+
 # dependency checking
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
