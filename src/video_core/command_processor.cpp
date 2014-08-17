@@ -8,6 +8,7 @@
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
 
+#include "debug_utils/debug_utils.h"
 
 namespace Pica {
 
@@ -68,6 +69,8 @@ static inline void WritePicaReg(u32 id, u32 value) {
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = (bool)index_info.format;
 
+            DebugUtils::GeometryDumper geometry_dumper;
+
             for (int index = 0; index < registers.num_vertices; ++index)
             {
                 int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
@@ -95,6 +98,10 @@ static inline void WritePicaReg(u32 id, u32 value) {
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
+
+                // NOTE: For now, we simply assume that the first input attribute corresponds to the position.
+                geometry_dumper.AddVertex({input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()}, registers.triangle_topology);
+
                 VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes());
 
                 if (is_indexed) {
@@ -103,6 +110,7 @@ static inline void WritePicaReg(u32 id, u32 value) {
 
                 PrimitiveAssembly::SubmitVertex(output);
             }
+            geometry_dumper.Dump();
             break;
         }
 
