@@ -51,14 +51,14 @@ void* AllocateExecutableMemory(size_t size, bool low)
     // printf("Mapped executable memory at %p (size %ld)\n", ptr,
     //    (unsigned long)size);
     
-#if defined(__FreeBSD__)
+#ifdef _WIN32
+    if (ptr == nullptr)
+    {
+#else
     if (ptr == MAP_FAILED)
     {
-        ptr = NULL;
-#else
-    if (ptr == NULL)
-    {
-#endif    
+        ptr = nullptr;
+#endif 
         PanicAlert("Failed to allocate executable memory");
     }
 #if !defined(_WIN32) && defined(__x86_64__) && !defined(MAP_32BIT)
@@ -88,6 +88,9 @@ void* AllocateMemoryPages(size_t size)
 #else
     void* ptr = mmap(0, size, PROT_READ | PROT_WRITE,
             MAP_ANON | MAP_PRIVATE, -1, 0);
+
+    if (ptr == MAP_FAILED)
+        ptr = nullptr;
 #endif
 
     // printf("Mapped memory at %p (size %ld)\n", ptr,
