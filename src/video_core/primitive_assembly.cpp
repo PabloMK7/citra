@@ -2,21 +2,23 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "clipper.h"
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
 
+#include "video_core/debug_utils/debug_utils.h"
+
 namespace Pica {
 
-namespace PrimitiveAssembly {
+template<typename VertexType>
+PrimitiveAssembler<VertexType>::PrimitiveAssembler(Regs::TriangleTopology topology)
+    : topology(topology), buffer_index(0) {
+}
 
-static OutputVertex buffer[2];
-static int buffer_index = 0; // TODO: reset this on emulation restart
-
-void SubmitVertex(OutputVertex& vtx)
+template<typename VertexType>
+void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandler triangle_handler)
 {
-    switch (registers.triangle_topology) {
+    switch (topology) {
         case Regs::TriangleTopology::List:
         case Regs::TriangleTopology::ListIndexed:
             if (buffer_index < 2) {
@@ -24,7 +26,7 @@ void SubmitVertex(OutputVertex& vtx)
             } else {
                 buffer_index = 0;
 
-                Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
+                triangle_handler(buffer[0], buffer[1], vtx);
             }
             break;
 
@@ -32,7 +34,7 @@ void SubmitVertex(OutputVertex& vtx)
             if (buffer_index == 2) {
                 buffer_index = 0;
 
-                Clipper::ProcessTriangle(buffer[0], buffer[1], vtx);
+                triangle_handler(buffer[0], buffer[1], vtx);
 
                 buffer[1] = vtx;
             } else {
@@ -41,11 +43,15 @@ void SubmitVertex(OutputVertex& vtx)
             break;
 
         default:
-            ERROR_LOG(GPU, "Unknown triangle mode %x:", (int)registers.triangle_topology.Value());
+            ERROR_LOG(GPU, "Unknown triangle topology %x:", (int)topology);
             break;
     }
 }
 
-} // namespace
+// explicitly instantiate use cases
+template
+struct PrimitiveAssembler<VertexShader::OutputVertex>;
+template
+struct PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex>;
 
 } // namespace

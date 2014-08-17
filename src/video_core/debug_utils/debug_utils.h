@@ -14,20 +14,18 @@ namespace Pica {
 
 namespace DebugUtils {
 
-using TriangleTopology = Regs::TriangleTopology;
-
 // Simple utility class for dumping geometry data to an OBJ file
 class GeometryDumper {
 public:
-    void AddVertex(std::array<float,3> pos, TriangleTopology topology);
-
-    void Dump();
-
-private:
     struct Vertex {
         std::array<float,3> pos;
     };
 
+    void AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2);
+
+    void Dump();
+
+private:
     struct Face {
         int index[3];
     };

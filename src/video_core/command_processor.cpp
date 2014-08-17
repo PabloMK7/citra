@@ -2,6 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include "clipper.h"
 #include "command_processor.h"
 #include "math.h"
 #include "pica.h"
@@ -79,6 +80,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             bool index_u16 = (bool)index_info.format;
 
             DebugUtils::GeometryDumper geometry_dumper;
+            PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
+            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(registers.triangle_topology.Value());
 
             for (int index = 0; index < registers.num_vertices; ++index)
             {
@@ -108,16 +111,25 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     }
                 }
 
-                // NOTE: For now, we simply assume that the first input attribute corresponds to the position.
-                geometry_dumper.AddVertex({input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()}, registers.triangle_topology);
+                // NOTE: When dumping geometry, we simply assume that the first input attribute
+                //       corresponds to the position for now.
+                DebugUtils::GeometryDumper::Vertex dumped_vertex = {
+                    input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()
+                };
+                using namespace std::placeholders;
+                dumping_primitive_assembler.SubmitVertex(dumped_vertex,
+                                                         std::bind(&DebugUtils::GeometryDumper::AddTriangle,
+                                                                   &geometry_dumper, _1, _2, _3));
 
+                // Send to vertex shader
                 VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes());
 
                 if (is_indexed) {
                     // TODO: Add processed vertex to vertex cache!
                 }
 
-                PrimitiveAssembly::SubmitVertex(output);
+                // Send to triangle clipper
+                clipper_primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
             }
             geometry_dumper.Dump();
             break;

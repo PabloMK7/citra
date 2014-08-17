@@ -22,27 +22,17 @@ namespace Pica {
 
 namespace DebugUtils {
 
-void GeometryDumper::AddVertex(std::array<float,3> pos, TriangleTopology topology) {
-    vertices.push_back({pos[0], pos[1], pos[2]});
+void GeometryDumper::AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2) {
+    vertices.push_back(v0);
+    vertices.push_back(v1);
+    vertices.push_back(v2);
 
     int num_vertices = vertices.size();
-
-    switch (topology) {
-    case TriangleTopology::List:
-    case TriangleTopology::ListIndexed:
-        if (0 == (num_vertices % 3))
-            faces.push_back({ num_vertices-3, num_vertices-2, num_vertices-1 });
-        break;
-
-    default:
-        ERROR_LOG(GPU, "Unknown triangle topology %x", (int)topology);
-        exit(0);
-        break;
-    }
+    faces.push_back({ num_vertices-3, num_vertices-2, num_vertices-1 });
 }
 
 void GeometryDumper::Dump() {
-    // NOTE: Permanently enabling this just trashes hard disks for no reason.
+    // NOTE: Permanently enabling this just trashes the hard disk for no reason.
     //       Hence, this is currently disabled.
     return;
 
