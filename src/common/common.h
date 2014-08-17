@@ -2,15 +2,14 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#pragma once
 
 // DO NOT EVER INCLUDE <windows.h> directly _or indirectly_ from this file
 // since it slows down the build a lot.
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 // Force enable logging in the right modes. For some reason, something had changed
 // so that debugfast no longer logged.
@@ -200,5 +199,3 @@ inline double bswapd(double f) {
 }
 
 #include "swap.h"
-
-#endif // _COMMON_H_

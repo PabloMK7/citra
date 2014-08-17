@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _ATOMIC_WIN32_H_
-#define _ATOMIC_WIN32_H_
+#pragma once
 
 #include "common/common.h"
 #include <intrin.h>
@@ -68,5 +67,3 @@ inline void AtomicStoreRelease(volatile u32& dest, u32 value) {
 }
 
 }
-
-#endif

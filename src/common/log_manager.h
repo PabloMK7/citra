@@ -2,16 +2,15 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _LOGMANAGER_H_
-#define _LOGMANAGER_H_
+#pragma once
 
 #include "common/log.h"
 #include "common/string_util.h"
 #include "common/thread.h"
 #include "common/file_util.h"
 
+#include <cstring>
 #include <set>
-#include <string.h>
 
 #define MAX_MESSAGES 8000
 #define MAX_MSGLEN  1024
@@ -165,5 +164,3 @@ public:
     static void Init();
     static void Shutdown();
 };
-
-#endif // _LOGMANAGER_H_

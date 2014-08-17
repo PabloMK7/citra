@@ -2,15 +2,13 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _STRINGUTIL_H_
-#define _STRINGUTIL_H_
+#pragma once
 
-#include <stdarg.h>
-
-#include <vector>
+#include <cstdarg>
+#include <iomanip>
 #include <string>
 #include <sstream>
-#include <iomanip>
+#include <vector>
 
 #include "common/common.h"
 
@@ -113,5 +111,3 @@ inline std::string UTF8ToTStr(const std::string& str)
 #endif
 
 #endif
-
-#endif // _STRINGUTIL_H_

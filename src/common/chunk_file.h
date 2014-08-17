@@ -15,8 +15,7 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#ifndef _POINTERWRAP_H_
-#define _POINTERWRAP_H_
+#pragma once
 
 // Extremely simple serialization framework.
 
@@ -871,5 +870,3 @@ private:
         char GitVersion[32];
     };
 }; */
-
-#endif  // _POINTERWRAP_H_

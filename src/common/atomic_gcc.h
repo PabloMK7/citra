@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _ATOMIC_GCC_H_
-#define _ATOMIC_GCC_H_
+#pragma once
 
 #include "common/common.h"
 
@@ -108,6 +107,4 @@ LONG SyncInterlockedExchange(LONG *Dest, LONG Val)
   return result;
 #endif
 }
-#endif
-
 #endif

@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _THREAD_H_
-#define _THREAD_H_
+#pragma once
 
 #include "common/std_condition_variable.h"
 #include "common/std_mutex.h"
@@ -152,5 +151,3 @@ inline void YieldCPU()
 void SetCurrentThreadName(const char *name);
     
 } // namespace Common
-
-#endif // _THREAD_H_

@@ -24,7 +24,7 @@
 
 #pragma once 
 
-#include <math.h>
+#include <cmath>
 #include <xmmintrin.h> // data_types__m128.cpp
 
 #ifdef _WIN32
