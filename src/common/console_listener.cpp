@@ -2,15 +2,15 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <algorithm>  // min
-#include <string> // System: To be able to add strings with "+"
-#include <stdio.h>
-#include <math.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <string>
 #ifdef _WIN32
 #include <windows.h>
 #include <array>
 #else
-#include <stdarg.h>
+#include <cstdarg>
 #endif
 
 #include "common/common.h"

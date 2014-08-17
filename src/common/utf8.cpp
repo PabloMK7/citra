@@ -18,10 +18,10 @@
 #undef max
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cstdarg>
 
 #include <algorithm>
 #include <string>

@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <stdio.h> // System
+#include <cstdio>
 
 #include "common/common.h" // Local
 #include "common/string_util.h"

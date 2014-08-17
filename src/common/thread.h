@@ -10,8 +10,8 @@
 
 // Don't include common.h here as it will break LogManager
 #include "common/common_types.h"
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 // This may not be defined outside _WIN32
 #ifndef _WIN32

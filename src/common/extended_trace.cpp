@@ -13,9 +13,8 @@
 // --------------------------------------------------------------------------------------
 
 #if defined(WIN32)
-
+#include <cstdio>
 #include <windows.h>
-#include <stdio.h>
 #include "common/extended_trace.h"
 #include "common/string_util.h"
 using namespace std;
