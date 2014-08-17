@@ -446,6 +446,103 @@ finalise:
 #endif
 }
 
+void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
+{
+    using Source = Pica::Regs::TevStageConfig::Source;
+    using ColorModifier = Pica::Regs::TevStageConfig::ColorModifier;
+    using AlphaModifier = Pica::Regs::TevStageConfig::AlphaModifier;
+    using Operation = Pica::Regs::TevStageConfig::Operation;
+
+    std::string stage_info = "Tev setup:\n";
+    for (int index = 0; index < stages.size(); ++index) {
+        const auto& tev_stage = stages[index];
+
+        const std::map<Source, std::string> source_map = {
+            { Source::PrimaryColor, "PrimaryColor" },
+            { Source::Texture0, "Texture0" },
+            { Source::Constant, "Constant" },
+            { Source::Previous, "Previous" },
+        };
+
+        const std::map<ColorModifier, std::string> color_modifier_map = {
+            { ColorModifier::SourceColor, { "%source.rgb" } }
+        };
+        const std::map<AlphaModifier, std::string> alpha_modifier_map = {
+            { AlphaModifier::SourceAlpha, "%source.a" }
+        };
+
+        std::map<Operation, std::string> combiner_map = {
+            { Operation::Replace, "%source1" },
+            { Operation::Modulate, "(%source1 * %source2) / 255" },
+        };
+
+        auto ReplacePattern =
+                [](const std::string& input, const std::string& pattern, const std::string& replacement) -> std::string {
+                    size_t start = input.find(pattern);
+                    if (start == std::string::npos)
+                        return input;
+
+                    std::string ret = input;
+                    ret.replace(start, pattern.length(), replacement);
+                    return ret;
+                };
+        auto GetColorSourceStr =
+                [&source_map,&color_modifier_map,&ReplacePattern](const Source& src, const ColorModifier& modifier) {
+                    auto src_it = source_map.find(src);
+                    std::string src_str = "Unknown";
+                    if (src_it != source_map.end())
+                        src_str = src_it->second;
+
+                    auto modifier_it = color_modifier_map.find(modifier);
+                    std::string modifier_str = "%source.????";
+                    if (modifier_it != color_modifier_map.end())
+                        modifier_str = modifier_it->second;
+
+                    return ReplacePattern(modifier_str, "%source", src_str);
+                };
+        auto GetColorCombinerStr =
+                [&](const Regs::TevStageConfig& tev_stage) {
+                    auto op_it = combiner_map.find(tev_stage.color_op);
+                    std::string op_str = "Unknown op (%source1, %source2, %source3)";
+                    if (op_it != combiner_map.end())
+                        op_str = op_it->second;
+
+                    op_str = ReplacePattern(op_str, "%source1", GetColorSourceStr(tev_stage.color_source1, tev_stage.color_modifier1));
+                    op_str = ReplacePattern(op_str, "%source2", GetColorSourceStr(tev_stage.color_source2, tev_stage.color_modifier2));
+                    return   ReplacePattern(op_str, "%source3", GetColorSourceStr(tev_stage.color_source3, tev_stage.color_modifier3));
+                };
+        auto GetAlphaSourceStr =
+                [&source_map,&alpha_modifier_map,&ReplacePattern](const Source& src, const AlphaModifier& modifier) {
+                    auto src_it = source_map.find(src);
+                    std::string src_str = "Unknown";
+                    if (src_it != source_map.end())
+                        src_str = src_it->second;
+
+                    auto modifier_it = alpha_modifier_map.find(modifier);
+                    std::string modifier_str = "%source.????";
+                    if (modifier_it != alpha_modifier_map.end())
+                        modifier_str = modifier_it->second;
+
+                    return ReplacePattern(modifier_str, "%source", src_str);
+                };
+        auto GetAlphaCombinerStr =
+                [&](const Regs::TevStageConfig& tev_stage) {
+                    auto op_it = combiner_map.find(tev_stage.alpha_op);
+                    std::string op_str = "Unknown op (%source1, %source2, %source3)";
+                    if (op_it != combiner_map.end())
+                        op_str = op_it->second;
+
+                    op_str = ReplacePattern(op_str, "%source1", GetAlphaSourceStr(tev_stage.alpha_source1, tev_stage.alpha_modifier1));
+                    op_str = ReplacePattern(op_str, "%source2", GetAlphaSourceStr(tev_stage.alpha_source2, tev_stage.alpha_modifier2));
+                    return   ReplacePattern(op_str, "%source3", GetAlphaSourceStr(tev_stage.alpha_source3, tev_stage.alpha_modifier3));
+                };
+
+        stage_info += "Stage " + std::to_string(index) + ": " + GetColorCombinerStr(tev_stage) + "   " + GetAlphaCombinerStr(tev_stage) + "\n";
+    }
+
+    DEBUG_LOG(GPU, "%s", stage_info.c_str());
+}
+
 } // namespace
 
 } // namespace

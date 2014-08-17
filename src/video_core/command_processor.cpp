@@ -40,6 +40,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
+            DebugUtils::DumpTevStageConfig(registers.GetTevStages());
+
             const auto& attribute_config = registers.vertex_attributes;
             const u8* const base_address = Memory::GetPointer(attribute_config.GetBaseAddress());
 
