@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 
+#include "common/string_util.h"
 #include "common/symbols.h"
 
 #include "core/mem_map.h"
@@ -220,9 +221,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
         TSymbol symbol = Symbols::GetSymbol(entry_point);
         name = symbol.name;
     } else {
-        char buff[100];
-        sprintf(buff, "%s", "unknown-%08X", entry_point);
-        name = buff;
+        name = StringFromFormat("unknown-%08x", entry_point);
     }
 
     Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, arg, processor_id,
