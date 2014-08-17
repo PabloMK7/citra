@@ -95,7 +95,7 @@ struct Regs {
         BitField<16, 16, u32> y;
     } viewport_corner;
 
-    INSERT_PADDING_WORDS(0x18);
+    INSERT_PADDING_WORDS(0x17);
 
     struct TextureConfig {
         INSERT_PADDING_WORDS(0x1);
@@ -130,6 +130,7 @@ struct Regs {
         // Seems like they are luminance formats and compressed textures.
     };
 
+    BitField<0, 1, u32> texturing_enable;
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
@@ -533,6 +534,7 @@ struct Regs {
         ADD_FIELD(viewport_depth_range);
         ADD_FIELD(viewport_depth_far_plane);
         ADD_FIELD(viewport_corner);
+        ADD_FIELD(texturing_enable);
         ADD_FIELD(texture0);
         ADD_FIELD(texture0_format);
         ADD_FIELD(tev_stage0);
@@ -598,6 +600,7 @@ ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
+ASSERT_REG_POSITION(texturing_enable, 0x80);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
 ASSERT_REG_POSITION(tev_stage0, 0xc0);

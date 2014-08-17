@@ -387,23 +387,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     buf = new u8[row_stride * texture_config.height];
     for (int y = 0; y < texture_config.height; ++y) {
         for (int x = 0; x < texture_config.width; ++x) {
-            // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
-            // of which is composed of four 2x2 subtiles each of which is composed of four texels.
-            // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
-            // texels are laid out in a 2x2 subtile like this:
-            // 2 3
-            // 0 1
-            //
-            // The full 8x8 tile has the texels arranged like this:
-            //
-            // 42 43 46 47 58 59 62 63
-            // 40 41 44 45 56 57 60 61
-            // 34 35 38 39 50 51 54 55
-            // 32 33 36 37 48 49 52 53
-            // 10 11 14 15 26 27 30 31
-            // 08 09 12 13 24 25 28 29
-            // 02 03 06 07 18 19 22 23
-            // 00 01 04 05 16 17 20 21
+            // Cf. rasterizer code for an explanation of this algorithm.
             int texel_index_within_tile = 0;
             for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
                 int sub_tile_width = 1 << block_size_index;

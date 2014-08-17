@@ -11,6 +11,8 @@
 #include "rasterizer.h"
 #include "vertex_shader.h"
 
+#include "debug_utils/debug_utils.h"
+
 namespace Pica {
 
 namespace Rasterizer {
@@ -165,6 +167,62 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
             };
 
+            Math::Vec4<u8> texture_color{};
+            float24 u = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
+            float24 v = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
+            if (registers.texturing_enable) {
+                // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+                // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+                // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+                // texels are laid out in a 2x2 subtile like this:
+                // 2 3
+                // 0 1
+                //
+                // The full 8x8 tile has the texels arranged like this:
+                //
+                // 42 43 46 47 58 59 62 63
+                // 40 41 44 45 56 57 60 61
+                // 34 35 38 39 50 51 54 55
+                // 32 33 36 37 48 49 52 53
+                // 10 11 14 15 26 27 30 31
+                // 08 09 12 13 24 25 28 29
+                // 02 03 06 07 18 19 22 23
+                // 00 01 04 05 16 17 20 21
+
+                // TODO: This is currently hardcoded for RGB8
+                u32* texture_data = (u32*)Memory::GetPointer(registers.texture0.GetPhysicalAddress());
+
+                // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
+                // To be flexible in case different but similar patterns are used, we keep this
+                // somewhat inefficient code around for now.
+                int s = (int)(u * float24::FromFloat32(registers.texture0.width)).ToFloat32();
+                int t = (int)(v * float24::FromFloat32(registers.texture0.height)).ToFloat32();
+                int texel_index_within_tile = 0;
+                for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
+                    int sub_tile_width = 1 << block_size_index;
+                    int sub_tile_height = 1 << block_size_index;
+
+                    int sub_tile_index = (s & sub_tile_width) << block_size_index;
+                    sub_tile_index += 2 * ((t & sub_tile_height) << block_size_index);
+                    texel_index_within_tile += sub_tile_index;
+                }
+
+                const int block_width = 8;
+                const int block_height = 8;
+
+                int coarse_s = (s / block_width) * block_width;
+                int coarse_t = (t / block_height) * block_height;
+
+                const int row_stride = registers.texture0.width * 3;
+                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
+                texture_color.r() = source_ptr[2];
+                texture_color.g() = source_ptr[1];
+                texture_color.b() = source_ptr[0];
+                texture_color.a() = 0xFF;
+
+                DebugUtils::DumpTexture(registers.texture0, (u8*)texture_data);
+            }
+
             // Texture environment - consists of 6 stages of color and alpha combining.
             //
             // Color combiners take three input color values from some source (e.g. interpolated
@@ -184,6 +242,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Source::PrimaryColor:
                         return primary_color.rgb();
 
+                    case Source::Texture0:
+                        return texture_color.rgb();
+
                     case Source::Constant:
                         return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
 
@@ -200,6 +261,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     switch (source) {
                     case Source::PrimaryColor:
                         return primary_color.a();
+
+                    case Source::Texture0:
+                        return texture_color.a();
 
                     case Source::Constant:
                         return tev_stage.const_a;
