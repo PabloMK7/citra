@@ -12,8 +12,7 @@
 //
 // ----------------------------------------------------------------------------------------
 
-#ifndef _EXTENDEDTRACE_H_INCLUDED_
-#define _EXTENDEDTRACE_H_INCLUDED_
+#pragma once
 
 #if defined(WIN32)
 
@@ -49,5 +48,3 @@ extern char g_uefbuf[UEFBUFSIZE];
 #define STACKTRACE2(file, eip, esp, ebp)            ((void)0)
 
 #endif    // WIN32
-
-#endif    // _EXTENDEDTRACE_H_INCLUDED_

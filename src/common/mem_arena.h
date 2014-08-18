@@ -15,8 +15,7 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#ifndef _MEMARENA_H_
-#define _MEMARENA_H_
+#pragma once
 
 #ifdef _WIN32
 #include <windows.h>
@@ -77,5 +76,3 @@ struct MemoryView
 // a passed-in list of MemoryView structures.
 u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena *arena);
 void MemoryMap_Shutdown(const MemoryView *views, int num_views, u32 flags, MemArena *arena);
-
-#endif // _MEMARENA_H_

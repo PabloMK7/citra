@@ -2,9 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-
-#ifndef _MATH_UTIL_H_
-#define _MATH_UTIL_H_
+#pragma once
 
 #include "common/common.h"
 
@@ -196,5 +194,3 @@ public:
 
     float data[16];
 };
-
-#endif // _MATH_UTIL_H_

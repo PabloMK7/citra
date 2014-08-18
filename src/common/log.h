@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _LOG_H_
-#define _LOG_H_
+#pragma once
 
 #define LOGGING
 
@@ -160,5 +159,3 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int 
 #else // GEKKO
 #define _assert_msg_(_t_, _a_, _fmt_, ...)
 #endif
-
-#endif // _LOG_H_

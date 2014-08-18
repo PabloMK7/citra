@@ -11,8 +11,8 @@
 #include <windows.h>
 #include <psapi.h>
 #else
-#include <errno.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cstdio>
 #endif
 
 #if !defined(_WIN32) && defined(__x86_64__) && !defined(MAP_32BIT)

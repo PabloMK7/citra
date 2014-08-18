@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _THUNK_H_
-#define _THUNK_H_
+#pragma once
 
 #include <map>
 
@@ -41,5 +40,3 @@ private:
     void Shutdown();
     void Reset();
 };
-
-#endif // _THUNK_H_

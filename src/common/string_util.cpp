@@ -2,9 +2,9 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <algorithm>
+#include <cstdlib>
+#include <cstdio>
 
 #include "common/common.h"
 #include "common/common_paths.h"
@@ -13,8 +13,8 @@
 #ifdef _WIN32
     #include <Windows.h>
 #else
+    #include <cerrno>
     #include <iconv.h>
-    #include <errno.h>
 #endif
 
 /// Make a string lowercase

@@ -2,9 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-
-#ifndef _FILEUTIL_H_
-#define _FILEUTIL_H_
+#pragma once
 
 #include <fstream>
 #include <cstdio>
@@ -220,5 +218,3 @@ void OpenFStream(T& fstream, const std::string& filename, std::ios_base::openmod
 	fstream.open(filename.c_str(), openmode);
 #endif
 }
-
-#endif

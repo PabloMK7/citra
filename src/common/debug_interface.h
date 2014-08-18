@@ -1,8 +1,7 @@
-#ifndef _DEBUGINTERFACE_H
-#define _DEBUGINTERFACE_H
+#pragma once
 
+#include <cstring>
 #include <string>
-#include <string.h>
 
 class DebugInterface
 {
@@ -35,5 +34,3 @@ public:
     virtual int getColor(unsigned int /*address*/){return 0xFFFFFFFF;}
     virtual std::string getDescription(unsigned int /*address*/) = 0;
 };
-
-#endif

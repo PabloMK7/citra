@@ -22,8 +22,7 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#ifndef COMMON_PLATFORM_H_
-#define COMMON_PLATFORM_H_
+#pragma once
 
 #include "common/common_types.h"
 
@@ -110,5 +109,3 @@ typedef void EXCEPTION_POINTERS;
 
 #define GCC_VERSION_AVAILABLE(major, minor) (defined(__GNUC__) &&  (__GNUC__ > (major) || \
     (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor))))
-
-#endif // COMMON_PLATFORM_H_

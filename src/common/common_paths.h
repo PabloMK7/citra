@@ -2,8 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#ifndef _COMMON_PATHS_H_
-#define _COMMON_PATHS_H_
+#pragma once
 
 // Make sure we pick up USER_DIR if set in config.h
 #include "common/common.h"
@@ -75,5 +74,3 @@
 
 // Files in the directory returned by GetUserPath(D_SYSCONF_IDX)
 #define SYSCONF    "SYSCONF"
-
-#endif // _COMMON_PATHS_H_

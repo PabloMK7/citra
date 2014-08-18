@@ -16,11 +16,11 @@
 #include <io.h>
 #include <direct.h>        // getcwd
 #else
+#include <cerrno>
+#include <cstdlib>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <errno.h>
-#include <stdlib.h>
 #endif
 
 #if defined(__APPLE__)

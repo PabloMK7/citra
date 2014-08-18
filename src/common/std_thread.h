@@ -1,6 +1,4 @@
-
-#ifndef STD_THREAD_H_
-#define STD_THREAD_H_
+#pragma once
 
 #define GCC_VER(x,y,z)    ((x) * 10000 + (y) * 100 + (z))
 #define GCC_VERSION GCC_VER(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
@@ -313,5 +311,4 @@ inline thread::id get_id()
 #undef THREAD_RETURN
 #undef THREAD_HANDLE
 
-#endif
 #endif
