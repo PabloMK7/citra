@@ -8,8 +8,6 @@
 
 #include "common/common.h"
 
-class DebugInterface;
-
 struct TSymbol
 {
     TSymbol() :
