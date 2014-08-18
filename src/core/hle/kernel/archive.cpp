@@ -31,8 +31,8 @@ enum class FileCommand : u32 {
 
 class Archive : public Object {
 public:
-    const char* GetTypeName() const { return "Archive"; }
-    const char* GetName() const { return name.c_str(); }
+    std::string GetTypeName() const { return "Archive"; }
+    std::string GetName() const { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::Archive; }
     Kernel::HandleType GetHandleType() const { return HandleType::Archive; }
@@ -110,7 +110,7 @@ Result MountArchive(Archive* archive) {
         return -1;
     }
     g_archive_map[id_code] = archive->GetHandle();
-    INFO_LOG(KERNEL, "Mounted archive %s", archive->GetName());
+    INFO_LOG(KERNEL, "Mounted archive %s", archive->GetName().c_str());
     return 0;
 }
 
