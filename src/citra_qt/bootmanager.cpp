@@ -32,17 +32,14 @@ void EmuThread::run()
 {
     while (true)
     {
-        for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)
+        if (cpu_running || exec_cpu_step)
         {
-            if (cpu_running || exec_cpu_step)
-            {
-                if (exec_cpu_step)
-                    exec_cpu_step = false;
+            if (exec_cpu_step)
+                exec_cpu_step = false;
 
-                Core::SingleStep();
-                if (!cpu_running)
-                    emit CPUStepped();
-            }
+            Core::SingleStep();
+            if (!cpu_running)
+                emit CPUStepped();
         }
     }
 
