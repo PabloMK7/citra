@@ -40,7 +40,7 @@ namespace Symbols
 
         return symbol;
     }
-    const std::string& GetName(u32 _address)
+    const std::string GetName(u32 _address)
     {
         return GetSymbol(_address).name;
     }
