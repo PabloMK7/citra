@@ -32,7 +32,7 @@ namespace Symbols
 
     void Add(u32 _address, const std::string& _name, u32 _size, u32 _type);
     TSymbol GetSymbol(u32 _address);
-    const std::string& GetName(u32 _address);
+    const std::string GetName(u32 _address);
     void Remove(u32 _address);
     void Clear();
 };
