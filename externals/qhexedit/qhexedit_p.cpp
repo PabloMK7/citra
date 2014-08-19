@@ -1,5 +1,3 @@
-#include <QtGui>
-
 #include "qhexedit_p.h"
 #include "commands.h"
 
@@ -437,7 +435,7 @@ void QHexEditPrivate::keyPressEvent(QKeyEvent *event)
 if (!_readOnly)
 {
     /* Hex input */
-        int key = int(event->text()[0].toAscii());
+        int key = int(event->text()[0].toLatin1());
         if ((key>='0' && key<='9') || (key>='a' && key <= 'f'))
         {
             if (getSelectionBegin() != getSelectionEnd())
