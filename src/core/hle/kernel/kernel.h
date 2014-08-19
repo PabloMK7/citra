@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include "common/common.h"
 
@@ -160,9 +161,9 @@ private:
         INITIAL_NEXT_ID = 0x10,
     };
 
-    Object* pool[MAX_COUNT];
-    bool    occupied[MAX_COUNT];
-    int     next_id;
+    std::array<Object*, MAX_COUNT> pool;
+    std::array<bool, MAX_COUNT> occupied;
+    int next_id;
 };
 
 extern ObjectPool g_object_pool;
