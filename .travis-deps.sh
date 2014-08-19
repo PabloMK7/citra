@@ -14,5 +14,5 @@ if [ "$TRAVIS_OS_NAME" = linux -o -z "$TRAVIS_OS_NAME" ]; then
     cd -	
 elif [ "$TRAVIS_OS_NAME" = osx ]; then
     brew tap homebrew/versions
-    brew install glew qt glfw3 pkgconfig
+    brew install glew qt5 glfw3 pkgconfig
 fi
