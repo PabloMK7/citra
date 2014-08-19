@@ -39,8 +39,8 @@ class Interface  : public Kernel::Object {
     friend class Manager;
 public:
     
-    const char *GetName() const { return GetPortName(); }
-    const char *GetTypeName() const { return GetPortName(); }
+    std::string GetName() const { return GetPortName(); }
+    std::string GetTypeName() const { return GetPortName(); }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Service; }
@@ -57,7 +57,7 @@ public:
      * Gets the string name used by CTROS for a service
      * @return Port name of service
      */
-    virtual const char *GetPortName() const {
+    virtual std::string GetPortName() const {
         return "[UNKNOWN SERVICE PORT]";
     }
 
@@ -86,7 +86,7 @@ public:
 
         if (itr == m_functions.end()) {
             ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X", 
-                GetPortName(), cmd_buff[0]);
+                GetPortName().c_str(), cmd_buff[0]);
 
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();
@@ -95,7 +95,7 @@ public:
         }
         if (itr->second.func == nullptr) {
             ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s", 
-                GetPortName(), itr->second.name.c_str());
+                GetPortName().c_str(), itr->second.name.c_str());
 
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();

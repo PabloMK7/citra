@@ -16,8 +16,8 @@ namespace Kernel {
 
 class Event : public Object {
 public:
-    const char* GetTypeName() const { return "Event"; }
-    const char* GetName() const { return name.c_str(); }
+    std::string GetTypeName() const { return "Event"; }
+    std::string GetName() const { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Event; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Event; }

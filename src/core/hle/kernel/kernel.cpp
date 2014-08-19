@@ -71,8 +71,8 @@ void ObjectPool::List() {
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i]) {
             if (pool[i]) {
-                INFO_LOG(KERNEL, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName(), 
-                    pool[i]->GetName());
+                INFO_LOG(KERNEL, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(), 
+                    pool[i]->GetName().c_str());
             }
         }
     }

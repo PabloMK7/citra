@@ -92,7 +92,7 @@ Result SendSyncRequest(Handle handle) {
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
-    DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName());
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName().c_str());
 
     bool wait = false;
     Result res = object->SyncRequest(&wait);
@@ -118,8 +118,8 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%d", handle, object->GetTypeName(), 
-            object->GetName(), nano_seconds);
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%d", handle, object->GetTypeName().c_str(), 
+            object->GetName().c_str(), nano_seconds);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
 
@@ -152,8 +152,8 @@ Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wa
         _assert_msg_(KERNEL, (object != nullptr), "called handle=0x%08X, but kernel object "
             "is nullptr!", handles[i]);
 
-        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName(), 
-            object->GetName());
+        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(), 
+            object->GetName().c_str());
 
         Result res = object->WaitSynchronization(&wait);
 

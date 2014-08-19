@@ -11,7 +11,7 @@ namespace Kernel {
 
 class SharedMemory : public Object {
 public:
-    const char* GetTypeName() const { return "SharedMemory"; }
+    std::string GetTypeName() const { return "SharedMemory"; }
 
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::SharedMemory; }

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string>
 #include "common/common.h"
 
 typedef u32 Handle;
@@ -33,7 +34,6 @@ enum class HandleType : u32 {
 };
     
 enum {
-    MAX_NAME_LENGTH     = 0x100,
     DEFAULT_STACK_SIZE  = 0x4000,
 };
 
@@ -45,8 +45,8 @@ class Object : NonCopyable {
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
-    virtual const char* GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
-    virtual const char* GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
+    virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
+    virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**

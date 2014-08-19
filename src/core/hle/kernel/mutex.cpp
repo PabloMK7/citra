@@ -15,8 +15,8 @@ namespace Kernel {
 
 class Mutex : public Object {
 public:
-    const char* GetTypeName() const { return "Mutex"; }
-    const char* GetName() const { return name.c_str(); }
+    std::string GetTypeName() const { return "Mutex"; }
+    std::string GetName() const { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Mutex; }

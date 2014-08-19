@@ -2,13 +2,12 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#include <stdio.h>
-
-#include <list>
 #include <algorithm>
-#include <vector>
+#include <cstdio>
+#include <list>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "common/common.h"
 #include "common/thread_queue_list.h"
@@ -25,8 +24,8 @@ namespace Kernel {
 class Thread : public Kernel::Object {
 public:
 
-    const char* GetName() const { return name; }
-    const char* GetTypeName() const { return "Thread"; }
+    std::string GetName() const { return name; }
+    std::string GetTypeName() const { return "Thread"; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Thread; }
     Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Thread; }
@@ -71,7 +70,7 @@ public:
 
     std::vector<Handle> waiting_threads;
 
-    char name[Kernel::MAX_NAME_LENGTH + 1];
+    std::string name;
 };
 
 // Lists all thread ids that aren't deleted/etc.
@@ -336,9 +335,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread->processor_id = processor_id;
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
-
-    strncpy(thread->name, name, Kernel::MAX_NAME_LENGTH);
-    thread->name[Kernel::MAX_NAME_LENGTH] = '\0';
+    thread->name = name;
 
     return thread;
 }

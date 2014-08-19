@@ -24,7 +24,7 @@ public:
      * Gets the string port name used by CTROS for the service
      * @return Port name of service
      */
-    const char *GetPortName() const {
+    std::string GetPortName() const {
         return "ndm:u";
     }
 

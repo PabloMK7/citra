@@ -17,8 +17,8 @@ namespace Kernel {
 
 class AddressArbiter : public Object {
 public:
-    const char* GetTypeName() const { return "Arbiter"; }
-    const char* GetName() const { return name.c_str(); }
+    std::string GetTypeName() const { return "Arbiter"; }
+    std::string GetName() const { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::AddressArbiter; }
     Kernel::HandleType GetHandleType() const { return HandleType::AddressArbiter; }
