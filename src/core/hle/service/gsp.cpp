@@ -36,6 +36,17 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
         0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
+static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
+    if (0 == g_shared_memory)
+        return nullptr;
+
+    _dbg_assert_msg_(GSP, screen_index < 2, "Invalid screen index");
+
+    // For each thread there are two FrameBufferUpdate fields
+    u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
+    return (FrameBufferUpdate*)Kernel::GetSharedMemoryPointer(g_shared_memory, offset);
+}
+
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
     return (InterruptRelayQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory,
@@ -166,6 +177,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 /**
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
+ * @todo This should probably take a thread_id parameter and only signal this thread?
  */
 void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == g_interrupt_event) {
@@ -191,7 +203,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
 }
 
 /// Executes the next GSP command
-void ExecuteCommand(const Command& command) {
+void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
     auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
@@ -262,6 +274,15 @@ void ExecuteCommand(const Command& command) {
         SignalInterrupt(InterruptId::PPF);
         SignalInterrupt(InterruptId::P3D);
         SignalInterrupt(InterruptId::DMA);
+
+        // Update framebuffer information if requested
+        for (int screen_id = 0; screen_id < 2; ++screen_id) {
+            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+            if (info->is_dirty)
+                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+
+            info->is_dirty = false;
+        }
         break;
     }
 
@@ -304,7 +325,7 @@ void TriggerCmdReqQueue(Service::Interface* self) {
             g_debugger.GXCommandProcessed((u8*)&command_buffer->commands[i]);
 
             // Decode and execute command
-            ExecuteCommand(command_buffer->commands[i]);
+            ExecuteCommand(command_buffer->commands[i], thread_id);
 
             // Indicates that command has completed
             command_buffer->number_commands = command_buffer->number_commands - 1;

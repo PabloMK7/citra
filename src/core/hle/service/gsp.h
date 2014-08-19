@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "common/bit_field.h"
 #include "core/hle/service/service.h"
 
@@ -75,6 +77,22 @@ struct FrameBufferInfo {
     u32 unknown;
 };
 static_assert(sizeof(FrameBufferInfo) == 0x1c, "Struct has incorrect size");
+
+struct FrameBufferUpdate {
+    BitField<0, 1, u8> index;    // Index used for GSP::SetBufferSwap
+    BitField<0, 1, u8> is_dirty; // true if GSP should update GPU framebuffer registers
+    u16 pad1;
+
+    FrameBufferInfo framebuffer_info[2];
+
+    u32 pad2;
+};
+static_assert(sizeof(FrameBufferUpdate) == 0x40, "Struct has incorrect size");
+// TODO: Not sure if this padding is correct.
+// Chances are the second block is stored at offset 0x24 rather than 0x20.
+#ifndef _MSC_VER
+static_assert(offsetof(FrameBufferUpdate, framebuffer_info[1]) == 0x20, "FrameBufferInfo element has incorrect alignment");
+#endif
 
 /// GSP command
 struct Command {
