@@ -17,7 +17,6 @@ Handle g_main_thread = 0;
 ObjectPool g_object_pool;
 
 ObjectPool::ObjectPool() {
-    memset(occupied, 0, sizeof(bool) * MAX_COUNT);
     next_id = INITIAL_NEXT_ID;
 }
 
@@ -57,7 +56,7 @@ void ObjectPool::Clear() {
             delete pool[i];
         occupied[i] = false;
     }
-    memset(pool, 0, sizeof(Object*)*MAX_COUNT);
+    pool.fill(nullptr);
     next_id = INITIAL_NEXT_ID;
 }
 
