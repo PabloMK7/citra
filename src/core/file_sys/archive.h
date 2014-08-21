@@ -37,18 +37,33 @@ public:
 
     /**
      * Read data from the archive
-     * @param offset Offset in bytes to start reading archive from
-     * @param length Length in bytes to read data from archive
+     * @param offset Offset in bytes to start reading data from
+     * @param length Length in bytes of data to read from archive
      * @param buffer Buffer to read data into
      * @return Number of bytes read
      */
     virtual size_t Read(const u64 offset, const u32 length, u8* buffer) const = 0;
 
     /**
+     * Write data to the archive
+     * @param offset Offset in bytes to start writing data to
+     * @param length Length in bytes of data to write to archive
+     * @param buffer Buffer to write data from
+     * @param flush  The flush parameters (0 == do not flush)
+     * @return Number of bytes written
+     */
+    virtual size_t Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) = 0;
+
+    /**
      * Get the size of the archive in bytes
      * @return Size of the archive in bytes
      */
     virtual size_t GetSize() const = 0;
+    
+    /**
+     * Set the size of the archive in bytes
+     */
+    virtual void SetSize(const u64 size) = 0;
 };
 
 } // namespace FileSys
