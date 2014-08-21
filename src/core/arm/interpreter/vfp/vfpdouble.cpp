@@ -895,7 +895,7 @@ vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn,
 #define NEG_SUBTRACT	(1 << 1)
 
 static u32
-vfp_double_multiply_accumulate(ARMul_State* state, int dd, int dn, int dm, u32 fpscr, u32 negate, char *func)
+vfp_double_multiply_accumulate(ARMul_State* state, int dd, int dn, int dm, u32 fpscr, u32 negate, const char *func)
 {
 	struct vfp_double vdd, vdp, vdn, vdm;
 	u32 exceptions;
