@@ -6,10 +6,17 @@
 
 #include "common/common.h"
 
+#include <algorithm>
 #include <vector>
 
 namespace MathUtil
 {
+
+template<typename T>
+inline T Clamp(const T val, const T& min, const T& max)
+{
+    return std::max(min, std::min(max, val));
+}
 
 static const u64 DOUBLE_SIGN = 0x8000000000000000ULL,
     DOUBLE_EXP  = 0x7FF0000000000000ULL,
