@@ -12,8 +12,6 @@
 
 #include "citra/emu_window/emu_window_glfw.h"
 
-#include "citra/citra.h"
-
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
     LogManager::Init();
