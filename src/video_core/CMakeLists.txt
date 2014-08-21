@@ -5,8 +5,9 @@ set(SRCS    clipper.cpp
             utils.cpp
             vertex_shader.cpp
             video_core.cpp
-            debug_utils/debug_utils.cpp
-            renderer_opengl/renderer_opengl.cpp)
+            renderer_opengl/renderer_opengl.cpp
+            renderer_opengl/gl_shader_util.cpp
+            debug_utils/debug_utils.cpp)
 
 set(HEADERS clipper.h
             command_processor.h
@@ -18,7 +19,9 @@ set(HEADERS clipper.h
             renderer_base.h
             vertex_shader.h
             video_core.h
-            debug_utils/debug_utils.h
-            renderer_opengl/renderer_opengl.h)
+            renderer_opengl/renderer_opengl.h
+            renderer_opengl/gl_shader_util.h
+            renderer_opengl/gl_shaders.h
+            debug_utils/debug_utils.h)
 
 add_library(video_core STATIC ${SRCS} ${HEADERS})
