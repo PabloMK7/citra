@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
+#include "common/math_util.h"
 
 #include "core/file_sys/archive.h"
 #include "core/hle/service/service.h"
@@ -48,22 +49,49 @@ public:
     Result SyncRequest(bool* wait) {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
+        
         switch (cmd) {
-
         // Read from archive...
         case FileCommand::Read:
         {
-            u64 offset = cmd_buff[1] | ((u64) cmd_buff[2]) << 32;
+            u64 offset  = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
             u32 length  = cmd_buff[3];
             u32 address = cmd_buff[5];
+
+            // Number of bytes read
             cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
             break;
         }
+        // Write to archive...
+        case FileCommand::Write:
+        {
+            u64 offset  = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
+            u32 length  = cmd_buff[3];
+            u32 flush   = cmd_buff[4];
+            u32 address = cmd_buff[6];
 
+            // Number of bytes written
+            cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
+            break;
+        }
+        case FileCommand::GetSize:
+        {
+            u64 filesize = (u64) backend->GetSize();
+            cmd_buff[2]  = (u32) filesize;         // Lower word
+            cmd_buff[3]  = (u32) (filesize >> 32); // Upper word
+            break;
+        }
+        case FileCommand::SetSize:
+        {
+            backend->SetSize(cmd_buff[1] | ((u64)cmd_buff[2] << 32));
+            break;
+        }
         // Unknown command...
         default:
+        {
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
             return -1;
+        }
         }
         cmd_buff[1] = 0; // No error
         return 0;
@@ -140,7 +168,7 @@ Archive* CreateArchive(Handle& handle, FileSys::Archive* backend, const std::str
  */
 Handle CreateArchive(FileSys::Archive* backend, const std::string& name) {
     Handle handle;
-    Archive* archive = CreateArchive(handle, backend, name);
+    CreateArchive(handle, backend, name);
     return handle;
 }
 
