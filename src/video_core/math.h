@@ -50,9 +50,8 @@ static inline Vec4<T> MakeVec(const T& x, const T& y, const T& z, const T& w);
 template<typename T>
 class Vec2 {
 public:
-    struct {
-        T x,y;
-    };
+    T x;
+    T y;
 
     T* AsArray() { return &x; }
 
@@ -176,10 +175,9 @@ template<typename T>
 class Vec3
 {
 public:
-    struct
-    {
-        T x,y,z;
-    };
+    T x;
+    T y;
+    T z;
 
     T* AsArray() { return &x; }
 
@@ -315,7 +313,7 @@ public:
     _DEFINE_SWIZZLER2(b, a, b##a); \
     _DEFINE_SWIZZLER2(b, a, b2##a2); \
     _DEFINE_SWIZZLER2(b, a, b3##a3); \
-    _DEFINE_SWIZZLER2(b, a, b4##a4);
+    _DEFINE_SWIZZLER2(b, a, b4##a4)
 
     DEFINE_SWIZZLER2(x, y, r, g, u, v, s, t);
     DEFINE_SWIZZLER2(x, z, r, b, u, w, s, q);
@@ -330,16 +328,27 @@ Vec3<T> operator * (const V& f, const Vec3<T>& vec)
     return Vec3<T>(f*vec.x,f*vec.y,f*vec.z);
 }
 
+template<>
+inline float Vec3<float>::Length() const {
+    return std::sqrt(x * x + y * y + z * z);
+}
+
+template<>
+inline Vec3<float> Vec3<float>::Normalized() const {
+    return *this / Length();
+}
+
+
 typedef Vec3<float> Vec3f;
 
 template<typename T>
 class Vec4
 {
 public:
-    struct
-    {
-        T x,y,z,w;
-    };
+    T x;
+    T y;
+    T z;
+    T w;
 
     T* AsArray() { return &x; }
 
@@ -456,7 +465,7 @@ public:
     _DEFINE_SWIZZLER2(a, b, a##b); \
     _DEFINE_SWIZZLER2(a, b, a2##b2); \
     _DEFINE_SWIZZLER2(b, a, b##a); \
-    _DEFINE_SWIZZLER2(b, a, b2##a2);
+    _DEFINE_SWIZZLER2(b, a, b2##a2)
 
     DEFINE_SWIZZLER2(x, y, r, g);
     DEFINE_SWIZZLER2(x, z, r, b);
@@ -480,7 +489,7 @@ public:
     _DEFINE_SWIZZLER3(b, a, c, b2##a2##c2); \
     _DEFINE_SWIZZLER3(b, c, a, b2##c2##a2); \
     _DEFINE_SWIZZLER3(c, a, b, c2##a2##b2); \
-    _DEFINE_SWIZZLER3(c, b, a, c2##b2##a2);
+    _DEFINE_SWIZZLER3(c, b, a, c2##b2##a2)
 
     DEFINE_SWIZZLER3(x, y, z, r, g, b);
     DEFINE_SWIZZLER3(x, y, w, r, g, a);
