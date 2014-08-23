@@ -191,8 +191,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 if (*state.call_stack_pointer == VertexShaderState::INVALID_ADDRESS) {
                     exit_loop = true;
                 } else {
-                    state.program_counter = &shader_memory[*state.call_stack_pointer--];
-                    *state.call_stack_pointer = VertexShaderState::INVALID_ADDRESS;
+                    // Jump back to call stack position, invalidate call stack entry, move up call stack pointer
+                    state.program_counter = &shader_memory[*state.call_stack_pointer];
+                    *state.call_stack_pointer-- = VertexShaderState::INVALID_ADDRESS;
                 }
 
                 break;
