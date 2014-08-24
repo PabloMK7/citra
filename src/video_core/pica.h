@@ -130,7 +130,20 @@ struct Regs {
         // Seems like they are luminance formats and compressed textures.
     };
 
-    BitField<0, 1, u32> texturing_enable;
+    static unsigned BytesPerPixel(TextureFormat format) {
+        if (format == TextureFormat::RGBA8)
+            return 4;
+        else if (format == TextureFormat::RGB8)
+            return 3;
+        else if (format == TextureFormat::RGBA5551 ||
+                 format == TextureFormat::RGB565 ||
+                 format == TextureFormat::RGBA4)
+            return 2;
+        else // placeholder
+            return 1;
+    }
+
+    BitField< 0, 1, u32> texturing_enable;
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;

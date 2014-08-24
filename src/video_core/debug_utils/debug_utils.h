@@ -192,10 +192,14 @@ void OnPicaRegWrite(u32 id, u32 value);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
 struct TextureInfo {
+    unsigned int address;
     int width;
     int height;
     int stride;
     Pica::Regs::TextureFormat format;
+
+    static TextureInfo FromPicaRegister(const Pica::Regs::TextureConfig& config,
+                                        const Pica::Regs::TextureFormat& format);
 };
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info);

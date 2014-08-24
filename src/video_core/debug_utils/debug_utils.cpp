@@ -382,6 +382,18 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
 }
 
+TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
+                                          const Regs::TextureFormat& format)
+{
+    TextureInfo info;
+    info.address = config.GetPhysicalAddress();
+    info.width = config.width;
+    info.height = config.height;
+    info.format = format;
+    info.stride = Pica::Regs::BytesPerPixel(info.format) * info.width;
+    return info;
+}
+
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // NOTE: Permanently enabling this just trashes hard disks for no reason.
     //       Hence, this is currently disabled.

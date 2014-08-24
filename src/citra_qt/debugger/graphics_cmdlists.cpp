@@ -4,30 +4,39 @@
 
 #include <QLabel>
 #include <QListView>
+#include <QMainWindow>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QTreeView>
-
-#include "graphics_cmdlists.hxx"
+#include <QSpinBox>
+#include <QComboBox>
 
 #include "video_core/pica.h"
 #include "video_core/math.h"
 
 #include "video_core/debug_utils/debug_utils.h"
 
+#include "graphics_cmdlists.hxx"
+
+#include "util/spinbox.hxx"
+
+QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
+    QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
+    for (int y = 0; y < info.height; ++y) {
+        for (int x = 0; x < info.width; ++x) {
+            Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(src, x, y, info);
+            decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
+        }
+    }
+
+    return decoded_image;
+}
+
 class TextureInfoWidget : public QWidget {
 public:
     TextureInfoWidget(u8* src, const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr) : QWidget(parent) {
-        QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
-        for (int y = 0; y < info.height; ++y) {
-            for (int x = 0; x < info.width; ++x) {
-                Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(src, x, y, info);
-                decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
-            }
-        }
-
         QLabel* image_widget = new QLabel;
-        QPixmap image_pixmap = QPixmap::fromImage(decoded_image);
+        QPixmap image_pixmap = QPixmap::fromImage(LoadTexture(src, info));
         image_pixmap = image_pixmap.scaled(200, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         image_widget->setPixmap(image_pixmap);
 
@@ -36,6 +45,120 @@ public:
         setLayout(layout);
     }
 };
+
+TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo& info, QWidget* parent)
+    : QDockWidget(tr("Texture 0x%1").arg(info.address, 8, 16, QLatin1Char('0'))),
+      info(info) {
+
+    QWidget* main_widget = new QWidget;
+
+    QLabel* image_widget = new QLabel;
+
+    connect(this, SIGNAL(UpdatePixmap(const QPixmap&)), image_widget, SLOT(setPixmap(const QPixmap&)));
+
+    CSpinBox* phys_address_spinbox = new CSpinBox;
+    phys_address_spinbox->SetBase(16);
+    phys_address_spinbox->SetRange(0, 0xFFFFFFFF);
+    phys_address_spinbox->SetPrefix("0x");
+    phys_address_spinbox->SetValue(info.address);
+    connect(phys_address_spinbox, SIGNAL(ValueChanged(qint64)), this, SLOT(OnAddressChanged(qint64)));
+
+    QComboBox* format_choice = new QComboBox;
+    format_choice->addItem(tr("RGBA8"));
+    format_choice->addItem(tr("RGB8"));
+    format_choice->addItem(tr("RGBA5551"));
+    format_choice->addItem(tr("RGB565"));
+    format_choice->addItem(tr("RGBA4"));
+    format_choice->setCurrentIndex(static_cast<int>(info.format));
+    connect(format_choice, SIGNAL(currentIndexChanged(int)), this, SLOT(OnFormatChanged(int)));
+
+    QSpinBox* width_spinbox = new QSpinBox;
+    width_spinbox->setMaximum(65535);
+    width_spinbox->setValue(info.width);
+    connect(width_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnWidthChanged(int)));
+
+    QSpinBox* height_spinbox = new QSpinBox;
+    height_spinbox->setMaximum(65535);
+    height_spinbox->setValue(info.height);
+    connect(height_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnHeightChanged(int)));
+
+    QSpinBox* stride_spinbox = new QSpinBox;
+    stride_spinbox->setMaximum(65535 * 4);
+    stride_spinbox->setValue(info.stride);
+    connect(stride_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnStrideChanged(int)));
+
+    QVBoxLayout* main_layout = new QVBoxLayout;
+    main_layout->addWidget(image_widget);
+
+    {
+        QHBoxLayout* sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(new QLabel(tr("Source Address:")));
+        sub_layout->addWidget(phys_address_spinbox);
+        main_layout->addLayout(sub_layout);
+    }
+
+    {
+        QHBoxLayout* sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(new QLabel(tr("Format")));
+        sub_layout->addWidget(format_choice);
+        main_layout->addLayout(sub_layout);
+    }
+
+    {
+        QHBoxLayout* sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(new QLabel(tr("Width:")));
+        sub_layout->addWidget(width_spinbox);
+        sub_layout->addStretch();
+        sub_layout->addWidget(new QLabel(tr("Height:")));
+        sub_layout->addWidget(height_spinbox);
+        sub_layout->addStretch();
+        sub_layout->addWidget(new QLabel(tr("Stride:")));
+        sub_layout->addWidget(stride_spinbox);
+        main_layout->addLayout(sub_layout);
+    }
+
+    main_widget->setLayout(main_layout);
+
+    emit UpdatePixmap(ReloadPixmap());
+
+    setWidget(main_widget);
+}
+
+void TextureInfoDockWidget::OnAddressChanged(qint64 value)
+{
+    info.address = value;
+    emit UpdatePixmap(ReloadPixmap());
+}
+
+void TextureInfoDockWidget::OnFormatChanged(int value)
+{
+    info.format = static_cast<Pica::Regs::TextureFormat>(value);
+    emit UpdatePixmap(ReloadPixmap());
+}
+
+void TextureInfoDockWidget::OnWidthChanged(int value)
+{
+    info.width = value;
+    emit UpdatePixmap(ReloadPixmap());
+}
+
+void TextureInfoDockWidget::OnHeightChanged(int value)
+{
+    info.height = value;
+    emit UpdatePixmap(ReloadPixmap());
+}
+
+void TextureInfoDockWidget::OnStrideChanged(int value)
+{
+    info.stride = value;
+    emit UpdatePixmap(ReloadPixmap());
+}
+
+QPixmap TextureInfoDockWidget::ReloadPixmap() const
+{
+    u8* src = Memory::GetPointer(info.address);
+    return QPixmap::fromImage(LoadTexture(src, info));
+}
 
 GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent)
 {
@@ -106,30 +229,42 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
     endResetModel();
 }
 
+#define COMMAND_IN_RANGE(cmd_id, reg_name)   \
+    (cmd_id >= PICA_REG_INDEX(reg_name) &&   \
+     cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::registers.reg_name)) / 4)
+
+void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index)
+{
+
+    const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
+    if (COMMAND_IN_RANGE(command_id, texture0)) {
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
+                                                                    Pica::registers.texture0_format);
+        QMainWindow* main_window = (QMainWindow*)parent();
+        main_window->tabifyDockWidget(this, new TextureInfoDockWidget(info, main_window));
+    }
+}
+
 void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index)
 {
     QWidget* new_info_widget;
 
-#define COMMAND_IN_RANGE(cmd_id, reg_name) (cmd_id >= PICA_REG_INDEX(reg_name) && cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::registers.reg_name)) / 4)
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
     if (COMMAND_IN_RANGE(command_id, texture0)) {
         u8* src = Memory::GetPointer(Pica::registers.texture0.GetPhysicalAddress());
-        Pica::DebugUtils::TextureInfo info;
-        info.width = Pica::registers.texture0.width;
-        info.height = Pica::registers.texture0.height;
-        info.stride = 3 * Pica::registers.texture0.width;
-        info.format = Pica::registers.texture0_format;
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
+                                                                    Pica::registers.texture0_format);
         new_info_widget = new TextureInfoWidget(src, info);
     } else {
         new_info_widget = new QWidget;
     }
-#undef COMMAND_IN_RANGE
 
     widget()->layout()->removeWidget(command_info_widget);
     delete command_info_widget;
     widget()->layout()->addWidget(new_info_widget);
     command_info_widget = new_info_widget;
 }
+#undef COMMAND_IN_RANGE
 
 GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pica Command List"), parent)
 {
@@ -145,6 +280,8 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
 
     connect(list_widget->selectionModel(), SIGNAL(currentChanged(const QModelIndex&,const QModelIndex&)),
             this, SLOT(SetCommandInfo(const QModelIndex&)));
+    connect(list_widget, SIGNAL(doubleClicked(const QModelIndex&)),
+            this, SLOT(OnCommandDoubleClicked(const QModelIndex&)));
 
 
     toggle_tracing = new QPushButton(tr("Start Tracing"));
