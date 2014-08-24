@@ -11,12 +11,17 @@
 #include "video_core/debug_utils/debug_utils.h"
 
 class QPushButton;
+class QTreeView;
 
 class GPUCommandListModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
+    enum {
+        CommandIdRole = Qt::UserRole,
+    };
+
     GPUCommandListModel(QObject* parent);
 
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -40,6 +45,7 @@ public:
 
 public slots:
     void OnToggleTracing();
+    void SetCommandInfo(const QModelIndex&);
 
 signals:
     void TracingFinished(const Pica::DebugUtils::PicaTrace&);
@@ -47,5 +53,7 @@ signals:
 private:
     std::unique_ptr<Pica::DebugUtils::PicaTrace> pica_trace;
 
+    QTreeView* list_widget;
+    QWidget* command_info_widget;
     QPushButton* toggle_tracing;
 };

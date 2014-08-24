@@ -12,6 +12,7 @@
 #include <mutex>
 #include <vector>
 
+#include "video_core/math.h"
 #include "video_core/pica.h"
 
 namespace Pica {
@@ -190,6 +191,14 @@ bool IsPicaTracing();
 void OnPicaRegWrite(u32 id, u32 value);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
+struct TextureInfo {
+    int width;
+    int height;
+    int stride;
+    Pica::Regs::TextureFormat format;
+};
+
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info);
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data);
 
 void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages);
