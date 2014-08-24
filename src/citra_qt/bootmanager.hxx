@@ -1,6 +1,6 @@
-#include <QMutex>
 #include <QThread>
 #include <QGLWidget>
+#include <atomic>
 #include "common/common.h"
 #include "common/emu_window.h"
 
@@ -67,8 +67,7 @@ private:
 
     bool exec_cpu_step;
     bool cpu_running;
-    bool stop_run;
-    QMutex mutex;
+    std::atomic<bool> stop_run;
 
     GRenderWindow* render_window;
 

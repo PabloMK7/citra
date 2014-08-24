@@ -33,7 +33,7 @@ void EmuThread::SetFilename(std::string filename)
 void EmuThread::run()
 {
     stop_run = false;
-    while (true)
+    while (!stop_run)
     {
         for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)
         {
@@ -49,9 +49,6 @@ void EmuThread::run()
                 }
             }
         }
-        QMutexLocker lock(&mutex);
-        if (stop_run)
-            break;
     }
     render_window->moveContext();
 
@@ -65,11 +62,7 @@ void EmuThread::Stop()
         INFO_LOG(MASTER_LOG, "EmuThread::Stop called while emu thread wasn't running, returning...");
         return;
     }
-
-    {
-        QMutexLocker lock(&mutex);
-        stop_run = true;
-    }
+    stop_run = true;
 
     //core::g_state = core::SYS_DIE;
 
@@ -94,7 +87,7 @@ void EmuThread::Stop()
 class GGLWidgetInternal : public QGLWidget
 {
 public:
-    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(parent)
+    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(fmt, parent)
     {
         parent_ = parent;
     }
