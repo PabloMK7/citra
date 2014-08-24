@@ -81,6 +81,8 @@ signals:
 
 class GRenderWindow : public QWidget, public EmuWindow
 {
+    Q_OBJECT
+
 public:
     GRenderWindow(QWidget* parent = NULL);
     ~GRenderWindow();
@@ -102,6 +104,9 @@ public:
 
     void keyPressEvent(QKeyEvent* event);
     void keyReleaseEvent(QKeyEvent* event);
+
+private slots:
+    void moveContext();
 
 private:
     QGLWidget* child;

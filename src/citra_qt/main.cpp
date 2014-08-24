@@ -142,7 +142,6 @@ void GMainWindow::BootGame(std::string filename)
     registersWidget->OnCPUStepped();
     callstackWidget->OnCPUStepped();
 
-    render_window->DoneCurrent(); // make sure EmuThread can access GL context
     render_window->GetEmuThread().SetFilename(filename);
     render_window->GetEmuThread().start();
 
@@ -204,7 +203,6 @@ void GMainWindow::ToggleWindowMode()
         ui.horizontalLayout->removeWidget(render_window);
         render_window->setParent(NULL);
         render_window->setVisible(true);
-        render_window->DoneCurrent();
         render_window->RestoreGeometry();
     }
     else if (!enable && render_window->parent() == NULL)
@@ -212,7 +210,6 @@ void GMainWindow::ToggleWindowMode()
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
-        render_window->DoneCurrent();
     }
 }
 

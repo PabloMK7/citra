@@ -1,5 +1,6 @@
 #include <QHBoxLayout>
 #include <QKeyEvent>
+#include <QApplication>
 
 #include "common/common.h"
 #include "bootmanager.hxx"
@@ -79,15 +80,11 @@ class GGLWidgetInternal : public QGLWidget
 public:
     GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(parent)
     {
-        doneCurrent();
         parent_ = parent;
     }
 
     void paintEvent(QPaintEvent* ev)
     {
-        // Apparently, Windows doesn't display anything if we don't call this here.
-        // TODO: Breaks linux though because we aren't calling doneCurrent() ... -.-
-//        makeCurrent();
     }
     void resizeEvent(QResizeEvent* ev) {
         parent_->SetClientAreaWidth(size().width());
@@ -118,8 +115,20 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
+    QObject::connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
+    QObject::connect(&emu_thread, SIGNAL(finished()), this, SLOT(moveContext()));
 
     BackupGeometry();
+}
+
+void GRenderWindow::moveContext()
+{
+    DoneCurrent();
+    // We need to move GL context to the swapping thread in Qt5
+#if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
+    // If the thread started running, move the GL Context to the new thread. Otherwise, move it back.
+    child->context()->moveToThread(emu_thread.isRunning() ? &emu_thread : qApp->thread());
+#endif
 }
 
 GRenderWindow::~GRenderWindow()
@@ -129,7 +138,7 @@ GRenderWindow::~GRenderWindow()
 
 void GRenderWindow::SwapBuffers()
 {
-    child->makeCurrent(); // TODO: Not necessary?
+    // MakeCurrent is already called in renderer_opengl
     child->swapBuffers();
 }
 
@@ -213,3 +222,4 @@ void GRenderWindow::keyReleaseEvent(QKeyEvent* event)
         QWidget::keyPressEvent(event);
     */
 }
+
