@@ -1,14 +1,18 @@
-set(SRCS    core.cpp
-            core_timing.cpp
-            loader/elf.cpp
-            loader/loader.cpp
-            loader/ncch.cpp
-            mem_map.cpp
-            mem_map_funcs.cpp
-            system.cpp
+set(SRCS
             arm/disassembler/arm_disasm.cpp
             arm/disassembler/load_symbol_map.cpp
-            file_sys/archive_romfs.cpp
+            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
+            arm/interpreter/mmu/cache.cpp
+            arm/interpreter/mmu/maverick.cpp
+            arm/interpreter/mmu/rb.cpp
+            arm/interpreter/mmu/sa_mmu.cpp
+            arm/interpreter/mmu/tlb.cpp
+            arm/interpreter/mmu/wb.cpp
+            arm/interpreter/mmu/xscale_copro.cpp
+            arm/interpreter/vfp/vfp.cpp
+            arm/interpreter/vfp/vfpdouble.cpp
+            arm/interpreter/vfp/vfpinstr.cpp
+            arm/interpreter/vfp/vfpsingle.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
@@ -18,22 +22,7 @@ set(SRCS    core.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
-            arm/interpreter/vfp/vfp.cpp
-            arm/interpreter/vfp/vfpdouble.cpp
-            arm/interpreter/vfp/vfpinstr.cpp
-            arm/interpreter/vfp/vfpsingle.cpp
-            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
-            arm/interpreter/mmu/cache.cpp
-            arm/interpreter/mmu/maverick.cpp
-            arm/interpreter/mmu/rb.cpp
-            arm/interpreter/mmu/sa_mmu.cpp
-            arm/interpreter/mmu/tlb.cpp
-            arm/interpreter/mmu/wb.cpp
-            arm/interpreter/mmu/xscale_copro.cpp
-            hle/hle.cpp
-            hle/config_mem.cpp
-            hle/coprocessor.cpp
-            hle/svc.cpp
+            file_sys/archive_romfs.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/archive.cpp
             hle/kernel/event.cpp
@@ -48,27 +37,26 @@ set(SRCS    core.cpp
             hle/service/ndm.cpp
             hle/service/service.cpp
             hle/service/srv.cpp
+            hle/config_mem.cpp
+            hle/coprocessor.cpp
+            hle/hle.cpp
+            hle/svc.cpp
             hw/gpu.cpp
             hw/hw.cpp
-            hw/ndma.cpp)
+            hw/ndma.cpp
+            loader/elf.cpp
+            loader/loader.cpp
+            loader/ncch.cpp
+            core.cpp
+            core_timing.cpp
+            mem_map.cpp
+            mem_map_funcs.cpp
+            system.cpp
+            )
 
-set(HEADERS core.h
-            core_timing.h
-            loader/elf.h
-            loader/loader.h
-            loader/ncch.h
-            mem_map.h
-            system.h
+set(HEADERS
             arm/disassembler/arm_disasm.h
             arm/disassembler/load_symbol_map.h
-            arm/interpreter/arm_interpreter.h
-            arm/interpreter/arm_regformat.h
-            arm/interpreter/armcpu.h
-            arm/interpreter/armdefs.h
-            arm/interpreter/armemu.h
-            arm/interpreter/armmmu.h
-            arm/interpreter/armos.h
-            arm/interpreter/skyeye_defs.h
             arm/interpreter/mmu/arm1176jzf_s_mmu.h
             arm/interpreter/mmu/cache.h
             arm/interpreter/mmu/rb.h
@@ -78,27 +66,48 @@ set(HEADERS core.h
             arm/interpreter/vfp/asm_vfp.h
             arm/interpreter/vfp/vfp.h
             arm/interpreter/vfp/vfp_helper.h
+            arm/interpreter/arm_interpreter.h
+            arm/interpreter/arm_regformat.h
+            arm/interpreter/armcpu.h
+            arm/interpreter/armdefs.h
+            arm/interpreter/armemu.h
+            arm/interpreter/armmmu.h
+            arm/interpreter/armos.h
+            arm/interpreter/skyeye_defs.h
+            arm/arm_interface.h
             file_sys/archive.h
             file_sys/archive_romfs.h
-            hle/config_mem.h
-            hle/coprocessor.h
-            hle/hle.h
-            hle/svc.h
             hle/kernel/address_arbiter.h
             hle/kernel/archive.h
+            hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
-            hle/function_wrappers.h
             hle/service/apt.h
             hle/service/fs.h
             hle/service/gsp.h
             hle/service/hid.h
+            hle/service/ndm.h
             hle/service/service.h
             hle/service/srv.h
+            hle/config_mem.h
+            hle/coprocessor.h
+            hle/function_wrappers.h
+            hle/hle.h
+            hle/svc.h
             hw/gpu.h
             hw/hw.h
-            hw/ndma.h)
+            hw/ndma.h
+            loader/elf.h
+            loader/loader.h
+            loader/ncch.h
+            core.h
+            core_timing.h
+            mem_map.h
+            system.h
+            )
+
+create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(core STATIC ${SRCS} ${HEADERS})
