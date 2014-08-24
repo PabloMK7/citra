@@ -7,6 +7,9 @@
     <Filter Include="debug_utils">
       <UniqueIdentifier>{0ac498e6-bbd8-46e3-9d5f-e816546ab90e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="renderer_opengl\generated">
+      <UniqueIdentifier>{00301d57-24b3-4717-86a4-0073d131eb78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp">
@@ -24,6 +27,9 @@
     <ClCompile Include="video_core.cpp" />
     <ClCompile Include="debug_utils\debug_utils.cpp">
       <Filter>debug_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer_opengl\generated\gl_3_2_core.c">
+      <Filter>renderer_opengl\generated</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +55,9 @@
     </ClInclude>
     <ClInclude Include="debug_utils\debug_utils.h">
       <Filter>debug_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer_opengl\generated\gl_3_2_core.h">
+      <Filter>renderer_opengl\generated</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

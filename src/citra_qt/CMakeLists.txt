@@ -47,7 +47,7 @@ else()
 	set(RT_LIBRARY rt)
 endif()
 
-target_link_libraries(citra-qt core common video_core qhexedit ${ICONV_LIBRARY} ${COREFOUNDATION_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${RT_LIBRARY} ${GLEW_LIBRARY} ${PNG_LIBRARIES})
+target_link_libraries(citra-qt core common video_core qhexedit ${ICONV_LIBRARY} ${COREFOUNDATION_LIBRARY} ${QT_LIBRARIES} ${OPENGL_LIBRARIES} ${RT_LIBRARY} ${PNG_LIBRARIES})
 if(USE_QT5)
     target_link_libraries(citra-qt Qt5::Gui Qt5::Widgets Qt5::OpenGL)
 endif()

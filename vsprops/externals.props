@@ -9,14 +9,14 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ExternalsDir)glew-1.10.0\include;$(ExternalsDir)glfw-3.0.2\include;$(ExternalsDir)qhexedit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ExternalsDir)glfw-3.0.2\include;$(ExternalsDir)qhexedit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
     </ClCompile>
     <Lib />
     <Link>
-      <AdditionalLibraryDirectories>$(ExternalsDir)glew-1.10.0\lib\Release\$(PlatformName);$(ExternalsDir)glfw-3.0.2\lib-msvc100;$(ExternalsDir)libjpeg;$(ExternalsDir)sdl-2.0.0\lib\$(PlatformName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glfw3dll.lib;opengl32.lib;glew32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ExternalsDir)glfw-3.0.2\lib-msvc100;$(ExternalsDir)libjpeg;$(ExternalsDir)sdl-2.0.0\lib\$(PlatformName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3dll.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>

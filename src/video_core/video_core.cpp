@@ -30,11 +30,6 @@ void Start() {
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
-
-    // Required in order for GLFW to work on Linux, 
-    // or for GL contexts above 2.x on OS X
-    glewExperimental = GL_TRUE;
-
     g_emu_window = emu_window;
     g_renderer = new RendererOpenGL();
     g_renderer->SetWindow(g_emu_window);

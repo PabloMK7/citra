@@ -19,7 +19,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modul
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
 include(FindX11 REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
@@ -33,7 +32,6 @@ ENDIF (APPLE)
 #external includes
 include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${GLEW_INCLUDE_PATH})
 
 # workaround for GLFW linking on OSX
 link_directories(${GLFW_LIBRARY_DIRS})
