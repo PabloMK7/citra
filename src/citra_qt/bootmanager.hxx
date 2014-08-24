@@ -1,3 +1,4 @@
+#include <QMutex>
 #include <QThread>
 #include <QGLWidget>
 #include "common/common.h"
@@ -66,6 +67,8 @@ private:
 
     bool exec_cpu_step;
     bool cpu_running;
+    bool stop_run;
+    QMutex mutex;
 
     GRenderWindow* render_window;
 
@@ -105,7 +108,7 @@ public:
     void keyPressEvent(QKeyEvent* event);
     void keyReleaseEvent(QKeyEvent* event);
 
-private slots:
+public slots:
     void moveContext();
 
 private:

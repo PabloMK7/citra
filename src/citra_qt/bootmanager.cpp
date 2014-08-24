@@ -20,7 +20,8 @@
 
 EmuThread::EmuThread(GRenderWindow* render_window) : 
     exec_cpu_step(false), cpu_running(false), 
-    render_window(render_window), filename("")
+    render_window(render_window), filename(""),
+    stop_run(false)
 {
 }
 
@@ -31,6 +32,7 @@ void EmuThread::SetFilename(std::string filename)
 
 void EmuThread::run()
 {
+    stop_run = false;
     while (true)
     {
         for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)
@@ -41,11 +43,17 @@ void EmuThread::run()
                     exec_cpu_step = false;
 
                 Core::SingleStep();
-                if (!cpu_running)
+                if (!cpu_running) {
                     emit CPUStepped();
+                    yieldCurrentThread();
+                }
             }
         }
+        QMutexLocker lock(&mutex);
+        if (stop_run)
+            break;
     }
+    render_window->moveContext();
 
     Core::Stop();
 }
@@ -58,16 +66,24 @@ void EmuThread::Stop()
         return;
     }
 
+    {
+        QMutexLocker lock(&mutex);
+        stop_run = true;
+    }
+
     //core::g_state = core::SYS_DIE;
 
-    wait(1000);
+    wait(500);
     if (isRunning())
     {
         WARN_LOG(MASTER_LOG, "EmuThread still running, terminating...");
-        terminate();
+        quit();
         wait(1000);
         if (isRunning())
+        {
             WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");
+            terminate();
+        }
     }
     INFO_LOG(MASTER_LOG, "EmuThread stopped");
 }
@@ -116,7 +132,6 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     layout->setMargin(0);
     setLayout(layout);
     QObject::connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
-    QObject::connect(&emu_thread, SIGNAL(finished()), this, SLOT(moveContext()));
 
     BackupGeometry();
 }
@@ -127,13 +142,14 @@ void GRenderWindow::moveContext()
     // We need to move GL context to the swapping thread in Qt5
 #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it back.
-    child->context()->moveToThread(emu_thread.isRunning() ? &emu_thread : qApp->thread());
+    child->context()->moveToThread((QThread::currentThread() == qApp->thread()) ? &emu_thread : qApp->thread());
 #endif
 }
 
 GRenderWindow::~GRenderWindow()
 {
-    emu_thread.Stop();
+    if (emu_thread.isRunning())
+        emu_thread.Stop();
 }
 
 void GRenderWindow::SwapBuffers()
@@ -144,7 +160,8 @@ void GRenderWindow::SwapBuffers()
 
 void GRenderWindow::closeEvent(QCloseEvent* event)
 {
-    emu_thread.Stop();
+    if (emu_thread.isRunning())
+        emu_thread.Stop();
     QWidget::closeEvent(event);
 }
 
