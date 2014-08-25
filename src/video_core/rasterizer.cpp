@@ -349,9 +349,11 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 combiner_output = Math::MakeVec(color_output, alpha_output);
             }
 
+            // TODO: Not sure if the multiplication by 65535 has already been taken care
+            // of when transforming to screen coordinates or not.
             u16 z = (u16)(((float)v0.screenpos[2].ToFloat32() * w0 +
                            (float)v1.screenpos[2].ToFloat32() * w1 +
-                           (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum); // TODO: Shouldn't need to multiply by 65536?
+                           (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
             SetDepth(x >> 4, y >> 4, z);
 
             DrawPixel(x >> 4, y >> 4, combiner_output);
