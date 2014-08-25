@@ -1,5 +1,6 @@
 #include <QThread>
 #include <QGLWidget>
+#include <atomic>
 #include "common/common.h"
 #include "common/emu_window.h"
 
@@ -66,6 +67,7 @@ private:
 
     bool exec_cpu_step;
     bool cpu_running;
+    std::atomic<bool> stop_run;
 
     GRenderWindow* render_window;
 
@@ -81,6 +83,8 @@ signals:
 
 class GRenderWindow : public QWidget, public EmuWindow
 {
+    Q_OBJECT
+
 public:
     GRenderWindow(QWidget* parent = NULL);
     ~GRenderWindow();
@@ -102,6 +106,9 @@ public:
 
     void keyPressEvent(QKeyEvent* event);
     void keyReleaseEvent(QKeyEvent* event);
+
+public slots:
+    void moveContext();
 
 private:
     QGLWidget* child;
