@@ -52,11 +52,11 @@ GMainWindow::GMainWindow()
 
     graphicsWidget = new GPUCommandStreamWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
-    callstackWidget->hide();
+    graphicsWidget ->hide();
 
     graphicsCommandsWidget = new GPUCommandListWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
-    callstackWidget->hide();
+    graphicsCommandsWidget->hide();
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(disasmWidget->toggleViewAction());

@@ -36,10 +36,44 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
         0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
+static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
+    if (0 == g_shared_memory)
+        return nullptr;
+
+    _dbg_assert_msg_(GSP, screen_index < 2, "Invalid screen index");
+
+    // For each thread there are two FrameBufferUpdate fields
+    u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
+    return (FrameBufferUpdate*)Kernel::GetSharedMemoryPointer(g_shared_memory, offset);
+}
+
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
     return (InterruptRelayQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory,
         sizeof(InterruptRelayQueue) * thread_id);
+}
+
+void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+    // TODO: Return proper error codes
+    if (base_address + size_in_bytes >= 0x420000) {
+        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)",
+                  base_address, size_in_bytes);
+        return;
+    }
+
+    // size should be word-aligned
+    if ((size_in_bytes % 4) != 0) {
+        ERROR_LOG(GPU, "Invalid size 0x%08x", size_in_bytes);
+        return;
+    }
+
+    while (size_in_bytes > 0) {
+        GPU::Write<u32>(base_address + 0x1EB00000, *data);
+
+        size_in_bytes -= 4;
+        ++data;
+        base_address += 4;
+    }
 }
 
 /// Write a GSP GPU hardware register
@@ -48,27 +82,9 @@ void WriteHWRegs(Service::Interface* self) {
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
-    // TODO: Return proper error codes
-    if (reg_addr + size >= 0x420000) {
-        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
-        return;
-    }
-
-    // size should be word-aligned
-    if ((size % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
-        return;
-    }
-
     u32* src = (u32*)Memory::GetPointer(cmd_buff[0x4]);
 
-    while (size > 0) {
-        GPU::Write<u32>(reg_addr + 0x1EB00000, *src);
-
-        size -= 4;
-        ++src;
-        reg_addr += 4;
-    }
+    WriteHWRegs(reg_addr, size, src);
 }
 
 /// Read a GSP GPU hardware register
@@ -100,6 +116,40 @@ void ReadHWRegs(Service::Interface* self) {
     }
 }
 
+void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+    u32 base_address = 0x400000;
+    if (info.active_fb == 0) {
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left1), 4, &info.address_left);
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right1), 4, &info.address_right);
+    } else {
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left2), 4, &info.address_left);
+        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right2), 4, &info.address_right);
+    }
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].stride), 4, &info.stride);
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].color_format), 4, &info.format);
+    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].active_fb), 4, &info.shown_fb);
+}
+
+/**
+ * GSP_GPU::SetBufferSwap service function
+ *
+ * Updates GPU display framebuffer configuration using the specified parameters.
+ *
+ *  Inputs:
+ *      1 : Screen ID (0 = top screen, 1 = bottom screen)
+ *      2-7 : FrameBufferInfo structure
+ *  Outputs:
+ *      1: Result code
+ */
+void SetBufferSwap(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+    u32 screen_id = cmd_buff[1];
+    FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
+    SetBufferSwap(screen_id, *fb_info);
+
+    cmd_buff[1] = 0; // No error
+}
+
 /**
  * GSP_GPU::RegisterInterruptRelayQueue service function
  *  Inputs:
@@ -127,6 +177,7 @@ void RegisterInterruptRelayQueue(Service::Interface* self) {
 /**
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
+ * @todo This should probably take a thread_id parameter and only signal this thread?
  */
 void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == g_interrupt_event) {
@@ -152,7 +203,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
 }
 
 /// Executes the next GSP command
-void ExecuteCommand(const Command& command) {
+void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
     auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
@@ -179,11 +230,6 @@ void ExecuteCommand(const Command& command) {
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
 
-        // TODO: Move this to GPU
-        // TODO: Not sure what units the size is measured in
-        g_debugger.CommandListCalled(params.address,
-                                     (u32*)Memory::GetPointer(params.address),
-                                     params.size);
         SignalInterrupt(InterruptId::P3D);
         break;
     }
@@ -223,6 +269,15 @@ void ExecuteCommand(const Command& command) {
         SignalInterrupt(InterruptId::PPF);
         SignalInterrupt(InterruptId::P3D);
         SignalInterrupt(InterruptId::DMA);
+
+        // Update framebuffer information if requested
+        for (int screen_id = 0; screen_id < 2; ++screen_id) {
+            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+            if (info->is_dirty)
+                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+
+            info->is_dirty = false;
+        }
         break;
     }
 
@@ -265,7 +320,7 @@ void TriggerCmdReqQueue(Service::Interface* self) {
             g_debugger.GXCommandProcessed((u8*)&command_buffer->commands[i]);
 
             // Decode and execute command
-            ExecuteCommand(command_buffer->commands[i]);
+            ExecuteCommand(command_buffer->commands[i], thread_id);
 
             // Indicates that command has completed
             command_buffer->number_commands = command_buffer->number_commands - 1;
@@ -278,7 +333,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
     {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
-    {0x00050200, nullptr,                       "SetBufferSwap"},
+    {0x00050200, SetBufferSwap,                 "SetBufferSwap"},
     {0x00060082, nullptr,                       "SetCommandList"},
     {0x000700C2, nullptr,                       "RequestDma"},
     {0x00080082, nullptr,                       "FlushDataCache"},

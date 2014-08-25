@@ -4,53 +4,28 @@
 
 #pragma once
 
-#include <QAbstractItemModel>
+#include <QAbstractListModel>
 #include <QDockWidget>
 
 #include "video_core/gpu_debugger.h"
+#include "video_core/debug_utils/debug_utils.h"
 
-// TODO: Rename class, since it's not actually a list model anymore...
-class GPUCommandListModel : public QAbstractItemModel, public GraphicsDebugger::DebuggerObserver
+class GPUCommandListModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
     GPUCommandListModel(QObject* parent);
 
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const;
-    QModelIndex parent(const QModelIndex& child) const;
     int columnCount(const QModelIndex& parent = QModelIndex()) const;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
-public:
-    void OnCommandListCalled(const GraphicsDebugger::PicaCommandList& lst, bool is_new) override;
-
 public slots:
-    void OnCommandListCalledInternal();
-
-signals:
-    void CommandListCalled();
+    void OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace);
 
 private:
-    struct TreeItem : public QObject
-    {
-        enum Type {
-            ROOT,
-            COMMAND_LIST,
-            COMMAND
-        };
-
-        TreeItem(Type type, int index, TreeItem* item_parent, QObject* parent) : QObject(parent), type(type), index(index), parent(item_parent) {}
-
-        Type type;
-        int index;
-        std::vector<TreeItem*> children;
-        TreeItem* parent;
-    };
-
-    std::vector<std::pair<u32,GraphicsDebugger::PicaCommandList>> command_lists;
-    TreeItem* root_item;
+    Pica::DebugUtils::PicaTrace pica_trace;
 };
 
 class GPUCommandListWidget : public QDockWidget
@@ -60,5 +35,12 @@ class GPUCommandListWidget : public QDockWidget
 public:
     GPUCommandListWidget(QWidget* parent = 0);
 
+public slots:
+    void OnToggleTracing();
+
+signals:
+    void TracingFinished(const Pica::DebugUtils::PicaTrace&);
+
 private:
+    std::unique_ptr<Pica::DebugUtils::PicaTrace> pica_trace;
 };

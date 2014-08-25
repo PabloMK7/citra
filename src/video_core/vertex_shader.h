@@ -27,7 +27,6 @@ struct OutputVertex {
     Math::Vec4<float24> dummy; // quaternions (not implemented, yet)
     Math::Vec4<float24> color;
     Math::Vec2<float24> tc0;
-    float24 tc0_v;
 
     // Padding for optimal alignment
     float24 pad[14];
@@ -36,6 +35,7 @@ struct OutputVertex {
 
     // position after perspective divide
     Math::Vec3<float24> screenpos;
+    float24 pad2;
 
     // Linear interpolation
     // factor: 0=this, 1=vtx
@@ -59,6 +59,7 @@ struct OutputVertex {
     }
 };
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
+static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
 union Instruction {
     enum class OpCode : u32 {
@@ -117,9 +118,78 @@ union Instruction {
     // while "dest" addresses individual floats.
     union {
         BitField<0x00, 0x5, u32> operand_desc_id;
-        BitField<0x07, 0x5, u32> src2;
-        BitField<0x0c, 0x7, u32> src1;
-        BitField<0x13, 0x7, u32> dest;
+
+        template<class BitFieldType>
+        struct SourceRegister : BitFieldType {
+            enum RegisterType {
+                Input,
+                Temporary,
+                FloatUniform
+            };
+
+            RegisterType GetRegisterType() const {
+                if (BitFieldType::Value() < 0x10)
+                    return Input;
+                else if (BitFieldType::Value() < 0x20)
+                    return Temporary;
+                else
+                    return FloatUniform;
+            }
+
+            int GetIndex() const {
+                if (GetRegisterType() == Input)
+                    return BitFieldType::Value();
+                else if (GetRegisterType() == Temporary)
+                    return BitFieldType::Value() - 0x10;
+                else if (GetRegisterType() == FloatUniform)
+                    return BitFieldType::Value() - 0x20;
+            }
+
+            std::string GetRegisterName() const {
+                std::map<RegisterType, std::string> type = {
+                    { Input, "i" },
+                    { Temporary, "t" },
+                    { FloatUniform, "f" },
+                };
+                return type[GetRegisterType()] + std::to_string(GetIndex());
+            }
+        };
+
+        SourceRegister<BitField<0x07, 0x5, u32>> src2;
+        SourceRegister<BitField<0x0c, 0x7, u32>> src1;
+
+        struct : BitField<0x15, 0x5, u32>
+        {
+            enum RegisterType {
+                Output,
+                Temporary,
+                Unknown
+            };
+            RegisterType GetRegisterType() const {
+                if (Value() < 0x8)
+                    return Output;
+                else if (Value() < 0x10)
+                    return Unknown;
+                else
+                    return Temporary;
+            }
+            int GetIndex() const {
+                if (GetRegisterType() == Output)
+                    return Value();
+                else if (GetRegisterType() == Temporary)
+                    return Value() - 0x10;
+                else
+                    return Value();
+            }
+            std::string GetRegisterName() const {
+                std::map<RegisterType, std::string> type = {
+                    { Output, "o" },
+                    { Temporary, "t" },
+                    { Unknown, "u" }
+                };
+                return type[GetRegisterType()] + std::to_string(GetIndex());
+            }
+        } dest;
     } common;
 
     // Format used for flow control instructions ("if")
@@ -128,6 +198,7 @@ union Instruction {
         BitField<0x0a, 0xc, u32> offset_words;
     } flow_control;
 };
+static_assert(std::is_standard_layout<Instruction>::value, "Structure is not using standard layout!");
 
 union SwizzlePattern {
     u32 hex;
@@ -184,6 +255,8 @@ union SwizzlePattern {
 
     // Components of "dest" that should be written to: LSB=dest.w, MSB=dest.x
     BitField< 0, 4, u32> dest_mask;
+
+    BitField< 4, 1, u32> negate; // negates src1
 
     BitField< 5, 2, Selector> src1_selector_3;
     BitField< 7, 2, Selector> src1_selector_2;

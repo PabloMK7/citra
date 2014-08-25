@@ -2,12 +2,14 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include "clipper.h"
 #include "command_processor.h"
 #include "math.h"
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
 
+#include "debug_utils/debug_utils.h"
 
 namespace Pica {
 
@@ -23,15 +25,24 @@ static u32 uniform_write_buffer[4];
 static u32 vs_binary_write_offset = 0;
 static u32 vs_swizzle_write_offset = 0;
 
-static inline void WritePicaReg(u32 id, u32 value) {
+static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
+
+    if (id >= registers.NumIds())
+        return;
+
+    // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
     u32 old_value = registers[id];
-    registers[id] = value;
+    registers[id] = (old_value & ~mask) | (value & mask);
+
+    DebugUtils::OnPicaRegWrite(id, registers[id]);
 
     switch(id) {
         // It seems like these trigger vertex rendering
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
+            DebugUtils::DumpTevStageConfig(registers.GetTevStages());
+
             const auto& attribute_config = registers.vertex_attributes;
             const u8* const base_address = Memory::GetPointer(attribute_config.GetBaseAddress());
 
@@ -68,6 +79,10 @@ static inline void WritePicaReg(u32 id, u32 value) {
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = (bool)index_info.format;
 
+            DebugUtils::GeometryDumper geometry_dumper;
+            PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
+            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(registers.triangle_topology.Value());
+
             for (int index = 0; index < registers.num_vertices; ++index)
             {
                 int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
@@ -95,14 +110,28 @@ static inline void WritePicaReg(u32 id, u32 value) {
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
+
+                // NOTE: When dumping geometry, we simply assume that the first input attribute
+                //       corresponds to the position for now.
+                DebugUtils::GeometryDumper::Vertex dumped_vertex = {
+                    input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()
+                };
+                using namespace std::placeholders;
+                dumping_primitive_assembler.SubmitVertex(dumped_vertex,
+                                                         std::bind(&DebugUtils::GeometryDumper::AddTriangle,
+                                                                   &geometry_dumper, _1, _2, _3));
+
+                // Send to vertex shader
                 VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes());
 
                 if (is_indexed) {
                     // TODO: Add processed vertex to vertex cache!
                 }
 
-                PrimitiveAssembly::SubmitVertex(output);
+                // Send to triangle clipper
+                clipper_primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
             }
+            geometry_dumper.Dump();
             break;
         }
 
@@ -207,14 +236,17 @@ static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
 
     u32* read_pointer = (u32*)first_command_word;
 
-    // TODO: Take parameter mask into consideration!
+    const u32 write_mask = ((header.parameter_mask & 0x1) ? (0xFFu <<  0) : 0u) |
+                           ((header.parameter_mask & 0x2) ? (0xFFu <<  8) : 0u) |
+                           ((header.parameter_mask & 0x4) ? (0xFFu << 16) : 0u) |
+                           ((header.parameter_mask & 0x8) ? (0xFFu << 24) : 0u);
 
-    WritePicaReg(header.cmd_id, *read_pointer);
+    WritePicaReg(header.cmd_id, *read_pointer, write_mask);
     read_pointer += 2;
 
     for (int i = 1; i < 1+header.extra_data_length; ++i) {
         u32 cmd = header.cmd_id + ((header.group_commands) ? i : 0);
-        WritePicaReg(cmd, *read_pointer);
+        WritePicaReg(cmd, *read_pointer, write_mask);
         ++read_pointer;
     }
 

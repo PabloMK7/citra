@@ -11,6 +11,8 @@
 #include "rasterizer.h"
 #include "vertex_shader.h"
 
+#include "debug_utils/debug_utils.h"
+
 namespace Pica {
 
 namespace Rasterizer {
@@ -78,10 +80,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     u16 max_x = std::max({vtxpos[0].x, vtxpos[1].x, vtxpos[2].x});
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
 
-    min_x = min_x & Fix12P4::IntMask();
-    min_y = min_y & Fix12P4::IntMask();
-    max_x = (max_x + Fix12P4::FracMask()) & Fix12P4::IntMask();
-    max_y = (max_y + Fix12P4::FracMask()) & Fix12P4::IntMask();
+    min_x &= Fix12P4::IntMask();
+    min_y &= Fix12P4::IntMask();
+    max_x = ((max_x + Fix12P4::FracMask()) & Fix12P4::IntMask());
+    max_y = ((max_y + Fix12P4::FracMask()) & Fix12P4::IntMask());
 
     // Triangle filling rules: Pixels on the right-sided edge or on flat bottom edges are not
     // drawn. Pixels on any other triangle border are drawn. This is implemented with three bias
@@ -112,10 +114,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             auto orient2d = [](const Math::Vec2<Fix12P4>& vtx1,
                                const Math::Vec2<Fix12P4>& vtx2,
                                const Math::Vec2<Fix12P4>& vtx3) {
-                const auto vec1 = (vtx2.Cast<int>() - vtx1.Cast<int>()).Append(0);
-                const auto vec2 = (vtx3.Cast<int>() - vtx1.Cast<int>()).Append(0);
+                const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
+                const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
                 // TODO: There is a very small chance this will overflow for sizeof(int) == 4
-                return Cross(vec1, vec2).z;
+                return Math::Cross(vec1, vec2).z;
             };
 
             int w0 = bias0 + orient2d(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
@@ -143,15 +145,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             //
             // The generalization to three vertices is straightforward in baricentric coordinates.
             auto GetInterpolatedAttribute = [&](float24 attr0, float24 attr1, float24 attr2) {
-                auto attr_over_w = Math::MakeVec3(attr0 / v0.pos.w,
-                                                  attr1 / v1.pos.w,
-                                                  attr2 / v2.pos.w);
-                auto w_inverse   = Math::MakeVec3(float24::FromFloat32(1.f) / v0.pos.w,
-                                                  float24::FromFloat32(1.f) / v1.pos.w,
-                                                  float24::FromFloat32(1.f) / v2.pos.w);
-                auto baricentric_coordinates = Math::MakeVec3(float24::FromFloat32(w0),
-                                                              float24::FromFloat32(w1),
-                                                              float24::FromFloat32(w2));
+                auto attr_over_w = Math::MakeVec(attr0 / v0.pos.w,
+                                                 attr1 / v1.pos.w,
+                                                 attr2 / v2.pos.w);
+                auto w_inverse   = Math::MakeVec(float24::FromFloat32(1.f) / v0.pos.w,
+                                                 float24::FromFloat32(1.f) / v1.pos.w,
+                                                 float24::FromFloat32(1.f) / v2.pos.w);
+                auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(w0),
+                                                             float24::FromFloat32(w1),
+                                                             float24::FromFloat32(w2));
 
                 float24 interpolated_attr_over_w = Math::Dot(attr_over_w, baricentric_coordinates);
                 float24 interpolated_w_inverse   = Math::Dot(w_inverse,   baricentric_coordinates);
@@ -165,12 +167,196 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
             };
 
+            Math::Vec4<u8> texture_color{};
+            float24 u = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
+            float24 v = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
+            if (registers.texturing_enable) {
+                // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+                // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+                // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+                // texels are laid out in a 2x2 subtile like this:
+                // 2 3
+                // 0 1
+                //
+                // The full 8x8 tile has the texels arranged like this:
+                //
+                // 42 43 46 47 58 59 62 63
+                // 40 41 44 45 56 57 60 61
+                // 34 35 38 39 50 51 54 55
+                // 32 33 36 37 48 49 52 53
+                // 10 11 14 15 26 27 30 31
+                // 08 09 12 13 24 25 28 29
+                // 02 03 06 07 18 19 22 23
+                // 00 01 04 05 16 17 20 21
+
+                // TODO: This is currently hardcoded for RGB8
+                u32* texture_data = (u32*)Memory::GetPointer(registers.texture0.GetPhysicalAddress());
+
+                // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
+                // To be flexible in case different but similar patterns are used, we keep this
+                // somewhat inefficient code around for now.
+                int s = (int)(u * float24::FromFloat32(registers.texture0.width)).ToFloat32();
+                int t = (int)(v * float24::FromFloat32(registers.texture0.height)).ToFloat32();
+                int texel_index_within_tile = 0;
+                for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
+                    int sub_tile_width = 1 << block_size_index;
+                    int sub_tile_height = 1 << block_size_index;
+
+                    int sub_tile_index = (s & sub_tile_width) << block_size_index;
+                    sub_tile_index += 2 * ((t & sub_tile_height) << block_size_index);
+                    texel_index_within_tile += sub_tile_index;
+                }
+
+                const int block_width = 8;
+                const int block_height = 8;
+
+                int coarse_s = (s / block_width) * block_width;
+                int coarse_t = (t / block_height) * block_height;
+
+                const int row_stride = registers.texture0.width * 3;
+                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
+                texture_color.r() = source_ptr[2];
+                texture_color.g() = source_ptr[1];
+                texture_color.b() = source_ptr[0];
+                texture_color.a() = 0xFF;
+
+                DebugUtils::DumpTexture(registers.texture0, (u8*)texture_data);
+            }
+
+            // Texture environment - consists of 6 stages of color and alpha combining.
+            //
+            // Color combiners take three input color values from some source (e.g. interpolated
+            // vertex color, texture color, previous stage, etc), perform some very simple
+            // operations on each of them (e.g. inversion) and then calculate the output color
+            // with some basic arithmetic. Alpha combiners can be configured separately but work
+            // analogously.
+            Math::Vec4<u8> combiner_output;
+            for (auto tev_stage : registers.GetTevStages()) {
+                using Source = Regs::TevStageConfig::Source;
+                using ColorModifier = Regs::TevStageConfig::ColorModifier;
+                using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
+                using Operation = Regs::TevStageConfig::Operation;
+
+                auto GetColorSource = [&](Source source) -> Math::Vec3<u8> {
+                    switch (source) {
+                    case Source::PrimaryColor:
+                        return primary_color.rgb();
+
+                    case Source::Texture0:
+                        return texture_color.rgb();
+
+                    case Source::Constant:
+                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
+
+                    case Source::Previous:
+                        return combiner_output.rgb();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown color combiner source %d\n", (int)source);
+                        return {};
+                    }
+                };
+
+                auto GetAlphaSource = [&](Source source) -> u8 {
+                    switch (source) {
+                    case Source::PrimaryColor:
+                        return primary_color.a();
+
+                    case Source::Texture0:
+                        return texture_color.a();
+
+                    case Source::Constant:
+                        return tev_stage.const_a;
+
+                    case Source::Previous:
+                        return combiner_output.a();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown alpha combiner source %d\n", (int)source);
+                        return 0;
+                    }
+                };
+
+                auto GetColorModifier = [](ColorModifier factor, const Math::Vec3<u8>& values) -> Math::Vec3<u8> {
+                    switch (factor)
+                    {
+                    case ColorModifier::SourceColor:
+                        return values;
+                    default:
+                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        return {};
+                    }
+                };
+
+                auto GetAlphaModifier = [](AlphaModifier factor, u8 value) -> u8 {
+                    switch (factor) {
+                    case AlphaModifier::SourceAlpha:
+                        return value;
+                    default:
+                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        return 0;
+                    }
+                };
+
+                auto ColorCombine = [](Operation op, const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
+                    switch (op) {
+                    case Operation::Replace:
+                        return input[0];
+
+                    case Operation::Modulate:
+                        return ((input[0] * input[1]) / 255).Cast<u8>();
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown color combiner operation %d\n", (int)op);
+                        return {};
+                    }
+                };
+
+                auto AlphaCombine = [](Operation op, const std::array<u8,3>& input) -> u8 {
+                    switch (op) {
+                    case Operation::Replace:
+                        return input[0];
+
+                    case Operation::Modulate:
+                        return input[0] * input[1] / 255;
+
+                    default:
+                        ERROR_LOG(GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        return 0;
+                    }
+                };
+
+                // color combiner
+                // NOTE: Not sure if the alpha combiner might use the color output of the previous
+                //       stage as input. Hence, we currently don't directly write the result to
+                //       combiner_output.rgb(), but instead store it in a temporary variable until
+                //       alpha combining has been done.
+                Math::Vec3<u8> color_result[3] = {
+                    GetColorModifier(tev_stage.color_modifier1, GetColorSource(tev_stage.color_source1)),
+                    GetColorModifier(tev_stage.color_modifier2, GetColorSource(tev_stage.color_source2)),
+                    GetColorModifier(tev_stage.color_modifier3, GetColorSource(tev_stage.color_source3))
+                };
+                auto color_output = ColorCombine(tev_stage.color_op, color_result);
+
+                // alpha combiner
+                std::array<u8,3> alpha_result = {
+                    GetAlphaModifier(tev_stage.alpha_modifier1, GetAlphaSource(tev_stage.alpha_source1)),
+                    GetAlphaModifier(tev_stage.alpha_modifier2, GetAlphaSource(tev_stage.alpha_source2)),
+                    GetAlphaModifier(tev_stage.alpha_modifier3, GetAlphaSource(tev_stage.alpha_source3))
+                };
+                auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
+
+                combiner_output = Math::MakeVec(color_output, alpha_output);
+            }
+
+            // TODO: Not sure if the multiplication by 65535 has already been taken care
+            // of when transforming to screen coordinates or not.
             u16 z = (u16)(((float)v0.screenpos[2].ToFloat32() * w0 +
                            (float)v1.screenpos[2].ToFloat32() * w1 +
-                           (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum); // TODO: Shouldn't need to multiply by 65536?
+                           (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
             SetDepth(x >> 4, y >> 4, z);
 
-            DrawPixel(x >> 4, y >> 4, primary_color);
+            DrawPixel(x >> 4, y >> 4, combiner_output);
         }
     }
 }

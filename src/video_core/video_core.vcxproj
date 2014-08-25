@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="debug_utils\debug_utils.cpp" />
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="command_processor.cpp" />
@@ -40,6 +41,7 @@
     <ClInclude Include="utils.h" />
     <ClInclude Include="vertex_shader.h" />
     <ClInclude Include="video_core.h" />
+    <ClInclude Include="debug_utils\debug_utils.h" />
     <ClInclude Include="renderer_opengl\renderer_opengl.h" />
   </ItemGroup>
   <ItemGroup>

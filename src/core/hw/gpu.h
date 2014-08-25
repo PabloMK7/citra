@@ -42,7 +42,7 @@ struct Regs {
 // depending on the current source line to make sure variable names are unique.
 #define INSERT_PADDING_WORDS_HELPER1(x, y) x ## y
 #define INSERT_PADDING_WORDS_HELPER2(x, y) INSERT_PADDING_WORDS_HELPER1(x, y)
-#define INSERT_PADDING_WORDS(num_words) u32 INSERT_PADDING_WORDS_HELPER2(pad, __LINE__)[(num_words)];
+#define INSERT_PADDING_WORDS(num_words) u32 INSERT_PADDING_WORDS_HELPER2(pad, __LINE__)[(num_words)]
 
 // helper macro to make sure the defined structures are of the expected size.
 #if defined(_MSC_VER)
@@ -53,7 +53,7 @@ struct Regs {
 #else
 #define ASSERT_MEMBER_SIZE(name, size_in_bytes)  \
     static_assert(sizeof(name) == size_in_bytes, \
-                  "Structure size and register block length don't match");
+                  "Structure size and register block length don't match")
 #endif
 
     enum class FramebufferFormat : u32 {
