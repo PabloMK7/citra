@@ -16,6 +16,10 @@ Handle g_event_handle = 0;
 
 void Initialize(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
+
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    cmd_buff[1] = 0; // No error
 }
 
 void GetProcSemaphore(Service::Interface* self) {
