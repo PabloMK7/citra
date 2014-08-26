@@ -57,6 +57,7 @@ private:
         // Properties
         int width;
         int height;
+        int stride; ///< Number of bytes between the coordinates (0,0) and (1,0)
 
         // OpenGL object IDs
         GLuint texture_id;

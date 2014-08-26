@@ -84,7 +84,7 @@ inline void Write(u32 addr, const T data) {
 
             for (int y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
-                for (int x = 0; x < config.output_width / 2; ++x) {
+                for (int x = 0; x < config.output_width; ++x) {
                     struct {
                         int r, g, b, a;
                     } source_color = { 0, 0, 0, 0 };
@@ -93,7 +93,7 @@ inline void Write(u32 addr, const T data) {
                     case Regs::FramebufferFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* srcptr = source_pointer + x * 4 + y * config.input_width * 4 / 2;
+                        u8* srcptr = source_pointer + x * 4 + y * config.input_width * 4;
                         source_color.r = srcptr[0]; // blue
                         source_color.g = srcptr[1]; // green
                         source_color.b = srcptr[2]; // red
@@ -121,7 +121,7 @@ inline void Write(u32 addr, const T data) {
                     case Regs::FramebufferFormat::RGB8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3 / 2;
+                        u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3;
                         dstptr[0] = source_color.r; // blue
                         dstptr[1] = source_color.g; // green
                         dstptr[2] = source_color.b; // red
@@ -217,16 +217,15 @@ void Init() {
     framebuffer_sub.address_right1 = 0x184C7800;
     //framebuffer_sub.address_right2 = unknown;
 
-    // TODO: Width should be 240 instead?
-    framebuffer_top.width = 480;
+    framebuffer_top.width = 240;
     framebuffer_top.height = 400;
-    framebuffer_top.stride = 480*3;
+    framebuffer_top.stride = 3 * 240;
     framebuffer_top.color_format = Regs::FramebufferFormat::RGB8;
     framebuffer_top.active_fb = 0;
 
-    framebuffer_sub.width = 480;
-    framebuffer_sub.height = 400;
-    framebuffer_sub.stride = 480*3;
+    framebuffer_sub.width = 240;
+    framebuffer_sub.height = 320;
+    framebuffer_sub.stride = 3 * 240;
     framebuffer_sub.color_format = Regs::FramebufferFormat::RGB8;
     framebuffer_sub.active_fb = 0;
 
