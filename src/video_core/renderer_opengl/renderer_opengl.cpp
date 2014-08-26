@@ -49,12 +49,17 @@ RendererOpenGL::RendererOpenGL() {
     resolution_height = VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight;
 
     // Initialize screen info
-    screen_info.Top().width            = VideoCore::kScreenTopWidth;
-    screen_info.Top().height           = VideoCore::kScreenTopHeight;
-    screen_info.Top().flipped_xfb_data = xfb_top_flipped;
+    const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
+    const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
+
+    screen_info.Top().width               = VideoCore::kScreenTopWidth;
+    screen_info.Top().height              = VideoCore::kScreenTopHeight;
+    screen_info.Top().stride              = framebuffer_top.stride;
+    screen_info.Top().flipped_xfb_data    = xfb_top_flipped;
 
     screen_info.Bottom().width            = VideoCore::kScreenBottomWidth;
     screen_info.Bottom().height           = VideoCore::kScreenBottomHeight;
+    screen_info.Bottom().stride           = framebuffer_sub.stride;
     screen_info.Bottom().flipped_xfb_data = xfb_bottom_flipped;
 }
 
@@ -90,8 +95,8 @@ void RendererOpenGL::SwapBuffers() {
  * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
  */
 void RendererOpenGL::FlipFramebuffer(const u8* raw_data, ScreenInfo& screen_info) {
-    int in_coord = 0;
     for (int x = 0; x < screen_info.width; x++) {
+        int in_coord = x * screen_info.stride;
         for (int y = screen_info.height-1; y >= 0; y--) {
             // TODO: Properly support other framebuffer formats
             int out_coord = (x + y * screen_info.width) * 3;
@@ -184,6 +189,7 @@ void RendererOpenGL::InitFramebuffer() {
 }
 
 void RendererOpenGL::RenderFramebuffer() {
+    glViewport(0, 0, resolution_width, resolution_height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program_id);

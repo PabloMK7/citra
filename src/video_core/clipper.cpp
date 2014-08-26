@@ -92,7 +92,7 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     viewport.offset_z   = float24::FromRawFloat24(registers.viewport_depth_far_plane);
 
     // TODO: Not sure why the viewport width needs to be divided by 2 but the viewport height does not
-    vtx.screenpos[0] = (vtx.pos.x / vtx.pos.w + float24::FromFloat32(1.0)) * viewport.halfsize_x / float24::FromFloat32(2.0) + viewport.offset_x;
+    vtx.screenpos[0] = (vtx.pos.x / vtx.pos.w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
     vtx.screenpos[1] = (vtx.pos.y / vtx.pos.w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
     vtx.screenpos[2] = viewport.offset_z - vtx.pos.z / vtx.pos.w * viewport.zscale;
 }

@@ -22,21 +22,21 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
     // Assuming RGBA8 format until actual framebuffer format handling is implemented
-    *(color_buffer + x + y * registers.framebuffer.GetWidth() / 2) = value;
+    *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
 }
 
 static u32 GetDepth(int x, int y) {
     u16* depth_buffer = (u16*)Memory::GetPointer(registers.framebuffer.GetDepthBufferAddress());
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
-    return *(depth_buffer + x + y * registers.framebuffer.GetWidth() / 2);
+    return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
 
 static void SetDepth(int x, int y, u16 value) {
     u16* depth_buffer = (u16*)Memory::GetPointer(registers.framebuffer.GetDepthBufferAddress());
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
-    *(depth_buffer + x + y * registers.framebuffer.GetWidth() / 2) = value;
+    *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
 }
 
 void ProcessTriangle(const VertexShader::OutputVertex& v0,
