@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="debug_utils\debug_utils.cpp" />
     <ClCompile Include="renderer_opengl\renderer_opengl.cpp" />
+    <ClCompile Include="renderer_opengl\gl_shader_util.cpp" />
     <ClCompile Include="clipper.cpp" />
     <ClCompile Include="command_processor.cpp" />
     <ClCompile Include="primitive_assembly.cpp" />
@@ -43,6 +44,8 @@
     <ClInclude Include="video_core.h" />
     <ClInclude Include="debug_utils\debug_utils.h" />
     <ClInclude Include="renderer_opengl\renderer_opengl.h" />
+    <ClInclude Include="renderer_opengl\gl_shader_util.h" />
+    <ClInclude Include="renderer_opengl\gl_shaders.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

@@ -11,11 +11,10 @@
 
 #include "video_core/renderer_base.h"
 
+#include <array>
 
 class RendererOpenGL : virtual public RendererBase {
 public:
-
-    static const int kMaxFramebuffers = 2;  ///< Maximum number of framebuffers
 
     RendererOpenGL();
     ~RendererOpenGL();
@@ -23,14 +22,14 @@ public:
     /// Swap buffers (render frame)
     void SwapBuffers();
 
-    /** 
+    /**
      * Renders external framebuffer (XFB)
      * @param src_rect Source rectangle in XFB to copy
      * @param dst_rect Destination rectangle in output framebuffer to copy to
      */
     void RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect);
 
-    /** 
+    /**
      * Set the emulator window to use for renderer
      * @param window EmuWindow handle to emulator window to use for rendering
      */
@@ -53,37 +52,47 @@ private:
     /// Updates the framerate
     void UpdateFramerate();
 
+    /// Structure used for storing information for rendering each 3DS screen
+    struct ScreenInfo {
+        // Properties
+        int width;
+        int height;
+
+        // OpenGL object IDs
+        GLuint texture_id;
+        GLuint vertex_buffer_id;
+
+        // Temporary
+        u8* flipped_xfb_data;
+    };
+
     /**
-     * Helper function to flip framebuffer from left-to-right to top-to-bottom
-     * @param in Pointer to input raw framebuffer in V/RAM
-     * @param out Pointer to output buffer with flipped framebuffer
-     * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
-     */
-    void FlipFramebuffer(const u8* in, u8* out);
+    * Helper function to flip framebuffer from left-to-right to top-to-bottom
+    * @param raw_data Pointer to input raw framebuffer in V/RAM
+    * @param screen_info ScreenInfo structure with screen size and output buffer pointer
+    * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
+    */
+    void FlipFramebuffer(const u8* raw_data, ScreenInfo& screen_info);
 
+    EmuWindow*  render_window;                    ///< Handle to render window
+    u32         last_mode;                        ///< Last render mode
 
-    EmuWindow*  m_render_window;                    ///< Handle to render window
-    u32         m_last_mode;                        ///< Last render mode
+    int resolution_width;                         ///< Current resolution width
+    int resolution_height;                        ///< Current resolution height
 
-    int m_resolution_width;                         ///< Current resolution width
-    int m_resolution_height;                        ///< Current resolution height
+    // OpenGL global object IDs
+    GLuint vertex_array_id;
+    GLuint program_id;
+    GLuint sampler_id;
 
-    // Framebuffers
-    // ------------
-
-    GLuint m_fbo[kMaxFramebuffers];                 ///< Framebuffer objects
-    GLuint m_fbo_rbo[kMaxFramebuffers];             ///< Render buffer objects
-    GLuint m_fbo_depth_buffers[kMaxFramebuffers];   ///< Depth buffers objects
-
-    GLuint m_xfb_texture_top;                       ///< GL handle to top framebuffer texture
-    GLuint m_xfb_texture_bottom;                    ///< GL handle to bottom framebuffer texture
-           
-    GLuint m_xfb_top;                               ///< GL handle to top framebuffer
-    GLuint m_xfb_bottom;                            ///< GL handle to bottom framebuffer
+    struct : std::array<ScreenInfo, 2> {
+        ScreenInfo& Top() { return (*this)[0]; }
+        ScreenInfo& Bottom() { return (*this)[1]; }
+    } screen_info;
 
     // "Flipped" framebuffers translate scanlines from native 3DS left-to-right to top-to-bottom
     // as OpenGL expects them in a texture. There probably is a more efficient way of doing this:
+    u8 xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopHeight * 4];
+    u8 xfb_bottom_flipped[VideoCore::kScreenBottomWidth * VideoCore::kScreenBottomHeight * 4];
 
-    u8 m_xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopHeight * 4];
-    u8 m_xfb_bottom_flipped[VideoCore::kScreenBottomWidth * VideoCore::kScreenBottomHeight * 4];
 };
