@@ -21,6 +21,7 @@ enum class FileType {
     CXI,
     CIA,
     ELF,
+    BIN,
 };
 
 /// Return type for functions in Loader namespace
