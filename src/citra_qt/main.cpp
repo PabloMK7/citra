@@ -150,7 +150,7 @@ void GMainWindow::BootGame(std::string filename)
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.elf *.axf *.cci *.cxi)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.elf *.axf *.bin *.cci *.cxi)"));
     if (filename.size())
        BootGame(filename.toLatin1().data());
 }
