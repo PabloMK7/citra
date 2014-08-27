@@ -27,7 +27,7 @@ ARM_Interpreter::ARM_Interpreter()  {
     // Reset the core to initial state
     ARMul_CoProInit(state); 
     ARMul_Reset(state);
-    state->NextInstr = RESUME;
+    state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = 3;
 
     state->pc = state->Reg[15] = 0x00000000;

@@ -117,6 +117,11 @@ void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     t->context.sp = t->stack_top;
     t->context.cpsr = 0x1F; // Usermode
     
+    // TODO(bunnei): This instructs the CPU core to start the execution as if it is "resuming" a
+    // thread. This is somewhat Sky-Eye specific, and should be re-architected in the future to be
+    // agnostic of the CPU core.
+    t->context.mode = 8;
+
     if (t->current_priority < lowest_priority) {
         t->current_priority = t->initial_priority;
     }
