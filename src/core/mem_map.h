@@ -9,6 +9,11 @@
 
 namespace Memory {
 
+// TODO: It would be nice to eventually replace these with strong types that prevent accidental
+// conversion between each other.
+typedef u32 VAddr; ///< Represents a pointer in the ARM11 virtual address space.
+typedef u32 PAddr; ///< Represents a pointer in the physical address space.
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 enum {
@@ -127,25 +132,25 @@ void Init();
 void Shutdown();
 
 template <typename T>
-inline void Read(T &var, const u32 addr);
+inline void Read(T &var, VAddr addr);
 
 template <typename T>
-inline void Write(u32 addr, const T data);
+inline void Write(VAddr addr, T data);
 
-u8 Read8(const u32 addr);
-u16 Read16(const u32 addr);
-u32 Read32(const u32 addr);
+u8 Read8(VAddr addr);
+u16 Read16(VAddr addr);
+u32 Read32(VAddr addr);
 
-u32 Read8_ZX(const u32 addr);
-u32 Read16_ZX(const u32 addr);
+u32 Read8_ZX(VAddr addr);
+u32 Read16_ZX(VAddr addr);
 
-void Write8(const u32 addr, const u8 data);
-void Write16(const u32 addr, const u16 data);
-void Write32(const u32 addr, const u32 data);
+void Write8(VAddr addr, u8 data);
+void Write16(VAddr addr, u16 data);
+void Write32(VAddr addr, u32 data);
 
-void WriteBlock(const u32 addr, const u8* data, const int size);
+void WriteBlock(VAddr addr, const u8* data, size_t size);
 
-u8* GetPointer(const u32 virtual_address);
+u8* GetPointer(VAddr virtual_address);
 
 /**
  * Maps a block of memory on the heap
@@ -163,14 +168,18 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
  */
 u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
 
-inline const char* GetCharPointer(const u32 address) {
+inline const char* GetCharPointer(const VAddr address) {
     return (const char *)GetPointer(address);
 }
 
 /// Converts a physical address to virtual address
-u32 PhysicalToVirtualAddress(const u32 addr);
+VAddr PhysicalToVirtualAddress(PAddr addr);
 
 /// Converts a virtual address to physical address
-u32 VirtualToPhysicalAddress(const u32 addr);
+PAddr VirtualToPhysicalAddress(VAddr addr);
 
 } // namespace
+
+// These are used often, so re-export then on the root namespace
+using Memory::VAddr;
+using Memory::PAddr;
