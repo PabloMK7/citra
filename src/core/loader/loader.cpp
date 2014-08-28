@@ -9,6 +9,7 @@
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
 #include "core/hle/kernel/archive.h"
+#include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +40,9 @@ FileType IdentifyFile(const std::string &filename) {
     else if (!strcasecmp(extension.c_str(), ".cci")) {
         return FileType::CCI; // TODO(bunnei): Do some filetype checking :p
     }
+    else if (!strcasecmp(extension.c_str(), ".bin")) {
+        return FileType::BIN; // TODO(bunnei): Do some filetype checking :p
+    }
     return FileType::Unknown;
 }
 
@@ -67,6 +71,22 @@ ResultStatus LoadFile(const std::string& filename) {
             return ResultStatus::Success;
         }
         break;
+    }
+
+    // Raw BIN file format...
+    case FileType::BIN:
+    {
+        INFO_LOG(LOADER, "Loading BIN file %s...", filename.c_str());
+
+        File::IOFile file(filename, "rb");
+
+        if (file.IsOpen()) {
+            file.ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), (size_t)file.GetSize());
+            Kernel::LoadExec(Memory::EXEFS_CODE_VADDR);
+        } else {
+            return ResultStatus::Error;
+        }
+        return ResultStatus::Success;
     }
 
     // Error occurred durring IdentifyFile...
