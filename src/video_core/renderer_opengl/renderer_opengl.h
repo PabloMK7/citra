@@ -42,14 +42,8 @@ public:
     void ShutDown();
 
 private:
-
-    /// Initialize the FBO
-    void InitFramebuffer();
-
-    // Blit the FBO to the OpenGL default framebuffer
-    void RenderFramebuffer();
-
-    /// Updates the framerate
+    void InitOpenGLObjects();
+    void DrawScreens();
     void UpdateFramerate();
 
     /// Structure used for storing information for rendering each 3DS screen

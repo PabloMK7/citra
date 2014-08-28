@@ -81,7 +81,7 @@ void RendererOpenGL::SwapBuffers() {
     RenderXFB(framebuffer_size, framebuffer_size);
 
     // XFB->Window copy
-    RenderFramebuffer();
+    DrawScreens();
 
     // Swap buffers
     render_window->PollEvents();
@@ -151,8 +151,16 @@ void RendererOpenGL::RenderXFB(const Common::Rect& src_rect, const Common::Rect&
     // so this may need to be changed (pair for each screen).
 }
 
-/// Initialize the FBO
-void RendererOpenGL::InitFramebuffer() {
+/**
+ * Initializes the OpenGL state and creates persistent objects.
+ */
+void RendererOpenGL::InitOpenGLObjects() {
+    glGenVertexArrays(1, &vertex_array_id);
+    glBindVertexArray(vertex_array_id);
+
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+    glDisable(GL_DEPTH_TEST);
+
     program_id = ShaderUtil::LoadShaders(GLShaders::g_vertex_shader, GLShaders::g_fragment_shader);
     sampler_id = glGetUniformLocation(program_id, "sampler");
     attrib_position = glGetAttribLocation(program_id, "position");
@@ -190,7 +198,10 @@ void RendererOpenGL::InitFramebuffer() {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void RendererOpenGL::RenderFramebuffer() {
+/**
+ * Draws the emulated screens to the emulator window.
+ */
+void RendererOpenGL::DrawScreens() {
     glViewport(0, 0, resolution_width, resolution_height);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -253,20 +264,8 @@ void RendererOpenGL::Init() {
         exit(-1);
     }
 
-    // Generate VAO
-    glGenVertexArrays(1, &vertex_array_id);
-    glBindVertexArray(vertex_array_id);
-
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
-    glDisable(GL_DEPTH_TEST);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-    // Initialize everything else
-    // --------------------------
-    InitFramebuffer();
-
     NOTICE_LOG(RENDER, "GL_VERSION: %s\n", glGetString(GL_VERSION));
+    InitOpenGLObjects();
 }
 
 /// Shutdown the renderer
