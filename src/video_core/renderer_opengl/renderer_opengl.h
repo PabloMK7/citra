@@ -85,6 +85,9 @@ private:
     GLuint vertex_array_id;
     GLuint program_id;
     GLuint sampler_id;
+    // Shader attribute input indices
+    GLuint attrib_position;
+    GLuint attrib_texcoord;
 
     struct : std::array<ScreenInfo, 2> {
         ScreenInfo& Top() { return (*this)[0]; }

@@ -155,6 +155,8 @@ void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect&
 void RendererOpenGL::InitFramebuffer() {
     program_id = ShaderUtil::LoadShaders(GLShaders::g_vertex_shader, GLShaders::g_fragment_shader);
     sampler_id = glGetUniformLocation(program_id, "sampler");
+    attrib_position = glGetAttribLocation(program_id, "position");
+    attrib_texcoord = glGetAttribLocation(program_id, "texCoord");
 
     // Generate vertex buffers for both screens
     glGenBuffers(1, &screen_info.Top().vertex_buffer_id);
@@ -197,8 +199,8 @@ void RendererOpenGL::RenderFramebuffer() {
     // Bind texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
 
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_texcoord);
 
     for (int i = 0; i < 2; i++) {
 
@@ -216,15 +218,15 @@ void RendererOpenGL::RenderFramebuffer() {
         const GLvoid* uv_offset = (const GLvoid*)(3 * sizeof(GLfloat));
 
         // Configure vertex buffer
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, NULL);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, uv_offset);
+        glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, stride, NULL);
+        glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, stride, uv_offset);
 
         // Draw screen
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(attrib_position);
+    glDisableVertexAttribArray(attrib_texcoord);
 
     m_current_frame++;
 }
