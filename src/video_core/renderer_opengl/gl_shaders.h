@@ -7,9 +7,9 @@
 namespace GLShaders {
 
 static const char g_vertex_shader[] = R"(
-#version 330 core
-layout(location = 0) in vec3 position;
-layout(location = 1) in vec2 texCoord;
+#version 150 core
+in vec3 position;
+in vec2 texCoord;
 
 out vec2 UV;
 
@@ -27,7 +27,7 @@ void main() {
 })";
 
 static const char g_fragment_shader[] = R"(
-#version 330 core
+#version 150 core
 in vec2 UV;
 out vec3 color;
 uniform sampler2D sampler;
