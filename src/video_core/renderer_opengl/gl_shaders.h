@@ -6,34 +6,40 @@
 
 namespace GLShaders {
 
-static const char g_vertex_shader[] = R"(
+const char g_vertex_shader[] = R"(
 #version 150 core
-in vec3 position;
-in vec2 texCoord;
 
-out vec2 UV;
+in vec2 vert_position;
+in vec2 vert_tex_coord;
+out vec2 frag_tex_coord;
 
-mat3 window_scale = mat3(
-                         vec3(1.0, 0.0, 0.0),
-                         vec3(0.0, 5.0/6.0, 0.0), // TODO(princesspeachum): replace hard-coded aspect with uniform
-                         vec3(0.0, 0.0, 1.0)
-                         );
+// This is a truncated 3x3 matrix for 2D transformations:
+// The upper-left 2x2 submatrix performs scaling/rotation/mirroring.
+// The third column performs translation.
+// The third row could be used for projection, which we don't need in 2D. It hence is assumed to
+// implicitly be [0, 0, 1]
+uniform mat3x2 modelview_matrix;
 
 void main() {
-    gl_Position.xyz = window_scale * position;
-    gl_Position.w = 1.0;
+    // Multiply input position by the rotscale part of the matrix and then manually translate by
+    // the last column. This is equivalent to using a full 3x3 matrix and expanding the vector
+    // to `vec3(vert_position.xy, 1.0)`
+    gl_Position = vec4(mat2(modelview_matrix) * vert_position + modelview_matrix[2], 0.0, 1.0);
+    frag_tex_coord = vert_tex_coord;
+}
+)";
 
-    UV = texCoord;
-})";
-
-static const char g_fragment_shader[] = R"(
+const char g_fragment_shader[] = R"(
 #version 150 core
-in vec2 UV;
-out vec3 color;
-uniform sampler2D sampler;
+
+in vec2 frag_tex_coord;
+out vec4 color;
+
+uniform sampler2D color_texture;
 
 void main() {
-    color = texture(sampler, UV).rgb;
-})";
+    color = texture(color_texture, frag_tex_coord);
+}
+)";
 
 }

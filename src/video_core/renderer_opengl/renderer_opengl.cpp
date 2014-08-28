@@ -3,64 +3,51 @@
 // Refer to the license.txt file included.
 
 #include "core/hw/gpu.h"
-
+#include "core/mem_map.h"
+#include "common/emu_window.h"
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_shaders.h"
 
-#include "core/mem_map.h"
-
 #include <algorithm>
 
-static const GLfloat kViewportAspectRatio =
-    (static_cast<float>(VideoCore::kScreenTopHeight) + VideoCore::kScreenBottomHeight) / VideoCore::kScreenTopWidth;
+/**
+ * Vertex structure that the drawn screen rectangles are composed of.
+ */
+struct ScreenRectVertex {
+    ScreenRectVertex(GLfloat x, GLfloat y, GLfloat u, GLfloat v) {
+        position[0] = x;
+        position[1] = y;
+        tex_coord[0] = u;
+        tex_coord[1] = v;
+    }
 
-// Fullscreen quad dimensions
-static const GLfloat kTopScreenWidthNormalized = 2;
-static const GLfloat kTopScreenHeightNormalized    = kTopScreenWidthNormalized    * (static_cast<float>(VideoCore::kScreenTopHeight)    / VideoCore::kScreenTopWidth);
-static const GLfloat kBottomScreenWidthNormalized  = kTopScreenWidthNormalized    * (static_cast<float>(VideoCore::kScreenBottomWidth)  / VideoCore::kScreenTopWidth);
-static const GLfloat kBottomScreenHeightNormalized = kBottomScreenWidthNormalized * (static_cast<float>(VideoCore::kScreenBottomHeight) / VideoCore::kScreenBottomWidth);
-
-static const GLfloat g_vbuffer_top[] = {
-    // x,   y                           z     u     v
-    -1.0f, 0.0f,                       0.0f, 0.0f, 1.0f,
-     1.0f, 0.0f,                       0.0f, 1.0f, 1.0f,
-     1.0f, kTopScreenHeightNormalized, 0.0f, 1.0f, 0.0f,
-     1.0f, kTopScreenHeightNormalized, 0.0f, 1.0f, 0.0f,
-    -1.0f, kTopScreenHeightNormalized, 0.0f, 0.0f, 0.0f,
-    -1.0f, 0.0f,                       0.0f, 0.0f, 1.0f
+    GLfloat position[2];
+    GLfloat tex_coord[2];
 };
 
-static const GLfloat g_vbuffer_bottom[] = {
-    // x                                   y                              z     u     v
-    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 0.0f, 1.0f,
-     (kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 1.0f, 1.0f,
-     (kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 1.0f, 0.0f,
-     (kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 1.0f, 0.0f,
-    -(kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 0.0f, 0.0f,
-    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 0.0f, 1.0f
-};
+/**
+ * Defines a 1:1 pixel ortographic projection matrix with (0,0) on the top-left
+ * corner and (width, height) on the lower-bottom.
+ *
+ * The projection part of the matrix is trivial, hence these operations are represented
+ * by a 3x2 matrix.
+ */
+static std::array<GLfloat, 3*2> MakeOrthographicMatrix(const float width, const float height) {
+    std::array<GLfloat, 3*2> matrix;
+
+    matrix[0] = 2.f / width; matrix[2] = 0.f;           matrix[4] = -1.f;
+    matrix[1] = 0.f;         matrix[3] = -2.f / height; matrix[5] = 1.f;
+    // Last matrix row is implicitly assumed to be [0, 0, 1].
+
+    return matrix;
+}
 
 /// RendererOpenGL constructor
 RendererOpenGL::RendererOpenGL() {
-
     resolution_width  = std::max(VideoCore::kScreenTopWidth, VideoCore::kScreenBottomWidth);
     resolution_height = VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight;
-
-    // Initialize screen info
-    const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
-    const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
-
-    screen_info.Top().width               = VideoCore::kScreenTopWidth;
-    screen_info.Top().height              = VideoCore::kScreenTopHeight;
-    screen_info.Top().stride              = framebuffer_top.stride;
-    screen_info.Top().flipped_xfb_data    = xfb_top_flipped;
-
-    screen_info.Bottom().width            = VideoCore::kScreenBottomWidth;
-    screen_info.Bottom().height           = VideoCore::kScreenBottomHeight;
-    screen_info.Bottom().stride           = framebuffer_sub.stride;
-    screen_info.Bottom().flipped_xfb_data = xfb_bottom_flipped;
 }
 
 /// RendererOpenGL destructor
@@ -71,16 +58,23 @@ RendererOpenGL::~RendererOpenGL() {
 void RendererOpenGL::SwapBuffers() {
     render_window->MakeCurrent();
 
-    // EFB->XFB copy
-    // TODO(bunnei): This is a hack and does not belong here. The copy should be triggered by some
-    // register write.
-    //
-    // TODO(princesspeachum): (related to above^) this should only be called when there's new data, not every frame.
-    // Currently this uploads data that shouldn't have changed.
-    Common::Rect framebuffer_size(0, 0, resolution_width, resolution_height);
-    RenderXFB(framebuffer_size, framebuffer_size);
+    for(int i : {0, 1}) {
+        const auto& framebuffer = GPU::g_regs.framebuffer_config[i];
 
-    // XFB->Window copy
+        if (textures[i].width != framebuffer.width || textures[i].height != framebuffer.height) {
+            // Reallocate texture if the framebuffer size has changed.
+            // This is expected to not happen very often and hence should not be a
+            // performance problem.
+            glBindTexture(GL_TEXTURE_2D, textures[i].handle);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebuffer.width, framebuffer.height, 0,
+                GL_BGR, GL_UNSIGNED_BYTE, nullptr);
+            textures[i].width = framebuffer.width;
+            textures[i].height = framebuffer.height;
+        }
+
+        LoadFBToActiveGLTexture(GPU::g_regs.framebuffer_config[i], textures[i]);
+    }
+
     DrawScreens();
 
     // Swap buffers
@@ -89,113 +83,108 @@ void RendererOpenGL::SwapBuffers() {
 }
 
 /**
- * Helper function to flip framebuffer from left-to-right to top-to-bottom
- * @param raw_data Pointer to input raw framebuffer in V/RAM
- * @param screen_info ScreenInfo structure with screen size and output buffer pointer
- * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
+ * Loads framebuffer from emulated memory into the active OpenGL texture.
  */
-void RendererOpenGL::FlipFramebuffer(const u8* raw_data, ScreenInfo& screen_info) {
-    for (int x = 0; x < screen_info.width; x++) {
-        int in_coord = x * screen_info.stride;
-        for (int y = screen_info.height-1; y >= 0; y--) {
-            // TODO: Properly support other framebuffer formats
-            int out_coord = (x + y * screen_info.width) * 3;
-            screen_info.flipped_xfb_data[out_coord] = raw_data[in_coord + 2];       // Red
-            screen_info.flipped_xfb_data[out_coord + 1] = raw_data[in_coord + 1];   // Green
-            screen_info.flipped_xfb_data[out_coord + 2] = raw_data[in_coord];       // Blue
-            in_coord += 3;
-        }
-    }
-}
+void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
+                                             const TextureInfo& texture) {
+    const VAddr framebuffer_vaddr = Memory::PhysicalToVirtualAddress(
+        framebuffer.active_fb == 1 ? framebuffer.address_left2 : framebuffer.address_left1);
 
-/**
- * Renders external framebuffer (XFB)
- * @param src_rect Source rectangle in XFB to copy
- * @param dst_rect Destination rectangle in output framebuffer to copy to
- */
-void RendererOpenGL::RenderXFB(const Common::Rect& src_rect, const Common::Rect& dst_rect) {
-    const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
-    const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
-    const u32 active_fb_top = (framebuffer_top.active_fb == 1)
-                            ? Memory::PhysicalToVirtualAddress(framebuffer_top.address_left2)
-                            : Memory::PhysicalToVirtualAddress(framebuffer_top.address_left1);
-    const u32 active_fb_sub = (framebuffer_sub.active_fb == 1)
-                            ? Memory::PhysicalToVirtualAddress(framebuffer_sub.address_left2)
-                            : Memory::PhysicalToVirtualAddress(framebuffer_sub.address_left1);
+    DEBUG_LOG(GPU, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
+        framebuffer.stride * framebuffer.height,
+        framebuffer_vaddr, (int)framebuffer.width,
+        (int)framebuffer.height, (int)framebuffer.format);
 
-    DEBUG_LOG(GPU, "RenderXFB: 0x%08x bytes from 0x%08x(%dx%d), fmt %x",
-              framebuffer_top.stride * framebuffer_top.height,
-              active_fb_top, (int)framebuffer_top.width,
-              (int)framebuffer_top.height, (int)framebuffer_top.format);
+    const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
 
-    FlipFramebuffer(Memory::GetPointer(active_fb_top), screen_info.Top());
-    FlipFramebuffer(Memory::GetPointer(active_fb_sub), screen_info.Bottom());
+    // TODO: Handle other pixel formats
+    _dbg_assert_msg_(RENDER, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
+                     "Unsupported 3DS pixel format.");
 
-    for (int i = 0; i < 2; i++) {
-        ScreenInfo* current_screen = &screen_info[i];
+    size_t pixel_stride = framebuffer.stride / 3;
+    // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
+    _dbg_assert_(RENDER, pixel_stride * 3 == framebuffer.stride);
+    // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
+    // only allows rows to have a memory alignement of 4.
+    _dbg_assert_(RENDER, pixel_stride % 4 == 0);
 
-        glBindTexture(GL_TEXTURE_2D, current_screen->texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture.handle);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);
 
-        // TODO: This should consider the GPU registers for framebuffer width, height and stride.
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, current_screen->width, current_screen->height,
-                        GL_RGB, GL_UNSIGNED_BYTE, current_screen->flipped_xfb_data);
-    }
+    // Update existing texture
+    // TODO: Test what happens on hardware when you change the framebuffer dimensions so that they
+    //       differ from the LCD resolution.
+    // TODO: Applications could theoretically crash Citra here by specifying too large
+    //       framebuffer sizes. We should make sure that this cannot happen.
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
+        GL_BGR, GL_UNSIGNED_BYTE, framebuffer_data);
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    // TODO(princesspeachum):
-    // Only the subset src_rect of the GPU buffer
-    // should be copied into the texture of the relevant screen.
-    //
-    // The method's parameters also only include src_rect and dest_rec for one screen,
-    // so this may need to be changed (pair for each screen).
 }
 
 /**
  * Initializes the OpenGL state and creates persistent objects.
  */
 void RendererOpenGL::InitOpenGLObjects() {
-    glGenVertexArrays(1, &vertex_array_id);
-    glBindVertexArray(vertex_array_id);
-
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
     glDisable(GL_DEPTH_TEST);
 
+    // Link shaders and get variable locations
     program_id = ShaderUtil::LoadShaders(GLShaders::g_vertex_shader, GLShaders::g_fragment_shader);
-    sampler_id = glGetUniformLocation(program_id, "sampler");
-    attrib_position = glGetAttribLocation(program_id, "position");
-    attrib_texcoord = glGetAttribLocation(program_id, "texCoord");
+    uniform_modelview_matrix = glGetUniformLocation(program_id, "modelview_matrix");
+    uniform_color_texture = glGetUniformLocation(program_id, "color_texture");
+    attrib_position = glGetAttribLocation(program_id, "vert_position");
+    attrib_tex_coord = glGetAttribLocation(program_id, "vert_tex_coord");
 
-    // Generate vertex buffers for both screens
-    glGenBuffers(1, &screen_info.Top().vertex_buffer_id);
-    glGenBuffers(1, &screen_info.Bottom().vertex_buffer_id);
+    // Generate VBO handle for drawing
+    glGenBuffers(1, &vertex_buffer_handle);
 
-    // Attach vertex data for top screen
-    glBindBuffer(GL_ARRAY_BUFFER, screen_info.Top().vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vbuffer_top), g_vbuffer_top, GL_STATIC_DRAW);
+    // Generate VAO
+    glGenVertexArrays(1, &vertex_array_handle);
+    glBindVertexArray(vertex_array_handle);
 
-    // Attach vertex data for bottom screen
-    glBindBuffer(GL_ARRAY_BUFFER, screen_info.Bottom().vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vbuffer_bottom), g_vbuffer_bottom, GL_STATIC_DRAW);
+    // Attach vertex data to VAO
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_handle);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ScreenRectVertex) * 4, nullptr, GL_STREAM_DRAW);
+    glVertexAttribPointer(attrib_position,  2, GL_FLOAT, GL_FALSE, sizeof(ScreenRectVertex), (GLvoid*)offsetof(ScreenRectVertex, position));
+    glVertexAttribPointer(attrib_tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(ScreenRectVertex), (GLvoid*)offsetof(ScreenRectVertex, tex_coord));
+    glEnableVertexAttribArray(attrib_position);
+    glEnableVertexAttribArray(attrib_tex_coord);
 
-    // Create color buffers for both screens
-    glGenTextures(1, &screen_info.Top().texture_id);
-    glGenTextures(1, &screen_info.Bottom().texture_id);
+    // Allocate textures for each screen
+    for (auto& texture : textures) {
+        glGenTextures(1, &texture.handle);
 
-    for (int i = 0; i < 2; i++) {
+        // Allocation of storage is deferred until the first frame, when we
+        // know the framebuffer size.
 
-        ScreenInfo* current_screen = &screen_info[i];
-
-        // Allocate texture
-        glBindTexture(GL_TEXTURE_2D, current_screen->vertex_buffer_id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, current_screen->width, current_screen->height,
-                     0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
+        glBindTexture(GL_TEXTURE_2D, texture.handle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
-
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+/**
+ * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD rotation.
+ */
+void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x, float y, float w, float h) {
+    std::array<ScreenRectVertex, 4> vertices = {
+        ScreenRectVertex(x,   y,   1.f, 0.f),
+        ScreenRectVertex(x+w, y,   1.f, 1.f),
+        ScreenRectVertex(x,   y+h, 0.f, 0.f),
+        ScreenRectVertex(x+w, y+h, 0.f, 1.f),
+    };
+
+    glBindTexture(GL_TEXTURE_2D, texture.handle);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_handle);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 /**
@@ -207,37 +196,22 @@ void RendererOpenGL::DrawScreens() {
 
     glUseProgram(program_id);
 
+    // Set projection matrix
+    std::array<GLfloat, 3*2> ortho_matrix = MakeOrthographicMatrix((float)resolution_width, (float)resolution_height);
+    glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
+
     // Bind texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
+    glUniform1i(uniform_color_texture, 0);
 
-    glEnableVertexAttribArray(attrib_position);
-    glEnableVertexAttribArray(attrib_texcoord);
+    const float max_width = std::max((float)VideoCore::kScreenTopWidth, (float)VideoCore::kScreenBottomWidth);
+    const float top_x = 0.5f * (max_width - VideoCore::kScreenTopWidth);
+    const float bottom_x = 0.5f * (max_width - VideoCore::kScreenBottomWidth);
 
-    for (int i = 0; i < 2; i++) {
-
-        ScreenInfo* current_screen = &screen_info[i];
-
-        glBindTexture(GL_TEXTURE_2D, current_screen->texture_id);
-
-        // Set sampler on Texture Unit 0
-        glUniform1i(sampler_id, 0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, current_screen->vertex_buffer_id);
-
-        // Vertex buffer layout
-        const GLsizei stride = 5 * sizeof(GLfloat);
-        const GLvoid* uv_offset = (const GLvoid*)(3 * sizeof(GLfloat));
-
-        // Configure vertex buffer
-        glVertexAttribPointer(attrib_position, 3, GL_FLOAT, GL_FALSE, stride, NULL);
-        glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, stride, uv_offset);
-
-        // Draw screen
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
-
-    glDisableVertexAttribArray(attrib_position);
-    glDisableVertexAttribArray(attrib_texcoord);
+    DrawSingleScreenRotated(textures[0], top_x, 0,
+        (float)VideoCore::kScreenTopWidth, (float)VideoCore::kScreenTopHeight);
+    DrawSingleScreenRotated(textures[1], bottom_x, (float)VideoCore::kScreenTopHeight,
+        (float)VideoCore::kScreenBottomWidth, (float)VideoCore::kScreenBottomHeight);
 
     m_current_frame++;
 }
