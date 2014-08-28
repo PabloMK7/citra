@@ -13,11 +13,11 @@
 
 #include <array>
 
-class RendererOpenGL : virtual public RendererBase {
+class RendererOpenGL : public RendererBase {
 public:
 
     RendererOpenGL();
-    ~RendererOpenGL();
+    ~RendererOpenGL() override;
 
     /// Swap buffers (render frame)
     void SwapBuffers();
