@@ -24,6 +24,7 @@ Regs g_regs;
 
 u32 g_cur_line = 0;         ///< Current vertical screen line
 u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
+u64 g_last_frame_ticks = 0; ///< CPU tick count from last frame
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -179,27 +180,44 @@ void Update() {
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     u64 current_ticks = Core::g_app_core->GetTicks();
 
-    // Synchronize line...
-    if ((current_ticks - g_last_line_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
-        GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-        g_cur_line++;
-        g_last_line_ticks = current_ticks;
+    // Update the frame after a certain number of CPU ticks have elapsed. This assumes that the
+    // active frame in memory is always complete to render. There also may be issues with this
+    // becoming out-of-synch with GSP synchrinization code (as follows). At this time, this seems to
+    // be the most effective solution for both homebrew and retail applications. With retail, this
+    // could be moved below (and probably would guarantee more accurate synchronization). However,
+    // primitive homebrew relies on a vertical blank interrupt to happen inevitably (regardless of a
+    // threading reschedule).
+
+    if ((current_ticks - g_last_frame_ticks) > GPU::kFrameTicks) {
+        VideoCore::g_renderer->SwapBuffers();
+        g_last_frame_ticks = current_ticks;
     }
 
-    // Synchronize frame...
-    if (g_cur_line >= framebuffer_top.height) {
-        g_cur_line = 0;
-        GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
-        VideoCore::g_renderer->SwapBuffers();
-        Kernel::WaitCurrentThread(WAITTYPE_VBLANK);
-        HLE::Reschedule(__func__);
+    // Synchronize GPU on a thread reschedule: Because we cannot accurately predict a vertical
+    // blank, we need to simulate it. Based on testing, it seems that retail applications work more
+    // accurately when this is signalled between thread switches.
+
+    if (HLE::g_reschedule) {
+
+        // Synchronize line...
+        if ((current_ticks - g_last_line_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
+            g_cur_line++;
+            g_last_line_ticks = current_ticks;
+        }
+
+        // Synchronize frame...
+        if (g_cur_line >= framebuffer_top.height) {
+            g_cur_line = 0;
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
+        }
     }
 }
 
 /// Initialize hardware
 void Init() {
     g_cur_line = 0;
-    g_last_line_ticks = Core::g_app_core->GetTicks();
+    g_last_frame_ticks = g_last_line_ticks = Core::g_app_core->GetTicks();
 
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];
