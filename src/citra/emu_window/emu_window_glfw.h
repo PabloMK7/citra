@@ -21,7 +21,7 @@ public:
 
     /// Makes the graphics context current for the caller thread
     void MakeCurrent() override;
-    
+
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     void DoneCurrent() override;
 
@@ -31,6 +31,9 @@ public:
     const bool IsOpen();
 
     void ReloadSetKeymaps() override;
+
+    /// Gets the size of the window in pixels
+    void GetFramebufferSize(int* fbWidth, int* fbHeight);
 
 private:
     GLFWwindow* m_render_window; ///< Internal GLFW render window

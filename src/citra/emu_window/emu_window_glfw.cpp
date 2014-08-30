@@ -34,6 +34,10 @@ const bool EmuWindow_GLFW::IsOpen() {
     return glfwWindowShouldClose(m_render_window) == 0;
 }
 
+void EmuWindow_GLFW::GetFramebufferSize(int* fbWidth, int* fbHeight) {
+    glfwGetFramebufferSize(m_render_window, fbWidth, fbHeight);
+}
+
 /// EmuWindow_GLFW constructor
 EmuWindow_GLFW::EmuWindow_GLFW() {
     keyboard_id = KeyMap::NewDeviceId();
@@ -63,6 +67,7 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     // Setup callbacks
     glfwSetWindowUserPointer(m_render_window, this);
     glfwSetKeyCallback(m_render_window, OnKeyEvent);
+
 
     DoneCurrent();
 }

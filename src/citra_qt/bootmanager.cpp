@@ -2,6 +2,12 @@
 #include <QKeyEvent>
 #include <QApplication>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+// Required for screen DPI information
+#include <QScreen>
+#include <QWindow>
+#endif
+
 #include "common/common.h"
 #include "bootmanager.hxx"
 
@@ -174,6 +180,24 @@ void GRenderWindow::PollEvents() {
         video_core::g_renderer->current_fps());
     setWindowTitle(title);
     */
+}
+
+// On Qt 5.1+, this correctly gets the size of the framebuffer (pixels).
+//
+// Older versions get the window size (density independent pixels),
+// and hence, do not support DPI scaling ("retina" displays).
+// The result will be a viewport that is smaller than the extent of the window.
+void GRenderWindow::GetFramebufferSize(int* fbWidth, int* fbHeight)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
+    int pixelRatio = child->QPaintDevice::devicePixelRatio();
+    
+    *fbWidth = child->QPaintDevice::width() * pixelRatio;
+    *fbHeight = child->QPaintDevice::height() * pixelRatio;
+#else
+    *fbWidth = child->QPaintDevice::width();
+    *fbHeight = child->QPaintDevice::height();
+#endif
 }
 
 void GRenderWindow::BackupGeometry()

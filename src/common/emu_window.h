@@ -49,8 +49,11 @@ public:
     void SetConfig(const WindowConfig& val) {
         m_config = val;
     }
-    
-    int GetClientAreaWidth() const { 
+
+    /// Gets the size of the window in pixels
+    virtual void GetFramebufferSize(int* fbWidth, int* fbHeight) = 0;
+
+    int GetClientAreaWidth() const {
         return m_client_area_width;
     }
 

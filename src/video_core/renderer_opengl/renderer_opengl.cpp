@@ -191,7 +191,8 @@ void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x
  * Draws the emulated screens to the emulator window.
  */
 void RendererOpenGL::DrawScreens() {
-    glViewport(0, 0, resolution_width, resolution_height);
+    UpdateViewportExtent();
+    glViewport(viewport_extent.x, viewport_extent.y, viewport_extent.width, viewport_extent.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program_id);
@@ -226,6 +227,39 @@ void RendererOpenGL::UpdateFramerate() {
  */
 void RendererOpenGL::SetWindow(EmuWindow* window) {
     render_window = window;
+}
+
+void RendererOpenGL::UpdateViewportExtent() {
+    int width_in_pixels;
+    int height_in_pixels;
+
+    render_window->GetFramebufferSize(&width_in_pixels, &height_in_pixels);
+
+    // No update needed if framebuffer size hasn't changed
+    if (width_in_pixels == framebuffer_size.width && height_in_pixels == framebuffer_size.height) {
+        return;
+    }
+
+    framebuffer_size.width = width_in_pixels;
+    framebuffer_size.height = height_in_pixels;
+
+    float window_aspect_ratio = static_cast<float>(height_in_pixels) / width_in_pixels;
+    float emulation_aspect_ratio = static_cast<float>(resolution_height) / resolution_width;
+
+    if (window_aspect_ratio > emulation_aspect_ratio) {
+        // If the window is more narrow than the emulation content, borders are applied on the
+        // top and bottom of the window.
+        viewport_extent.width = width_in_pixels;
+        viewport_extent.height = emulation_aspect_ratio * viewport_extent.width;
+        viewport_extent.x = 0;
+        viewport_extent.y = (height_in_pixels - viewport_extent.height) / 2;
+    } else {
+        // Otherwise, borders are applied on the left and right sides of the window.
+        viewport_extent.height = height_in_pixels;
+        viewport_extent.width = (1 / emulation_aspect_ratio) * viewport_extent.height;
+        viewport_extent.x = (width_in_pixels - viewport_extent.width) / 2;
+        viewport_extent.y = 0;
+    }
 }
 
 /// Initialize the renderer

@@ -96,6 +96,7 @@ public:
     void MakeCurrent() override;
     void DoneCurrent() override;
     void PollEvents() override;
+    void GetFramebufferSize(int* fbWidth, int* fbHeight) override;
 
     void BackupGeometry();
     void RestoreGeometry();
