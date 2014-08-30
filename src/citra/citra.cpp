@@ -31,7 +31,9 @@ int __cdecl main(int argc, char **argv) {
         return -1;
     }
 
-    Core::RunLoop();
+    while(true) {
+        Core::RunLoop();
+    }
 
     delete emu_window;
 
