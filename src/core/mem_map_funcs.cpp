@@ -18,7 +18,7 @@ std::map<u32, MemoryBlock> g_heap_gsp_map;
 std::map<u32, MemoryBlock> g_shared_map;
 
 /// Convert a physical address to virtual address
-u32 PhysicalToVirtualAddress(const u32 addr) {
+VAddr PhysicalToVirtualAddress(const PAddr addr) {
     // Our memory interface read/write functions assume virtual addresses. Put any physical address
     // to virtual address translations here. This is quite hacky, but necessary until we implement
     // proper MMU emulation.
@@ -34,7 +34,7 @@ u32 PhysicalToVirtualAddress(const u32 addr) {
 }
 
 /// Convert a physical address to virtual address
-u32 VirtualToPhysicalAddress(const u32 addr) {
+PAddr VirtualToPhysicalAddress(const VAddr addr) {
     // Our memory interface read/write functions assume virtual addresses. Put any physical address
     // to virtual address translations here. This is quite hacky, but necessary until we implement
     // proper MMU emulation.
@@ -50,7 +50,7 @@ u32 VirtualToPhysicalAddress(const u32 addr) {
 }
 
 template <typename T>
-inline void Read(T &var, const u32 vaddr) {
+inline void Read(T &var, const VAddr vaddr) {
     // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
     // TODO: Make sure this represents the mirrors in a correct way.
     // Could just do a base-relative read, too.... TODO
@@ -98,7 +98,7 @@ inline void Read(T &var, const u32 vaddr) {
 }
 
 template <typename T>
-inline void Write(u32 vaddr, const T data) {
+inline void Write(const VAddr vaddr, const T data) {
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
@@ -146,7 +146,7 @@ inline void Write(u32 vaddr, const T data) {
     }
 }
 
-u8 *GetPointer(const u32 vaddr) {
+u8 *GetPointer(const VAddr vaddr) {
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
         return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
@@ -227,13 +227,13 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
     return block.GetVirtualAddress();
 }
 
-u8 Read8(const u32 addr) {
+u8 Read8(const VAddr addr) {
     u8 data = 0;
     Read<u8>(data, addr);
-    return (u8)data;
+    return data;
 }
 
-u16 Read16(const u32 addr) {
+u16 Read16(const VAddr addr) {
     u16_le data = 0;
     Read<u16_le>(data, addr);
 
@@ -246,7 +246,7 @@ u16 Read16(const u32 addr) {
     return (u16)data;
 }
 
-u32 Read32(const u32 addr) {
+u32 Read32(const VAddr addr) {
     u32_le data = 0;
     Read<u32_le>(data, addr);
 
@@ -263,31 +263,31 @@ u32 Read32(const u32 addr) {
     return (u32)data;
 }
 
-u32 Read8_ZX(const u32 addr) {
+u32 Read8_ZX(const VAddr addr) {
     return (u32)Read8(addr);
 }
 
-u32 Read16_ZX(const u32 addr) {
+u32 Read16_ZX(const VAddr addr) {
     return (u32)Read16(addr);
 }
 
-void Write8(const u32 addr, const u8 data) {
+void Write8(const VAddr addr, const u8 data) {
     Write<u8>(addr, data);
 }
 
-void Write16(const u32 addr, const u16 data) {
+void Write16(const VAddr addr, const u16 data) {
     Write<u16_le>(addr, data);
 }
 
-void Write32(const u32 addr, const u32 data) {
+void Write32(const VAddr addr, const u32 data) {
     Write<u32_le>(addr, data);
 }
 
-void Write64(const u32 addr, const u64 data) {
+void Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
-void WriteBlock(const u32 addr, const u8* data, const int size) {
+void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
     int offset = 0;
     while (offset < (size & ~3)) {
         Write32(addr + offset, *(u32*)&data[offset]);
