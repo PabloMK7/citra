@@ -1,30 +1,5 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
-# MSVS generated files
-ipch/
-*.suo
-*.user
-*.sdf
-*.opensdf
-
-# Build generated files
+# Build directory
 build/
-bin/
 
 # Generated source files
 src/common/scm_rev.cpp
-
-# Generated header files
-src/citra_qt/ui_*.h

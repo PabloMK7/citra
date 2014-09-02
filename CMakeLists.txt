@@ -1,80 +1,131 @@
-cmake_minimum_required(VERSION 2.8.7)
+# CMake 2.8.11 required for Qt5 settings to be applied automatically on
+# dependent libraries.
+cmake_minimum_required(VERSION 2.8.11)
 
 project(citra)
 
-SET(CXX_COMPILE_FLAGS "-std=c++11")
-
-# silence some spam
-add_definitions(-Wno-attributes)
+if (NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes")
+else()
+    # Silence deprecation warnings
+    add_definitions(/D_CRT_SECURE_NO_WARNINGS)
+endif()
 add_definitions(-DSINGLETHREADED)
-add_definitions(${CXX_COMPILE_FLAGS})
 
 find_package(PNG)
 if (PNG_FOUND)
     add_definitions(-DHAVE_PNG)
 endif ()
 
-# dependency checking
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules/")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMakeTests)
-include(FindX11 REQUIRED)
-find_package(PkgConfig REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(OpenGL REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
+# Include bundled CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 
-# corefoundation is required only on OSX
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
+
+option(ENABLE_GLFW "Enable the GLFW frontend" ON)
+if (ENABLE_GLFW)
+    if (WIN32)
+        # Detect toolchain and platform
+        if (MSVC)
+            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+                set(TMP_ARCH "x64")
+            else()
+                set(TMP_ARCH "Win32")
+            endif()
+
+            if (MSVC11) # Visual C++ 2012
+                set(TMP_TOOLSET "v110")
+            elseif (MSVC12) # Visual C++ 2013
+                set(TMP_TOOLSET "v120")
+            else()
+                set(TMP_TOOLSET "UNSUPPORTED")
+                message(SEND_ERROR "We don't supply GLFW binaries for your version of MSVC, you might have to provide them yourself.")
+            endif()
+
+            set(TMP_TOOLSET "msvc_${TMP_TOOLSET}-${TMP_ARCH}")
+        else()
+            # Assume mingw
+            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+                set(TMP_ARCH "x86_64")
+            else()
+                set(TMP_ARCH "i686")
+            endif()
+
+            set(TMP_TOOLSET "mingw-${TMP_ARCH}")
+        endif()
+
+        set(GLFW_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/glfw-3.0.4.bin")
+        set(GLFW_INCLUDE_DIRS "${GLFW_PREFIX}/include" CACHE PATH "Path to GLFW3 headers")
+        set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib-${TMP_TOOLSET}" CACHE PATH "Path to GLFW3 libraries")
+
+        # Clean up after ourselves
+        unset(TMP_TOOLSET)
+        unset(TMP_ARCH)
+
+        set(GLFW_LIBRARIES glfw3)
+    else()
+        find_package(X11 REQUIRED)
+        find_package(PkgConfig REQUIRED)
+        pkg_search_module(GLFW REQUIRED glfw3)
+    endif()
+
+    include_directories(${GLFW_INCLUDE_DIRS})
+    link_directories(${GLFW_LIBRARY_DIRS})
+endif()
+
 IF (APPLE)
+    # CoreFoundation is required only on OSX
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 ENDIF (APPLE)
 
-#external includes
-include_directories(${GLFW_INCLUDE_DIRS})
-include_directories(${OPENGL_INCLUDE_DIR})
-include_directories(${GLEW_INCLUDE_PATH})
-
-# workaround for GLFW linking on OSX
-link_directories(${GLFW_LIBRARY_DIRS})
-
-option(DISABLE_QT "Disable Qt GUI" OFF)
-option(USE_QT5 "Use Qt5 when available" ON)
-if (NOT DISABLE_QT)
-    if(USE_QT5)
-        find_package(Qt5Gui)
-        find_package(Qt5Widgets)
-        find_package(Qt5OpenGL)
-        if(NOT Qt5Gui_FOUND OR NOT Qt5Widgets_FOUND OR NOT Qt5OpenGL_FOUND)
-            message("Qt5 libraries not found! Using Qt4 instead.")
-            set(USE_QT5 OFF)
-        endif()
+option(ENABLE_QT "Enable the Qt frontend" ON)
+option(CITRA_FORCE_QT4 "Use Qt4 even if Qt5 is available." OFF)
+if (ENABLE_QT)
+    # Set CMAKE_PREFIX_PATH if QTDIR is defined in the environment This allows CMake to
+    # automatically find the Qt packages on Windows
+    if (DEFINED ENV{QTDIR})
+        list(APPEND CMAKE_PREFIX_PATH "$ENV{QTDIR}")
     endif()
-    if(NOT USE_QT5)
-        include(FindQt4)
-        find_package(Qt4 COMPONENTS QtCore QtGui QtOpenGL)
 
-        if(QT4_FOUND AND QT_QTCORE_FOUND AND QT_QTGUI_FOUND AND QT_QTOPENGL_FOUND)
-            include(${QT_USE_FILE})
-            include_directories(${QT_INCLUDES})
-        else()
-            message("Qt4 libraries not found! Disabling Qt GUI")
-            set(DISABLE_QT ON)
-        endif()
+    if (NOT CITRA_FORCE_QT4)
+        find_package(Qt5 COMPONENTS Widgets OpenGL)
+        set(CITRA_QT_LIBS Qt5::Widgets Qt5::OpenGL)
+    endif()
+
+    if (CITRA_FORCE_QT4 OR NOT Qt5_FOUND)
+        # Try to fallback to Qt4
+        find_package(Qt4 REQUIRED COMPONENTS QtGui QtOpenGL)
+        set(CITRA_QT_LIBS Qt4::QtGui Qt4::QtOpenGL)
     endif()
 endif()
+
+# This function should be passed a list of all files in a target. It will automatically generate
+# file groups following the directory hierarchy, so that the layout of the files in IDEs matches the
+# one in the filesystem.
+function(create_directory_groups)
+    # Place any files that aren't in the source list in a separate group so that they don't get in
+    # the way.
+    source_group("Other Files" REGULAR_EXPRESSION ".")
+
+    foreach(file_name ${ARGV})
+        get_filename_component(dir_name "${file_name}" PATH)
+        # Group names use '\' as a separator even though the entire rest of CMake uses '/'...
+        string(REPLACE "/" "\\" group_name "${dir_name}")
+        source_group("${group_name}" FILES "${file_name}")
+    endforeach()
+endfunction()
 
 # generate git revision information
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REF_SPEC GIT_REV)
 git_describe(GIT_DESC --always --long --dirty)
 git_branch_name(GIT_BRANCH)
-    
-# internal includes
-include_directories(src)
 
 # process subdirectories
-if(NOT DISABLE_QT)
+if(ENABLE_QT)
     include_directories(externals/qhexedit)
     add_subdirectory(externals/qhexedit)
 endif()

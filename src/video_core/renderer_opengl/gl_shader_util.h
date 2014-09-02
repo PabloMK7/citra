@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <GL/glew.h>
+#include "generated/gl_3_2_core.h"
 
 namespace ShaderUtil {
 

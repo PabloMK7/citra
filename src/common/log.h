@@ -4,7 +4,9 @@
 
 #pragma once
 
+#ifndef LOGGING
 #define LOGGING
+#endif
 
 enum {
     OS_LEVEL,       // Printed by the emulated operating system

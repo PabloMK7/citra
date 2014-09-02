@@ -1,6 +1,8 @@
+# Generate cpp with Git revision from template
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp" @ONLY)
 
-set(SRCS    break_points.cpp
+set(SRCS
+            break_points.cpp
             console_listener.cpp
             extended_trace.cpp
             file_search.cpp
@@ -12,23 +14,25 @@ set(SRCS    break_points.cpp
             memory_util.cpp
             misc.cpp
             msg_handler.cpp
-            string_util.cpp
             scm_rev.cpp
+            string_util.cpp
             symbols.cpp
             thread.cpp
             timer.cpp
-            utf8.cpp)
+            utf8.cpp
+            )
 
-set(HEADERS atomic.h
+set(HEADERS
+            atomic.h
             atomic_gcc.h
             atomic_win32.h
             bit_field.h
             break_points.h
             chunk_file.h
+            common.h
             common_funcs.h
             common_paths.h
             common_types.h
-            common.h
             console_listener.h
             cpu_detect.h
             debug_interface.h
@@ -37,10 +41,11 @@ set(HEADERS atomic.h
             fifo_queue.h
             file_search.h
             file_util.h
+            fixed_size_queue.h
             hash.h
             linear_disk_cache.h
-            log_manager.h
             log.h
+            log_manager.h
             math_util.h
             mem_arena.h
             memory_util.h
@@ -54,8 +59,12 @@ set(HEADERS atomic.h
             swap.h
             symbols.h
             thread.h
+            thread_queue_list.h
             thunk.h
             timer.h
-            utf8.h)
+            utf8.h
+            )
+
+create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(common STATIC ${SRCS} ${HEADERS})

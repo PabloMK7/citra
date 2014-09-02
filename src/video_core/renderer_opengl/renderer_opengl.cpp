@@ -247,10 +247,9 @@ void RendererOpenGL::SetWindow(EmuWindow* window) {
 void RendererOpenGL::Init() {
     render_window->MakeCurrent();
 
-    GLenum err = glewInit();
-    if (GLEW_OK != err) {
-        ERROR_LOG(RENDER, "Failed to initialize GLEW! Error message: \"%s\". Exiting...",
-                  glewGetErrorString(err));
+    int err = ogl_LoadFunctions();
+    if (ogl_LOAD_SUCCEEDED != err) {
+        ERROR_LOG(RENDER, "Failed to initialize GL functions! Exiting...");
         exit(-1);
     }
 
@@ -265,7 +264,6 @@ void RendererOpenGL::Init() {
 
     // Initialize everything else
     // --------------------------
-
     InitFramebuffer();
 
     NOTICE_LOG(RENDER, "GL_VERSION: %s\n", glGetString(GL_VERSION));
