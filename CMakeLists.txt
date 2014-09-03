@@ -65,7 +65,10 @@ if (ENABLE_GLFW)
 
         set(GLFW_LIBRARIES glfw3)
     else()
-        find_package(X11 REQUIRED)
+        if (NOT APPLE)
+            find_package(X11 REQUIRED)
+        endif()
+        
         find_package(PkgConfig REQUIRED)
         pkg_search_module(GLFW REQUIRED glfw3)
     endif()
