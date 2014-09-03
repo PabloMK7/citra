@@ -4,10 +4,10 @@
 
 #include <vector>
 #include <cstdio>
+#include <atomic>
 
 #include "common/msg_handler.h"
 #include "common/std_mutex.h"
-#include "common/atomic.h"
 #include "common/chunk_file.h"
 
 #include "core/core_timing.h"
@@ -54,7 +54,7 @@ Event *eventPool = 0;
 Event *eventTsPool = 0;
 int allocatedTsEvents = 0;
 // Optimization to skip MoveEvents when possible.
-volatile u32 hasTsEvents = false;
+std::atomic<u32> hasTsEvents;
 
 // Downcount has been moved to currentMIPS, to save a couple of clocks in every ARM JIT block
 // as we can already reach that structure through a register.
@@ -202,7 +202,7 @@ void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata
         tsLast->next = ne;
     tsLast = ne;
 
-    Common::AtomicStoreRelease(hasTsEvents, 1);
+    hasTsEvents.store(1, std::memory_order_release);
 }
 
 // Same as ScheduleEvent_Threadsafe(0, ...) EXCEPT if we are already on the CPU thread
@@ -484,7 +484,7 @@ void ProcessFifoWaitEvents()
 
 void MoveEvents()
 {
-    Common::AtomicStoreRelease(hasTsEvents, 0);
+    hasTsEvents.store(0, std::memory_order_release);
 
     std::lock_guard<std::recursive_mutex> lk(externalEventSection);
     // Move events from async queue into main queue

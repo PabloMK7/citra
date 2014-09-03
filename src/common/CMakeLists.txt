@@ -23,9 +23,6 @@ set(SRCS
             )
 
 set(HEADERS
-            atomic.h
-            atomic_gcc.h
-            atomic_win32.h
             bit_field.h
             break_points.h
             chunk_file.h
