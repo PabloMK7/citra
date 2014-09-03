@@ -57,6 +57,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00170000, nullptr,       "GetSoundVolume"},
 };
 
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
