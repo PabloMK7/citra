@@ -49,9 +49,6 @@ set(HEADERS
             msg_handler.h
             platform.h
             scm_rev.h
-            std_condition_variable.h
-            std_mutex.h
-            std_thread.h
             string_util.h
             swap.h
             symbols.h

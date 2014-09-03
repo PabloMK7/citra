@@ -9,10 +9,8 @@
 #include <mach/mach.h>
 #elif defined(BSD4_4) || defined(__OpenBSD__)
 #include <pthread_np.h>
-#endif
-
-#ifdef USE_BEGINTHREADEX
-#include <process.h>
+#elif defined(_WIN32)
+#include <Windows.h>
 #endif
 
 namespace Common
