@@ -8,6 +8,7 @@ set(SRCS
             file_search.cpp
             file_util.cpp
             hash.cpp
+            key_map.cpp
             log_manager.cpp
             math_util.cpp
             mem_arena.cpp
@@ -39,6 +40,7 @@ set(HEADERS
             file_search.h
             file_util.h
             hash.h
+            key_map.h
             linear_disk_cache.h
             log.h
             log_manager.h
