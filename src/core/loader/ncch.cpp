@@ -40,19 +40,17 @@ u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
 bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
     u8* footer = compressed + compressed_size - 8;
     u32 buffer_top_and_bottom = *(u32*)footer;
-    u32 i, j;
     u32 out = decompressed_size;
     u32 index = compressed_size - ((buffer_top_and_bottom >> 24) & 0xFF);
-    u8 control;
     u32 stop_index = compressed_size - (buffer_top_and_bottom & 0xFFFFFF);
 
     memset(decompressed, 0, decompressed_size);
     memcpy(decompressed, compressed, compressed_size);
 
     while(index > stop_index) {
-        control = compressed[--index];
+       u8 control = compressed[--index];
 
-        for(i = 0; i < 8; i++) {
+        for(u32 i = 0; i < 8; i++) {
             if(index <= stop_index)
                 break;
             if(index <= 0)
@@ -76,13 +74,13 @@ bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 
                 if(out < segment_size) {
                     return false;
                 }
-                for(j = 0; j < segment_size; j++) {
-                    u8 data;
+                for(u32 j = 0; j < segment_size; j++) {
                     // Check if compression is out of bounds
                     if(out + segment_offset >= decompressed_size) {
                         return false;
                     }
-                    data  = decompressed[out + segment_offset];
+
+                    u8 data  = decompressed[out + segment_offset];
                     decompressed[--out] = data;
                 }
             } else {
