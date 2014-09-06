@@ -36,22 +36,20 @@ QVariant DisassemblerModel::data(const QModelIndex& index, int role) const {
     switch (role) {
         case Qt::DisplayRole:
         {
-            static char result[255];
-
             u32 address = base_address + index.row() * 4;
             u32 instr = Memory::Read32(address);
-            ARM_Disasm::disasm(address, instr, result);
+            std::string disassembly = ARM_Disasm::Disassemble(address, instr);
 
             if (index.column() == 0) {
                 return QString("0x%1").arg((uint)(address), 8, 16, QLatin1Char('0'));
             } else if (index.column() == 1) {
-                return QString::fromLatin1(result);
+                return QString::fromStdString(disassembly);
             } else if (index.column() == 2) {
                 if(Symbols::HasSymbol(address)) {
                     TSymbol symbol = Symbols::GetSymbol(address);
                     return QString("%1 - Size:%2").arg(QString::fromStdString(symbol.name))
                                                   .arg(symbol.size / 4); // divide by 4 to get instruction count
-                } else if (ARM_Disasm::decode(instr) == OP_BL) {
+                } else if (ARM_Disasm::Decode(instr) == OP_BL) {
                     u32 offset = instr & 0xFFFFFF;
 
                     // Sign-extend the 24-bit offset
