@@ -46,17 +46,17 @@ struct NCCH_Header {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ExeFS (executable file system) headers
 
-typedef struct {
+struct ExeFs_SectionHeader {
     char name[8];
     u32 offset;
     u32 size;
-} ExeFs_SectionHeader;
+};
 
-typedef struct {
+struct ExeFs_Header {
     ExeFs_SectionHeader section[8];
     u8 reserved[0x80];
     u8 hashes[8][0x20];
-} ExeFs_Header;
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ExHeader (executable file system header) headers
