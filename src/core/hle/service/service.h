@@ -149,13 +149,13 @@ public:
     void AddService(Interface* service);
 
     /// Removes a service from the manager (does not delete it though)
-    void DeleteService(std::string port_name);
+    void DeleteService(const std::string& port_name);
 
     /// Get a Service Interface from its UID
     Interface* FetchFromHandle(u32 uid);
 
     /// Get a Service Interface from its port
-    Interface* FetchFromPortName(std::string port_name);
+    Interface* FetchFromPortName(const std::string& port_name);
 
 private:
 
