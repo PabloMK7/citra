@@ -260,14 +260,14 @@ std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
     // The "mov" instruction ignores the first operand (rn).
     rn_str[0] = 0;
     if ((flags & kNoOperand1) == 0) {
-        rn_str = StringFromFormat("r%d, ", rn);
+        rn_str = Common::StringFromFormat("r%d, ", rn);
     }
 
     // The following instructions do not write the result register (rd):
     // tst, teq, cmp, cmn.
     rd_str[0] = 0;
     if ((flags & kNoDest) == 0) {
-        rd_str = StringFromFormat("r%d, ", rd);
+        rd_str = Common::StringFromFormat("r%d, ", rd);
     }
 
     const char *sbit_str = "";
@@ -275,7 +275,7 @@ std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
         sbit_str = "s";
 
     if (is_immed) {
-        return StringFromFormat("%s%s%s\t%s%s#%u  ; 0x%x",
+        return Common::StringFromFormat("%s%s%s\t%s%s#%u  ; 0x%x",
                 opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), immed, immed);
     }
 
@@ -290,24 +290,24 @@ std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
     rotated_val = (rotated_val >> rotate2) | (rotated_val << (32 - rotate2));
 
     if (!shift_is_reg && shift_type == 0 && shift_amount == 0) {
-        return StringFromFormat("%s%s%s\t%s%sr%d",
+        return Common::StringFromFormat("%s%s%s\t%s%sr%d",
                 opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm);
     }
 
     const char *shift_name = shift_names[shift_type];
     if (shift_is_reg) {
-        return StringFromFormat("%s%s%s\t%s%sr%d, %s r%d",
+        return Common::StringFromFormat("%s%s%s\t%s%sr%d, %s r%d",
                 opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm,
                 shift_name, rs);
     }
     if (shift_amount == 0) {
         if (shift_type == 3) {
-            return StringFromFormat("%s%s%s\t%s%sr%d, RRX",
+            return Common::StringFromFormat("%s%s%s\t%s%sr%d, RRX",
                     opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm);
         }
         shift_amount = 32;
     }
-    return StringFromFormat("%s%s%s\t%s%sr%d, %s #%u",
+    return Common::StringFromFormat("%s%s%s\t%s%sr%d, %s #%u",
             opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm,
             shift_name, shift_amount);
 }
@@ -325,20 +325,20 @@ std::string ARM_Disasm::DisassembleBranch(uint32_t addr, Opcode opcode, uint32_t
     offset += 8;
     addr += offset;
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s\t0x%x", opname, cond_to_str(cond), addr);
+    return Common::StringFromFormat("%s%s\t0x%x", opname, cond_to_str(cond), addr);
 }
 
 std::string ARM_Disasm::DisassembleBX(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rn = insn & 0xf;
-    return StringFromFormat("bx%s\tr%d", cond_to_str(cond), rn);
+    return Common::StringFromFormat("bx%s\tr%d", cond_to_str(cond), rn);
 }
 
 std::string ARM_Disasm::DisassembleBKPT(uint32_t insn)
 {
     uint32_t immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
-    return StringFromFormat("bkpt\t#%d", immed);
+    return Common::StringFromFormat("bkpt\t#%d", immed);
 }
 
 std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
@@ -346,7 +346,7 @@ std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t rm = insn & 0xf;
-    return StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
+    return Common::StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
 }
 
 std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
@@ -376,7 +376,7 @@ std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
     tmp_list[0] = 0;
     for (int ii = 0; ii < 16; ++ii) {
         if (reg_list & (1 << ii)) {
-            tmp_list += StringFromFormat("%sr%d", comma, ii);
+            tmp_list += Common::StringFromFormat("%sr%d", comma, ii);
             comma = ",";
         }
     }
@@ -396,7 +396,7 @@ std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
         }
     }
 
-    return StringFromFormat("%s%s%s\tr%d%s, {%s}%s",
+    return Common::StringFromFormat("%s%s%s\tr%d%s, {%s}%s",
             opname, cond_to_str(cond), addr_mode, rn, bang, tmp_list.c_str(), carret);
 }
 
@@ -432,10 +432,10 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
     if (is_reg == 0) {
         if (is_pre) {
             if (offset == 0) {
-                return StringFromFormat("%s%s%s\tr%d, [r%d]",
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d]",
                         opname, cond_to_str(cond), byte, rd, rn);
             } else {
-                return StringFromFormat("%s%s%s\tr%d, [r%d, #%s%u]%s",
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d, #%s%u]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, offset, bang);
             }
         } else {
@@ -443,7 +443,7 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
             if (write_back)
                 transfer = "t";
 
-            return StringFromFormat("%s%s%s%s\tr%d, [r%d], #%s%u",
+            return Common::StringFromFormat("%s%s%s%s\tr%d, [r%d], #%s%u",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, offset);
         }
     }
@@ -457,16 +457,16 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
     if (is_pre) {
         if (shift_amount == 0) {
             if (shift_type == 0) {
-                return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d]%s",
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, rm, bang);
             }
             if (shift_type == 3) {
-                return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, RRX]%s",
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, RRX]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, rm, bang);
             }
             shift_amount = 32;
         }
-        return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, %s #%u]%s",
+        return Common::StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, %s #%u]%s",
                 opname, cond_to_str(cond), byte, rd, rn, minus, rm,
                 shift_name, shift_amount, bang);
     }
@@ -477,17 +477,17 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
 
     if (shift_amount == 0) {
         if (shift_type == 0) {
-            return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d",
+            return Common::StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm);
         }
         if (shift_type == 3) {
-            return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, RRX",
+            return Common::StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, RRX",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm);
         }
         shift_amount = 32;
     }
 
-    return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, %s #%u",
+    return Common::StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, %s #%u",
             opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm,
             shift_name, shift_amount);
 }
@@ -528,22 +528,22 @@ std::string ARM_Disasm::DisassembleMemHalf(uint32_t insn)
     if (is_immed) {
         if (is_pre) {
             if (offset == 0) {
-                return StringFromFormat("%s%sh\tr%d, [r%d]", opname, cond_to_str(cond), rd, rn);
+                return Common::StringFromFormat("%s%sh\tr%d, [r%d]", opname, cond_to_str(cond), rd, rn);
             } else {
-                return StringFromFormat("%s%sh\tr%d, [r%d, #%s%u]%s",
+                return Common::StringFromFormat("%s%sh\tr%d, [r%d, #%s%u]%s",
                         opname, cond_to_str(cond), rd, rn, minus, offset, bang);
             }
         } else {
-            return StringFromFormat("%s%sh\tr%d, [r%d], #%s%u",
+            return Common::StringFromFormat("%s%sh\tr%d, [r%d], #%s%u",
                     opname, cond_to_str(cond), rd, rn, minus, offset);
         }
     }
 
     if (is_pre) {
-        return StringFromFormat("%s%sh\tr%d, [r%d, %sr%d]%s",
+        return Common::StringFromFormat("%s%sh\tr%d, [r%d, %sr%d]%s",
                 opname, cond_to_str(cond), rd, rn, minus, rm, bang);
     } else {
-        return StringFromFormat("%s%sh\tr%d, [r%d], %sr%d",
+        return Common::StringFromFormat("%s%sh\tr%d, [r%d], %sr%d",
                 opname, cond_to_str(cond), rd, rn, minus, rm);
     }
 }
@@ -558,7 +558,7 @@ std::string ARM_Disasm::DisassembleMCR(Opcode opcode, uint32_t insn)
     uint8_t crm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s\t%d, 0, r%d, cr%d, cr%d, {%d}",
+    return Common::StringFromFormat("%s%s\t%d, 0, r%d, cr%d, cr%d, {%d}",
             opname, cond_to_str(cond), cpnum, crd, crn, crm, opcode2);
 }
 
@@ -572,7 +572,7 @@ std::string ARM_Disasm::DisassembleMLA(Opcode opcode, uint32_t insn)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
+    return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs, rn);
 }
 
@@ -586,7 +586,7 @@ std::string ARM_Disasm::DisassembleUMLAL(Opcode opcode, uint32_t insn)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
+    return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rdlo, rdhi, rm, rs);
 }
 
@@ -599,7 +599,7 @@ std::string ARM_Disasm::DisassembleMUL(Opcode opcode, uint32_t insn)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s%s\tr%d, r%d, r%d",
+    return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs);
 }
 
@@ -609,7 +609,7 @@ std::string ARM_Disasm::DisassembleMRS(uint32_t insn)
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t ps = (insn >> 22) & 1;
 
-    return StringFromFormat("mrs%s\tr%d, %s", cond_to_str(cond), rd, ps ? "spsr" : "cpsr");
+    return Common::StringFromFormat("mrs%s\tr%d, %s", cond_to_str(cond), rd, ps ? "spsr" : "cpsr");
 }
 
 std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
@@ -636,13 +636,13 @@ std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
         uint8_t rotate = (insn >> 8) & 0xf;
         uint8_t rotate2 = rotate << 1;
         uint32_t rotated_val = (immed >> rotate2) | (immed << (32 - rotate2));
-        return StringFromFormat("msr%s\t%s_%s, #0x%x",
+        return Common::StringFromFormat("msr%s\t%s_%s, #0x%x",
                 cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rotated_val);
     }
 
     uint8_t rm = insn & 0xf;
 
-    return StringFromFormat("msr%s\t%s_%s, r%d",
+    return Common::StringFromFormat("msr%s\t%s_%s, r%d",
             cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rm);
 }
 
@@ -658,14 +658,14 @@ std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
 
     if (is_reg) {
         uint8_t rm = insn & 0xf;
-        return StringFromFormat("pld\t[r%d, %sr%d]", rn, minus, rm);
+        return Common::StringFromFormat("pld\t[r%d, %sr%d]", rn, minus, rm);
     }
 
     uint16_t offset = insn & 0xfff;
     if (offset == 0) {
-        return StringFromFormat("pld\t[r%d]", rn);
+        return Common::StringFromFormat("pld\t[r%d]", rn);
     } else {
-        return StringFromFormat("pld\t[r%d, #%s%u]", rn, minus, offset);
+        return Common::StringFromFormat("pld\t[r%d, #%s%u]", rn, minus, offset);
     }
 }
 
@@ -674,7 +674,7 @@ std::string ARM_Disasm::DisassembleSWI(uint32_t insn)
     uint8_t cond = (insn >> 28) & 0xf;
     uint32_t sysnum = insn & 0x00ffffff;
 
-    return StringFromFormat("swi%s 0x%x", cond_to_str(cond), sysnum);
+    return Common::StringFromFormat("swi%s 0x%x", cond_to_str(cond), sysnum);
 }
 
 std::string ARM_Disasm::DisassembleSWP(Opcode opcode, uint32_t insn)
@@ -685,7 +685,7 @@ std::string ARM_Disasm::DisassembleSWP(Opcode opcode, uint32_t insn)
     uint8_t rm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
-    return StringFromFormat("%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
+    return Common::StringFromFormat("%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
 }
 
 Opcode ARM_Disasm::Decode(uint32_t insn) {

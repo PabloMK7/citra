@@ -278,7 +278,7 @@ void PrintFunctionAndSourceInfo(FILE* file, const STACKFRAME& callstack)
 
     GetFunctionInfoFromAddresses((ULONG)callstack.AddrPC.Offset, (ULONG)callstack.AddrFrame.Offset, symInfo);
     GetSourceInfoFromAddress((ULONG)callstack.AddrPC.Offset, srcInfo);
-    etfprint(file, "     " + TStrToUTF8(srcInfo) + " : " + TStrToUTF8(symInfo) + "\n");
+    etfprint(file, "     " + Common::TStrToUTF8(srcInfo) + " : " + Common::TStrToUTF8(symInfo) + "\n");
 }
 
 void StackTrace( HANDLE hThread, const char* lpszMessage, FILE *file )

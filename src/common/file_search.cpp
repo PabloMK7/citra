@@ -35,10 +35,10 @@ CFileSearch::CFileSearch(const CFileSearch::XStringVector& _rSearchStrings, cons
 void CFileSearch::FindFiles(const std::string& _searchString, const std::string& _strPath)
 {
     std::string GCMSearchPath;
-    BuildCompleteFilename(GCMSearchPath, _strPath, _searchString);
+    Common::BuildCompleteFilename(GCMSearchPath, _strPath, _searchString);
 #ifdef _WIN32
     WIN32_FIND_DATA findData;
-    HANDLE FindFirst = FindFirstFile(UTF8ToTStr(GCMSearchPath).c_str(), &findData);
+    HANDLE FindFirst = FindFirstFile(Common::UTF8ToTStr(GCMSearchPath).c_str(), &findData);
 
     if (FindFirst != INVALID_HANDLE_VALUE)
     {
@@ -49,7 +49,7 @@ void CFileSearch::FindFiles(const std::string& _searchString, const std::string&
             if (findData.cFileName[0] != '.')
             {
                 std::string strFilename;
-                BuildCompleteFilename(strFilename, _strPath, TStrToUTF8(findData.cFileName));
+                Common::BuildCompleteFilename(strFilename, _strPath, Common::TStrToUTF8(findData.cFileName));
                 m_FileNames.push_back(strFilename);
             }
 

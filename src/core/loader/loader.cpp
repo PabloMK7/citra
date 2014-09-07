@@ -28,22 +28,21 @@ FileType IdentifyFile(const std::string &filename) {
     }
 
     size_t extension_loc = filename.find_last_of('.');
-    std::string extension = extension_loc != std::string::npos ? filename.substr(extension_loc) : "";
+    if (extension_loc == std::string::npos)
+        return FileType::Unknown;
+    std::string extension = Common::ToLower(filename.substr(extension_loc));
 
-    if (LowerStr(extension) == ".elf") {
-        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (LowerStr(extension) == ".axf") {
-        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (LowerStr(extension) == ".cxi") {
-        return FileType::CXI; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (LowerStr(extension) == ".cci") {
-        return FileType::CCI; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (LowerStr(extension) == ".bin") {
-        return FileType::BIN; // TODO(bunnei): Do some filetype checking :p
+    // TODO(bunnei): Do actual filetype checking instead of naively checking the extension
+    if (extension == ".elf") {
+        return FileType::ELF;
+    } else if (extension == ".axf") {
+        return FileType::ELF;
+    } else if (extension == ".cxi") {
+        return FileType::CXI;
+    } else if (extension == ".cci") {
+        return FileType::CCI;
+    } else if (extension == ".bin") {
+        return FileType::BIN;
     }
     return FileType::Unknown;
 }

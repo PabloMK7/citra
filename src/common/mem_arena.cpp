@@ -143,7 +143,7 @@ void MemArena::GrabLowMemSpace(size_t size)
     // a bit more.
     for (int i = 0; i < 10000; i++)
     {
-        std::string file_name = StringFromFormat("/citramem.%d", i);
+        std::string file_name = Common::StringFromFormat("/citramem.%d", i);
         fd = shm_open(file_name.c_str(), O_RDWR | O_CREAT | O_EXCL, 0600);
         if (fd != -1)
         {

@@ -17,14 +17,16 @@
     #include <iconv.h>
 #endif
 
+namespace Common {
+
 /// Make a string lowercase
-std::string LowerStr(std::string str) {
+std::string ToLower(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
     return str;
 }
 
 /// Make a string uppercase
-std::string UpperStr(std::string str) {
+std::string ToUpper(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
     return str;
 }
@@ -541,3 +543,5 @@ std::string UTF16ToUTF8(const std::wstring& input)
 }
 
 #endif
+
+}

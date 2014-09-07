@@ -121,7 +121,7 @@ void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const 
     if (!log->IsEnabled() || level > log->GetLevel() || ! log->HasListeners())
         return;
 
-    CharArrayFromFormatV(temp, MAX_MSGLEN, fmt, args);
+    Common::CharArrayFromFormatV(temp, MAX_MSGLEN, fmt, args);
 
     static const char level_to_char[7] = "ONEWID";
     sprintf(msg, "%s %s:%u %c[%s] %s: %s\n", Common::Timer::GetTimeFormatted().c_str(), file, line, 
