@@ -59,6 +59,6 @@ struct TGAHeader {
  * @param raw_data Raw RGBA8 texture data to dump
  * @todo This should be moved to some general purpose/common code
  */
-void DumpTGA(std::string filename, int width, int height, u8* raw_data);
+void DumpTGA(std::string filename, short width, short height, u8* raw_data);
 
 } // namespace
