@@ -19,9 +19,8 @@
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window) : 
-    exec_cpu_step(false), cpu_running(false), 
-    render_window(render_window), filename(""),
-    stop_run(false)
+    filename(""), exec_cpu_step(false), cpu_running(false),
+    stop_run(false), render_window(render_window)
 {
 }
 
