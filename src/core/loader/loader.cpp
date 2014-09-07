@@ -26,21 +26,23 @@ FileType IdentifyFile(const std::string &filename) {
         ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
         return FileType::Error;
     }
-    std::string extension = filename.size() >= 5 ? filename.substr(filename.size() - 4) : "";
 
-    if (!strcasecmp(extension.c_str(), ".elf")) {
+    size_t extension_loc = filename.find_last_of('.');
+    std::string extension = extension_loc != std::string::npos ? filename.substr(extension_loc) : "";
+
+    if (LowerStr(extension) == ".elf") {
         return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
     }
-    else if (!strcasecmp(extension.c_str(), ".axf")) {
+    else if (LowerStr(extension) == ".axf") {
         return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
     }
-    else if (!strcasecmp(extension.c_str(), ".cxi")) {
+    else if (LowerStr(extension) == ".cxi") {
         return FileType::CXI; // TODO(bunnei): Do some filetype checking :p
     }
-    else if (!strcasecmp(extension.c_str(), ".cci")) {
+    else if (LowerStr(extension) == ".cci") {
         return FileType::CCI; // TODO(bunnei): Do some filetype checking :p
     }
-    else if (!strcasecmp(extension.c_str(), ".bin")) {
+    else if (LowerStr(extension) == ".bin") {
         return FileType::BIN; // TODO(bunnei): Do some filetype checking :p
     }
     return FileType::Unknown;

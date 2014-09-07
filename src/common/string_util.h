@@ -13,10 +13,11 @@
 #include "common/common.h"
 
 /// Make a string lowercase
-void LowerStr(char* str);
+
+std::string LowerStr(std::string str);
 
 /// Make a string uppercase
-void UpperStr(char* str);
+std::string UpperStr(std::string str);
 
 std::string StringFromFormat(const char* format, ...);
 // Cheap!
