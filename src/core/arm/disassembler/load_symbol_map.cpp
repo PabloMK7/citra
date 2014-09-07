@@ -19,7 +19,7 @@ void LoadSymbolMap(std::string filename) {
     std::ifstream infile(filename);
 
     std::string address_str, function_name, line;
-    u32 size, address;
+    u32 size;
 
     while (std::getline(infile, line)) {
         std::istringstream iss(line);
