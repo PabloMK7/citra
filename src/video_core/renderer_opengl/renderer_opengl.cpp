@@ -18,28 +18,28 @@ static const GLfloat kViewportAspectRatio =
 
 // Fullscreen quad dimensions
 static const GLfloat kTopScreenWidthNormalized = 2;
-static const GLfloat kTopScreenHeightNormalized = kTopScreenWidthNormalized * (static_cast<float>(VideoCore::kScreenTopHeight) / VideoCore::kScreenTopWidth);
-static const GLfloat kBottomScreenWidthNormalized = kTopScreenWidthNormalized * (static_cast<float>(VideoCore::kScreenBottomWidth) / VideoCore::kScreenTopWidth);
+static const GLfloat kTopScreenHeightNormalized    = kTopScreenWidthNormalized    * (static_cast<float>(VideoCore::kScreenTopHeight)    / VideoCore::kScreenTopWidth);
+static const GLfloat kBottomScreenWidthNormalized  = kTopScreenWidthNormalized    * (static_cast<float>(VideoCore::kScreenBottomWidth)  / VideoCore::kScreenTopWidth);
 static const GLfloat kBottomScreenHeightNormalized = kBottomScreenWidthNormalized * (static_cast<float>(VideoCore::kScreenBottomHeight) / VideoCore::kScreenBottomWidth);
 
 static const GLfloat g_vbuffer_top[] = {
-    // x, y, z                                u, v
-    -1.0f, 0.0f, 0.0f,                        0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f,                         1.0f, 1.0f,
-    1.0f, kTopScreenHeightNormalized, 0.0f,   1.0f, 0.0f,
-    1.0f, kTopScreenHeightNormalized, 0.0f,   1.0f, 0.0f,
-    -1.0f, kTopScreenHeightNormalized, 0.0f,  0.0f, 0.0f,
-    -1.0f, 0.0f, 0.0f,                        0.0f, 1.0f
+    // x,   y                           z     u     v
+    -1.0f, 0.0f,                       0.0f, 0.0f, 1.0f,
+     1.0f, 0.0f,                       0.0f, 1.0f, 1.0f,
+     1.0f, kTopScreenHeightNormalized, 0.0f, 1.0f, 0.0f,
+     1.0f, kTopScreenHeightNormalized, 0.0f, 1.0f, 0.0f,
+    -1.0f, kTopScreenHeightNormalized, 0.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f,                       0.0f, 0.0f, 1.0f
 };
 
 static const GLfloat g_vbuffer_bottom[] = {
-    // x, y, z                                                                   u, v
-    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f,   0.0f, 1.0f,
-    (kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f,    1.0f, 1.0f,
-    (kBottomScreenWidthNormalized / 2), 0.0f, 0.0f,                              1.0f, 0.0f,
-    (kBottomScreenWidthNormalized / 2), 0.0f, 0.0f,                              1.0f, 0.0f,
-    -(kBottomScreenWidthNormalized / 2), 0.0f, 0.0f,                             0.0f, 0.0f,
-    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f,   0.0f, 1.0f
+    // x                                   y                              z     u     v
+    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 0.0f, 1.0f,
+     (kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 1.0f, 1.0f,
+     (kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 1.0f, 0.0f,
+     (kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 1.0f, 0.0f,
+    -(kBottomScreenWidthNormalized / 2),  0.0f,                          0.0f, 0.0f, 0.0f,
+    -(kBottomScreenWidthNormalized / 2), -kBottomScreenHeightNormalized, 0.0f, 0.0f, 1.0f
 };
 
 /// RendererOpenGL constructor
