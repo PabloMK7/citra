@@ -37,7 +37,7 @@ void CallstackWidget::OnCPUStepped()
 
         /* TODO (mattvail) clean me, move to debugger interface */
         u32 insn = Memory::Read32(call_addr);
-        if (disasm->decode(insn) == OP_BL)
+        if (disasm->Decode(insn) == OP_BL)
         {
             std::string name;
             // ripped from disasm

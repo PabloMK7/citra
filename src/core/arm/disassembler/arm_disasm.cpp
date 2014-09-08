@@ -1,8 +1,8 @@
 // Copyright 2006 The Android Open Source Project
 
-#include <stdio.h>
-#include <string.h>
+#include <string>
 
+#include "common/string_util.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 static const char *cond_names[] = {
@@ -135,20 +135,14 @@ static const char* cond_to_str(int cond) {
     return cond_names[cond];
 }
 
-char *ARM_Disasm::disasm(uint32_t addr, uint32_t insn, char *result)
+std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
 {
-    static char   buf[80];
-    char          *ptr;
-
-    ptr = result ? result : buf;
-    Opcode opcode = decode(insn);
+    Opcode opcode = Decode(insn);
     switch (opcode) {
         case OP_INVALID:
-            sprintf(ptr, "Invalid");
-            return ptr;
+            return "Invalid";
         case OP_UNDEFINED:
-            sprintf(ptr, "Undefined");
-            return ptr;
+            return "Undefined";
         case OP_ADC:
         case OP_ADD:
         case OP_AND:
@@ -165,28 +159,26 @@ char *ARM_Disasm::disasm(uint32_t addr, uint32_t insn, char *result)
         case OP_SUB:
         case OP_TEQ:
         case OP_TST:
-            return disasm_alu(opcode, insn, ptr);
+            return DisassembleALU(opcode, insn);
         case OP_B:
         case OP_BL:
-            return disasm_branch(addr, opcode, insn, ptr);
+            return DisassembleBranch(addr, opcode, insn);
         case OP_BKPT:
-            return disasm_bkpt(insn, ptr);
+            return DisassembleBKPT(insn);
         case OP_BLX:
             // not supported yet
             break;
         case OP_BX:
-            return disasm_bx(insn, ptr);
+            return DisassembleBX(insn);
         case OP_CDP:
-            sprintf(ptr, "cdp");
-            return ptr;
+            return "cdp";
         case OP_CLZ:
-            return disasm_clz(insn, ptr);
+            return DisassembleCLZ(insn);
         case OP_LDC:
-            sprintf(ptr, "ldc");
-            return ptr;
+            return "ldc";
         case OP_LDM:
         case OP_STM:
-            return disasm_memblock(opcode, insn, ptr);
+            return DisassembleMemblock(opcode, insn);
         case OP_LDR:
         case OP_LDRB:
         case OP_LDRBT:
@@ -195,53 +187,52 @@ char *ARM_Disasm::disasm(uint32_t addr, uint32_t insn, char *result)
         case OP_STRB:
         case OP_STRBT:
         case OP_STRT:
-            return disasm_mem(insn, ptr);
+            return DisassembleMem(insn);
         case OP_LDRH:
         case OP_LDRSB:
         case OP_LDRSH:
         case OP_STRH:
-            return disasm_memhalf(insn, ptr);
+            return DisassembleMemHalf(insn);
         case OP_MCR:
         case OP_MRC:
-            return disasm_mcr(opcode, insn, ptr);
+            return DisassembleMCR(opcode, insn);
         case OP_MLA:
-            return disasm_mla(opcode, insn, ptr);
+            return DisassembleMLA(opcode, insn);
         case OP_MRS:
-            return disasm_mrs(insn, ptr);
+            return DisassembleMRS(insn);
         case OP_MSR:
-            return disasm_msr(insn, ptr);
+            return DisassembleMSR(insn);
         case OP_MUL:
-            return disasm_mul(opcode, insn, ptr);
+            return DisassembleMUL(opcode, insn);
         case OP_PLD:
-            return disasm_pld(insn, ptr);
+            return DisassemblePLD(insn);
         case OP_STC:
-            sprintf(ptr, "stc");
-            return ptr;
+            return "stc";
         case OP_SWI:
-            return disasm_swi(insn, ptr);
+            return DisassembleSWI(insn);
         case OP_SWP:
         case OP_SWPB:
-            return disasm_swp(opcode, insn, ptr);
+            return DisassembleSWP(opcode, insn);
         case OP_UMLAL:
         case OP_UMULL:
         case OP_SMLAL:
         case OP_SMULL:
-            return disasm_umlal(opcode, insn, ptr);
+            return DisassembleUMLAL(opcode, insn);
         default:
-            sprintf(ptr, "Error");
-            return ptr;
+            return "Error";
     }
     return NULL;
 }
 
-char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
 {
     static const uint8_t kNoOperand1 = 1;
     static const uint8_t kNoDest = 2;
     static const uint8_t kNoSbit = 4;
 
-    char rn_str[20];
-    char rd_str[20];
+    std::string rn_str;
+    std::string rd_str;
+
     uint8_t flags = 0;
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t is_immed = (insn >> 25) & 0x1;
@@ -250,7 +241,7 @@ char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t immed = insn & 0xff;
 
-    const char *opname = opcode_names[opcode];
+    const char* opname = opcode_names[opcode];
     switch (opcode) {
         case OP_CMN:
         case OP_CMP:
@@ -269,14 +260,14 @@ char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
     // The "mov" instruction ignores the first operand (rn).
     rn_str[0] = 0;
     if ((flags & kNoOperand1) == 0) {
-        sprintf(rn_str, "r%d, ", rn);
+        rn_str = StringFromFormat("r%d, ", rn);
     }
 
     // The following instructions do not write the result register (rd):
     // tst, teq, cmp, cmn.
     rd_str[0] = 0;
     if ((flags & kNoDest) == 0) {
-        sprintf(rd_str, "r%d, ", rd);
+        rd_str = StringFromFormat("r%d, ", rd);
     }
 
     const char *sbit_str = "";
@@ -284,9 +275,8 @@ char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
         sbit_str = "s";
 
     if (is_immed) {
-        sprintf(ptr, "%s%s%s\t%s%s#%u  ; 0x%x",
-                opname, cond_to_str(cond), sbit_str, rd_str, rn_str, immed, immed);
-        return ptr;
+        return StringFromFormat("%s%s%s\t%s%s#%u  ; 0x%x",
+                opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), immed, immed);
     }
 
     uint8_t shift_is_reg = (insn >> 4) & 1;
@@ -300,33 +290,29 @@ char *ARM_Disasm::disasm_alu(Opcode opcode, uint32_t insn, char *ptr)
     rotated_val = (rotated_val >> rotate2) | (rotated_val << (32 - rotate2));
 
     if (!shift_is_reg && shift_type == 0 && shift_amount == 0) {
-        sprintf(ptr, "%s%s%s\t%s%sr%d",
-                opname, cond_to_str(cond), sbit_str, rd_str, rn_str, rm);
-        return ptr;
+        return StringFromFormat("%s%s%s\t%s%sr%d",
+                opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm);
     }
 
     const char *shift_name = shift_names[shift_type];
     if (shift_is_reg) {
-        sprintf(ptr, "%s%s%s\t%s%sr%d, %s r%d",
-                opname, cond_to_str(cond), sbit_str, rd_str, rn_str, rm,
+        return StringFromFormat("%s%s%s\t%s%sr%d, %s r%d",
+                opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm,
                 shift_name, rs);
-        return ptr;
     }
     if (shift_amount == 0) {
         if (shift_type == 3) {
-            sprintf(ptr, "%s%s%s\t%s%sr%d, RRX",
-                    opname, cond_to_str(cond), sbit_str, rd_str, rn_str, rm);
-            return ptr;
+            return StringFromFormat("%s%s%s\t%s%sr%d, RRX",
+                    opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm);
         }
         shift_amount = 32;
     }
-    sprintf(ptr, "%s%s%s\t%s%sr%d, %s #%u",
-            opname, cond_to_str(cond), sbit_str, rd_str, rn_str, rm,
+    return StringFromFormat("%s%s%s\t%s%sr%d, %s #%u",
+            opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), rm,
             shift_name, shift_amount);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_branch(uint32_t addr, Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleBranch(uint32_t addr, Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint32_t offset = insn & 0xffffff;
@@ -339,37 +325,34 @@ char *ARM_Disasm::disasm_branch(uint32_t addr, Opcode opcode, uint32_t insn, cha
     offset += 8;
     addr += offset;
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s\t0x%x", opname, cond_to_str(cond), addr);
-    return ptr;
+    return StringFromFormat("%s%s\t0x%x", opname, cond_to_str(cond), addr);
 }
 
-char *ARM_Disasm::disasm_bx(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleBX(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rn = insn & 0xf;
-    sprintf(ptr, "bx%s\tr%d", cond_to_str(cond), rn);
-    return ptr;
+    return StringFromFormat("bx%s\tr%d", cond_to_str(cond), rn);
 }
 
-char *ARM_Disasm::disasm_bkpt(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleBKPT(uint32_t insn)
 {
     uint32_t immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
-    sprintf(ptr, "bkpt\t#%d", immed);
-    return ptr;
+    return StringFromFormat("bkpt\t#%d", immed);
 }
 
-char *ARM_Disasm::disasm_clz(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t rm = insn & 0xf;
-    sprintf(ptr, "clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
-    return ptr;
+    return StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
 }
 
-char *ARM_Disasm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
 {
-    char tmp_reg[10], tmp_list[80];
+    std::string tmp_reg;
+    std::string tmp_list;
 
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t write_back = (insn >> 21) & 0x1;
@@ -393,8 +376,7 @@ char *ARM_Disasm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
     tmp_list[0] = 0;
     for (int ii = 0; ii < 16; ++ii) {
         if (reg_list & (1 << ii)) {
-            sprintf(tmp_reg, "%sr%d", comma, ii);
-            strcat(tmp_list, tmp_reg);
+            tmp_list += StringFromFormat("%sr%d", comma, ii);
             comma = ",";
         }
     }
@@ -414,12 +396,11 @@ char *ARM_Disasm::disasm_memblock(Opcode opcode, uint32_t insn, char *ptr)
         }
     }
 
-    sprintf(ptr, "%s%s%s\tr%d%s, {%s}%s",
-            opname, cond_to_str(cond), addr_mode, rn, bang, tmp_list, carret);
-    return ptr;
+    return StringFromFormat("%s%s%s\tr%d%s, {%s}%s",
+            opname, cond_to_str(cond), addr_mode, rn, bang, tmp_list.c_str(), carret);
 }
 
-char *ARM_Disasm::disasm_mem(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMem(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t is_reg = (insn >> 25) & 0x1;
@@ -451,20 +432,20 @@ char *ARM_Disasm::disasm_mem(uint32_t insn, char *ptr)
     if (is_reg == 0) {
         if (is_pre) {
             if (offset == 0) {
-                sprintf(ptr, "%s%s%s\tr%d, [r%d]",
+                return StringFromFormat("%s%s%s\tr%d, [r%d]",
                         opname, cond_to_str(cond), byte, rd, rn);
             } else {
-                sprintf(ptr, "%s%s%s\tr%d, [r%d, #%s%u]%s",
+                return StringFromFormat("%s%s%s\tr%d, [r%d, #%s%u]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, offset, bang);
             }
         } else {
             const char *transfer = "";
             if (write_back)
                 transfer = "t";
-            sprintf(ptr, "%s%s%s%s\tr%d, [r%d], #%s%u",
+
+            return StringFromFormat("%s%s%s%s\tr%d, [r%d], #%s%u",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, offset);
         }
-        return ptr;
     }
 
     uint8_t rm = insn & 0xf;
@@ -476,21 +457,18 @@ char *ARM_Disasm::disasm_mem(uint32_t insn, char *ptr)
     if (is_pre) {
         if (shift_amount == 0) {
             if (shift_type == 0) {
-                sprintf(ptr, "%s%s%s\tr%d, [r%d, %sr%d]%s",
+                return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, rm, bang);
-                return ptr;
             }
             if (shift_type == 3) {
-                sprintf(ptr, "%s%s%s\tr%d, [r%d, %sr%d, RRX]%s",
+                return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, RRX]%s",
                         opname, cond_to_str(cond), byte, rd, rn, minus, rm, bang);
-                return ptr;
             }
             shift_amount = 32;
         }
-        sprintf(ptr, "%s%s%s\tr%d, [r%d, %sr%d, %s #%u]%s",
+        return StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d, %s #%u]%s",
                 opname, cond_to_str(cond), byte, rd, rn, minus, rm,
                 shift_name, shift_amount, bang);
-        return ptr;
     }
 
     const char *transfer = "";
@@ -499,25 +477,22 @@ char *ARM_Disasm::disasm_mem(uint32_t insn, char *ptr)
 
     if (shift_amount == 0) {
         if (shift_type == 0) {
-            sprintf(ptr, "%s%s%s%s\tr%d, [r%d], %sr%d",
+            return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm);
-            return ptr;
         }
         if (shift_type == 3) {
-            sprintf(ptr, "%s%s%s%s\tr%d, [r%d], %sr%d, RRX",
+            return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, RRX",
                     opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm);
-            return ptr;
         }
         shift_amount = 32;
     }
 
-    sprintf(ptr, "%s%s%s%s\tr%d, [r%d], %sr%d, %s #%u",
+    return StringFromFormat("%s%s%s%s\tr%d, [r%d], %sr%d, %s #%u",
             opname, cond_to_str(cond), byte, transfer, rd, rn, minus, rm,
             shift_name, shift_amount);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_memhalf(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMemHalf(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t is_load = (insn >> 20) & 0x1;
@@ -553,29 +528,27 @@ char *ARM_Disasm::disasm_memhalf(uint32_t insn, char *ptr)
     if (is_immed) {
         if (is_pre) {
             if (offset == 0) {
-                sprintf(ptr, "%s%sh\tr%d, [r%d]", opname, cond_to_str(cond), rd, rn);
+                return StringFromFormat("%s%sh\tr%d, [r%d]", opname, cond_to_str(cond), rd, rn);
             } else {
-                sprintf(ptr, "%s%sh\tr%d, [r%d, #%s%u]%s",
+                return StringFromFormat("%s%sh\tr%d, [r%d, #%s%u]%s",
                         opname, cond_to_str(cond), rd, rn, minus, offset, bang);
             }
         } else {
-            sprintf(ptr, "%s%sh\tr%d, [r%d], #%s%u",
+            return StringFromFormat("%s%sh\tr%d, [r%d], #%s%u",
                     opname, cond_to_str(cond), rd, rn, minus, offset);
         }
-        return ptr;
     }
 
     if (is_pre) {
-        sprintf(ptr, "%s%sh\tr%d, [r%d, %sr%d]%s",
+        return StringFromFormat("%s%sh\tr%d, [r%d, %sr%d]%s",
                 opname, cond_to_str(cond), rd, rn, minus, rm, bang);
     } else {
-        sprintf(ptr, "%s%sh\tr%d, [r%d], %sr%d",
+        return StringFromFormat("%s%sh\tr%d, [r%d], %sr%d",
                 opname, cond_to_str(cond), rd, rn, minus, rm);
     }
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_mcr(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMCR(Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t crn = (insn >> 16) & 0xf;
@@ -585,12 +558,11 @@ char *ARM_Disasm::disasm_mcr(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t crm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s\t%d, 0, r%d, cr%d, cr%d, {%d}",
+    return StringFromFormat("%s%s\t%d, 0, r%d, cr%d, cr%d, {%d}",
             opname, cond_to_str(cond), cpnum, crd, crn, crm, opcode2);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_mla(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMLA(Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 16) & 0xf;
@@ -600,12 +572,11 @@ char *ARM_Disasm::disasm_mla(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s%s\tr%d, r%d, r%d, r%d",
+    return StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs, rn);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_umlal(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleUMLAL(Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rdhi = (insn >> 16) & 0xf;
@@ -615,12 +586,11 @@ char *ARM_Disasm::disasm_umlal(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s%s\tr%d, r%d, r%d, r%d",
+    return StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rdlo, rdhi, rm, rs);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_mul(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMUL(Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 16) & 0xf;
@@ -629,22 +599,20 @@ char *ARM_Disasm::disasm_mul(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s%s\tr%d, r%d, r%d",
+    return StringFromFormat("%s%s%s\tr%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_mrs(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMRS(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t ps = (insn >> 22) & 1;
 
-    sprintf(ptr, "mrs%s\tr%d, %s", cond_to_str(cond), rd, ps ? "spsr" : "cpsr");
-    return ptr;
+    return StringFromFormat("mrs%s\tr%d, %s", cond_to_str(cond), rd, ps ? "spsr" : "cpsr");
 }
 
-char *ARM_Disasm::disasm_msr(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
 {
     char flags[8];
     int flag_index = 0;
@@ -668,19 +636,17 @@ char *ARM_Disasm::disasm_msr(uint32_t insn, char *ptr)
         uint8_t rotate = (insn >> 8) & 0xf;
         uint8_t rotate2 = rotate << 1;
         uint32_t rotated_val = (immed >> rotate2) | (immed << (32 - rotate2));
-        sprintf(ptr, "msr%s\t%s_%s, #0x%x",
+        return StringFromFormat("msr%s\t%s_%s, #0x%x",
                 cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rotated_val);
-        return ptr;
     }
 
     uint8_t rm = insn & 0xf;
 
-    sprintf(ptr, "msr%s\t%s_%s, r%d",
+    return StringFromFormat("msr%s\t%s_%s, r%d",
             cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rm);
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_pld(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
 {
     uint8_t is_reg = (insn >> 25) & 0x1;
     uint8_t is_up = (insn >> 23) & 0x1;
@@ -692,29 +658,26 @@ char *ARM_Disasm::disasm_pld(uint32_t insn, char *ptr)
 
     if (is_reg) {
         uint8_t rm = insn & 0xf;
-        sprintf(ptr, "pld\t[r%d, %sr%d]", rn, minus, rm);
-        return ptr;
+        return StringFromFormat("pld\t[r%d, %sr%d]", rn, minus, rm);
     }
 
     uint16_t offset = insn & 0xfff;
     if (offset == 0) {
-        sprintf(ptr, "pld\t[r%d]", rn);
+        return StringFromFormat("pld\t[r%d]", rn);
     } else {
-        sprintf(ptr, "pld\t[r%d, #%s%u]", rn, minus, offset);
+        return StringFromFormat("pld\t[r%d, #%s%u]", rn, minus, offset);
     }
-    return ptr;
 }
 
-char *ARM_Disasm::disasm_swi(uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleSWI(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint32_t sysnum = insn & 0x00ffffff;
 
-    sprintf(ptr, "swi%s 0x%x", cond_to_str(cond), sysnum);
-    return ptr;
+    return StringFromFormat("swi%s 0x%x", cond_to_str(cond), sysnum);
 }
 
-char *ARM_Disasm::disasm_swp(Opcode opcode, uint32_t insn, char *ptr)
+std::string ARM_Disasm::DisassembleSWP(Opcode opcode, uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
     uint8_t rn = (insn >> 16) & 0xf;
@@ -722,26 +685,25 @@ char *ARM_Disasm::disasm_swp(Opcode opcode, uint32_t insn, char *ptr)
     uint8_t rm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
-    sprintf(ptr, "%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
-    return ptr;
+    return StringFromFormat("%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
 }
 
-Opcode ARM_Disasm::decode(uint32_t insn) {
+Opcode ARM_Disasm::Decode(uint32_t insn) {
     uint32_t bits27_26 = (insn >> 26) & 0x3;
     switch (bits27_26) {
         case 0x0:
-            return decode00(insn);
+            return Decode00(insn);
         case 0x1:
-            return decode01(insn);
+            return Decode01(insn);
         case 0x2:
-            return decode10(insn);
+            return Decode10(insn);
         case 0x3:
-            return decode11(insn);
+            return Decode11(insn);
     }
     return OP_INVALID;
 }
 
-Opcode ARM_Disasm::decode00(uint32_t insn) {
+Opcode ARM_Disasm::Decode00(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     uint8_t bit4 = (insn >> 4) & 0x1;
     if (bit25 == 0 && bit4 == 1) {
@@ -767,21 +729,21 @@ Opcode ARM_Disasm::decode00(uint32_t insn) {
                 return OP_SWP;
             }
             // One of the multiply instructions
-            return decode_mul(insn);
+            return DecodeMUL(insn);
         }
 
         uint8_t bit7 = (insn >> 7) & 0x1;
         if (bit7 == 1) {
             // One of the load/store halfword/byte instructions
-            return decode_ldrh(insn);
+            return DecodeLDRH(insn);
         }
     }
 
     // One of the data processing instructions
-    return decode_alu(insn);
+    return DecodeALU(insn);
 }
 
-Opcode ARM_Disasm::decode01(uint32_t insn) {
+Opcode ARM_Disasm::Decode01(uint32_t insn) {
     uint8_t is_reg = (insn >> 25) & 0x1;
     uint8_t bit4 = (insn >> 4) & 0x1;
     if (is_reg == 1 && bit4 == 1)
@@ -808,7 +770,7 @@ Opcode ARM_Disasm::decode01(uint32_t insn) {
     return OP_STR;
 }
 
-Opcode ARM_Disasm::decode10(uint32_t insn) {
+Opcode ARM_Disasm::Decode10(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDM/STM
@@ -833,7 +795,7 @@ Opcode ARM_Disasm::decode10(uint32_t insn) {
     return OP_BL;
 }
 
-Opcode ARM_Disasm::decode11(uint32_t insn) {
+Opcode ARM_Disasm::Decode11(uint32_t insn) {
     uint8_t bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDC, SDC
@@ -882,7 +844,7 @@ Opcode ARM_Disasm::decode11(uint32_t insn) {
     return OP_MCR;
 }
 
-Opcode ARM_Disasm::decode_mul(uint32_t insn) {
+Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     uint8_t bit24 = (insn >> 24) & 0x1;
     if (bit24 != 0) {
         // This is an unexpected bit pattern.  Create an undefined
@@ -916,7 +878,7 @@ Opcode ARM_Disasm::decode_mul(uint32_t insn) {
     return OP_SMLAL;
 }
 
-Opcode ARM_Disasm::decode_ldrh(uint32_t insn) {
+Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
     uint8_t is_load = (insn >> 20) & 0x1;
     uint8_t bits_65 = (insn >> 5) & 0x3;
     if (is_load) {
@@ -946,7 +908,7 @@ Opcode ARM_Disasm::decode_ldrh(uint32_t insn) {
     return OP_STRH;
 }
 
-Opcode ARM_Disasm::decode_alu(uint32_t insn) {
+Opcode ARM_Disasm::DecodeALU(uint32_t insn) {
     uint8_t is_immed = (insn >> 25) & 0x1;
     uint8_t opcode = (insn >> 21) & 0xf;
     uint8_t bit_s = (insn >> 20) & 1;

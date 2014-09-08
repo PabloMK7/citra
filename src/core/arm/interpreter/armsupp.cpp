@@ -17,6 +17,7 @@
 
 //#include <util.h>
 
+#include <string>
 #include "core/arm/interpreter/armdefs.h"
 #include "core/arm/interpreter/armemu.h"
 #include "core/hle/coprocessor.h"
@@ -870,12 +871,8 @@ ARMul_CDP (ARMul_State * state, ARMword instr)
 void
 ARMul_UndefInstr (ARMul_State * state, ARMword instr)
 {
-    /*SKYEYE_LOG_IN_CLR(RED, "In %s, line = %d, undef instr: 0x%x\n",
-      __func__, __LINE__, instr);*/
-    char buff[512];
-    ARM_Disasm disasm = ARM_Disasm();
-    disasm.disasm(state->pc, instr, buff);
-    ERROR_LOG(ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", buff, instr);
+    std::string disasm = ARM_Disasm::Disassemble(state->pc, instr);
+    ERROR_LOG(ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", disasm.c_str(), instr);
     ARMul_Abort (state, ARMul_UndefinedInstrV);
 }
 
