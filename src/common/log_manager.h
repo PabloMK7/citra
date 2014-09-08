@@ -6,11 +6,11 @@
 
 #include "common/log.h"
 #include "common/string_util.h"
-#include "common/thread.h"
 #include "common/file_util.h"
 
 #include <cstring>
 #include <set>
+#include <mutex>
 
 #define MAX_MESSAGES 8000
 #define MAX_MSGLEN  1024

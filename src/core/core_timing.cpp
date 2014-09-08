@@ -5,9 +5,9 @@
 #include <vector>
 #include <cstdio>
 #include <atomic>
+#include <mutex>
 
 #include "common/msg_handler.h"
-#include "common/std_mutex.h"
 #include "common/chunk_file.h"
 
 #include "core/core_timing.h"
