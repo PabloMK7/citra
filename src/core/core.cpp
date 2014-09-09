@@ -3,15 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
-#include "common/log.h"
-#include "common/symbols.h"
-
-#include "video_core/video_core.h"
 
 #include "core/core.h"
-#include "core/mem_map.h"
 #include "core/hw/hw.h"
-#include "core/hw/gpu.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
 

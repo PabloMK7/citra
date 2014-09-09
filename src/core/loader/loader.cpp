@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "core/file_sys/archive_romfs.h"
-#include "core/loader/loader.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
 #include "core/hle/kernel/archive.h"

@@ -2,8 +2,6 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#include <string.h>
-
 #include "common/common.h"
 
 #include "core/core.h"

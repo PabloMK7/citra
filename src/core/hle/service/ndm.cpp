@@ -2,8 +2,6 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include "common/log.h"
-
 #include "core/hle/hle.h"
 #include "core/hle/service/ndm.h"
 

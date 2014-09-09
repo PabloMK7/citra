@@ -3,10 +3,8 @@
 // Refer to the license.txt file included.  
 
 #include <algorithm>
-#include <cstdio>
 #include <list>
 #include <map>
-#include <string>
 #include <vector>
 
 #include "common/common.h"
@@ -15,7 +13,6 @@
 #include "core/core.h"
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
-#include "core/hle/svc.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 

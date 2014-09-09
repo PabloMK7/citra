@@ -8,7 +8,6 @@
 
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
-#include "hle/hle.h"
 #include "hle/config_mem.h"
 
 namespace Memory {
