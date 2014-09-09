@@ -14,96 +14,102 @@
 
 namespace HID_User {
 
-Handle g_shared_mem = 0; ///< Handle to shared memory region designated to HID_User service
+// Handle to shared memory region designated to HID_User service
+static Handle shared_mem = 0;
 
 // Event handles
-Handle g_event_pad_or_touch_1 = 0;
-Handle g_event_pad_or_touch_2 = 0;
-Handle g_event_accelerometer = 0;
-Handle g_event_gyroscope = 0;
-Handle g_event_debug_pad = 0;
+static Handle event_pad_or_touch_1 = 0;
+static Handle event_pad_or_touch_2 = 0;
+static Handle event_accelerometer = 0;
+static Handle event_gyroscope = 0;
+static Handle event_debug_pad = 0;
 
-// Next PAD state update information
-PADState g_next_state = {{0}};
-u32 g_next_index = 0;
-s16 g_next_circle_x = 0;
-s16 g_next_circle_y = 0;
+// Next Pad state update information
+static PadState next_state = {{0}};
+static u32 next_index = 0;
+static s16 next_circle_x = 0;
+static s16 next_circle_y = 0;
 
-/** Gets a pointer to the PADData structure inside HID shared memory
+/**
+ * Gets a pointer to the PadData structure inside HID shared memory
  */
-static inline PADData* GetPADData() {
-    if (0 == g_shared_mem)
+static inline PadData* GetPadData() {
+    if (0 == shared_mem)
         return nullptr;
 
-    return reinterpret_cast<PADData*>(Kernel::GetSharedMemoryPointer(g_shared_mem, 0));
+    return reinterpret_cast<PadData*>(Kernel::GetSharedMemoryPointer(shared_mem, 0));
 }
 
-/** Circle PAD from keys.
+/**
+ * Circle Pad from keys.
  *
- *  This is implemented as "pushed all the way to an edge (max) or centered (0)".
+ * This is implemented as "pushed all the way to an edge (max) or centered (0)".
  *
- *  Indicate the circle pad is pushed completely to the edge in 1 of 8 directions.
+ * Indicate the circle pad is pushed completely to the edge in 1 of 8 directions.
  */
-void UpdateNextCirclePADState() {
+void UpdateNextCirclePadState() {
     static const s16 max_value = 0x9C;
-    g_next_circle_x = g_next_state.circle_left ? -max_value : 0x0;
-    g_next_circle_x += g_next_state.circle_right ? max_value : 0x0;
-    g_next_circle_y = g_next_state.circle_down ? -max_value : 0x0;
-    g_next_circle_y += g_next_state.circle_up ? max_value : 0x0;
+    next_circle_x = next_state.circle_left ? -max_value : 0x0;
+    next_circle_x += next_state.circle_right ? max_value : 0x0;
+    next_circle_y = next_state.circle_down ? -max_value : 0x0;
+    next_circle_y += next_state.circle_up ? max_value : 0x0;
 }
 
-/** Sets a PAD state (button or button combo) as pressed
+/**
+ * Sets a Pad state (button or button combo) as pressed
  */
-void PADButtonPress(PADState pad_state) {
-    g_next_state.hex |= pad_state.hex;
-    UpdateNextCirclePADState();
+void PadButtonPress(PadState pad_state) {
+    next_state.hex |= pad_state.hex;
+    UpdateNextCirclePadState();
 }
 
-/** Sets a PAD state (button or button combo) as released
+/**
+ * Sets a Pad state (button or button combo) as released
  */
-void PADButtonRelease(PADState pad_state) {
-    g_next_state.hex &= ~pad_state.hex;
-    UpdateNextCirclePADState();
+void PadButtonRelease(PadState pad_state) {
+    next_state.hex &= ~pad_state.hex;
+    UpdateNextCirclePadState();
 }
 
-/** Called after all PAD changes to be included in this update have been made,
- *  including both PAD key changes and analog circle PAD changes.
+/**
+ * Called after all Pad changes to be included in this update have been made,
+ * including both Pad key changes and analog circle Pad changes.
  */
-void PADUpdateComplete() {
-    PADData* pad_data = GetPADData();
+void PadUpdateComplete() {
+    PadData* pad_data = GetPadData();
 
-    // Update PADData struct
-    pad_data->current_state.hex = g_next_state.hex;
-    pad_data->index = g_next_index;
-    g_next_index = (g_next_index + 1) % pad_data->entries.size();
+    // Update PadData struct
+    pad_data->current_state.hex = next_state.hex;
+    pad_data->index = next_index;
+    next_index = (next_index + 1) % pad_data->entries.size();
 
-    // Get the previous PAD state
+    // Get the previous Pad state
     u32 last_entry_index = (pad_data->index - 1) % pad_data->entries.size();
-    PADState old_state = pad_data->entries[last_entry_index].current_state;
+    PadState old_state = pad_data->entries[last_entry_index].current_state;
 
     // Compute bitmask with 1s for bits different from the old state
-    PADState changed;
-    changed.hex = (g_next_state.hex ^ old_state.hex);
+    PadState changed;
+    changed.hex = (next_state.hex ^ old_state.hex);
 
     // Compute what was added
-    PADState additions;
-    additions.hex = changed.hex & g_next_state.hex;
+    PadState additions;
+    additions.hex = changed.hex & next_state.hex;
 
     // Compute what was removed
-    PADState removals;
+    PadState removals;
     removals.hex = changed.hex & old_state.hex;
 
-    // Get the current PAD entry
-    PADDataEntry* current_pad_entry = &pad_data->entries[pad_data->index];
+    // Get the current Pad entry
+    PadDataEntry* current_pad_entry = &pad_data->entries[pad_data->index];
 
     // Update entry properties
-    current_pad_entry->current_state.hex = g_next_state.hex;
+    current_pad_entry->current_state.hex = next_state.hex;
     current_pad_entry->delta_additions.hex = additions.hex;
     current_pad_entry->delta_removals.hex = removals.hex;
 
-    // Set circle PAD
-    current_pad_entry->circle_pad_x = g_next_circle_x;
-    current_pad_entry->circle_pad_y = g_next_circle_y;
+    // Set circle Pad
+    current_pad_entry->circle_pad_x = next_circle_x;
+    current_pad_entry->circle_pad_y = next_circle_y;
 
     // If we just updated index 0, provide a new timestamp
     if (pad_data->index == 0) {
@@ -111,24 +117,24 @@ void PADUpdateComplete() {
         pad_data->index_reset_ticks = (s64)Core::g_app_core->GetTicks();
     }
 
-    // Signal both handles when there's an update to PAD or touch
-    Kernel::SignalEvent(g_event_pad_or_touch_1);
-    Kernel::SignalEvent(g_event_pad_or_touch_2);
+    // Signal both handles when there's an update to Pad or touch
+    Kernel::SignalEvent(event_pad_or_touch_1);
+    Kernel::SignalEvent(event_pad_or_touch_2);
 }
 
 
 // TODO(peachum):
-// Add a method for setting analog input from joystick device for the circle PAD.
+// Add a method for setting analog input from joystick device for the circle Pad.
 //
 // This method should:
-//     * Be called after both PADButton<Press, Release>().
-//     * Be called before PADUpdateComplete()
-//     * Set current PADEntry.circle_pad_<axis> using analog data
+//     * Be called after both PadButton<Press, Release>().
+//     * Be called before PadUpdateComplete()
+//     * Set current PadEntry.circle_pad_<axis> using analog data
 //     * Set PadData.raw_circle_pad_data
-//     * Set PadData.current_state.circle_right = 1 if current PADEntry.circle_pad_x >= 41
-//     * Set PadData.current_state.circle_up = 1 if current PADEntry.circle_pad_y >= 41
-//     * Set PadData.current_state.circle_left = 1 if current PADEntry.circle_pad_x <= -41
-//     * Set PadData.current_state.circle_right = 1 if current PADEntry.circle_pad_y <= -41
+//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_x >= 41
+//     * Set PadData.current_state.circle_up = 1 if current PadEntry.circle_pad_y >= 41
+//     * Set PadData.current_state.circle_left = 1 if current PadEntry.circle_pad_x <= -41
+//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
 
 
 /**
@@ -149,12 +155,12 @@ void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
-    cmd_buff[3] = g_shared_mem;
-    cmd_buff[4] = g_event_pad_or_touch_1;
-    cmd_buff[5] = g_event_pad_or_touch_2;
-    cmd_buff[6] = g_event_accelerometer;
-    cmd_buff[7] = g_event_gyroscope;
-    cmd_buff[8] = g_event_debug_pad;
+    cmd_buff[3] = shared_mem;
+    cmd_buff[4] = event_pad_or_touch_1;
+    cmd_buff[5] = event_pad_or_touch_2;
+    cmd_buff[6] = event_accelerometer;
+    cmd_buff[7] = event_gyroscope;
+    cmd_buff[8] = event_debug_pad;
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -177,14 +183,14 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    g_shared_mem = Kernel::CreateSharedMemory("HID_User:SharedMem"); // Create shared memory object
+    shared_mem = Kernel::CreateSharedMemory("HID_User:SharedMem"); // Create shared memory object
 
     // Create event handles
-    g_event_pad_or_touch_1 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventPADOrTouch1");
-    g_event_pad_or_touch_2 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventPADOrTouch2");
-    g_event_accelerometer = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventAccelerometer");
-    g_event_gyroscope = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventGyroscope");
-    g_event_debug_pad = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventDebugPAD");
+    event_pad_or_touch_1 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventPadOrTouch1");
+    event_pad_or_touch_2 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventPadOrTouch2");
+    event_accelerometer = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventAccelerometer");
+    event_gyroscope = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventGyroscope");
+    event_debug_pad = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventDebugPad");
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }

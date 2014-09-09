@@ -8,7 +8,6 @@
 #include "common/scm_rev.h"
 
 #include "common/key_map.h"
-#include "core/hle/service/hid.h"
 
 // Abstraction class used to provide an interface between emulation code and the frontend (e.g. SDL, 
 //  QGLWidget, GLFW, etc...)
@@ -35,21 +34,11 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     virtual void DoneCurrent() = 0;
 
-    static void KeyPressed(KeyMap::CitraKey key) {
-        HID_User::PADState mapped_key = KeyMap::Get3DSKey(key);
+    /// Signals a key press action to the HID module
+    static void KeyPressed(KeyMap::HostDeviceKey key);
 
-        if (mapped_key.hex != HID_User::PAD_NONE.hex) {
-            HID_User::PADButtonPress(mapped_key);
-        }
-    }
-
-    static void KeyReleased(KeyMap::CitraKey key) {
-        HID_User::PADState mapped_key = KeyMap::Get3DSKey(key);
-
-        if (mapped_key.hex != HID_User::PAD_NONE.hex) {
-            HID_User::PADButtonRelease(mapped_key);
-        }
-    }
+    /// Signals a key release action to the HID module
+    static void KeyReleased(KeyMap::HostDeviceKey key);
 
     Config GetConfig() const { 
         return m_config;

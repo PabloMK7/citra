@@ -25,8 +25,9 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     void DoneCurrent();
 
-	GLFWwindow* m_render_window;    ///< Internal GLFW render window
+    static void OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods);
 
 private:
-
+    GLFWwindow* m_render_window; ///< Internal GLFW render window
+    int keyboard_id;             ///< Device id of keyboard for use with KeyMap
 };

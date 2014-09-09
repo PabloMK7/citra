@@ -10,13 +10,15 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace HID_User
 
-// This service is used for interfacing to physical user controls... perhaps "Human Interface 
-// Devices"? Uses include game pad controls, accelerometers, gyroscopes, etc.
+// This service is used for interfacing to physical user controls.
+// Uses include game pad controls, touchscreen, accelerometers, gyroscopes, and debug pad.
 
 namespace HID_User {
 
-/// Structure of a PAD controller state
-struct PADState {
+/** 
+ * Structure of a Pad controller state.
+ */
+struct PadState {
     union {
         u32 hex;
 
@@ -40,58 +42,64 @@ struct PADState {
     };
 };
 
-/// Structure of a single entry in the PADData's PAD state history array
-struct PADDataEntry {
-    PADState current_state;
-    PADState delta_additions;
-    PADState delta_removals;
+/**
+ * Structure of a single entry in the PadData's Pad state history array.
+ */
+struct PadDataEntry {
+    PadState current_state;
+    PadState delta_additions;
+    PadState delta_removals;
 
     s16 circle_pad_x;
     s16 circle_pad_y;
 };
 
-/// Structure of all data related to the 3DS Pad
-struct PADData {
+/**
+ * Structure of all data related to the 3DS Pad.
+ */
+struct PadData {
     s64 index_reset_ticks;
     s64 index_reset_ticks_previous;
-    u32 index; // the index of the last updated PAD state history element
+    u32 index; // the index of the last updated Pad state history element
 
     u32 pad1;
     u32 pad2;
 
-    PADState current_state; // same as entries[index].current_state
+    PadState current_state; // same as entries[index].current_state
     u32 raw_circle_pad_data;
 
     u32 pad3;
 
-    std::array<PADDataEntry, 8> entries; // PAD state history
+    std::array<PadDataEntry, 8> entries; // Pad state history
 };
 
-// Pre-defined PADStates for single button presses
-const PADState PAD_NONE         = {{0}};
-const PADState PAD_A            = {{1u << 0}};
-const PADState PAD_B            = {{1u << 1}};
-const PADState PAD_SELECT       = {{1u << 2}};
-const PADState PAD_START        = {{1u << 3}};
-const PADState PAD_RIGHT        = {{1u << 4}};
-const PADState PAD_LEFT         = {{1u << 5}};
-const PADState PAD_UP           = {{1u << 6}};
-const PADState PAD_DOWN         = {{1u << 7}};
-const PADState PAD_R            = {{1u << 8}};
-const PADState PAD_L            = {{1u << 9}};
-const PADState PAD_X            = {{1u << 10}};
-const PADState PAD_Y            = {{1u << 11}};
-const PADState PAD_CIRCLE_RIGHT = {{1u << 28}};
-const PADState PAD_CIRCLE_LEFT  = {{1u << 29}};
-const PADState PAD_CIRCLE_UP    = {{1u << 30}};
-const PADState PAD_CIRCLE_DOWN  = {{1u << 31}};
+// Pre-defined PadStates for single button presses
+const PadState PAD_NONE         = {{0}};
+const PadState PAD_A            = {{1u << 0}};
+const PadState PAD_B            = {{1u << 1}};
+const PadState PAD_SELECT       = {{1u << 2}};
+const PadState PAD_START        = {{1u << 3}};
+const PadState PAD_RIGHT        = {{1u << 4}};
+const PadState PAD_LEFT         = {{1u << 5}};
+const PadState PAD_UP           = {{1u << 6}};
+const PadState PAD_DOWN         = {{1u << 7}};
+const PadState PAD_R            = {{1u << 8}};
+const PadState PAD_L            = {{1u << 9}};
+const PadState PAD_X            = {{1u << 10}};
+const PadState PAD_Y            = {{1u << 11}};
+const PadState PAD_CIRCLE_RIGHT = {{1u << 28}};
+const PadState PAD_CIRCLE_LEFT  = {{1u << 29}};
+const PadState PAD_CIRCLE_UP    = {{1u << 30}};
+const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
 
 // Methods for updating the HID module's state
-void PADButtonPress(PADState pad_state);
-void PADButtonRelease(PADState pad_state);
-void PADUpdateComplete();
+void PadButtonPress(PadState pad_state);
+void PadButtonRelease(PadState pad_state);
+void PadUpdateComplete();
 
-/// HID service interface
+/**
+ * HID service interface.
+ */
 class Interface : public Service::Interface {
 public:
 

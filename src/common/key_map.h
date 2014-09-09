@@ -1,4 +1,4 @@
-// Copyright 2013 Dolphin Emulator Project
+// Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
@@ -8,28 +8,38 @@
 
 namespace KeyMap {
 
-class CitraKey {
-public:
-    CitraKey() : keyCode(0) {}
-    CitraKey(int code) : keyCode(code) {}
+/**
+ * Represents a key for a specific host device.
+ */
+struct HostDeviceKey {
+    int key_code;
+    int device_id; ///< Uniquely identifies a host device
 
-    int keyCode;
-
-    bool operator < (const CitraKey &other) const {
-        return keyCode < other.keyCode;
+    bool operator < (const HostDeviceKey &other) const {
+        if (device_id == other.device_id) {
+            return key_code < other.key_code;
+        }
+        return device_id < other.device_id;
     }
 
-    bool operator == (const CitraKey &other) const {
-        return keyCode == other.keyCode;
+    bool operator == (const HostDeviceKey &other) const {
+        return device_id == other.device_id && key_code == other.key_code;
     }
 };
 
-struct DefaultKeyMapping {
-    KeyMap::CitraKey key;
-    HID_User::PADState state;
-};
+/**
+ * Generates a new device id, which uniquely identifies a host device within KeyMap.
+ */
+int NewDeviceId();
 
-void SetKeyMapping(CitraKey key, HID_User::PADState padState);
-HID_User::PADState Get3DSKey(CitraKey key);
+/**
+ * Maps a device-specific key to a PadState.
+ */
+void SetKeyMapping(HostDeviceKey key, HID_User::PadState padState);
+
+/**
+ * Gets the PadState that's mapped to the provided device-specific key.
+ */
+HID_User::PadState GetPadKey(HostDeviceKey key);
 
 }

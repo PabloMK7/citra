@@ -4,6 +4,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 set(SRCS
             break_points.cpp
             console_listener.cpp
+            emu_window.cpp
             extended_trace.cpp
             file_search.cpp
             file_util.cpp
