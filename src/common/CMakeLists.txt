@@ -38,7 +38,6 @@ set(HEADERS
             fifo_queue.h
             file_search.h
             file_util.h
-            fixed_size_queue.h
             hash.h
             linear_disk_cache.h
             log.h
