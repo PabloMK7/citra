@@ -6,8 +6,7 @@
 #include "common/common.h"
 #include "common/math_util.h"
 
-#include <cmath>
-#include <numeric>
+#include <numeric> // Necessary on OS X, but not Linux
 
 namespace MathUtil
 {

@@ -19,12 +19,8 @@
 #endif
 
 #include <cstdlib>
-#include <cstdio>
 #include <cstring>
-#include <cstdarg>
-
 #include <algorithm>
-#include <string>
 
 #include "common/common_types.h"
 #include "common/utf8.h"

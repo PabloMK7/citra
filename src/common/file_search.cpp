@@ -4,15 +4,13 @@
 
 
 #include "common/common.h"
-#include "common/common_paths.h"
+
 #ifndef _WIN32
-#include <sys/types.h>
 #include <dirent.h>
 #else
 #include <windows.h>
 #endif
 
-#include <string>
 #include <algorithm>
 
 #include "common/file_search.h"
