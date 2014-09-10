@@ -3,10 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/common.h"
-#include "common/log.h"
 #include "common/string_util.h"
-
-#include "core/hle/hle.h"
 
 #include "core/hle/service/service.h"
 #include "core/hle/service/apt.h"
@@ -15,8 +12,6 @@
 #include "core/hle/service/hid.h"
 #include "core/hle/service/ndm.h"
 #include "core/hle/service/srv.h"
-
-#include "core/hle/kernel/kernel.h"
 
 namespace Service {
 

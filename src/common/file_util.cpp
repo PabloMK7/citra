@@ -4,9 +4,7 @@
 
 
 #include "common/common.h"
-#include "common/common_paths.h"
 #include "common/file_util.h"
-#include "common/string_util.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -16,10 +14,7 @@
 #include <io.h>
 #include <direct.h>        // getcwd
 #else
-#include <cerrno>
-#include <cstdlib>
 #include <sys/param.h>
-#include <sys/types.h>
 #include <dirent.h>
 #endif
 
@@ -31,8 +26,6 @@
 
 #include <algorithm>
 #include <sys/stat.h>
-
-#include "common/string_util.h"
 
 #ifndef S_ISDIR
 #define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)

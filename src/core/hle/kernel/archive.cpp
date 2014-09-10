@@ -7,7 +7,6 @@
 
 #include "core/file_sys/archive.h"
 #include "core/hle/service/service.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

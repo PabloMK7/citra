@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.  
 
 #include <map>
-#include <string>
 
 #include "common/string_util.h"
 #include "common/symbols.h"
@@ -12,13 +11,11 @@
 
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 
 #include "core/hle/function_wrappers.h"
-#include "core/hle/svc.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

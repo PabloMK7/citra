@@ -22,11 +22,7 @@
 #include "common/string_util.h"
 
 #ifndef _WIN32
-#include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <cerrno>
-#include <cstring>
 #ifdef ANDROID
 #include <sys/ioctl.h>
 #include <linux/ashmem.h>

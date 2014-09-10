@@ -3,14 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <string>
+
 #ifdef _WIN32
 #include <windows.h>
 #include <array>
-#else
-#include <cstdarg>
 #endif
 
 #include "common/common.h"

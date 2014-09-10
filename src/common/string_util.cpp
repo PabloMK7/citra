@@ -3,17 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <cstdlib>
-#include <cstdio>
 
 #include "common/common.h"
-#include "common/common_paths.h"
 #include "common/string_util.h"
 
 #ifdef _WIN32
     #include <Windows.h>
 #else
-    #include <cerrno>
     #include <iconv.h>
 #endif
 

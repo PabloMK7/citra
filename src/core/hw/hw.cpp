@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
-#include "common/log.h"
 
 #include "core/hw/hw.h"
 #include "core/hw/gpu.h"

@@ -5,7 +5,6 @@
 #include "core/hle/coprocessor.h"
 #include "core/hle/hle.h"
 #include "core/mem_map.h"
-#include "core/core.h"
 
 namespace HLE {
 

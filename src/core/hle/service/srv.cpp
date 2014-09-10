@@ -4,7 +4,6 @@
 
 #include "core/hle/hle.h"
 #include "core/hle/service/srv.h"
-#include "core/hle/service/service.h"
 #include "core/hle/kernel/event.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

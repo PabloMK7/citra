@@ -4,8 +4,6 @@
 
 #include "common/common.h"
 
-#include "core/loader/loader.h"
-#include "core/hle/hle.h"
 #include "core/hle/service/fs.h"
 #include "core/hle/kernel/archive.h"
 
