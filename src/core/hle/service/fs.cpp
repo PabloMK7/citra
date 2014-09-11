@@ -12,35 +12,192 @@
 
 namespace FS_User {
 
+// Command to access archive file
+enum class LowPathType : u32 {
+    Invalid = 0,
+    Empty   = 1,
+    Binary  = 2,
+    Char    = 3,
+    Wchar   = 4
+};
+
+std::string GetStringFromCmdBuff(const u32 pointer, const u32 size) {
+    auto data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
+    return std::string(data, size - 1);
+}
+
+// We currently return 0 for success and -1 for failure in cmd_buff[1].  -1 was chosen because it
+// puts all the sections of the http://3dbrew.org/wiki/Error_codes to something non-zero, to make
+// sure we don't mislead the application into thinking something worked.
+
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    cmd_buff[1] = 0; // No error
+
+    // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
+    // http://3dbrew.org/wiki/FS:Initialize#Request
+    cmd_buff[1] = 0;
+
+    DEBUG_LOG(KERNEL, "called");
+}
+
+void OpenFile(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    u32 transaction = cmd_buff[1];
+    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    LowPathType type = static_cast<LowPathType>(cmd_buff[4]);
+    u32 size = cmd_buff[5];
+    FileSys::Mode mode; mode.hex = cmd_buff[6];
+    u32 attributes = cmd_buff[7]; // TODO(Link Mauve): do something with those attributes.
+    u32 pointer = cmd_buff[9];
+
+    if (type != LowPathType::Char) {
+        ERROR_LOG(KERNEL, "file LowPath type other than char is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    std::string file_name = GetStringFromCmdBuff(pointer, size);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d mode=%d attrs=%d data=%s", type, size, mode, attributes, file_name.c_str());
+
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_name, mode);
+    if (handle) {
+        cmd_buff[1] = 0;
+        cmd_buff[3] = handle;
+    } else {
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_name.c_str());
+        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        cmd_buff[1] = -1;
+    }
+
     DEBUG_LOG(KERNEL, "called");
 }
 
 void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
-    FileSys::Archive::IdCode arch_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+    u32 transaction = cmd_buff[1];
+    auto archive_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+    LowPathType archive_type = static_cast<LowPathType>(cmd_buff[3]);
+    u32 archive_size = cmd_buff[4];
+    LowPathType type = static_cast<LowPathType>(cmd_buff[5]);
+    u32 size = cmd_buff[6];
+    FileSys::Mode mode; mode.hex = cmd_buff[7];
+    u32 attributes = cmd_buff[8]; // TODO(Link Mauve): do something with those attributes.
+    u32 archive_pointer = cmd_buff[10];
+    u32 pointer = cmd_buff[12];
 
-    // TODO(bunnei): Properly implement use of these...
-    //u32 transaction       = cmd_buff[1];
-    //u32 arch_lowpath_type = cmd_buff[3];
-    //u32 arch_lowpath_sz   = cmd_buff[4];
-    //u32 file_lowpath_type = cmd_buff[5];
-    //u32 file_lowpath_sz   = cmd_buff[6];
-    //u32 flags             = cmd_buff[7];
-    //u32 attr              = cmd_buff[8];
-    //u32 arch_lowpath_desc = cmd_buff[9];
-    //u32 arch_lowpath_ptr  = cmd_buff[10];
-    //u32 file_lowpath_desc = cmd_buff[11];
-    //u32 file_lowpath_ptr  = cmd_buff[12];
+    if (archive_type != LowPathType::Empty) {
+        ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    if (type != LowPathType::Char) {
+        ERROR_LOG(KERNEL, "file LowPath type other than char is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    std::string archive_name = GetStringFromCmdBuff(archive_pointer, archive_size);
+    std::string file_name = GetStringFromCmdBuff(pointer, size);
+
+    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d archive_data=%s"
+                      "file_type=%d file_size=%d file_mode=%d file_attrs=%d file_data=%s",
+              archive_type, archive_size, archive_name.c_str(),
+              type, size, mode, attributes, file_name.c_str());
+
+    // TODO(Link Mauve): check if we should even get a handle for the archive, and don't leak it.
+    Handle archive_handle = Kernel::OpenArchive(archive_id);
+    if (archive_handle) {
+        cmd_buff[1] = 0;
+        // cmd_buff[2] isn't used according to 3dmoo's implementation.
+        cmd_buff[3] = archive_handle;
+    } else {
+        ERROR_LOG(KERNEL, "failed to get a handle for archive %s", archive_name.c_str());
+        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_name, mode);
+    if (handle) {
+        cmd_buff[1] = 0;
+        cmd_buff[3] = handle;
+    } else {
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_name.c_str());
+        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        cmd_buff[1] = -1;
+    }
+
+    DEBUG_LOG(KERNEL, "called");
+}
+
+void OpenDirectory(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle archive_handle = static_cast<Handle>(cmd_buff[2]);
+    LowPathType type = static_cast<LowPathType>(cmd_buff[3]);
+    u32 size = cmd_buff[4];
+    u32 pointer = cmd_buff[6];
+
+    if (type != LowPathType::Char) {
+        ERROR_LOG(KERNEL, "directory LowPath type other than char is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    std::string dir_name = GetStringFromCmdBuff(pointer, size);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, size, dir_name.c_str());
+
+    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_name);
+    if (handle) {
+        cmd_buff[1] = 0;
+        cmd_buff[3] = handle;
+    } else {
+        ERROR_LOG(KERNEL, "failed to get a handle for directory %s", dir_name.c_str());
+        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        cmd_buff[1] = -1;
+    }
+
+    DEBUG_LOG(KERNEL, "called");
+}
+
+void OpenArchive(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    auto arch_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
+    LowPathType type = static_cast<LowPathType>(cmd_buff[2]);
+    u32 size = cmd_buff[3];
+    u32 pointer = cmd_buff[5];
+
+    if (type != LowPathType::Empty) {
+        ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    std::string archive_name = GetStringFromCmdBuff(pointer, size);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, size, archive_name.c_str());
 
     Handle handle = Kernel::OpenArchive(arch_id);
-    if (0 != handle) {
-        cmd_buff[1] = 0; // No error
+    if (handle) {
+        cmd_buff[1] = 0;
+        // cmd_buff[2] isn't used according to 3dmoo's implementation.
         cmd_buff[3] = handle;
+    } else {
+        ERROR_LOG(KERNEL, "failed to get a handle for archive %s", archive_name.c_str());
+        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        cmd_buff[1] = -1;
     }
+
     DEBUG_LOG(KERNEL, "called");
 }
 
@@ -48,7 +205,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
     {0x08010002, Initialize,            "Initialize"},
-    {0x080201C2, nullptr,               "OpenFile"},
+    {0x080201C2, OpenFile,              "OpenFile"},
     {0x08030204, OpenFileDirectly,      "OpenFileDirectly"},
     {0x08040142, nullptr,               "DeleteFile"},
     {0x08050244, nullptr,               "RenameFile"},
@@ -57,8 +214,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08080202, nullptr,               "CreateFile"},
     {0x08090182, nullptr,               "CreateDirectory"},
     {0x080A0244, nullptr,               "RenameDirectory"},
-    {0x080B0102, nullptr,               "OpenDirectory"},
-    {0x080C00C2, nullptr,               "OpenArchive"},
+    {0x080B0102, OpenDirectory,         "OpenDirectory"},
+    {0x080C00C2, OpenArchive,           "OpenArchive"},
     {0x080D0144, nullptr,               "ControlArchive"},
     {0x080E0080, nullptr,               "CloseArchive"},
     {0x080F0180, nullptr,               "FormatThisUserSaveData"},
