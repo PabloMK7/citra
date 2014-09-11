@@ -151,29 +151,41 @@ public:
 	bool Close();
 
 	template <typename T>
-	bool ReadArray(T* data, size_t length)
+	size_t ReadArray(T* data, size_t length)
 	{
-		if (!IsOpen() || length != std::fread(data, sizeof(T), length, m_file))
+		if (!IsOpen()) {
+			m_good = false;
+			return -1;
+		}
+
+		size_t items_read = std::fread(data, sizeof(T), length, m_file);
+		if (items_read != length)
 			m_good = false;
 
-		return m_good;
+		return items_read;
 	}
 
 	template <typename T>
-	bool WriteArray(const T* data, size_t length)
+	size_t WriteArray(const T* data, size_t length)
 	{
-		if (!IsOpen() || length != std::fwrite(data, sizeof(T), length, m_file))
+		if (!IsOpen()) {
+			m_good = false;
+			return -1;
+		}
+
+		size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
+		if (items_written != length)
 			m_good = false;
 
-		return m_good;
+		return items_written;
 	}
 
-	bool ReadBytes(void* data, size_t length)
+	size_t ReadBytes(void* data, size_t length)
 	{
 		return ReadArray(reinterpret_cast<char*>(data), length);
 	}
 
-	bool WriteBytes(const void* data, size_t length)
+	size_t WriteBytes(const void* data, size_t length)
 	{
 		return WriteArray(reinterpret_cast<const char*>(data), length);
 	}
