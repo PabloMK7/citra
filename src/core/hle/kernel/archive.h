@@ -29,6 +29,15 @@ Handle OpenArchive(FileSys::Archive::IdCode id_code);
  */
 Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
 
+/**
+ * Open a File from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the File inside of the Archive
+ * @param mode Mode under which to open the File
+ * @return Opened File object
+ */
+Handle OpenFileFromArchive(Handle handle, const std::string& name, const FileSys::Mode mode);
+
 /// Initialize archives
 void ArchiveInit();
 
