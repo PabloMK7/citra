@@ -31,7 +31,7 @@
 
 #include "arm_regformat.h"
 #include "common/platform.h"
-#include "skyeye_defs.h"
+#include "core/arm/skyeye_common/skyeye_defs.h"
 
 //AJ2D--------------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ typedef unsigned long long      uint64_t;
 #endif
 */
 
-#include "armmmu.h"
+#include "core/arm/skyeye_common/armmmu.h"
 //#include "lcd/skyeye_lcd.h"
 
 

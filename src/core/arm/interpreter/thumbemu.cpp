@@ -19,7 +19,7 @@
 instruction into its corresponding ARM instruction, and using the
 existing ARM simulator.  */
 
-#include "skyeye_defs.h"
+#include "core/arm/skyeye_common/skyeye_defs.h"
 
 #ifndef MODET			/* required for the Thumb instruction support */
 #if 1
@@ -29,9 +29,9 @@ existing ARM simulator.  */
 #endif
 #endif
 
-#include "armdefs.h"
-#include "armemu.h"
-#include "armos.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armemu.h"
+#include "core/arm/skyeye_common/armos.h"
 
 
 /* Decode a 16bit Thumb instruction.  The instruction is in the low

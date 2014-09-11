@@ -9,7 +9,7 @@
 #include "core/core.h"
 #include "common/break_points.h"
 #include "common/symbols.h"
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 DisassemblerModel::DisassemblerModel(QObject* parent) : QAbstractItemModel(parent), base_address(0), code_size(0), program_counter(0), selection(QModelIndex()) {

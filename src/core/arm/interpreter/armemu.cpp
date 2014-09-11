@@ -18,9 +18,9 @@
 
 //#include <util.h> // DEBUG()
 
-#include "arm_regformat.h"
-#include "armdefs.h"
-#include "armemu.h"
+#include "core/arm/skyeye_common/arm_regformat.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armemu.h"
 #include "core/hle/hle.h"
 
 //#include "svc.h"

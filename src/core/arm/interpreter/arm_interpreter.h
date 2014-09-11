@@ -7,8 +7,8 @@
 #include "common/common.h"
 
 #include "core/arm/arm_interface.h"
-#include "core/arm/interpreter/armdefs.h"
-#include "core/arm/interpreter/armemu.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armemu.h"
 
 class ARM_Interpreter : virtual public ARM_Interface {
 public:

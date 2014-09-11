@@ -9,10 +9,6 @@ set(SRCS
             arm/interpreter/mmu/tlb.cpp
             arm/interpreter/mmu/wb.cpp
             arm/interpreter/mmu/xscale_copro.cpp
-            arm/interpreter/vfp/vfp.cpp
-            arm/interpreter/vfp/vfpdouble.cpp
-            arm/interpreter/vfp/vfpinstr.cpp
-            arm/interpreter/vfp/vfpsingle.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
@@ -22,6 +18,10 @@ set(SRCS
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
+            arm/skyeye_common/vfp/vfp.cpp
+            arm/skyeye_common/vfp/vfpdouble.cpp
+            arm/skyeye_common/vfp/vfpinstr.cpp
+            arm/skyeye_common/vfp/vfpsingle.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_sdmc.cpp
             file_sys/file_romfs.cpp
@@ -63,23 +63,23 @@ set(SRCS
 set(HEADERS
             arm/disassembler/arm_disasm.h
             arm/disassembler/load_symbol_map.h
+            arm/interpreter/arm_interpreter.h
             arm/interpreter/mmu/arm1176jzf_s_mmu.h
             arm/interpreter/mmu/cache.h
             arm/interpreter/mmu/rb.h
             arm/interpreter/mmu/sa_mmu.h
             arm/interpreter/mmu/tlb.h
             arm/interpreter/mmu/wb.h
-            arm/interpreter/vfp/asm_vfp.h
-            arm/interpreter/vfp/vfp.h
-            arm/interpreter/vfp/vfp_helper.h
-            arm/interpreter/arm_interpreter.h
-            arm/interpreter/arm_regformat.h
-            arm/interpreter/armcpu.h
-            arm/interpreter/armdefs.h
-            arm/interpreter/armemu.h
-            arm/interpreter/armmmu.h
-            arm/interpreter/armos.h
-            arm/interpreter/skyeye_defs.h
+            arm/skyeye_common/vfp/asm_vfp.h
+            arm/skyeye_common/vfp/vfp.h
+            arm/skyeye_common/vfp/vfp_helper.h
+            arm/skyeye_common/arm_regformat.h
+            arm/skyeye_common/armcpu.h
+            arm/skyeye_common/armdefs.h
+            arm/skyeye_common/armemu.h
+            arm/skyeye_common/armmmu.h
+            arm/skyeye_common/armos.h
+            arm/skyeye_common/skyeye_defs.h
             arm/arm_interface.h
             file_sys/archive.h
             file_sys/archive_romfs.h

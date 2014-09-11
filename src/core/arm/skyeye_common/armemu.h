@@ -18,7 +18,7 @@
 #define __ARMEMU_H__
 
 
-#include "armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 //#include "skyeye.h"
 
 //extern ARMword isize;

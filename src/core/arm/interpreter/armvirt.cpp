@@ -23,8 +23,8 @@ table. The routines PutWord and GetWord implement this. Pages are never
 freed as they might be needed again. A single area of memory may be
 defined to generate aborts. */
 
-#include "armdefs.h"
-#include "skyeye_defs.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/skyeye_defs.h"
 //#include "code_cov.h"
 
 #ifdef VALIDATE			/* for running the validate suite */

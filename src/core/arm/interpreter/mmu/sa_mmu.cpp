@@ -21,7 +21,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 
 /**
  *  The interface of read data from bus

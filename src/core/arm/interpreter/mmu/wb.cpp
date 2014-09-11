@@ -1,4 +1,4 @@
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 
 /* wb_init
  * @wb_t	:wb_t to init

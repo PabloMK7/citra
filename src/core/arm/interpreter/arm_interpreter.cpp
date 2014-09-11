@@ -4,7 +4,7 @@
 
 #include "core/arm/interpreter/arm_interpreter.h"
 
-const static cpu_config_t s_arm11_cpu_info = {
+const static cpu_config_t arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
 
@@ -17,7 +17,7 @@ ARM_Interpreter::ARM_Interpreter()  {
     ARMul_NewState(state);
 
     state->abort_model = 0;
-    state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
+    state->cpu = (cpu_config_t*)&arm11_cpu_info;
     state->bigendSig = LOW;
 
     ARMul_SelectProcessor(state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);

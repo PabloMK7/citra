@@ -20,10 +20,10 @@
 
 #include <assert.h>
 #include <string.h>
-#include "armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 /* two header for arm disassemble */
 //#include "skyeye_arch.h"
-#include "armcpu.h"
+#include "core/arm/skyeye_common/armcpu.h"
 
 
 extern mmu_ops_t xscale_mmu_ops;

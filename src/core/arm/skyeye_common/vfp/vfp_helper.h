@@ -38,7 +38,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 
 #define u16 uint16_t
 #define u32 uint32_t

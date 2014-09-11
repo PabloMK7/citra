@@ -1,4 +1,4 @@
-#include "core/arm/interpreter/armdefs.h"
+#include "core/arm/skyeye_common/armdefs.h"
 
 /*chy 2004-06-06, fix bug found by wenye@cs.ucsb.edu*/
 ARMword rb_masks[] = {

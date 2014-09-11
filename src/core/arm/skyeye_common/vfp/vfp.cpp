@@ -25,8 +25,8 @@
 
 #include "common/common.h"
 
-#include "core/arm/interpreter/armdefs.h"
-#include "core/arm/interpreter/vfp/vfp.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 
 //ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
 
@@ -62,7 +62,7 @@ VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#define VFP_MRC_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_MRC_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
@@ -88,7 +88,7 @@ VFPMCR (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#define VFP_MCR_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_MCR_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n", 
@@ -110,7 +110,7 @@ VFPMRRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value1, AR
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#define VFP_MRRC_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_MRRC_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
@@ -136,7 +136,7 @@ VFPMCRR (ARMul_State * state, unsigned type, ARMword instr, ARMword value1, ARMw
 	if (CoProc == 11 || CoProc == 10)
 	{
 		#define VFP_MCRR_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_MCRR_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n", 
@@ -179,7 +179,7 @@ VFPSTC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value)
 		#endif
 
 		#define VFP_STC_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_STC_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
@@ -210,7 +210,7 @@ VFPLDC (ARMul_State * state, unsigned type, ARMword instr, ARMword value)
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#define VFP_LDC_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_LDC_TRANS
 	}
 	DEBUG_LOG(ARM11, "Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n", 
@@ -237,7 +237,7 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 	if (CoProc == 10 || CoProc == 11)
 	{
 		#define VFP_CDP_TRANS
-		#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 		#undef VFP_CDP_TRANS
 		
 		int exceptions = 0;
@@ -257,21 +257,21 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 
 /* ----------- MRC ------------ */
 #define VFP_MRC_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_MRC_IMPL
 
 #define VFP_MRRC_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_MRRC_IMPL
 
 
 /* ----------- MCR ------------ */
 #define VFP_MCR_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_MCR_IMPL
 
 #define VFP_MCRR_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_MCRR_IMPL
 
 /* Memory operation are not inlined, as old Interpreter and Fast interpreter
@@ -283,19 +283,19 @@ VFPCDP (ARMul_State * state, unsigned type, ARMword instr)
 
 /* ----------- STC ------------ */
 #define VFP_STC_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_STC_IMPL
 
 
 /* ----------- LDC ------------ */
 #define VFP_LDC_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_LDC_IMPL
 
 
 /* ----------- CDP ------------ */
 #define VFP_CDP_IMPL
-#include "core/arm/interpreter/vfp/vfpinstr.cpp"
+#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_CDP_IMPL
 
 /* Miscellaneous functions */
