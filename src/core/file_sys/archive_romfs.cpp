@@ -5,6 +5,7 @@
 #include "common/common_types.h"
 
 #include "core/file_sys/archive_romfs.h"
+#include "core/file_sys/directory_romfs.h"
 #include "core/file_sys/file_romfs.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -30,6 +31,15 @@ Archive_RomFS::~Archive_RomFS() {
  */
 std::unique_ptr<File> Archive_RomFS::OpenFile(const std::string& path, const Mode mode) const {
     return std::unique_ptr<File>(new File_RomFS);
+}
+
+/**
+ * Open a directory specified by its path
+ * @param path Path relative to the archive
+ * @return Opened directory, or nullptr
+ */
+std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const std::string& path) const {
+    return std::unique_ptr<Directory>(new Directory_RomFS);
 }
 
 /**

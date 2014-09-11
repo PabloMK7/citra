@@ -8,6 +8,7 @@
 #include "common/file_util.h"
 
 #include "core/file_sys/archive_sdmc.h"
+#include "core/file_sys/directory_sdmc.h"
 #include "core/file_sys/file_sdmc.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +43,17 @@ std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode
     DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.c_str(), mode);
     File_SDMC* file = new File_SDMC(this, path, mode);
     return std::unique_ptr<File>(file);
+}
+
+/**
+ * Open a directory specified by its path
+ * @param path Path relative to the archive
+ * @return Opened directory, or nullptr
+ */
+std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const std::string& path) const {
+    DEBUG_LOG(FILESYS, "called path=%s", path.c_str());
+    Directory_SDMC* directory = new Directory_SDMC(this, path);
+    return std::unique_ptr<Directory>(directory);
 }
 
 /**

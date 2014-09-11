@@ -10,6 +10,7 @@
 #include "common/bit_field.h"
 
 #include "core/file_sys/file.h"
+#include "core/file_sys/directory.h"
 
 #include "core/hle/kernel/kernel.h"
 
@@ -54,6 +55,13 @@ public:
      * @return Opened file, or nullptr
      */
     virtual std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const = 0;
+
+    /**
+     * Open a directory specified by its path
+     * @param path Path relative to the archive
+     * @return Opened directory, or nullptr
+     */
+    virtual std::unique_ptr<Directory> OpenDirectory(const std::string& path) const = 0;
 
     /**
      * Read data from the archive

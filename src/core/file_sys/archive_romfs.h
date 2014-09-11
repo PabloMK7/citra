@@ -37,6 +37,13 @@ public:
     std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const override;
 
     /**
+     * Open a directory specified by its path
+     * @param path Path relative to the archive
+     * @return Opened directory, or nullptr
+     */
+    std::unique_ptr<Directory> OpenDirectory(const std::string& path) const override;
+
+    /**
      * Read data from the archive
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from archive
