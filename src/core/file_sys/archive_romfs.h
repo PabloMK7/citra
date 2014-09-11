@@ -29,6 +29,14 @@ public:
     IdCode GetIdCode() const override { return IdCode::RomFS; };
 
     /**
+     * Open a file specified by its path, using the specified mode
+     * @param path Path relative to the archive
+     * @param mode Mode to open the file with
+     * @return Opened file, or nullptr
+     */
+    std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const override;
+
+    /**
      * Read data from the archive
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from archive
