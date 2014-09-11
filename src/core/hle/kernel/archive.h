@@ -38,6 +38,14 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
  */
 Handle OpenFileFromArchive(Handle handle, const std::string& name, const FileSys::Mode mode);
 
+/**
+ * Open a Directory from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the Directory inside of the Archive
+ * @return Opened Directory object
+ */
+Handle OpenDirectoryFromArchive(Handle handle, const std::string& name);
+
 /// Initialize archives
 void ArchiveInit();
 
