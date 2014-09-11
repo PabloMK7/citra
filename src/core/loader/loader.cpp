@@ -78,7 +78,7 @@ ResultStatus LoadFile(const std::string& filename) {
     {
         INFO_LOG(LOADER, "Loading BIN file %s...", filename.c_str());
 
-        File::IOFile file(filename, "rb");
+        FileUtil::IOFile file(filename, "rb");
 
         if (file.IsOpen()) {
             file.ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), (size_t)file.GetSize());

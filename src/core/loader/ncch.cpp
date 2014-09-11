@@ -138,7 +138,7 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
  */
 ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const {
     // Iterate through the ExeFs archive until we find the .code file...
-    File::IOFile file(filename, "rb");
+    FileUtil::IOFile file(filename, "rb");
     if (file.IsOpen()) {
         for (int i = 0; i < kMaxSections; i++) {
             // Load the specified section...
@@ -199,7 +199,7 @@ ResultStatus AppLoader_NCCH::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    File::IOFile file(filename, "rb");
+    FileUtil::IOFile file(filename, "rb");
     if (file.IsOpen()) {
         file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
 
@@ -290,7 +290,7 @@ ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) const {
  * @return ResultStatus result of function
  */
 ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
-    File::IOFile file(filename, "rb");
+    FileUtil::IOFile file(filename, "rb");
     if (file.IsOpen()) {
         // Check if the NCCH has a RomFS...
         if (ncch_header.romfs_offset != 0 && ncch_header.romfs_size != 0) {

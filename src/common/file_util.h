@@ -43,7 +43,7 @@ enum {
 	NUM_PATH_INDICES
 };
 
-namespace File
+namespace FileUtil
 {
 
 // FileSystem tree node/ 

@@ -351,7 +351,7 @@ ResultStatus AppLoader_ELF::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    File::IOFile file(filename, "rb");
+    FileUtil::IOFile file(filename, "rb");
 
     if (file.IsOpen()) {
         u32 size = (u32)file.GetSize();

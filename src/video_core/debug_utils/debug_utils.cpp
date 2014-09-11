@@ -336,7 +336,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     png_infop info_ptr = nullptr;
 
     // Open file for writing (binary mode)
-    File::IOFile fp(filename, "wb");
+    FileUtil::IOFile fp(filename, "wb");
 
     // Initialize write structure
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
