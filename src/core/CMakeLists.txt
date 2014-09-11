@@ -23,7 +23,9 @@ set(SRCS
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
             file_sys/archive_romfs.cpp
+            file_sys/archive_sdmc.cpp
             file_sys/file_romfs.cpp
+            file_sys/file_sdmc.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/archive.cpp
             hle/kernel/event.cpp
@@ -78,8 +80,10 @@ set(HEADERS
             arm/arm_interface.h
             file_sys/archive.h
             file_sys/archive_romfs.h
+            file_sys/archive_sdmc.h
             file_sys/file.h
             file_sys/file_romfs.h
+            file_sys/file_sdmc.h
             hle/kernel/address_arbiter.h
             hle/kernel/archive.h
             hle/kernel/event.h
