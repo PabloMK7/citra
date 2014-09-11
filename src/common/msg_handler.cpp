@@ -72,7 +72,7 @@ bool MsgAlert(bool yes_no, int Style, const char* format, ...)
 
     va_list args;
     va_start(args, format);
-    CharArrayFromFormatV(buffer, sizeof(buffer)-1, str_translator(format).c_str(), args);
+    Common::CharArrayFromFormatV(buffer, sizeof(buffer)-1, str_translator(format).c_str(), args);
     va_end(args);
 
     ERROR_LOG(MASTER_LOG, "%s: %s", caption.c_str(), buffer);

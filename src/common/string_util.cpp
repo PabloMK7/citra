@@ -13,20 +13,18 @@
     #include <iconv.h>
 #endif
 
+namespace Common {
+
 /// Make a string lowercase
-void LowerStr(char* str) {
-    for (int i = 0; str[i]; i++) {
-        str[i] = tolower(str[ i ]);
-    }
+std::string ToLower(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return str;
 }
 
 /// Make a string uppercase
-void UpperStr(char* str) {
-    for (int i=0; i < strlen(str); i++) {
-        if(str[i] >= 'a' && str[i] <= 'z') {
-            str[i] &= 0xDF;
-        }
-    }
+std::string ToUpper(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+    return str;
 }
 
 // faster than sscanf
@@ -546,3 +544,5 @@ std::string UTF16ToUTF8(const std::wstring& input)
 }
 
 #endif
+
+}

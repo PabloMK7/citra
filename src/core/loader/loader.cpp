@@ -25,22 +25,23 @@ FileType IdentifyFile(const std::string &filename) {
         ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
         return FileType::Error;
     }
-    std::string extension = filename.size() >= 5 ? filename.substr(filename.size() - 4) : "";
 
-    if (!strcasecmp(extension.c_str(), ".elf")) {
-        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (!strcasecmp(extension.c_str(), ".axf")) {
-        return FileType::ELF; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (!strcasecmp(extension.c_str(), ".cxi")) {
-        return FileType::CXI; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (!strcasecmp(extension.c_str(), ".cci")) {
-        return FileType::CCI; // TODO(bunnei): Do some filetype checking :p
-    }
-    else if (!strcasecmp(extension.c_str(), ".bin")) {
-        return FileType::BIN; // TODO(bunnei): Do some filetype checking :p
+    size_t extension_loc = filename.find_last_of('.');
+    if (extension_loc == std::string::npos)
+        return FileType::Unknown;
+    std::string extension = Common::ToLower(filename.substr(extension_loc));
+
+    // TODO(bunnei): Do actual filetype checking instead of naively checking the extension
+    if (extension == ".elf") {
+        return FileType::ELF;
+    } else if (extension == ".axf") {
+        return FileType::ELF;
+    } else if (extension == ".cxi") {
+        return FileType::CXI;
+    } else if (extension == ".cci") {
+        return FileType::CCI;
+    } else if (extension == ".bin") {
+        return FileType::BIN;
     }
     return FileType::Unknown;
 }

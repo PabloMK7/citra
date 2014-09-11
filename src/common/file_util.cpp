@@ -64,7 +64,7 @@ bool Exists(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
-    int result = _tstat64(UTF8ToTStr(copy).c_str(), &file_info);
+    int result = _tstat64(Common::UTF8ToTStr(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
 #endif
@@ -81,7 +81,7 @@ bool IsDirectory(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
-    int result = _tstat64(UTF8ToTStr(copy).c_str(), &file_info);
+    int result = _tstat64(Common::UTF8ToTStr(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
 #endif
@@ -117,7 +117,7 @@ bool Delete(const std::string &filename)
     }
 
 #ifdef _WIN32
-    if (!DeleteFile(UTF8ToTStr(filename).c_str()))
+    if (!DeleteFile(Common::UTF8ToTStr(filename).c_str()))
     {
         WARN_LOG(COMMON, "Delete: DeleteFile failed on %s: %s", 
                  filename.c_str(), GetLastErrorMsg());
@@ -139,7 +139,7 @@ bool CreateDir(const std::string &path)
 {
     INFO_LOG(COMMON, "CreateDir: directory %s", path.c_str());
 #ifdef _WIN32
-    if (::CreateDirectory(UTF8ToTStr(path).c_str(), NULL))
+    if (::CreateDirectory(Common::UTF8ToTStr(path).c_str(), NULL))
         return true;
     DWORD error = GetLastError();
     if (error == ERROR_ALREADY_EXISTS)
@@ -218,7 +218,7 @@ bool DeleteDir(const std::string &filename)
     }
 
 #ifdef _WIN32
-    if (::RemoveDirectory(UTF8ToTStr(filename).c_str()))
+    if (::RemoveDirectory(Common::UTF8ToTStr(filename).c_str()))
         return true;
 #else
     if (rmdir(filename.c_str()) == 0)
@@ -247,7 +247,7 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename)
     INFO_LOG(COMMON, "Copy: %s --> %s", 
             srcFilename.c_str(), destFilename.c_str());
 #ifdef _WIN32
-    if (CopyFile(UTF8ToTStr(srcFilename).c_str(), UTF8ToTStr(destFilename).c_str(), FALSE))
+    if (CopyFile(Common::UTF8ToTStr(srcFilename).c_str(), Common::UTF8ToTStr(destFilename).c_str(), FALSE))
         return true;
 
     ERROR_LOG(COMMON, "Copy: failed %s --> %s: %s", 
@@ -335,7 +335,7 @@ u64 GetSize(const std::string &filename)
     
     struct stat64 buf;
 #ifdef _WIN32
-    if (_tstat64(UTF8ToTStr(filename).c_str(), &buf) == 0)
+    if (_tstat64(Common::UTF8ToTStr(filename).c_str(), &buf) == 0)
 #else
     if (stat64(filename.c_str(), &buf) == 0)
 #endif
@@ -408,7 +408,7 @@ u32 ScanDirectoryTree(const std::string &directory, FSTEntry& parentEntry)
     // Find the first file in the directory.
     WIN32_FIND_DATA ffd;
 
-    HANDLE hFind = FindFirstFile(UTF8ToTStr(directory + "\\*").c_str(), &ffd);
+    HANDLE hFind = FindFirstFile(Common::UTF8ToTStr(directory + "\\*").c_str(), &ffd);
     if (hFind == INVALID_HANDLE_VALUE)
     {
         FindClose(hFind);
@@ -418,7 +418,7 @@ u32 ScanDirectoryTree(const std::string &directory, FSTEntry& parentEntry)
     do
     {
         FSTEntry entry;
-        const std::string virtualName(TStrToUTF8(ffd.cFileName));
+        const std::string virtualName(Common::TStrToUTF8(ffd.cFileName));
 #else
     struct dirent dirent, *result = NULL;
 
@@ -475,7 +475,7 @@ bool DeleteDirRecursively(const std::string &directory)
 #ifdef _WIN32
     // Find the first file in the directory.
     WIN32_FIND_DATA ffd;
-    HANDLE hFind = FindFirstFile(UTF8ToTStr(directory + "\\*").c_str(), &ffd);
+    HANDLE hFind = FindFirstFile(Common::UTF8ToTStr(directory + "\\*").c_str(), &ffd);
 
     if (hFind == INVALID_HANDLE_VALUE)
     {
@@ -486,7 +486,7 @@ bool DeleteDirRecursively(const std::string &directory)
     // windows loop
     do
     {
-        const std::string virtualName(TStrToUTF8(ffd.cFileName));
+        const std::string virtualName(Common::TStrToUTF8(ffd.cFileName));
 #else
     struct dirent dirent, *result = NULL;
     DIR *dirp = opendir(directory.c_str());
@@ -624,7 +624,7 @@ std::string& GetExeDirectory()
     {
         TCHAR Dolphin_exe_Path[2048];
         GetModuleFileName(NULL, Dolphin_exe_Path, 2048);
-        DolphinPath = TStrToUTF8(Dolphin_exe_Path);
+        DolphinPath = Common::TStrToUTF8(Dolphin_exe_Path);
         DolphinPath = DolphinPath.substr(0, DolphinPath.find_last_of('\\'));
     }
     return DolphinPath;
@@ -819,7 +819,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[])
 {
     Close();
 #ifdef _WIN32
-    _tfopen_s(&m_file, UTF8ToTStr(filename).c_str(), UTF8ToTStr(openmode).c_str());
+    _tfopen_s(&m_file, Common::UTF8ToTStr(filename).c_str(), Common::UTF8ToTStr(openmode).c_str());
 #else
     m_file = fopen(filename.c_str(), openmode);
 #endif

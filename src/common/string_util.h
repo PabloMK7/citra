@@ -12,11 +12,13 @@
 
 #include "common/common.h"
 
+namespace Common {
+
 /// Make a string lowercase
-void LowerStr(char* str);
+std::string ToLower(std::string str);
 
 /// Make a string uppercase
-void UpperStr(char* str);
+std::string ToUpper(std::string str);
 
 std::string StringFromFormat(const char* format, ...);
 // Cheap!
@@ -111,3 +113,5 @@ inline std::string UTF8ToTStr(const std::string& str)
 #endif
 
 #endif
+
+}

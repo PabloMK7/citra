@@ -77,7 +77,7 @@ void RendererOpenGL::SwapBuffers() {
     //
     // TODO(princesspeachum): (related to above^) this should only be called when there's new data, not every frame.
     // Currently this uploads data that shouldn't have changed.
-    common::Rect framebuffer_size(0, 0, resolution_width, resolution_height);
+    Common::Rect framebuffer_size(0, 0, resolution_width, resolution_height);
     RenderXFB(framebuffer_size, framebuffer_size);
 
     // XFB->Window copy
@@ -113,7 +113,7 @@ void RendererOpenGL::FlipFramebuffer(const u8* raw_data, ScreenInfo& screen_info
  * @param src_rect Source rectangle in XFB to copy
  * @param dst_rect Destination rectangle in output framebuffer to copy to
  */
-void RendererOpenGL::RenderXFB(const common::Rect& src_rect, const common::Rect& dst_rect) {
+void RendererOpenGL::RenderXFB(const Common::Rect& src_rect, const Common::Rect& dst_rect) {
     const auto& framebuffer_top = GPU::g_regs.framebuffer_config[0];
     const auto& framebuffer_sub = GPU::g_regs.framebuffer_config[1];
     const u32 active_fb_top = (framebuffer_top.active_fb == 1)

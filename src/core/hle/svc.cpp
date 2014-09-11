@@ -218,7 +218,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
         TSymbol symbol = Symbols::GetSymbol(entry_point);
         name = symbol.name;
     } else {
-        name = StringFromFormat("unknown-%08x", entry_point);
+        name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
     Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, arg, processor_id,

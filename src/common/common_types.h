@@ -100,7 +100,7 @@ union t128 {
     __m128  a;              ///< 128-bit floating point (__m128 maps to the XMM[0-7] registers)
 };
 
-namespace common {
+namespace Common {
 /// Rectangle data structure
 class Rect {
 public:
