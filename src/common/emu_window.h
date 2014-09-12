@@ -7,6 +7,8 @@
 #include "common/common.h"
 #include "common/scm_rev.h"
 
+#include "common/key_map.h"
+
 // Abstraction class used to provide an interface between emulation code and the frontend (e.g. SDL, 
 //  QGLWidget, GLFW, etc...)
 class EmuWindow
@@ -31,6 +33,12 @@ public:
 
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     virtual void DoneCurrent() = 0;
+
+    /// Signals a key press action to the HID module
+    static void KeyPressed(KeyMap::HostDeviceKey key);
+
+    /// Signals a key release action to the HID module
+    static void KeyReleased(KeyMap::HostDeviceKey key);
 
     Config GetConfig() const { 
         return m_config;

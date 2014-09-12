@@ -116,4 +116,6 @@ private:
     EmuThread emu_thread;
 
     QByteArray geometry;
+
+    int keyboard_id;
 };

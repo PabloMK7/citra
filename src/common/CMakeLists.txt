@@ -4,10 +4,12 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 set(SRCS
             break_points.cpp
             console_listener.cpp
+            emu_window.cpp
             extended_trace.cpp
             file_search.cpp
             file_util.cpp
             hash.cpp
+            key_map.cpp
             log_manager.cpp
             math_util.cpp
             mem_arena.cpp
@@ -39,6 +41,7 @@ set(HEADERS
             file_search.h
             file_util.h
             hash.h
+            key_map.h
             linear_disk_cache.h
             log.h
             log_manager.h
