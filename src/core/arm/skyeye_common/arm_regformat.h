@@ -99,5 +99,7 @@ enum arm_regno{
     MAX_REG_NUM,
 };
 
-#define VFP_OFFSET(x) (x - VFP_BASE)
+#define CP15(idx)       (idx - CP15_BASE)
+#define VFP_OFFSET(x)   (x - VFP_BASE)
+
 #endif

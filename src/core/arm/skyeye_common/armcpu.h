@@ -20,16 +20,13 @@
 
 #ifndef __ARM_CPU_H__
 #define __ARM_CPU_H__
-//#include <skyeye_thread.h>
-//#include <skyeye_obj.h>
-//#include <skyeye_mach.h>
-//#include <skyeye_exec.h>
 
 #include <stddef.h>
 #include <stdio.h>
 
 #include "common/thread.h"
 
+#include "core/arm/skyeye_common/armdefs.h"
 
 typedef struct ARM_CPU_State_s {
     ARMul_State * core;

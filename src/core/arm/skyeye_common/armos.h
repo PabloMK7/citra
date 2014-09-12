@@ -15,14 +15,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
-//#include "bank_defs.h"
-//#include "dyncom/defines.h"
-
-//typedef struct mmap_area{
-//	mem_bank_t bank;
-//	void *mmap_addr;
-//	struct mmap_area *next;
-//}mmap_area_t;
+#include <stdint.h>
 
 #if FAST_MEMORY
 /* in user mode, mmap_base will be on initial brk,
