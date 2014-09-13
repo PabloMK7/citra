@@ -7,25 +7,25 @@
 // Make sure we pick up USER_DIR if set in config.h
 #include "common/common.h"
 
-// Directory seperators, do we need this?
+// Directory separators, do we need this?
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'
 
 #ifndef MAX_PATH
-#define MAX_PATH    260
+#define MAX_PATH 260
 #endif
 
 // The user data dir
 #define ROOT_DIR "."
 #ifdef _WIN32
     #define USERDATA_DIR "user"
-    #define EMU_DATA_DIR "emu"
+    #define EMU_DATA_DIR "Citra Emulator"
 #else
     #define USERDATA_DIR "user"
     #ifdef USER_DIR
         #define EMU_DATA_DIR USER_DIR
     #else
-        #define EMU_DATA_DIR ".emu"
+        #define EMU_DATA_DIR ".citra-emu"
     #endif
 #endif
 
@@ -48,30 +48,30 @@
 #define JAP_DIR "JAP"
 
 // Subdirs in the User dir returned by GetUserPath(D_USER_IDX)
-#define CONFIG_DIR            "config"
-#define GAMECONFIG_DIR        "game_config"
-#define MAPS_DIR            "maps"
-#define CACHE_DIR            "cache"
+#define CONFIG_DIR        "config"
+#define GAMECONFIG_DIR    "game_config"
+#define MAPS_DIR          "maps"
+#define CACHE_DIR         "cache"
 #define SDMC_DIR          "sdmc"
-#define SHADERCACHE_DIR        "shader_cache"
-#define STATESAVES_DIR        "state_saves"
-#define SCREENSHOTS_DIR        "screenShots"
-#define DUMP_DIR            "dump"
-#define DUMP_TEXTURES_DIR    "textures"
-#define DUMP_FRAMES_DIR        "frames"
-#define DUMP_AUDIO_DIR        "audio"
-#define LOGS_DIR            "logs"
-#define SHADERS_DIR         "shaders"
-#define SYSCONF_DIR         "sysconf"
+#define SHADERCACHE_DIR   "shader_cache"
+#define STATESAVES_DIR    "state_saves"
+#define SCREENSHOTS_DIR   "screenShots"
+#define DUMP_DIR          "dump"
+#define DUMP_TEXTURES_DIR "textures"
+#define DUMP_FRAMES_DIR   "frames"
+#define DUMP_AUDIO_DIR    "audio"
+#define LOGS_DIR          "logs"
+#define SHADERS_DIR       "shaders"
+#define SYSCONF_DIR       "sysconf"
 
 // Filenames
 // Files in the directory returned by GetUserPath(D_CONFIG_IDX)
 #define EMU_CONFIG        "emu.ini"
-#define DEBUGGER_CONFIG    "debugger.ini"
-#define LOGGER_CONFIG    "logger.ini"
+#define DEBUGGER_CONFIG   "debugger.ini"
+#define LOGGER_CONFIG     "logger.ini"
 
 // Files in the directory returned by GetUserPath(D_LOGS_IDX)
-#define MAIN_LOG    "emu.log"
+#define MAIN_LOG "emu.log"
 
 // Files in the directory returned by GetUserPath(D_SYSCONF_IDX)
-#define SYSCONF    "SYSCONF"
+#define SYSCONF "SYSCONF"

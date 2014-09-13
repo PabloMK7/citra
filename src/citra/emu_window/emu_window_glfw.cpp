@@ -6,26 +6,9 @@
 
 #include "video_core/video_core.h"
 
-#include "citra/emu_window/emu_window_glfw.h"
+#include "core/settings.h"
 
-static const std::pair<int, HID_User::PadState> default_key_map[] = {
-    { GLFW_KEY_A, HID_User::PAD_A },
-    { GLFW_KEY_B, HID_User::PAD_B },
-    { GLFW_KEY_BACKSLASH, HID_User::PAD_SELECT },
-    { GLFW_KEY_ENTER, HID_User::PAD_START },
-    { GLFW_KEY_RIGHT, HID_User::PAD_RIGHT },
-    { GLFW_KEY_LEFT, HID_User::PAD_LEFT },
-    { GLFW_KEY_UP, HID_User::PAD_UP },
-    { GLFW_KEY_DOWN, HID_User::PAD_DOWN },
-    { GLFW_KEY_R, HID_User::PAD_R },
-    { GLFW_KEY_L, HID_User::PAD_L },
-    { GLFW_KEY_X, HID_User::PAD_X },
-    { GLFW_KEY_Y, HID_User::PAD_Y },
-    { GLFW_KEY_H, HID_User::PAD_CIRCLE_RIGHT },
-    { GLFW_KEY_F, HID_User::PAD_CIRCLE_LEFT },
-    { GLFW_KEY_T, HID_User::PAD_CIRCLE_UP },
-    { GLFW_KEY_G, HID_User::PAD_CIRCLE_DOWN },
-};
+#include "citra/emu_window/emu_window_glfw.h"
 
 /// Called by GLFW when a key event occurs
 void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods) {
@@ -48,14 +31,9 @@ void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int acti
 
 /// EmuWindow_GLFW constructor
 EmuWindow_GLFW::EmuWindow_GLFW() {
-
-    // Register a new ID for the default keyboard
     keyboard_id = KeyMap::NewDeviceId();
 
-    // Set default key mappings for keyboard
-    for (auto mapping : default_key_map) {
-        KeyMap::SetKeyMapping({mapping.first, keyboard_id}, mapping.second);
-    }
+    ReloadSetKeymaps();
 
     // Initialize the window
     if(glfwInit() != GL_TRUE) {
@@ -110,4 +88,23 @@ void EmuWindow_GLFW::MakeCurrent() {
 /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
 void EmuWindow_GLFW::DoneCurrent() {
     glfwMakeContextCurrent(NULL);
+}
+
+void EmuWindow_GLFW::ReloadSetKeymaps() {
+    KeyMap::SetKeyMapping({Settings::values.pad_a_key,      keyboard_id}, HID_User::PAD_A);
+    KeyMap::SetKeyMapping({Settings::values.pad_b_key,      keyboard_id}, HID_User::PAD_B);
+    KeyMap::SetKeyMapping({Settings::values.pad_select_key, keyboard_id}, HID_User::PAD_SELECT);
+    KeyMap::SetKeyMapping({Settings::values.pad_start_key,  keyboard_id}, HID_User::PAD_START);
+    KeyMap::SetKeyMapping({Settings::values.pad_dright_key, keyboard_id}, HID_User::PAD_RIGHT);
+    KeyMap::SetKeyMapping({Settings::values.pad_dleft_key,  keyboard_id}, HID_User::PAD_LEFT);
+    KeyMap::SetKeyMapping({Settings::values.pad_dup_key,    keyboard_id}, HID_User::PAD_UP);
+    KeyMap::SetKeyMapping({Settings::values.pad_ddown_key,  keyboard_id}, HID_User::PAD_DOWN);
+    KeyMap::SetKeyMapping({Settings::values.pad_r_key,      keyboard_id}, HID_User::PAD_R);
+    KeyMap::SetKeyMapping({Settings::values.pad_l_key,      keyboard_id}, HID_User::PAD_L);
+    KeyMap::SetKeyMapping({Settings::values.pad_x_key,      keyboard_id}, HID_User::PAD_X);
+    KeyMap::SetKeyMapping({Settings::values.pad_y_key,      keyboard_id}, HID_User::PAD_Y);
+    KeyMap::SetKeyMapping({Settings::values.pad_sright_key, keyboard_id}, HID_User::PAD_CIRCLE_RIGHT);
+    KeyMap::SetKeyMapping({Settings::values.pad_sleft_key,  keyboard_id}, HID_User::PAD_CIRCLE_LEFT);
+    KeyMap::SetKeyMapping({Settings::values.pad_sup_key,    keyboard_id}, HID_User::PAD_CIRCLE_UP);
+    KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, HID_User::PAD_CIRCLE_DOWN);
 }

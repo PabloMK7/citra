@@ -648,7 +648,7 @@ std::string GetSysDirectory()
     return sysDir;
 }
 
-// Returns a string with a Dolphin data dir or file in the user's home
+// Returns a string with a Citra data dir or file in the user's home
 // directory. To be used in "multi-user" mode (that is, installed).
 const std::string& GetUserPath(const unsigned int DirIDX, const std::string &newPath)
 {
@@ -668,22 +668,22 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
                 getenv("PWD") : "") + DIR_SEP EMU_DATA_DIR DIR_SEP;
 #endif
 
-        paths[D_CONFIG_IDX]            = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
-        paths[D_GAMECONFIG_IDX]        = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
-        paths[D_MAPS_IDX]            = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
-        paths[D_CACHE_IDX]            = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
+        paths[D_CONFIG_IDX]         = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
+        paths[D_GAMECONFIG_IDX]     = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
+        paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
+        paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
         paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
         paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
-        paths[D_STATESAVES_IDX]        = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
+        paths[D_STATESAVES_IDX]     = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
         paths[D_SCREENSHOTS_IDX]    = paths[D_USER_IDX] + SCREENSHOTS_DIR DIR_SEP;
-        paths[D_DUMP_IDX]            = paths[D_USER_IDX] + DUMP_DIR DIR_SEP;
-        paths[D_DUMPFRAMES_IDX]        = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
-        paths[D_DUMPAUDIO_IDX]        = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
-        paths[D_DUMPTEXTURES_IDX]    = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
-        paths[D_LOGS_IDX]            = paths[D_USER_IDX] + LOGS_DIR DIR_SEP;
-        paths[F_DEBUGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
-        paths[F_LOGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
+        paths[D_DUMP_IDX]           = paths[D_USER_IDX] + DUMP_DIR DIR_SEP;
+        paths[D_DUMPFRAMES_IDX]     = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
+        paths[D_DUMPAUDIO_IDX]      = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
+        paths[D_DUMPTEXTURES_IDX]   = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
+        paths[D_LOGS_IDX]           = paths[D_USER_IDX] + LOGS_DIR DIR_SEP;
+        paths[F_DEBUGGERCONFIG_IDX] = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
+        paths[F_LOGGERCONFIG_IDX]   = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
         paths[F_MAINLOG_IDX]        = paths[D_LOGS_IDX] + MAIN_LOG;
     }
 
@@ -702,44 +702,44 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
         switch (DirIDX)
         {
         case D_ROOT_IDX:
-            paths[D_USER_IDX] = paths[D_ROOT_IDX] + DIR_SEP;
-            paths[D_SYSCONF_IDX]    = paths[D_USER_IDX] + SYSCONF_DIR + DIR_SEP;
-            paths[F_SYSCONF_IDX]    = paths[D_SYSCONF_IDX] + SYSCONF;
+            paths[D_USER_IDX]           = paths[D_ROOT_IDX] + DIR_SEP;
+            paths[D_SYSCONF_IDX]        = paths[D_USER_IDX] + SYSCONF_DIR + DIR_SEP;
+            paths[F_SYSCONF_IDX]        = paths[D_SYSCONF_IDX] + SYSCONF;
             break;
 
         case D_USER_IDX:
-            paths[D_USER_IDX]        = paths[D_ROOT_IDX] + DIR_SEP;
-            paths[D_CONFIG_IDX]            = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
-            paths[D_GAMECONFIG_IDX]        = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
-            paths[D_MAPS_IDX]            = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
-            paths[D_CACHE_IDX]            = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
+            paths[D_USER_IDX]           = paths[D_ROOT_IDX] + DIR_SEP;
+            paths[D_CONFIG_IDX]         = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
+            paths[D_GAMECONFIG_IDX]     = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
+            paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
+            paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
             paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
             paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
             paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
-            paths[D_STATESAVES_IDX]        = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
+            paths[D_STATESAVES_IDX]     = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
             paths[D_SCREENSHOTS_IDX]    = paths[D_USER_IDX] + SCREENSHOTS_DIR DIR_SEP;
-            paths[D_DUMP_IDX]            = paths[D_USER_IDX] + DUMP_DIR DIR_SEP;
-            paths[D_DUMPFRAMES_IDX]        = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
-            paths[D_DUMPAUDIO_IDX]        = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
-            paths[D_DUMPTEXTURES_IDX]    = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
-            paths[D_LOGS_IDX]            = paths[D_USER_IDX] + LOGS_DIR DIR_SEP;
+            paths[D_DUMP_IDX]           = paths[D_USER_IDX] + DUMP_DIR DIR_SEP;
+            paths[D_DUMPFRAMES_IDX]     = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
+            paths[D_DUMPAUDIO_IDX]      = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
+            paths[D_DUMPTEXTURES_IDX]   = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
+            paths[D_LOGS_IDX]           = paths[D_USER_IDX] + LOGS_DIR DIR_SEP;
             paths[D_SYSCONF_IDX]        = paths[D_USER_IDX] + SYSCONF_DIR DIR_SEP;
-            paths[F_EMUCONFIG_IDX]        = paths[D_CONFIG_IDX] + EMU_CONFIG;
-            paths[F_DEBUGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
-            paths[F_LOGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
+            paths[F_EMUCONFIG_IDX]      = paths[D_CONFIG_IDX] + EMU_CONFIG;
+            paths[F_DEBUGGERCONFIG_IDX] = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
+            paths[F_LOGGERCONFIG_IDX]   = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
             paths[F_MAINLOG_IDX]        = paths[D_LOGS_IDX] + MAIN_LOG;
             break;
 
         case D_CONFIG_IDX:
-            paths[F_EMUCONFIG_IDX]    = paths[D_CONFIG_IDX] + EMU_CONFIG;
-            paths[F_DEBUGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
-            paths[F_LOGGERCONFIG_IDX]    = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
+            paths[F_EMUCONFIG_IDX]      = paths[D_CONFIG_IDX] + EMU_CONFIG;
+            paths[F_DEBUGGERCONFIG_IDX] = paths[D_CONFIG_IDX] + DEBUGGER_CONFIG;
+            paths[F_LOGGERCONFIG_IDX]   = paths[D_CONFIG_IDX] + LOGGER_CONFIG;
             break;
 
         case D_DUMP_IDX:
-            paths[D_DUMPFRAMES_IDX]        = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
-            paths[D_DUMPAUDIO_IDX]        = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
-            paths[D_DUMPTEXTURES_IDX]    = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
+            paths[D_DUMPFRAMES_IDX]     = paths[D_DUMP_IDX] + DUMP_FRAMES_DIR DIR_SEP;
+            paths[D_DUMPAUDIO_IDX]      = paths[D_DUMP_IDX] + DUMP_AUDIO_DIR DIR_SEP;
+            paths[D_DUMPTEXTURES_IDX]   = paths[D_DUMP_IDX] + DUMP_TEXTURES_DIR DIR_SEP;
             break;
 
         case D_LOGS_IDX:

@@ -56,6 +56,7 @@ set(SRCS
             core_timing.cpp
             mem_map.cpp
             mem_map_funcs.cpp
+            settings.cpp
             system.cpp
             )
 
@@ -117,6 +118,7 @@ set(HEADERS
             core.h
             core_timing.h
             mem_map.h
+            settings.h
             system.h
             )
 
