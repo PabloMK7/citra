@@ -22,6 +22,13 @@ namespace Kernel {
 Handle OpenArchive(FileSys::Archive::IdCode id_code);
 
 /**
+ * Closes an archive
+ * @param id_code IdCode of the archive to open
+ * @return true if it worked fine
+ */
+Result CloseArchive(FileSys::Archive::IdCode id_code);
+
+/**
  * Creates an Archive
  * @param backend File system backend interface to the archive
  * @param name Optional name of Archive

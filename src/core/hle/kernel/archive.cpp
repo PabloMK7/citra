@@ -96,6 +96,13 @@ public:
             backend->SetSize(cmd_buff[1] | ((u64)cmd_buff[2] << 32));
             break;
         }
+        case FileCommand::Close:
+        {
+            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            Kernel::g_object_pool.Destroy<Archive>(GetHandle());
+            CloseArchive(backend->GetIdCode());
+            break;
+        }
         // Unknown command...
         default:
         {
@@ -174,6 +181,13 @@ public:
             break;
         }
 
+        case FileCommand::Close:
+        {
+            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            Kernel::g_object_pool.Destroy<File>(GetHandle());
+            break;
+        }
+
         // Unknown command...
         default:
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
@@ -230,6 +244,13 @@ public:
             break;
         }
 
+        case DirectoryCommand::Close:
+        {
+            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            Kernel::g_object_pool.Destroy<Directory>(GetHandle());
+            break;
+        }
+
         // Unknown command...
         default:
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
@@ -267,6 +288,21 @@ Handle OpenArchive(FileSys::Archive::IdCode id_code) {
         return 0;
     }
     return itr->second;
+}
+
+/**
+ * Closes an archive
+ * @param id_code IdCode of the archive to open
+ * @return Result of operation, 0 on success, otherwise error code
+ */
+Result CloseArchive(FileSys::Archive::IdCode id_code) {
+    if (1 != g_archive_map.erase(id_code)) {
+        ERROR_LOG(KERNEL, "Cannot close archive %d", (int) id_code);
+        return -1;
+    }
+
+    INFO_LOG(KERNEL, "Closed archive %d", (int) id_code);
+    return 0;
 }
 
 /**
