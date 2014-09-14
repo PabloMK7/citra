@@ -21,13 +21,6 @@ EmuWindow*      g_emu_window    = NULL;     ///< Frontend emulator window
 RendererBase*   g_renderer      = NULL;     ///< Renderer plugin
 int             g_current_frame = 0;
 
-/// Start the video core
-void Start() {
-    if (g_emu_window == NULL) {
-        ERROR_LOG(VIDEO, "VideoCore::Start called without calling Init()!");
-    }
-}
-
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
     g_emu_window = emu_window;
