@@ -516,12 +516,12 @@ struct Regs {
     // Used for debugging purposes, so performance is not an issue here
     static std::string GetCommandName(int index) {
         std::map<u32, std::string> map;
-        Regs regs;
 
         // TODO: MSVC does not support using offsetof() on non-static data members even though this
         //       is technically allowed since C++11. Hence, this functionality is disabled until
         //       MSVC properly supports it.
         #ifndef _MSC_VER
+        Regs regs;
         #define ADD_FIELD(name)                                                                               \
             do {                                                                                              \
                 map.insert({PICA_REG_INDEX(name), #name});                                                    \

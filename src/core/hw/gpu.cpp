@@ -49,7 +49,7 @@ inline void Write(u32 addr, const T data) {
         return;
     }
 
-    g_regs[index] = data;
+    g_regs[index] = static_cast<u32>(data);
 
     switch (index) {
 
@@ -81,9 +81,9 @@ inline void Write(u32 addr, const T data) {
             u8* source_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
             u8* dest_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
-            for (int y = 0; y < config.output_height; ++y) {
+            for (u32 y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
-                for (int x = 0; x < config.output_width; ++x) {
+                for (u32 x = 0; x < config.output_width; ++x) {
                     struct {
                         int r, g, b, a;
                     } source_color = { 0, 0, 0, 0 };
@@ -134,10 +134,10 @@ inline void Write(u32 addr, const T data) {
                 }
             }
 
-            DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%dx%d)-> 0x%08x(%dx%d), dst format %x",
+            DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
                       config.output_height * config.output_width * 4,
-                      config.GetPhysicalInputAddress(), (int)config.input_width, (int)config.input_height,
-                      config.GetPhysicalOutputAddress(), (int)config.output_width, (int)config.output_height,
+                      config.GetPhysicalInputAddress(), config.input_width, config.input_height,
+                      config.GetPhysicalOutputAddress(), config.output_width, config.output_height,
                       config.output_format.Value());
         }
         break;
