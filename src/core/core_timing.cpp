@@ -7,11 +7,12 @@
 #include <atomic>
 #include <mutex>
 
-#include "common/msg_handler.h"
 #include "common/chunk_file.h"
+#include "common/msg_handler.h"
+#include "common/string_util.h"
 
-#include "core/core_timing.h"
 #include "core/core.h"
+#include "core/core_timing.h"
 
 int g_clock_rate_arm11 = 268123480;
 
@@ -586,9 +587,10 @@ std::string GetScheduledEventsSummary()
         const char *name = event_types[ptr->type].name;
         if (!name)
             name = "[unknown]";
-        char temp[512];
-        sprintf(temp, "%s : %i %08x%08x\n", name, (int)ptr->time, (u32)(ptr->userdata >> 32), (u32)(ptr->userdata));
-        text += temp;
+
+        text += Common::StringFromFormat("%s : %i %08x%08x\n", name, (int)ptr->time,
+                                        (u32)(ptr->userdata >> 32), (u32)(ptr->userdata));
+
         ptr = ptr->next;
     }
     return text;
