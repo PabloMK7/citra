@@ -32,6 +32,7 @@ enum class HandleType : u32 {
     File            = 10,
     Semaphore       = 11,
     Archive         = 12,
+    Directory       = 13,
 };
     
 enum {

@@ -671,7 +671,7 @@ public:
         _failureReason->clear();
         _failureReason->append("LoadStateWrongVersion");
 
-        if (!File::Exists(_rFilename)) {
+        if (!FileUtil::Exists(_rFilename)) {
             _failureReason->clear();
             _failureReason->append("LoadStateDoesntExist");
             ERROR_LOG(COMMON, "ChunkReader: File doesn't exist");
@@ -679,7 +679,7 @@ public:
         }
                 
         // Check file size
-        const u64 fileSize = File::GetSize(_rFilename);
+        const u64 fileSize = FileUtil::GetSize(_rFilename);
         static const u64 headerSize = sizeof(SChunkHeader);
         if (fileSize < headerSize)
         {
@@ -687,7 +687,7 @@ public:
             return ERROR_BAD_FILE;
         }
 
-        File::IOFile pFile(_rFilename, "rb");
+        FileUtil::IOFile pFile(_rFilename, "rb");
         if (!pFile)
         {
             ERROR_LOG(COMMON,"ChunkReader: Can't open file for reading");
@@ -765,7 +765,7 @@ public:
     {
         INFO_LOG(COMMON, "ChunkReader: Writing %s" , _rFilename.c_str());
 
-        File::IOFile pFile(_rFilename, "wb");
+        FileUtil::IOFile pFile(_rFilename, "wb");
         if (!pFile)
         {
             ERROR_LOG(COMMON,"ChunkReader: Error opening file for write");

@@ -75,7 +75,7 @@ LogManager::LogManager()
     m_Log[LogTypes::MEMCARD_MANAGER]    = new LogContainer("MemCard Manager",   "MemCard Manager");
     m_Log[LogTypes::NETPLAY]            = new LogContainer("NETPLAY",           "Netplay");
 
-    m_fileLog = new FileLogListener(File::GetUserPath(F_MAINLOG_IDX).c_str());
+    m_fileLog = new FileLogListener(FileUtil::GetUserPath(F_MAINLOG_IDX).c_str());
     m_consoleLog = new ConsoleListener();
     m_debuggerLog = new DebuggerLogListener();
 

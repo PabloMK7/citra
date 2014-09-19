@@ -39,7 +39,7 @@
 // This namespace has various generic functions related to files and paths.
 // The code still needs a ton of cleanup.
 // REMEMBER: strdup considered harmful!
-namespace File
+namespace FileUtil
 {
 
 // Remove any ending forward slashes from directory paths
@@ -172,7 +172,7 @@ bool CreateFullPath(const std::string &fullPath)
     int panicCounter = 100;
     INFO_LOG(COMMON, "CreateFullPath: path %s", fullPath.c_str());
 
-    if (File::Exists(fullPath))
+    if (FileUtil::Exists(fullPath))
     {
         INFO_LOG(COMMON, "CreateFullPath: path exists %s", fullPath.c_str());
         return true;
@@ -190,8 +190,8 @@ bool CreateFullPath(const std::string &fullPath)
 
         // Include the '/' so the first call is CreateDir("/") rather than CreateDir("")
         std::string const subPath(fullPath.substr(0, position + 1));
-        if (!File::IsDirectory(subPath))
-            File::CreateDir(subPath);
+        if (!FileUtil::IsDirectory(subPath))
+            FileUtil::CreateDir(subPath);
 
         // A safety check
         panicCounter--;
@@ -211,7 +211,7 @@ bool DeleteDir(const std::string &filename)
     INFO_LOG(COMMON, "DeleteDir: directory %s", filename.c_str());
 
     // check if a directory
-    if (!File::IsDirectory(filename))
+    if (!FileUtil::IsDirectory(filename))
     {
         ERROR_LOG(COMMON, "DeleteDir: Not a directory %s", filename.c_str());
         return false;
@@ -386,7 +386,7 @@ bool CreateEmptyFile(const std::string &filename)
 {
     INFO_LOG(COMMON, "CreateEmptyFile: %s", filename.c_str()); 
 
-    if (!File::IOFile(filename, "wb"))
+    if (!FileUtil::IOFile(filename, "wb"))
     {
         ERROR_LOG(COMMON, "CreateEmptyFile: failed %s: %s",
                   filename.c_str(), GetLastErrorMsg());
@@ -519,7 +519,7 @@ bool DeleteDirRecursively(const std::string &directory)
         }
         else
         {
-            if (!File::Delete(newPath))
+            if (!FileUtil::Delete(newPath))
             {
                 #ifndef _WIN32
                 closedir(dirp);
@@ -536,7 +536,7 @@ bool DeleteDirRecursively(const std::string &directory)
     }
     closedir(dirp);
 #endif
-    File::DeleteDir(directory);
+    FileUtil::DeleteDir(directory);
         
     return true;
 }
@@ -546,8 +546,8 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
 {
 #ifndef _WIN32
     if (source_path == dest_path) return;
-    if (!File::Exists(source_path)) return;
-    if (!File::Exists(dest_path)) File::CreateFullPath(dest_path);
+    if (!FileUtil::Exists(source_path)) return;
+    if (!FileUtil::Exists(dest_path)) FileUtil::CreateFullPath(dest_path);
 
     struct dirent dirent, *result = NULL;
     DIR *dirp = opendir(source_path.c_str());
@@ -569,10 +569,10 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
         {
             source += '/';
             dest += '/';
-            if (!File::Exists(dest)) File::CreateFullPath(dest);
+            if (!FileUtil::Exists(dest)) FileUtil::CreateFullPath(dest);
             CopyDir(source, dest);
         }
-        else if (!File::Exists(dest)) File::Copy(source, dest);
+        else if (!FileUtil::Exists(dest)) FileUtil::Copy(source, dest);
     }
     closedir(dirp);
 #endif
@@ -660,7 +660,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 #ifdef _WIN32
         paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
 #else
-        if (File::Exists(ROOT_DIR DIR_SEP USERDATA_DIR))
+        if (FileUtil::Exists(ROOT_DIR DIR_SEP USERDATA_DIR))
             paths[D_USER_IDX] = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
         else
             paths[D_USER_IDX] = std::string(getenv("HOME") ? 
@@ -688,7 +688,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 
     if (!newPath.empty())
     {
-        if (!File::IsDirectory(newPath))
+        if (!FileUtil::IsDirectory(newPath))
         {
             WARN_LOG(COMMON, "Invalid path specified %s", newPath.c_str());
             return paths[DirIDX];
@@ -750,11 +750,11 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 
 //std::string GetThemeDir(const std::string& theme_name)
 //{
-//    std::string dir = File::GetUserPath(D_THEMES_IDX) + theme_name + "/";
+//    std::string dir = FileUtil::GetUserPath(D_THEMES_IDX) + theme_name + "/";
 //
 //#if !defined(_WIN32)
 //    // If theme does not exist in user's dir load from shared directory
-//    if (!File::Exists(dir))
+//    if (!FileUtil::Exists(dir))
 //        dir = SHARED_USER_DIR THEMES_DIR "/" + theme_name + "/";
 //#endif
 //    
@@ -763,12 +763,12 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 
 bool WriteStringToFile(bool text_file, const std::string &str, const char *filename)
 {
-    return File::IOFile(filename, text_file ? "w" : "wb").WriteBytes(str.data(), str.size());
+    return FileUtil::IOFile(filename, text_file ? "w" : "wb").WriteBytes(str.data(), str.size());
 }
 
 bool ReadFileToString(bool text_file, const char *filename, std::string &str)
 {
-    File::IOFile file(filename, text_file ? "r" : "rb");
+    FileUtil::IOFile file(filename, text_file ? "r" : "rb");
     auto const f = file.GetHandle();
 
     if (!f)
@@ -854,7 +854,7 @@ void IOFile::SetHandle(std::FILE* file)
 u64 IOFile::GetSize()
 {
     if (IsOpen())
-        return File::GetSize(m_file);
+        return FileUtil::GetSize(m_file);
     else
         return 0;
 }
