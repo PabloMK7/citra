@@ -394,8 +394,7 @@ void ArchiveInit() {
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).  Currently the only half-finished
     // archive type is SDMC, so it is the only one getting exposed.
 
-    // TODO(Link Mauve): don't assume the path separator is '/'.
-    std::string sdmc_directory = FileUtil::GetCurrentDir() + "/userdata/sdmc";
+    std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     auto archive = new FileSys::Archive_SDMC(sdmc_directory);
     if (archive->Initialize())
         CreateArchive(archive, "SDMC");
