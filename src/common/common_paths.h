@@ -52,6 +52,7 @@
 #define GAMECONFIG_DIR        "game_config"
 #define MAPS_DIR            "maps"
 #define CACHE_DIR            "cache"
+#define SDMC_DIR          "sdmc"
 #define SHADERCACHE_DIR        "shader_cache"
 #define STATESAVES_DIR        "state_saves"
 #define SCREENSHOTS_DIR        "screenShots"

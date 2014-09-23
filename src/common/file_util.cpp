@@ -672,6 +672,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
         paths[D_GAMECONFIG_IDX]        = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
         paths[D_MAPS_IDX]            = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
         paths[D_CACHE_IDX]            = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
+        paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
         paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
         paths[D_STATESAVES_IDX]        = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
@@ -712,6 +713,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
             paths[D_GAMECONFIG_IDX]        = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
             paths[D_MAPS_IDX]            = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
             paths[D_CACHE_IDX]            = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
+            paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
             paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
             paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
             paths[D_STATESAVES_IDX]        = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
