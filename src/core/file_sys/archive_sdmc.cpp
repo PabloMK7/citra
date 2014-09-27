@@ -24,6 +24,10 @@ Archive_SDMC::Archive_SDMC(const std::string& mount_point) {
 Archive_SDMC::~Archive_SDMC() {
 }
 
+/**
+ * Initialize the archive.
+ * @return true if it initialized successfully
+ */
 bool Archive_SDMC::Initialize() {
     if (!FileUtil::IsDirectory(mount_point)) {
         WARN_LOG(FILESYS, "Directory %s not found, disabling SDMC.", mount_point.c_str());

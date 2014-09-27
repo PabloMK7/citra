@@ -35,8 +35,8 @@ public:
      * Write data to the file
      * @param offset Offset in bytes to start writing data to
      * @param length Length in bytes of data to write to file
-     * @param buffer Buffer to write data from
      * @param flush The flush parameters (0 == do not flush)
+     * @param buffer Buffer to read data from
      * @return Number of bytes written
      */
     size_t Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const override;
