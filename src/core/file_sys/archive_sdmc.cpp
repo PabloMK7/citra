@@ -46,6 +46,8 @@ bool Archive_SDMC::Initialize() {
 std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode mode) const {
     DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.c_str(), mode);
     File_SDMC* file = new File_SDMC(this, path, mode);
+    if (!file->Open())
+        return nullptr;
     return std::unique_ptr<File>(file);
 }
 

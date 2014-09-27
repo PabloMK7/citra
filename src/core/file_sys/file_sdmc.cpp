@@ -19,24 +19,34 @@ File_SDMC::File_SDMC(const Archive_SDMC* archive, const std::string& path, const
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../etc/passwd can give the emulated program your users list.
-    std::string real_path = archive->GetMountPoint() + path;
-
-    if (!mode.create_flag && !FileUtil::Exists(real_path)) {
-        file = nullptr;
-        return;
-    }
-
-    std::string mode_string;
-    if (mode.read_flag)
-        mode_string += "r";
-    if (mode.write_flag)
-        mode_string += "w";
-
-    file = new FileUtil::IOFile(real_path, mode_string.c_str());
+    this->path = archive->GetMountPoint() + path;
+    this->mode.hex = mode.hex;
 }
 
 File_SDMC::~File_SDMC() {
     Close();
+}
+
+/**
+ * Open the file
+ * @return true if the file opened correctly
+ */
+bool File_SDMC::Open() {
+    if (!mode.create_flag && !FileUtil::Exists(path)) {
+        ERROR_LOG(FILESYS, "Non-existing file %s can’t be open without mode create.", path.c_str());
+        return false;
+    }
+
+    std::string mode_string;
+    if (mode.read_flag && mode.write_flag)
+        mode_string = "w+";
+    else if (mode.read_flag)
+        mode_string = "r";
+    else if (mode.write_flag)
+        mode_string = "w";
+
+    file = new FileUtil::IOFile(path, mode_string.c_str());
+    return true;
 }
 
 /**

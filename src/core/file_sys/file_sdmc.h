@@ -23,6 +23,12 @@ public:
     ~File_SDMC() override;
 
     /**
+     * Open the file
+     * @return true if the file opened correctly
+     */
+    bool Open() override;
+
+    /**
      * Read data from the file
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from file
@@ -61,6 +67,8 @@ public:
     bool Close() const override;
 
 private:
+    std::string path;
+    Mode mode;
     FileUtil::IOFile* file;
 };
 

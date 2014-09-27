@@ -374,6 +374,9 @@ Handle OpenFileFromArchive(Handle archive_handle, const std::string& path, const
     file->path = path;
     file->backend = archive->backend->OpenFile(path, mode);
 
+    if (!file->backend)
+        return 0;
+
     return handle;
 }
 
