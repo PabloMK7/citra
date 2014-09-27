@@ -44,6 +44,13 @@ public:
     virtual size_t GetSize() const = 0;
 
     /**
+     * Set the size of the file in bytes
+     * @param size New size of the file
+     * @return true if successful
+     */
+    virtual bool SetSize(const u64 size) const = 0;
+
+    /**
      * Close the file
      * @return true if the file closed correctly
      */

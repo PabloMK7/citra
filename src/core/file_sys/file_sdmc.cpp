@@ -76,6 +76,17 @@ size_t File_SDMC::GetSize() const {
 }
 
 /**
+ * Set the size of the file in bytes
+ * @param size New size of the file
+ * @return true if successful
+ */
+bool File_SDMC::SetSize(const u64 size) const {
+    file->Resize(size);
+    file->Flush();
+    return true;
+}
+
+/**
  * Close the file
  * @return true if the file closed correctly
  */

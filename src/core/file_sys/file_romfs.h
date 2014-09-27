@@ -45,6 +45,13 @@ public:
     size_t GetSize() const override;
 
     /**
+     * Set the size of the file in bytes
+     * @param size New size of the file
+     * @return true if successful
+     */
+    bool SetSize(const u64 size) const override;
+
+    /**
      * Close the file
      * @return true if the file closed correctly
      */

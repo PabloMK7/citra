@@ -49,6 +49,15 @@ size_t File_RomFS::GetSize() const {
 }
 
 /**
+ * Set the size of the file in bytes
+ * @param size New size of the file
+ * @return true if successful
+ */
+bool File_RomFS::SetSize(const u64 size) const {
+    return false;
+}
+
+/**
  * Close the file
  * @return true if the file closed correctly
  */
