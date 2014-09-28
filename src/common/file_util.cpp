@@ -763,12 +763,12 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 //    return dir;
 //}
 
-bool WriteStringToFile(bool text_file, const std::string &str, const char *filename)
+size_t WriteStringToFile(bool text_file, const std::string &str, const char *filename)
 {
     return FileUtil::IOFile(filename, text_file ? "w" : "wb").WriteBytes(str.data(), str.size());
 }
 
-bool ReadFileToString(bool text_file, const char *filename, std::string &str)
+size_t ReadFileToString(bool text_file, const char *filename, std::string &str)
 {
     FileUtil::IOFile file(filename, text_file ? "r" : "rb");
     auto const f = file.GetHandle();
