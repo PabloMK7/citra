@@ -65,7 +65,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
     // vertex positions in rasterizer coordinates
     auto FloatToFix = [](float24 flt) {
-                          return Fix12P4(flt.ToFloat32() * 16.0f);
+                          return Fix12P4(static_cast<unsigned short>(flt.ToFloat32() * 16.0f));
                       };
     auto ScreenToRasterizerCoordinates = [FloatToFix](const Math::Vec3<float24> vec) {
                                              return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
@@ -151,9 +151,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 auto w_inverse   = Math::MakeVec(float24::FromFloat32(1.f) / v0.pos.w,
                                                  float24::FromFloat32(1.f) / v1.pos.w,
                                                  float24::FromFloat32(1.f) / v2.pos.w);
-                auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(w0),
-                                                             float24::FromFloat32(w1),
-                                                             float24::FromFloat32(w2));
+                auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(static_cast<float>(w0)),
+                                                             float24::FromFloat32(static_cast<float>(w1)),
+                                                             float24::FromFloat32(static_cast<float>(w2)));
 
                 float24 interpolated_attr_over_w = Math::Dot(attr_over_w, baricentric_coordinates);
                 float24 interpolated_w_inverse   = Math::Dot(w_inverse,   baricentric_coordinates);
@@ -195,8 +195,8 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
                 // To be flexible in case different but similar patterns are used, we keep this
                 // somewhat inefficient code around for now.
-                int s = (int)(u * float24::FromFloat32(registers.texture0.width)).ToFloat32();
-                int t = (int)(v * float24::FromFloat32(registers.texture0.height)).ToFloat32();
+                int s = (int)(u * float24::FromFloat32(static_cast<float>(registers.texture0.width))).ToFloat32();
+                int t = (int)(v * float24::FromFloat32(static_cast<float>(registers.texture0.height))).ToFloat32();
                 int texel_index_within_tile = 0;
                 for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
                     int sub_tile_width = 1 << block_size_index;

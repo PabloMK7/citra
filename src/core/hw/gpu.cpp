@@ -27,7 +27,7 @@ u64 g_last_frame_ticks = 0; ///< CPU tick count from last frame
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
     u32 addr = raw_addr - 0x1EF00000;
-    int index = addr / 4;
+    u32 index = addr / 4;
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
@@ -41,7 +41,7 @@ inline void Read(T &var, const u32 raw_addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     addr -= 0x1EF00000;
-    int index = addr / 4;
+    u32 index = addr / 4;
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {

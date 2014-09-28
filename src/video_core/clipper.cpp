@@ -86,8 +86,8 @@ static void InitScreenCoordinates(OutputVertex& vtx)
 
     viewport.halfsize_x = float24::FromRawFloat24(registers.viewport_size_x);
     viewport.halfsize_y = float24::FromRawFloat24(registers.viewport_size_y);
-    viewport.offset_x   = float24::FromFloat32(registers.viewport_corner.x);
-    viewport.offset_y   = float24::FromFloat32(registers.viewport_corner.y);
+    viewport.offset_x   = float24::FromFloat32(static_cast<float>(registers.viewport_corner.x));
+    viewport.offset_y   = float24::FromFloat32(static_cast<float>(registers.viewport_corner.y));
     viewport.zscale     = float24::FromRawFloat24(registers.viewport_depth_range);
     viewport.offset_z   = float24::FromRawFloat24(registers.viewport_depth_far_plane);
 
@@ -150,7 +150,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
     InitScreenCoordinates(*(output_list[0]));
     InitScreenCoordinates(*(output_list[1]));
 
-    for (int i = 0; i < output_list.size() - 2; i ++) {
+    for (size_t i = 0; i < output_list.size() - 2; i ++) {
         OutputVertex& vtx0 = *(output_list[0]);
         OutputVertex& vtx1 = *(output_list[i+1]);
         OutputVertex& vtx2 = *(output_list[i+2]);
@@ -158,7 +158,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
         InitScreenCoordinates(vtx2);
 
         DEBUG_LOG(GPU,
-                  "Triangle %d/%d (%d buffer vertices) at position (%.3f, %.3f, %.3f, %.3f), "
+                  "Triangle %u/%u (%u buffer vertices) at position (%.3f, %.3f, %.3f, %.3f), "
                   "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
                   "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",
                   i,output_list.size(), buffer_vertices.size(),

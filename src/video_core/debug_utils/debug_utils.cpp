@@ -203,7 +203,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                     } else {
                         it->component_mask = it->component_mask | component_mask;
                     }
-                } catch (const std::out_of_range& oor) {
+                } catch (const std::out_of_range& ) {
                     _dbg_assert_msg_(GPU, 0, "Unknown output attribute mapping");
                     ERROR_LOG(GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
                               (int)output_attributes[i].map_x.Value(),
@@ -235,7 +235,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     dvlp.swizzle_patterns_offset = write_offset - dvlp_offset;
     dvlp.swizzle_patterns_num_entries = swizzle_size;
     u32 dummy = 0;
-    for (int i = 0; i < swizzle_size; ++i) {
+    for (unsigned int i = 0; i < swizzle_size; ++i) {
         QueueForWriting((u8*)&swizzle_data[i], sizeof(swizzle_data[i]));
         QueueForWriting((u8*)&dummy, sizeof(dummy));
     }
@@ -278,7 +278,7 @@ void StartPicaTracing()
 
 bool IsPicaTracing()
 {
-    return is_pica_tracing;
+    return is_pica_tracing != 0;
 }
 
 void OnPicaRegWrite(u32 id, u32 value)
@@ -428,7 +428,7 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
     using Operation = Pica::Regs::TevStageConfig::Operation;
 
     std::string stage_info = "Tev setup:\n";
-    for (int index = 0; index < stages.size(); ++index) {
+    for (size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];
 
         const std::map<Source, std::string> source_map = {

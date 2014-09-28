@@ -225,7 +225,7 @@ union SwizzlePattern {
     }
 
     bool DestComponentEnabled(int i) const {
-        return (dest_mask & (0x8 >> i));
+        return (dest_mask & (0x8 >> i)) != 0;
     }
 
     std::string SelectorToString(bool src2) const {
