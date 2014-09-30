@@ -241,16 +241,6 @@ void ConsoleListener::PixelSpace(int Left, int Top, int Width, int Height, bool 
 void ConsoleListener::Log(LogTypes::LOG_LEVELS Level, const char *Text)
 {
 #if defined(_WIN32)
-    /*
-    const int MAX_BYTES = 1024*10;
-    char Str[MAX_BYTES];
-    va_list ArgPtr;
-    int Cnt;
-    va_start(ArgPtr, Text);
-    Cnt = vsnprintf(Str, MAX_BYTES, Text, ArgPtr);
-    va_end(ArgPtr);
-    */
-    DWORD cCharsWritten;
     WORD Color;
 
     switch (Level)

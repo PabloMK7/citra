@@ -53,7 +53,7 @@ size_t File_SDMC::Write(const u64 offset, const u32 length, const u32 flush, con
 }
 
 size_t File_SDMC::GetSize() const {
-    return file->GetSize();
+    return static_cast<size_t>(file->GetSize());
 }
 
 bool File_SDMC::Close() const {

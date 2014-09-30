@@ -287,7 +287,7 @@ void Write64(const VAddr addr, const u64 data) {
 }
 
 void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
-    int offset = 0;
+    u32 offset = 0;
     while (offset < (size & ~3)) {
         Write32(addr + offset, *(u32*)&data[offset]);
         offset += 4;
