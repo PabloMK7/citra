@@ -358,6 +358,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001C0040, nullptr,                       "SetLedForceOff"},
     {0x001D0040, nullptr,                       "SetTestCommand"},
     {0x001E0080, nullptr,                       "SetInternalPriorities"},
+    {0x001F0082, nullptr,                       "StoreDataCache"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
