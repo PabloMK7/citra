@@ -152,6 +152,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x004C0000, nullptr,               "SetFatalErrDispMode"},
     {0x004D0080, nullptr,               "GetAppletProgramInfo"},
     {0x004E0000, nullptr,               "HardwareResetAsync"},
+    {0x004F0080, nullptr,               "SetApplicationCpuTimeLimit"},
+    {0x00500040, nullptr,               "GetApplicationCpuTimeLimit"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
