@@ -19,6 +19,12 @@ public:
     virtual ~File() { }
 
     /**
+     * Open the file
+     * @return true if the file opened correctly
+     */
+    virtual bool Open() = 0;
+
+    /**
      * Read data from the file
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from file
@@ -31,8 +37,8 @@ public:
      * Write data to the file
      * @param offset Offset in bytes to start writing data to
      * @param length Length in bytes of data to write to file
-     * @param buffer Buffer to write data from
      * @param flush The flush parameters (0 == do not flush)
+     * @param buffer Buffer to read data from
      * @return Number of bytes written
      */
     virtual size_t Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const = 0;
@@ -42,6 +48,13 @@ public:
      * @return Size of the file in bytes
      */
     virtual size_t GetSize() const = 0;
+
+    /**
+     * Set the size of the file in bytes
+     * @param size New size of the file
+     * @return true if successful
+     */
+    virtual bool SetSize(const u64 size) const = 0;
 
     /**
      * Close the file

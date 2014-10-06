@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <fstream>
 #include <cstdio>
 #include <cstring>
@@ -130,6 +131,16 @@ std::string &GetExeDirectory();
 
 size_t WriteStringToFile(bool text_file, const std::string &str, const char *filename);
 size_t ReadFileToString(bool text_file, const char *filename, std::string &str);
+
+/**
+ * Splits the filename into 8.3 format
+ * Loosely implemented following https://en.wikipedia.org/wiki/8.3_filename
+ * @param filename The normal filename to use
+ * @param short_name A 9-char array in which the short name will be written
+ * @param extension A 4-char array in which the extension will be written
+ */
+void SplitFilename83(const std::string& filename, std::array<char, 9>& short_name,
+                     std::array<char, 4>& extension);
 
 // simple wrapper for cstdlib file functions to
 // hopefully will make error checking easier

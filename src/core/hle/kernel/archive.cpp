@@ -181,6 +181,14 @@ public:
             break;
         }
 
+        case FileCommand::SetSize:
+        {
+            u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
+            DEBUG_LOG(KERNEL, "SetSize %s %s size=%d", GetTypeName().c_str(), GetName().c_str(), size);
+            backend->SetSize(size);
+            break;
+        }
+
         case FileCommand::Close:
         {
             DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
@@ -365,6 +373,9 @@ Handle OpenFileFromArchive(Handle archive_handle, const std::string& path, const
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
     file->path = path;
     file->backend = archive->backend->OpenFile(path, mode);
+
+    if (!file->backend)
+        return 0;
 
     return handle;
 }

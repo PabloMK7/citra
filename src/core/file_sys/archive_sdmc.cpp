@@ -24,6 +24,10 @@ Archive_SDMC::Archive_SDMC(const std::string& mount_point) {
 Archive_SDMC::~Archive_SDMC() {
 }
 
+/**
+ * Initialize the archive.
+ * @return true if it initialized successfully
+ */
 bool Archive_SDMC::Initialize() {
     if (!FileUtil::IsDirectory(mount_point)) {
         WARN_LOG(FILESYS, "Directory %s not found, disabling SDMC.", mount_point.c_str());
@@ -42,6 +46,8 @@ bool Archive_SDMC::Initialize() {
 std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode mode) const {
     DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.c_str(), mode);
     File_SDMC* file = new File_SDMC(this, path, mode);
+    if (!file->Open())
+        return nullptr;
     return std::unique_ptr<File>(file);
 }
 

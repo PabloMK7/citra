@@ -20,6 +20,10 @@ public:
     Archive_SDMC(const std::string& mount_point);
     ~Archive_SDMC() override;
 
+    /**
+     * Initialize the archive.
+     * @return true if it initialized successfully
+     */
     bool Initialize();
 
     /**

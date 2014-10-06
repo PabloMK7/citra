@@ -37,9 +37,12 @@ public:
     bool Close() const override;
 
 private:
-    u32 entry_count;
-    u32 current_entry;
-    FileUtil::FSTEntry entry;
+    u32 total_entries_in_directory;
+    FileUtil::FSTEntry directory;
+
+    // We need to remember the last entry we returned, so a subsequent call to Read will continue
+    // from the next one.  This iterator will always point to the next unread entry.
+    std::vector<FileUtil::FSTEntry>::iterator children_iterator;
 };
 
 } // namespace FileSys

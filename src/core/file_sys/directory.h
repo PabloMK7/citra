@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
@@ -17,9 +19,9 @@ namespace FileSys {
 const size_t FILENAME_LENGTH = 0x20C / 2;
 struct Entry {
     char16_t filename[FILENAME_LENGTH]; // Entry name (UTF-16, null-terminated)
-    char short_name[8]; // 8.3 file name ('longfilename' -> 'LONGFI~1')
+    std::array<char, 9> short_name; // 8.3 file name ('longfilename' -> 'LONGFI~1', null-terminated)
     char unknown1; // unknown (observed values: 0x0A, 0x70, 0xFD)
-    char extension[3]; // 8.3 file extension (set to spaces for directories)
+    std::array<char, 4> extension; // 8.3 file extension (set to spaces for directories, null-terminated)
     char unknown2; // unknown (always 0x01)
     char unknown3; // unknown (0x00 or 0x08)
     char is_directory; // directory flag
@@ -29,6 +31,10 @@ struct Entry {
     u64 file_size; // file size (for files only)
 };
 static_assert(sizeof(Entry) == 0x228, "Directory Entry struct isn't exactly 0x228 bytes long!");
+static_assert(offsetof(Entry, short_name) == 0x20C, "Wrong offset for short_name in Entry.");
+static_assert(offsetof(Entry, extension) == 0x216, "Wrong offset for extension in Entry.");
+static_assert(offsetof(Entry, is_archive) == 0x21E, "Wrong offset for is_archive in Entry.");
+static_assert(offsetof(Entry, file_size) == 0x220, "Wrong offset for file_size in Entry.");
 
 class Directory : NonCopyable {
 public:

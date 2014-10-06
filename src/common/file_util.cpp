@@ -780,6 +780,48 @@ size_t ReadFileToString(bool text_file, const char *filename, std::string &str)
     return file.ReadArray(&str[0], str.size());
 }
 
+/**
+ * Splits the filename into 8.3 format
+ * Loosely implemented following https://en.wikipedia.org/wiki/8.3_filename
+ * @param filename The normal filename to use
+ * @param short_name A 9-char array in which the short name will be written
+ * @param extension A 4-char array in which the extension will be written
+ */
+void SplitFilename83(const std::string& filename, std::array<char, 9>& short_name,
+                     std::array<char, 4>& extension) {
+    const std::string forbidden_characters = ".\"/\\[]:;=, ";
+
+    // On a FAT32 partition, 8.3 names are stored as a 11 bytes array, filled with spaces.
+    short_name = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '\0'};
+    extension = {' ', ' ', ' ', '\0'};
+
+    std::string::size_type point = filename.rfind('.');
+    if (point == filename.size() - 1)
+        point = filename.rfind('.', point);
+
+    // Get short name.
+    int j = 0;
+    for (char letter : filename.substr(0, point)) {
+        if (forbidden_characters.find(letter, 0) != std::string::npos)
+            continue;
+        if (j == 8) {
+            // TODO(Link Mauve): also do that for filenames containing a space.
+            // TODO(Link Mauve): handle multiple files having the same short name.
+            short_name[6] = '~';
+            short_name[7] = '1';
+            break;
+        }
+        short_name[j++] = toupper(letter);
+    }
+
+    // Get extension.
+    if (point != std::string::npos) {
+        j = 0;
+        for (char letter : filename.substr(point + 1, 3))
+            extension[j++] = toupper(letter);
+    }
+}
+
 IOFile::IOFile()
     : m_file(NULL), m_good(true)
 {}
