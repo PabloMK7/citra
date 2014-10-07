@@ -3751,7 +3751,9 @@ void InterpreterMainLoop(ARMul_State* state)
 						inst_base = (arm_inst *)&inst_buf[ptr]                             
 #define INC_PC(l)			ptr += sizeof(arm_inst) + l
 
-#ifdef __GNUC__
+// GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
+// clunky switch statement.
+#if defined __GNUC__ || defined __clang__
 #define GOTO_NEXT_INST			goto *InstLabel[inst_base->idx]
 #else
 #define GOTO_NEXT_INST switch(inst_base->idx) { \
@@ -3996,7 +3998,9 @@ void InterpreterMainLoop(ARMul_State* state)
 	//arm_processor *cpu = (arm_processor *)get_cast_conf_obj(core->cpu_data, "arm_core_t");
 	arm_processor *cpu = state; //(arm_processor *)(core->cpu_data->obj);
 
-#if __GNUC__
+    // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback
+    // to a clunky switch statement.
+#if defined __GNUC__ || defined __clang__
     void *InstLabel[] = {
 		#define VFP_INTERPRETER_LABEL
 		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
@@ -6543,7 +6547,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		DEBUG_LOG(ARM11, "[%llx]\n", InstLabel[i]);
 	DEBUG_LOG(ARM11, "InstLabel:%d\n", sizeof(InstLabel));
 #endif
-#ifdef __GNUC__
+#if defined __GNUC__ || defined __clang__
 	InterpreterInitInstLength((unsigned long long int *)InstLabel, sizeof(InstLabel));
 #endif
 #if 0
