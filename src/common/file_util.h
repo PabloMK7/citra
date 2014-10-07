@@ -48,7 +48,7 @@ enum {
 namespace FileUtil
 {
 
-// FileSystem tree node/ 
+// FileSystem tree node/
 struct FSTEntry
 {
 	bool isDirectory;
@@ -86,13 +86,13 @@ bool Delete(const std::string &filename);
 // Deletes a directory filename, returns true on success
 bool DeleteDir(const std::string &filename);
 
-// renames file srcFilename to destFilename, returns true on success 
+// renames file srcFilename to destFilename, returns true on success
 bool Rename(const std::string &srcFilename, const std::string &destFilename);
 
-// copies file srcFilename to destFilename, returns true on success 
+// copies file srcFilename to destFilename, returns true on success
 bool Copy(const std::string &srcFilename, const std::string &destFilename);
 
-// creates an empty file filename, returns true on success 
+// creates an empty file filename, returns true on success
 bool CreateEmptyFile(const std::string &filename);
 
 // Scans the directory tree gets, starting from _Directory and adds the
@@ -111,7 +111,7 @@ void CopyDir(const std::string &source_path, const std::string &dest_path);
 // Set the current directory to given directory
 bool SetCurrentDir(const std::string &directory);
 
-// Returns a pointer to a string with a Dolphin data dir in the user's home
+// Returns a pointer to a string with a Citra data dir in the user's home
 // directory. To be used in "multi-user" mode (that is, installed).
 const std::string& GetUserPath(const unsigned int DirIDX, const std::string &newPath="");
 
@@ -153,10 +153,10 @@ public:
 	IOFile(const std::string& filename, const char openmode[]);
 
 	~IOFile();
-	
+
 	IOFile(IOFile&& other);
 	IOFile& operator=(IOFile&& other);
-	
+
 	void Swap(IOFile& other);
 
 	bool Open(const std::string& filename, const char openmode[]);

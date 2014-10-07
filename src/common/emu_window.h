@@ -16,7 +16,7 @@ class EmuWindow
 
 public:
     /// Data structure to store an emuwindow configuration
-    struct Config{
+    struct WindowConfig {
         bool    fullscreen;
         int     res_width;
         int     res_height;
@@ -34,17 +34,19 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     virtual void DoneCurrent() = 0;
 
+    virtual void ReloadSetKeymaps() = 0;
+
     /// Signals a key press action to the HID module
     static void KeyPressed(KeyMap::HostDeviceKey key);
 
     /// Signals a key release action to the HID module
     static void KeyReleased(KeyMap::HostDeviceKey key);
 
-    Config GetConfig() const { 
+    WindowConfig GetConfig() const {
         return m_config;
     }
 
-    void SetConfig(const Config& val) {
+    void SetConfig(const WindowConfig& val) {
         m_config = val;
     }
     
@@ -86,6 +88,6 @@ protected:
     int m_client_area_height;       ///< Current client height, should be set by window impl.
 
 private:
-    Config m_config;                ///< Internal configuration
+    WindowConfig m_config;                ///< Internal configuration
 
 };

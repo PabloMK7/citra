@@ -4,12 +4,12 @@
 
 #include "common/common.h"
 #include "common/log_manager.h"
-#include "common/file_util.h"
 
 #include "core/system.h"
 #include "core/core.h"
 #include "core/loader/loader.h"
 
+#include "citra/config.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
 /// Application entry point
@@ -21,13 +21,16 @@ int __cdecl main(int argc, char **argv) {
         return -1;
     }
 
+    Config config;
+
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
     System::Init(emu_window);
 
-    if (Loader::ResultStatus::Success != Loader::LoadFile(boot_filename)) {
-        ERROR_LOG(BOOT, "Failed to load ROM!");
+    Loader::ResultStatus load_result = Loader::LoadFile(boot_filename);
+    if (Loader::ResultStatus::Success != load_result) {
+        ERROR_LOG(BOOT, "Failed to load ROM (Error %i)!", load_result);
         return -1;
     }
 

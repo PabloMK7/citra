@@ -27,7 +27,11 @@ public:
 
     static void OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods);
 
+    void ReloadSetKeymaps() override;
+
 private:
     GLFWwindow* m_render_window; ///< Internal GLFW render window
-    int keyboard_id;             ///< Device id of keyboard for use with KeyMap
+
+    /// Device id of keyboard for use with KeyMap
+    int keyboard_id;
 };

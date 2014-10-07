@@ -4,6 +4,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(SRCS
             config/controller_config.cpp
             config/controller_config_util.cpp
+            config.cpp
             debugger/callstack.cpp
             debugger/disassembler.cpp
             debugger/graphics.cpp
@@ -18,6 +19,7 @@ set(SRCS
 set(HEADERS
             config/controller_config.hxx
             config/controller_config_util.hxx
+            config.h
             debugger/callstack.hxx
             debugger/disassembler.hxx
             debugger/graphics.hxx

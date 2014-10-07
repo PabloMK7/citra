@@ -26,12 +26,16 @@
 #include "core/core.h"
 #include "core/loader/loader.h"
 #include "core/arm/disassembler/load_symbol_map.h"
+#include "citra_qt/config.h"
 
 #include "version.h"
 
 
 GMainWindow::GMainWindow()
 {
+    LogManager::Init();
+    Config config;
+
     ui.setupUi(this);
     statusBar()->hide();
 
@@ -112,7 +116,6 @@ GMainWindow::GMainWindow()
 
     show();
 
-    LogManager::Init();
     System::Init(render_window);
 }
 

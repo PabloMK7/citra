@@ -30,6 +30,7 @@ LogManager::LogManager()
     m_Log[LogTypes::MASTER_LOG]         = new LogContainer("*",                 "Master Log");
     m_Log[LogTypes::BOOT]               = new LogContainer("BOOT",              "Boot");
     m_Log[LogTypes::COMMON]             = new LogContainer("COMMON",            "Common");
+    m_Log[LogTypes::CONFIG]             = new LogContainer("CONFIG",            "Configuration");
     m_Log[LogTypes::DISCIO]             = new LogContainer("DIO",               "Disc IO");
     m_Log[LogTypes::FILEMON]            = new LogContainer("FileMon",           "File Monitor");
     m_Log[LogTypes::PAD]                = new LogContainer("PAD",               "Pad");

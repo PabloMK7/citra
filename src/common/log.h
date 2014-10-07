@@ -28,6 +28,7 @@ enum LOG_TYPE {
     COMMANDPROCESSOR,
     COMMON,
     CONSOLE,
+    CONFIG,
     DISCIO,
     FILEMON,
     DSPHLE,

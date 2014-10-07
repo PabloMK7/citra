@@ -107,6 +107,8 @@ public:
     void keyPressEvent(QKeyEvent* event);
     void keyReleaseEvent(QKeyEvent* event);
 
+    void ReloadSetKeymaps() override;
+
 public slots:
     void moveContext();
 
@@ -117,5 +119,6 @@ private:
 
     QByteArray geometry;
 
+    /// Device id of keyboard for use with KeyMap
     int keyboard_id;
 };
