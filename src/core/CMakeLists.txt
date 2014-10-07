@@ -6,19 +6,10 @@ set(SRCS
             arm/dyncom/arm_dyncom_interpreter.cpp
             arm/dyncom/arm_dyncom_run.cpp
             arm/dyncom/arm_dyncom_thumb.cpp
-            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
-            arm/interpreter/mmu/cache.cpp
-            arm/interpreter/mmu/maverick.cpp
-            arm/interpreter/mmu/rb.cpp
-            arm/interpreter/mmu/sa_mmu.cpp
-            arm/interpreter/mmu/tlb.cpp
-            arm/interpreter/mmu/wb.cpp
-            arm/interpreter/mmu/xscale_copro.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
-            arm/interpreter/armmmu.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
@@ -72,12 +63,6 @@ set(HEADERS
             arm/dyncom/arm_dyncom_run.h
             arm/dyncom/arm_dyncom_thumb.h
             arm/interpreter/arm_interpreter.h
-            arm/interpreter/mmu/arm1176jzf_s_mmu.h
-            arm/interpreter/mmu/cache.h
-            arm/interpreter/mmu/rb.h
-            arm/interpreter/mmu/sa_mmu.h
-            arm/interpreter/mmu/tlb.h
-            arm/interpreter/mmu/wb.h
             arm/skyeye_common/arm_regformat.h
             arm/skyeye_common/armcpu.h
             arm/skyeye_common/armdefs.h

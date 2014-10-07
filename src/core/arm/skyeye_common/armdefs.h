@@ -367,7 +367,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 
     int verbose;        /* non-zero means print various messages like the banner */
 
-    mmu_state_t mmu;
     int mmu_inited;
     //mem_state_t mem;
     /*remove io_state to skyeye_mach_*.c files */

@@ -22,7 +22,6 @@ ARM_Interpreter::ARM_Interpreter()  {
 
     ARMul_SelectProcessor(state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
     state->lateabtSig = LOW;
-    mmu_init(state);
 
     // Reset the core to initial state
     ARMul_CoProInit(state); 
