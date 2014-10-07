@@ -17,7 +17,6 @@
 
 
 #include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/armos.h"
 #include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 

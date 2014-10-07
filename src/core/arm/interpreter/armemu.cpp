@@ -28,9 +28,6 @@
 //ichfly
 //#define callstacker 1
 
-
-//#include "armos.h"
-
 //#include "skyeye_callback.h"
 //#include "skyeye_bus.h"
 //#include "sim_control.h"

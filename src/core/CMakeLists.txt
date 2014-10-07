@@ -19,7 +19,6 @@ set(SRCS
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
             arm/interpreter/armmmu.cpp
-            arm/interpreter/armos.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
