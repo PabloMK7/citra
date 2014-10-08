@@ -73,6 +73,36 @@ void ReceiveParameter(Service::Interface* self) {
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
 
+/**
+* APT_U::GlanceParameter service function
+* Inputs:
+* 1 : AppID
+* 2 : Parameter buffer size, max size is 0x1000
+* Outputs:
+* 1 : Result of function, 0 on success, otherwise error code
+* 2 : Unknown, for now assume AppID of the process which sent these parameters
+* 3 : Unknown, for now assume Signal type
+* 4 : Actual parameter buffer size, this is <= to the the input size
+* 5 : Value
+* 6 : Handle from the source process which set the parameters, likely used for shared memory
+* 7 : Size
+* 8 : Output parameter buffer ptr
+*/
+void GlanceParameter(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+    u32 app_id = cmd_buff[1];
+    u32 buffer_size = cmd_buff[2];
+    cmd_buff[1] = 0; // No error
+    cmd_buff[2] = 0;
+    cmd_buff[3] = static_cast<u32>(SignalType::AppJustStarted); // Signal type
+    cmd_buff[4] = 0;
+    cmd_buff[5] = 0;
+    cmd_buff[6] = 0;
+    cmd_buff[7] = 0;
+    cmd_buff[8] = 0;
+    WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, GetLockHandle,         "GetLockHandle"},
     {0x00020080, Initialize,            "Initialize"},
@@ -87,7 +117,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000B0040, InquireNotification,   "InquireNotification"},
     {0x000C0104, nullptr,               "SendParameter"},
     {0x000D0080, ReceiveParameter,      "ReceiveParameter"},
-    {0x000E0080, nullptr,               "GlanceParameter"},
+    {0x000E0080, GlanceParameter,       "GlanceParameter"},
     {0x000F0100, nullptr,               "CancelParameter"},
     {0x001000C2, nullptr,               "DebugFunc"},
     {0x001100C0, nullptr,               "MapProgramIdForDebug"},
