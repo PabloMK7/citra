@@ -77,7 +77,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                       : nullptr;
 
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
-        const bool negate_src1 = swizzle.negate;
+        const bool negate_src1 = (swizzle.negate != 0);
 
         float24 src1[4] = {
             src1_[(int)swizzle.GetSelectorSrc1(0)],

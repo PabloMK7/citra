@@ -63,8 +63,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 for (int component = 0; component < loader_config.component_count; ++component) {
                     u32 attribute_index = loader_config.GetComponent(component);
                     vertex_attribute_sources[attribute_index] = load_address;
-                    vertex_attribute_strides[attribute_index] = loader_config.byte_count;
-                    vertex_attribute_formats[attribute_index] = (u32)attribute_config.GetFormat(attribute_index);
+                    vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
+                    vertex_attribute_formats[attribute_index] = static_cast<u32>(attribute_config.GetFormat(attribute_index));
                     vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
                     vertex_attribute_element_size[attribute_index] = attribute_config.GetElementSizeInBytes(attribute_index);
                     load_address += attribute_config.GetStride(attribute_index);
@@ -83,9 +83,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(registers.triangle_topology.Value());
 
-            for (int index = 0; index < registers.num_vertices; ++index)
+            for (unsigned int index = 0; index < registers.num_vertices; ++index)
             {
-                int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
+                unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
 
                 if (is_indexed) {
                     // TODO: Implement some sort of vertex cache!
@@ -95,7 +95,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 VertexShader::InputVertex input;
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
-                    for (int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                    for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
                         const u8* srcdata = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
                         const float srcval = (vertex_attribute_formats[i] == 0) ? *(s8*)srcdata :
                                              (vertex_attribute_formats[i] == 1) ? *(u8*)srcdata :
@@ -244,7 +244,7 @@ static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
     WritePicaReg(header.cmd_id, *read_pointer, write_mask);
     read_pointer += 2;
 
-    for (int i = 1; i < 1+header.extra_data_length; ++i) {
+    for (unsigned int i = 1; i < 1+header.extra_data_length; ++i) {
         u32 cmd = header.cmd_id + ((header.group_commands) ? i : 0);
         WritePicaReg(cmd, *read_pointer, write_mask);
         ++read_pointer;

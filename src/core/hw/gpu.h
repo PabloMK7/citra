@@ -201,7 +201,7 @@ struct Regs {
 #undef INSERT_PADDING_WORDS_HELPER2
 #undef INSERT_PADDING_WORDS
 
-    static inline int NumIds() {
+    static inline size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 

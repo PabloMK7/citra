@@ -563,7 +563,7 @@ struct Regs {
         return map[index];
     }
 
-    static inline int NumIds() {
+    static inline size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 
