@@ -24,6 +24,8 @@ struct Values {
     int pad_sdown_key;
     int pad_sleft_key;
     int pad_sright_key;
+
+    bool use_virtual_sd;
 } extern values;
 
 }

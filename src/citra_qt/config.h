@@ -14,6 +14,9 @@ class Config {
 
     void ReadControls();
     void SaveControls();
+
+    void ReadData();
+    void SaveData();
 public:
     Config();
     ~Config();

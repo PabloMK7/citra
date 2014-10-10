@@ -25,6 +25,9 @@ pad_sup =
 pad_sdown =
 pad_sleft =
 pad_sright =
+
+[Data Storage]
+use_virtual_sd =
 )";
 
 }
