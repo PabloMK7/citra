@@ -129,6 +129,9 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     setLayout(layout);
     connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
 
+	setMinimumSize(GetActiveConfig().min_client_area_size.first,
+                   GetActiveConfig().min_client_area_size.second);
+
     OnFramebufferSizeChanged();
     NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(child->width(), child->height()));
 
@@ -274,4 +277,8 @@ void GRenderWindow::ReloadSetKeymaps()
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
 {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));
+}
+
+void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
+	setMinimumSize(minimal_size.first, minimal_size.second);
 }

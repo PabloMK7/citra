@@ -37,6 +37,8 @@ public:
     void ReloadSetKeymaps() override;
 
 private:
+    void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;
+
     static EmuWindow_GLFW* GetEmuWindow(GLFWwindow* win);
 
     GLFWwindow* m_render_window; ///< Internal GLFW render window

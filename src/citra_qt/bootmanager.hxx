@@ -121,6 +121,8 @@ public slots:
     void moveContext();  // overridden
 
 private:
+    void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;
+
     QGLWidget* child;
 
     EmuThread emu_thread;

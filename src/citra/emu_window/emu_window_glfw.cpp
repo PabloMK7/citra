@@ -46,6 +46,15 @@ void EmuWindow_GLFW::OnClientAreaResizeEvent(GLFWwindow* win, int width, int hei
     _dbg_assert_(GUI, width > 0);
     _dbg_assert_(GUI, height > 0);
 
+    // TODO: It's actually more interesting to us what the framebuffer size ends up being.
+    int adjusted_width = std::max<unsigned>(width, GetEmuWindow(win)->GetActiveConfig().min_client_area_size.first);
+    int adjusted_height = std::max<unsigned>(height, GetEmuWindow(win)->GetActiveConfig().min_client_area_size.second);
+
+    if (adjusted_width != width || adjusted_height != height) {
+        glfwSetWindowSize(win, adjusted_width, adjusted_height);
+        return;
+    }
+
     GetEmuWindow(win)->NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(width, height));
 }
 
@@ -135,4 +144,16 @@ void EmuWindow_GLFW::ReloadSetKeymaps() {
     KeyMap::SetKeyMapping({Settings::values.pad_sleft_key,  keyboard_id}, HID_User::PAD_CIRCLE_LEFT);
     KeyMap::SetKeyMapping({Settings::values.pad_sup_key,    keyboard_id}, HID_User::PAD_CIRCLE_UP);
     KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, HID_User::PAD_CIRCLE_DOWN);
+}
+
+void EmuWindow_GLFW::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
+    std::pair<int,int> current_size;
+    glfwGetWindowSize(m_render_window, &current_size.first, &current_size.second);
+
+    _dbg_assert_(GUI, (int)minimal_size.first > 0 && (int)minimal_size.second > 0);
+    int new_width  = std::max(current_size.first,  (int)minimal_size.first);
+    int new_height = std::max(current_size.second, (int)minimal_size.second);
+
+    if (current_size != std::make_pair(new_width, new_height))
+        glfwSetWindowSize(m_render_window, new_width, new_height);
 }

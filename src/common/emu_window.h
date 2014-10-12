@@ -20,6 +20,7 @@ public:
         bool    fullscreen;
         int     res_width;
         int     res_height;
+        std::pair<unsigned,unsigned> min_client_area_size;
     };
 
     /// Swap buffers to display the next frame
@@ -42,8 +43,8 @@ public:
     /// Signals a key release action to the HID module
     static void KeyReleased(KeyMap::HostDeviceKey key);
 
-    WindowConfig GetConfig() const {
-        return config;
+    const WindowConfig& GetActiveConfig() const {
+        return active_config;
     }
 
     void SetConfig(const WindowConfig& val) {
@@ -72,24 +73,40 @@ public:
         window_title = val;
     }
 
+    // Only call this from the GUI thread!
+    void ProcessConfigurationChanges() {
+        // TODO: For proper thread safety, we should eventually implement a proper
+        // multiple-writer/single-reader queue...
+
+        if (config.min_client_area_size != active_config.min_client_area_size) {
+            OnMinimalClientAreaChangeRequest(config.min_client_area_size);
+            config.min_client_area_size = active_config.min_client_area_size;
+        }
+    }
+
 protected:
-    EmuWindow() : // TODO: What the hell... -.- - don't hardcode dimensions here without applying them in a sensible manner...
+    EmuWindow() :
         window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc))
-        m_client_area_width(640),
-        m_client_area_height(480),
-    {}
+    {
+        // TODO
+        config.min_client_area_size = std::make_pair(300u, 500u);
+        active_config = config;
+    }
     virtual ~EmuWindow() {}
 
     std::pair<unsigned,unsigned> NotifyFramebufferSizeChanged(const std::pair<unsigned,unsigned>& size) {
         framebuffer_size = size;
     }
 
-    void NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned> size) {
+    void NotifyClientAreaSizeChanged(const std::pair<unsigned,unsigned>& size) {
         client_area_width = size.first;
         client_area_height = size.second;
     }
 
 private:
+    virtual void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
+    }
+
     std::string window_title;      ///< Current window title, should be used by window impl.
 
     std::pair<unsigned,unsigned> framebuffer_size;
@@ -97,5 +114,6 @@ private:
     unsigned client_area_width;    ///< Current client width, should be set by window impl.
     unsigned client_area_height;   ///< Current client height, should be set by window impl.
 
-    WindowConfig config;         ///< Internal configuration
+    WindowConfig config;         ///< Internal configuration (changes pending for being applied in ProcessConfigurationChanges)
+    WindowConfig active_config;  ///< Internal active configuration
 };
