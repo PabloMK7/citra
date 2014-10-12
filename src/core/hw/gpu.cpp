@@ -89,7 +89,7 @@ inline void Write(u32 addr, const T data) {
                     } source_color = { 0, 0, 0, 0 };
 
                     switch (config.input_format) {
-                    case Regs::FramebufferFormat::RGBA8:
+                    case Regs::PixelFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
                         u8* srcptr = source_pointer + x * 4 + y * config.input_width * 4;
@@ -106,7 +106,7 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     switch (config.output_format) {
-                    /*case Regs::FramebufferFormat::RGBA8:
+                    /*case Regs::PixelFormat::RGBA8:
                     {
                         // TODO: Untested
                         u8* dstptr = (u32*)(dest_pointer + x * 4 + y * config.output_width * 4);
@@ -117,7 +117,7 @@ inline void Write(u32 addr, const T data) {
                         break;
                     }*/
 
-                    case Regs::FramebufferFormat::RGB8:
+                    case Regs::PixelFormat::RGB8:
                     {
                         // TODO: Most likely got the component order messed up.
                         u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3;
@@ -236,13 +236,13 @@ void Init() {
     framebuffer_top.width = 240;
     framebuffer_top.height = 400;
     framebuffer_top.stride = 3 * 240;
-    framebuffer_top.color_format = Regs::FramebufferFormat::RGB8;
+    framebuffer_top.color_format = Regs::PixelFormat::RGB8;
     framebuffer_top.active_fb = 0;
 
     framebuffer_sub.width = 240;
     framebuffer_sub.height = 320;
     framebuffer_sub.stride = 3 * 240;
-    framebuffer_sub.color_format = Regs::FramebufferFormat::RGB8;
+    framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
     framebuffer_sub.active_fb = 0;
 
     NOTICE_LOG(GPU, "initialized OK");

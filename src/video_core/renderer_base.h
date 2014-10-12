@@ -19,7 +19,7 @@ public:
     RendererBase() : m_current_fps(0), m_current_frame(0) {
     }
 
-    ~RendererBase() {
+    virtual ~RendererBase() {
     }
 
     /// Swap buffers (render frame)

@@ -113,10 +113,10 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
 
     // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
     QGLFormat fmt;
-    fmt.setProfile(QGLFormat::CoreProfile);
     fmt.setVersion(3,2);
-    fmt.setSampleBuffers(true);
-    fmt.setSamples(4);
+    fmt.setProfile(QGLFormat::CoreProfile);
+    // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
+    fmt.setOption(QGL::NoDeprecatedFunctions);
     
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);

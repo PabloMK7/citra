@@ -7,27 +7,21 @@
 #include "generated/gl_3_2_core.h"
 
 #include "common/common.h"
-#include "common/emu_window.h"
-
+#include "core/hw/gpu.h"
 #include "video_core/renderer_base.h"
 
 #include <array>
 
-class RendererOpenGL : virtual public RendererBase {
+class EmuWindow;
+
+class RendererOpenGL : public RendererBase {
 public:
 
     RendererOpenGL();
-    ~RendererOpenGL();
+    ~RendererOpenGL() override;
 
     /// Swap buffers (render frame)
     void SwapBuffers();
-
-    /**
-     * Renders external framebuffer (XFB)
-     * @param src_rect Source rectangle in XFB to copy
-     * @param dst_rect Destination rectangle in output framebuffer to copy to
-     */
-    void RenderXFB(const Common::Rect& src_rect, const Common::Rect& dst_rect);
 
     /**
      * Set the emulator window to use for renderer
@@ -42,38 +36,21 @@ public:
     void ShutDown();
 
 private:
-
-    /// Initialize the FBO
-    void InitFramebuffer();
-
-    // Blit the FBO to the OpenGL default framebuffer
-    void RenderFramebuffer();
-
-    /// Updates the framerate
-    void UpdateFramerate();
-
-    /// Structure used for storing information for rendering each 3DS screen
-    struct ScreenInfo {
-        // Properties
-        int width;
-        int height;
-        int stride; ///< Number of bytes between the coordinates (0,0) and (1,0)
-
-        // OpenGL object IDs
-        GLuint texture_id;
-        GLuint vertex_buffer_id;
-
-        // Temporary
-        u8* flipped_xfb_data;
+    /// Structure used for storing information about the textures for each 3DS screen
+    struct TextureInfo {
+        GLuint handle;
+        GLsizei width;
+        GLsizei height;
     };
 
-    /**
-    * Helper function to flip framebuffer from left-to-right to top-to-bottom
-    * @param raw_data Pointer to input raw framebuffer in V/RAM
-    * @param screen_info ScreenInfo structure with screen size and output buffer pointer
-    * @todo Early on hack... I'd like to find a more efficient way of doing this /bunnei
-    */
-    void FlipFramebuffer(const u8* raw_data, ScreenInfo& screen_info);
+    void InitOpenGLObjects();
+    void DrawScreens();
+    void DrawSingleScreenRotated(const TextureInfo& texture, float x, float y, float w, float h);
+    void UpdateFramerate();
+
+    // Loads framebuffer from emulated memory into the active OpenGL texture.
+    static void LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
+                                        const TextureInfo& texture);
 
     EmuWindow*  render_window;                    ///< Handle to render window
     u32         last_mode;                        ///< Last render mode
@@ -81,22 +58,15 @@ private:
     int resolution_width;                         ///< Current resolution width
     int resolution_height;                        ///< Current resolution height
 
-    // OpenGL global object IDs
-    GLuint vertex_array_id;
+    // OpenGL object IDs
+    GLuint vertex_array_handle;
+    GLuint vertex_buffer_handle;
     GLuint program_id;
-    GLuint sampler_id;
+    std::array<TextureInfo, 2> textures;
+    // Shader uniform location indices
+    GLuint uniform_modelview_matrix;
+    GLuint uniform_color_texture;
     // Shader attribute input indices
     GLuint attrib_position;
-    GLuint attrib_texcoord;
-
-    struct : std::array<ScreenInfo, 2> {
-        ScreenInfo& Top() { return (*this)[0]; }
-        ScreenInfo& Bottom() { return (*this)[1]; }
-    } screen_info;
-
-    // "Flipped" framebuffers translate scanlines from native 3DS left-to-right to top-to-bottom
-    // as OpenGL expects them in a texture. There probably is a more efficient way of doing this:
-    u8 xfb_top_flipped[VideoCore::kScreenTopWidth * VideoCore::kScreenTopHeight * 4];
-    u8 xfb_bottom_flipped[VideoCore::kScreenBottomWidth * VideoCore::kScreenBottomHeight * 4];
-
+    GLuint attrib_tex_coord;
 };

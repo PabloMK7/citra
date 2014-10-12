@@ -56,7 +56,7 @@ struct Regs {
                   "Structure size and register block length don't match")
 #endif
 
-    enum class FramebufferFormat : u32 {
+    enum class PixelFormat : u32 {
         RGBA8  = 0,
         RGB8   = 1,
         RGB565 = 2,
@@ -84,9 +84,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x10b);
 
-    struct {
-        using Format = Regs::FramebufferFormat;
-
+    struct FramebufferConfig {
         union {
             u32 size;
 
@@ -102,7 +100,7 @@ struct Regs {
         union {
             u32 format;
 
-            BitField< 0, 3, Format> color_format;
+            BitField< 0, 3, PixelFormat> color_format;
         };
 
         INSERT_PADDING_WORDS(0x1);
@@ -130,8 +128,6 @@ struct Regs {
     INSERT_PADDING_WORDS(0x169);
 
     struct {
-        using Format = Regs::FramebufferFormat;
-
         u32 input_address;
         u32 output_address;
 
@@ -161,8 +157,8 @@ struct Regs {
             u32 flags;
 
             BitField< 0, 1, u32> flip_data;        // flips input data horizontally (TODO) if true
-            BitField< 8, 3, Format> input_format;
-            BitField<12, 3, Format> output_format;
+            BitField< 8, 3, PixelFormat> input_format;
+            BitField<12, 3, PixelFormat> output_format;
             BitField<16, 1, u32> output_tiled;     // stores output in a tiled format
         };
 
