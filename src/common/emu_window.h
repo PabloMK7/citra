@@ -43,54 +43,59 @@ public:
     static void KeyReleased(KeyMap::HostDeviceKey key);
 
     WindowConfig GetConfig() const {
-        return m_config;
+        return config;
     }
 
     void SetConfig(const WindowConfig& val) {
-        m_config = val;
+        config = val;
     }
 
-    /// Gets the size of the window in pixels
-    virtual void GetFramebufferSize(int* fbWidth, int* fbHeight) = 0;
-
-    int GetClientAreaWidth() const {
-        return m_client_area_width;
+    /**
+      * Gets the size of the framebuffer in pixels
+      */
+    const std::pair<unsigned,unsigned> GetFramebufferSize() const {
+        return framebuffer_size;
     }
 
-    void SetClientAreaWidth(const int val) {
-        m_client_area_width = val;
+    /**
+     * Gets window client area width in logical coordinates
+     */
+    std::pair<unsigned,unsigned> GetClientAreaSize() const {
+        return std::make_pair(client_area_width, client_area_height);
     }
 
-    int GetClientAreaHeight() const {
-        return m_client_area_height;
+    std::string GetWindowTitle() const {
+        return window_title;
     }
 
-    void SetClientAreaHeight(const int val) {
-        m_client_area_height = val;
-    }
-
-    std::string GetWindowTitle() const { 
-        return m_window_title;
-    }
-    
-    void SetWindowTitle(std::string val) {
-        m_window_title = val;
+    void SetWindowTitle(const std::string& val) {
+        window_title = val;
     }
 
 protected:
-    EmuWindow():
-        m_window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc)),
+    EmuWindow() : // TODO: What the hell... -.- - don't hardcode dimensions here without applying them in a sensible manner...
+        window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc))
         m_client_area_width(640),
-        m_client_area_height(480)
+        m_client_area_height(480),
     {}
     virtual ~EmuWindow() {}
 
-    std::string m_window_title;     ///< Current window title, should be used by window impl.
+    std::pair<unsigned,unsigned> NotifyFramebufferSizeChanged(const std::pair<unsigned,unsigned>& size) {
+        framebuffer_size = size;
+    }
 
-    int m_client_area_width;        ///< Current client width, should be set by window impl.
-    int m_client_area_height;       ///< Current client height, should be set by window impl.
+    void NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned> size) {
+        client_area_width = size.first;
+        client_area_height = size.second;
+    }
 
 private:
-    WindowConfig m_config;                ///< Internal configuration
+    std::string window_title;      ///< Current window title, should be used by window impl.
 
+    std::pair<unsigned,unsigned> framebuffer_size;
+
+    unsigned client_area_width;    ///< Current client width, should be set by window impl.
+    unsigned client_area_height;   ///< Current client height, should be set by window impl.
+
+    WindowConfig config;         ///< Internal configuration
 };

@@ -1,11 +1,15 @@
+#include <atomic>
+
 #include <QThread>
 #include <QGLWidget>
-#include <atomic>
+
 #include "common/common.h"
 #include "common/emu_window.h"
 
-class GRenderWindow;
+class QScreen;
 class QKeyEvent;
+
+class GRenderWindow;
 
 class EmuThread : public QThread
 {
@@ -74,7 +78,7 @@ private:
 signals:
     /**
      * Emitted when CPU when we've finished processing a single Gekko instruction
-     * 
+     *
      * @warning This will only be emitted when the CPU is not running (SetCpuRunning(false))
      * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
@@ -96,12 +100,11 @@ public:
     void MakeCurrent() override;
     void DoneCurrent() override;
     void PollEvents() override;
-    void GetFramebufferSize(int* fbWidth, int* fbHeight) override;
 
     void BackupGeometry();
     void RestoreGeometry();
     void restoreGeometry(const QByteArray& geometry); // overridden
-    QByteArray saveGeometry(); // overridden
+    QByteArray saveGeometry();  // overridden
 
     EmuThread& GetEmuThread();
 
@@ -110,8 +113,12 @@ public:
 
     void ReloadSetKeymaps() override;
 
+    void OnClientAreaResized(unsigned width, unsigned height);
+
+    void OnFramebufferSizeChanged();
+
 public slots:
-    void moveContext();
+    void moveContext();  // overridden
 
 private:
     QGLWidget* child;

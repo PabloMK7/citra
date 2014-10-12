@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include "common/emu_window.h"
+
+struct GLFWwindow;
 
 class EmuWindow_GLFW : public EmuWindow {
 public:
@@ -30,12 +30,15 @@ public:
     /// Whether the window is still open, and a close request hasn't yet been sent
     const bool IsOpen();
 
+    static void OnClientAreaResizeEvent(GLFWwindow* win, int width, int height);
+
+    static void OnFramebufferResizeEvent(GLFWwindow* win, int width, int height);
+
     void ReloadSetKeymaps() override;
 
-    /// Gets the size of the window in pixels
-    void GetFramebufferSize(int* fbWidth, int* fbHeight);
-
 private:
+    static EmuWindow_GLFW* GetEmuWindow(GLFWwindow* win);
+
     GLFWwindow* m_render_window; ///< Internal GLFW render window
 
     /// Device id of keyboard for use with KeyMap

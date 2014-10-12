@@ -230,10 +230,10 @@ void RendererOpenGL::SetWindow(EmuWindow* window) {
 }
 
 void RendererOpenGL::UpdateViewportExtent() {
-    int width_in_pixels;
-    int height_in_pixels;
+    unsigned width_in_pixels;
+    unsigned height_in_pixels;
 
-    render_window->GetFramebufferSize(&width_in_pixels, &height_in_pixels);
+    std::tie(width_in_pixels, height_in_pixels) = render_window->GetFramebufferSize();
 
     // No update needed if framebuffer size hasn't changed
     if (width_in_pixels == framebuffer_size.width && height_in_pixels == framebuffer_size.height) {

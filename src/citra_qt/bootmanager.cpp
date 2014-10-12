@@ -88,20 +88,20 @@ void EmuThread::Stop()
 class GGLWidgetInternal : public QGLWidget
 {
 public:
-    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(fmt, parent)
-    {
-        parent_ = parent;
+    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent)
+                     : QGLWidget(fmt, parent), parent(parent) {
     }
 
-    void paintEvent(QPaintEvent* ev) override
-    {
+    void paintEvent(QPaintEvent* ev) override {
     }
+
     void resizeEvent(QResizeEvent* ev) override {
-        parent_->SetClientAreaWidth(size().width());
-        parent_->SetClientAreaHeight(size().height());
+        parent->OnClientAreaResized(ev->size().width(), ev->size().height());
+        parent->OnFramebufferSizeChanged();
     }
+
 private:
-    GRenderWindow* parent_;
+    GRenderWindow* parent;
 };
 
 EmuThread& GRenderWindow::GetEmuThread()
@@ -120,16 +120,23 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     fmt.setProfile(QGLFormat::CoreProfile);
     // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
     fmt.setOption(QGL::NoDeprecatedFunctions);
-    
+
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
     resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
-    QObject::connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
+    connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
+
+    OnFramebufferSizeChanged();
+    NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(child->width(), child->height()));
 
     BackupGeometry();
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this, SLOT(OnFramebufferSizeChanged()));
+#endif
 }
 
 void GRenderWindow::moveContext()
@@ -182,22 +189,26 @@ void GRenderWindow::PollEvents() {
     */
 }
 
-// On Qt 5.1+, this correctly gets the size of the framebuffer (pixels).
+// On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
 //
 // Older versions get the window size (density independent pixels),
 // and hence, do not support DPI scaling ("retina" displays).
 // The result will be a viewport that is smaller than the extent of the window.
-void GRenderWindow::GetFramebufferSize(int* fbWidth, int* fbHeight)
+void GRenderWindow::OnFramebufferSizeChanged()
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 1, 0)
-    int pixelRatio = child->QPaintDevice::devicePixelRatio();
-    
-    *fbWidth = child->QPaintDevice::width() * pixelRatio;
-    *fbHeight = child->QPaintDevice::height() * pixelRatio;
+    // Screen changes potentially incur a change in screen DPI, hence we should update the framebuffer size
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    // windowHandle() might not be accessible until the window is displayed to screen.
+    auto pixel_ratio = windowHandle() ? (windowHandle()->screen()->devicePixelRatio()) : 1.0;
+
+    unsigned width = child->QPaintDevice::width() * pixel_ratio;
+    unsigned height = child->QPaintDevice::height() * pixel_ratio;
 #else
-    *fbWidth = child->QPaintDevice::width();
-    *fbHeight = child->QPaintDevice::height();
+    unsigned width = child->QPaintDevice::width();
+    unsigned height = child->QPaintDevice::height();
 #endif
+
+    NotifyFramebufferSizeChanged(std::make_pair(width, height));
 }
 
 void GRenderWindow::BackupGeometry()
@@ -260,3 +271,7 @@ void GRenderWindow::ReloadSetKeymaps()
     KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, HID_User::PAD_CIRCLE_DOWN);
 }
 
+void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
+{
+    NotifyClientAreaSizeChanged(std::make_pair(width, height));
+}

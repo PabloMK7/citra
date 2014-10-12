@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <GLFW/glfw3.h>
+
 #include "common/common.h"
 
 #include "video_core/video_core.h"
@@ -10,22 +12,21 @@
 
 #include "citra/emu_window/emu_window_glfw.h"
 
+EmuWindow_GLFW* EmuWindow_GLFW::GetEmuWindow(GLFWwindow* win) {
+    return static_cast<EmuWindow_GLFW*>(glfwGetWindowUserPointer(win));
+}
+
 /// Called by GLFW when a key event occurs
 void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods) {
 
-    if (!VideoCore::g_emu_window) {
-        return;
-    }
-
-    int keyboard_id = ((EmuWindow_GLFW*)VideoCore::g_emu_window)->keyboard_id;
+    int keyboard_id = GetEmuWindow(win)->keyboard_id;
 
     if (action == GLFW_PRESS) {
         EmuWindow::KeyPressed({key, keyboard_id});
-    }
-
-    if (action == GLFW_RELEASE) {
+    } else if (action == GLFW_RELEASE) {
         EmuWindow::KeyReleased({key, keyboard_id});
     }
+
     HID_User::PadUpdateComplete();
 }
 
@@ -34,8 +35,18 @@ const bool EmuWindow_GLFW::IsOpen() {
     return glfwWindowShouldClose(m_render_window) == 0;
 }
 
-void EmuWindow_GLFW::GetFramebufferSize(int* fbWidth, int* fbHeight) {
-    glfwGetFramebufferSize(m_render_window, fbWidth, fbHeight);
+void EmuWindow_GLFW::OnFramebufferResizeEvent(GLFWwindow* win, int width, int height) {
+    _dbg_assert_(GUI, width > 0);
+    _dbg_assert_(GUI, height > 0);
+
+    GetEmuWindow(win)->NotifyFramebufferSizeChanged(std::pair<unsigned,unsigned>(width, height));
+}
+
+void EmuWindow_GLFW::OnClientAreaResizeEvent(GLFWwindow* win, int width, int height) {
+    _dbg_assert_(GUI, width > 0);
+    _dbg_assert_(GUI, height > 0);
+
+    GetEmuWindow(win)->NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(width, height));
 }
 
 /// EmuWindow_GLFW constructor
@@ -54,20 +65,30 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     // GLFW on OSX requires these window hints to be set to create a 3.2+ GL context.
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
+
     m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth, 
         (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), 
-        m_window_title.c_str(), NULL, NULL);
+        GetWindowTitle().c_str(), NULL, NULL);
 
     if (m_render_window == NULL) {
         printf("Failed to create GLFW window! Exiting...");
         exit(1);
     }
-    
-    // Setup callbacks
-    glfwSetWindowUserPointer(m_render_window, this);
-    glfwSetKeyCallback(m_render_window, OnKeyEvent);
 
+    glfwSetWindowUserPointer(m_render_window, this);
+
+    // Notify base interface about window state
+    int width, height;
+    glfwGetFramebufferSize(m_render_window, &width, &height);
+    OnFramebufferResizeEvent(m_render_window, width, height);
+
+    glfwGetWindowSize(m_render_window, &width, &height);
+    OnClientAreaResizeEvent(m_render_window, width, height);
+
+    // Setup callbacks
+    glfwSetKeyCallback(m_render_window, OnKeyEvent);
+    glfwSetFramebufferSizeCallback(m_render_window, OnFramebufferResizeEvent);
+    glfwSetWindowSizeCallback(m_render_window, OnClientAreaResizeEvent);
 
     DoneCurrent();
 }
