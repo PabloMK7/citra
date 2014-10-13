@@ -6,17 +6,19 @@
 
 #include "core/hw/hw.h"
 #include "core/hw/gpu.h"
+#include "core/hw/lcd.h"
 
 namespace HW {
 
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
-
     case VADDR_GPU:
         GPU::Read(var, addr);
         break;
-
+    case VADDR_LCD:
+        LCD::Write(var, addr);
+        break;
     default:
         LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
     }
@@ -25,11 +27,12 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
-
     case VADDR_GPU:
         GPU::Write(addr, data);
         break;
-
+    case VADDR_LCD:
+        LCD::Write(addr, data);
+        break;
     default:
         LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
     }
@@ -54,6 +57,7 @@ void Update() {
 /// Initialize hardware
 void Init() {
     GPU::Init();
+    LCD::Init();
     LOG_DEBUG(HW, "initialized OK");
 }
 

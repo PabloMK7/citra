@@ -87,6 +87,7 @@ set(SRCS
             hle/svc.cpp
             hw/gpu.cpp
             hw/hw.cpp
+            hw/lcd.cpp
             loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
@@ -196,6 +197,7 @@ set(HEADERS
             hle/svc.h
             hw/gpu.h
             hw/hw.h
+            hw/lcd.h
             loader/elf.h
             loader/loader.h
             loader/ncch.h

@@ -11,11 +11,15 @@
 #include "gsp_gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/gpu.h"
+#include "core/hw/lcd.h"
 
 #include "video_core/gpu_debugger.h"
 
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;
+
+// Beginning address of HW regs
+const static u32 REGS_BEGIN = 0x1EB00000;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace GSP_GPU
@@ -87,7 +91,7 @@ static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
         return;
 
     while (size_in_bytes > 0) {
-        HW::Write<u32>(base_address + 0x1EB00000, *data);
+        HW::Write<u32>(base_address + REGS_BEGIN, *data);
 
         size_in_bytes -= 4;
         ++data;
@@ -130,7 +134,7 @@ static void WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* 
         return;
 
     while (size_in_bytes > 0) {
-        const u32 reg_address = base_address + 0x1EB00000;
+        const u32 reg_address = base_address + REGS_BEGIN;
 
         u32 reg_value;
         HW::Read<u32>(reg_value, reg_address);
@@ -190,7 +194,7 @@ static void ReadHWRegs(Service::Interface* self) {
     u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
 
     while (size > 0) {
-        HW::Read<u32>(*dst, reg_addr + 0x1EB00000);
+        HW::Read<u32>(*dst, reg_addr + REGS_BEGIN);
 
         size -= 4;
         ++dst;
@@ -439,24 +443,18 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
  *  Outputs:
  *      1: Result code
  */
-void SetLcdForceBlack(Service::Interface* self) {
-    // TODO: currently has no effect, as LCD reg writes have nowhere to go. 
-
+static void SetLcdForceBlack(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
+
     bool enable_black = cmd_buff[1] != 0;
-    u32 data = 0;
+    LCD::Regs::ColorFill data = {0};
 
-    if (enable_black) {
-        // Sets bit 24 to 1, enabling the fill
-        // Since data is already 0x00000000, there is no need to explicitly set
-        // bits 0-23 to zero (black), or bit 24 to 0 (fill disabled).
-        data |= (1 << 24);
-    }
+    // Since data is already zeroed, there is no need to explicitly set
+    // the color to black (all zero).
+    data.is_enabled = enable_black;
 
-    u32 data_main = data;
-    u32 data_sub  = data;
-    WriteHWRegs(0x202204, 4, &data_main); // Main LCD
-    WriteHWRegs(0x202A04, 4, &data_sub);  // Sub LCD
+    LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw); // Top LCD
+    LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
     
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }

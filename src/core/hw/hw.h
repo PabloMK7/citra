@@ -8,8 +8,8 @@
 
 namespace HW {
 
-enum {
-    VADDR_IO        = 0x1EC00000,
+/// Beginnings of IO register regions, in the user VA space.
+enum : u32 {
     VADDR_HASH      = 0x1EC01000,
     VADDR_CSND      = 0x1EC03000,
     VADDR_DSP       = 0x1EC40000,
@@ -25,9 +25,7 @@ enum {
     VADDR_SPI_3     = 0x1EC60000,
     VADDR_I2C_3     = 0x1EC61000,
     VADDR_MIC       = 0x1EC62000,
-    VADDR_PXI       = 0x1EC63000,   // 0xFFFD2000
-    //VADDR_NTRCARD
-    VADDR_CDMA      = 0xFFFDA000,   // CoreLink DMA-330? Info
+    VADDR_PXI       = 0x1EC63000,
     VADDR_LCD       = 0x1ED02000,
     VADDR_DSP_2     = 0x1ED03000,
     VADDR_HASH_2    = 0x1EE01000,
