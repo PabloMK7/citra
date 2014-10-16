@@ -29,6 +29,11 @@ void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int acti
     HID_User::PadUpdateComplete();
 }
 
+/// Whether the window is still open, and a close request hasn't yet been sent
+const bool EmuWindow_GLFW::IsOpen() {
+    return glfwWindowShouldClose(m_render_window) != 0;
+}
+
 /// EmuWindow_GLFW constructor
 EmuWindow_GLFW::EmuWindow_GLFW() {
     keyboard_id = KeyMap::NewDeviceId();

@@ -34,7 +34,7 @@ int __cdecl main(int argc, char **argv) {
         return -1;
     }
 
-    while(true) {
+    while (emu_window->IsOpen()) {
         Core::RunLoop();
     }
 
