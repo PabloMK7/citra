@@ -27,6 +27,9 @@ public:
 
     static void OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods);
 
+    /// Whether the window is still open, and a close request hasn't yet been sent
+    const bool IsOpen();
+
     void ReloadSetKeymaps() override;
 
 private:
