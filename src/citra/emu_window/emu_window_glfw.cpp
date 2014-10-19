@@ -31,7 +31,7 @@ void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int acti
 
 /// Whether the window is still open, and a close request hasn't yet been sent
 const bool EmuWindow_GLFW::IsOpen() {
-    return glfwWindowShouldClose(m_render_window) != 0;
+    return glfwWindowShouldClose(m_render_window) == 0;
 }
 
 /// EmuWindow_GLFW constructor
