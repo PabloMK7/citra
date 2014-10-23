@@ -28,7 +28,7 @@ enum class ArbitrationType : u32 {
 };
 
 /// Arbitrate an address
-Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value);
+ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value);
 
 /// Create an address arbiter
 Handle CreateAddressArbiter(const std::string& name = "Unknown");

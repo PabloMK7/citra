@@ -62,7 +62,7 @@ void Manager::DeleteService(const std::string& port_name) {
 
 /// Get a Service Interface from its Handle
 Interface* Manager::FetchFromHandle(Handle handle) {
-    return Kernel::g_object_pool.GetFast<Interface>(handle);
+    return Kernel::g_object_pool.Get<Interface>(handle);
 }
 
 /// Get a Service Interface from its port

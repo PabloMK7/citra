@@ -35,8 +35,8 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) override {
-        *wait = locked;
+    ResultVal<bool> WaitSynchronization() override {
+        bool wait = locked;
         if (locked) {
             Handle thread = GetCurrentThreadHandle();
             if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
@@ -47,7 +47,7 @@ public:
         if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
             locked = true;
         }
-        return 0;
+        return MakeResult<bool>(wait);
     }
 };
 
@@ -57,12 +57,12 @@ public:
  * @param permanent_locked Boolean permanent locked value to set event
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result SetPermanentLock(Handle handle, const bool permanent_locked) {
-    Event* evt = g_object_pool.GetFast<Event>(handle);
-    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
+    Event* evt = g_object_pool.Get<Event>(handle);
+    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     evt->permanent_locked = permanent_locked;
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**
@@ -71,14 +71,14 @@ Result SetPermanentLock(Handle handle, const bool permanent_locked) {
  * @param locked Boolean locked value to set event
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result SetEventLocked(const Handle handle, const bool locked) {
-    Event* evt = g_object_pool.GetFast<Event>(handle);
-    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+ResultCode SetEventLocked(const Handle handle, const bool locked) {
+    Event* evt = g_object_pool.Get<Event>(handle);
+    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {
         evt->locked = locked;
     }
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**
@@ -86,9 +86,9 @@ Result SetEventLocked(const Handle handle, const bool locked) {
  * @param handle Handle to event to signal
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result SignalEvent(const Handle handle) {
-    Event* evt = g_object_pool.GetFast<Event>(handle);
-    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+ResultCode SignalEvent(const Handle handle) {
+    Event* evt = g_object_pool.Get<Event>(handle);
+    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     // Resume threads waiting for event to signal
     bool event_caught = false;
@@ -106,7 +106,7 @@ Result SignalEvent(const Handle handle) {
     if (!evt->permanent_locked) {
         evt->locked = event_caught;
     }
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**
@@ -114,14 +114,14 @@ Result SignalEvent(const Handle handle) {
  * @param handle Handle to event to clear
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result ClearEvent(Handle handle) {
-    Event* evt = g_object_pool.GetFast<Event>(handle);
-    _assert_msg_(KERNEL, (evt != nullptr), "called, but event is nullptr!");
+ResultCode ClearEvent(Handle handle) {
+    Event* evt = g_object_pool.Get<Event>(handle);
+    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {
         evt->locked = true;
     }
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**

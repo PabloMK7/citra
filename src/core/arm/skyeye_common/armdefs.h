@@ -799,22 +799,24 @@ pascal void SpinCursor (short increment);    /* copied from CursorCtl.h */
 #include "list.h"
 #include "tb.h"
 */
-const int EQ = 0;
-const int NE = 1;
-const int CS = 2;
-const int CC = 3;
-const int MI = 4;
-const int PL = 5;
-const int VS = 6;
-const int VC = 7;
-const int HI = 8;
-const int LS = 9;
-const int GE = 10;
-const int LT = 11;
-const int GT = 12;
-const int LE = 13;
-const int AL = 14;
-const int NV = 15;
+enum ConditionCode {
+    EQ = 0,
+    NE = 1,
+    CS = 2,
+    CC = 3,
+    MI = 4,
+    PL = 5,
+    VS = 6,
+    VC = 7,
+    HI = 8,
+    LS = 9,
+    GE = 10,
+    LT = 11,
+    GT = 12,
+    LE = 13,
+    AL = 14,
+    NV = 15,
+};
 
 #ifndef NFLAG
 #define NFLAG    state->NFlag

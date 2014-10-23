@@ -34,10 +34,7 @@ static s16 next_circle_y = 0;
  * Gets a pointer to the PadData structure inside HID shared memory
  */
 static inline PadData* GetPadData() {
-    if (0 == shared_mem)
-        return nullptr;
-
-    return reinterpret_cast<PadData*>(Kernel::GetSharedMemoryPointer(shared_mem, 0));
+    return reinterpret_cast<PadData*>(Kernel::GetSharedMemoryPointer(shared_mem, 0).ValueOr(nullptr));
 }
 
 /**

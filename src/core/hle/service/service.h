@@ -80,7 +80,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) override {
+    ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
@@ -91,7 +91,7 @@ public:
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
-            return 0;
+            return MakeResult<bool>(false);
         }
         if (itr->second.func == nullptr) {
             ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s",
@@ -100,12 +100,12 @@ public:
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
-            return 0;
+            return MakeResult<bool>(false);
         }
 
         itr->second.func(this);
 
-        return 0; // TODO: Implement return from actual function
+        return MakeResult<bool>(false); // TODO: Implement return from actual function
     }
 
     /**
@@ -113,10 +113,10 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "unimplemented function");
-        return 0;
+        return UnimplementedFunction(ErrorModule::OS);
     }
 
 protected:

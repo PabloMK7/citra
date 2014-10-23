@@ -16,6 +16,7 @@
 #include "core/hle/kernel/thread.h"
 
 #include "core/hle/function_wrappers.h"
+#include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,18 +87,22 @@ static Result ConnectToPort(Handle* out, const char* port_name) {
 
 /// Synchronize to an OS service
 static Result SendSyncRequest(Handle handle) {
+    // TODO(yuriks): ObjectPool::Get tries to check the Object type, which fails since this is a generic base Object,
+    // so we are forced to use GetFast and manually verify the handle.
+    if (!Kernel::g_object_pool.IsValid(handle)) {
+        return InvalidHandle(ErrorModule::Kernel).raw;
+    }
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
     DEBUG_LOG(SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName().c_str());
 
-    bool wait = false;
-    Result res = object->SyncRequest(&wait);
-    if (wait) {
+    ResultVal<bool> wait = object->SyncRequest();
+    if (wait.Succeeded() && *wait) {
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     }
 
-    return res;
+    return wait.Code().raw;
 }
 
 /// Close a handle
@@ -110,25 +115,25 @@ static Result CloseHandle(Handle handle) {
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
-    bool wait = false;
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
+    if (!Kernel::g_object_pool.IsValid(handle)) {
+        return InvalidHandle(ErrorModule::Kernel).raw;
+    }
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+    _dbg_assert_(KERNEL, object != nullptr);
 
     DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(),
             object->GetName().c_str(), nano_seconds);
 
-    _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
-
-    Result res = object->WaitSynchronization(&wait);
+    ResultVal<bool> wait = object->WaitSynchronization();
 
     // Check for next thread to schedule
-    if (wait) {
+    if (wait.Succeeded() && *wait) {
         HLE::Reschedule(__func__);
-        return 0;
     }
 
-    return res;
+    return wait.Code().raw;
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
@@ -143,20 +148,21 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
     // Iterate through each handle, synchronize kernel object
     for (s32 i = 0; i < handle_count; i++) {
-        bool wait = false;
+        if (!Kernel::g_object_pool.IsValid(handles[i])) {
+            return InvalidHandle(ErrorModule::Kernel).raw;
+        }
         Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]);
-
-        _assert_msg_(KERNEL, (object != nullptr), "called handle=0x%08X, but kernel object "
-            "is nullptr!", handles[i]);
 
         DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(),
             object->GetName().c_str());
 
-        Result res = object->WaitSynchronization(&wait);
+        // TODO(yuriks): Verify how the real function behaves when an error happens here
+        ResultVal<bool> wait_result = object->WaitSynchronization();
+        bool wait = wait_result.Succeeded() && *wait_result;
 
         if (!wait && !wait_all) {
             *out = i;
-            return 0;
+            return RESULT_SUCCESS.raw;
         } else {
             unlock_all = false;
         }
@@ -164,13 +170,13 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
     if (wait_all && unlock_all) {
         *out = handle_count;
-        return 0;
+        return RESULT_SUCCESS.raw;
     }
 
     // Check for next thread to schedule
     HLE::Reschedule(__func__);
 
-    return 0;
+    return RESULT_SUCCESS.raw;
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
@@ -183,8 +189,8 @@ static Result CreateAddressArbiter(u32* arbiter) {
 
 /// Arbitrate address
 static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
-    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address,
-        value);
+    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type),
+            address, value).raw;
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
@@ -246,13 +252,16 @@ static u32 ExitThread() {
 
 /// Gets the priority for the specified thread
 static Result GetThreadPriority(s32* priority, Handle handle) {
-    *priority = Kernel::GetThreadPriority(handle);
-    return 0;
+    ResultVal<u32> priority_result = Kernel::GetThreadPriority(handle);
+    if (priority_result.Succeeded()) {
+        *priority = *priority_result;
+    }
+    return priority_result.Code().raw;
 }
 
 /// Sets the priority for the specified thread
 static Result SetThreadPriority(Handle handle, s32 priority) {
-    return Kernel::SetThreadPriority(handle, priority);
+    return Kernel::SetThreadPriority(handle, priority).raw;
 }
 
 /// Create a mutex
@@ -266,9 +275,8 @@ static Result CreateMutex(Handle* mutex, u32 initial_locked) {
 /// Release a mutex
 static Result ReleaseMutex(Handle handle) {
     DEBUG_LOG(SVC, "called handle=0x%08X", handle);
-    _assert_msg_(KERNEL, (handle != 0), "called, but handle is nullptr!");
-    Kernel::ReleaseMutex(handle);
-    return 0;
+    ResultCode res = Kernel::ReleaseMutex(handle);
+    return res.raw;
 }
 
 /// Get current thread ID
@@ -310,16 +318,14 @@ static Result DuplicateHandle(Handle* out, Handle handle) {
 
 /// Signals an event
 static Result SignalEvent(Handle evt) {
-    Result res = Kernel::SignalEvent(evt);
     DEBUG_LOG(SVC, "called event=0x%08X", evt);
-    return res;
+    return Kernel::SignalEvent(evt).raw;
 }
 
 /// Clears an event
 static Result ClearEvent(Handle evt) {
-    Result res = Kernel::ClearEvent(evt);
     DEBUG_LOG(SVC, "called event=0x%08X", evt);
-    return res;
+    return Kernel::ClearEvent(evt).raw;
 }
 
 /// Sleep the current thread

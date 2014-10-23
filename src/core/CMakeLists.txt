@@ -133,6 +133,7 @@ set(HEADERS
             hle/service/srv.h
             hle/service/ssl_c.h
             hle/config_mem.h
+            hle/result.h
             hle/function_wrappers.h
             hle/hle.h
             hle/svc.h

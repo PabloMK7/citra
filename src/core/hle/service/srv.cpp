@@ -35,7 +35,7 @@ static void GetProcSemaphore(Service::Interface* self) {
 }
 
 static void GetServiceHandle(Service::Interface* self) {
-    Result res = 0;
+    ResultCode res = RESULT_SUCCESS;
     u32* cmd_buff = Service::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
@@ -46,9 +46,9 @@ static void GetServiceHandle(Service::Interface* self) {
         DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
-        res = -1;
+        res = UnimplementedFunction(ErrorModule::SRV);
     }
-    cmd_buff[1] = res;
+    cmd_buff[1] = res.raw;
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
