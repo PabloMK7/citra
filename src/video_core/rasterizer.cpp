@@ -225,28 +225,29 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
                 using Operation = Regs::TevStageConfig::Operation;
 
-                auto GetColorSource = [&](Source source) -> Math::Vec3<u8> {
+                auto GetColorSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
                     case Source::PrimaryColor:
-                        return primary_color.rgb();
+                        return primary_color;
 
                     case Source::Texture0:
-                        return texture_color[0].rgb();
+                        return texture_color[0];
 
                     case Source::Texture1:
-                        return texture_color[1].rgb();
+                        return texture_color[1];
 
                     case Source::Texture2:
-                        return texture_color[2].rgb();
+                        return texture_color[2];
 
                     case Source::Constant:
-                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
+                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b, tev_stage.const_a};
 
                     case Source::Previous:
-                        return combiner_output.rgb();
+                        return combiner_output;
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -273,17 +274,23 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner source %d\n", (int)source);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };
 
-                auto GetColorModifier = [](ColorModifier factor, const Math::Vec3<u8>& values) -> Math::Vec3<u8> {
+                auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
                     switch (factor)
                     {
                     case ColorModifier::SourceColor:
-                        return values;
+                        return values.rgb();
+
+                    case ColorModifier::SourceAlpha:
+                        return { values.a(), values.a(), values.a() };
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -292,8 +299,13 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     switch (factor) {
                     case AlphaModifier::SourceAlpha:
                         return value;
+
+                    case AlphaModifier::OneMinusSourceAlpha:
+                        return 255 - value;
+
                     default:
-                        LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
+                        LOG_ERROR(HW_GPU, "Unknown alpha factor %d\n", (int)factor);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };
@@ -306,8 +318,21 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Operation::Modulate:
                         return ((input[0] * input[1]) / 255).Cast<u8>();
 
+                    case Operation::Add:
+                    {
+                        auto result = input[0] + input[1];
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        return result.Cast<u8>();
+                    }
+
+                    case Operation::Lerp:
+                        return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -320,8 +345,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Operation::Modulate:
                         return input[0] * input[1] / 255;
 
+                    case Operation::Add:
+                        return std::min(255, input[0] + input[1]);
+
+                    case Operation::Lerp:
+                        return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };

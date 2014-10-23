@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <map>
+#include <vector>
 
 #include "common/bit_field.h"
 #include "common/common_types.h"

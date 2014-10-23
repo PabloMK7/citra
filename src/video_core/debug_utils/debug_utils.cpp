@@ -573,20 +573,26 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
         const std::map<Source, std::string> source_map = {
             { Source::PrimaryColor, "PrimaryColor" },
             { Source::Texture0, "Texture0" },
+            { Source::Texture1, "Texture1" },
+            { Source::Texture2, "Texture2" },
             { Source::Constant, "Constant" },
             { Source::Previous, "Previous" },
         };
 
         const std::map<ColorModifier, std::string> color_modifier_map = {
-            { ColorModifier::SourceColor, { "%source.rgb" } }
+            { ColorModifier::SourceColor, { "%source.rgb" } },
+            { ColorModifier::SourceAlpha, { "%source.aaa" } },
         };
         const std::map<AlphaModifier, std::string> alpha_modifier_map = {
-            { AlphaModifier::SourceAlpha, "%source.a" }
+            { AlphaModifier::SourceAlpha, "%source.a" },
+            { AlphaModifier::OneMinusSourceAlpha, "(255 - %source.a)" },
         };
 
         std::map<Operation, std::string> combiner_map = {
             { Operation::Replace, "%source1" },
             { Operation::Modulate, "(%source1 * %source2) / 255" },
+            { Operation::Add, "(%source1 + %source2)" },
+            { Operation::Lerp, "lerp(%source1, %source2, %source3)" },
         };
 
         auto ReplacePattern =
