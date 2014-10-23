@@ -13,6 +13,7 @@
 #include <commdlg.h>    // for GetSaveFileName
 #include <io.h>
 #include <direct.h>        // getcwd
+#include <tchar.h>
 #else
 #include <sys/param.h>
 #include <dirent.h>
