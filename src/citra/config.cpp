@@ -55,9 +55,14 @@ void Config::ReadControls() {
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
 }
 
+void Config::ReadData() {
+    Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
+}
+
 void Config::Reload() {
     LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
     ReadControls();
+    ReadData();
 }
 
 Config::~Config() {

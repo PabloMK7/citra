@@ -191,8 +191,10 @@ bool CreateFullPath(const std::string &fullPath)
 
         // Include the '/' so the first call is CreateDir("/") rather than CreateDir("")
         std::string const subPath(fullPath.substr(0, position + 1));
-        if (!FileUtil::IsDirectory(subPath))
-            FileUtil::CreateDir(subPath);
+        if (!FileUtil::IsDirectory(subPath) && !FileUtil::CreateDir(subPath)) {
+            ERROR_LOG(COMMON, "CreateFullPath: directory creation failed");
+            return false;
+        }
 
         // A safety check
         panicCounter--;

@@ -64,12 +64,26 @@ void Config::SaveControls() {
     qt_config->endGroup();
 }
 
+void Config::ReadData() {
+    qt_config->beginGroup("Data Storage");
+    Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
+    qt_config->endGroup();
+}
+
+void Config::SaveData() {
+    qt_config->beginGroup("Data Storage");
+    qt_config->setValue("use_virtual_sd", Settings::values.use_virtual_sd);
+    qt_config->endGroup();
+}
+
 void Config::Reload() {
     ReadControls();
+    ReadData();
 }
 
 void Config::Save() {
     SaveControls();
+    SaveData();
 }
 
 Config::~Config() {

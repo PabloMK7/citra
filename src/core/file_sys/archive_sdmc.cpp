@@ -10,6 +10,7 @@
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_sdmc.h"
 #include "core/file_sys/file_sdmc.h"
+#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -29,8 +30,13 @@ Archive_SDMC::~Archive_SDMC() {
  * @return true if it initialized successfully
  */
 bool Archive_SDMC::Initialize() {
-    if (!FileUtil::IsDirectory(mount_point)) {
-        WARN_LOG(FILESYS, "Directory %s not found, disabling SDMC.", mount_point.c_str());
+    if (!Settings::values.use_virtual_sd) {
+        WARN_LOG(FILESYS, "SDMC disabled by config.");
+        return false;
+    }
+
+    if (!FileUtil::CreateFullPath(mount_point)) {
+        WARN_LOG(FILESYS, "Unable to create SDMC path.");
         return false;
     }
 
