@@ -169,7 +169,6 @@ std::string Timer::GetTimeFormatted()
 {
     time_t sysTime;
     struct tm * gmTime;
-    char formattedTime[13];
     char tmp[13];
 
     time(&sysTime);
@@ -181,14 +180,12 @@ std::string Timer::GetTimeFormatted()
 #ifdef _WIN32
     struct timeb tp;
     (void)::ftime(&tp);
-    sprintf(formattedTime, "%s:%03i", tmp, tp.millitm);
+    return StringFromFormat("%s:%03i", tmp, tp.millitm);
 #else
     struct timeval t;
     (void)gettimeofday(&t, NULL);
-    sprintf(formattedTime, "%s:%03d", tmp, (int)(t.tv_usec / 1000));
+    return StringFromFormat("%s:%03d", tmp, (int)(t.tv_usec / 1000));
 #endif
-
-    return std::string(formattedTime);
 }
 
 // Returns a timestamp with decimals for precise time comparisons
