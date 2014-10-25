@@ -14,6 +14,8 @@
 #include "core/core.h"
 #include "core/settings.h"
 
+#include "video_core/debug_utils/debug_utils.h"
+
 #include "video_core/video_core.h"
 
 #include "citra_qt/version.h"
@@ -65,14 +67,21 @@ void EmuThread::Stop()
     }
     stop_run = true;
 
+    // Release emu threads from any breakpoints, so that this doesn't hang forever.
+    Pica::g_debug_context->ClearBreakpoints();
+
     //core::g_state = core::SYS_DIE;
 
-    wait(500);
+    // TODO: Waiting here is just a bad workaround for retarded shutdown logic.
+    wait(1000);
     if (isRunning())
     {
         WARN_LOG(MASTER_LOG, "EmuThread still running, terminating...");
         quit();
-        wait(1000);
+
+        // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
+        // queued... This should be fixed.
+        wait(50000);
         if (isRunning())
         {
             WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");

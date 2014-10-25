@@ -36,6 +36,8 @@ GMainWindow::GMainWindow()
 {
     LogManager::Init();
 
+    Pica::g_debug_context = Pica::DebugContext::Construct();
+
     Config config;
 
     if (!Settings::values.enable_log)
@@ -133,6 +135,8 @@ GMainWindow::~GMainWindow()
     // will get automatically deleted otherwise
     if (render_window->parent() == nullptr)
         delete render_window;
+
+    Pica::g_debug_context.reset();
 }
 
 void GMainWindow::BootGame(std::string filename)

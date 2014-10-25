@@ -34,6 +34,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     u32 old_value = registers[id];
     registers[id] = (old_value & ~mask) | (value & mask);
 
+    if (g_debug_context)
+        g_debug_context->OnEvent(DebugContext::Event::CommandLoaded, reinterpret_cast<void*>(&id));
+
     DebugUtils::OnPicaRegWrite(id, registers[id]);
 
     switch(id) {
@@ -42,6 +45,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
             DebugUtils::DumpTevStageConfig(registers.GetTevStages());
+
+            if (g_debug_context)
+                g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
 
             const auto& attribute_config = registers.vertex_attributes;
             const u8* const base_address = Memory::GetPointer(attribute_config.GetBaseAddress());
@@ -132,6 +138,10 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 clipper_primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
             }
             geometry_dumper.Dump();
+
+            if (g_debug_context)
+                g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+
             break;
         }
 
@@ -229,6 +239,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         default:
             break;
     }
+
+    if (g_debug_context)
+        g_debug_context->OnEvent(DebugContext::Event::CommandProcessed, reinterpret_cast<void*>(&id));
 }
 
 static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {

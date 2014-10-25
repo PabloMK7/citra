@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <condition_variable>
+#include <list>
 #include <map>
 #include <fstream>
 #include <mutex>
@@ -12,6 +14,7 @@
 #include <png.h>
 #endif
 
+#include "common/log.h"
 #include "common/file_util.h"
 
 #include "video_core/pica.h"
@@ -19,6 +22,46 @@
 #include "debug_utils.h"
 
 namespace Pica {
+
+void DebugContext::OnEvent(Event event, void* data) {
+    if (!breakpoints[event].enabled)
+        return;
+
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // TODO: Should stop the CPU thread here once we multithread emulation.
+
+        active_breakpoint = event;
+        at_breakpoint = true;
+
+        // Tell all observers that we hit a breakpoint
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaBreakPointHit(event, data);
+        }
+
+        // Wait until another thread tells us to Resume()
+        resume_from_breakpoint.wait(lock, [&]{ return !at_breakpoint; });
+    }
+}
+
+void DebugContext::Resume() {
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // Tell all observers that we are about to resume
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaResume();
+        }
+
+        // Resume the waiting thread (i.e. OnEvent())
+        at_breakpoint = false;
+    }
+
+    resume_from_breakpoint.notify_one();
+}
+
+std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
