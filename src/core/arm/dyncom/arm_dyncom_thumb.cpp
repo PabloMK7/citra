@@ -1,19 +1,27 @@
-/*  thumbemu.c -- Thumb instruction emulation.
-    Copyright (C) 1996, Cygnus Software Technologies Ltd.
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
- 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
- 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
+/* Copyright (C) 
+* 2011 - Michael.Kang blackfin.kang@gmail.com
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+* 
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+* 
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+* 
+*/
+/**
+* @file arm_dyncom_thumb.c
+* @brief The thumb dynamic interpreter
+* @author Michael.Kang blackfin.kang@gmail.com
+* @version 78.77
+* @date 2011-11-07
+*/
 
 /* We can provide simple Thumb simulation by decoding the Thumb
 instruction into its corresponding ARM instruction, and using the
@@ -29,26 +37,22 @@ existing ARM simulator.  */
 #endif
 #endif
 
-#include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/skyeye_common/armos.h"
-
+#include "core/arm/dyncom/arm_dyncom_thumb.h"
 
 /* Decode a 16bit Thumb instruction.  The instruction is in the low
    16-bits of the tinstr field, with the following Thumb instruction
    held in the high 16-bits.  Passing in two Thumb instructions allows
    easier simulation of the special dual BL instruction.  */
 
-tdstate
-ARMul_ThumbDecode (
-     ARMul_State *state,
-     ARMword pc,
-     ARMword tinstr,
-     ARMword *ainstr)
+tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size)
 {
-	tdstate valid = t_decoded;	/* default assumes a valid instruction */
+    tdstate valid = t_uninitialized;
 	ARMword next_instr;
-
+	ARMword tinstr;
+	tinstr = instr;
+	/* The endian should be judge here */
+	#if 0
 	if (state->bigendSig) {
 		next_instr = tinstr & 0xFFFF;
 		tinstr >>= 16;
@@ -57,7 +61,13 @@ ARMul_ThumbDecode (
 		next_instr = tinstr >> 16;
 		tinstr &= 0xFFFF;
 	}
+	#endif
+	if((addr & 0x3) != 0)
+		tinstr = instr >> 16;
+	else
+		tinstr &= 0xFFFF;
 
+	//printf("In %s, instr=0x%x, tinstr=0x%x, r15=0x%x\n", __FUNCTION__, instr, tinstr, cpu->translate_pc);
 #if 1				/* debugging to catch non updates */
 	*ainstr = 0xDEADC0DE;
 #endif
@@ -114,14 +124,16 @@ ARMul_ThumbDecode (
 		   save the following conditional, and just have one large
 		   subset. */
 		if ((tinstr & (1 << 10)) == 0) {
-			/* Format 4 */
-            enum OpcodeType { t_norm, t_shift, t_neg, t_mul };
-			struct ThumbOpcode {
-				ARMword opcode;
-                OpcodeType otype;
-            };
+			typedef enum
+			{ t_norm, t_shift, t_neg, t_mul }otype_t;
 
-            ThumbOpcode subset[16] = {
+			/* Format 4 */
+			struct
+			{
+				ARMword opcode;
+				otype_t otype;
+			}
+			subset[16] = {
 				{
 				0xE0100000, t_norm},	/* ANDS Rd,Rd,Rs     */
 				{
@@ -223,9 +235,14 @@ ARMul_ThumbDecode (
 				break;
 			case 0xE:	/* BLX */
 			case 0xF:	/* BLX */
-				if (state->is_v5) {
+				
+				//if (state->is_v5) {
+				if(1){
+					//valid = t_branch;
+					#if 1
 					*ainstr = 0xE1200030	/* base */
 						|(Rs << 0);	/* Rm */
+					#endif
 				} else {
 					valid = t_undefined;
 				}
@@ -367,11 +384,13 @@ ARMul_ThumbDecode (
 	case 26:		/* Bcc */
 	case 27:		/* Bcc/SWI */
 		if ((tinstr & 0x0F00) == 0x0F00) {
+			#if 0
 			if (tinstr == (ARMul_ABORTWORD & 0xffff) &&
 					state->AbortAddr == pc) {
 				*ainstr = ARMul_ABORTWORD;
 				break;
 			}
+			#endif
 			/* Format 17 : SWI */
 			*ainstr = 0xEF000000;
 			/* Breakpoint must be handled specially.  */
@@ -385,6 +404,7 @@ ARMul_ThumbDecode (
 		}
 		else if ((tinstr & 0x0F00) != 0x0E00) {
 			/* Format 16 */
+			#if 0
 			int doit = FALSE;
 			/* TODO: Since we are doing a switch here, we could just add
 			   the SWI and undefined instruction checks into this
@@ -444,6 +464,7 @@ ARMul_ThumbDecode (
 							0xFFFFFF00 : 0)));
 				FLUSHPIPE;
 			}
+			#endif
 			valid = t_branch;
 		}
 		else		/* UNDEFINED : cc=1110(AL) uses different format */
@@ -451,10 +472,12 @@ ARMul_ThumbDecode (
 		break;
 	case 28:		/* B */
 		/* Format 18 */
+		#if 0
 		state->Reg[15] = (pc + 4 + (((tinstr & 0x3FF) << 1)
 					    | ((tinstr & (1 << 10)) ?
 					       0xFFFFF800 : 0)));
-		FLUSHPIPE;
+		#endif
+		//FLUSHPIPE;
 		valid = t_branch;
 		break;
 	case 29:
@@ -462,14 +485,8 @@ ARMul_ThumbDecode (
 			valid = t_undefined;
 		else{
 			/* BLX 1 for armv5t and above */
-			ARMword tmp = (pc + 2);
-			state->Reg[15] =
-				(state->Reg[14] + ((tinstr & 0x07FF) << 1)) & 0xFFFFFFFC;
-			state->Reg[14] = (tmp | 1);
-			CLEART;
-			DEBUG_LOG(ARM11, "In %s, After  BLX(1),LR=0x%x,PC=0x%x, offset=0x%x\n", __FUNCTION__, state->Reg[14], state->Reg[15], (tinstr &0x7FF) << 1);
+			//printf("In %s, After  BLX(1),LR=0x%x,PC=0x%x, offset=0x%x\n", __FUNCTION__, state->Reg[14], state->Reg[15], (tinstr &0x7FF) << 1);
 			valid = t_branch;
-			FLUSHPIPE;
 		}
 		break;
 	case 30:		/* BL instruction 1 */
@@ -479,17 +496,7 @@ ARMul_ThumbDecode (
 		   perspective) we check if the following instruction is the
 		   second half of this BL, and if it is we simulate it
 		   immediately.  */
-		state->Reg[14] = state->Reg[15]
-			+ (((tinstr & 0x07FF) << 12)
-			   | ((tinstr & (1 << 10)) ? 0xFF800000 : 0));
-		valid = t_branch;	/* in-case we don't have the 2nd half */
-		//tinstr = next_instr;	/* move the instruction down */
-		//if (((tinstr & 0xF800) >> 11) != 31)
-		//	break;	/* exit, since not correct instruction */
-		/* else we fall through to process the second half of the BL */
-		//pc += 2;	/* point the pc at the 2nd half */
-		state->Reg[15] = pc + 2;
-		FLUSHPIPE;
+		valid = t_branch;
 		break;
 	case 31:		/* BL instruction 2 */
 		/* Format 19 */
@@ -499,15 +506,16 @@ ARMul_ThumbDecode (
 		   the simulation of it on its own, with undefined results if
 		   r14 is not suitably initialised.  */
 		{
+			#if 0
 			ARMword tmp = (pc + 2);
 			state->Reg[15] =
 				(state->Reg[14] + ((tinstr & 0x07FF) << 1));
 			state->Reg[14] = (tmp | 1);
+			#endif
 			valid = t_branch;
-			FLUSHPIPE;
 		}
 		break;
 	}
-
+	*inst_size = 2;
 	return valid;
 }

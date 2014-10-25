@@ -15,18 +15,11 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
-//#include <util.h>
-
-#include <string>
-#include "core/arm/interpreter/armdefs.h"
-#include "core/arm/interpreter/armemu.h"
-#include "core/hle/coprocessor.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/disassembler/arm_disasm.h"
+#include "core/mem_map.h"
 
-//#include "ansidecl.h"
-//#include "skyeye.h"
-//extern int skyeye_instr_debug;
-/* Definitions for the support routines.  */
 
 static ARMword ModeToBank (ARMword);
 static void EnvokeList (ARMul_State *, unsigned int, unsigned int);
@@ -751,7 +744,7 @@ ARMword ARMul_MRC (ARMul_State * state, ARMword instr)
     int cpopc = BITS(21, 23) & 0x7;
 
     if (cn == 13 && cm == 0 && cp == 3) { //c13,c0,3; returns CPU svc buffer
-	ARMword result = HLE::CallMRC(instr);
+	ARMword result = Memory::KERNEL_MEMORY_VADDR;
 
 	if (result != -1) {
 		return result;

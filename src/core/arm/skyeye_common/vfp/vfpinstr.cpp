@@ -3709,7 +3709,7 @@ VFPLABEL_INST:
 		{
 			fault = check_address_validity(cpu, addr, &phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
-			fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
+			fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
 			if (fault) goto MMU_EXCEPTION;
 			DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d, cpu->ExtReg[inst_cream->d]);
 		}
@@ -3719,13 +3719,13 @@ VFPLABEL_INST:
 			if (fault) goto MMU_EXCEPTION;
 
 			/* Check endianness */
-			fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d*2], 32);
+			fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d*2], 32);
 			if (fault) goto MMU_EXCEPTION;
 
 			fault = check_address_validity(cpu, addr + 4, &phys_addr, 0);
 			if (fault) goto MMU_EXCEPTION;
 
-			fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[inst_cream->d*2+1], 32);
+			fault = interpreter_write_memory(addr + 4, phys_addr, cpu->ExtReg[inst_cream->d*2+1], 32);
 			if (fault) goto MMU_EXCEPTION;
 			DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, inst_cream->d*2+1, inst_cream->d*2, cpu->ExtReg[inst_cream->d*2+1], cpu->ExtReg[inst_cream->d*2]);
 		}
@@ -3926,7 +3926,7 @@ VFPLABEL_INST:
 			{
 				fault = check_address_validity(cpu, addr, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 				addr += 4;
@@ -3936,12 +3936,12 @@ VFPLABEL_INST:
 				/* Careful of endianness, little by default */
 				fault = check_address_validity(cpu, addr, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 				if (fault) goto MMU_EXCEPTION;
 
 				fault = check_address_validity(cpu, addr + 4, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				fault = interpreter_write_memory(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 				addr += 8;
@@ -4048,7 +4048,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 	{
 		if (single)
 		{
-			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+			//fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
@@ -4166,7 +4166,7 @@ VFPLABEL_INST: /* encoding 1 */
 				fault = check_address_validity(cpu, addr, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\taddr[%x] <= s%d=[%x]\n", addr, inst_cream->d+i, cpu->ExtReg[inst_cream->d+i]);
 				addr += 4;
@@ -4177,13 +4177,13 @@ VFPLABEL_INST: /* encoding 1 */
 				fault = check_address_validity(cpu, addr, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 				if (fault) goto MMU_EXCEPTION;
 
 				fault = check_address_validity(cpu, addr + 4, &phys_addr, 0);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				fault = interpreter_write_memory(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 				addr += 8;
@@ -4304,7 +4304,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		if (single)
 		{
 			
-			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+			//fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
@@ -4321,7 +4321,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		else
 		{
 		
-			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+			//fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 0);
 			bb = cpu->dyncom_engine->bb;
@@ -4332,7 +4332,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			bb = cpu->dyncom_engine->bb;
 			//if (fault) goto MMU_EXCEPTION;
 
-			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+			//fault = interpreter_write_memory(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, ADD(Addr, CONST(4)), 0);
 			bb = cpu->dyncom_engine->bb;
@@ -4431,7 +4431,7 @@ VFPLABEL_INST:
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_read_memory(core, addr, phys_addr, value1, 32);
+				fault = interpreter_read_memory(addr, phys_addr, value1, 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, value1, addr);
 				cpu->ExtReg[inst_cream->d+i] = value1;
@@ -4443,13 +4443,13 @@ VFPLABEL_INST:
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_read_memory(core, addr, phys_addr, value1, 32);
+				fault = interpreter_read_memory(addr, phys_addr, value1, 32);
 				if (fault) goto MMU_EXCEPTION;
 
 				fault = check_address_validity(cpu, addr + 4, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
 
-				fault = interpreter_read_memory(core, addr + 4, phys_addr, value2, 32);
+				fault = interpreter_read_memory(addr + 4, phys_addr, value2, 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, value2, value1, addr+4, addr);
 				cpu->ExtReg[(inst_cream->d+i)*2] = value1;
@@ -4682,7 +4682,7 @@ VFPLABEL_INST:
 		{
 			fault = check_address_validity(cpu, addr, &phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
-			fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
+			fault = interpreter_read_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d], 32);
 			if (fault) goto MMU_EXCEPTION;
 			DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d, cpu->ExtReg[inst_cream->d], addr);
 		}
@@ -4691,12 +4691,12 @@ VFPLABEL_INST:
 			unsigned int word1, word2;
 			fault = check_address_validity(cpu, addr, &phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
-			fault = interpreter_read_memory(core, addr, phys_addr, word1, 32);
+			fault = interpreter_read_memory(addr, phys_addr, word1, 32);
 			if (fault) goto MMU_EXCEPTION;
 
 			fault = check_address_validity(cpu, addr + 4, &phys_addr, 1);
 			if (fault) goto MMU_EXCEPTION;
-			fault = interpreter_read_memory(core, addr + 4, phys_addr, word2, 32);
+			fault = interpreter_read_memory(addr + 4, phys_addr, word2, 32);
 			if (fault) goto MMU_EXCEPTION;
 			/* Check endianness */
 			cpu->ExtReg[inst_cream->d*2] = word1;
@@ -4923,7 +4923,7 @@ VFPLABEL_INST:
 			{
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+				fault = interpreter_read_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\ts%d <= [%x] addr[%x]\n", inst_cream->d+i, cpu->ExtReg[inst_cream->d+i], addr);
 				addr += 4;
@@ -4933,12 +4933,12 @@ VFPLABEL_INST:
 				/* Careful of endianness, little by default */
 				fault = check_address_validity(cpu, addr, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_read_memory(core, addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
+				fault = interpreter_read_memory(addr, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2], 32);
 				if (fault) goto MMU_EXCEPTION;
 
 				fault = check_address_validity(cpu, addr + 4, &phys_addr, 1);
 				if (fault) goto MMU_EXCEPTION;
-				fault = interpreter_read_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+				fault = interpreter_read_memory(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 				if (fault) goto MMU_EXCEPTION;
 				DBG("\ts[%d-%d] <= [%x-%x] addr[%x-%x]\n", (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2], addr+4, addr);
 				addr += 8;
@@ -5058,7 +5058,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 		if (single)
 		{
 			
-			//fault = interpreter_write_memory(core, addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
+			//fault = interpreter_write_memory(addr, phys_addr, cpu->ExtReg[inst_cream->d+i], 32);
 			/* if R(i) is R15? */
 			#if 0
 			phys_addr = get_phys_addr(cpu, bb, Addr, 1);
@@ -5095,7 +5095,7 @@ int DYNCOM_TRANS(vfpinstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc
 			val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
 			LETFPS((d + i) * 2 + 1, FPBITCAST32(val));
 
-			//fault = interpreter_write_memory(core, addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
+			//fault = interpreter_write_memory(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
 			//DBG("\taddr[%x-%x] <= s[%d-%d]=[%x-%x]\n", addr+4, addr, (inst_cream->d+i)*2+1, (inst_cream->d+i)*2, cpu->ExtReg[(inst_cream->d+i)*2+1], cpu->ExtReg[(inst_cream->d+i)*2]);
 			//addr += 8;
 			Addr = ADD(Addr, CONST(8));

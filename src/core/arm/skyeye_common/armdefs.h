@@ -31,7 +31,7 @@
 
 #include "arm_regformat.h"
 #include "common/platform.h"
-#include "skyeye_defs.h"
+#include "core/arm/skyeye_common/skyeye_defs.h"
 
 //AJ2D--------------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ typedef unsigned long long      uint64_t;
 #endif
 */
 
-#include "armmmu.h"
+#include "core/arm/skyeye_common/armmmu.h"
 //#include "lcd/skyeye_lcd.h"
 
 
@@ -367,7 +367,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 
     int verbose;        /* non-zero means print various messages like the banner */
 
-    mmu_state_t mmu;
     int mmu_inited;
     //mem_state_t mem;
     /*remove io_state to skyeye_mach_*.c files */

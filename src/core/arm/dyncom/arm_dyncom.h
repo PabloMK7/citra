@@ -4,17 +4,18 @@
 
 #pragma once
 
-#include "common/common.h"
+#include <memory>
+
+#include "common/common_types.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/armemu.h"
 
-class ARM_Interpreter final : virtual public ARM_Interface {
+class ARM_DynCom final : virtual public ARM_Interface {
 public:
 
-    ARM_Interpreter();
-    ~ARM_Interpreter();
+    ARM_DynCom();
+    ~ARM_DynCom();
 
     /**
      * Set the Program Counter to an address
@@ -75,8 +76,6 @@ public:
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     void PrepareReschedule();
 
-protected:
-
     /**
      * Executes the given number of instructions
      * @param num_instructions Number of instructions to executes
@@ -85,6 +84,7 @@ protected:
 
 private:
 
-    ARMul_State* state;
+    std::unique_ptr<ARMul_State> state;
+    u64 ticks;
 
 };

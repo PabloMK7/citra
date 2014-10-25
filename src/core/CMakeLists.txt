@@ -1,27 +1,22 @@
 set(SRCS
             arm/disassembler/arm_disasm.cpp
             arm/disassembler/load_symbol_map.cpp
-            arm/interpreter/mmu/arm1176jzf_s_mmu.cpp
-            arm/interpreter/mmu/cache.cpp
-            arm/interpreter/mmu/maverick.cpp
-            arm/interpreter/mmu/rb.cpp
-            arm/interpreter/mmu/sa_mmu.cpp
-            arm/interpreter/mmu/tlb.cpp
-            arm/interpreter/mmu/wb.cpp
-            arm/interpreter/mmu/xscale_copro.cpp
-            arm/interpreter/vfp/vfp.cpp
-            arm/interpreter/vfp/vfpdouble.cpp
-            arm/interpreter/vfp/vfpinstr.cpp
-            arm/interpreter/vfp/vfpsingle.cpp
+            arm/dyncom/arm_dyncom.cpp
+            arm/dyncom/arm_dyncom_dec.cpp
+            arm/dyncom/arm_dyncom_interpreter.cpp
+            arm/dyncom/arm_dyncom_run.cpp
+            arm/dyncom/arm_dyncom_thumb.cpp
             arm/interpreter/arm_interpreter.cpp
             arm/interpreter/armcopro.cpp
             arm/interpreter/armemu.cpp
             arm/interpreter/arminit.cpp
-            arm/interpreter/armmmu.cpp
-            arm/interpreter/armos.cpp
             arm/interpreter/armsupp.cpp
             arm/interpreter/armvirt.cpp
             arm/interpreter/thumbemu.cpp
+            arm/skyeye_common/vfp/vfp.cpp
+            arm/skyeye_common/vfp/vfpdouble.cpp
+            arm/skyeye_common/vfp/vfpinstr.cpp
+            arm/skyeye_common/vfp/vfpsingle.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_sdmc.cpp
             file_sys/file_romfs.cpp
@@ -43,7 +38,6 @@ set(SRCS
             hle/service/service.cpp
             hle/service/srv.cpp
             hle/config_mem.cpp
-            hle/coprocessor.cpp
             hle/hle.cpp
             hle/svc.cpp
             hw/gpu.cpp
@@ -63,23 +57,23 @@ set(SRCS
 set(HEADERS
             arm/disassembler/arm_disasm.h
             arm/disassembler/load_symbol_map.h
-            arm/interpreter/mmu/arm1176jzf_s_mmu.h
-            arm/interpreter/mmu/cache.h
-            arm/interpreter/mmu/rb.h
-            arm/interpreter/mmu/sa_mmu.h
-            arm/interpreter/mmu/tlb.h
-            arm/interpreter/mmu/wb.h
-            arm/interpreter/vfp/asm_vfp.h
-            arm/interpreter/vfp/vfp.h
-            arm/interpreter/vfp/vfp_helper.h
+            arm/dyncom/arm_dyncom.h
+            arm/dyncom/arm_dyncom_dec.h
+            arm/dyncom/arm_dyncom_interpreter.h
+            arm/dyncom/arm_dyncom_run.h
+            arm/dyncom/arm_dyncom_thumb.h
             arm/interpreter/arm_interpreter.h
-            arm/interpreter/arm_regformat.h
-            arm/interpreter/armcpu.h
-            arm/interpreter/armdefs.h
-            arm/interpreter/armemu.h
-            arm/interpreter/armmmu.h
-            arm/interpreter/armos.h
-            arm/interpreter/skyeye_defs.h
+            arm/skyeye_common/arm_regformat.h
+            arm/skyeye_common/armcpu.h
+            arm/skyeye_common/armdefs.h
+            arm/skyeye_common/armemu.h
+            arm/skyeye_common/armmmu.h
+            arm/skyeye_common/armos.h
+            arm/skyeye_common/skyeye_defs.h
+            arm/skyeye_common/skyeye_types.h
+            arm/skyeye_common/vfp/asm_vfp.h
+            arm/skyeye_common/vfp/vfp.h
+            arm/skyeye_common/vfp/vfp_helper.h
             arm/arm_interface.h
             file_sys/archive.h
             file_sys/archive_romfs.h
@@ -105,7 +99,6 @@ set(HEADERS
             hle/service/service.h
             hle/service/srv.h
             hle/config_mem.h
-            hle/coprocessor.h
             hle/function_wrappers.h
             hle/hle.h
             hle/svc.h

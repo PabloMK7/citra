@@ -51,9 +51,9 @@
  * ===========================================================================
  */
  
-#include "core/arm/interpreter/vfp/vfp.h"
-#include "core/arm/interpreter/vfp/vfp_helper.h"
-#include "core/arm/interpreter/vfp/asm_vfp.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
+#include "core/arm/skyeye_common/vfp/vfp_helper.h"
+#include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
 static struct vfp_double vfp_double_default_qnan = {
 	//.exponent	= 2047,

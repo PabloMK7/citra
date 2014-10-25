@@ -2,47 +2,56 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.  
 
-#include "core/arm/interpreter/arm_interpreter.h"
+#include "core/arm/skyeye_common/armcpu.h"
+#include "core/arm/skyeye_common/armemu.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 
-const static cpu_config_t arm11_cpu_info = {
+#include "core/arm/dyncom/arm_dyncom.h"
+#include "core/arm/dyncom/arm_dyncom_interpreter.h"
+
+const static cpu_config_t s_arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
 
-ARM_Interpreter::ARM_Interpreter()  {
-    state = new ARMul_State;
+ARM_DynCom::ARM_DynCom() : ticks(0) {
+    state = std::unique_ptr<ARMul_State>(new ARMul_State);
 
     ARMul_EmulateInit();
-    memset(state, 0, sizeof(ARMul_State));
+    memset(state.get(), 0, sizeof(ARMul_State));
 
-    ARMul_NewState(state);
+    ARMul_NewState((ARMul_State*)state.get());
 
     state->abort_model = 0;
-    state->cpu = (cpu_config_t*)&arm11_cpu_info;
+    state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
     state->bigendSig = LOW;
 
-    ARMul_SelectProcessor(state, ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
+    ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
     state->lateabtSig = LOW;
 
     // Reset the core to initial state
-    ARMul_CoProInit(state); 
-    ARMul_Reset(state);
+    ARMul_CoProInit(state.get());
+    ARMul_Reset(state.get());
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = 3;
 
     state->pc = state->Reg[15] = 0x00000000;
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
     state->servaddr = 0xFFFF0000;
+    state->NirqSig = HIGH;
+
+    VFPInit(state.get()); // Initialize the VFP
+
+    ARMul_EmulateInit();
 }
 
-ARM_Interpreter::~ARM_Interpreter() {
-    delete state;
+ARM_DynCom::~ARM_DynCom() {
 }
 
 /**
  * Set the Program Counter to an address
  * @param addr Address to set PC to
  */
-void ARM_Interpreter::SetPC(u32 pc) {
+void ARM_DynCom::SetPC(u32 pc) {
     state->pc = state->Reg[15] = pc;
 }
 
@@ -50,7 +59,7 @@ void ARM_Interpreter::SetPC(u32 pc) {
  * Get the current Program Counter
  * @return Returns current PC
  */
-u32 ARM_Interpreter::GetPC() const {
+u32 ARM_DynCom::GetPC() const {
     return state->pc;
 }
 
@@ -59,7 +68,7 @@ u32 ARM_Interpreter::GetPC() const {
  * @param index Register index (0-15)
  * @return Returns the value in the register
  */
-u32 ARM_Interpreter::GetReg(int index) const {
+u32 ARM_DynCom::GetReg(int index) const {
     return state->Reg[index];
 }
 
@@ -68,7 +77,7 @@ u32 ARM_Interpreter::GetReg(int index) const {
  * @param index Register index (0-15)
  * @param value Value to set register to
  */
-void ARM_Interpreter::SetReg(int index, u32 value) {
+void ARM_DynCom::SetReg(int index, u32 value) {
     state->Reg[index] = value;
 }
 
@@ -76,7 +85,7 @@ void ARM_Interpreter::SetReg(int index, u32 value) {
  * Get the current CPSR register
  * @return Returns the value of the CPSR register
  */
-u32 ARM_Interpreter::GetCPSR() const {
+u32 ARM_DynCom::GetCPSR() const {
     return state->Cpsr;
 }
 
@@ -84,7 +93,7 @@ u32 ARM_Interpreter::GetCPSR() const {
  * Set the current CPSR register
  * @param cpsr Value to set CPSR to
  */
-void ARM_Interpreter::SetCPSR(u32 cpsr) {
+void ARM_DynCom::SetCPSR(u32 cpsr) {
     state->Cpsr = cpsr;
 }
 
@@ -92,17 +101,18 @@ void ARM_Interpreter::SetCPSR(u32 cpsr) {
  * Returns the number of clock ticks since the last reset
  * @return Returns number of clock ticks
  */
-u64 ARM_Interpreter::GetTicks() const {
-    return ARMul_Time(state);
+u64 ARM_DynCom::GetTicks() const {
+    return ticks;
 }
 
 /**
  * Executes the given number of instructions
  * @param num_instructions Number of instructions to executes
  */
-void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
-    state->NumInstrsToExecute = num_instructions - 1;
-    ARMul_Emulate32(state);
+void ARM_DynCom::ExecuteInstructions(int num_instructions) {
+    ticks += num_instructions;
+    state->NumInstrsToExecute = num_instructions;
+    InterpreterMainLoop(state.get());
 }
 
 /**
@@ -110,7 +120,7 @@ void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
  * @param ctx Thread context to save
  * @todo Do we need to save Reg[15] and NextInstr?
  */
-void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
+void ARM_DynCom::SaveContext(ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
 
@@ -131,7 +141,7 @@ void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
  * @param ctx Thread context to load
  * @param Do we need to load Reg[15] and NextInstr?
  */
-void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
+void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
     memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
     memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
 
@@ -148,6 +158,6 @@ void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
 }
 
 /// Prepare core for thread reschedule (if needed to correctly handle state)
-void ARM_Interpreter::PrepareReschedule() {
+void ARM_DynCom::PrepareReschedule() {
     state->NumInstrsToExecute = 0;
 }

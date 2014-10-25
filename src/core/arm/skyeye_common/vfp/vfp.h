@@ -25,7 +25,7 @@
 
 #define vfpdebug //printf
 
-#include "core/arm/interpreter/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
+#include "core/arm/skyeye_common/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
 unsigned VFPInit (ARMul_State *state);
 unsigned VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value);

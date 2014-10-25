@@ -108,4 +108,6 @@ typedef struct generic_arch_s
 	align_t alignment;
 } generic_arch_t;
 
+typedef u32 addr_t;
+
 #endif
