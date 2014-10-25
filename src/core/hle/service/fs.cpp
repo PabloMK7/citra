@@ -83,7 +83,7 @@ void OpenFileDirectly(Service::Interface* self) {
     auto archive_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
     LowPathType archive_type = static_cast<LowPathType>(cmd_buff[3]);
     u32 archive_size = cmd_buff[4];
-    LowPathType type = static_cast<LowPathType>(cmd_buff[5]);
+    LowPathType file_type = static_cast<LowPathType>(cmd_buff[5]);
     u32 size = cmd_buff[6];
     FileSys::Mode mode; mode.hex = cmd_buff[7];
     u32 attributes = cmd_buff[8]; // TODO(Link Mauve): do something with those attributes.
@@ -96,19 +96,13 @@ void OpenFileDirectly(Service::Interface* self) {
         return;
     }
 
-    if (type != LowPathType::Char) {
-        ERROR_LOG(KERNEL, "file LowPath type other than char is currently unsupported");
-        cmd_buff[1] = -1;
-        return;
-    }
-
     std::string archive_name = GetStringFromCmdBuff(archive_pointer, archive_size);
     std::string file_name = GetStringFromCmdBuff(pointer, size);
 
     DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d archive_data=%s"
                       "file_type=%d file_size=%d file_mode=%d file_attrs=%d file_data=%s",
               archive_type, archive_size, archive_name.c_str(),
-              type, size, mode, attributes, file_name.c_str());
+              file_type, size, mode, attributes, file_name.c_str());
 
     // TODO(Link Mauve): check if we should even get a handle for the archive, and don't leak it.
     Handle archive_handle = Kernel::OpenArchive(archive_id);
@@ -120,6 +114,11 @@ void OpenFileDirectly(Service::Interface* self) {
         ERROR_LOG(KERNEL, "failed to get a handle for archive %s", archive_name.c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
+        return;
+    }
+
+    if (file_type != LowPathType::Char) {
+        WARN_LOG(KERNEL, "file LowPath type other than char is currently unsupported; returning archive handle instead");
         return;
     }
 
