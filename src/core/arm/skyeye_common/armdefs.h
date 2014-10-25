@@ -799,22 +799,22 @@ pascal void SpinCursor (short increment);    /* copied from CursorCtl.h */
 #include "list.h"
 #include "tb.h"
 */
-#define EQ 0
-#define NE 1
-#define CS 2
-#define CC 3
-#define MI 4
-#define PL 5
-#define VS 6
-#define VC 7
-#define HI 8
-#define LS 9
-#define GE 10
-#define LT 11
-#define GT 12
-#define LE 13
-#define AL 14
-#define NV 15
+const int EQ = 0;
+const int NE = 1;
+const int CS = 2;
+const int CC = 3;
+const int MI = 4;
+const int PL = 5;
+const int VS = 6;
+const int VC = 7;
+const int HI = 8;
+const int LS = 9;
+const int GE = 10;
+const int LT = 11;
+const int GT = 12;
+const int LE = 13;
+const int AL = 14;
+const int NV = 15;
 
 #ifndef NFLAG
 #define NFLAG    state->NFlag
