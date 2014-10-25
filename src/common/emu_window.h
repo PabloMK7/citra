@@ -6,7 +6,7 @@
 
 #include "common/common.h"
 #include "common/scm_rev.h"
-
+#include "common/string_util.h"
 #include "common/key_map.h"
 
 // Abstraction class used to provide an interface between emulation code and the frontend (e.g. SDL, 
@@ -75,11 +75,11 @@ public:
     }
 
 protected:
-    EmuWindow() : m_client_area_width(640), m_client_area_height(480) {
-        char window_title[255];
-        sprintf(window_title, "Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
-        m_window_title = window_title;
-    }
+    EmuWindow():
+        m_client_area_width(640),
+        m_client_area_height(480),
+        m_window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc))
+    {}
     virtual ~EmuWindow() {}
 
     std::string m_window_title;     ///< Current window title, should be used by window impl.
