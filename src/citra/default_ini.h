@@ -26,6 +26,9 @@ pad_sdown =
 pad_sleft =
 pad_sright =
 
+[Core]
+cpu_core = ## 0: Interpreter (default), 1: DynCom Interpreter
+
 [Data Storage]
 use_virtual_sd =
 )";

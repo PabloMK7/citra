@@ -7,6 +7,7 @@
 namespace Settings {
 
 struct Values {
+    // Controls
     int pad_a_key;
     int pad_b_key;
     int pad_x_key;
@@ -25,6 +26,10 @@ struct Values {
     int pad_sleft_key;
     int pad_sright_key;
 
+    // Core
+    int cpu_core;
+
+    // Data Storage
     bool use_virtual_sd;
 } extern values;
 

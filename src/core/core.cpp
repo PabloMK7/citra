@@ -5,12 +5,14 @@
 #include "common/common_types.h"
 
 #include "core/core.h"
-#include "core/hw/hw.h"
+
+#include "core/settings.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
-
+#include "core/arm/dyncom/arm_dyncom.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hw/hw.h"
 
 namespace Core {
 
@@ -48,8 +50,17 @@ int Init() {
     NOTICE_LOG(MASTER_LOG, "initialized OK");
 
     g_disasm = new ARM_Disasm();
-    g_app_core = new ARM_Interpreter();
     g_sys_core = new ARM_Interpreter();
+
+    switch (Settings::values.cpu_core) {
+        case CPU_FastInterpreter:
+            g_app_core = new ARM_DynCom();
+            break;
+        case CPU_Interpreter:
+        default:
+            g_app_core = new ARM_Interpreter();
+            break;
+    }
 
     g_last_ticks = Core::g_app_core->GetTicks();
 

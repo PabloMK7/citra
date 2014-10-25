@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #include "core/settings.h"
+#include "core/core.h"
 #include "common/file_util.h"
 
 #include "config.h"
@@ -64,6 +65,18 @@ void Config::SaveControls() {
     qt_config->endGroup();
 }
 
+void Config::ReadCore() {
+    qt_config->beginGroup("Core");
+    Settings::values.cpu_core = qt_config->value("cpu_core", Core::CPU_Interpreter).toInt();
+    qt_config->endGroup();
+}
+
+void Config::SaveCore() {
+    qt_config->beginGroup("Core");
+    qt_config->setValue("cpu_core", Settings::values.cpu_core);
+    qt_config->endGroup();
+}
+
 void Config::ReadData() {
     qt_config->beginGroup("Data Storage");
     Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
@@ -78,11 +91,13 @@ void Config::SaveData() {
 
 void Config::Reload() {
     ReadControls();
+    ReadCore();
     ReadData();
 }
 
 void Config::Save() {
     SaveControls();
+    SaveCore();
     SaveData();
 }
 

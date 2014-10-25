@@ -11,9 +11,6 @@
 
 namespace GPU {
 
-static const u32 kFrameCycles   = 268123480 / 60;   ///< 268MHz / 60 frames per second
-static const u32 kFrameTicks    = kFrameCycles / 3; ///< Approximate number of instructions/frame
-
 // Returns index corresponding to the Regs member labeled by field_name
 // TODO: Due to Visual studio bug 209229, offsetof does not return constant expressions
 //       when used with array elements (e.g. GPU_REG_INDEX(memory_fill_config[0])).

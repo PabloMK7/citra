@@ -11,6 +11,11 @@
 
 namespace Core {
 
+enum CPUCore {
+    CPU_Interpreter,
+    CPU_FastInterpreter
+};
+
 extern ARM_Interface*   g_app_core;     ///< ARM11 application core
 extern ARM_Interface*   g_sys_core;     ///< ARM11 system (OS) core
 

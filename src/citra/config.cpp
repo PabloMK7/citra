@@ -7,6 +7,7 @@
 #include "citra/default_ini.h"
 #include "common/file_util.h"
 #include "core/settings.h"
+#include "core/core.h"
 
 #include "config.h"
 
@@ -55,6 +56,10 @@ void Config::ReadControls() {
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
 }
 
+void Config::ReadCore() {
+    Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
+}
+
 void Config::ReadData() {
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 }
@@ -62,6 +67,7 @@ void Config::ReadData() {
 void Config::Reload() {
     LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
     ReadControls();
+    ReadCore();
     ReadData();
 }
 
