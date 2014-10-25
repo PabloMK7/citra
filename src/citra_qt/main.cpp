@@ -20,6 +20,7 @@
 #include "debugger/callstack.hxx"
 #include "debugger/ramview.hxx"
 #include "debugger/graphics.hxx"
+#include "debugger/graphics_breakpoints.hxx"
 #include "debugger/graphics_cmdlists.hxx"
 
 #include "core/settings.h"
@@ -69,12 +70,17 @@ GMainWindow::GMainWindow()
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
 
+    auto graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+    graphicsBreakpointsWidget->hide();
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());
     debug_menu->addAction(graphicsWidget->toggleViewAction());
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half

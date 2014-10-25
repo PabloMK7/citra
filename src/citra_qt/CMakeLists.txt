@@ -8,6 +8,7 @@ set(SRCS
             debugger/callstack.cpp
             debugger/disassembler.cpp
             debugger/graphics.cpp
+            debugger/graphics_breakpoints.cpp
             debugger/graphics_cmdlists.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
@@ -24,6 +25,7 @@ set(HEADERS
             debugger/callstack.hxx
             debugger/disassembler.hxx
             debugger/graphics.hxx
+            debugger/graphics_breakpoints.hxx
             debugger/graphics_cmdlists.hxx
             debugger/ramview.hxx
             debugger/registers.hxx
