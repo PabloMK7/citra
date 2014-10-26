@@ -10,6 +10,8 @@
 #include "video_core/gpu_debugger.h"
 #include "video_core/debug_utils/debug_utils.h"
 
+class QPushButton;
+
 class GPUCommandListModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -20,6 +22,7 @@ public:
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
 public slots:
     void OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace);
@@ -43,4 +46,6 @@ signals:
 
 private:
     std::unique_ptr<Pica::DebugUtils::PicaTrace> pica_trace;
+
+    QPushButton* toggle_tracing;
 };

@@ -49,6 +49,24 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
+QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    switch(role) {
+    case Qt::DisplayRole:
+    {
+        if (section == 0) {
+            return tr("Command Name");
+        } else if (section == 1) {
+            return tr("Data");
+        }
+
+        break;
+    }
+    }
+
+    return QVariant();
+}
+
 void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace)
 {
     beginResetModel();
@@ -70,7 +88,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
     list_widget->setFont(QFont("monospace"));
     list_widget->setRootIsDecorated(false);
 
-    QPushButton* toggle_tracing = new QPushButton(tr("Start Tracing"));
+    toggle_tracing = new QPushButton(tr("Start Tracing"));
 
     connect(toggle_tracing, SIGNAL(clicked()), this, SLOT(OnToggleTracing()));
     connect(this, SIGNAL(TracingFinished(const Pica::DebugUtils::PicaTrace&)),
@@ -88,8 +106,10 @@ void GPUCommandListWidget::OnToggleTracing()
 {
     if (!Pica::DebugUtils::IsPicaTracing()) {
         Pica::DebugUtils::StartPicaTracing();
+        toggle_tracing->setText(tr("Stop Tracing"));
     } else {
         pica_trace = Pica::DebugUtils::FinishPicaTracing();
         emit TracingFinished(*pica_trace);
+        toggle_tracing->setText(tr("Start Tracing"));
     }
 }
