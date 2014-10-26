@@ -10,6 +10,7 @@ set(SRCS
             debugger/graphics.cpp
             debugger/graphics_breakpoints.cpp
             debugger/graphics_cmdlists.cpp
+            debugger/graphics_framebuffer.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
             util/spinbox.cpp
@@ -27,6 +28,7 @@ set(HEADERS
             debugger/graphics.hxx
             debugger/graphics_breakpoints.hxx
             debugger/graphics_cmdlists.hxx
+            debugger/graphics_framebuffer.hxx
             debugger/ramview.hxx
             debugger/registers.hxx
             util/spinbox.hxx
