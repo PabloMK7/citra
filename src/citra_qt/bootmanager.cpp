@@ -90,10 +90,10 @@ public:
         parent_ = parent;
     }
 
-    void paintEvent(QPaintEvent* ev)
+    void paintEvent(QPaintEvent* ev) override
     {
     }
-    void resizeEvent(QResizeEvent* ev) {
+    void resizeEvent(QResizeEvent* ev) override {
         parent_->SetClientAreaWidth(size().width());
         parent_->SetClientAreaHeight(size().height());
     }

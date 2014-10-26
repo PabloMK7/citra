@@ -32,7 +32,7 @@ public:
 private:
     void BootGame(std::string filename);
 
-    void closeEvent(QCloseEvent* event);
+    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void OnStartGame();

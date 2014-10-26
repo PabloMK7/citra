@@ -15,11 +15,11 @@ namespace Kernel {
 
 class Mutex : public Object {
 public:
-    std::string GetTypeName() const { return "Mutex"; }
-    std::string GetName() const { return name; }
+    std::string GetTypeName() const override { return "Mutex"; }
+    std::string GetName() const override { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
-    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Mutex; }
+    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Mutex; }
 
     bool initial_locked;                        ///< Initial lock state when mutex was created
     bool locked;                                ///< Current locked state
@@ -32,7 +32,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) {
+    Result SyncRequest(bool* wait) override {
         // TODO(bunnei): ImplementMe
         locked = true;
         return 0;
@@ -43,7 +43,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         *wait = locked;
 

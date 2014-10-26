@@ -22,7 +22,7 @@ public:
      * Gets the string name used by CTROS for the service
      * @return Port name of service
      */
-    std::string GetPortName() const {
+    std::string GetPortName() const override {
         return "srv:";
     }
 

@@ -42,11 +42,11 @@ enum class DirectoryCommand : u32 {
 
 class Archive : public Object {
 public:
-    std::string GetTypeName() const { return "Archive"; }
-    std::string GetName() const { return name; }
+    std::string GetTypeName() const override { return "Archive"; }
+    std::string GetName() const override { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::Archive; }
-    Kernel::HandleType GetHandleType() const { return HandleType::Archive; }
+    Kernel::HandleType GetHandleType() const override { return HandleType::Archive; }
 
     std::string name;           ///< Name of archive (optional)
     FileSys::Archive* backend;  ///< Archive backend interface
@@ -56,7 +56,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) {
+    Result SyncRequest(bool* wait) override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
         
@@ -119,7 +119,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
         return 0;
@@ -128,11 +128,11 @@ public:
 
 class File : public Object {
 public:
-    std::string GetTypeName() const { return "File"; }
-    std::string GetName() const { return path; }
+    std::string GetTypeName() const override { return "File"; }
+    std::string GetName() const override { return path; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::File; }
-    Kernel::HandleType GetHandleType() const { return HandleType::File; }
+    Kernel::HandleType GetHandleType() const override { return HandleType::File; }
 
     std::string path; ///< Path of the file
     std::unique_ptr<FileSys::File> backend; ///< File backend interface
@@ -142,7 +142,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) {
+    Result SyncRequest(bool* wait) override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
         switch (cmd) {
@@ -211,7 +211,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
         return 0;
@@ -220,11 +220,11 @@ public:
 
 class Directory : public Object {
 public:
-    std::string GetTypeName() const { return "Directory"; }
-    std::string GetName() const { return path; }
+    std::string GetTypeName() const override { return "Directory"; }
+    std::string GetName() const override { return path; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::Directory; }
-    Kernel::HandleType GetHandleType() const { return HandleType::Directory; }
+    Kernel::HandleType GetHandleType() const override { return HandleType::Directory; }
 
     std::string path; ///< Path of the directory
     std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
@@ -234,7 +234,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) {
+    Result SyncRequest(bool* wait) override {
         u32* cmd_buff = Service::GetCommandBuffer();
         DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
         switch (cmd) {
@@ -274,7 +274,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
         return 0;
