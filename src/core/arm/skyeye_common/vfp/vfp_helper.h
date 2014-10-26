@@ -38,14 +38,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "common/common_types.h"
 #include "core/arm/skyeye_common/armdefs.h"
-
-#define u16 uint16_t
-#define u32 uint32_t
-#define u64 uint64_t
-#define s16 int16_t
-#define s32 int32_t
-#define s64 int64_t
 
 #define pr_info //printf
 #define pr_debug //printf
