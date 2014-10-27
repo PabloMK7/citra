@@ -17,6 +17,7 @@ class Config {
     bool LoadINI(INIReader* config, const char* location, const std::string& default_contents="", bool retry=true);
     void ReadControls();
     void ReadData();
+    void ReadMiscellaneous();
 public:
     Config();
     ~Config();

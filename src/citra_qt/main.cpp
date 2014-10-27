@@ -22,6 +22,7 @@
 #include "debugger/graphics.hxx"
 #include "debugger/graphics_cmdlists.hxx"
 
+#include "core/settings.h"
 #include "core/system.h"
 #include "core/core.h"
 #include "core/loader/loader.h"
@@ -34,7 +35,11 @@
 GMainWindow::GMainWindow()
 {
     LogManager::Init();
+
     Config config;
+
+    if (!Settings::values.enable_log)
+        LogManager::Shutdown();
 
     ui.setupUi(this);
     statusBar()->hide();

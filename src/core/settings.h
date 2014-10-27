@@ -26,6 +26,8 @@ struct Values {
     int pad_sright_key;
 
     bool use_virtual_sd;
+
+    bool enable_log;
 } extern values;
 
 }

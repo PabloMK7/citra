@@ -28,6 +28,9 @@ pad_sright =
 
 [Data Storage]
 use_virtual_sd =
+
+[Miscellaneous]
+enable_log =
 )";
 
 }
