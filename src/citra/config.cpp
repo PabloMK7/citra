@@ -58,6 +58,7 @@ void Config::ReadControls() {
 
 void Config::ReadCore() {
     Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
+    Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 60);
 }
 
 void Config::ReadData() {

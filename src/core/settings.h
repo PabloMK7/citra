@@ -28,6 +28,7 @@ struct Values {
 
     // Core
     int cpu_core;
+    int gpu_refresh_rate;
 
     // Data Storage
     bool use_virtual_sd;

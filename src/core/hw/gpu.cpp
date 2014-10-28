@@ -218,16 +218,7 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
-    switch (Settings::values.cpu_core) {
-        case Core::CPU_FastInterpreter:
-            kFrameCycles = 268123480 / 2048;
-            break;
-        case Core::CPU_Interpreter:
-        default:
-            kFrameCycles = 268123480 / 60;
-            break;
-    }
-    
+    kFrameCycles = 268123480 / Settings::values.gpu_refresh_rate;
     kFrameTicks  = kFrameCycles / 3;
 
     g_cur_line = 0;
