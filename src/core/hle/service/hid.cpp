@@ -78,6 +78,10 @@ void PadButtonRelease(PadState pad_state) {
 void PadUpdateComplete() {
     PadData* pad_data = GetPadData();
 
+    if (pad_data == nullptr) {
+        return;
+    }
+
     // Update PadData struct
     pad_data->current_state.hex = next_state.hex;
     pad_data->index = next_index;
