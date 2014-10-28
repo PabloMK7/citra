@@ -2,8 +2,12 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <thread>
+
 #include "common/common.h"
-#include "common/log_manager.h"
+#include "common/logging/text_formatter.h"
+#include "common/logging/backend.h"
+#include "common/scope_exit.h"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -15,7 +19,12 @@
 
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
-    LogManager::Init();
+    std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
+    std::thread logging_thread(Log::TextLoggingLoop, logger);
+    SCOPE_EXIT({
+        logger->Close();
+        logging_thread.join();
+    });
 
     if (argc < 2) {
         ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
@@ -23,9 +32,6 @@ int __cdecl main(int argc, char **argv) {
     }
 
     Config config;
-
-    if (!Settings::values.enable_log)
-        LogManager::Shutdown();
 
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;

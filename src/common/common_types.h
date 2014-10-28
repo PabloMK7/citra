@@ -41,8 +41,6 @@ typedef std::int64_t s64; ///< 64-bit signed int
 typedef float   f32; ///< 32-bit floating point
 typedef double  f64; ///< 64-bit floating point
 
-#include "common/common.h"
-
 /// Union for fast 16-bit type casting
 union t16 {
     u8  _u8[2];             ///< 8-bit unsigned char(s)

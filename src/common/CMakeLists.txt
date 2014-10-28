@@ -11,6 +11,8 @@ set(SRCS
             hash.cpp
             key_map.cpp
             log_manager.cpp
+            logging/text_formatter.cpp
+            logging/backend.cpp
             math_util.cpp
             mem_arena.cpp
             memory_util.cpp
@@ -32,6 +34,7 @@ set(HEADERS
             common_funcs.h
             common_paths.h
             common_types.h
+            concurrent_ring_buffer.h
             console_listener.h
             cpu_detect.h
             debug_interface.h
@@ -45,6 +48,9 @@ set(HEADERS
             linear_disk_cache.h
             log.h
             log_manager.h
+            logging/text_formatter.h
+            logging/log.h
+            logging/backend.h
             math_util.h
             mem_arena.h
             memory_util.h

@@ -21,6 +21,7 @@
 //for gettimeofday and struct time(spec|val)
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 namespace Common
