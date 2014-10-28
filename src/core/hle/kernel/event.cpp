@@ -16,11 +16,11 @@ namespace Kernel {
 
 class Event : public Object {
 public:
-    std::string GetTypeName() const { return "Event"; }
-    std::string GetName() const { return name; }
+    std::string GetTypeName() const override { return "Event"; }
+    std::string GetName() const override { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Event; }
-    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Event; }
+    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Event; }
 
     ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
     ResetType reset_type;                   ///< Current ResetType
@@ -35,7 +35,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         *wait = locked;
         if (locked) {
             Handle thread = GetCurrentThreadHandle();

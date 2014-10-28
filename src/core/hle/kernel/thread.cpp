@@ -21,11 +21,11 @@ namespace Kernel {
 class Thread : public Kernel::Object {
 public:
 
-    std::string GetName() const { return name; }
-    std::string GetTypeName() const { return "Thread"; }
+    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override { return "Thread"; }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Thread; }
-    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Thread; }
+    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Thread; }
 
     inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
     inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
@@ -38,7 +38,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         if (status != THREADSTATUS_DORMANT) {
             Handle thread = GetCurrentThreadHandle();
             if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {

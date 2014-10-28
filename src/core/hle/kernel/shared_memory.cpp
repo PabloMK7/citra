@@ -11,17 +11,17 @@ namespace Kernel {
 
 class SharedMemory : public Object {
 public:
-    std::string GetTypeName() const { return "SharedMemory"; }
+    std::string GetTypeName() const override { return "SharedMemory"; }
 
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
-    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::SharedMemory; }
+    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
 
     /**
      * Wait for kernel object to synchronize
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
         return 0;

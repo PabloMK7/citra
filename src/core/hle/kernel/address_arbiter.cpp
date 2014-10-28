@@ -17,11 +17,11 @@ namespace Kernel {
 
 class AddressArbiter : public Object {
 public:
-    std::string GetTypeName() const { return "Arbiter"; }
-    std::string GetName() const { return name; }
+    std::string GetTypeName() const override { return "Arbiter"; }
+    std::string GetName() const override { return name; }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::AddressArbiter; }
-    Kernel::HandleType GetHandleType() const { return HandleType::AddressArbiter; }
+    Kernel::HandleType GetHandleType() const override { return HandleType::AddressArbiter; }
 
     std::string name;   ///< Name of address arbiter object (optional)
 
@@ -30,7 +30,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
         return 0;

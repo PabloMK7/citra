@@ -21,19 +21,19 @@ public:
     ~RendererOpenGL() override;
 
     /// Swap buffers (render frame)
-    void SwapBuffers();
+    void SwapBuffers() override;
 
     /**
      * Set the emulator window to use for renderer
      * @param window EmuWindow handle to emulator window to use for rendering
      */
-    void SetWindow(EmuWindow* window);
+    void SetWindow(EmuWindow* window) override;
 
     /// Initialize the renderer
-    void Init();
+    void Init() override;
 
     /// Shutdown the renderer
-    void ShutDown();
+    void ShutDown() override;
 
 private:
     /// Structure used for storing information about the textures for each 3DS screen

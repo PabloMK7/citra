@@ -39,11 +39,11 @@ class Interface  : public Kernel::Object {
     friend class Manager;
 public:
     
-    std::string GetName() const { return GetPortName(); }
-    std::string GetTypeName() const { return GetPortName(); }
+    std::string GetName() const override { return GetPortName(); }
+    std::string GetTypeName() const override { return GetPortName(); }
 
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
-    Kernel::HandleType GetHandleType() const { return Kernel::HandleType::Service; }
+    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Service; }
 
     typedef void (*Function)(Interface*);
 
@@ -80,7 +80,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result SyncRequest(bool* wait) {
+    Result SyncRequest(bool* wait) override {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
@@ -113,7 +113,7 @@ public:
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
-    Result WaitSynchronization(bool* wait) {
+    Result WaitSynchronization(bool* wait) override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "unimplemented function");
         return 0;

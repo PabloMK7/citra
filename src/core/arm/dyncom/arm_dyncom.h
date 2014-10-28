@@ -21,7 +21,7 @@ public:
      * Set the Program Counter to an address
      * @param addr Address to set PC to
      */
-    void SetPC(u32 pc);
+    void SetPC(u32 pc) override;
 
     /*
      * Get the current Program Counter
@@ -41,7 +41,7 @@ public:
      * @param index Register index (0-15)
      * @param value Value to set register to
      */
-    void SetReg(int index, u32 value);
+    void SetReg(int index, u32 value) override;
 
     /**
      * Get the current CPSR register
@@ -53,7 +53,7 @@ public:
      * Set the current CPSR register
      * @param cpsr Value to set CPSR to
      */
-    void SetCPSR(u32 cpsr);
+    void SetCPSR(u32 cpsr) override;
 
     /**
      * Returns the number of clock ticks since the last reset
@@ -65,22 +65,22 @@ public:
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    void SaveContext(ThreadContext& ctx);
+    void SaveContext(ThreadContext& ctx) override;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    void LoadContext(const ThreadContext& ctx);
+    void LoadContext(const ThreadContext& ctx) override;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
-    void PrepareReschedule();
+    void PrepareReschedule() override;
 
     /**
      * Executes the given number of instructions
      * @param num_instructions Number of instructions to executes
      */
-    void ExecuteInstructions(int num_instructions);
+    void ExecuteInstructions(int num_instructions) override;
 
 private:
 

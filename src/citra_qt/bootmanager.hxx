@@ -25,7 +25,7 @@ public:
      *
      * @warning Only call when not running!
      */
-    void run();
+    void run() override;
 
     /**
      * Allow the CPU to process a single instruction (if cpu is not running)
@@ -89,13 +89,13 @@ public:
     GRenderWindow(QWidget* parent = NULL);
     ~GRenderWindow();
 
-    void closeEvent(QCloseEvent*);
+    void closeEvent(QCloseEvent*) override;
 
     // EmuWindow implementation
-    void SwapBuffers();
-    void MakeCurrent();
-    void DoneCurrent();
-    void PollEvents();
+    void SwapBuffers() override;
+    void MakeCurrent() override;
+    void DoneCurrent() override;
+    void PollEvents() override;
 
     void BackupGeometry();
     void RestoreGeometry();
@@ -104,8 +104,8 @@ public:
 
     EmuThread& GetEmuThread();
 
-    void keyPressEvent(QKeyEvent* event);
-    void keyReleaseEvent(QKeyEvent* event);
+    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
     void ReloadSetKeymaps() override;
 

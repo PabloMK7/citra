@@ -14,16 +14,16 @@ public:
     ~EmuWindow_GLFW();
 
     /// Swap buffers to display the next frame
-    void SwapBuffers();
+    void SwapBuffers() override;
 
 	/// Polls window events
-	void PollEvents();
+	void PollEvents() override;
 
     /// Makes the graphics context current for the caller thread
-    void MakeCurrent();
+    void MakeCurrent() override;
     
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
-    void DoneCurrent();
+    void DoneCurrent() override;
 
     static void OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods);
 
