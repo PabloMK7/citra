@@ -1,5 +1,6 @@
 # Build directory
 build/
+doc-build/
 
 # Generated source files
 src/common/scm_rev.cpp
