@@ -26,6 +26,10 @@ pad_sdown =
 pad_sleft =
 pad_sright =
 
+[Core]
+cpu_core = ## 0: Interpreter (default), 1: FastInterpreter (experimental)
+gpu_refresh_rate = ## 60 (default), 1024 or 2048 may work better on the FastInterpreter
+
 [Data Storage]
 use_virtual_sd =
 )";

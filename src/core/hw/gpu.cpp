@@ -4,6 +4,7 @@
 
 #include "common/common_types.h"
 
+#include "core/settings.h"
 #include "core/core.h"
 #include "core/mem_map.h"
 
@@ -23,6 +24,9 @@ Regs g_regs;
 u32 g_cur_line = 0;         ///< Current vertical screen line
 u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
 u64 g_last_frame_ticks = 0; ///< CPU tick count from last frame
+
+static u32 kFrameCycles = 0; ///< 268MHz / 60 frames per second
+static u32 kFrameTicks  = 0; ///< Approximate number of instructions/frame
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -214,6 +218,9 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
+    kFrameCycles = 268123480 / Settings::values.gpu_refresh_rate;
+    kFrameTicks  = kFrameCycles / 3;
+
     g_cur_line = 0;
     g_last_frame_ticks = g_last_line_ticks = Core::g_app_core->GetTicks();
 
