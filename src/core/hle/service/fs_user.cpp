@@ -5,6 +5,7 @@
 #include "common/common.h"
 
 #include "fs_user.h"
+#include "core/settings.h"
 #include "core/hle/kernel/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,6 +201,21 @@ void OpenArchive(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
+/*
+* FS_User::IsSdmcDetected service function
+*  Outputs:
+*      1 : Result of function, 0 on success, otherwise error code
+*      2 : Whether the Sdmc could be detected
+*/
+void IsSdmcDetected(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    cmd_buff[1] = 0;
+    cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
+    
+    DEBUG_LOG(KERNEL, "called");
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
@@ -225,7 +241,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08140000, nullptr,               "GetSdmcArchiveResource"},
     {0x08150000, nullptr,               "GetNandArchiveResource"},
     {0x08160000, nullptr,               "GetSdmcFatfsErro"},
-    {0x08170000, nullptr,               "IsSdmcDetected"},
+    {0x08170000, IsSdmcDetected,        "IsSdmcDetected"},
     {0x08180000, nullptr,               "IsSdmcWritable"},
     {0x08190042, nullptr,               "GetSdmcCid"},
     {0x081A0042, nullptr,               "GetNandCid"},
