@@ -100,7 +100,7 @@ void OpenFileDirectly(Service::Interface* self) {
     std::string archive_name = GetStringFromCmdBuff(archive_pointer, archive_size);
     std::string file_name = GetStringFromCmdBuff(pointer, size);
 
-    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d archive_data=%s"
+    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d archive_data=%s "
                       "file_type=%d file_size=%d file_mode=%d file_attrs=%d file_data=%s",
               archive_type, archive_size, archive_name.c_str(),
               file_type, size, mode, attributes, file_name.c_str());
@@ -132,6 +132,42 @@ void OpenFileDirectly(Service::Interface* self) {
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
+
+    DEBUG_LOG(KERNEL, "called");
+}
+
+/*
+ * FS_User::CreateDirectory service function
+ *  Inputs:
+ *      2 : Archive handle lower word
+ *      3 : Archive handle upper word
+ *      4 : Directory path string type
+ *      5 : Directory path string size
+ *      8 : Directory path string data
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void CreateDirectory(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO: cmd_buff[2], aka archive handle lower word, isn't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    LowPathType type = static_cast<LowPathType>(cmd_buff[4]);
+    u32 name_size = cmd_buff[5];
+    u32 name_offset = cmd_buff[8];
+
+    if (type != LowPathType::Char) {
+        ERROR_LOG(KERNEL, "directory LowPath type other than char is currently unsupported");
+        cmd_buff[1] = -1;
+        return;
+    }
+
+    std::string dir_name = GetStringFromCmdBuff(name_offset, name_size);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, name_size, dir_name.c_str());
+
+    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_name);
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -227,7 +263,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08060142, nullptr,               "DeleteDirectory"},
     {0x08070142, nullptr,               "DeleteDirectoryRecursively"},
     {0x08080202, nullptr,               "CreateFile"},
-    {0x08090182, nullptr,               "CreateDirectory"},
+    {0x08090182, CreateDirectory,       "CreateDirectory"},
     {0x080A0244, nullptr,               "RenameDirectory"},
     {0x080B0102, OpenDirectory,         "OpenDirectory"},
     {0x080C00C2, OpenArchive,           "OpenArchive"},

@@ -58,6 +58,15 @@ std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode
 }
 
 /**
+ * Create a directory specified by its path
+ * @param path Path relative to the archive
+ * @return Whether the directory could be created
+ */
+bool Archive_SDMC::CreateDirectory(const std::string& path) const {
+    return FileUtil::CreateDir(GetMountPoint() + path);
+}
+
+/**
  * Open a directory specified by its path
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
