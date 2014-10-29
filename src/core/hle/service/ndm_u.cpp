@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/hle.h"
-#include "core/hle/service/ndm.h"
+#include "ndm_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace NDM_U

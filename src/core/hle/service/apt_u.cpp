@@ -8,7 +8,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
-#include "core/hle/service/apt.h"
+#include "apt_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace APT_U

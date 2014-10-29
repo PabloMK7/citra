@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core/hle/service/hid.h"
+#include "core/hle/service/hid_user.h"
 
 namespace KeyMap {
 

@@ -7,7 +7,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
-#include "core/hle/service/hid.h"
+#include "hid_user.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace HID_User

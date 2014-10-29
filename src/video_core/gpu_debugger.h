@@ -10,7 +10,7 @@
 
 #include "common/log.h"
 
-#include "core/hle/service/gsp.h"
+#include "core/hle/service/gsp_gpu.h"
 
 #include "command_processor.h"
 #include "pica.h"
