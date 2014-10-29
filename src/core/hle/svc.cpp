@@ -115,7 +115,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%d", handle, object->GetTypeName().c_str(), 
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(), 
             object->GetName().c_str(), nano_seconds);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
@@ -138,7 +138,7 @@ Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wa
     bool unlock_all = true;
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
-    DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%d", 
+    DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%lld", 
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
 
     // Iterate through each handle, synchronize kernel object
@@ -324,7 +324,7 @@ Result ClearEvent(Handle evt) {
 
 /// Sleep the current thread
 void SleepThread(s64 nanoseconds) {
-    DEBUG_LOG(SVC, "called nanoseconds=%d", nanoseconds);
+    DEBUG_LOG(SVC, "called nanoseconds=%lld", nanoseconds);
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on

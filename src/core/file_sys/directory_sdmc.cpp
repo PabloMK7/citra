@@ -42,7 +42,7 @@ u32 Directory_SDMC::Read(const u32 count, Entry* entries) {
         const std::string& filename = file.virtualName;
         Entry& entry = entries[entries_read];
 
-        WARN_LOG(FILESYS, "File %s: size=%d dir=%d", filename.c_str(), file.size, file.isDirectory);
+        WARN_LOG(FILESYS, "File %s: size=%llu dir=%d", filename.c_str(), file.size, file.isDirectory);
 
         // TODO(Link Mauve): use a proper conversion to UTF-16.
         for (int j = 0; j < FILENAME_LENGTH; ++j) {

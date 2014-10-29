@@ -50,7 +50,7 @@ std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const std::string& path)
  * @return Number of bytes read
  */
 size_t Archive_RomFS::Read(const u64 offset, const u32 length, u8* buffer) const {
-    DEBUG_LOG(FILESYS, "called offset=%d, length=%d", offset, length);
+    DEBUG_LOG(FILESYS, "called offset=%llu, length=%d", offset, length);
     memcpy(buffer, &raw_data[(u32)offset], length);
     return length;
 }
