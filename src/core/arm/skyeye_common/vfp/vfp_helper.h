@@ -44,7 +44,7 @@
 #define pr_info //printf
 #define pr_debug //printf
 
-static u32 vfp_fls(int x);
+static u32 fls(int x);
 #define do_div(n, base) {n/=base;}
 
 /* From vfpinstr.h */
@@ -502,7 +502,7 @@ struct op {
 	u32 flags;
 };
 
-static u32 vfp_fls(int x)
+static u32 fls(int x)
 {
 	int r = 32;
 
@@ -531,5 +531,10 @@ static u32 vfp_fls(int x)
 	return r;
 
 }
+
+u32 vfp_double_normaliseroundintern(ARMul_State* state, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
+u32 vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
+u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
+u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, struct vfp_double* dm, u32 fpscr);
 
 #endif
