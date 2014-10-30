@@ -6,12 +6,20 @@
 #include "common/string_util.h"
 
 #include "core/hle/service/service.h"
+#include "core/hle/service/ac_u.h"
 #include "core/hle/service/apt_u.h"
+#include "core/hle/service/cfg_u.h"
+#include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/fs_user.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid_user.h"
+#include "core/hle/service/mic_u.h"
 #include "core/hle/service/ndm_u.h"
+#include "core/hle/service/nwm_uds.h"
+#include "core/hle/service/ptm_u.h"
+#include "core/hle/service/soc_u.h"
 #include "core/hle/service/srv.h"
+#include "core/hle/service/ssl_c.h"
 
 namespace Service {
 
@@ -66,11 +74,19 @@ void Init() {
     g_manager = new Manager;
     
     g_manager->AddService(new SRV::Interface);
+    g_manager->AddService(new AC_U::Interface);
     g_manager->AddService(new APT_U::Interface);
+    g_manager->AddService(new CFG_U::Interface);
+    g_manager->AddService(new DSP_DSP::Interface);
     g_manager->AddService(new FS_User::Interface);
     g_manager->AddService(new GSP_GPU::Interface);
     g_manager->AddService(new HID_User::Interface);
+    g_manager->AddService(new MIC_U::Interface);
     g_manager->AddService(new NDM_U::Interface);
+    g_manager->AddService(new NWM_UDS::Interface);
+    g_manager->AddService(new PTM_U::Interface);
+    g_manager->AddService(new SOC_U::Interface);
+    g_manager->AddService(new SSL_C::Interface);
 
     NOTICE_LOG(HLE, "initialized OK");
 }
