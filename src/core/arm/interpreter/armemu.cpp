@@ -63,13 +63,6 @@ static unsigned MultiplyAdd64 (ARMul_State *, ARMword, int, int);
 static void Handle_Load_Double (ARMul_State *, ARMword);
 static void Handle_Store_Double (ARMul_State *, ARMword);
 
-void
-XScale_set_fsr_far (ARMul_State * state, ARMword fsr, ARMword _far);
-int             
-XScale_debug_moe (ARMul_State * state, int moe);
-unsigned xscale_cp15_cp_access_allowed (ARMul_State * state, unsigned reg,
-                                        unsigned cpnum);
-
 static int
 handle_v6_insn (ARMul_State * state, ARMword instr);
 
@@ -376,7 +369,7 @@ ARMul_Emulate26 (ARMul_State * state)
 #endif
 {
     /* The PC pipeline value depends on whether ARM
-    or Thumb instructions are being 
+    or Thumb instructions are being
     d.  */
     ARMword isize;
     ARMword instr;		/* The current instruction.  */
@@ -538,6 +531,7 @@ ARMul_Emulate26 (ARMul_State * state)
             state->AbortAddr = 1;
 
             instr = ARMul_LoadInstrN (state, pc, isize);
+
             //chy 2006-04-12, for ICE debug
             have_bp=ARMul_ICE_debug(state,instr,pc);
 #if 0
@@ -562,6 +556,7 @@ ARMul_Emulate26 (ARMul_State * state)
         }
         printf("\n");
 #endif
+
         instr = ARMul_LoadInstrN (state, pc, isize);
         state->last_instr = state->CurrInstr;
         state->CurrInstr = instr;
@@ -952,9 +947,8 @@ ARMul_Emulate26 (ARMul_State * state)
             case t_decoded:
                 /* ARM instruction available.  */
                 //printf("t decode %04lx -> %08lx\n", instr & 0xffff, armOp);
-                
-                if (armOp == 0xDEADC0DE)
-                {
+
+                if (armOp == 0xDEADC0DE) {
                     DEBUG("Failed to decode thumb opcode %04X at %08X\n", instr, pc);
                 }
 
@@ -967,7 +961,6 @@ ARMul_Emulate26 (ARMul_State * state)
             }
         }
 #endif
-
         /* Check the condition codes.  */
         if ((temp = TOPBITS (28)) == AL) {
             /* Vile deed in the need for speed. */
@@ -1123,6 +1116,7 @@ ARMul_Emulate26 (ARMul_State * state)
         }		/* cc check */
 
 //chy 2003-08-24 now #if 0 .... #endif  process cp14, cp15.reg14, I disable it...
+
 
         /* Actual execution of instructions begins here.  */
         /* If the condition codes don't match, stop here.  */
@@ -2308,12 +2302,9 @@ mainswitch:
                         if (state->Aborted) {
                             TAKEABORT;
                         }
-                        if (enter)
-                        {
+                        if (enter) {
                             state->Reg[DESTReg] = 0;
-                        }
-                        else
-                        {
+                        } else {
                             state->Reg[DESTReg] = 1;
                         }
                         break;
@@ -3063,7 +3054,27 @@ mainswitch:
                     break;
 
                 case 0x68:	/* Store Word, No WriteBack, Post Inc, Reg.  */
-                    if (BIT (4)) {
+                    //ichfly PKHBT PKHTB todo check this
+                    if ((instr & 0x70) == 0x10) //pkhbt
+                    {
+                        u8 idest = BITS(12, 15);
+                        u8 rfis = BITS(16, 19);
+                        u8 rlast = BITS(0, 3);
+                        u8 ishi = BITS(7,11);
+                        state->Reg[idest] = (state->Reg[rfis] & 0xFFFF) | ((state->Reg[rlast] << ishi) & 0xFFFF0000);
+                        break;
+                    }
+                    else if ((instr & 0x70) == 0x50)//pkhtb
+                    {
+                        u8 idest = BITS(12, 15);
+                        u8 rfis = BITS(16, 19);
+                        u8 rlast = BITS(0, 3);
+                        u8 ishi = BITS(7, 11);
+                        if (ishi == 0)ishi = 0x20;
+                        state->Reg[idest] = (((int)(state->Reg[rlast]) >> (int)(ishi))& 0xFFFF) | ((state->Reg[rfis]) & 0xFFFF0000);
+                        break;
+                    }
+                    else if (BIT (4)) {
 #ifdef MODE32
                         if (state->is_v6
                                 && handle_v6_insn (state, instr))
@@ -3675,7 +3686,13 @@ mainswitch:
 
                 /* Co-Processor Data Transfers.  */
                 case 0xc4:
-                    if (state->is_v5) {
+                    if ((instr & 0x0FF00FF0) == 0xC400B10) //vmov BIT(0-3), BIT(12-15), BIT(16-20),  vmov d0, r0, r0
+                    {
+                        state->ExtReg[BITS(0, 3) << 1] = state->Reg[BITS(12, 15)];
+                        state->ExtReg[(BITS(0, 3) << 1) + 1] = state->Reg[BITS(16, 20)];
+                        break;
+                    }
+                    else if (state->is_v5) {
                         /* Reading from R15 is UNPREDICTABLE.  */
                         if (BITS (12, 15) == 15 || BITS (16, 19) == 15)
                             ARMul_UndefInstr (state, instr);
@@ -3695,13 +3712,21 @@ mainswitch:
                     break;
 
                 case 0xc5:
-                    if (state->is_v5) {
+                    if ((instr & 0x00000FF0) == 0xB10) //vmov BIT(12-15), BIT(16-20), BIT(0-3) vmov r0, r0, d0
+                    {
+                        state->Reg[BITS(12, 15)] = state->ExtReg[BITS(0, 3) << 1];
+                        state->Reg[BITS(16, 19)] = state->ExtReg[(BITS(0, 3) << 1) + 1];
+                        break;
+                    }
+                    else if (state->is_v5) {
                         /* Writes to R15 are UNPREDICATABLE.  */
                         if (DESTReg == 15 || LHSReg == 15)
                             ARMul_UndefInstr (state, instr);
                         /* Is access to the coprocessor allowed ?  */
                         else if (!CP_ACCESS_ALLOWED(state, CPNum))
-                            ARMul_UndefInstr (state, instr);
+                        {
+                            ARMul_UndefInstr(state, instr);
+                        }
                         else {
                             /* MRRC, ARMv5TE and up */
                             ARMul_MRRC (state, instr, &DEST, &(state->Reg[LHSReg]));
@@ -4059,9 +4084,11 @@ TEST_EMULATE:
             //        continue;
             else if (state->Emulate != RUN)
                 break;
-        }
-        while (state->NumInstrsToExecute--);
+      
+    }
 
+        while (state->NumInstrsToExecute);
+exit:
         state->decoded = decoded;
         state->loaded = loaded;
         state->pc = pc;
@@ -5686,12 +5713,98 @@ L_stm_s_takeabort:
         case 0x3f:
             printf ("Unhandled v6 insn: rbit\n");
             break;
+#endif
         case 0x61:
-            printf ("Unhandled v6 insn: sadd/ssub\n");
+            if ((instr & 0xFF0) == 0xf70)//ssub16
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = (a1 - a2)&0xFFFF | (((b1 - b2)&0xFFFF)<< 0x10);
+                return 1;
+            }
+            else if ((instr & 0xFF0) == 0xf10)//sadd16
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = (a1 + a2)&0xFFFF | (((b1 + b2)&0xFFFF)<< 0x10);
+                return 1;
+            }
+            else if ((instr & 0xFF0) == 0xf50)//ssax
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = (a1 - b2) & 0xFFFF | (((a2 + b1) & 0xFFFF) << 0x10);
+                return 1;
+            }
+            else if ((instr & 0xFF0) == 0xf30)//sasx
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = (a2 - b1) & 0xFFFF | (((a2 + b1) & 0xFFFF) << 0x10);
+                return 1;
+            }
+            else printf ("Unhandled v6 insn: sadd/ssub\n");
             break;
         case 0x62:
-            printf ("Unhandled v6 insn: qadd/qsub\n");
+            if ((instr & 0xFF0) == 0xf70)//QSUB16
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                s32 res1 = (a1 - b1);
+                s32 res2 = (a2 - b2);
+                if (res1 > 0x7FFF) res1 = 0x7FFF;
+                if (res2 > 0x7FFF) res2 = 0x7FFF;
+                if (res1 < 0x7FFF) res1 = -0x8000;
+                if (res2 < 0x7FFF) res2 = -0x8000;
+                state->Reg[tar] = (res1 & 0xFFFF) | ((res2 & 0xFFFF) << 0x10);
+                return 1;
+            }
+            else if ((instr & 0xFF0) == 0xf10)//QADD16
+            {
+                u8 tar = BITS(12, 15);
+                u8 src1 = BITS(16, 19);
+                u8 src2 = BITS(0, 3);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = (state->Reg[src2] & 0xFFFF);
+                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                s32 res1 = (a1 + b1);
+                s32 res2 = (a2 + b2);
+                if (res1 > 0x7FFF) res1 = 0x7FFF;
+                if (res2 > 0x7FFF) res2 = 0x7FFF;
+                if (res1 < 0x7FFF) res1 = -0x8000;
+                if (res2 < 0x7FFF) res2 = -0x8000;
+                state->Reg[tar] = ((res1) & 0xFFFF) | (((res2) & 0xFFFF) << 0x10);
+                return 1;
+            }
+            else printf ("Unhandled v6 insn: qadd/qsub\n");
             break;
+#if 0
         case 0x63:
             printf ("Unhandled v6 insn: shadd/shsub\n");
             break;
@@ -5709,10 +5822,65 @@ L_stm_s_takeabort:
             break;
 #endif
         case 0x6c:
-            printf ("Unhandled v6 insn: uxtb16/uxtab16\n");
+            if ((instr & 0xf03f0) == 0xf0070) //uxtb16
+            {
+                u8 src1 = BITS(0, 3);
+                u8 tar = BITS(12, 15);
+                u32 base = state->Reg[src1];
+                u32 shamt = BITS(9,10)* 8;
+                u32 in = ((base << (32 - shamt)) | (base >> shamt));
+                state->Reg[tar] = in & 0x00FF00FF;
+                return 1;
+            }
+            else
+                printf ("Unhandled v6 insn: uxtb16/uxtab16\n");
             break;
         case 0x70:
-            printf ("Unhandled v6 insn: smuad/smusd/smlad/smlsd\n");
+            if ((instr & 0xf0d0) == 0xf010)//smuad //ichfly
+            {
+                u8 tar = BITS(16, 19);
+                u8 src1 = BITS(0, 3);
+                u8 src2 = BITS(8, 11);
+                u8 swap = BIT(5);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
+                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = a1*a2 + b1*b2;
+                return 1;
+
+            }
+            else if ((instr & 0xf0d0) == 0xf050)//smusd
+            {
+                u8 tar = BITS(16, 19);
+                u8 src1 = BITS(0, 3);
+                u8 src2 = BITS(8, 11);
+                u8 swap = BIT(5);
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
+                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = a1*a2 - b1*b2;
+                return 1;
+            }
+            else if ((instr & 0xd0) == 0x10)//smlad
+            {
+                u8 tar = BITS(16, 19);
+                u8 src1 = BITS(0, 3);
+                u8 src2 = BITS(8, 11);
+                u8 src3 = BITS(12, 15);
+                u8 swap = BIT(5);
+
+                u32 a3 = state->Reg[src3];
+
+                s16 a1 = (state->Reg[src1] & 0xFFFF);
+                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
+                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
+                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
+                state->Reg[tar] = a1*a2 + b1*b2 + a3;
+                return 1;
+            }
+            else printf ("Unhandled v6 insn: smuad/smusd/smlad/smlsd\n");
             break;
         case 0x74:
             printf ("Unhandled v6 insn: smlald/smlsld\n");
@@ -5750,13 +5918,10 @@ L_stm_s_takeabort:
                 if (state->Aborted) {
                     TAKEABORT;
                 }
-                
-                if (enter)
-                {
+
+                if (enter) {
                     state->Reg[DESTReg] = 0;
-                }
-                else
-                {
+                } else {
                     state->Reg[DESTReg] = 1;
                 }
 
@@ -5795,12 +5960,9 @@ L_stm_s_takeabort:
                 }
 
 
-                if (enter)
-                {
+                if (enter) {
                     state->Reg[DESTReg] = 0;
-                }
-                else
-                {
+                } else {
                     state->Reg[DESTReg] = 1;
                 }
 
@@ -5853,8 +6015,25 @@ L_stm_s_takeabort:
 
             case 0x01:
             case 0xf3:
-                printf ("Unhandled v6 insn: ssat\n");
-                return 0;
+                //ichfly
+                //SSAT16
+            {
+                         u8 tar = BITS(12,15);
+                         u8 src = BITS(0, 3);
+                         u8 val = BITS(16, 19) + 1;
+                         s16 a1 = (state->Reg[src]);
+                         s16 a2 = (state->Reg[src] >> 0x10);
+                         s16 min = (s16)(0x8000) >> (16 - val);
+                         s16 max = 0x7FFF >> (16 - val);
+                         if (min > a1) a1 = min;
+                         if (max < a1) a1 = max;
+                         if (min > a2) a2 = min;
+                         if (max < a2) a2 = max;
+                         u32 temp2 = ((u32)(a2)) << 0x10;
+                         state->Reg[tar] = (a1&0xFFFF) | (temp2);
+            }
+
+                return 1;
             default:
                 break;
             }
@@ -5944,8 +6123,21 @@ L_stm_s_takeabort:
 
             case 0x01:
             case 0xf3:
-                printf ("Unhandled v6 insn: usat\n");
-                return 0;
+                //ichfly
+                //USAT16
+                {
+                    u8 tar = BITS(12, 15);
+                    u8 src = BITS(0, 3);
+                    u8 val = BITS(16, 19);
+                    s16 a1 = (state->Reg[src]);
+                    s16 a2 = (state->Reg[src] >> 0x10);
+                    s16 max = 0xFFFF >> (16 - val);
+                    if (max < a1) a1 = max;
+                    if (max < a2) a2 = max;
+                    u32 temp2 = ((u32)(a2)) << 0x10;
+                    state->Reg[tar] = (a1 & 0xFFFF) | (temp2);
+                }
+                return 1;
             default:
                 break;
             }
