@@ -30,11 +30,11 @@ set(SRCS
             hle/kernel/mutex.cpp
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
-            hle/service/apt.cpp
-            hle/service/fs.cpp
-            hle/service/gsp.cpp
-            hle/service/hid.cpp
-            hle/service/ndm.cpp
+            hle/service/apt_u.cpp
+            hle/service/fs_user.cpp
+            hle/service/gsp_gpu.cpp
+            hle/service/hid_user.cpp
+            hle/service/ndm_u.cpp
             hle/service/service.cpp
             hle/service/srv.cpp
             hle/config_mem.cpp
@@ -91,11 +91,11 @@ set(HEADERS
             hle/kernel/mutex.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
-            hle/service/apt.h
-            hle/service/fs.h
-            hle/service/gsp.h
-            hle/service/hid.h
-            hle/service/ndm.h
+            hle/service/apt_u.h
+            hle/service/fs_user.h
+            hle/service/gsp_gpu.h
+            hle/service/hid_user.h
+            hle/service/ndm_u.h
             hle/service/service.h
             hle/service/srv.h
             hle/config_mem.h

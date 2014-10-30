@@ -9,7 +9,7 @@
 #include "core/mem_map.h"
 
 #include "core/hle/hle.h"
-#include "core/hle/service/gsp.h"
+#include "core/hle/service/gsp_gpu.h"
 
 #include "core/hw/gpu.h"
 

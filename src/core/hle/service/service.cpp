@@ -6,11 +6,11 @@
 #include "common/string_util.h"
 
 #include "core/hle/service/service.h"
-#include "core/hle/service/apt.h"
-#include "core/hle/service/fs.h"
-#include "core/hle/service/gsp.h"
-#include "core/hle/service/hid.h"
-#include "core/hle/service/ndm.h"
+#include "core/hle/service/apt_u.h"
+#include "core/hle/service/fs_user.h"
+#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/hid_user.h"
+#include "core/hle/service/ndm_u.h"
 #include "core/hle/service/srv.h"
 
 namespace Service {
