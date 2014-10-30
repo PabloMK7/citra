@@ -158,8 +158,8 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
         InitScreenCoordinates(vtx2);
 
         DEBUG_LOG(GPU,
-                  "Triangle %u/%u (%u buffer vertices) at position (%.3f, %.3f, %.3f, %.3f), "
-                  "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
+                  "Triangle %lu/%lu (%lu buffer vertices) at position (%.3f, %.3f, %.3f, %.3f), "
+                  "(%.3lu, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
                   "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",
                   i,output_list.size(), buffer_vertices.size(),
                   vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(), vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(),output_list.size(),

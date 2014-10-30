@@ -153,7 +153,7 @@ public:
             u64 offset = cmd_buff[1] | ((u64) cmd_buff[2]) << 32;
             u32 length  = cmd_buff[3];
             u32 address = cmd_buff[5];
-            DEBUG_LOG(KERNEL, "Read %s %s: offset=0x%x length=%d address=0x%x",
+            DEBUG_LOG(KERNEL, "Read %s %s: offset=0x%llx length=%d address=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address);
             cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
             break;
@@ -166,7 +166,7 @@ public:
             u32 length  = cmd_buff[3];
             u32 flush   = cmd_buff[4];
             u32 address = cmd_buff[6];
-            DEBUG_LOG(KERNEL, "Write %s %s: offset=0x%x length=%d address=0x%x, flush=0x%x",
+            DEBUG_LOG(KERNEL, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
             cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
             break;
@@ -184,7 +184,7 @@ public:
         case FileCommand::SetSize:
         {
             u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-            DEBUG_LOG(KERNEL, "SetSize %s %s size=%d", GetTypeName().c_str(), GetName().c_str(), size);
+            DEBUG_LOG(KERNEL, "SetSize %s %s size=%llu", GetTypeName().c_str(), GetName().c_str(), size);
             backend->SetSize(size);
             break;
         }

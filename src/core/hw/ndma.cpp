@@ -10,12 +10,12 @@ namespace NDMA {
 
 template <typename T>
 inline void Read(T &var, const u32 addr) {
-    ERROR_LOG(NDMA, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
+    ERROR_LOG(NDMA, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
 }
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    ERROR_LOG(NDMA, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+    ERROR_LOG(NDMA, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
 }
 
 // Explicitly instantiate template functions because we aren't defining this in the header:

@@ -35,7 +35,7 @@ inline void Read(T &var, const u32 raw_addr) {
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
+        ERROR_LOG(GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
         return;
     }
 
@@ -49,7 +49,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        ERROR_LOG(GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
         return;
     }
 

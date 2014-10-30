@@ -102,7 +102,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                              (vertex_attribute_formats[i] == 2) ? *(s16*)srcdata :
                                                                                   *(float*)srcdata;
                         input.attr[i][comp] = float24::FromFloat32(srcval);
-                        DEBUG_LOG(GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",
+                        DEBUG_LOG(GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
                                   comp, i, vertex, index,
                                   attribute_config.GetBaseAddress(),
                                   vertex_attribute_sources[i] - base_address,

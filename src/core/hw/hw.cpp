@@ -50,7 +50,7 @@ inline void Read(T &var, const u32 addr) {
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Read%d @ 0x%08X", sizeof(var) * 8, addr);
+        ERROR_LOG(HW, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
     }
 }
 
@@ -68,7 +68,7 @@ inline void Write(u32 addr, const T data) {
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        ERROR_LOG(HW, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
     }
 }
 
