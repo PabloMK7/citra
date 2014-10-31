@@ -25,11 +25,6 @@ public:
 
     std::string name;   ///< Name of address arbiter object (optional)
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");

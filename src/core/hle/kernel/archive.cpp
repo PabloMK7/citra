@@ -52,11 +52,6 @@ public:
     std::string name;           ///< Name of archive (optional)
     FileSys::Archive* backend;  ///< Archive backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
@@ -114,11 +109,6 @@ public:
         return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
@@ -137,11 +127,6 @@ public:
     FileSys::Path path; ///< Path of the file
     std::unique_ptr<FileSys::File> backend; ///< File backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
@@ -208,11 +193,6 @@ public:
         return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
@@ -231,11 +211,6 @@ public:
     FileSys::Path path; ///< Path of the directory
     std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
@@ -273,11 +248,6 @@ public:
         return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
@@ -313,7 +283,6 @@ ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
 /**
  * Mounts an archive
  * @param archive Pointer to the archive to mount
- * @return Result of operation
  */
 ResultCode MountArchive(Archive* archive) {
     FileSys::Archive::IdCode id_code = archive->backend->GetIdCode();

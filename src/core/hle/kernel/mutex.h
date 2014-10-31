@@ -13,7 +13,6 @@ namespace Kernel {
 /**
  * Releases a mutex
  * @param handle Handle to mutex to release
- * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode ReleaseMutex(Handle handle);
 

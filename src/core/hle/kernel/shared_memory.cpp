@@ -16,11 +16,6 @@ public:
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
     Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
@@ -48,11 +43,6 @@ SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
     return shared_memory;
 }
 
-/**
- * Creates a shared memory object
- * @param name Optional name of shared memory object
- * @return Handle of newly created shared memory object
- */
 Handle CreateSharedMemory(const std::string& name) {
     Handle handle;
     CreateSharedMemory(handle, name);
@@ -86,12 +76,6 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
     return RESULT_SUCCESS;
 }
 
-/**
- * Gets a pointer to the shared memory block
- * @param handle Shared memory block handle
- * @param offset Offset from the start of the shared memory block to get pointer
- * @return Pointer to the shared memory block from the specified offset
- */
 ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset) {
     SharedMemory* shared_memory = Kernel::g_object_pool.Get<SharedMemory>(handle);
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);

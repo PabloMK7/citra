@@ -27,22 +27,12 @@ public:
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
     std::string name;                           ///< Name of mutex (optional)
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> SyncRequest() override {
         // TODO(bunnei): ImplementMe
         locked = true;
         return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         bool wait = locked;

@@ -75,11 +75,6 @@ public:
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
@@ -108,11 +103,6 @@ public:
         return MakeResult<bool>(false); // TODO: Implement return from actual function
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "unimplemented function");

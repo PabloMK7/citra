@@ -30,11 +30,6 @@ public:
     std::vector<Handle> waiting_threads;    ///< Threads that are waiting for the event
     std::string name;                       ///< Name of event (optional)
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
     ResultVal<bool> WaitSynchronization() override {
         bool wait = locked;
         if (locked) {
