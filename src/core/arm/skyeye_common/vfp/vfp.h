@@ -88,21 +88,21 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 
 /* MRC */
-inline void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);
-inline void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value);
-inline void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2);
-inline void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
-inline void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
+void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);
+void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value);
+void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2);
+void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
+void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
 /* MCR */
-inline void VMSR(ARMul_State * state, ARMword reg, ARMword Rt);
+void VMSR(ARMul_State * state, ARMword reg, ARMword Rt);
 /* STC */
-inline int VSTM(ARMul_State * state, int type, ARMword instr, ARMword* value);
-inline int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword* value);
-inline int VSTR(ARMul_State * state, int type, ARMword instr, ARMword* value);
+int VSTM(ARMul_State * state, int type, ARMword instr, ARMword* value);
+int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword* value);
+int VSTR(ARMul_State * state, int type, ARMword instr, ARMword* value);
 /* LDC */
-inline int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value);
-inline int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value);
-inline int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value);
+int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value);
+int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value);
+int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value);
 
 #ifdef __cplusplus
  }
