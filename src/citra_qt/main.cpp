@@ -116,7 +116,10 @@ GMainWindow::GMainWindow()
 
     show();
 
-    System::Init(render_window);
+    QStringList args = QApplication::arguments();
+    if (args.length() >= 2) {
+        BootGame(args[1].toStdString());
+    }
 }
 
 GMainWindow::~GMainWindow()
@@ -129,6 +132,7 @@ GMainWindow::~GMainWindow()
 void GMainWindow::BootGame(std::string filename)
 {
     NOTICE_LOG(MASTER_LOG, "Citra starting...\n");
+    System::Init(render_window);
 
     if (Core::Init()) {
         ERROR_LOG(MASTER_LOG, "Core initialization failed, exiting...");
@@ -149,6 +153,7 @@ void GMainWindow::BootGame(std::string filename)
     render_window->GetEmuThread().start();
 
     render_window->show();
+    OnStartGame();
 }
 
 void GMainWindow::OnMenuLoadFile()
@@ -185,6 +190,7 @@ void GMainWindow::OnPauseGame()
 void GMainWindow::OnStopGame()
 {
     render_window->GetEmuThread().SetCpuRunning(false);
+    // TODO: Shutdown core
 
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
@@ -246,7 +252,6 @@ int __cdecl main(int argc, char* argv[])
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
     GMainWindow main_window;
-
     main_window.show();
     return app.exec();
 }
