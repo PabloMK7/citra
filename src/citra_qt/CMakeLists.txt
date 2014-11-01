@@ -11,6 +11,7 @@ set(SRCS
             debugger/graphics_cmdlists.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
+            util/spinbox.cpp
             bootmanager.cpp
             hotkeys.cpp
             main.cpp
@@ -26,6 +27,7 @@ set(HEADERS
             debugger/graphics_cmdlists.hxx
             debugger/ramview.hxx
             debugger/registers.hxx
+            util/spinbox.hxx
             bootmanager.hxx
             hotkeys.hxx
             main.hxx
