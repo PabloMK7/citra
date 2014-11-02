@@ -57,6 +57,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00030100, nullptr,           "RegisterService"},
     {0x000400C0, nullptr,           "UnregisterService"},
     {0x00050100, GetServiceHandle,  "GetServiceHandle"},
+    {0x000B0000, nullptr,           "ReceiveNotification"},
+    {0x000C0080, nullptr,           "PublishToSubscriber"}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
