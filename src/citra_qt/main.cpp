@@ -128,10 +128,10 @@ GMainWindow::~GMainWindow()
 
 void GMainWindow::BootGame(std::string filename)
 {
-    NOTICE_LOG(MASTER_LOG, "citra starting...\n");
+    NOTICE_LOG(MASTER_LOG, "Citra starting...\n");
 
     if (Core::Init()) {
-        ERROR_LOG(MASTER_LOG, "core initialization failed, exiting...");
+        ERROR_LOG(MASTER_LOG, "Core initialization failed, exiting...");
         Core::Stop();
         exit(1);
     }
