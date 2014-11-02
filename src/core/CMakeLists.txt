@@ -34,6 +34,7 @@ set(SRCS
             hle/service/apt_u.cpp
             hle/service/cfg_u.cpp
             hle/service/dsp_dsp.cpp
+            hle/service/err_f.cpp
             hle/service/fs_user.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
@@ -103,6 +104,7 @@ set(HEADERS
             hle/service/apt_u.h
             hle/service/cfg_u.h
             hle/service/dsp_dsp.h
+            hle/service/err_f.h
             hle/service/fs_user.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h

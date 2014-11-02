@@ -10,6 +10,7 @@
 #include "core/hle/service/apt_u.h"
 #include "core/hle/service/cfg_u.h"
 #include "core/hle/service/dsp_dsp.h"
+#include "core/hle/service/err_f.h"
 #include "core/hle/service/fs_user.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid_user.h"
@@ -78,6 +79,7 @@ void Init() {
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new CFG_U::Interface);
     g_manager->AddService(new DSP_DSP::Interface);
+    g_manager->AddService(new ERR_F::Interface);
     g_manager->AddService(new FS_User::Interface);
     g_manager->AddService(new GSP_GPU::Interface);
     g_manager->AddService(new HID_User::Interface);
