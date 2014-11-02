@@ -51,6 +51,7 @@ set(HEADERS
             msg_handler.h
             platform.h
             scm_rev.h
+            scope_exit.h
             string_util.h
             swap.h
             symbols.h
