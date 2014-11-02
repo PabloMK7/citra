@@ -43,7 +43,15 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
  * @param mode Mode under which to open the File
  * @return Opened File object
  */
-Handle OpenFileFromArchive(Handle handle, const std::string& name, const FileSys::Mode mode);
+Handle OpenFileFromArchive(Handle archive_handle, const std::string& name, const FileSys::Mode mode);
+
+/**
+ * Create a Directory from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the Directory inside of the Archive
+ * @return Whether creation of directory succeeded
+ */
+Result CreateDirectoryFromArchive(Handle archive_handle, const std::string& name);
 
 /**
  * Open a Directory from an Archive
@@ -51,7 +59,7 @@ Handle OpenFileFromArchive(Handle handle, const std::string& name, const FileSys
  * @param path Path to the Directory inside of the Archive
  * @return Opened Directory object
  */
-Handle OpenDirectoryFromArchive(Handle handle, const std::string& name);
+Handle OpenDirectoryFromArchive(Handle archive_handle, const std::string& name);
 
 /// Initialize archives
 void ArchiveInit();

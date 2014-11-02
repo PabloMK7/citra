@@ -57,6 +57,13 @@ public:
     virtual std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const = 0;
 
     /**
+     * Create a directory specified by its path
+     * @param path Path relative to the archive
+     * @return Whether the directory could be created
+     */
+    virtual bool CreateDirectory(const std::string& path) const = 0;
+
+    /**
      * Open a directory specified by its path
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr

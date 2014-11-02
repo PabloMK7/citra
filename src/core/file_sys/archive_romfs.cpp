@@ -34,6 +34,16 @@ std::unique_ptr<File> Archive_RomFS::OpenFile(const std::string& path, const Mod
 }
 
 /**
+ * Create a directory specified by its path
+ * @param path Path relative to the archive
+ * @return Whether the directory could be created
+ */
+bool Archive_RomFS::CreateDirectory(const std::string& path) const {
+    ERROR_LOG(FILESYS, "Attempted to create a directory in ROMFS.");
+    return false;
+};
+
+/**
  * Open a directory specified by its path
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr

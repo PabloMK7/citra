@@ -381,6 +381,21 @@ Handle OpenFileFromArchive(Handle archive_handle, const std::string& path, const
 }
 
 /**
+ * Create a Directory from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the Directory inside of the Archive
+ * @return Opened Directory object
+ */
+Result CreateDirectoryFromArchive(Handle archive_handle, const std::string& path) {
+    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+    if (archive == nullptr)
+        return -1;
+    if (archive->backend->CreateDirectory(path))
+        return 0;
+    return -1;
+}
+
+/**
  * Open a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive
