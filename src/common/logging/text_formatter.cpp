@@ -14,7 +14,32 @@
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 
+#include "common/string_util.h"
+
 namespace Log {
+
+// TODO(bunnei): This should be moved to a generic path manipulation library
+const char* TrimSourcePath(const char* path, const char* root) {
+    const char* p = path;
+
+    while (*p != '\0') {
+        const char* next_slash = p;
+        while (*next_slash != '\0' && *next_slash != '/' && *next_slash != '\\') {
+            ++next_slash;
+        }
+
+        bool is_src = Common::ComparePartialString(p, next_slash, root);
+        p = next_slash;
+
+        if (*p != '\0') {
+            ++p;
+        }
+        if (is_src) {
+            path = p;
+        }
+    }
+    return path;
+}
 
 void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
     unsigned int time_seconds    = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
@@ -25,7 +50,7 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
 
     snprintf(out_text, text_len, "[%4u.%06u] %s <%s> %s: %s",
         time_seconds, time_fractional, class_name, level_name,
-        entry.location.c_str(), entry.message.c_str());
+        TrimSourcePath(entry.location.c_str()), entry.message.c_str());
 }
 
 static void ChangeConsoleColor(Level level) {
