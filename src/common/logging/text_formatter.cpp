@@ -5,6 +5,11 @@
 #include <array>
 #include <cstdio>
 
+#ifdef _WIN32
+#   define WIN32_LEAN_AND_MEAN
+#   include <Windows.h>
+#endif
+
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
@@ -23,7 +28,52 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
         entry.location.c_str(), entry.message.c_str());
 }
 
+static void ChangeConsoleColor(Level level) {
+#ifdef _WIN32
+    static HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+
+    WORD color = 0;
+    switch (level) {
+    case Level::Trace: // Grey
+        color = FOREGROUND_INTENSITY; break;
+    case Level::Debug: // Cyan
+        color = FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+    case Level::Info: // Bright gray
+        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+    case Level::Warning: // Bright yellow
+        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY; break;
+    case Level::Error: // Bright red
+        color = FOREGROUND_RED | FOREGROUND_INTENSITY; break;
+    case Level::Critical: // Bright magenta
+        color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
+    }
+
+    SetConsoleTextAttribute(console_handle, color);
+#else
+#define ESC "\x1b"
+    const char* color = "";
+    switch (level) {
+    case Level::Trace: // Grey
+        color = ESC "[1;30m"; break;
+    case Level::Debug: // Cyan
+        color = ESC "[0;36m"; break;
+    case Level::Info: // Bright gray
+        color = ESC "[0;37m"; break;
+    case Level::Warning: // Bright yellow
+        color = ESC "[1;33m"; break;
+    case Level::Error: // Bright red
+        color = ESC "[1;31m"; break;
+    case Level::Critical: // Bright magenta
+        color = ESC "[1;35m"; break;
+    }
+#undef ESC
+
+    fputs(color, stderr);
+#endif
+}
+
 void PrintMessage(const Entry& entry) {
+    ChangeConsoleColor(entry.log_level);
     std::array<char, 4 * 1024> format_buffer;
     FormatLogMessage(entry, format_buffer.data(), format_buffer.size());
     fputs(format_buffer.data(), stderr);
