@@ -5,6 +5,7 @@
 #include "common/common.h"
 
 #include "fs_user.h"
+#include "common/string_util.h"
 #include "core/settings.h"
 #include "core/hle/kernel/archive.h"
 
@@ -13,18 +14,73 @@
 
 namespace FS_User {
 
-// Command to access archive file
-enum class LowPathType : u32 {
-    Invalid = 0,
-    Empty   = 1,
-    Binary  = 2,
-    Char    = 3,
-    Wchar   = 4
-};
+FS_Path::FS_Path(LowPathType type, u32 size, u32 pointer):
+    type(type)
+{
+    switch (type) {
+        case Binary:
+        {
+            auto data = Memory::GetPointer(pointer);
+            binary = std::vector<u8>(data, data + size);
+            break;
+        }
+        case Char:
+        {
+            auto data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
+            string = std::string(data, size - 1);
+        }
+        case Wchar:
+        {
+            auto data = reinterpret_cast<const char16_t*>(Memory::GetPointer(pointer));
+            u16str = std::u16string(data, size/2 - 1);
+        }
+    }
+}
 
-std::string GetStringFromCmdBuff(const u32 pointer, const u32 size) {
-    auto data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
-    return std::string(data, size - 1);
+FS_Path::LowPathType FS_Path::GetType() const {
+    return type;
+}
+
+const std::vector<u8>& FS_Path::GetBinary() const {
+    return binary;
+}
+
+const std::string& FS_Path::GetString() const {
+    _dbg_assert_msg_(KERNEL, type == Char, "LowPathType is not Char!");
+    return string;
+}
+
+const std::u16string& FS_Path::GetU16Str() const {
+    _dbg_assert_msg_(KERNEL, type == Wchar, "LowPathType is not Wchar!");
+    return u16str;
+}
+
+std::string FS_Path::AsString() {
+    switch (GetType()) {
+        case FS_Path::Char:
+            return GetString();
+        case FS_Path::Empty:
+            return {};
+        case FS_Path::Wchar:
+        {
+            auto str16 = GetU16Str();
+            return Common::UTF16ToUTF8(std::wstring(str16.cbegin(), str16.cend()));
+        }
+    }
+}
+
+std::u16string FS_Path::AsU16Str() {
+    switch (GetType()) {
+        case FS_Path::Wchar:
+            return GetU16Str();
+        case FS_Path::Empty:
+            return {};
+        case FS_Path::Char:
+        {
+            auto str = GetString();
+            return std::u16string(str.cbegin(), str.cend());
+        }
+    }
 }
 
 // We currently return 0 for success and -1 for failure in cmd_buff[1].  -1 was chosen because it
@@ -44,32 +100,36 @@ void Initialize(Service::Interface* self) {
 void OpenFile(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
-    u32 transaction = cmd_buff[1];
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
     Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
-    LowPathType type = static_cast<LowPathType>(cmd_buff[4]);
-    u32 size = cmd_buff[5];
+    auto filename_type    = static_cast<FS_Path::LowPathType>(cmd_buff[4]);
+    u32 filename_size     = cmd_buff[5];
     FileSys::Mode mode; mode.hex = cmd_buff[6];
-    u32 attributes = cmd_buff[7]; // TODO(Link Mauve): do something with those attributes.
-    u32 pointer = cmd_buff[9];
+    u32 attributes        = cmd_buff[7]; // TODO(Link Mauve): do something with those attributes.
+    u32 filename_ptr      = cmd_buff[9];
 
-    if (type != LowPathType::Char) {
-        ERROR_LOG(KERNEL, "file LowPath type other than char is currently unsupported");
-        cmd_buff[1] = -1;
-        return;
+    FS_Path file_path(filename_type, filename_size, filename_ptr);
+    std::string file_string;
+    switch (file_path.GetType()) {
+        case FS_Path::Char:
+        case FS_Path::Wchar:
+            file_string = file_path.AsString();
+            break;
+        default:
+            WARN_LOG(KERNEL, "file LowPath type is currently unsupported; returning archive handle instead");
+            return;
     }
 
-    std::string file_name = GetStringFromCmdBuff(pointer, size);
+    DEBUG_LOG(KERNEL, "type=%d size=%d mode=%d attrs=%d data=%s",
+              filename_type, filename_size, mode, attributes, file_string.c_str());
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d mode=%d attrs=%d data=%s", type, size, mode, attributes, file_name.c_str());
-
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_name, mode);
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_string, mode);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_name.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_string.c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -80,30 +140,24 @@ void OpenFile(Service::Interface* self) {
 void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
-    u32 transaction = cmd_buff[1];
-    auto archive_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
-    LowPathType archive_type = static_cast<LowPathType>(cmd_buff[3]);
-    u32 archive_size = cmd_buff[4];
-    LowPathType file_type = static_cast<LowPathType>(cmd_buff[5]);
-    u32 size = cmd_buff[6];
+    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+    auto archivename_type = static_cast<FS_Path::LowPathType>(cmd_buff[3]);
+    u32 archivename_size  = cmd_buff[4];
+    auto filename_type    = static_cast<FS_Path::LowPathType>(cmd_buff[5]);
+    u32 filename_size     = cmd_buff[6];
     FileSys::Mode mode; mode.hex = cmd_buff[7];
-    u32 attributes = cmd_buff[8]; // TODO(Link Mauve): do something with those attributes.
-    u32 archive_pointer = cmd_buff[10];
-    u32 pointer = cmd_buff[12];
+    u32 attributes        = cmd_buff[8]; // TODO(Link Mauve): do something with those attributes.
+    u32 archivename_ptr   = cmd_buff[10];
+    u32 filename_ptr      = cmd_buff[12];
 
-    if (archive_type != LowPathType::Empty) {
+    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d file_type=%d file_size=%d file_mode=%d file_attrs=%d",
+              archivename_type, archivename_size, filename_type, filename_size, mode, attributes);
+
+    if (archivename_type != FS_Path::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = -1;
         return;
     }
-
-    std::string archive_name = GetStringFromCmdBuff(archive_pointer, archive_size);
-    std::string file_name = GetStringFromCmdBuff(pointer, size);
-
-    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d archive_data=%s "
-                      "file_type=%d file_size=%d file_mode=%d file_attrs=%d file_data=%s",
-              archive_type, archive_size, archive_name.c_str(),
-              file_type, size, mode, attributes, file_name.c_str());
 
     // TODO(Link Mauve): check if we should even get a handle for the archive, and don't leak it.
     Handle archive_handle = Kernel::OpenArchive(archive_id);
@@ -112,23 +166,30 @@ void OpenFileDirectly(Service::Interface* self) {
         // cmd_buff[2] isn't used according to 3dmoo's implementation.
         cmd_buff[3] = archive_handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for archive %s", archive_name.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for archive");
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
         return;
     }
 
-    if (file_type != LowPathType::Char) {
-        WARN_LOG(KERNEL, "file LowPath type other than char is currently unsupported; returning archive handle instead");
-        return;
+    FS_Path file_path(filename_type, filename_size, filename_ptr);
+    std::string file_string;
+    switch (file_path.GetType()) {
+        case FS_Path::Char:
+        case FS_Path::Wchar:
+            file_string = file_path.AsString();
+            break;
+        default:
+            WARN_LOG(KERNEL, "file LowPath type is currently unsupported; returning archive handle instead");
+            return;
     }
 
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_name, mode);
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_string, mode);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_name.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_string.c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -153,21 +214,25 @@ void CreateDirectory(Service::Interface* self) {
     // TODO: cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
     Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
-    LowPathType type = static_cast<LowPathType>(cmd_buff[4]);
-    u32 name_size = cmd_buff[5];
-    u32 name_offset = cmd_buff[8];
+    auto dirname_type = static_cast<FS_Path::LowPathType>(cmd_buff[4]);
+    u32 dirname_size = cmd_buff[5];
+    u32 dirname_ptr = cmd_buff[8];
 
-    if (type != LowPathType::Char) {
-        ERROR_LOG(KERNEL, "directory LowPath type other than char is currently unsupported");
-        cmd_buff[1] = -1;
-        return;
+    FS_Path dir_path(dirname_type, dirname_size, dirname_ptr);
+    std::string dir_string;
+    switch (dir_path.GetType()) {
+        case FS_Path::Char:
+        case FS_Path::Wchar:
+            dir_string = dir_path.AsString();
+            break;
+        default:
+            cmd_buff[1] = -1;
+            return;
     }
 
-    std::string dir_name = GetStringFromCmdBuff(name_offset, name_size);
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, name_size, dir_name.c_str());
-
-    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_name);
+    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_string);
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -178,26 +243,30 @@ void OpenDirectory(Service::Interface* self) {
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
     Handle archive_handle = static_cast<Handle>(cmd_buff[2]);
-    LowPathType type = static_cast<LowPathType>(cmd_buff[3]);
-    u32 size = cmd_buff[4];
-    u32 pointer = cmd_buff[6];
+    auto dirname_type = static_cast<FS_Path::LowPathType>(cmd_buff[3]);
+    u32 dirname_size = cmd_buff[4];
+    u32 dirname_ptr = cmd_buff[6];
 
-    if (type != LowPathType::Char) {
-        ERROR_LOG(KERNEL, "directory LowPath type other than char is currently unsupported");
-        cmd_buff[1] = -1;
-        return;
+    FS_Path dir_path(dirname_type, dirname_size, dirname_ptr);
+    std::string dir_string;
+    switch (dir_path.GetType()) {
+        case FS_Path::Char:
+        case FS_Path::Wchar:
+            dir_string = dir_path.AsString();
+            break;
+        default:
+            cmd_buff[1] = -1;
+            return;
     }
 
-    std::string dir_name = GetStringFromCmdBuff(pointer, size);
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, size, dir_name.c_str());
-
-    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_name);
+    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_string);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for directory %s", dir_name.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for directory %s", dir_string.c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -208,28 +277,26 @@ void OpenDirectory(Service::Interface* self) {
 void OpenArchive(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
-    auto arch_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
-    LowPathType type = static_cast<LowPathType>(cmd_buff[2]);
-    u32 size = cmd_buff[3];
-    u32 pointer = cmd_buff[5];
+    auto archive_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
+    auto archivename_type = static_cast<FS_Path::LowPathType>(cmd_buff[2]);
+    u32 archivename_size = cmd_buff[3];
+    u32 archivename_ptr = cmd_buff[5];
 
-    if (type != LowPathType::Empty) {
+    DEBUG_LOG(KERNEL, "type=%d size=%d", archivename_type, archivename_size);
+
+    if (archivename_type != FS_Path::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = -1;
         return;
     }
 
-    std::string archive_name = GetStringFromCmdBuff(pointer, size);
-
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", type, size, archive_name.c_str());
-
-    Handle handle = Kernel::OpenArchive(arch_id);
+    Handle handle = Kernel::OpenArchive(archive_id);
     if (handle) {
         cmd_buff[1] = 0;
         // cmd_buff[2] isn't used according to 3dmoo's implementation.
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for archive %s", archive_name.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for archive");
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
