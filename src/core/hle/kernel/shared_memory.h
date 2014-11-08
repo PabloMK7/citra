@@ -12,11 +12,15 @@ namespace Kernel {
 
 /// Permissions for mapped shared memory blocks
 enum class MemoryPermission : u32 {
-    None        = 0,
-    Read        = (1u <<  0),
-    Write       = (1u <<  1),
-    ReadWrite   = (Read | Write),
-    DontCare    = (1u << 28)
+    None             = 0,
+    Read             = (1u <<  0),
+    Write            = (1u <<  1),
+    ReadWrite        = (Read | Write),
+    Execute          = (1u <<  2),
+    ReadExecute      = (Read | Execute),
+    WriteExecute     = (Write | Execute),
+    ReadWriteExecute = (Read | Write | Execute),
+    DontCare         = (1u << 28)
 };
 
 /**
