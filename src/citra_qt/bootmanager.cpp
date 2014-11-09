@@ -33,19 +33,16 @@ void EmuThread::run()
     stop_run = false;
     while (!stop_run)
     {
-        for (int tight_loop = 0; tight_loop < 10000; ++tight_loop)
+        if (cpu_running)
         {
-            if (cpu_running || exec_cpu_step)
-            {
-                if (exec_cpu_step)
-                    exec_cpu_step = false;
-
-                Core::SingleStep();
-                if (!cpu_running) {
-                    emit CPUStepped();
-                    yieldCurrentThread();
-                }
-            }
+            Core::RunLoop();
+        } 
+        else if (exec_cpu_step)
+        {
+            exec_cpu_step = false;
+            Core::SingleStep();
+            emit CPUStepped();
+            yieldCurrentThread();
         }
     }
     render_window->moveContext();
