@@ -4,4 +4,4 @@
 
 #pragma once
 
-void InterpreterMainLoop(ARMul_State* state);
+unsigned InterpreterMainLoop(ARMul_State* state);

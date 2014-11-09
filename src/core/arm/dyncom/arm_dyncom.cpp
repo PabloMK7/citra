@@ -110,9 +110,12 @@ u64 ARM_DynCom::GetTicks() const {
  * @param num_instructions Number of instructions to executes
  */
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
-    ticks += num_instructions;
     state->NumInstrsToExecute = num_instructions;
-    InterpreterMainLoop(state.get());
+
+    // Dyncom only breaks on instruction dispatch. This only happens on every instruction when
+    // executing one instruction at a time. Otherwise, if a block is being executed, more 
+    // instructions may actually be executed than specified.
+    ticks += InterpreterMainLoop(state.get());
 }
 
 /**

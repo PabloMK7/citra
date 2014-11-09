@@ -3718,7 +3718,7 @@ static bool InAPrivilegedMode(arm_core_t *core)
 }
 
 /* r15 = r15 + 8 */
-void InterpreterMainLoop(ARMul_State* state)
+unsigned InterpreterMainLoop(ARMul_State* state)
 {
 	#define CRn				inst_cream->crn
 	#define OPCODE_2			inst_cream->opcode_2
@@ -3754,9 +3754,15 @@ void InterpreterMainLoop(ARMul_State* state)
 // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
 // clunky switch statement.
 #if defined __GNUC__ || defined __clang__
-#define GOTO_NEXT_INST			goto *InstLabel[inst_base->idx]
+#define GOTO_NEXT_INST \
+    if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
+    num_instrs++; \
+    goto *InstLabel[inst_base->idx]
 #else
-#define GOTO_NEXT_INST switch(inst_base->idx) { \
+#define GOTO_NEXT_INST \
+    if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
+    num_instrs++; \
+    switch(inst_base->idx) { \
     case 0: goto VMLA_INST; \
     case 1: goto VMLS_INST; \
     case 2: goto VNMLA_INST; \
@@ -4028,20 +4034,15 @@ void InterpreterMainLoop(ARMul_State* state)
 	unsigned int addr;
 	unsigned int phys_addr;
 	unsigned int last_pc = 0;
+	unsigned int num_instrs = 0;
 	fault_t fault;
 	static unsigned int last_physical_base = 0, last_logical_base = 0;
 	int ptr;
+	bool single_step = (cpu->NumInstrsToExecute == 1);
 
 	LOAD_NZCVT;
 	DISPATCH:
 	{
-        if (cpu->NumInstrsToExecute == 0)
-            return;
-
-        cpu->NumInstrsToExecute--;
-
-        //NOTICE_LOG(ARM11, "instr!");
-
 		if (!cpu->NirqSig) {
                 	if (!(cpu->Cpsr & 0x80)) {
 				goto END;
@@ -4393,7 +4394,8 @@ void InterpreterMainLoop(ARMul_State* state)
 			#define CP_ACCESS_ALLOW 0
 			if(CP_ACCESS_ALLOW){
 				/* undefined instruction here */
-				return;
+				cpu->NumInstrsToExecute = 0;
+				return num_instrs;
 			}
 			ERROR_LOG(ARM11, "CDP insn inst=0x%x, pc=0x%x\n", inst_cream->inst, cpu->Reg[15]);
 			unsigned cpab = (cpu->CDP[inst_cream->cp_num]) (cpu, ARMul_FIRST, inst_cream->inst);
@@ -6532,12 +6534,14 @@ void InterpreterMainLoop(ARMul_State* state)
 		cpu->AbortAddr = addr;
 		cpu->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
 		cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-		return;
+		cpu->NumInstrsToExecute = 0;
+		return num_instrs;
 	}
 	END:
 	{
 		SAVE_NZCVT;
-		return;
+		cpu->NumInstrsToExecute = 0;
+		return num_instrs;
 	}
 	INIT_INST_LENGTH:
 	{
@@ -6557,7 +6561,8 @@ void InterpreterMainLoop(ARMul_State* state)
 	DEBUG_LOG(ARM11, "%llx\n", InstLabel[1]);
 	DEBUG_LOG(ARM11, "%lld\n", (char *)InstEndLabel[1] - (char *)InstLabel[1]);
 #endif
-	return;
+	cpu->NumInstrsToExecute = 0;
+	return num_instrs;
 	}
 }
 
