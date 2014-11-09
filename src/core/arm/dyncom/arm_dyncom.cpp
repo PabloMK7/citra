@@ -60,7 +60,7 @@ void ARM_DynCom::SetPC(u32 pc) {
  * @return Returns current PC
  */
 u32 ARM_DynCom::GetPC() const {
-    return state->pc;
+    return state->Reg[15];
 }
 
 /**
@@ -129,7 +129,7 @@ void ARM_DynCom::SaveContext(ThreadContext& ctx) {
 
     ctx.sp = state->Reg[13];
     ctx.lr = state->Reg[14];
-    ctx.pc = state->pc;
+    ctx.pc = state->Reg[15];
     ctx.cpsr = state->Cpsr;
 
     ctx.fpscr = state->VFP[1];
