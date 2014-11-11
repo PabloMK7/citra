@@ -34,7 +34,11 @@ void Initialize(Service::Interface* self) {
     Kernel::SetEventLocked(cmd_buff[3], true);
     Kernel::SetEventLocked(cmd_buff[4], false); // Fire start event
 
+    _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
+    Kernel::ReleaseMutex(lock_handle);
+
     cmd_buff[1] = 0; // No error
+
     DEBUG_LOG(KERNEL, "called");
 }
 
