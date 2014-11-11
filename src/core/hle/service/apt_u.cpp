@@ -15,6 +15,8 @@
 
 namespace APT_U {
 
+static Handle lock_handle = 0;
+
 /// Signals used by APT functions
 enum class SignalType : u32 {
     None            = 0x0,
@@ -39,8 +41,21 @@ void Initialize(Service::Interface* self) {
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
+
+    if (0 == lock_handle) {
+        // TODO(bunnei): Verify if this is created here or at application boot?
+        lock_handle = Kernel::CreateMutex(false, "APT_U:Lock");
+        Kernel::ReleaseMutex(lock_handle);
+    }
     cmd_buff[1] = 0; // No error
-    cmd_buff[5] = Kernel::CreateMutex(false, "APT_U:Lock");
+
+    // Not sure what these parameters are used for, but retail apps check that they are 0 after
+    // GetLockHandle has been called.
+    cmd_buff[2] = 0;
+    cmd_buff[3] = 0;
+    cmd_buff[4] = 0;
+
+    cmd_buff[5] = lock_handle;
     DEBUG_LOG(KERNEL, "called handle=0x%08X", cmd_buff[5]);
 }
 
@@ -191,6 +206,8 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+
+    lock_handle = 0;
 }
 
 Interface::~Interface() {
