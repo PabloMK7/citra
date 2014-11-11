@@ -36,6 +36,7 @@ set(SRCS
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
             hle/service/fs_user.cpp
+            hle/service/frd_u.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
             hle/service/mic_u.cpp
@@ -106,6 +107,7 @@ set(HEADERS
             hle/service/dsp_dsp.h
             hle/service/err_f.h
             hle/service/fs_user.h
+            hle/service/frd_u.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h
             hle/service/mic_u.h
