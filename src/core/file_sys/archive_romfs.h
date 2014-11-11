@@ -37,6 +37,20 @@ public:
     std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const override;
 
     /**
+     * Delete a file specified by its path
+     * @param path Path relative to the archive
+     * @return Whether the file could be deleted
+     */
+    bool DeleteFile(const FileSys::Path& path) const override;
+
+    /**
+     * Delete a directory specified by its path
+     * @param path Path relative to the archive
+     * @return Whether the directory could be deleted
+     */
+    bool DeleteDirectory(const FileSys::Path& path) const override;
+
+    /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created

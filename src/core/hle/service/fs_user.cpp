@@ -138,6 +138,68 @@ void OpenFileDirectly(Service::Interface* self) {
 }
 
 /*
+ * FS_User::DeleteFile service function
+ *  Inputs:
+ *      2 : Archive handle lower word
+ *      3 : Archive handle upper word
+ *      4 : File path string type
+ *      5 : File path string size
+ *      7 : File path string data
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void DeleteFile(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    auto filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[4]);
+    u32 filename_size     = cmd_buff[5];
+    u32 filename_ptr      = cmd_buff[7];
+
+    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
+              filename_type, filename_size, file_path.DebugStr().c_str());
+
+    cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path);
+    
+    DEBUG_LOG(KERNEL, "called");
+}
+
+/*
+ * FS_User::DeleteDirectory service function
+ *  Inputs:
+ *      2 : Archive handle lower word
+ *      3 : Archive handle upper word
+ *      4 : Directory path string type
+ *      5 : Directory path string size
+ *      7 : Directory path string data
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void DeleteDirectory(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    auto dirname_type     = static_cast<FileSys::LowPathType>(cmd_buff[4]);
+    u32 dirname_size      = cmd_buff[5];
+    u32 dirname_ptr       = cmd_buff[7];
+
+    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
+
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
+              dirname_type, dirname_size, dir_path.DebugStr().c_str());
+    
+    cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path);
+    
+    DEBUG_LOG(KERNEL, "called");
+}
+
+/*
  * FS_User::CreateDirectory service function
  *  Inputs:
  *      2 : Archive handle lower word
@@ -159,18 +221,8 @@ void CreateDirectory(Service::Interface* self) {
     u32 dirname_ptr = cmd_buff[8];
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
-    std::string dir_string;
-    switch (dir_path.GetType()) {
-    case FileSys::Char:
-    case FileSys::Wchar:
-        dir_string = dir_path.AsString();
-        break;
-    default:
-        cmd_buff[1] = -1;
-        return;
-    }
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
     cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path);
 
@@ -188,25 +240,15 @@ void OpenDirectory(Service::Interface* self) {
     u32 dirname_ptr = cmd_buff[6];
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
-    std::string dir_string;
-    switch (dir_path.GetType()) {
-    case FileSys::Char:
-    case FileSys::Wchar:
-        dir_string = dir_path.AsString();
-        break;
-    default:
-        cmd_buff[1] = -1;
-        return;
-    }
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
+    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
     Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for directory %s", dir_string.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for directory");
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -279,9 +321,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08010002, Initialize,            "Initialize"},
     {0x080201C2, OpenFile,              "OpenFile"},
     {0x08030204, OpenFileDirectly,      "OpenFileDirectly"},
-    {0x08040142, nullptr,               "DeleteFile"},
+    {0x08040142, DeleteFile,            "DeleteFile"},
     {0x08050244, nullptr,               "RenameFile"},
-    {0x08060142, nullptr,               "DeleteDirectory"},
+    {0x08060142, DeleteDirectory,       "DeleteDirectory"},
     {0x08070142, nullptr,               "DeleteDirectoryRecursively"},
     {0x08080202, nullptr,               "CreateFile"},
     {0x08090182, CreateDirectory,       "CreateDirectory"},

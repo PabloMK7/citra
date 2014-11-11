@@ -185,6 +185,20 @@ public:
     virtual std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
+     * Delete a file specified by its path
+     * @param path Path relative to the archive
+     * @return Whether the file could be deleted
+     */
+    virtual bool DeleteFile(const FileSys::Path& path) const = 0;
+
+    /**
+     * Delete a directory specified by its path
+     * @param path Path relative to the archive
+     * @return Whether the directory could be deleted
+     */
+    virtual bool DeleteDirectory(const FileSys::Path& path) const = 0;
+
+    /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created
