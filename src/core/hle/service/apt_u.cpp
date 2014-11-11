@@ -78,6 +78,25 @@ void InquireNotification(Service::Interface* self) {
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X", app_id);
 }
 
+/**
+ * APT_U::ReceiveParameter service function. This returns the current parameter data from NS state,
+ * from the source process which set the parameters. Once finished, NS will clear a flag in the NS
+ * state so that this command will return an error if this command is used again if parameters were
+ * not set again. This is called when the second Initialize event is triggered. It returns a signal
+ * type indicating why it was triggered.
+ * Inputs:
+ * 1 : AppID
+ * 2 : Parameter buffer size, max size is 0x1000
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ * 2 : Unknown, for now assume AppID of the process which sent these parameters
+ * 3 : Unknown, for now assume Signal type
+ * 4 : Actual parameter buffer size, this is <= to the the input size
+ * 5 : Value
+ * 6 : Handle from the source process which set the parameters, likely used for shared memory
+ * 7 : Size
+ * 8 : Output parameter buffer ptr
+ */
 void ReceiveParameter(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
@@ -85,7 +104,7 @@ void ReceiveParameter(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 0;
     cmd_buff[3] = static_cast<u32>(SignalType::AppJustStarted); // Signal type
-    cmd_buff[4] = 0x10;
+    cmd_buff[4] = 0x10; // Parameter buffer size (16)
     cmd_buff[5] = 0;
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
@@ -93,32 +112,35 @@ void ReceiveParameter(Service::Interface* self) {
 }
 
 /**
-* APT_U::GlanceParameter service function
-* Inputs:
-* 1 : AppID
-* 2 : Parameter buffer size, max size is 0x1000
-* Outputs:
-* 1 : Result of function, 0 on success, otherwise error code
-* 2 : Unknown, for now assume AppID of the process which sent these parameters
-* 3 : Unknown, for now assume Signal type
-* 4 : Actual parameter buffer size, this is <= to the the input size
-* 5 : Value
-* 6 : Handle from the source process which set the parameters, likely used for shared memory
-* 7 : Size
-* 8 : Output parameter buffer ptr
-*/
+ * APT_U::GlanceParameter service function. This is exactly the same as APT_U::ReceiveParameter
+ * (except for the word value prior to the output handle), except this will not clear the flag
+ * (except when responseword[3]==8 || responseword[3]==9) in NS state.
+ * Inputs:
+ * 1 : AppID
+ * 2 : Parameter buffer size, max size is 0x1000
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ * 2 : Unknown, for now assume AppID of the process which sent these parameters
+ * 3 : Unknown, for now assume Signal type
+ * 4 : Actual parameter buffer size, this is <= to the the input size
+ * 5 : Value
+ * 6 : Handle from the source process which set the parameters, likely used for shared memory
+ * 7 : Size
+ * 8 : Output parameter buffer ptr
+ */
 void GlanceParameter(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     u32 buffer_size = cmd_buff[2];
+
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 0;
     cmd_buff[3] = static_cast<u32>(SignalType::AppJustStarted); // Signal type
-    cmd_buff[4] = 0;
+    cmd_buff[4] = 0x10; // Parameter buffer size (16)
     cmd_buff[5] = 0;
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
-    cmd_buff[8] = 0;
+
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
 
