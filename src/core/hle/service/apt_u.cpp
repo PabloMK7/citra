@@ -144,6 +144,34 @@ void GlanceParameter(Service::Interface* self) {
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
 
+/**
+ * APT_U::AppletUtility service function
+ * Inputs:
+ * 1 : Unknown, but clearly used for something
+ * 2 : Buffer 1 size (purpose is unknown)
+ * 3 : Buffer 2 size (purpose is unknown)
+ * 5 : Buffer 1 address (purpose is unknown)
+ * 65 : Buffer 2 address (purpose is unknown)
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ */
+void AppletUtility(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // These are from 3dbrew - I'm not really sure what they're used for.
+    u32 unk = cmd_buff[1];
+    u32 buffer1_size = cmd_buff[2];
+    u32 buffer2_size = cmd_buff[3];
+    u32 buffer1_addr = cmd_buff[5];
+    u32 buffer2_addr = cmd_buff[65];
+
+    cmd_buff[1] = 0; // No error
+
+    WARN_LOG(KERNEL, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
+             "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size, 
+             buffer1_addr, buffer2_addr);
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, GetLockHandle,         "GetLockHandle"},
     {0x00020080, Initialize,            "Initialize"},
@@ -219,7 +247,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00480100, nullptr,               "GetProgramInfo"},
     {0x00490180, nullptr,               "Reboot"},
     {0x004A0040, nullptr,               "GetCaptureInfo"},
-    {0x004B00C2, nullptr,               "AppletUtility"},
+    {0x004B00C2, AppletUtility,         "AppletUtility"},
     {0x004C0000, nullptr,               "SetFatalErrDispMode"},
     {0x004D0080, nullptr,               "GetAppletProgramInfo"},
     {0x004E0000, nullptr,               "HardwareResetAsync"},
