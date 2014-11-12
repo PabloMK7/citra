@@ -15,6 +15,8 @@
 
 namespace APT_U {
 
+static Handle lock_handle = 0;
+
 /// Signals used by APT functions
 enum class SignalType : u32 {
     None            = 0x0,
@@ -32,15 +34,32 @@ void Initialize(Service::Interface* self) {
     Kernel::SetEventLocked(cmd_buff[3], true);
     Kernel::SetEventLocked(cmd_buff[4], false); // Fire start event
 
+    _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
+    Kernel::ReleaseMutex(lock_handle);
+
     cmd_buff[1] = 0; // No error
+
     DEBUG_LOG(KERNEL, "called");
 }
 
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
+
+    if (0 == lock_handle) {
+        // TODO(bunnei): Verify if this is created here or at application boot?
+        lock_handle = Kernel::CreateMutex(false, "APT_U:Lock");
+        Kernel::ReleaseMutex(lock_handle);
+    }
     cmd_buff[1] = 0; // No error
-    cmd_buff[5] = Kernel::CreateMutex(false, "APT_U:Lock");
+
+    // Not sure what these parameters are used for, but retail apps check that they are 0 after
+    // GetLockHandle has been called.
+    cmd_buff[2] = 0;
+    cmd_buff[3] = 0;
+    cmd_buff[4] = 0;
+
+    cmd_buff[5] = lock_handle;
     DEBUG_LOG(KERNEL, "called handle=0x%08X", cmd_buff[5]);
 }
 
@@ -59,6 +78,25 @@ void InquireNotification(Service::Interface* self) {
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X", app_id);
 }
 
+/**
+ * APT_U::ReceiveParameter service function. This returns the current parameter data from NS state,
+ * from the source process which set the parameters. Once finished, NS will clear a flag in the NS
+ * state so that this command will return an error if this command is used again if parameters were
+ * not set again. This is called when the second Initialize event is triggered. It returns a signal
+ * type indicating why it was triggered.
+ * Inputs:
+ * 1 : AppID
+ * 2 : Parameter buffer size, max size is 0x1000
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ * 2 : Unknown, for now assume AppID of the process which sent these parameters
+ * 3 : Unknown, for now assume Signal type
+ * 4 : Actual parameter buffer size, this is <= to the the input size
+ * 5 : Value
+ * 6 : Handle from the source process which set the parameters, likely used for shared memory
+ * 7 : Size
+ * 8 : Output parameter buffer ptr
+ */
 void ReceiveParameter(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
@@ -66,7 +104,7 @@ void ReceiveParameter(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 0;
     cmd_buff[3] = static_cast<u32>(SignalType::AppJustStarted); // Signal type
-    cmd_buff[4] = 0x10;
+    cmd_buff[4] = 0x10; // Parameter buffer size (16)
     cmd_buff[5] = 0;
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
@@ -74,33 +112,64 @@ void ReceiveParameter(Service::Interface* self) {
 }
 
 /**
-* APT_U::GlanceParameter service function
-* Inputs:
-* 1 : AppID
-* 2 : Parameter buffer size, max size is 0x1000
-* Outputs:
-* 1 : Result of function, 0 on success, otherwise error code
-* 2 : Unknown, for now assume AppID of the process which sent these parameters
-* 3 : Unknown, for now assume Signal type
-* 4 : Actual parameter buffer size, this is <= to the the input size
-* 5 : Value
-* 6 : Handle from the source process which set the parameters, likely used for shared memory
-* 7 : Size
-* 8 : Output parameter buffer ptr
-*/
+ * APT_U::GlanceParameter service function. This is exactly the same as APT_U::ReceiveParameter
+ * (except for the word value prior to the output handle), except this will not clear the flag
+ * (except when responseword[3]==8 || responseword[3]==9) in NS state.
+ * Inputs:
+ * 1 : AppID
+ * 2 : Parameter buffer size, max size is 0x1000
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ * 2 : Unknown, for now assume AppID of the process which sent these parameters
+ * 3 : Unknown, for now assume Signal type
+ * 4 : Actual parameter buffer size, this is <= to the the input size
+ * 5 : Value
+ * 6 : Handle from the source process which set the parameters, likely used for shared memory
+ * 7 : Size
+ * 8 : Output parameter buffer ptr
+ */
 void GlanceParameter(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     u32 buffer_size = cmd_buff[2];
+
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 0;
     cmd_buff[3] = static_cast<u32>(SignalType::AppJustStarted); // Signal type
-    cmd_buff[4] = 0;
+    cmd_buff[4] = 0x10; // Parameter buffer size (16)
     cmd_buff[5] = 0;
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
-    cmd_buff[8] = 0;
+
     WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+}
+
+/**
+ * APT_U::AppletUtility service function
+ * Inputs:
+ * 1 : Unknown, but clearly used for something
+ * 2 : Buffer 1 size (purpose is unknown)
+ * 3 : Buffer 2 size (purpose is unknown)
+ * 5 : Buffer 1 address (purpose is unknown)
+ * 65 : Buffer 2 address (purpose is unknown)
+ * Outputs:
+ * 1 : Result of function, 0 on success, otherwise error code
+ */
+void AppletUtility(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // These are from 3dbrew - I'm not really sure what they're used for.
+    u32 unk = cmd_buff[1];
+    u32 buffer1_size = cmd_buff[2];
+    u32 buffer2_size = cmd_buff[3];
+    u32 buffer1_addr = cmd_buff[5];
+    u32 buffer2_addr = cmd_buff[65];
+
+    cmd_buff[1] = 0; // No error
+
+    WARN_LOG(KERNEL, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
+             "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size, 
+             buffer1_addr, buffer2_addr);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -178,7 +247,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00480100, nullptr,               "GetProgramInfo"},
     {0x00490180, nullptr,               "Reboot"},
     {0x004A0040, nullptr,               "GetCaptureInfo"},
-    {0x004B00C2, nullptr,               "AppletUtility"},
+    {0x004B00C2, AppletUtility,         "AppletUtility"},
     {0x004C0000, nullptr,               "SetFatalErrDispMode"},
     {0x004D0080, nullptr,               "GetAppletProgramInfo"},
     {0x004E0000, nullptr,               "HardwareResetAsync"},
@@ -191,6 +260,8 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+
+    lock_handle = 0;
 }
 
 Interface::~Interface() {
