@@ -182,21 +182,21 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    virtual std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const = 0;
+    virtual std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created
      */
-    virtual bool CreateDirectory(const std::string& path) const = 0;
+    virtual bool CreateDirectory(const Path& path) const = 0;
 
     /**
      * Open a directory specified by its path
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    virtual std::unique_ptr<Directory> OpenDirectory(const std::string& path) const = 0;
+    virtual std::unique_ptr<Directory> OpenDirectory(const Path& path) const = 0;
 
     /**
      * Read data from the archive

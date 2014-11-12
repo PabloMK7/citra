@@ -34,21 +34,21 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const override;
+    std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const override;
 
     /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created
      */
-    bool CreateDirectory(const std::string& path) const override;
+    bool CreateDirectory(const Path& path) const override;
 
     /**
      * Open a directory specified by its path
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    std::unique_ptr<Directory> OpenDirectory(const std::string& path) const override;
+    std::unique_ptr<Directory> OpenDirectory(const Path& path) const override;
 
     /**
      * Read data from the archive

@@ -55,7 +55,7 @@ void OpenFile(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "type=%d size=%d mode=%d attrs=%d data=%s",
               filename_type, filename_size, mode, attributes, file_string.c_str());
 
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_string, mode);
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
@@ -115,7 +115,7 @@ void OpenFileDirectly(Service::Interface* self) {
         return;
     }
 
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_string, mode);
+    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
@@ -163,7 +163,7 @@ void CreateDirectory(Service::Interface* self) {
 
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
 
-    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_string);
+    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path);
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -192,7 +192,7 @@ void OpenDirectory(Service::Interface* self) {
 
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_string.c_str());
 
-    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_string);
+    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;

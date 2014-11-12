@@ -19,7 +19,7 @@ namespace FileSys {
 class Directory_SDMC final : public Directory {
 public:
     Directory_SDMC();
-    Directory_SDMC(const Archive_SDMC* archive, const std::string& path);
+    Directory_SDMC(const Archive_SDMC* archive, const Path& path);
     ~Directory_SDMC() override;
 
     /**

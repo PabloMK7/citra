@@ -19,7 +19,7 @@ namespace FileSys {
 class File_SDMC final : public File {
 public:
     File_SDMC();
-    File_SDMC(const Archive_SDMC* archive, const std::string& path, const Mode mode);
+    File_SDMC(const Archive_SDMC* archive, const Path& path, const Mode mode);
     ~File_SDMC() override;
 
     /**
