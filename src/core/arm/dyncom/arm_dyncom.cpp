@@ -60,7 +60,7 @@ void ARM_DynCom::SetPC(u32 pc) {
  * @return Returns current PC
  */
 u32 ARM_DynCom::GetPC() const {
-    return state->pc;
+    return state->Reg[15];
 }
 
 /**
@@ -110,9 +110,12 @@ u64 ARM_DynCom::GetTicks() const {
  * @param num_instructions Number of instructions to executes
  */
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
-    ticks += num_instructions;
     state->NumInstrsToExecute = num_instructions;
-    InterpreterMainLoop(state.get());
+
+    // Dyncom only breaks on instruction dispatch. This only happens on every instruction when
+    // executing one instruction at a time. Otherwise, if a block is being executed, more 
+    // instructions may actually be executed than specified.
+    ticks += InterpreterMainLoop(state.get());
 }
 
 /**
@@ -126,7 +129,7 @@ void ARM_DynCom::SaveContext(ThreadContext& ctx) {
 
     ctx.sp = state->Reg[13];
     ctx.lr = state->Reg[14];
-    ctx.pc = state->pc;
+    ctx.pc = state->Reg[15];
     ctx.cpsr = state->Cpsr;
 
     ctx.fpscr = state->VFP[1];

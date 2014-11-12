@@ -26,13 +26,13 @@ void Start();
 
 /**
  * Run the core CPU loop
- * This function loops for 100 instructions in the CPU before trying to update hardware. This is a
- * little bit faster than SingleStep, and should be pretty much equivalent. The number of
- * instructions chosen is fairly arbitrary, however a large number will more drastically affect the
- * frequency of GSP interrupts and likely break things. The point of this is to just loop in the CPU
- * for more than 1 instruction to reduce overhead and make it a little bit faster...
+ * This function runs the core for the specified number of CPU instructions before trying to update
+ * hardware. This is much faster than SingleStep (and should be equivalent), as the CPU is not
+ * required to do a full dispatch with each instruction. NOTE: the number of instructions requested
+ * is not guaranteed to run, as this will be interrupted preemptively if a hardware update is
+ * requested (e.g. on a thread switch).
  */
-void RunLoop(int tight_loop=100);
+void RunLoop(int tight_loop=1000);
 
 /// Step the CPU one instruction
 void SingleStep();

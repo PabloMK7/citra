@@ -3718,7 +3718,7 @@ static bool InAPrivilegedMode(arm_core_t *core)
 }
 
 /* r15 = r15 + 8 */
-void InterpreterMainLoop(ARMul_State* state)
+unsigned InterpreterMainLoop(ARMul_State* state)
 {
 	#define CRn				inst_cream->crn
 	#define OPCODE_2			inst_cream->opcode_2
@@ -3747,16 +3747,22 @@ void InterpreterMainLoop(ARMul_State* state)
 	#endif
 
 	#define FETCH_INST			if (inst_base->br != NON_BRANCH)                                   \
-							goto PROFILING;                                             \
+							goto DISPATCH;                                             \
 						inst_base = (arm_inst *)&inst_buf[ptr]                             
 #define INC_PC(l)			ptr += sizeof(arm_inst) + l
 
 // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
 // clunky switch statement.
 #if defined __GNUC__ || defined __clang__
-#define GOTO_NEXT_INST			goto *InstLabel[inst_base->idx]
+#define GOTO_NEXT_INST \
+    if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
+    num_instrs++; \
+    goto *InstLabel[inst_base->idx]
 #else
-#define GOTO_NEXT_INST switch(inst_base->idx) { \
+#define GOTO_NEXT_INST \
+    if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
+    num_instrs++; \
+    switch(inst_base->idx) { \
     case 0: goto VMLA_INST; \
     case 1: goto VMLS_INST; \
     case 2: goto VNMLA_INST; \
@@ -4028,20 +4034,15 @@ void InterpreterMainLoop(ARMul_State* state)
 	unsigned int addr;
 	unsigned int phys_addr;
 	unsigned int last_pc = 0;
+	unsigned int num_instrs = 0;
 	fault_t fault;
 	static unsigned int last_physical_base = 0, last_logical_base = 0;
 	int ptr;
+	bool single_step = (cpu->NumInstrsToExecute == 1);
 
 	LOAD_NZCVT;
 	DISPATCH:
 	{
-        if (cpu->NumInstrsToExecute == 0)
-            return;
-
-        cpu->NumInstrsToExecute--;
-
-        //NOTICE_LOG(ARM11, "instr!");
-
 		if (!cpu->NirqSig) {
                 	if (!(cpu->Cpsr & 0x80)) {
 				goto END;
@@ -4179,10 +4180,6 @@ void InterpreterMainLoop(ARMul_State* state)
 		inst_base = (arm_inst *)&inst_buf[ptr];
 		GOTO_NEXT_INST;
 	}
-	PROFILING:
-	{
-		goto DISPATCH;
-	}
 	ADC_INST:
 	{
 		INC_ICOUNTER;
@@ -4207,7 +4204,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(adc_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4241,7 +4238,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(add_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4272,7 +4269,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(and_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4290,11 +4287,11 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			SET_PC;
 			INC_PC(sizeof(bbl_inst));
-			goto PROFILING;
+			goto DISPATCH;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		INC_PC(sizeof(bbl_inst));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	BIC_INST:
 	{
@@ -4322,7 +4319,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(bic_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4358,12 +4355,12 @@ void InterpreterMainLoop(ARMul_State* state)
 				//DEBUG_MSG;
 			}
 			INC_PC(sizeof(blx_inst));
-			goto PROFILING;
+			goto DISPATCH;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 //		INC_PC(sizeof(bx_inst));
 		INC_PC(sizeof(blx_inst));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	BX_INST:
 	{
@@ -4376,12 +4373,12 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
 //			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			INC_PC(sizeof(bx_inst));
-			goto PROFILING;
+			goto DISPATCH;
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 //		INC_PC(sizeof(bx_inst));
 		INC_PC(sizeof(bx_inst));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	BXJ_INST:
 	CDP_INST:
@@ -4393,7 +4390,8 @@ void InterpreterMainLoop(ARMul_State* state)
 			#define CP_ACCESS_ALLOW 0
 			if(CP_ACCESS_ALLOW){
 				/* undefined instruction here */
-				return;
+				cpu->NumInstrsToExecute = 0;
+				return num_instrs;
 			}
 			ERROR_LOG(ARM11, "CDP insn inst=0x%x, pc=0x%x\n", inst_cream->inst, cpu->Reg[15]);
 			unsigned cpab = (cpu->CDP[inst_cream->cp_num]) (cpu, ARMul_FIRST, inst_cream->inst);
@@ -4522,7 +4520,7 @@ void InterpreterMainLoop(ARMul_State* state)
 //			RD = RM;
 			if ((inst_cream->Rd == 15)) {
 				INC_PC(sizeof(mov_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 //		DEBUG_LOG(ARM11, "cpy inst %x\n", cpu->Reg[15]);
@@ -4558,7 +4556,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(eor_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4717,7 +4715,7 @@ void InterpreterMainLoop(ARMul_State* state)
  			}
 			if (BIT(inst, 15)) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4764,7 +4762,7 @@ void InterpreterMainLoop(ARMul_State* state)
 				cpu->TFlag = value & 0x1;
 				cpu->Reg[15] &= 0xFFFFFFFE;
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		//}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4794,7 +4792,7 @@ void InterpreterMainLoop(ARMul_State* state)
 				cpu->TFlag = value & 0x1;
 				cpu->Reg[15] &= 0xFFFFFFFE;
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4848,7 +4846,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4869,7 +4867,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4926,7 +4924,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4953,7 +4951,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4980,7 +4978,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5006,7 +5004,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5031,7 +5029,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5058,7 +5056,7 @@ void InterpreterMainLoop(ARMul_State* state)
 
 			if (BITS(inst_cream->inst, 12, 15) == 15) {
 				INC_PC(sizeof(ldst_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5228,7 +5226,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(mla_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5260,7 +5258,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(mov_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 //				return;
 		}
@@ -5422,7 +5420,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(mul_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5451,7 +5449,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(mvn_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5483,7 +5481,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(orr_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5575,7 +5573,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(rsb_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5612,7 +5610,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(rsc_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5653,7 +5651,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(sbc_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -6066,7 +6064,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		//if (BITS(inst_cream->inst, 12, 15) == 15)
-		//	goto PROFILING;
+		//	goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -6175,7 +6173,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
 		//if (BITS(inst_cream->inst, 12, 15) == 15)
-		//	goto PROFILING;
+		//	goto DISPATCH;
 		INC_PC(sizeof(ldst_inst));
 		FETCH_INST;
 		GOTO_NEXT_INST;
@@ -6225,7 +6223,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			}
 			if (inst_cream->Rd == 15) {
 				INC_PC(sizeof(sub_inst));
-				goto PROFILING;
+				goto DISPATCH;
 			}
 		}
 		cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -6449,7 +6447,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		cpu->Reg[15] = cpu->Reg[15] + 4 + inst_cream->imm;
 		//DEBUG_LOG(ARM11, " BL_1_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 		INC_PC(sizeof(b_2_thumb));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	B_COND_THUMB:
 	{
@@ -6461,7 +6459,7 @@ void InterpreterMainLoop(ARMul_State* state)
 			cpu->Reg[15] += 2;
 		//DEBUG_LOG(ARM11, " B_COND_THUMB: imm=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[15]);
 		INC_PC(sizeof(b_cond_thumb));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	BL_1_THUMB:
 	{
@@ -6487,7 +6485,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		cpu->Reg[14] = tmp;
 		//DEBUG_LOG(ARM11, " BL_2_THUMB: imm=0x%x, r14=0x%x, r15=0x%x\n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 		INC_PC(sizeof(bl_2_thumb));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 	BLX_1_THUMB:
 	{	
@@ -6503,7 +6501,7 @@ void InterpreterMainLoop(ARMul_State* state)
 		cpu->TFlag = 0;
 		//DEBUG_LOG(ARM11, "In BLX_1_THUMB, BLX(1),imm=0x%x,r14=0x%x, r15=0x%x, \n", inst_cream->imm, cpu->Reg[14], cpu->Reg[15]);
 		INC_PC(sizeof(blx_1_thumb));
-		goto PROFILING;
+		goto DISPATCH;
 	}
 
 	UQADD16_INST:
@@ -6532,12 +6530,14 @@ void InterpreterMainLoop(ARMul_State* state)
 		cpu->AbortAddr = addr;
 		cpu->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
 		cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-		return;
+		cpu->NumInstrsToExecute = 0;
+		return num_instrs;
 	}
 	END:
 	{
 		SAVE_NZCVT;
-		return;
+		cpu->NumInstrsToExecute = 0;
+		return num_instrs;
 	}
 	INIT_INST_LENGTH:
 	{
@@ -6557,7 +6557,8 @@ void InterpreterMainLoop(ARMul_State* state)
 	DEBUG_LOG(ARM11, "%llx\n", InstLabel[1]);
 	DEBUG_LOG(ARM11, "%lld\n", (char *)InstEndLabel[1] - (char *)InstLabel[1]);
 #endif
-	return;
+	cpu->NumInstrsToExecute = 0;
+	return num_instrs;
 	}
 }
 
