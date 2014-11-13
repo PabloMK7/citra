@@ -4,13 +4,15 @@
 
 #pragma once
 
+#include <array>
+
 #include "generated/gl_3_2_core.h"
 
-#include "common/common.h"
-#include "core/hw/gpu.h"
-#include "video_core/renderer_base.h"
+#include "common/math_util.h"
 
-#include <array>
+#include "core/hw/gpu.h"
+
+#include "video_core/renderer_base.h"
 
 class EmuWindow;
 
@@ -52,26 +54,14 @@ private:
     static void LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
                                         const TextureInfo& texture);
 
-    /// Updates the viewport rectangle
-    void UpdateViewportExtent();
+    /// Computes the viewport rectangle
+    MathUtil::Rectangle<unsigned> GetViewportExtent();
 
     EmuWindow*  render_window;                    ///< Handle to render window
     u32         last_mode;                        ///< Last render mode
 
     int resolution_width;                         ///< Current resolution width
     int resolution_height;                        ///< Current resolution height
-
-    struct {
-        int width;
-        int height;
-    } framebuffer_size;                           ///< Current framebuffer size
-
-    struct {
-        int x;
-        int y;
-        int width;
-        int height;
-    } viewport_extent;                            ///< Current viewport rectangle
 
     // OpenGL object IDs
     GLuint vertex_array_handle;
