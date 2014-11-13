@@ -46,14 +46,8 @@ void EmuWindow_GLFW::OnClientAreaResizeEvent(GLFWwindow* win, int width, int hei
     _dbg_assert_(GUI, width > 0);
     _dbg_assert_(GUI, height > 0);
 
-    // TODO: It's actually more interesting to us what the framebuffer size ends up being.
-    int adjusted_width = std::max<unsigned>(width, GetEmuWindow(win)->GetActiveConfig().min_client_area_size.first);
-    int adjusted_height = std::max<unsigned>(height, GetEmuWindow(win)->GetActiveConfig().min_client_area_size.second);
-
-    if (adjusted_width != width || adjusted_height != height) {
-        glfwSetWindowSize(win, adjusted_width, adjusted_height);
-        return;
-    }
+    // NOTE: GLFW provides no proper way to set a minimal window size.
+    //       Hence, we just ignore the corresponding EmuWindow hint.
 
     GetEmuWindow(win)->NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(width, height));
 }
