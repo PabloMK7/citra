@@ -7,11 +7,13 @@
 #include <memory>
 
 #include "common/common_types.h"
+#include "common/string_util.h"
 #include "common/bit_field.h"
 
 #include "core/file_sys/file.h"
 #include "core/file_sys/directory.h"
 
+#include "core/mem_map.h"
 #include "core/hle/kernel/kernel.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,11 +21,108 @@
 
 namespace FileSys {
 
+// Path string type
+enum LowPathType : u32 {
+    Invalid = 0,
+    Empty   = 1,
+    Binary  = 2,
+    Char    = 3,
+    Wchar   = 4
+};
+
 union Mode {
     u32 hex;
     BitField<0, 1, u32> read_flag;
     BitField<1, 1, u32> write_flag;
     BitField<2, 1, u32> create_flag;
+};
+
+class Path {
+public:
+
+    Path():
+        type(Invalid)
+    {
+    }
+
+    Path(LowPathType type, u32 size, u32 pointer):
+        type(type)
+    {
+        switch (type) {
+            case Binary:
+            {
+                u8* data = Memory::GetPointer(pointer);
+                binary = std::vector<u8>(data, data + size);
+                break;
+            }
+            case Char:
+            {
+                const char* data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
+                string = std::string(data, size - 1); // Data is always null-terminated.
+                break;
+            }
+            case Wchar:
+            {
+                const char16_t* data = reinterpret_cast<const char16_t*>(Memory::GetPointer(pointer));
+                u16str = std::u16string(data, size/2 - 1); // Data is always null-terminated.
+                break;
+            }
+        }
+    }
+
+    LowPathType GetType() const {
+        return type;
+    }
+
+    const std::string AsString() const {
+        switch (GetType()) {
+            case Char:
+                return string;
+            case Wchar:
+                return Common::UTF16ToUTF8(u16str);
+            case Empty:
+                return {};
+            default:
+                ERROR_LOG(KERNEL, "LowPathType cannot be converted to string!");
+                return {};
+        }
+    }
+
+    const std::u16string AsU16Str() const {
+        switch (GetType()) {
+            case Char:
+                return Common::UTF8ToUTF16(string);
+            case Wchar:
+                return u16str;
+            case Empty:
+                return {};
+            default:
+                ERROR_LOG(KERNEL, "LowPathType cannot be converted to u16string!");
+                return {};
+        }
+    }
+
+    const std::vector<u8> AsBinary() const {
+        switch (GetType()) {
+            case Binary:
+                return binary;
+            case Char:
+                return std::vector<u8>(string.begin(), string.end());
+            case Wchar:
+                return std::vector<u8>(u16str.begin(), u16str.end());
+            case Empty:
+                return {};
+            default:
+                ERROR_LOG(KERNEL, "LowPathType cannot be converted to binary!");
+                return {};
+        }
+    }
+
+private:
+    LowPathType type;
+    std::vector<u8> binary;
+    std::string string;
+    std::u16string u16str;
 };
 
 class Archive : NonCopyable {
