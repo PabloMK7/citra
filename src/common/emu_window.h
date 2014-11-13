@@ -24,6 +24,8 @@
  * - EmuWindow may expose some of its state as read-only to the emulation core, however care
  *   should be taken to make sure the provided information is self-consistent. This requires
  *   some sort of synchronization (most of this is still a TODO).
+ * - DO NOT TREAT THIS CLASS AS A GUI TOOLKIT ABSTRACTION LAYER. That's not what it is. Please
+ *   re-read the upper points again and think about it if you don't see this.
  */
 class EmuWindow
 {
@@ -92,8 +94,8 @@ public:
 protected:
     EmuWindow()
     {
-        // TODO
-        config.min_client_area_size = std::make_pair(300u, 500u);
+        // TODO: Find a better place to set this.
+        config.min_client_area_size = std::make_pair(400u, 480u);
         active_config = config;
     }
     virtual ~EmuWindow() {}
