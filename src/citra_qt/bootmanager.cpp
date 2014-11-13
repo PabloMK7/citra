@@ -132,8 +132,7 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     setLayout(layout);
     connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
 
-	setMinimumSize(GetActiveConfig().min_client_area_size.first,
-                   GetActiveConfig().min_client_area_size.second);
+    OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
 
     OnFramebufferSizeChanged();
     NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(child->width(), child->height()));
