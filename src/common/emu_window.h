@@ -103,6 +103,7 @@ protected:
      * This method invokes OnMinimalClientAreaChangeRequest if the corresponding configuration
      * field changed.
      * @note Implementations will usually want to call this from the GUI thread.
+     * @todo Actually call this in existing implementations.
      */
     void ProcessConfigurationChanges() {
         // TODO: For proper thread safety, we should eventually implement a proper
