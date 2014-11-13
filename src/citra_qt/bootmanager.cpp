@@ -111,6 +111,9 @@ EmuThread& GRenderWindow::GetEmuThread()
 
 GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this), keyboard_id(0)
 {
+    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    setWindowTitle(QString::fromStdString(window_title));
+
     keyboard_id = KeyMap::NewDeviceId();
     ReloadSetKeymaps();
 
@@ -182,14 +185,6 @@ void GRenderWindow::DoneCurrent()
 }
 
 void GRenderWindow::PollEvents() {
-    // TODO(ShizZy): Does this belong here? This is a reasonable place to update the window title
-    //  from the main thread, but this should probably be in an event handler...
-    /*
-    static char title[128];
-    sprintf(title, "%s (FPS: %02.02f)", window_title_.c_str(), 
-        video_core::g_renderer->current_fps());
-    setWindowTitle(title);
-    */
 }
 
 // On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).

@@ -89,20 +89,8 @@ public:
         return std::make_pair(client_area_width, client_area_height);
     }
 
-    // TODO: Remove
-    std::string GetWindowTitle() const {
-        return window_title;
-    }
-
-    // TODO: Remove
-    void SetWindowTitle(const std::string& val) {
-        window_title = val;
-    }
-
 protected:
-    // TODO: Remove window title initialization
-    EmuWindow() :
-        window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc))
+    EmuWindow()
     {
         // TODO
         config.min_client_area_size = std::make_pair(300u, 500u);
@@ -144,9 +132,6 @@ protected:
 private:
     virtual void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
     }
-
-    // TODO: Remove
-    std::string window_title;      ///< Current window title, should be used by window impl.
 
     std::pair<unsigned,unsigned> framebuffer_size;
 

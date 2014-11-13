@@ -75,9 +75,10 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth, 
-        (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight), 
-        GetWindowTitle().c_str(), NULL, NULL);
+    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth,
+        (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight),
+        window_title.c_str(), NULL, NULL);
 
     if (m_render_window == NULL) {
         printf("Failed to create GLFW window! Exiting...");
