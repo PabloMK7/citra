@@ -74,6 +74,35 @@ public:
         return type;
     }
 
+    /**
+     * Gets the string representation of the path for debugging
+     * @return String representation of the path for debugging
+     */
+    const std::string DebugStr() const {
+        switch (GetType()) {
+        case Invalid:
+            return "[Invalid]";
+        case Empty:
+            return "[Empty]";
+        case Binary:
+        {
+            std::stringstream res;
+            res << "[Binary: ";
+            for (unsigned byte : binary)
+                res << std::hex << std::setw(2) << std::setfill('0') << byte;
+            res << ']';
+            return res.str();
+        }
+        case Char:
+            return "[Char: " + AsString() + ']';
+        case Wchar:
+            return "[Wchar: " + AsString() + ']';
+        default:
+            ERROR_LOG(KERNEL, "LowPathType cannot be converted to string!");
+            return {};
+        }
+    }
+
     const std::string AsString() const {
         switch (GetType()) {
             case Char:
