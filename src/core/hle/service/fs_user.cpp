@@ -28,6 +28,22 @@ void Initialize(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
+/**
+ * FS_User::OpenFile service function
+ *  Inputs:
+ *      1 : Transaction
+ *      2 : Archive handle lower word
+ *      3 : Archive handle upper word
+ *      4 : Low path type
+ *      5 : Low path size
+ *      6 : Open flags
+ *      7 : Attributes
+ *      8 : (LowPathSize << 14) | 2
+ *      9 : Low path data pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      3 : File handle
+ */
 void OpenFile(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -39,28 +55,16 @@ void OpenFile(Service::Interface* self) {
     FileSys::Mode mode; mode.hex = cmd_buff[6];
     u32 attributes        = cmd_buff[7]; // TODO(Link Mauve): do something with those attributes.
     u32 filename_ptr      = cmd_buff[9];
-
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
-    std::string file_string;
-    switch (file_path.GetType()) {
-    case FileSys::Char:
-    case FileSys::Wchar:
-        file_string = file_path.AsString();
-        break;
-    default:
-        WARN_LOG(KERNEL, "file LowPath type is currently unsupported; returning archive handle instead");
-        return;
-    }
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d mode=%d attrs=%d data=%s",
-              filename_type, filename_size, mode, attributes, file_string.c_str());
+    DEBUG_LOG(KERNEL, "path=%s, mode=%d attrs=%d", file_path.DebugStr().c_str(), mode, attributes);
 
     Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
     if (handle) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_string.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -68,6 +72,25 @@ void OpenFile(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
+/**
+ * FS_User::OpenFileDirectly service function
+ *  Inputs:
+ *      1 : Transaction
+ *      2 : Archive ID
+ *      3 : Archive low path type
+ *      4 : Archive low path size
+ *      5 : File low path type
+ *      6 : File low path size
+ *      7 : Flags
+ *      8 : Attributes
+ *      9 : (ArchiveLowPathSize << 14) | 0x802
+ *      10 : Archive low path
+ *      11 : (FileLowPathSize << 14) | 2
+ *      12 : File low path
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      3 : File handle
+ */
 void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -80,38 +103,24 @@ void OpenFileDirectly(Service::Interface* self) {
     u32 attributes        = cmd_buff[8]; // TODO(Link Mauve): do something with those attributes.
     u32 archivename_ptr   = cmd_buff[10];
     u32 filename_ptr      = cmd_buff[12];
+    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "archive_type=%d archive_size=%d file_type=%d file_size=%d file_mode=%d file_attrs=%d",
-              archivename_type, archivename_size, filename_type, filename_size, mode, attributes);
+    DEBUG_LOG(KERNEL, "archive_path=%s file_path=%s, mode=%d attributes=%d",
+              archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode, attributes);
 
-    if (archivename_type != FileSys::Empty) {
+    if (archive_path.GetType() != FileSys::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = -1;
         return;
     }
 
-    // TODO(Link Mauve): check if we should even get a handle for the archive, and don't leak it.
+    // TODO(Link Mauve): Check if we should even get a handle for the archive, and don't leak it
     Handle archive_handle = Kernel::OpenArchive(archive_id);
-    if (archive_handle) {
-        cmd_buff[1] = 0;
-        // cmd_buff[2] isn't used according to 3dmoo's implementation.
-        cmd_buff[3] = archive_handle;
-    } else {
+    if (!archive_handle) {
         ERROR_LOG(KERNEL, "failed to get a handle for archive");
-        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
+        // TODO(Link Mauve): Check for the actual error values, this one was just chosen arbitrarily
         cmd_buff[1] = -1;
-        return;
-    }
-
-    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
-    std::string file_string;
-    switch (file_path.GetType()) {
-    case FileSys::Char:
-    case FileSys::Wchar:
-        file_string = file_path.AsString();
-        break;
-    default:
-        WARN_LOG(KERNEL, "file LowPath type is currently unsupported; returning archive handle instead");
         return;
     }
 
@@ -120,7 +129,7 @@ void OpenFileDirectly(Service::Interface* self) {
         cmd_buff[1] = 0;
         cmd_buff[3] = handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_string.c_str());
+        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
         // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
         cmd_buff[1] = -1;
     }
@@ -205,17 +214,31 @@ void OpenDirectory(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
+/**
+ * FS_User::OpenArchive service function
+ *  Inputs:
+ *      1 : Archive ID
+ *      2 : Archive low path type
+ *      3 : Archive low path size
+ *      4 : (LowPathSize << 14) | 2
+ *      5 : Archive low path
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Archive handle lower word (unused)
+ *      3 : Archive handle upper word (same as file handle)
+ */
 void OpenArchive(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
-    auto archive_id = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
+    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
-    u32 archivename_size = cmd_buff[3];
-    u32 archivename_ptr = cmd_buff[5];
+    u32 archivename_size  = cmd_buff[3];
+    u32 archivename_ptr   = cmd_buff[5];
+    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d", archivename_type, archivename_size);
+    DEBUG_LOG(KERNEL, "archive_path=%s", archive_path.DebugStr().c_str());
 
-    if (archivename_type != FileSys::Empty) {
+    if (archive_path.GetType() != FileSys::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = -1;
         return;

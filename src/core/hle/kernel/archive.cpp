@@ -367,6 +367,17 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name) {
  * @return Opened File object
  */
 Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
+    // TODO(bunnei): Binary type files get a raw file pointer to the archive. Currently, we create
+    // the archive file handles at app loading, and then keep them persistent throughout execution.
+    // Archives file handles are just reused and not actually freed until emulation shut down.
+    // Verify if real hardware works this way, or if new handles are created each time
+    if (path.GetType() == FileSys::Binary)
+        // TODO(bunnei): FixMe - this is a hack to compensate for an incorrect FileSys backend
+        // design. While the functionally of this is OK, our implementation decision to separate
+        // normal files from archive file pointers is very likely wrong.
+        // See https://github.com/citra-emu/citra/issues/205
+        return archive_handle;
+
     File* file = new File;
     Handle handle = Kernel::g_object_pool.Create(file);
 
