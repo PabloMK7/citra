@@ -16,7 +16,7 @@ public:
         num_instructions = 0;
     }
 
-    ~ARM_Interface() {
+    virtual ~ARM_Interface() {
     }
 
     /**
