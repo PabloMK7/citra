@@ -12,15 +12,8 @@ class Config {
     QSettings* qt_config;
     std::string qt_config_loc;
 
-    void ReadControls();
-    void SaveControls();
-    void ReadCore();
-    void SaveCore();
-    void ReadData();
-    void SaveData();
-
-    void ReadMiscellaneous();
-    void SaveMiscellaneous();
+    void ReadValues();
+    void SaveValues();
 public:
     Config();
     ~Config();

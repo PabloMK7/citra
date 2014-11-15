@@ -21,7 +21,7 @@ Config::Config() {
     Reload();
 }
 
-void Config::ReadControls() {
+void Config::ReadValues() {
     qt_config->beginGroup("Controls");
     Settings::values.pad_a_key = qt_config->value("pad_a", Qt::Key_A).toInt();
     Settings::values.pad_b_key = qt_config->value("pad_b", Qt::Key_S).toInt();
@@ -41,9 +41,22 @@ void Config::ReadControls() {
     Settings::values.pad_sleft_key  = qt_config->value("pad_sleft",  Qt::Key_Left).toInt();
     Settings::values.pad_sright_key = qt_config->value("pad_sright", Qt::Key_Right).toInt();
     qt_config->endGroup();
+
+    qt_config->beginGroup("Core");
+    Settings::values.cpu_core = qt_config->value("cpu_core", Core::CPU_Interpreter).toInt();
+    Settings::values.gpu_refresh_rate = qt_config->value("gpu_refresh_rate", 60).toInt();
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Data Storage");
+    Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Miscellaneous");
+    Settings::values.enable_log = qt_config->value("enable_log", true).toBool();
+    qt_config->endGroup();
 }
 
-void Config::SaveControls() {
+void Config::SaveValues() {
     qt_config->beginGroup("Controls");
     qt_config->setValue("pad_a", Settings::values.pad_a_key);
     qt_config->setValue("pad_b", Settings::values.pad_b_key);
@@ -63,58 +76,27 @@ void Config::SaveControls() {
     qt_config->setValue("pad_sleft",  Settings::values.pad_sleft_key);
     qt_config->setValue("pad_sright", Settings::values.pad_sright_key);
     qt_config->endGroup();
-}
 
-void Config::ReadCore() {
-    qt_config->beginGroup("Core");
-    Settings::values.cpu_core = qt_config->value("cpu_core", Core::CPU_Interpreter).toInt();
-    Settings::values.gpu_refresh_rate = qt_config->value("gpu_refresh_rate", 60).toInt();
-    qt_config->endGroup();
-}
-
-void Config::SaveCore() {
     qt_config->beginGroup("Core");
     qt_config->setValue("cpu_core", Settings::values.cpu_core);
     qt_config->setValue("gpu_refresh_rate", Settings::values.gpu_refresh_rate);
     qt_config->endGroup();
-}
 
-void Config::ReadData() {
-    qt_config->beginGroup("Data Storage");
-    Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
-    qt_config->endGroup();
-}
-
-void Config::SaveData() {
     qt_config->beginGroup("Data Storage");
     qt_config->setValue("use_virtual_sd", Settings::values.use_virtual_sd);
     qt_config->endGroup();
-}
 
-void Config::ReadMiscellaneous() {
-    qt_config->beginGroup("Miscellaneous");
-    Settings::values.enable_log = qt_config->value("enable_log", true).toBool();
-    qt_config->endGroup();
-}
-
-void Config::SaveMiscellaneous() {
     qt_config->beginGroup("Miscellaneous");
     qt_config->setValue("enable_log", Settings::values.enable_log);
     qt_config->endGroup();
 }
 
 void Config::Reload() {
-    ReadControls();
-    ReadCore();
-    ReadData();
-    ReadMiscellaneous();
+    ReadValues();
 }
 
 void Config::Save() {
-    SaveControls();
-    SaveCore();
-    SaveData();
-    SaveMiscellaneous();
+    SaveValues();
 }
 
 Config::~Config() {

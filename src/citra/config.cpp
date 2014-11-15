@@ -36,7 +36,8 @@ bool Config::LoadINI(INIReader* config, const char* location, const std::string&
     return true;
 }
 
-void Config::ReadControls() {
+void Config::ReadValues() {
+    // Controls
     Settings::values.pad_a_key = glfw_config->GetInteger("Controls", "pad_a", GLFW_KEY_A);
     Settings::values.pad_b_key = glfw_config->GetInteger("Controls", "pad_b", GLFW_KEY_S);
     Settings::values.pad_x_key = glfw_config->GetInteger("Controls", "pad_x", GLFW_KEY_Z);
@@ -54,27 +55,21 @@ void Config::ReadControls() {
     Settings::values.pad_sdown_key  = glfw_config->GetInteger("Controls", "pad_sdown",  GLFW_KEY_DOWN);
     Settings::values.pad_sleft_key  = glfw_config->GetInteger("Controls", "pad_sleft",  GLFW_KEY_LEFT);
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
-}
 
-void Config::ReadCore() {
+    // Core
     Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
     Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 60);
-}
 
-void Config::ReadData() {
+    // Data Storage
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
-}
 
-void Config::ReadMiscellaneous() {
+    // Miscellaneous
     Settings::values.enable_log = glfw_config->GetBoolean("Miscellaneous", "enable_log", true);
 }
 
 void Config::Reload() {
     LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
-    ReadControls();
-    ReadCore();
-    ReadData();
-    ReadMiscellaneous();
+    ReadValues();
 }
 
 Config::~Config() {
