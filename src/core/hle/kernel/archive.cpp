@@ -100,7 +100,6 @@ public:
         {
             DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
             CloseArchive(backend->GetIdCode());
-            Kernel::g_object_pool.Destroy<Archive>(GetHandle());
             break;
         }
         // Unknown command...
@@ -304,8 +303,9 @@ Handle OpenArchive(FileSys::Archive::IdCode id_code) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 Result CloseArchive(FileSys::Archive::IdCode id_code) {
-    if (1 != g_archive_map.erase(id_code)) {
-        ERROR_LOG(KERNEL, "Cannot close archive %d", (int) id_code);
+    auto itr = g_archive_map.find(id_code);
+    if (itr == g_archive_map.end()) {
+        ERROR_LOG(KERNEL, "Cannot close archive %d, does not exist!", (int)id_code);
         return -1;
     }
 
