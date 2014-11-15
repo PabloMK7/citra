@@ -72,7 +72,7 @@ Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions,
 
     if (address < Memory::SHARED_MEMORY_VADDR || address >= Memory::SHARED_MEMORY_VADDR_END) {
         ERROR_LOG(KERNEL, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
-            handle);
+            handle, address);
         return -1;
     }
     SharedMemory* shared_memory = Kernel::g_object_pool.GetFast<SharedMemory>(handle);
