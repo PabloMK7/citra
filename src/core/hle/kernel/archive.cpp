@@ -99,8 +99,8 @@ public:
         case FileCommand::Close:
         {
             DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            Kernel::g_object_pool.Destroy<Archive>(GetHandle());
             CloseArchive(backend->GetIdCode());
+            Kernel::g_object_pool.Destroy<Archive>(GetHandle());
             break;
         }
         // Unknown command...
