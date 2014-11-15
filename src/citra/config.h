@@ -18,6 +18,7 @@ class Config {
     void ReadControls();
     void ReadCore();
     void ReadData();
+    void ReadMiscellaneous();
 public:
     Config();
     ~Config();

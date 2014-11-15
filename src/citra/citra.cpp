@@ -5,6 +5,7 @@
 #include "common/common.h"
 #include "common/log_manager.h"
 
+#include "core/settings.h"
 #include "core/system.h"
 #include "core/core.h"
 #include "core/loader/loader.h"
@@ -22,6 +23,9 @@ int __cdecl main(int argc, char **argv) {
     }
 
     Config config;
+    
+    if (!Settings::values.enable_log)
+        LogManager::Shutdown();
 
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;

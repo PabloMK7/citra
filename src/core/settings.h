@@ -32,6 +32,8 @@ struct Values {
 
     // Data Storage
     bool use_virtual_sd;
+
+    bool enable_log;
 } extern values;
 
 }

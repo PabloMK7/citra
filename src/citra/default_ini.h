@@ -32,6 +32,9 @@ gpu_refresh_rate = ## 60 (default)
 
 [Data Storage]
 use_virtual_sd =
+
+[Miscellaneous]
+enable_log =
 )";
 
 }

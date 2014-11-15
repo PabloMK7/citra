@@ -18,6 +18,9 @@ class Config {
     void SaveCore();
     void ReadData();
     void SaveData();
+
+    void ReadMiscellaneous();
+    void SaveMiscellaneous();
 public:
     Config();
     ~Config();

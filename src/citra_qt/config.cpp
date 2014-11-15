@@ -91,16 +91,30 @@ void Config::SaveData() {
     qt_config->endGroup();
 }
 
+void Config::ReadMiscellaneous() {
+    qt_config->beginGroup("Miscellaneous");
+    Settings::values.enable_log = qt_config->value("enable_log", true).toBool();
+    qt_config->endGroup();
+}
+
+void Config::SaveMiscellaneous() {
+    qt_config->beginGroup("Miscellaneous");
+    qt_config->setValue("enable_log", Settings::values.enable_log);
+    qt_config->endGroup();
+}
+
 void Config::Reload() {
     ReadControls();
     ReadCore();
     ReadData();
+    ReadMiscellaneous();
 }
 
 void Config::Save() {
     SaveControls();
     SaveCore();
     SaveData();
+    SaveMiscellaneous();
 }
 
 Config::~Config() {

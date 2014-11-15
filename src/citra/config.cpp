@@ -65,11 +65,16 @@ void Config::ReadData() {
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 }
 
+void Config::ReadMiscellaneous() {
+    Settings::values.enable_log = glfw_config->GetBoolean("Miscellaneous", "enable_log", true);
+}
+
 void Config::Reload() {
     LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
     ReadControls();
     ReadCore();
     ReadData();
+    ReadMiscellaneous();
 }
 
 Config::~Config() {
