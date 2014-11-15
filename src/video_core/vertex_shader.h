@@ -141,7 +141,7 @@ union Instruction {
                     return BitFieldType::Value();
                 else if (GetRegisterType() == Temporary)
                     return BitFieldType::Value() - 0x10;
-                else if (GetRegisterType() == FloatUniform)
+                else // if (GetRegisterType() == FloatUniform)
                     return BitFieldType::Value() - 0x20;
             }
 
