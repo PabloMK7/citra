@@ -147,6 +147,7 @@ u32 Read16_ZX(VAddr addr);
 void Write8(VAddr addr, u8 data);
 void Write16(VAddr addr, u16 data);
 void Write32(VAddr addr, u32 data);
+void Write64(VAddr addr, u64 data);
 
 void WriteBlock(VAddr addr, const u8* data, size_t size);
 
