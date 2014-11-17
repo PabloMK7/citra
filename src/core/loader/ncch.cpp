@@ -24,7 +24,7 @@ static const int kBlockSize     = 0x200;    ///< Size of ExeFS blocks (in bytes)
  * @param size Size of compressed buffer
  * @return Size of decompressed buffer
  */
-u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
+static u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
     u32 offset_size = *(u32*)(buffer + size - 4);
     return offset_size + size;
 }
@@ -37,7 +37,7 @@ u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
  * @param decompressed_size Size of decompressed buffer
  * @return True on success, otherwise false
  */
-bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
+static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
     u8* footer = compressed + compressed_size - 8;
     u32 buffer_top_and_bottom = *(u32*)footer;
     u32 out = decompressed_size;
