@@ -76,9 +76,9 @@ public:
 
 protected:
     EmuWindow():
+        m_window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc)),
         m_client_area_width(640),
-        m_client_area_height(480),
-        m_window_title(Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc))
+        m_client_area_height(480)
     {}
     virtual ~EmuWindow() {}
 
