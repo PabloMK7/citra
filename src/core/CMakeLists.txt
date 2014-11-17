@@ -32,6 +32,7 @@ set(SRCS
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
             hle/service/apt_u.cpp
+            hle/service/boss_u.cpp
             hle/service/cfg_u.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
@@ -103,6 +104,7 @@ set(HEADERS
             hle/kernel/thread.h
             hle/service/ac_u.h
             hle/service/apt_u.h
+            hle/service/boss_u.h
             hle/service/cfg_u.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
