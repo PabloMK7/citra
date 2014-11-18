@@ -2,6 +2,12 @@
 #include <QKeyEvent>
 #include <QApplication>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+// Required for screen DPI information
+#include <QScreen>
+#include <QWindow>
+#endif
+
 #include "common/common.h"
 #include "bootmanager.hxx"
 
@@ -82,20 +88,20 @@ void EmuThread::Stop()
 class GGLWidgetInternal : public QGLWidget
 {
 public:
-    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent) : QGLWidget(fmt, parent)
-    {
-        parent_ = parent;
+    GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent)
+                     : QGLWidget(fmt, parent), parent(parent) {
     }
 
-    void paintEvent(QPaintEvent* ev) override
-    {
+    void paintEvent(QPaintEvent* ev) override {
     }
+
     void resizeEvent(QResizeEvent* ev) override {
-        parent_->SetClientAreaWidth(size().width());
-        parent_->SetClientAreaHeight(size().height());
+        parent->OnClientAreaResized(ev->size().width(), ev->size().height());
+        parent->OnFramebufferSizeChanged();
     }
+
 private:
-    GRenderWindow* parent_;
+    GRenderWindow* parent;
 };
 
 EmuThread& GRenderWindow::GetEmuThread()
@@ -105,6 +111,9 @@ EmuThread& GRenderWindow::GetEmuThread()
 
 GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this), keyboard_id(0)
 {
+    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    setWindowTitle(QString::fromStdString(window_title));
+
     keyboard_id = KeyMap::NewDeviceId();
     ReloadSetKeymaps();
 
@@ -114,16 +123,25 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     fmt.setProfile(QGLFormat::CoreProfile);
     // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
     fmt.setOption(QGL::NoDeprecatedFunctions);
-    
+
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
     resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
-    QObject::connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
+    connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
+
+    OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
+
+    OnFramebufferSizeChanged();
+    NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(child->width(), child->height()));
 
     BackupGeometry();
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this, SLOT(OnFramebufferSizeChanged()));
+#endif
 }
 
 void GRenderWindow::moveContext()
@@ -166,14 +184,28 @@ void GRenderWindow::DoneCurrent()
 }
 
 void GRenderWindow::PollEvents() {
-    // TODO(ShizZy): Does this belong here? This is a reasonable place to update the window title
-    //  from the main thread, but this should probably be in an event handler...
-    /*
-    static char title[128];
-    sprintf(title, "%s (FPS: %02.02f)", window_title_.c_str(), 
-        video_core::g_renderer->current_fps());
-    setWindowTitle(title);
-    */
+}
+
+// On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
+//
+// Older versions get the window size (density independent pixels),
+// and hence, do not support DPI scaling ("retina" displays).
+// The result will be a viewport that is smaller than the extent of the window.
+void GRenderWindow::OnFramebufferSizeChanged()
+{
+    // Screen changes potentially incur a change in screen DPI, hence we should update the framebuffer size
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    // windowHandle() might not be accessible until the window is displayed to screen.
+    auto pixel_ratio = windowHandle() ? (windowHandle()->screen()->devicePixelRatio()) : 1.0;
+
+    unsigned width = child->QPaintDevice::width() * pixel_ratio;
+    unsigned height = child->QPaintDevice::height() * pixel_ratio;
+#else
+    unsigned width = child->QPaintDevice::width();
+    unsigned height = child->QPaintDevice::height();
+#endif
+
+    NotifyFramebufferSizeChanged(std::make_pair(width, height));
 }
 
 void GRenderWindow::BackupGeometry()
@@ -236,3 +268,11 @@ void GRenderWindow::ReloadSetKeymaps()
     KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, HID_User::PAD_CIRCLE_DOWN);
 }
 
+void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
+{
+    NotifyClientAreaSizeChanged(std::make_pair(width, height));
+}
+
+void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
+	setMinimumSize(minimal_size.first, minimal_size.second);
+}

@@ -191,7 +191,8 @@ void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x
  * Draws the emulated screens to the emulator window.
  */
 void RendererOpenGL::DrawScreens() {
-    glViewport(0, 0, resolution_width, resolution_height);
+    auto viewport_extent = GetViewportExtent();
+    glViewport(viewport_extent.left, viewport_extent.top, viewport_extent.GetWidth(), viewport_extent.GetHeight()); // TODO: Or bottom?
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program_id);
@@ -226,6 +227,34 @@ void RendererOpenGL::UpdateFramerate() {
  */
 void RendererOpenGL::SetWindow(EmuWindow* window) {
     render_window = window;
+}
+
+MathUtil::Rectangle<unsigned> RendererOpenGL::GetViewportExtent() {
+    unsigned framebuffer_width;
+    unsigned framebuffer_height;
+    std::tie(framebuffer_width, framebuffer_height) = render_window->GetFramebufferSize();
+
+    float window_aspect_ratio = static_cast<float>(framebuffer_height) / framebuffer_width;
+    float emulation_aspect_ratio = static_cast<float>(resolution_height) / resolution_width;
+
+    MathUtil::Rectangle<unsigned> viewport_extent;
+    if (window_aspect_ratio > emulation_aspect_ratio) {
+		// Window is narrower than the emulation content => apply borders to the top and bottom
+        unsigned viewport_height = emulation_aspect_ratio * framebuffer_width;
+        viewport_extent.left = 0;
+        viewport_extent.top = (framebuffer_height - viewport_height) / 2;
+        viewport_extent.right = viewport_extent.left + framebuffer_width;
+        viewport_extent.bottom = viewport_extent.top + viewport_height;
+    } else {
+        // Otherwise, apply borders to the left and right sides of the window.
+        unsigned viewport_width = framebuffer_height / emulation_aspect_ratio;
+        viewport_extent.left = (framebuffer_width - viewport_width) / 2;
+        viewport_extent.top = 0;
+        viewport_extent.right = viewport_extent.left + viewport_width;
+        viewport_extent.bottom = viewport_extent.top + framebuffer_height;
+    }
+
+    return viewport_extent;
 }
 
 /// Initialize the renderer

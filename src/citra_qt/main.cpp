@@ -117,7 +117,8 @@ GMainWindow::GMainWindow()
     connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this, SLOT(OnMenuLoadFile()));
     connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this, SLOT(OnStartGame()));
 
-    setWindowTitle(render_window->GetWindowTitle().c_str());
+    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    setWindowTitle(window_title.c_str());
 
     show();
 
