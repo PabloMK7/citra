@@ -157,7 +157,7 @@ u8* GetPointer(VAddr virtual_address);
  * Maps a block of memory on the heap
  * @param size Size of block in bytes
  * @param operation Memory map operation type
- * @param flags Memory allocation flags
+ * @param permissions Memory allocation permissions
  */
 u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
 
