@@ -15,11 +15,11 @@
 
 namespace FileSys {
 
-Directory_SDMC::Directory_SDMC(const Archive_SDMC* archive, const std::string& path) {
+Directory_SDMC::Directory_SDMC(const Archive_SDMC* archive, const Path& path) {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../usr/bin can give the emulated program your installed programs.
-    std::string absolute_path = archive->GetMountPoint() + path;
+    std::string absolute_path = archive->GetMountPoint() + path.AsString();
     FileUtil::ScanDirectoryTree(absolute_path, directory);
     children_iterator = directory.children.begin();
 }

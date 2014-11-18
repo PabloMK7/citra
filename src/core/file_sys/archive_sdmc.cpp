@@ -49,8 +49,8 @@ bool Archive_SDMC::Initialize() {
  * @param mode Mode to open the file with
  * @return Opened file, or nullptr
  */
-std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode mode) const {
-    DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.c_str(), mode);
+std::unique_ptr<File> Archive_SDMC::OpenFile(const Path& path, const Mode mode) const {
+    DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.DebugStr().c_str(), mode);
     File_SDMC* file = new File_SDMC(this, path, mode);
     if (!file->Open())
         return nullptr;
@@ -62,8 +62,8 @@ std::unique_ptr<File> Archive_SDMC::OpenFile(const std::string& path, const Mode
  * @param path Path relative to the archive
  * @return Whether the directory could be created
  */
-bool Archive_SDMC::CreateDirectory(const std::string& path) const {
-    return FileUtil::CreateDir(GetMountPoint() + path);
+bool Archive_SDMC::CreateDirectory(const Path& path) const {
+    return FileUtil::CreateDir(GetMountPoint() + path.AsString());
 }
 
 /**
@@ -71,8 +71,8 @@ bool Archive_SDMC::CreateDirectory(const std::string& path) const {
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
  */
-std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const std::string& path) const {
-    DEBUG_LOG(FILESYS, "called path=%s", path.c_str());
+std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const Path& path) const {
+    DEBUG_LOG(FILESYS, "called path=%s", path.DebugStr().c_str());
     Directory_SDMC* directory = new Directory_SDMC(this, path);
     return std::unique_ptr<Directory>(directory);
 }

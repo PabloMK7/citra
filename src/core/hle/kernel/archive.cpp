@@ -99,7 +99,6 @@ public:
         case FileCommand::Close:
         {
             DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            Kernel::g_object_pool.Destroy<Archive>(GetHandle());
             CloseArchive(backend->GetIdCode());
             break;
         }
@@ -129,12 +128,12 @@ public:
 class File : public Object {
 public:
     std::string GetTypeName() const override { return "File"; }
-    std::string GetName() const override { return path; }
+    std::string GetName() const override { return path.DebugStr(); }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::File; }
     Kernel::HandleType GetHandleType() const override { return HandleType::File; }
 
-    std::string path; ///< Path of the file
+    FileSys::Path path; ///< Path of the file
     std::unique_ptr<FileSys::File> backend; ///< File backend interface
 
     /**
@@ -221,12 +220,12 @@ public:
 class Directory : public Object {
 public:
     std::string GetTypeName() const override { return "Directory"; }
-    std::string GetName() const override { return path; }
+    std::string GetName() const override { return path.DebugStr(); }
 
     static Kernel::HandleType GetStaticHandleType() { return HandleType::Directory; }
     Kernel::HandleType GetHandleType() const override { return HandleType::Directory; }
 
-    std::string path; ///< Path of the directory
+    FileSys::Path path; ///< Path of the directory
     std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
 
     /**
@@ -304,8 +303,9 @@ Handle OpenArchive(FileSys::Archive::IdCode id_code) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 Result CloseArchive(FileSys::Archive::IdCode id_code) {
-    if (1 != g_archive_map.erase(id_code)) {
-        ERROR_LOG(KERNEL, "Cannot close archive %d", (int) id_code);
+    auto itr = g_archive_map.find(id_code);
+    if (itr == g_archive_map.end()) {
+        ERROR_LOG(KERNEL, "Cannot close archive %d, does not exist!", (int)id_code);
         return -1;
     }
 
@@ -366,7 +366,18 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name) {
  * @param mode Mode under which to open the File
  * @return Opened File object
  */
-Handle OpenFileFromArchive(Handle archive_handle, const std::string& path, const FileSys::Mode mode) {
+Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
+    // TODO(bunnei): Binary type files get a raw file pointer to the archive. Currently, we create
+    // the archive file handles at app loading, and then keep them persistent throughout execution.
+    // Archives file handles are just reused and not actually freed until emulation shut down.
+    // Verify if real hardware works this way, or if new handles are created each time
+    if (path.GetType() == FileSys::Binary)
+        // TODO(bunnei): FixMe - this is a hack to compensate for an incorrect FileSys backend
+        // design. While the functionally of this is OK, our implementation decision to separate
+        // normal files from archive file pointers is very likely wrong.
+        // See https://github.com/citra-emu/citra/issues/205
+        return archive_handle;
+
     File* file = new File;
     Handle handle = Kernel::g_object_pool.Create(file);
 
@@ -386,7 +397,7 @@ Handle OpenFileFromArchive(Handle archive_handle, const std::string& path, const
  * @param path Path to the Directory inside of the Archive
  * @return Opened Directory object
  */
-Result CreateDirectoryFromArchive(Handle archive_handle, const std::string& path) {
+Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
     if (archive == nullptr)
         return -1;
@@ -401,7 +412,7 @@ Result CreateDirectoryFromArchive(Handle archive_handle, const std::string& path
  * @param path Path to the Directory inside of the Archive
  * @return Opened Directory object
  */
-Handle OpenDirectoryFromArchive(Handle archive_handle, const std::string& path) {
+Handle OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Directory* directory = new Directory;
     Handle handle = Kernel::g_object_pool.Create(directory);
 

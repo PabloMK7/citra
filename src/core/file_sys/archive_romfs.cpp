@@ -29,7 +29,7 @@ Archive_RomFS::~Archive_RomFS() {
  * @param mode Mode to open the file with
  * @return Opened file, or nullptr
  */
-std::unique_ptr<File> Archive_RomFS::OpenFile(const std::string& path, const Mode mode) const {
+std::unique_ptr<File> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
     return std::unique_ptr<File>(new File_RomFS);
 }
 
@@ -38,7 +38,7 @@ std::unique_ptr<File> Archive_RomFS::OpenFile(const std::string& path, const Mod
  * @param path Path relative to the archive
  * @return Whether the directory could be created
  */
-bool Archive_RomFS::CreateDirectory(const std::string& path) const {
+bool Archive_RomFS::CreateDirectory(const Path& path) const {
     ERROR_LOG(FILESYS, "Attempted to create a directory in ROMFS.");
     return false;
 };
@@ -48,7 +48,7 @@ bool Archive_RomFS::CreateDirectory(const std::string& path) const {
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
  */
-std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const std::string& path) const {
+std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const Path& path) const {
     return std::unique_ptr<Directory>(new Directory_RomFS);
 }
 

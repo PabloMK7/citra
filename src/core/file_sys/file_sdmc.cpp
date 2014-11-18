@@ -15,11 +15,11 @@
 
 namespace FileSys {
 
-File_SDMC::File_SDMC(const Archive_SDMC* archive, const std::string& path, const Mode mode) {
+File_SDMC::File_SDMC(const Archive_SDMC* archive, const Path& path, const Mode mode) {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../etc/passwd can give the emulated program your users list.
-    this->path = archive->GetMountPoint() + path;
+    this->path = archive->GetMountPoint() + path.AsString();
     this->mode.hex = mode.hex;
 }
 

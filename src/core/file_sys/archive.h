@@ -74,6 +74,35 @@ public:
         return type;
     }
 
+    /**
+     * Gets the string representation of the path for debugging
+     * @return String representation of the path for debugging
+     */
+    const std::string DebugStr() const {
+        switch (GetType()) {
+        case Invalid:
+            return "[Invalid]";
+        case Empty:
+            return "[Empty]";
+        case Binary:
+        {
+            std::stringstream res;
+            res << "[Binary: ";
+            for (unsigned byte : binary)
+                res << std::hex << std::setw(2) << std::setfill('0') << byte;
+            res << ']';
+            return res.str();
+        }
+        case Char:
+            return "[Char: " + AsString() + ']';
+        case Wchar:
+            return "[Wchar: " + AsString() + ']';
+        default:
+            ERROR_LOG(KERNEL, "LowPathType cannot be converted to string!");
+            return {};
+        }
+    }
+
     const std::string AsString() const {
         switch (GetType()) {
             case Char:
@@ -153,21 +182,21 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    virtual std::unique_ptr<File> OpenFile(const std::string& path, const Mode mode) const = 0;
+    virtual std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created
      */
-    virtual bool CreateDirectory(const std::string& path) const = 0;
+    virtual bool CreateDirectory(const Path& path) const = 0;
 
     /**
      * Open a directory specified by its path
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    virtual std::unique_ptr<Directory> OpenDirectory(const std::string& path) const = 0;
+    virtual std::unique_ptr<Directory> OpenDirectory(const Path& path) const = 0;
 
     /**
      * Read data from the archive
