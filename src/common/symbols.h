@@ -33,5 +33,5 @@ namespace Symbols
     const std::string GetName(u32 _address);
     void Remove(u32 _address);
     void Clear();
-};
+}
 

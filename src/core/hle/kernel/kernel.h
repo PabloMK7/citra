@@ -87,7 +87,7 @@ public:
             delete pool[handle - HANDLE_OFFSET];
         }
         return error;
-    };
+    }
 
     bool IsValid(Handle handle);
 

@@ -36,7 +36,7 @@ class Event
 public:
     Event()
         : is_set(false)
-    {};
+    {}
 
     void Set()
     {
