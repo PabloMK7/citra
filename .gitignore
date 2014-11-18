@@ -1,6 +1,10 @@
 # Build directory
-build/
+[Bb]uild/
 doc-build/
 
 # Generated source files
 src/common/scm_rev.cpp
+
+# Project/editor files
+*.swp
+.idea/
