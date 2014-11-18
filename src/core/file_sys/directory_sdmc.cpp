@@ -45,7 +45,7 @@ u32 Directory_SDMC::Read(const u32 count, Entry* entries) {
         WARN_LOG(FILESYS, "File %s: size=%llu dir=%d", filename.c_str(), file.size, file.isDirectory);
 
         // TODO(Link Mauve): use a proper conversion to UTF-16.
-        for (int j = 0; j < FILENAME_LENGTH; ++j) {
+        for (size_t j = 0; j < FILENAME_LENGTH; ++j) {
             entry.filename[j] = filename[j];
             if (!filename[j])
                 break;
