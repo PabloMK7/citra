@@ -13,7 +13,7 @@ namespace SRV {
 
 Handle g_event_handle = 0;
 
-void Initialize(Service::Interface* self) {
+static void Initialize(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
 
     u32* cmd_buff = Service::GetCommandBuffer();
@@ -21,7 +21,7 @@ void Initialize(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
 }
 
-void GetProcSemaphore(Service::Interface* self) {
+static void GetProcSemaphore(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");
 
     u32* cmd_buff = Service::GetCommandBuffer();
@@ -34,7 +34,7 @@ void GetProcSemaphore(Service::Interface* self) {
     cmd_buff[3] = g_event_handle;
 }
 
-void GetServiceHandle(Service::Interface* self) {
+static void GetServiceHandle(Service::Interface* self) {
     Result res = 0;
     u32* cmd_buff = Service::GetCommandBuffer();
 

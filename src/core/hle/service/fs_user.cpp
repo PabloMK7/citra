@@ -18,7 +18,7 @@ namespace FS_User {
 // puts all the sections of the http://3dbrew.org/wiki/Error_codes to something non-zero, to make
 // sure we don't mislead the application into thinking something worked.
 
-void Initialize(Service::Interface* self) {
+static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
@@ -44,7 +44,7 @@ void Initialize(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      3 : File handle
  */
-void OpenFile(Service::Interface* self) {
+static void OpenFile(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
@@ -91,7 +91,7 @@ void OpenFile(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      3 : File handle
  */
-void OpenFileDirectly(Service::Interface* self) {
+static void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
@@ -148,7 +148,7 @@ void OpenFileDirectly(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void CreateDirectory(Service::Interface* self) {
+static void CreateDirectory(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     // TODO: cmd_buff[2], aka archive handle lower word, isn't used according to
@@ -177,7 +177,7 @@ void CreateDirectory(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
-void OpenDirectory(Service::Interface* self) {
+static void OpenDirectory(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
@@ -227,7 +227,7 @@ void OpenDirectory(Service::Interface* self) {
  *      2 : Archive handle lower word (unused)
  *      3 : Archive handle upper word (same as file handle)
  */
-void OpenArchive(Service::Interface* self) {
+static void OpenArchive(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
@@ -264,7 +264,7 @@ void OpenArchive(Service::Interface* self) {
 *      1 : Result of function, 0 on success, otherwise error code
 *      2 : Whether the Sdmc could be detected
 */
-void IsSdmcDetected(Service::Interface* self) {
+static void IsSdmcDetected(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     cmd_buff[1] = 0;

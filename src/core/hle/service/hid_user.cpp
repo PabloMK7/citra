@@ -47,7 +47,7 @@ static inline PadData* GetPadData() {
  *
  * Indicate the circle pad is pushed completely to the edge in 1 of 8 directions.
  */
-void UpdateNextCirclePadState() {
+static void UpdateNextCirclePadState() {
     static const s16 max_value = 0x9C;
     next_circle_x = next_state.circle_left ? -max_value : 0x0;
     next_circle_x += next_state.circle_right ? max_value : 0x0;
@@ -155,7 +155,7 @@ void PadUpdateComplete() {
  *      7 : Gyroscope event
  *      8 : Event signaled by HID_User
  */
-void GetIPCHandles(Service::Interface* self) {
+static void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error

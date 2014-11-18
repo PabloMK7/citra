@@ -52,7 +52,7 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
         sizeof(InterruptRelayQueue) * thread_id);
 }
 
-void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
     // TODO: Return proper error codes
     if (base_address + size_in_bytes >= 0x420000) {
         ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)",
@@ -76,7 +76,7 @@ void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
 }
 
 /// Write a GSP GPU hardware register
-void WriteHWRegs(Service::Interface* self) {
+static void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -87,7 +87,7 @@ void WriteHWRegs(Service::Interface* self) {
 }
 
 /// Read a GSP GPU hardware register
-void ReadHWRegs(Service::Interface* self) {
+static void ReadHWRegs(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -115,7 +115,7 @@ void ReadHWRegs(Service::Interface* self) {
     }
 }
 
-void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address = 0x400000;
     if (info.active_fb == 0) {
         WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left1), 4, &info.address_left);
@@ -140,7 +140,7 @@ void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
  *  Outputs:
  *      1: Result code
  */
-void SetBufferSwap(Service::Interface* self) {
+static void SetBufferSwap(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 screen_id = cmd_buff[1];
     FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
@@ -159,7 +159,7 @@ void SetBufferSwap(Service::Interface* self) {
  *      2 : Thread index into GSP command buffer
  *      4 : Handle to GSP shared memory
  */
-void RegisterInterruptRelayQueue(Service::Interface* self) {
+static void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 flags = cmd_buff[1];
     g_interrupt_event = cmd_buff[3];
@@ -202,7 +202,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
 }
 
 /// Executes the next GSP command
-void ExecuteCommand(const Command& command, u32 thread_id) {
+static void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
     auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
@@ -308,7 +308,7 @@ void ExecuteCommand(const Command& command, u32 thread_id) {
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
-void TriggerCmdReqQueue(Service::Interface* self) {
+static void TriggerCmdReqQueue(Service::Interface* self) {
 
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {

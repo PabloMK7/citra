@@ -29,7 +29,7 @@ enum ControlMemoryOperation {
 };
 
 /// Map application or GSP heap memory
-Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
+static Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
     DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
         operation, addr0, addr1, size, permissions);
 
@@ -53,7 +53,7 @@ Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 siz
 }
 
 /// Maps a memory block to specified address
-Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
+static Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
     DEBUG_LOG(SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
         handle, addr, permissions, other_permissions);
 
@@ -73,7 +73,7 @@ Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permis
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-Result ConnectToPort(Handle* out, const char* port_name) {
+static Result ConnectToPort(Handle* out, const char* port_name) {
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
     DEBUG_LOG(SVC, "called port_name=%s", port_name);
@@ -85,7 +85,7 @@ Result ConnectToPort(Handle* out, const char* port_name) {
 }
 
 /// Synchronize to an OS service
-Result SendSyncRequest(Handle handle) {
+static Result SendSyncRequest(Handle handle) {
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
@@ -101,14 +101,14 @@ Result SendSyncRequest(Handle handle) {
 }
 
 /// Close a handle
-Result CloseHandle(Handle handle) {
+static Result CloseHandle(Handle handle) {
     // ImplementMe
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
     return 0;
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
-Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
+static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool wait = false;
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
@@ -132,7 +132,7 @@ Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all, 
+static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
     s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool unlock_all = true;
@@ -174,7 +174,7 @@ Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wa
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
-Result CreateAddressArbiter(u32* arbiter) {
+static Result CreateAddressArbiter(u32* arbiter) {
     DEBUG_LOG(SVC, "called");
     Handle handle = Kernel::CreateAddressArbiter();
     *arbiter = handle;
@@ -182,18 +182,18 @@ Result CreateAddressArbiter(u32* arbiter) {
 }
 
 /// Arbitrate address
-Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
+static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
     return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address, 
         value);
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
-void OutputDebugString(const char* string) {
+static void OutputDebugString(const char* string) {
     OS_LOG(SVC, "%s", string);
 }
 
 /// Get resource limit
-Result GetResourceLimit(Handle* resource_limit, Handle process) {
+static Result GetResourceLimit(Handle* resource_limit, Handle process) {
     // With regards to proceess values:
     // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for 
     // the current KThread.
@@ -203,7 +203,7 @@ Result GetResourceLimit(Handle* resource_limit, Handle process) {
 }
 
 /// Get resource limit current values
-Result GetResourceLimitCurrentValues(s64* values, Handle resource_limit, void* names, 
+static Result GetResourceLimitCurrentValues(s64* values, Handle resource_limit, void* names,
     s32 name_count) {
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%s, name_count=%d",
         resource_limit, names, name_count);
@@ -212,7 +212,7 @@ Result GetResourceLimitCurrentValues(s64* values, Handle resource_limit, void* n
 }
 
 /// Creates a new thread
-Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
+static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
     std::string name;
     if (Symbols::HasSymbol(entry_point)) {
         TSymbol symbol = Symbols::GetSymbol(entry_point);
@@ -234,7 +234,7 @@ Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 p
 }
 
 /// Called when a thread exits
-u32 ExitThread() {
+static u32 ExitThread() {
     Handle thread = Kernel::GetCurrentThreadHandle();
 
     DEBUG_LOG(SVC, "called, pc=0x%08X", Core::g_app_core->GetPC()); // PC = 0x0010545C
@@ -245,18 +245,18 @@ u32 ExitThread() {
 }
 
 /// Gets the priority for the specified thread
-Result GetThreadPriority(s32* priority, Handle handle) {
+static Result GetThreadPriority(s32* priority, Handle handle) {
     *priority = Kernel::GetThreadPriority(handle);
     return 0;
 }
 
 /// Sets the priority for the specified thread
-Result SetThreadPriority(Handle handle, s32 priority) {
+static Result SetThreadPriority(Handle handle, s32 priority) {
     return Kernel::SetThreadPriority(handle, priority);
 }
 
 /// Create a mutex
-Result CreateMutex(Handle* mutex, u32 initial_locked) {
+static Result CreateMutex(Handle* mutex, u32 initial_locked) {
     *mutex = Kernel::CreateMutex((initial_locked != 0));
     DEBUG_LOG(SVC, "called initial_locked=%s : created handle=0x%08X", 
         initial_locked ? "true" : "false", *mutex);
@@ -264,7 +264,7 @@ Result CreateMutex(Handle* mutex, u32 initial_locked) {
 }
 
 /// Release a mutex
-Result ReleaseMutex(Handle handle) {
+static Result ReleaseMutex(Handle handle) {
     DEBUG_LOG(SVC, "called handle=0x%08X", handle);
     _assert_msg_(KERNEL, (handle != 0), "called, but handle is nullptr!");
     Kernel::ReleaseMutex(handle);
@@ -272,19 +272,19 @@ Result ReleaseMutex(Handle handle) {
 }
 
 /// Get current thread ID
-Result GetThreadId(u32* thread_id, Handle thread) {
+static Result GetThreadId(u32* thread_id, Handle thread) {
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called thread=0x%08X", thread);
     return 0;
 }
 
 /// Query memory
-Result QueryMemory(void* info, void* out, u32 addr) {
+static Result QueryMemory(void* info, void* out, u32 addr) {
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called addr=0x%08X", addr);
     return 0;
 }
 
 /// Create an event
-Result CreateEvent(Handle* evt, u32 reset_type) {
+static Result CreateEvent(Handle* evt, u32 reset_type) {
     *evt = Kernel::CreateEvent((ResetType)reset_type);
     DEBUG_LOG(SVC, "called reset_type=0x%08X : created handle=0x%08X", 
         reset_type, *evt);
@@ -292,7 +292,7 @@ Result CreateEvent(Handle* evt, u32 reset_type) {
 }
 
 /// Duplicates a kernel handle
-Result DuplicateHandle(Handle* out, Handle handle) {
+static Result DuplicateHandle(Handle* out, Handle handle) {
     DEBUG_LOG(SVC, "called handle=0x%08X", handle);
 
     // Translate kernel handles -> real handles
@@ -309,26 +309,26 @@ Result DuplicateHandle(Handle* out, Handle handle) {
 }
 
 /// Signals an event
-Result SignalEvent(Handle evt) {
+static Result SignalEvent(Handle evt) {
     Result res = Kernel::SignalEvent(evt);
     DEBUG_LOG(SVC, "called event=0x%08X", evt);
     return res;
 }
 
 /// Clears an event
-Result ClearEvent(Handle evt) {
+static Result ClearEvent(Handle evt) {
     Result res = Kernel::ClearEvent(evt);
     DEBUG_LOG(SVC, "called event=0x%08X", evt);
     return res;
 }
 
 /// Sleep the current thread
-void SleepThread(s64 nanoseconds) {
+static void SleepThread(s64 nanoseconds) {
     DEBUG_LOG(SVC, "called nanoseconds=%lld", nanoseconds);
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
-s64 GetSystemTick() {
+static s64 GetSystemTick() {
     return (s64)Core::g_app_core->GetTicks();
 }
 
