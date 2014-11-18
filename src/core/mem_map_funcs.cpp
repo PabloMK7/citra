@@ -12,9 +12,9 @@
 
 namespace Memory {
 
-std::map<u32, MemoryBlock> g_heap_map;
-std::map<u32, MemoryBlock> g_heap_gsp_map;
-std::map<u32, MemoryBlock> g_shared_map;
+static std::map<u32, MemoryBlock> heap_map;
+static std::map<u32, MemoryBlock> heap_gsp_map;
+static std::map<u32, MemoryBlock> shared_map;
 
 /// Convert a physical address to virtual address
 VAddr PhysicalToVirtualAddress(const PAddr addr) {
@@ -194,11 +194,11 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
     block.operation     = operation;
     block.permissions   = permissions;
 
-    if (g_heap_map.size() > 0) {
-        const MemoryBlock last_block = g_heap_map.rbegin()->second;
+    if (heap_map.size() > 0) {
+        const MemoryBlock last_block = heap_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
-    g_heap_map[block.GetVirtualAddress()] = block;
+    heap_map[block.GetVirtualAddress()] = block;
 
     return block.GetVirtualAddress();
 }
@@ -217,11 +217,11 @@ u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
     block.operation     = operation;
     block.permissions   = permissions;
 
-    if (g_heap_gsp_map.size() > 0) {
-        const MemoryBlock last_block = g_heap_gsp_map.rbegin()->second;
+    if (heap_gsp_map.size() > 0) {
+        const MemoryBlock last_block = heap_gsp_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
-    g_heap_gsp_map[block.GetVirtualAddress()] = block;
+    heap_gsp_map[block.GetVirtualAddress()] = block;
 
     return block.GetVirtualAddress();
 }

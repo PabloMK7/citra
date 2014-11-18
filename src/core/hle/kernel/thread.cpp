@@ -71,17 +71,17 @@ public:
 };
 
 // Lists all thread ids that aren't deleted/etc.
-std::vector<Handle> g_thread_queue;
+static std::vector<Handle> thread_queue;
 
 // Lists only ready thread ids.
-Common::ThreadQueueList<Handle> g_thread_ready_queue;
+static Common::ThreadQueueList<Handle> thread_ready_queue;
 
-Handle g_current_thread_handle;
-Thread* g_current_thread;
+static Handle current_thread_handle;
+static Thread* current_thread;
 
 /// Gets the current thread
 inline Thread* GetCurrentThread() {
-    return g_current_thread;
+    return current_thread;
 }
 
 /// Gets the current thread handle
@@ -91,8 +91,8 @@ Handle GetCurrentThreadHandle() {
 
 /// Sets the current thread
 inline void SetCurrentThread(Thread* t) {
-    g_current_thread = t;
-    g_current_thread_handle = t->GetHandle();
+    current_thread = t;
+    current_thread_handle = t->GetHandle();
 }
 
 /// Saves the current CPU context
@@ -131,13 +131,13 @@ void ChangeReadyState(Thread* t, bool ready) {
     Handle handle = t->GetHandle();
     if (t->IsReady()) {
         if (!ready) {
-            g_thread_ready_queue.remove(t->current_priority, handle);
+            thread_ready_queue.remove(t->current_priority, handle);
         }
     }  else if (ready) {
         if (t->IsRunning()) {
-            g_thread_ready_queue.push_front(t->current_priority, handle);
+            thread_ready_queue.push_front(t->current_priority, handle);
         } else {
-            g_thread_ready_queue.push_back(t->current_priority, handle);
+            thread_ready_queue.push_back(t->current_priority, handle);
         }
         t->status = THREADSTATUS_READY;
     }
@@ -195,7 +195,7 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
     s32 priority = THREADPRIO_LOWEST;
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (const auto& handle : g_thread_queue) {
+    for (const auto& handle : thread_queue) {
 
         // TODO(bunnei): Verify arbiter address...
         if (!VerifyWait(handle, WAITTYPE_ARB, arbiter))
@@ -218,7 +218,7 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
 void ArbitrateAllThreads(u32 arbiter, u32 address) {
     
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (const auto& handle : g_thread_queue) {
+    for (const auto& handle : thread_queue) {
 
         // TODO(bunnei): Verify arbiter address...
         if (VerifyWait(handle, WAITTYPE_ARB, arbiter))
@@ -265,9 +265,9 @@ Thread* NextThread() {
     Thread* cur = GetCurrentThread();
     
     if (cur && cur->IsRunning()) {
-        next = g_thread_ready_queue.pop_first_better(cur->current_priority);
+        next = thread_ready_queue.pop_first_better(cur->current_priority);
     } else  {
-        next = g_thread_ready_queue.pop_first();
+        next = thread_ready_queue.pop_first();
     }
     if (next == 0) {
         return nullptr;
@@ -306,9 +306,9 @@ void DebugThreadQueue() {
         return;
     }
     INFO_LOG(KERNEL, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
-    for (u32 i = 0; i < g_thread_queue.size(); i++) {
-        Handle handle = g_thread_queue[i];
-        s32 priority = g_thread_ready_queue.contains(handle);
+    for (u32 i = 0; i < thread_queue.size(); i++) {
+        Handle handle = thread_queue[i];
+        s32 priority = thread_ready_queue.contains(handle);
         if (priority != -1) {
             INFO_LOG(KERNEL, "0x%02X 0x%08X", priority, handle);
         }
@@ -326,8 +326,8 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
 
     handle = Kernel::g_object_pool.Create(thread);
 
-    g_thread_queue.push_back(handle);
-    g_thread_ready_queue.prepare(priority);
+    thread_queue.push_back(handle);
+    thread_ready_queue.prepare(priority);
 
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
@@ -405,16 +405,16 @@ Result SetThreadPriority(Handle handle, s32 priority) {
 
     // Change thread priority
     s32 old = thread->current_priority;
-    g_thread_ready_queue.remove(old, handle);
+    thread_ready_queue.remove(old, handle);
     thread->current_priority = priority;
-    g_thread_ready_queue.prepare(thread->current_priority);
+    thread_ready_queue.prepare(thread->current_priority);
 
     // Change thread status to "ready" and push to ready queue
     if (thread->IsRunning()) {
         thread->status = (thread->status & ~THREADSTATUS_RUNNING) | THREADSTATUS_READY;
     }
     if (thread->IsReady()) {
-        g_thread_ready_queue.push_back(thread->current_priority, handle);
+        thread_ready_queue.push_back(thread->current_priority, handle);
     }
 
     return 0;

@@ -11,7 +11,7 @@
 
 namespace SRV {
 
-Handle g_event_handle = 0;
+static Handle g_event_handle = 0;
 
 static void Initialize(Service::Interface* self) {
     DEBUG_LOG(OSHLE, "called");

@@ -16,10 +16,10 @@
 
 namespace Core {
 
-u64             g_last_ticks    = 0;        ///< Last CPU ticks
-ARM_Disasm*     g_disasm        = nullptr;  ///< ARM disassembler
-ARM_Interface*  g_app_core      = nullptr;  ///< ARM11 application core
-ARM_Interface*  g_sys_core      = nullptr;  ///< ARM11 system (OS) core
+static u64         last_ticks = 0;        ///< Last CPU ticks
+static ARM_Disasm* disasm     = nullptr;  ///< ARM disassembler
+ARM_Interface*     g_app_core = nullptr;  ///< ARM11 application core
+ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
@@ -49,7 +49,7 @@ void Stop() {
 int Init() {
     NOTICE_LOG(MASTER_LOG, "initialized OK");
 
-    g_disasm = new ARM_Disasm();
+    disasm = new ARM_Disasm();
     g_sys_core = new ARM_Interpreter();
 
     switch (Settings::values.cpu_core) {
@@ -62,13 +62,13 @@ int Init() {
             break;
     }
 
-    g_last_ticks = Core::g_app_core->GetTicks();
+    last_ticks = Core::g_app_core->GetTicks();
 
     return 0;
 }
 
 void Shutdown() {
-    delete g_disasm;
+    delete disasm;
     delete g_app_core;
     delete g_sys_core;
 
