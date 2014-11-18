@@ -106,4 +106,4 @@ void SetClockFrequencyMHz(int cpuMhz);
 int GetClockFrequencyMHz();
 extern int slicelength;
 
-}; // namespace
+} // namespace

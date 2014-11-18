@@ -26,7 +26,7 @@ public:
      * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
      * @return IdCode of the archive
      */
-    IdCode GetIdCode() const override { return IdCode::RomFS; };
+    IdCode GetIdCode() const override { return IdCode::RomFS; }
 
     /**
      * Open a file specified by its path, using the specified mode

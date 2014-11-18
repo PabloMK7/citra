@@ -41,7 +41,7 @@ std::unique_ptr<File> Archive_RomFS::OpenFile(const Path& path, const Mode mode)
 bool Archive_RomFS::CreateDirectory(const Path& path) const {
     ERROR_LOG(FILESYS, "Attempted to create a directory in ROMFS.");
     return false;
-};
+}
 
 /**
  * Open a directory specified by its path

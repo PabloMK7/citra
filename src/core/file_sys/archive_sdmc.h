@@ -30,7 +30,7 @@ public:
      * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
      * @return IdCode of the archive
      */
-    IdCode GetIdCode() const override { return IdCode::SDMC; };
+    IdCode GetIdCode() const override { return IdCode::SDMC; }
 
     /**
      * Open a file specified by its path, using the specified mode

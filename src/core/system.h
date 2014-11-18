@@ -30,4 +30,4 @@ void RunLoopFor(int cycles);
 void RunLoopUntil(u64 global_cycles);
 void Shutdown();
 
-};
+}
