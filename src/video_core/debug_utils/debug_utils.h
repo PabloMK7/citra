@@ -41,7 +41,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 // Utility class to log Pica commands.
 struct PicaTrace {
     struct Write : public std::pair<u32,u32> {
-		Write(u32 id, u32 value) : std::pair<u32,u32>(id, value) {}
+        Write(u32 id, u32 value) : std::pair<u32,u32>(id, value) {}
 
         u32& Id() { return first; }
         const u32& Id() const { return first; }

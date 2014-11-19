@@ -16,33 +16,33 @@
 
 // User directory indices for GetUserPath
 enum {
-	D_USER_IDX,
-	D_ROOT_IDX,
-	D_CONFIG_IDX,
-	D_GAMECONFIG_IDX,
-	D_MAPS_IDX,
-	D_CACHE_IDX,
-	D_SHADERCACHE_IDX,
-	D_SHADERS_IDX,
-	D_STATESAVES_IDX,
-	D_SCREENSHOTS_IDX,
-	D_SDMC_IDX,
-	D_HIRESTEXTURES_IDX,
-	D_DUMP_IDX,
-	D_DUMPFRAMES_IDX,
-	D_DUMPAUDIO_IDX,
-	D_DUMPTEXTURES_IDX,
-	D_DUMPDSP_IDX,
-	D_LOGS_IDX,
-	D_SYSCONF_IDX,
-	F_EMUCONFIG_IDX,
-	F_DEBUGGERCONFIG_IDX,
-	F_LOGGERCONFIG_IDX,
-	F_MAINLOG_IDX,
-	F_RAMDUMP_IDX,
-	F_ARAMDUMP_IDX,
-	F_SYSCONF_IDX,
-	NUM_PATH_INDICES
+    D_USER_IDX,
+    D_ROOT_IDX,
+    D_CONFIG_IDX,
+    D_GAMECONFIG_IDX,
+    D_MAPS_IDX,
+    D_CACHE_IDX,
+    D_SHADERCACHE_IDX,
+    D_SHADERS_IDX,
+    D_STATESAVES_IDX,
+    D_SCREENSHOTS_IDX,
+    D_SDMC_IDX,
+    D_HIRESTEXTURES_IDX,
+    D_DUMP_IDX,
+    D_DUMPFRAMES_IDX,
+    D_DUMPAUDIO_IDX,
+    D_DUMPTEXTURES_IDX,
+    D_DUMPDSP_IDX,
+    D_LOGS_IDX,
+    D_SYSCONF_IDX,
+    F_EMUCONFIG_IDX,
+    F_DEBUGGERCONFIG_IDX,
+    F_LOGGERCONFIG_IDX,
+    F_MAINLOG_IDX,
+    F_RAMDUMP_IDX,
+    F_ARAMDUMP_IDX,
+    F_SYSCONF_IDX,
+    NUM_PATH_INDICES
 };
 
 namespace FileUtil
@@ -51,11 +51,11 @@ namespace FileUtil
 // FileSystem tree node/
 struct FSTEntry
 {
-	bool isDirectory;
-	u64 size;						// file length or number of entries from children
-	std::string physicalName;		// name on disk
-	std::string virtualName;		// name in FST names table
-	std::vector<FSTEntry> children;
+    bool isDirectory;
+    u64 size;                       // file length or number of entries from children
+    std::string physicalName;       // name on disk
+    std::string virtualName;        // name in FST names table
+    std::vector<FSTEntry> children;
 };
 
 // Returns true if file filename exists
@@ -148,86 +148,86 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 class IOFile : public NonCopyable
 {
 public:
-	IOFile();
-	IOFile(std::FILE* file);
-	IOFile(const std::string& filename, const char openmode[]);
+    IOFile();
+    IOFile(std::FILE* file);
+    IOFile(const std::string& filename, const char openmode[]);
 
-	~IOFile();
+    ~IOFile();
 
-	IOFile(IOFile&& other);
-	IOFile& operator=(IOFile&& other);
+    IOFile(IOFile&& other);
+    IOFile& operator=(IOFile&& other);
 
-	void Swap(IOFile& other);
+    void Swap(IOFile& other);
 
-	bool Open(const std::string& filename, const char openmode[]);
-	bool Close();
+    bool Open(const std::string& filename, const char openmode[]);
+    bool Close();
 
-	template <typename T>
-	size_t ReadArray(T* data, size_t length)
-	{
-		if (!IsOpen()) {
-			m_good = false;
-			return -1;
-		}
+    template <typename T>
+    size_t ReadArray(T* data, size_t length)
+    {
+        if (!IsOpen()) {
+            m_good = false;
+            return -1;
+        }
 
-		size_t items_read = std::fread(data, sizeof(T), length, m_file);
-		if (items_read != length)
-			m_good = false;
+        size_t items_read = std::fread(data, sizeof(T), length, m_file);
+        if (items_read != length)
+            m_good = false;
 
-		return items_read;
-	}
+        return items_read;
+    }
 
-	template <typename T>
-	size_t WriteArray(const T* data, size_t length)
-	{
-		if (!IsOpen()) {
-			m_good = false;
-			return -1;
-		}
+    template <typename T>
+    size_t WriteArray(const T* data, size_t length)
+    {
+        if (!IsOpen()) {
+            m_good = false;
+            return -1;
+        }
 
-		size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
-		if (items_written != length)
-			m_good = false;
+        size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
+        if (items_written != length)
+            m_good = false;
 
-		return items_written;
-	}
+        return items_written;
+    }
 
-	size_t ReadBytes(void* data, size_t length)
-	{
-		return ReadArray(reinterpret_cast<char*>(data), length);
-	}
+    size_t ReadBytes(void* data, size_t length)
+    {
+        return ReadArray(reinterpret_cast<char*>(data), length);
+    }
 
-	size_t WriteBytes(const void* data, size_t length)
-	{
-		return WriteArray(reinterpret_cast<const char*>(data), length);
-	}
+    size_t WriteBytes(const void* data, size_t length)
+    {
+        return WriteArray(reinterpret_cast<const char*>(data), length);
+    }
 
-	bool IsOpen() { return NULL != m_file; }
+    bool IsOpen() { return NULL != m_file; }
 
-	// m_good is set to false when a read, write or other function fails
-	bool IsGood() {	return m_good; }
-	operator void*() { return m_good ? m_file : NULL; }
+    // m_good is set to false when a read, write or other function fails
+    bool IsGood() {    return m_good; }
+    operator void*() { return m_good ? m_file : NULL; }
 
-	std::FILE* ReleaseHandle();
+    std::FILE* ReleaseHandle();
 
-	std::FILE* GetHandle() { return m_file; }
+    std::FILE* GetHandle() { return m_file; }
 
-	void SetHandle(std::FILE* file);
+    void SetHandle(std::FILE* file);
 
-	bool Seek(s64 off, int origin);
-	u64 Tell();
-	u64 GetSize();
-	bool Resize(u64 size);
-	bool Flush();
+    bool Seek(s64 off, int origin);
+    u64 Tell();
+    u64 GetSize();
+    bool Resize(u64 size);
+    bool Flush();
 
-	// clear error state
-	void Clear() { m_good = true; std::clearerr(m_file); }
+    // clear error state
+    void Clear() { m_good = true; std::clearerr(m_file); }
 
-	std::FILE* m_file;
-	bool m_good;
+    std::FILE* m_file;
+    bool m_good;
 private:
-	IOFile(IOFile&);
-	IOFile& operator=(IOFile& other);
+    IOFile(IOFile&);
+    IOFile& operator=(IOFile& other);
 };
 
 }  // namespace
@@ -237,8 +237,8 @@ template <typename T>
 void OpenFStream(T& fstream, const std::string& filename, std::ios_base::openmode openmode)
 {
 #ifdef _WIN32
-	fstream.open(Common::UTF8ToTStr(filename).c_str(), openmode);
+    fstream.open(Common::UTF8ToTStr(filename).c_str(), openmode);
 #else
-	fstream.open(filename.c_str(), openmode);
+    fstream.open(filename.c_str(), openmode);
 #endif
 }

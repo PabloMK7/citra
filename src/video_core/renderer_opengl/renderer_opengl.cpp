@@ -239,7 +239,7 @@ MathUtil::Rectangle<unsigned> RendererOpenGL::GetViewportExtent() {
 
     MathUtil::Rectangle<unsigned> viewport_extent;
     if (window_aspect_ratio > emulation_aspect_ratio) {
-		// Window is narrower than the emulation content => apply borders to the top and bottom
+        // Window is narrower than the emulation content => apply borders to the top and bottom
         unsigned viewport_height = emulation_aspect_ratio * framebuffer_width;
         viewport_extent.left = 0;
         viewport_extent.top = (framebuffer_height - viewport_height) / 2;

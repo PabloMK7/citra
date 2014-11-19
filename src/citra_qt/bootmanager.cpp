@@ -274,5 +274,5 @@ void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
 }
 
 void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
-	setMinimumSize(minimal_size.first, minimal_size.second);
+    setMinimumSize(minimal_size.first, minimal_size.second);
 }

@@ -16,8 +16,8 @@ public:
     /// Swap buffers to display the next frame
     void SwapBuffers() override;
 
-	/// Polls window events
-	void PollEvents() override;
+    /// Polls window events
+    void PollEvents() override;
 
     /// Makes the graphics context current for the caller thread
     void MakeCurrent() override;
