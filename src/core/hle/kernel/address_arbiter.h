@@ -11,7 +11,7 @@
 // Address arbiters are an underlying kernel synchronization object that can be created/used via
 // supervisor calls (SVCs). They function as sort of a global lock. Typically, games/other CTR
 // applications use them as an underlying mechanism to implement thread-safe barriers, events, and
-// semphores. 
+// semphores.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace

@@ -16,10 +16,10 @@ public slots:
     void OnCPUStepped();
 
 private:
-	Ui::ARMRegisters cpu_regs_ui;
+    Ui::ARMRegisters cpu_regs_ui;
 
-	QTreeWidget* tree;
-    
-	QTreeWidgetItem* registers;
-	QTreeWidgetItem* CSPR;
+    QTreeWidget* tree;
+
+    QTreeWidgetItem* registers;
+    QTreeWidgetItem* CSPR;
 };

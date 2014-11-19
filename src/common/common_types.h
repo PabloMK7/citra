@@ -22,7 +22,7 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#pragma once 
+#pragma once
 
 #include <cmath>
 #include <cstdint>
@@ -45,8 +45,8 @@ typedef double  f64; ///< 64-bit floating point
 
 /// Union for fast 16-bit type casting
 union t16 {
-	u8	_u8[2];             ///< 8-bit unsigned char(s)
-	u16 _u16;               ///< 16-bit unsigned shorts(s)
+    u8  _u8[2];             ///< 8-bit unsigned char(s)
+    u16 _u16;               ///< 16-bit unsigned shorts(s)
 };
 
 /// Union for fast 32-bit type casting

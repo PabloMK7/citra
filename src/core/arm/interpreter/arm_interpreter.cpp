@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include "core/arm/interpreter/arm_interpreter.h"
 
@@ -24,7 +24,7 @@ ARM_Interpreter::ARM_Interpreter()  {
     state->lateabtSig = LOW;
 
     // Reset the core to initial state
-    ARMul_CoProInit(state); 
+    ARMul_CoProInit(state);
     ARMul_Reset(state);
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = 3;

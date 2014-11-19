@@ -50,7 +50,7 @@ template<s32 func(u32*, u32, u32, u32, u32, u32)> void Wrap(){
 
 template<s32 func(s32*, u32*, s32, bool, s64)> void Wrap() {
     s32 param_1 = 0;
-    s32 retval = func(&param_1, (Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2), 
+    s32 retval = func(&param_1, (Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
         (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)));
     Core::g_app_core->SetReg(1, (u32)param_1);
     FuncReturn(retval);
@@ -103,7 +103,7 @@ template<s32 func(void*)> void Wrap() {
 }
 
 template<s32 func(s64*, u32, void*, s32)> void Wrap(){
-    FuncReturn(func((s64*)Memory::GetPointer(PARAM(0)), PARAM(1), Memory::GetPointer(PARAM(2)), 
+    FuncReturn(func((s64*)Memory::GetPointer(PARAM(0)), PARAM(1), Memory::GetPointer(PARAM(2)),
         (s32)PARAM(3)));
 }
 

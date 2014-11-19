@@ -269,7 +269,7 @@ static void IsSdmcDetected(Service::Interface* self) {
 
     cmd_buff[1] = 0;
     cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
-    
+
     DEBUG_LOG(KERNEL, "called");
 }
 

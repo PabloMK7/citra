@@ -121,11 +121,11 @@ std::string ArrayToString(const u8 *data, u32 size, int line_len, bool spaces)
 {
     std::ostringstream oss;
     oss << std::setfill('0') << std::hex;
-    
+
     for (int line = 0; size; ++data, --size)
     {
         oss << std::setw(2) << (int)*data;
-        
+
         if (line_len == ++line)
         {
             oss << '\n';
@@ -168,7 +168,7 @@ bool TryParse(const std::string &str, u32 *const output)
     errno = 0;
 
     unsigned long value = strtoul(str.c_str(), &endptr, 0);
-    
+
     if (!endptr || *endptr)
         return false;
 
@@ -294,7 +294,7 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
 //#include <string>
 //#include <assert.h>
 
-const char HEX2DEC[256] = 
+const char HEX2DEC[256] =
 {
     /*       0  1  2  3   4  5  6  7   8  9  A  B   C  D  E  F */
     /* 0 */ 16,16,16,16, 16,16,16,16, 16,16,16,16, 16,16,16,16,
@@ -327,7 +327,7 @@ std::string UriDecode(const std::string & sSrc)
     const unsigned char * pSrc = (const unsigned char *)sSrc.c_str();
     const size_t SRC_LEN = sSrc.length();
     const unsigned char * const SRC_END = pSrc + SRC_LEN;
-    const unsigned char * const SRC_LAST_DEC = SRC_END - 2;   // last decodable '%' 
+    const unsigned char * const SRC_LAST_DEC = SRC_END - 2;   // last decodable '%'
 
     char * const pStart = new char[SRC_LEN];
     char * pEnd = pStart;
@@ -394,7 +394,7 @@ std::string UriEncode(const std::string & sSrc)
 
     for (; pSrc < SRC_END; ++pSrc)
     {
-        if (SAFE[*pSrc]) 
+        if (SAFE[*pSrc])
             *pEnd++ = *pSrc;
         else
         {
@@ -518,9 +518,9 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
 
     out_buffer.resize(out_buffer_size - dst_bytes);
     out_buffer.swap(result);
-    
+
     iconv_close(conv_desc);
-    
+
     return result;
 }
 
@@ -576,7 +576,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
     out_buffer.swap(result);
 
     iconv_close(conv_desc);
-    
+
     return result;
 }
 

@@ -48,7 +48,7 @@ void GKeyConfigButton::OnActivePortChanged(const common::Config::ControllerPort&
     else if (config.keys.key_code[id] == Qt::Key_Control) text = tr("Control");
     else if (config.keys.key_code[id] == Qt::Key_Alt) text = tr("Alt");
     else if (config.keys.key_code[id] == Qt::Key_Meta) text = tr("Meta");
-	setText(text);
+    setText(text);
 }
 
 void GKeyConfigButton::OnClicked()

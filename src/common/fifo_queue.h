@@ -45,7 +45,7 @@ public:
         // create the element, add it to the queue
         m_write_ptr->current = new T(std::forward<Arg>(t));
         // set the next pointer to a new element ptr
-        // then advance the write pointer 
+        // then advance the write pointer
         m_write_ptr = m_write_ptr->next = new ElementPtr();
         Common::AtomicIncrement(m_size);
     }

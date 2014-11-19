@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include <vector>
 
@@ -20,7 +20,7 @@ bool g_reschedule = false;  ///< If true, immediately reschedules the CPU to a n
 const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
-        ERROR_LOG(HLE,"unknown svc=0x%02X", func_num); 
+        ERROR_LOG(HLE,"unknown svc=0x%02X", func_num);
         return nullptr;
     }
     return &g_module_db[0].func_table[func_num];
@@ -58,7 +58,7 @@ void RegisterAllModules() {
 
 void Init() {
     Service::Init();
-    
+
     RegisterAllModules();
 
     NOTICE_LOG(HLE, "initialized OK");

@@ -15,7 +15,7 @@
 
 namespace HID_User {
 
-/** 
+/**
  * Structure of a Pad controller state.
  */
 struct PadState {

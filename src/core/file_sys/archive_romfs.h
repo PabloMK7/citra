@@ -74,7 +74,7 @@ public:
      * @return Size of the archive in bytes
      */
     size_t GetSize() const override;
-    
+
     /**
      * Set the size of the archive in bytes
      */

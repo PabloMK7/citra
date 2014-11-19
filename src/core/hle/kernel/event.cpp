@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include <map>
 #include <algorithm>
@@ -95,7 +95,7 @@ Result SignalEvent(const Handle handle) {
     for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
         ResumeThreadFromWait( evt->waiting_threads[i]);
 
-        // If any thread is signalled awake by this event, assume the event was "caught" and reset 
+        // If any thread is signalled awake by this event, assume the event was "caught" and reset
         // the event. This will result in the next thread waiting on the event to block. Otherwise,
         // the event will not be reset, and the next thread to call WaitSynchronization on it will
         // not block. Not sure if this is correct behavior, but it seems to work.

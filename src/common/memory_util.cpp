@@ -47,7 +47,7 @@ void* AllocateExecutableMemory(size_t size, bool low)
 
     // printf("Mapped executable memory at %p (size %ld)\n", ptr,
     //    (unsigned long)size);
-    
+
 #ifdef _WIN32
     if (ptr == nullptr)
     {
@@ -55,7 +55,7 @@ void* AllocateExecutableMemory(size_t size, bool low)
     if (ptr == MAP_FAILED)
     {
         ptr = nullptr;
-#endif 
+#endif
         PanicAlert("Failed to allocate executable memory");
     }
 #if !defined(_WIN32) && defined(__x86_64__) && !defined(MAP_32BIT)
@@ -127,11 +127,11 @@ void FreeMemoryPages(void* ptr, size_t size)
     if (ptr)
     {
 #ifdef _WIN32
-    
+
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
             PanicAlert("FreeMemoryPages failed!\n%s", GetLastErrorMsg());
         ptr = NULL; // Is this our responsibility?
-    
+
 #else
         munmap(ptr, size);
 #endif

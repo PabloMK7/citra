@@ -23,7 +23,7 @@ int __cdecl main(int argc, char **argv) {
     }
 
     Config config;
-    
+
     if (!Settings::values.enable_log)
         LogManager::Shutdown();
 

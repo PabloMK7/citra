@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include <algorithm>
 #include <list>
@@ -113,7 +113,7 @@ void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     t->context.pc = t->context.reg_15 = t->entry_point;
     t->context.sp = t->stack_top;
     t->context.cpsr = 0x1F; // Usermode
-    
+
     // TODO(bunnei): This instructs the CPU core to start the execution as if it is "resuming" a
     // thread. This is somewhat Sky-Eye specific, and should be re-architected in the future to be
     // agnostic of the CPU core.
@@ -148,7 +148,7 @@ inline bool VerifyWait(const Handle& handle, WaitType type, Handle wait_handle) 
     Thread* thread = g_object_pool.GetFast<Thread>(handle);
     _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
 
-    if (type != thread->wait_type || wait_handle != thread->wait_handle) 
+    if (type != thread->wait_type || wait_handle != thread->wait_handle)
         return false;
 
     return true;
@@ -158,7 +158,7 @@ inline bool VerifyWait(const Handle& handle, WaitType type, Handle wait_handle) 
 void StopThread(Handle handle, const char* reason) {
     Thread* thread = g_object_pool.GetFast<Thread>(handle);
     _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
-    
+
     ChangeReadyState(thread, false);
     thread->status = THREADSTATUS_DORMANT;
     for (size_t i = 0; i < thread->waiting_threads.size(); ++i) {
@@ -181,7 +181,7 @@ void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     }
     ChangeReadyState(t, (new_status & THREADSTATUS_READY) != 0);
     t->status = new_status;
-    
+
     if (new_status == THREADSTATUS_WAIT) {
         if (t->wait_type == WAITTYPE_NONE) {
             ERROR_LOG(KERNEL, "Waittype none not allowed");
@@ -216,7 +216,7 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
 
 /// Arbitrate all threads currently waiting
 void ArbitrateAllThreads(u32 arbiter, u32 address) {
-    
+
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (const auto& handle : thread_queue) {
 
@@ -238,11 +238,11 @@ void CallThread(Thread* t) {
 /// Switches CPU context to that of the specified thread
 void SwitchContext(Thread* t) {
     Thread* cur = GetCurrentThread();
-    
+
     // Save context for current thread
     if (cur) {
         SaveContext(cur->context);
-        
+
         if (cur->IsRunning()) {
             ChangeReadyState(cur, true);
         }
@@ -263,7 +263,7 @@ void SwitchContext(Thread* t) {
 Thread* NextThread() {
     Handle next;
     Thread* cur = GetCurrentThread();
-    
+
     if (cur && cur->IsRunning()) {
         next = thread_ready_queue.pop_first_better(cur->current_priority);
     } else  {
@@ -319,7 +319,7 @@ void DebugThreadQueue() {
 Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 priority,
     s32 processor_id, u32 stack_top, int stack_size) {
 
-    _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST), 
+    _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST),
         "CreateThread priority=%d, outside of allowable range!", priority)
 
     Thread* thread = new Thread;
@@ -351,7 +351,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
         return -1;
     }
     if ((u32)stack_size < 0x200) {
-        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid stack_size=0x%08X", name, 
+        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid stack_size=0x%08X", name,
             stack_size);
         return -1;
     }
@@ -368,7 +368,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
         return -1;
     }
     Handle handle;
-    Thread* thread = CreateThread(handle, name, entry_point, priority, processor_id, stack_top, 
+    Thread* thread = CreateThread(handle, name, entry_point, priority, processor_id, stack_top,
         stack_size);
 
     ResetThread(thread, arg, 0);
@@ -423,19 +423,19 @@ Result SetThreadPriority(Handle handle, s32 priority) {
 /// Sets up the primary application thread
 Handle SetupMainThread(s32 priority, int stack_size) {
     Handle handle;
-    
+
     // Initialize new "main" thread
-    Thread* thread = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority, 
+    Thread* thread = CreateThread(handle, "main", Core::g_app_core->GetPC(), priority,
         THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END, stack_size);
-    
+
     ResetThread(thread, 0, 0);
-    
+
     // If running another thread already, set it to "ready" state
     Thread* cur = GetCurrentThread();
     if (cur && cur->IsRunning()) {
         ChangeReadyState(cur, true);
     }
-    
+
     // Run new "main" thread
     SetCurrentThread(thread);
     thread->status = THREADSTATUS_RUNNING;
@@ -452,12 +452,12 @@ void Reschedule() {
     HLE::g_reschedule = false;
     if (next > 0) {
         INFO_LOG(KERNEL, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
-        
+
         SwitchContext(next);
 
         // Hack - There is no mechanism yet to waken the primary thread if it has been put to sleep
         // by a simulated VBLANK thread switch. So, we'll just immediately set it to "ready" again.
-        // This results in the current thread yielding on a VBLANK once, and then it will be 
+        // This results in the current thread yielding on a VBLANK once, and then it will be
         // immediately placed back in the queue for execution.
         if (prev->wait_type == WAITTYPE_VBLANK) {
             ResumeThreadFromWait(prev->GetHandle());

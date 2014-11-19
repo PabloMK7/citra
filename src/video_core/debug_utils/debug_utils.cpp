@@ -318,9 +318,9 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     return;
 
 #ifndef HAVE_PNG
-	return;
+    return;
 #else
-	if (!data)
+    if (!data)
         return;
 
     // Write data to file

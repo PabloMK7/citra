@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #pragma once
 
@@ -63,7 +63,7 @@ public:
      * Get the current CPSR register
      * @return Returns the value of the CPSR register
      */
-    virtual u32 GetCPSR() const = 0;  
+    virtual u32 GetCPSR() const = 0;
 
     /**
      * Set the current CPSR register
@@ -98,7 +98,7 @@ public:
     }
 
 protected:
-    
+
     /**
      * Executes the given number of instructions
      * @param num_instructions Number of instructions to executes

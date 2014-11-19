@@ -41,7 +41,7 @@ struct BaseEvent
     s64 time;
     u64 userdata;
     int type;
-    //	Event *next;
+    // Event *next;
 };
 
 typedef LinkedListItem<BaseEvent> Event;
@@ -249,7 +249,7 @@ void AddEventToQueue(Event* ne)
 
 // This must be run ONLY from within the cpu thread
 // cyclesIntoFuture may be VERY inaccurate if called from anything else
-// than Advance 
+// than Advance
 void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata)
 {
     Event *ne = GetNewEvent();
@@ -469,8 +469,8 @@ void ProcessFifoWaitEvents()
     {
         if (first->time <= globalTimer)
         {
-            //			LOG(TIMER, "[Scheduler] %s		 (%lld, %lld) ", 
-            //				first->name ? first->name : "?", (u64)globalTimer, (u64)first->time);
+            //LOG(TIMER, "[Scheduler] %s (%lld, %lld) ",
+            //    first->name ? first->name : "?", (u64)globalTimer, (u64)first->time);
             Event* evt = first;
             first = first->next;
             event_types[evt->type].callback(evt->userdata, (int)(globalTimer - evt->time));
@@ -516,23 +516,23 @@ void Advance()
     //currentMIPS->downcount = slicelength;
 
     //if (Common::AtomicLoadAcquire(hasTsEvents))
-    //	MoveEvents();
+    //    MoveEvents();
     //ProcessFifoWaitEvents();
 
     //if (!first)
     //{
-    //	// WARN_LOG(TIMER, "WARNING - no events in queue. Setting currentMIPS->downcount to 10000");
-    //	currentMIPS->downcount += 10000;
+    //    // WARN_LOG(TIMER, "WARNING - no events in queue. Setting currentMIPS->downcount to 10000");
+    //    currentMIPS->downcount += 10000;
     //}
     //else
     //{
-    //	slicelength = (int)(first->time - globalTimer);
-    //	if (slicelength > MAX_SLICE_LENGTH)
-    //		slicelength = MAX_SLICE_LENGTH;
-    //	currentMIPS->downcount = slicelength;
+    //    slicelength = (int)(first->time - globalTimer);
+    //    if (slicelength > MAX_SLICE_LENGTH)
+    //        slicelength = MAX_SLICE_LENGTH;
+    //    currentMIPS->downcount = slicelength;
     //}
     //if (advanceCallback)
-    //	advanceCallback(cyclesExecuted);
+    //    advanceCallback(cyclesExecuted);
 }
 
 void LogPendingEvents()
@@ -550,20 +550,20 @@ void Idle(int maxIdle)
     ERROR_LOG(TIME, "Unimplemented function!");
     //int cyclesDown = currentMIPS->downcount;
     //if (maxIdle != 0 && cyclesDown > maxIdle)
-    //	cyclesDown = maxIdle;
+    //    cyclesDown = maxIdle;
 
     //if (first && cyclesDown > 0)
     //{
-    //	int cyclesExecuted = slicelength - currentMIPS->downcount;
-    //	int cyclesNextEvent = (int) (first->time - globalTimer);
+    //    int cyclesExecuted = slicelength - currentMIPS->downcount;
+    //    int cyclesNextEvent = (int) (first->time - globalTimer);
 
-    //	if (cyclesNextEvent < cyclesExecuted + cyclesDown)
-    //	{
-    //		cyclesDown = cyclesNextEvent - cyclesExecuted;
-    //		// Now, now... no time machines, please.
-    //		if (cyclesDown < 0)
-    //			cyclesDown = 0;
-    //	}
+    //    if (cyclesNextEvent < cyclesExecuted + cyclesDown)
+    //    {
+    //        cyclesDown = cyclesNextEvent - cyclesExecuted;
+    //        // Now, now... no time machines, please.
+    //        if (cyclesDown < 0)
+    //            cyclesDown = 0;
+    //    }
     //}
 
     //INFO_LOG(TIME, "Idle for %i cycles! (%f ms)", cyclesDown, cyclesDown / (float)(g_clock_rate_arm11 * 0.001f));
@@ -571,7 +571,7 @@ void Idle(int maxIdle)
     //idledCycles += cyclesDown;
     //currentMIPS->downcount -= cyclesDown;
     //if (currentMIPS->downcount == 0)
-    //	currentMIPS->downcount = -1;
+    //    currentMIPS->downcount = -1;
 }
 
 std::string GetScheduledEventsSummary()
@@ -623,4 +623,4 @@ void DoState(PointerWrap &p)
     p.Do(idledCycles);
 }
 
-}	// namespace
+} // namespace

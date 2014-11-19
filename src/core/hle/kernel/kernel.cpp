@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include "common/common.h"
 
@@ -68,7 +68,7 @@ void ObjectPool::List() {
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i]) {
             if (pool[i]) {
-                INFO_LOG(KERNEL, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(), 
+                INFO_LOG(KERNEL, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(),
                     pool[i]->GetName().c_str());
             }
         }
@@ -110,7 +110,7 @@ void Shutdown() {
  */
 bool LoadExec(u32 entry_point) {
     Init();
-    
+
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
