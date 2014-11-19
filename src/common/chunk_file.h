@@ -51,7 +51,7 @@ public:
     PointerWrapSection(PointerWrap &p, int ver, const char *title) : p_(p), ver_(ver), title_(title) {
     }
     ~PointerWrapSection();
-    
+
     bool operator == (const int &v) const { return ver_ == v; }
     bool operator != (const int &v) const { return ver_ != v; }
     bool operator <= (const int &v) const { return ver_ <= v; }
@@ -196,7 +196,7 @@ public:
         }
         (*ptr) += size;
     }
-    
+
     template<class K, class T>
     void Do(std::map<K, T *> &x)
     {
@@ -364,7 +364,7 @@ public:
         if (vec_size > 0)
             DoArray(&x[0], vec_size);
     }
-    
+
     // Store deques.
     template<class T>
     void Do(std::deque<T *> &x)
@@ -481,11 +481,11 @@ public:
     }
 
     // Store strings.
-    void Do(std::string &x) 
+    void Do(std::string &x)
     {
         int stringLen = (int)x.length() + 1;
         Do(stringLen);
-        
+
         switch (mode) {
         case MODE_READ:        x = (char*)*ptr; break;
         case MODE_WRITE:    memcpy(*ptr, x.c_str(), stringLen); break;
@@ -495,7 +495,7 @@ public:
         (*ptr) += stringLen;
     }
 
-    void Do(std::wstring &x) 
+    void Do(std::wstring &x)
     {
         int stringLen = sizeof(wchar_t)*((int)x.length() + 1);
         Do(stringLen);
@@ -534,7 +534,7 @@ public:
     void Do(T &x) {
         DoHelper<T>::Do(this, x);
     }
-    
+
     template<class T>
     void DoPOD(T &x) {
         DoHelper<T>::Do(this, x);

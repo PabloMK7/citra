@@ -43,7 +43,7 @@ void CFileSearch::FindFiles(const std::string& _searchString, const std::string&
         bool bkeepLooping = true;
 
         while (bkeepLooping)
-        {            
+        {
             if (findData.cFileName[0] != '.')
             {
                 std::string strFilename;

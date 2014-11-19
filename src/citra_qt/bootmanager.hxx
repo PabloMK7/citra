@@ -18,7 +18,7 @@ class EmuThread : public QThread
 public:
     /**
      * Set image filename
-     * 
+     *
      * @param filename
      * @warning Only call when not running!
      */

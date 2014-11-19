@@ -39,7 +39,7 @@ enum {
 template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
-    
+
     // TODO(bunnei): What is the virtual address of NDMA?
     // case VADDR_NDMA:
     //     NDMA::Read(var, addr);
@@ -57,9 +57,9 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
-    
+
     // TODO(bunnei): What is the virtual address of NDMA?
-    // case VADDR_NDMA 
+    // case VADDR_NDMA
     //     NDMA::Write(addr, data);
     //     break;
 

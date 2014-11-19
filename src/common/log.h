@@ -11,7 +11,7 @@
 enum {
     OS_LEVEL,       // Printed by the emulated operating system
     NOTICE_LEVEL,   // VERY important information that is NOT errors. Like startup and OSReports.
-    ERROR_LEVEL,    // Critical errors 
+    ERROR_LEVEL,    // Critical errors
     WARNING_LEVEL,  // Something is suspicious.
     INFO_LEVEL,     // General information.
     DEBUG_LEVEL,    // Detailed debugging - might make things slow.
@@ -46,7 +46,7 @@ enum LOG_TYPE {
     MEMMAP,
     MEMCARD_MANAGER,
     OSREPORT,
-    PAD, 
+    PAD,
     PROCESSORINTERFACE,
     PIXELENGINE,
     SERIALINTERFACE,
@@ -89,7 +89,7 @@ enum LOG_LEVELS {
 
 }  // namespace
 
-void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int line, 
+void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int line,
     const char* function, const char* fmt, ...)
 #ifdef __GNUC__
         __attribute__((format(printf, 6, 7)))

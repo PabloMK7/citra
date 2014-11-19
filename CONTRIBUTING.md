@@ -28,23 +28,23 @@ Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spac
 namespace Example {
 
 // Namespace contents are not indented
- 
+
 // Declare globals at the top
 int g_foo = 0;
 char* g_some_pointer; // Notice the position of the *
- 
+
 enum SomeEnum {
     COLOR_RED,
     COLOR_GREEN,
     COLOR_BLUE
 };
- 
+
 struct Position {
     int x, y;
 };
- 
+
 // Use "typename" rather than "class" here, just to be consistent
-template 
+template
 void FooBar() {
     int some_array[] = {
         5,
@@ -52,29 +52,29 @@ void FooBar() {
         7,
         42
     };
- 
+
     if (note == the_space_after_the_if) {
         CallAfunction();
     } else {
         // Use a space after the // when commenting
     }
- 
+
     // Comment directly above code when possible
     if (some_condition) single_statement();
- 
+
     // Place a single space after the for loop semicolons
     for (int i = 0; i != 25; ++i) {
         // This is how we write loops
     }
- 
+
     DoStuff(this, function, call, takes, up, multiple,
             lines, like, this);
- 
+
     if (this || condition_takes_up_multiple &&
         lines && like && this || everything ||
         alright || then) {
     }
- 
+
     switch (var) {
     // No indentation for case label
     case 1: {
@@ -85,18 +85,18 @@ void FooBar() {
     case 3:
         DoSomething(var);
         return;
- 
+
     default:
         // Yes, even break for the last case
         break;
     }
- 
+
     std::vector
         you_can_declare,
         a_few,
         variables,
         like_this;
 }
- 
+
 }
 ```

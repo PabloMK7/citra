@@ -273,13 +273,13 @@ bool ElfReader::LoadInto(u32 vaddr) {
 
     for (int i = 0; i < header->e_phnum; i++) {
         Elf32_Phdr *p = segments + i;
-        INFO_LOG(MASTER_LOG, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr, 
+        INFO_LOG(MASTER_LOG, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr,
             p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
             segment_addr[i] = base_addr + p->p_vaddr;
             memcpy(Memory::GetPointer(segment_addr[i]), GetSegmentPtr(i), p->p_filesz);
-            INFO_LOG(MASTER_LOG, "Loadable Segment Copied to %08x, size %08x", segment_addr[i], 
+            INFO_LOG(MASTER_LOG, "Loadable Segment Copied to %08x, size %08x", segment_addr[i],
                 p->p_memsz);
         }
     }

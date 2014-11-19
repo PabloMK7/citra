@@ -249,7 +249,7 @@ void AddEventToQueue(Event* ne)
 
 // This must be run ONLY from within the cpu thread
 // cyclesIntoFuture may be VERY inaccurate if called from anything else
-// than Advance 
+// than Advance
 void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata)
 {
     Event *ne = GetNewEvent();
@@ -469,7 +469,7 @@ void ProcessFifoWaitEvents()
     {
         if (first->time <= globalTimer)
         {
-            //			LOG(TIMER, "[Scheduler] %s		 (%lld, %lld) ", 
+            //			LOG(TIMER, "[Scheduler] %s		 (%lld, %lld) ",
             //				first->name ? first->name : "?", (u64)globalTimer, (u64)first->time);
             Event* evt = first;
             first = first->next;

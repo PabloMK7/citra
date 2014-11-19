@@ -9,7 +9,7 @@
 #include "common/timer.h"
 #include "common/thread.h"
 
-void GenericLog(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, int line, 
+void GenericLog(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, int line,
     const char* function, const char* fmt, ...)
 {
     va_list args;
@@ -112,7 +112,7 @@ LogManager::~LogManager()
     delete m_debuggerLog;
 }
 
-void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file, 
+void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const char* file,
     int line, const char* function, const char *fmt, va_list args)
 {
     char temp[MAX_MSGLEN];
@@ -125,11 +125,11 @@ void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const 
     Common::CharArrayFromFormatV(temp, MAX_MSGLEN, fmt, args);
 
     static const char level_to_char[7] = "ONEWID";
-    sprintf(msg, "%s %s:%u %c[%s] %s: %s\n", Common::Timer::GetTimeFormatted().c_str(), file, line, 
+    sprintf(msg, "%s %s:%u %c[%s] %s: %s\n", Common::Timer::GetTimeFormatted().c_str(), file, line,
         level_to_char[(int)level], log->GetShortName(), function, temp);
-    
+
 #ifdef ANDROID
-    Host_SysMessage(msg);    
+    Host_SysMessage(msg);
 #endif
     log->Trigger(level, msg);
 }

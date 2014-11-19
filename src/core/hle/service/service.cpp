@@ -75,7 +75,7 @@ Interface* Manager::FetchFromPortName(const std::string& port_name) {
 /// Initialize ServiceManager
 void Init() {
     g_manager = new Manager;
-    
+
     g_manager->AddService(new SRV::Interface);
     g_manager->AddService(new AC_U::Interface);
     g_manager->AddService(new APT_U::Interface);

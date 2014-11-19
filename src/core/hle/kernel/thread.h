@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #pragma once
 

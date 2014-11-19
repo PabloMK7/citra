@@ -118,7 +118,7 @@ AppLoader_NCCH::~AppLoader_NCCH() {
  * @return ResultStatus result of function
  */
 ResultStatus AppLoader_NCCH::LoadExec() const {
-    if (!is_loaded) 
+    if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
 
     std::vector<u8> code;
@@ -185,7 +185,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
         return ResultStatus::Error;
     }
     return ResultStatus::ErrorNotUsed;
-} 
+}
 
 /**
  * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
@@ -210,7 +210,7 @@ ResultStatus AppLoader_NCCH::Load() {
             file.Seek(ncch_offset, 0);
             file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
         }
-        
+
         // Verify we are loading the correct file type...
         if (0 != memcmp(&ncch_header.magic, "NCCH", 4))
             return ResultStatus::ErrorInvalidFormat;

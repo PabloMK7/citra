@@ -25,7 +25,7 @@ public:
     /// Swap buffers (render frame)
     virtual void SwapBuffers() = 0;
 
-    /** 
+    /**
      * Set the emulator window to use for renderer
      * @param window EmuWindow handle to emulator window to use for rendering
      */

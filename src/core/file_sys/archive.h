@@ -222,7 +222,7 @@ public:
      * @return Size of the archive in bytes
      */
     virtual size_t GetSize() const = 0;
-    
+
     /**
      * Set the size of the archive in bytes
      */

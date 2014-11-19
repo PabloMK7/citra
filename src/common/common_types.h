@@ -22,7 +22,7 @@
  * http://code.google.com/p/gekko-gc-emu/
  */
 
-#pragma once 
+#pragma once
 
 #include <cmath>
 #include <cstdint>

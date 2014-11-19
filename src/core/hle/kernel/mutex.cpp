@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include <map>
 #include <vector>
@@ -28,7 +28,7 @@ public:
     std::string name;                           ///< Name of mutex (optional)
 
     /**
-     * Synchronize kernel object 
+     * Synchronize kernel object
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */

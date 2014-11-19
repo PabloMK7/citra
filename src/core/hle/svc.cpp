@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include <map>
 
@@ -30,7 +30,7 @@ enum ControlMemoryOperation {
 
 /// Map application or GSP heap memory
 static Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
-    DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X", 
+    DEBUG_LOG(SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X",
         operation, addr0, addr1, size, permissions);
 
     switch (operation) {
@@ -54,7 +54,7 @@ static Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, 
 
 /// Maps a memory block to specified address
 static Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
-    DEBUG_LOG(SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d", 
+    DEBUG_LOG(SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d",
         handle, addr, permissions, other_permissions);
 
     Kernel::MemoryPermission permissions_type = static_cast<Kernel::MemoryPermission>(permissions);
@@ -63,7 +63,7 @@ static Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other
     case Kernel::MemoryPermission::Write:
     case Kernel::MemoryPermission::ReadWrite:
     case Kernel::MemoryPermission::DontCare:
-        Kernel::MapSharedMemory(handle, addr, permissions_type, 
+        Kernel::MapSharedMemory(handle, addr, permissions_type,
             static_cast<Kernel::MemoryPermission>(other_permissions));
         break;
     default:
@@ -115,7 +115,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(), 
+    DEBUG_LOG(SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(),
             object->GetName().c_str(), nano_seconds);
 
     _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
@@ -138,7 +138,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     bool unlock_all = true;
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
-    DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%lld", 
+    DEBUG_LOG(SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%lld",
         handle_count, (wait_all ? "true" : "false"), nano_seconds);
 
     // Iterate through each handle, synchronize kernel object
@@ -149,7 +149,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         _assert_msg_(KERNEL, (object != nullptr), "called handle=0x%08X, but kernel object "
             "is nullptr!", handles[i]);
 
-        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(), 
+        DEBUG_LOG(SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(),
             object->GetName().c_str());
 
         Result res = object->WaitSynchronization(&wait);
@@ -183,7 +183,7 @@ static Result CreateAddressArbiter(u32* arbiter) {
 
 /// Arbitrate address
 static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
-    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address, 
+    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type), address,
         value);
 }
 
@@ -195,7 +195,7 @@ static void OutputDebugString(const char* string) {
 /// Get resource limit
 static Result GetResourceLimit(Handle* resource_limit, Handle process) {
     // With regards to proceess values:
-    // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for 
+    // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for
     // the current KThread.
     *resource_limit = 0xDEADBEEF;
     ERROR_LOG(SVC, "(UNIMPLEMENTED) called process=0x%08X", process);
@@ -227,9 +227,9 @@ static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top
     Core::g_app_core->SetReg(1, thread);
 
     DEBUG_LOG(SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
-        "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point, 
+        "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
         name.c_str(), arg, stack_top, priority, processor_id, thread);
-    
+
     return 0;
 }
 
@@ -258,7 +258,7 @@ static Result SetThreadPriority(Handle handle, s32 priority) {
 /// Create a mutex
 static Result CreateMutex(Handle* mutex, u32 initial_locked) {
     *mutex = Kernel::CreateMutex((initial_locked != 0));
-    DEBUG_LOG(SVC, "called initial_locked=%s : created handle=0x%08X", 
+    DEBUG_LOG(SVC, "called initial_locked=%s : created handle=0x%08X",
         initial_locked ? "true" : "false", *mutex);
     return 0;
 }
@@ -286,7 +286,7 @@ static Result QueryMemory(void* info, void* out, u32 addr) {
 /// Create an event
 static Result CreateEvent(Handle* evt, u32 reset_type) {
     *evt = Kernel::CreateEvent((ResetType)reset_type);
-    DEBUG_LOG(SVC, "called reset_type=0x%08X : created handle=0x%08X", 
+    DEBUG_LOG(SVC, "called reset_type=0x%08X : created handle=0x%08X",
         reset_type, *evt);
     return 0;
 }
@@ -301,7 +301,7 @@ static Result DuplicateHandle(Handle* out, Handle handle) {
     }
     _assert_msg_(KERNEL, (handle != Kernel::CurrentProcess),
         "(UNIMPLEMENTED) process handle duplication!");
-    
+
     // TODO(bunnei): FixMe - This is a hack to return the handle that we were asked to duplicate.
     *out = handle;
 

@@ -52,14 +52,14 @@ public:
     FileSys::Archive* backend;  ///< Archive backend interface
 
     /**
-     * Synchronize kernel object 
+     * Synchronize kernel object
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
     Result SyncRequest(bool* wait) override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
-        
+
         switch (cmd) {
         // Read from archive...
         case FileCommand::Read:
@@ -343,7 +343,7 @@ Archive* CreateArchive(Handle& handle, FileSys::Archive* backend, const std::str
     archive->backend = backend;
 
     MountArchive(archive);
-    
+
     return archive;
 }
 

@@ -20,7 +20,7 @@ namespace VideoCore {
 void DumpTGA(std::string filename, short width, short height, u8* raw_data) {
     TGAHeader hdr = {0, 0, 2, 0, 0, 0, 0, width, height, 24, 0};
     FILE* fout = fopen(filename.c_str(), "wb");
-    
+
     fwrite(&hdr, sizeof(TGAHeader), 1, fout);
 
     for (int y = 0; y < height; y++) {
@@ -30,7 +30,7 @@ void DumpTGA(std::string filename, short width, short height, u8* raw_data) {
             putc(raw_data[(3 * (y * width)) + (3 * x) + 2], fout); // r
         }
     }
-    
+
     fclose(fout);
 }
 } // namespace

@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #pragma once
 
@@ -34,7 +34,7 @@ Handle CreateSharedMemory(const std::string& name="Unknown");
  * @param other_permissions Memory block map other permissions (specified by SVC field)
  * @return Result of operation, 0 on success, otherwise error code
  */
-Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions, 
+Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions,
     MemoryPermission other_permissions);
 
 /**

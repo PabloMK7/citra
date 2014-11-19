@@ -215,7 +215,7 @@ private:
     u32             entry_point;
     u32             ncch_offset; // Offset to NCCH header, can be 0 or after NCSD header
     u32             exefs_offset;
-    
+
     NCCH_Header     ncch_header;
     ExeFs_Header    exefs_header;
     ExHeader_Header exheader_header;

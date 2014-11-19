@@ -27,7 +27,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0040, nullptr,               "SetClamp"},
     {0x000E0000, nullptr,               "GetClamp"},
     {0x000F0040, nullptr,               "unknown_input1"},
-    {0x00100040, nullptr,               "unknown_input2"},	
+    {0x00100040, nullptr,               "unknown_input2"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

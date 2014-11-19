@@ -23,7 +23,7 @@
 #define APP_TITLE       APP_NAME " " APP_VERSION
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
-EmuThread::EmuThread(GRenderWindow* render_window) : 
+EmuThread::EmuThread(GRenderWindow* render_window) :
     filename(""), exec_cpu_step(false), cpu_running(false),
     stop_run(false), render_window(render_window)
 {
@@ -42,7 +42,7 @@ void EmuThread::run()
         if (cpu_running)
         {
             Core::RunLoop();
-        } 
+        }
         else if (exec_cpu_step)
         {
             exec_cpu_step = false;

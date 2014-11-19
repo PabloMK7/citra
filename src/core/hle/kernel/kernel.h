@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #pragma once
 
@@ -34,7 +34,7 @@ enum class HandleType : u32 {
     Archive         = 12,
     Directory       = 13,
 };
-    
+
 enum {
     DEFAULT_STACK_SIZE  = 0x4000,
 };
@@ -52,7 +52,7 @@ public:
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Synchronize kernel object 
+     * Synchronize kernel object
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
@@ -139,7 +139,7 @@ public:
     }
 
     bool GetIDType(Handle handle, HandleType* type) const {
-        if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) || 
+        if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) ||
             !occupied[handle - HANDLE_OFFSET]) {
             ERROR_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
             return false;
@@ -155,7 +155,7 @@ public:
     int GetCount();
 
 private:
-    
+
     enum {
         MAX_COUNT       = 0x1000,
         HANDLE_OFFSET   = 0x100,

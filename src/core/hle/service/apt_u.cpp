@@ -27,7 +27,7 @@ enum class SignalType : u32 {
 
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
-    
+
     cmd_buff[3] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Menu");  // APT menu event handle
     cmd_buff[4] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause"); // APT pause event handle
 
@@ -168,7 +168,7 @@ void AppletUtility(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
 
     WARN_LOG(KERNEL, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
-             "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size, 
+             "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size,
              buffer1_addr, buffer2_addr);
 }
 

@@ -28,7 +28,7 @@ void CallstackWidget::OnCPUStepped()
 
     u32 sp = app_core->GetReg(13); //stack pointer
     u32 addr, ret_addr, call_addr, func_addr;
-    
+
     int counter = 0;
     for (int addr = 0x10000000; addr >= sp; addr -= 4)
     {
@@ -55,7 +55,7 @@ void CallstackWidget::OnCPUStepped()
             callstack_model->setItem(counter, 0, new QStandardItem(QString("0x%1").arg(addr, 8, 16, QLatin1Char('0'))));
             callstack_model->setItem(counter, 1, new QStandardItem(QString("0x%1").arg(ret_addr, 8, 16, QLatin1Char('0'))));
             callstack_model->setItem(counter, 2, new QStandardItem(QString("0x%1").arg(call_addr, 8, 16, QLatin1Char('0'))));
-            
+
             name = Symbols::HasSymbol(func_addr) ? Symbols::GetSymbol(func_addr).name : "unknown";
             callstack_model->setItem(counter, 3, new QStandardItem(QString("%1_%2").arg(QString::fromStdString(name))
                 .arg(QString("0x%1").arg(func_addr, 8, 16, QLatin1Char('0')))));

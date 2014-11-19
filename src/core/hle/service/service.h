@@ -38,7 +38,7 @@ class Manager;
 class Interface  : public Kernel::Object {
     friend class Manager;
 public:
-    
+
     std::string GetName() const override { return GetPortName(); }
     std::string GetTypeName() const override { return GetPortName(); }
 
@@ -76,7 +76,7 @@ public:
     }
 
     /**
-     * Synchronize kernel object 
+     * Synchronize kernel object
      * @param wait Boolean wait set if current thread should wait as a result of sync operation
      * @return Result of operation, 0 on success, otherwise error code
      */
@@ -85,23 +85,23 @@ public:
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X", 
+            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X",
                 GetPortName().c_str(), cmd_buff[0]);
 
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
-            return 0; 
+            return 0;
         }
         if (itr->second.func == nullptr) {
-            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s", 
+            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s",
                 GetPortName().c_str(), itr->second.name.c_str());
 
             // TODO(bunnei): Hack - ignore error
             u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
-            return 0; 
-        } 
+            return 0;
+        }
 
         itr->second.func(this);
 

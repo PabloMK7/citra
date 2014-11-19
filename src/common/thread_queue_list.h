@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #pragma once
 
@@ -12,7 +12,7 @@ template<class IdType>
 struct ThreadQueueList {
     // Number of queues (number of priority levels starting at 0.)
     static const int NUM_QUEUES = 128;
-    
+
     // Initial number of threads a single queue can handle.
     static const int INITIAL_CAPACITY = 32;
 

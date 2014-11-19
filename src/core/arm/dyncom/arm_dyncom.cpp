@@ -1,6 +1,6 @@
 // Copyright 2014 Citra Emulator Project
 // Licensed under GPLv2
-// Refer to the license.txt file included.  
+// Refer to the license.txt file included.
 
 #include "core/arm/skyeye_common/armcpu.h"
 #include "core/arm/skyeye_common/armemu.h"
@@ -113,7 +113,7 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     state->NumInstrsToExecute = num_instructions;
 
     // Dyncom only breaks on instruction dispatch. This only happens on every instruction when
-    // executing one instruction at a time. Otherwise, if a block is being executed, more 
+    // executing one instruction at a time. Otherwise, if a block is being executed, more
     // instructions may actually be executed than specified.
     ticks += InterpreterMainLoop(state.get());
 }

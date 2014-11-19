@@ -23,5 +23,5 @@ namespace ERR_F {
             return "err:f";
         }
     };
-    
+
 } // namespace
