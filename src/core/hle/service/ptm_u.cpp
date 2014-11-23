@@ -11,13 +11,30 @@
 
 namespace PTM_U {
 
+static bool shell_open = true;
+
+/*
+ * PTM_User::GetShellState service function.
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Whether the 3DS's physical shell casing is open (1) or closed (0)
+ */
+static void GetShellState(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    cmd_buff[1] = 0;
+    cmd_buff[2] = shell_open ? 1 : 0;
+
+    DEBUG_LOG(KERNEL, "PTM_U::GetShellState called");
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010002, nullptr,               "RegisterAlarmClient"},
     {0x00020080, nullptr,               "SetRtcAlarm"},
     {0x00030000, nullptr,               "GetRtcAlarm"},
     {0x00040000, nullptr,               "CancelRtcAlarm"},
     {0x00050000, nullptr,               "GetAdapterState"},
-    {0x00060000, nullptr,               "GetShellState"},
+    {0x00060000, GetShellState,         "GetShellState"},
     {0x00070000, nullptr,               "GetBatteryLevel"},
     {0x00080000, nullptr,               "GetBatteryChargeState"},
     {0x00090000, nullptr,               "GetPedometerState"},
