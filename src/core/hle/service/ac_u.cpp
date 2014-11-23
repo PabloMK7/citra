@@ -22,12 +22,12 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000E0042, nullptr,               "GetCurrentAPInfo"},
     {0x00100042, nullptr,               "GetCurrentNZoneInfo"},
     {0x00110042, nullptr,               "GetNZoneApNumService"},
-    {0x00240042, nullptr,               "AddDenyApType "},
-    {0x00270002, nullptr,               "GetInfraPriority "},
+    {0x00240042, nullptr,               "AddDenyApType"},
+    {0x00270002, nullptr,               "GetInfraPriority"},
     {0x002D0082, nullptr,               "SetRequestEulaVersion"},
     {0x00300004, nullptr,               "RegisterDisconnectEvent"},
     {0x003C0042, nullptr,               "GetAPSSIDList"},
-    {0x003E0042, nullptr,               "IsConnected "},
+    {0x003E0042, nullptr,               "IsConnected"},
     {0x00400042, nullptr,               "SetClientVersion"},
 };
 

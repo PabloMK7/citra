@@ -31,18 +31,24 @@ set(SRCS
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
+            hle/service/am_net.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
+            hle/service/cfg_i.cpp
             hle/service/cfg_u.cpp
+            hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
             hle/service/fs_user.cpp
             hle/service/frd_u.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
+            hle/service/ir_rst.cpp
+            hle/service/ir_u.cpp
             hle/service/mic_u.cpp
             hle/service/ndm_u.cpp
             hle/service/nwm_uds.cpp
+            hle/service/pm_app.cpp
             hle/service/ptm_u.cpp
             hle/service/service.cpp
             hle/service/soc_u.cpp
@@ -103,18 +109,24 @@ set(HEADERS
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h
+            hle/service/am_net.h
             hle/service/apt_u.h
             hle/service/boss_u.h
+            hle/service/cfg_i.h
             hle/service/cfg_u.h
+            hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
             hle/service/fs_user.h
             hle/service/frd_u.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h
+            hle/service/ir_rst.h
+            hle/service/ir_u.h
             hle/service/mic_u.h
             hle/service/ndm_u.h
             hle/service/nwm_uds.h
+            hle/service/pm_app.h
             hle/service/ptm_u.h
             hle/service/service.h
             hle/service/soc_u.h

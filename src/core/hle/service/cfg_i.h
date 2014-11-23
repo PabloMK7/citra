@@ -7,11 +7,9 @@
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace MIC_U
+// Namespace CFG_I
 
-// mic service
-
-namespace MIC_U {
+namespace CFG_I {
 
 class Interface : public Service::Interface {
 public:
@@ -22,7 +20,7 @@ public:
      * @return Port name of service
      */
     std::string GetPortName() const override {
-        return "mic:u";
+        return "cfg:i";
     }
 };
 
