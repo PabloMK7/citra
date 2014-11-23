@@ -45,7 +45,7 @@ enum SomeEnum {
 };
 
 /**
- * Very important function that does a lot of stuff.
+ * Very important struct that does a lot of stuff.
  * Note that the asterisks are indented by one space.
  */
 struct Position {
