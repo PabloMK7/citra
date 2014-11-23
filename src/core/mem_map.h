@@ -57,11 +57,11 @@ enum : u32 {
     HEAP_VADDR              = 0x08000000,
     HEAP_VADDR_END          = (HEAP_VADDR + HEAP_SIZE),
 
-    HEAP_GSP_SIZE           = 0x02000000,   ///< GSP heap size... TODO: Define correctly?
-    HEAP_GSP_VADDR          = 0x14000000,
-    HEAP_GSP_VADDR_END      = (HEAP_GSP_VADDR + HEAP_GSP_SIZE),
-    HEAP_GSP_PADDR          = 0x00000000,
-    HEAP_GSP_PADDR_END      = (HEAP_GSP_PADDR + HEAP_GSP_SIZE),
+    HEAP_LINEAR_SIZE        = 0x08000000,   ///< Linear heap size... TODO: Define correctly?
+    HEAP_LINEAR_VADDR       = 0x14000000,
+    HEAP_LINEAR_VADDR_END   = (HEAP_LINEAR_VADDR + HEAP_LINEAR_SIZE),
+    HEAP_LINEAR_PADDR       = 0x00000000,
+    HEAP_LINEAR_PADDR_END   = (HEAP_LINEAR_PADDR + HEAP_LINEAR_SIZE),
 
     HARDWARE_IO_SIZE        = 0x01000000,
     HARDWARE_IO_PADDR       = 0x10000000,                       ///< IO physical address start
@@ -112,7 +112,7 @@ extern u8 *g_base;
 // These are guaranteed to point to "low memory" addresses (sub-32-bit).
 // 64-bit: Pointers to low-mem (sub-0x10000000) mirror
 // 32-bit: Same as the corresponding physical/virtual pointers.
-extern u8* g_heap_gsp;      ///< GSP heap (main memory)
+extern u8* g_heap_linear;   ///< Linear heap (main memory)
 extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_shared_mem;    ///< Shared memory
@@ -159,7 +159,7 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
  * @param operation Memory map operation type
  * @param permissions Control memory permissions
  */
-u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions);
+u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions);
 
 inline const char* GetCharPointer(const VAddr address) {
     return (const char *)GetPointer(address);

@@ -43,7 +43,7 @@ static Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, 
 
     // Map GSP heap memory
     case MEMORY_OPERATION_GSP_HEAP:
-        *out_addr = Memory::MapBlock_HeapGSP(size, operation, permissions);
+        *out_addr = Memory::MapBlock_HeapLinear(size, operation, permissions);
         break;
 
     // Unknown ControlMemory operation

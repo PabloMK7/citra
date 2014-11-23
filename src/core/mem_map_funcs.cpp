@@ -13,7 +13,7 @@
 namespace Memory {
 
 static std::map<u32, MemoryBlock> heap_map;
-static std::map<u32, MemoryBlock> heap_gsp_map;
+static std::map<u32, MemoryBlock> heap_linear_map;
 static std::map<u32, MemoryBlock> shared_map;
 
 /// Convert a physical address to virtual address
@@ -67,9 +67,9 @@ inline void Read(T &var, const VAddr vaddr) {
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         var = *((const T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR]);
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
-        var = *((const T*)&g_heap_gsp[vaddr - HEAP_GSP_VADDR]);
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR) && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        var = *((const T*)&g_heap_linear[vaddr - HEAP_LINEAR_VADDR]);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
@@ -112,9 +112,9 @@ inline void Write(const VAddr vaddr, const T data) {
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         *(T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR] = data;
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        *(T*)&g_heap_gsp[vaddr - HEAP_GSP_VADDR] = data;
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR)  && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        *(T*)&g_heap_linear[vaddr - HEAP_LINEAR_VADDR] = data;
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
@@ -154,9 +154,9 @@ u8 *GetPointer(const VAddr vaddr) {
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         return g_exefs_code + (vaddr - EXEFS_CODE_VADDR);
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        return g_heap_gsp + (vaddr - HEAP_GSP_VADDR);
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR)  && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        return g_heap_linear + (vaddr - HEAP_LINEAR_VADDR);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
@@ -204,24 +204,24 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
 }
 
 /**
- * Maps a block of memory on the GSP heap
+ * Maps a block of memory on the linear heap
  * @param size Size of block in bytes
  * @param operation Memory map operation type
  * @param flags Memory allocation flags
  */
-u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
+u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
 
-    block.base_address  = HEAP_GSP_VADDR;
+    block.base_address  = HEAP_LINEAR_VADDR;
     block.size          = size;
     block.operation     = operation;
     block.permissions   = permissions;
 
-    if (heap_gsp_map.size() > 0) {
-        const MemoryBlock last_block = heap_gsp_map.rbegin()->second;
+    if (heap_linear_map.size() > 0) {
+        const MemoryBlock last_block = heap_linear_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
-    heap_gsp_map[block.GetVirtualAddress()] = block;
+    heap_linear_map[block.GetVirtualAddress()] = block;
 
     return block.GetVirtualAddress();
 }
