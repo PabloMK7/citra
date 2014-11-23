@@ -24,6 +24,10 @@ Citra is a brand new project, so we have a great opportunity to keep things clea
 ### Indentation/Whitespace Style
 Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spaces instead.
 
+### Comments
+* For regular comments, use C++ style (`//`) comments, even for multi-line ones.
+* For doc-comments (Doxygen comments), use `/// ` if it's a single line, else use the `/**` `*/` style featured in the example. Start the text on the second line, not the first containing `/**`.
+
 ```cpp
 namespace Example {
 
@@ -33,12 +37,17 @@ namespace Example {
 int g_foo = 0;
 char* g_some_pointer; // Notice the position of the *
 
+/// A colorful enum.
 enum SomeEnum {
-    COLOR_RED,
-    COLOR_GREEN,
-    COLOR_BLUE
+    COLOR_RED,   ///< The color of fire.
+    COLOR_GREEN, ///< The color of grass.
+    COLOR_BLUE   ///< Not actually the color of water.
 };
 
+/**
+ * Very important struct that does a lot of stuff.
+ * Note that the asterisks are indented by one space.
+ */
 struct Position {
     int x, y;
 };
