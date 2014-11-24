@@ -340,97 +340,68 @@ ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path
     return MakeResult<Handle>(handle);
 }
 
-/**
- * Delete a File from an Archive
- * @param archive_handle Handle to an open Archive object
- * @param path Path to the File inside of the Archive
- * @return Whether deletion succeeded
- */
-Result DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path) {
+ResultCode DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
     if (archive == nullptr)
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     if (archive->backend->DeleteFile(path))
-        return 0;
-    return -1;
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-/**
- * Rename a File between two Archives
- * @param src_archive_handle Handle to the source Archive object
- * @param src_path Path to the File inside of the source Archive
- * @param dest_archive_handle Handle to the destination Archive object
- * @param dest_path Path to the File inside of the destination Archive
- * @return Whether rename succeeded
- */
-Result RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                 Handle dest_archive_handle, const FileSys::Path& dest_path) {
+ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                     Handle dest_archive_handle, const FileSys::Path& dest_path) {
     Archive* src_archive = Kernel::g_object_pool.GetFast<Archive>(src_archive_handle);
     Archive* dest_archive = Kernel::g_object_pool.GetFast<Archive>(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameFile(src_path, dest_path))
-            return 0;
+            return RESULT_SUCCESS;
     } else {
         // TODO: Implement renaming across archives
-        return -1;
+        return UnimplementedFunction(ErrorModule::FS);
     }
-    return -1;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-/**
- * Delete a Directory from an Archive
- * @param archive_handle Handle to an open Archive object
- * @param path Path to the Directory inside of the Archive
- * @return Whether deletion succeeded
- */
-Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
+ResultCode DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
     if (archive == nullptr)
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     if (archive->backend->DeleteDirectory(path))
-        return 0;
-    return -1;
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-/**
- * Create a Directory from an Archive
- * @param archive_handle Handle to an open Archive object
- * @param path Path to the Directory inside of the Archive
- * @return Whether creation succeeded
- */
-Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
+ResultCode CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
     if (archive == nullptr)
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     if (archive->backend->CreateDirectory(path))
-        return 0;
-    return -1;
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-/**
- * Rename a Directory between two Archives
- * @param src_archive_handle Handle to the source Archive object
- * @param src_path Path to the Directory inside of the source Archive
- * @param dest_archive_handle Handle to the destination Archive object
- * @param dest_path Path to the Directory inside of the destination Archive
- * @return Whether rename succeeded
- */
-Result RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                      Handle dest_archive_handle, const FileSys::Path& dest_path) {
+ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                          Handle dest_archive_handle, const FileSys::Path& dest_path) {
     Archive* src_archive = Kernel::g_object_pool.GetFast<Archive>(src_archive_handle);
     Archive* dest_archive = Kernel::g_object_pool.GetFast<Archive>(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameDirectory(src_path, dest_path))
-            return 0;
+            return RESULT_SUCCESS;
     } else {
         // TODO: Implement renaming across archives
-        return -1;
+        return UnimplementedFunction(ErrorModule::FS);
     }
-    return -1;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
 /**

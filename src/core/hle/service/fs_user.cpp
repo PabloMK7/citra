@@ -159,7 +159,7 @@ void DeleteFile(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
               filename_type, filename_size, file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path);
+    cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path).raw;
     
     DEBUG_LOG(KERNEL, "called");
 }
@@ -201,7 +201,7 @@ void RenameFile(Service::Interface* self) {
               src_filename_type, src_filename_size, src_file_path.DebugStr().c_str(),
               dest_filename_type, dest_filename_size, dest_file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path);
+    cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
     
     DEBUG_LOG(KERNEL, "called");
 }
@@ -232,7 +232,7 @@ void DeleteDirectory(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
               dirname_type, dirname_size, dir_path.DebugStr().c_str());
     
-    cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path);
+    cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
     
     DEBUG_LOG(KERNEL, "called");
 }
@@ -262,7 +262,7 @@ static void CreateDirectory(Service::Interface* self) {
 
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path);
+    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path).raw;
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -304,7 +304,7 @@ void RenameDirectory(Service::Interface* self) {
               src_dirname_type, src_dirname_size, src_dir_path.DebugStr().c_str(),
               dest_dirname_type, dest_dirname_size, dest_dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path);
+    cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
     
     DEBUG_LOG(KERNEL, "called");
 }
