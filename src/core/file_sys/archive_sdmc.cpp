@@ -58,6 +58,24 @@ std::unique_ptr<File> Archive_SDMC::OpenFile(const Path& path, const Mode mode) 
 }
 
 /**
+ * Delete a file specified by its path
+ * @param path Path relative to the archive
+ * @return Whether the file could be deleted
+ */
+bool Archive_SDMC::DeleteFile(const FileSys::Path& path) const {
+    return FileUtil::Delete(GetMountPoint() + path.AsString());
+}
+
+/**
+ * Delete a directory specified by its path
+ * @param path Path relative to the archive
+ * @return Whether the directory could be deleted
+ */
+bool Archive_SDMC::DeleteDirectory(const FileSys::Path& path) const {
+    return FileUtil::DeleteDir(GetMountPoint() + path.AsString());
+}
+
+/**
  * Create a directory specified by its path
  * @param path Path relative to the archive
  * @return Whether the directory could be created

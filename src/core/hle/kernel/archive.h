@@ -46,6 +46,22 @@ Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
 Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
+ * Delete a File from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the File inside of the Archive
+ * @return Whether deletion succeeded
+ */
+Result DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path);
+
+/**
+ * Delete a Directory from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the Directory inside of the Archive
+ * @return Whether deletion succeeded
+ */
+Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+
+/**
  * Create a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive

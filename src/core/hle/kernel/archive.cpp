@@ -392,10 +392,40 @@ Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, con
 }
 
 /**
+ * Delete a File from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the File inside of the Archive
+ * @return Whether deletion succeeded
+ */
+Result DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path) {
+    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+    if (archive == nullptr)
+        return -1;
+    if (archive->backend->DeleteFile(path))
+        return 0;
+    return -1;
+}
+
+/**
+ * Delete a Directory from an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the Directory inside of the Archive
+ * @return Whether deletion succeeded
+ */
+Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
+    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+    if (archive == nullptr)
+        return -1;
+    if (archive->backend->DeleteDirectory(path))
+        return 0;
+    return -1;
+}
+
+/**
  * Create a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive
- * @return Opened Directory object
+ * @return Whether creation succeeded
  */
 Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
