@@ -6,8 +6,9 @@
 
 #include "common/common_types.h"
 
-#include "core/hle/kernel/kernel.h"
 #include "core/file_sys/archive.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
@@ -17,33 +18,31 @@ namespace Kernel {
 /**
  * Opens an archive
  * @param id_code IdCode of the archive to open
- * @return Handle to archive if it exists, otherwise a null handle (0)
+ * @return Handle to the opened archive
  */
-Handle OpenArchive(FileSys::Archive::IdCode id_code);
+ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code);
 
 /**
  * Closes an archive
  * @param id_code IdCode of the archive to open
- * @return true if it worked fine
  */
-Result CloseArchive(FileSys::Archive::IdCode id_code);
+ResultCode CloseArchive(FileSys::Archive::IdCode id_code);
 
 /**
  * Creates an Archive
  * @param backend File system backend interface to the archive
- * @param name Optional name of Archive
- * @return Handle to newly created Archive object
+ * @param name Name of Archive
  */
-Handle CreateArchive(FileSys::Archive* backend, const std::string& name);
+ResultCode CreateArchive(FileSys::Archive* backend, const std::string& name);
 
 /**
  * Open a File from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the File inside of the Archive
  * @param mode Mode under which to open the File
- * @return Opened File object
+ * @return Handle to the opened File object
  */
-Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
+ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
  * Delete a File from an Archive
@@ -73,9 +72,9 @@ Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& pa
  * Open a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive
- * @return Opened Directory object
+ * @return Handle to the opened File object
  */
-Handle OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultVal<Handle> OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
 
 /// Initialize archives
 void ArchiveInit();

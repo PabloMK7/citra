@@ -11,10 +11,11 @@
 #include "common/thread_queue_list.h"
 
 #include "core/core.h"
-#include "core/mem_map.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/result.h"
+#include "core/mem_map.h"
 
 namespace Kernel {
 
@@ -33,21 +34,17 @@ public:
     inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
-        if (status != THREADSTATUS_DORMANT) {
+    ResultVal<bool> WaitSynchronization() override {
+        const bool wait = status != THREADSTATUS_DORMANT;
+        if (wait) {
             Handle thread = GetCurrentThreadHandle();
             if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
                 waiting_threads.push_back(thread);
             }
             WaitCurrentThread(WAITTYPE_THREADEND, this->GetHandle());
-            *wait = true;
         }
-        return 0;
+
+        return MakeResult<bool>(wait);
     }
 
     ThreadContext context;
@@ -144,27 +141,22 @@ void ChangeReadyState(Thread* t, bool ready) {
 }
 
 /// Verify that a thread has not been released from waiting
-inline bool VerifyWait(const Handle& handle, WaitType type, Handle wait_handle) {
-    Thread* thread = g_object_pool.GetFast<Thread>(handle);
-    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
-
-    if (type != thread->wait_type || wait_handle != thread->wait_handle)
-        return false;
-
-    return true;
+inline bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
+    _dbg_assert_(KERNEL, thread != nullptr);
+    return type == thread->wait_type && wait_handle == thread->wait_handle;
 }
 
 /// Stops the current thread
-void StopThread(Handle handle, const char* reason) {
-    Thread* thread = g_object_pool.GetFast<Thread>(handle);
-    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
+ResultCode StopThread(Handle handle, const char* reason) {
+    Thread* thread = g_object_pool.Get<Thread>(handle);
+    if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     ChangeReadyState(thread, false);
     thread->status = THREADSTATUS_DORMANT;
-    for (size_t i = 0; i < thread->waiting_threads.size(); ++i) {
-        const Handle waiting_thread = thread->waiting_threads[i];
+    for (Handle waiting_handle : thread->waiting_threads) {
+        Thread* waiting_thread = g_object_pool.Get<Thread>(waiting_handle);
         if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, handle)) {
-            ResumeThreadFromWait(waiting_thread);
+            ResumeThreadFromWait(waiting_handle);
         }
     }
     thread->waiting_threads.clear();
@@ -172,6 +164,8 @@ void StopThread(Handle handle, const char* reason) {
     // Stopped threads are never waiting.
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
+
+    return RESULT_SUCCESS;
 }
 
 /// Changes a threads state
@@ -195,13 +189,15 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
     s32 priority = THREADPRIO_LOWEST;
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (const auto& handle : thread_queue) {
+    for (Handle handle : thread_queue) {
+        Thread* thread = g_object_pool.Get<Thread>(handle);
 
         // TODO(bunnei): Verify arbiter address...
-        if (!VerifyWait(handle, WAITTYPE_ARB, arbiter))
+        if (!VerifyWait(thread, WAITTYPE_ARB, arbiter))
             continue;
 
-        Thread* thread = g_object_pool.GetFast<Thread>(handle);
+        if (thread == nullptr)
+            continue; // TODO(yuriks): Thread handle will hang around forever. Should clean up.
         if(thread->current_priority <= priority) {
             highest_priority_thread = handle;
             priority = thread->current_priority;
@@ -218,10 +214,11 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
 void ArbitrateAllThreads(u32 arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (const auto& handle : thread_queue) {
+    for (Handle handle : thread_queue) {
+        Thread* thread = g_object_pool.Get<Thread>(handle);
 
         // TODO(bunnei): Verify arbiter address...
-        if (VerifyWait(handle, WAITTYPE_ARB, arbiter))
+        if (VerifyWait(thread, WAITTYPE_ARB, arbiter))
             ResumeThreadFromWait(handle);
     }
 }
@@ -272,7 +269,7 @@ Thread* NextThread() {
     if (next == 0) {
         return nullptr;
     }
-    return Kernel::g_object_pool.GetFast<Thread>(next);
+    return Kernel::g_object_pool.Get<Thread>(next);
 }
 
 /**
@@ -289,8 +286,7 @@ void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle) {
-    u32 error;
-    Thread* thread = Kernel::g_object_pool.Get<Thread>(handle, error);
+    Thread* thread = Kernel::g_object_pool.Get<Thread>(handle);
     if (thread) {
         thread->status &= ~THREADSTATUS_WAIT;
         if (!(thread->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
@@ -378,19 +374,23 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 }
 
 /// Get the priority of the thread specified by handle
-u32 GetThreadPriority(const Handle handle) {
-    Thread* thread = g_object_pool.GetFast<Thread>(handle);
-    _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
-    return thread->current_priority;
+ResultVal<u32> GetThreadPriority(const Handle handle) {
+    Thread* thread = g_object_pool.Get<Thread>(handle);
+    if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
+
+    return MakeResult<u32>(thread->current_priority);
 }
 
 /// Set the priority of the thread specified by handle
-Result SetThreadPriority(Handle handle, s32 priority) {
+ResultCode SetThreadPriority(Handle handle, s32 priority) {
     Thread* thread = nullptr;
     if (!handle) {
         thread = GetCurrentThread(); // TODO(bunnei): Is this correct behavior?
     } else {
-        thread = g_object_pool.GetFast<Thread>(handle);
+        thread = g_object_pool.Get<Thread>(handle);
+        if (thread == nullptr) {
+            return InvalidHandle(ErrorModule::Kernel);
+        }
     }
     _assert_msg_(KERNEL, (thread != nullptr), "called, but thread is nullptr!");
 
@@ -417,7 +417,7 @@ Result SetThreadPriority(Handle handle, s32 priority) {
         thread_ready_queue.push_back(thread->current_priority, handle);
     }
 
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /// Sets up the primary application thread

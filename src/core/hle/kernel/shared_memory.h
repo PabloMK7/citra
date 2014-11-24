@@ -32,9 +32,8 @@ Handle CreateSharedMemory(const std::string& name="Unknown");
  * @param address Address in system memory to map shared memory block to
  * @param permissions Memory block map permissions (specified by SVC field)
  * @param other_permissions Memory block map other permissions (specified by SVC field)
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions,
+ResultCode MapSharedMemory(Handle handle, u32 address, MemoryPermission permissions,
     MemoryPermission other_permissions);
 
 /**
@@ -43,6 +42,6 @@ Result MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions,
  * @param offset Offset from the start of the shared memory block to get pointer
  * @return Pointer to the shared memory block from the specified offset
  */
-u8* GetSharedMemoryPointer(Handle handle, u32 offset);
+ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset);
 
 } // namespace

@@ -28,28 +28,23 @@ u32 g_thread_id = 1;            ///< Thread index into interrupt relay queue, 1 
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
-    if (0 == g_shared_memory)
-        return nullptr;
-
-    return Kernel::GetSharedMemoryPointer(g_shared_memory,
-        0x800 + (thread_id * sizeof(CommandBuffer)));
+    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * sizeof(CommandBuffer)));
+    return ptr.ValueOr(nullptr);
 }
 
 static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    if (0 == g_shared_memory)
-        return nullptr;
-
     _dbg_assert_msg_(GSP, screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
-    return (FrameBufferUpdate*)Kernel::GetSharedMemoryPointer(g_shared_memory, offset);
+    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, offset);
+    return reinterpret_cast<FrameBufferUpdate*>(ptr.ValueOr(nullptr));
 }
 
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
-    return (InterruptRelayQueue*)Kernel::GetSharedMemoryPointer(g_shared_memory,
-        sizeof(InterruptRelayQueue) * thread_id);
+    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(InterruptRelayQueue) * thread_id);
+    return reinterpret_cast<InterruptRelayQueue*>(ptr.ValueOr(nullptr));
 }
 
 static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {

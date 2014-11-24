@@ -15,31 +15,27 @@ namespace Kernel {
  * Changes whether an event is locked or not
  * @param handle Handle to event to change
  * @param locked Boolean locked value to set event
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result SetEventLocked(const Handle handle, const bool locked);
+ResultCode SetEventLocked(const Handle handle, const bool locked);
 
 /**
  * Hackish function to set an events permanent lock state, used to pass through synch blocks
  * @param handle Handle to event to change
  * @param permanent_locked Boolean permanent locked value to set event
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result SetPermanentLock(Handle handle, const bool permanent_locked);
+ResultCode SetPermanentLock(Handle handle, const bool permanent_locked);
 
 /**
  * Signals an event
  * @param handle Handle to event to signal
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result SignalEvent(const Handle handle);
+ResultCode SignalEvent(const Handle handle);
 
 /**
  * Clears an event
  * @param handle Handle to event to clear
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result ClearEvent(Handle handle);
+ResultCode ClearEvent(Handle handle);
 
 /**
  * Creates an event

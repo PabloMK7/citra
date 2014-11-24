@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/result.h"
 
 enum ThreadPriority {
     THREADPRIO_HIGHEST      = 0,    ///< Highest thread priority
@@ -55,7 +56,7 @@ Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
 void Reschedule();
 
 /// Stops the current thread
-void StopThread(Handle thread, const char* reason);
+ResultCode StopThread(Handle thread, const char* reason);
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
@@ -80,10 +81,10 @@ void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHa
 void WaitThread_Synchronization();
 
 /// Get the priority of the thread specified by handle
-u32 GetThreadPriority(const Handle handle);
+ResultVal<u32> GetThreadPriority(const Handle handle);
 
 /// Set the priority of the thread specified by handle
-Result SetThreadPriority(Handle handle, s32 priority);
+ResultCode SetThreadPriority(Handle handle, s32 priority);
 
 /// Initialize threading
 void ThreadingInit();

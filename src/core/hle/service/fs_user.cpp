@@ -4,26 +4,24 @@
 
 #include "common/common.h"
 
-#include "fs_user.h"
 #include "common/string_util.h"
-#include "core/settings.h"
 #include "core/hle/kernel/archive.h"
+#include "core/hle/kernel/archive.h"
+#include "core/hle/result.h"
+#include "core/hle/service/fs_user.h"
+#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
 
 namespace FS_User {
 
-// We currently return 0 for success and -1 for failure in cmd_buff[1].  -1 was chosen because it
-// puts all the sections of the http://3dbrew.org/wiki/Error_codes to something non-zero, to make
-// sure we don't mislead the application into thinking something worked.
-
 static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
     // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
     // http://3dbrew.org/wiki/FS:Initialize#Request
-    cmd_buff[1] = 0;
+    cmd_buff[1] = RESULT_SUCCESS.raw;
 
     DEBUG_LOG(KERNEL, "called");
 }
@@ -59,14 +57,12 @@ static void OpenFile(Service::Interface* self) {
 
     DEBUG_LOG(KERNEL, "path=%s, mode=%d attrs=%d", file_path.DebugStr().c_str(), mode, attributes);
 
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
-    if (handle) {
-        cmd_buff[1] = 0;
-        cmd_buff[3] = handle;
+    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
+    cmd_buff[1] = handle.Code().raw;
+    if (handle.Succeeded()) {
+        cmd_buff[3] = *handle;
     } else {
         ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
-        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
-        cmd_buff[1] = -1;
     }
 
     DEBUG_LOG(KERNEL, "called");
@@ -111,27 +107,27 @@ static void OpenFileDirectly(Service::Interface* self) {
 
     if (archive_path.GetType() != FileSys::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
-        cmd_buff[1] = -1;
+        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
         return;
     }
 
     // TODO(Link Mauve): Check if we should even get a handle for the archive, and don't leak it
-    Handle archive_handle = Kernel::OpenArchive(archive_id);
-    if (!archive_handle) {
+    // TODO(yuriks): Why is there all this duplicate (and seemingly useless) code up here?
+    ResultVal<Handle> archive_handle = Kernel::OpenArchive(archive_id);
+    cmd_buff[1] = archive_handle.Code().raw;
+    if (archive_handle.Failed()) {
         ERROR_LOG(KERNEL, "failed to get a handle for archive");
-        // TODO(Link Mauve): Check for the actual error values, this one was just chosen arbitrarily
-        cmd_buff[1] = -1;
         return;
     }
+    // cmd_buff[2] isn't used according to 3dmoo's implementation.
+    cmd_buff[3] = *archive_handle;
 
-    Handle handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
-    if (handle) {
-        cmd_buff[1] = 0;
-        cmd_buff[3] = handle;
+    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(*archive_handle, file_path, mode);
+    cmd_buff[1] = handle.Code().raw;
+    if (handle.Succeeded()) {
+        cmd_buff[3] = *handle;
     } else {
         ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
-        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
-        cmd_buff[1] = -1;
     }
 
     DEBUG_LOG(KERNEL, "called");
@@ -243,14 +239,12 @@ static void OpenDirectory(Service::Interface* self) {
 
     DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    Handle handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
-    if (handle) {
-        cmd_buff[1] = 0;
-        cmd_buff[3] = handle;
+    ResultVal<Handle> handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
+    cmd_buff[1] = handle.Code().raw;
+    if (handle.Succeeded()) {
+        cmd_buff[3] = *handle;
     } else {
         ERROR_LOG(KERNEL, "failed to get a handle for directory");
-        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
-        cmd_buff[1] = -1;
     }
 
     DEBUG_LOG(KERNEL, "called");
@@ -282,19 +276,17 @@ static void OpenArchive(Service::Interface* self) {
 
     if (archive_path.GetType() != FileSys::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
-        cmd_buff[1] = -1;
+        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
         return;
     }
 
-    Handle handle = Kernel::OpenArchive(archive_id);
-    if (handle) {
-        cmd_buff[1] = 0;
+    ResultVal<Handle> handle = Kernel::OpenArchive(archive_id);
+    cmd_buff[1] = handle.Code().raw;
+    if (handle.Succeeded()) {
         // cmd_buff[2] isn't used according to 3dmoo's implementation.
-        cmd_buff[3] = handle;
+        cmd_buff[3] = *handle;
     } else {
         ERROR_LOG(KERNEL, "failed to get a handle for archive");
-        // TODO(Link Mauve): check for the actual error values, this one was just chosen arbitrarily.
-        cmd_buff[1] = -1;
     }
 
     DEBUG_LOG(KERNEL, "called");

@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include "common/common.h"
+#include "core/hle/result.h"
 
 typedef u32 Handle;
 typedef s32 Result;
@@ -52,21 +53,19 @@ public:
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
+     * Synchronize kernel object.
+     * @return True if the current thread should wait as a result of the sync
      */
-    virtual Result SyncRequest(bool* wait) {
+    virtual ResultVal<bool> SyncRequest() {
         ERROR_LOG(KERNEL, "(UNIMPLEMENTED)");
-        return -1;
+        return UnimplementedFunction(ErrorModule::Kernel);
     }
 
     /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
+     * Wait for kernel object to synchronize.
+     * @return True if the current thread should wait as a result of the wait
      */
-    virtual Result WaitSynchronization(bool* wait) = 0;
+    virtual ResultVal<bool> WaitSynchronization() = 0;
 };
 
 class ObjectPool : NonCopyable {
@@ -80,38 +79,29 @@ public:
     static Object* CreateByIDType(int type);
 
     template <class T>
-    u32 Destroy(Handle handle) {
-        u32 error;
-        if (Get<T>(handle, error)) {
+    void Destroy(Handle handle) {
+        if (Get<T>(handle)) {
             occupied[handle - HANDLE_OFFSET] = false;
             delete pool[handle - HANDLE_OFFSET];
         }
-        return error;
     }
 
     bool IsValid(Handle handle);
 
     template <class T>
-    T* Get(Handle handle, u32& outError) {
+    T* Get(Handle handle) {
         if (handle < HANDLE_OFFSET || handle >= HANDLE_OFFSET + MAX_COUNT || !occupied[handle - HANDLE_OFFSET]) {
-            // Tekken 6 spams 0x80020001 gets wrong with no ill effects, also on the real PSP
-            if (handle != 0 && (u32)handle != 0x80020001) {
+            if (handle != 0) {
                 WARN_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
             }
-            outError = 0;//T::GetMissingErrorCode();
-            return 0;
+            return nullptr;
         } else {
-            // Previously we had a dynamic_cast here, but since RTTI was disabled traditionally,
-            // it just acted as a static case and everything worked. This means that we will never
-            // see the Wrong type object error below, but we'll just have to live with that danger.
-            T* t = static_cast<T*>(pool[handle - HANDLE_OFFSET]);
-            if (t == 0 || t->GetHandleType() != T::GetStaticHandleType()) {
+            Object* t = pool[handle - HANDLE_OFFSET];
+            if (t->GetHandleType() != T::GetStaticHandleType()) {
                 WARN_LOG(KERNEL, "Kernel: Wrong object type for %i (%08x)", handle, handle);
-                outError = 0;//T::GetMissingErrorCode();
-                return 0;
+                return nullptr;
             }
-            outError = 0;//SCE_KERNEL_ERROR_OK;
-            return t;
+            return static_cast<T*>(t);
         }
     }
 

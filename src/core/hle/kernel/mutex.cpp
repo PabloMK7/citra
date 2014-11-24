@@ -27,31 +27,20 @@ public:
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
     std::string name;                           ///< Name of mutex (optional)
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result SyncRequest(bool* wait) override {
+    ResultVal<bool> SyncRequest() override {
         // TODO(bunnei): ImplementMe
         locked = true;
-        return 0;
+        return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
-        *wait = locked;
-
+        bool wait = locked;
         if (locked) {
             Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
         }
 
-        return 0;
+        return MakeResult<bool>(wait);
     }
 };
 
@@ -119,15 +108,17 @@ bool ReleaseMutex(Mutex* mutex) {
  * Releases a mutex
  * @param handle Handle to mutex to release
  */
-Result ReleaseMutex(Handle handle) {
-    Mutex* mutex = Kernel::g_object_pool.GetFast<Mutex>(handle);
-
-    _assert_msg_(KERNEL, (mutex != nullptr), "ReleaseMutex tried to release a nullptr mutex!");
+ResultCode ReleaseMutex(Handle handle) {
+    Mutex* mutex = Kernel::g_object_pool.Get<Mutex>(handle);
+    if (mutex == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!ReleaseMutex(mutex)) {
-        return -1;
+        // TODO(yuriks): Verify error code, this one was pulled out of thin air. I'm not even sure
+        // what error condition this is supposed to be signaling.
+        return ResultCode(ErrorDescription::AlreadyDone, ErrorModule::Kernel,
+                ErrorSummary::NothingHappened, ErrorLevel::Temporary);
     }
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**

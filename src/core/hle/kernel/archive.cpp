@@ -9,8 +9,9 @@
 #include "core/file_sys/archive.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory.h"
-#include "core/hle/service/service.h"
 #include "core/hle/kernel/archive.h"
+#include "core/hle/result.h"
+#include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
@@ -51,12 +52,7 @@ public:
     std::string name;           ///< Name of archive (optional)
     FileSys::Archive* backend;  ///< Archive backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result SyncRequest(bool* wait) override {
+    ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
 
@@ -106,22 +102,17 @@ public:
         default:
         {
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
-            return -1;
+            return UnimplementedFunction(ErrorModule::FS);
         }
         }
         cmd_buff[1] = 0; // No error
-        return 0;
+        return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return 0;
+        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -136,12 +127,7 @@ public:
     FileSys::Path path; ///< Path of the file
     std::unique_ptr<FileSys::File> backend; ///< File backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result SyncRequest(bool* wait) override {
+    ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
         switch (cmd) {
@@ -183,7 +169,8 @@ public:
         case FileCommand::SetSize:
         {
             u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-            DEBUG_LOG(KERNEL, "SetSize %s %s size=%llu", GetTypeName().c_str(), GetName().c_str(), size);
+            DEBUG_LOG(KERNEL, "SetSize %s %s size=%llu",
+                    GetTypeName().c_str(), GetName().c_str(), size);
             backend->SetSize(size);
             break;
         }
@@ -198,22 +185,18 @@ public:
         // Unknown command...
         default:
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
-            cmd_buff[1] = -1; // TODO(Link Mauve): use the correct error code for that.
-            return -1;
+            ResultCode error = UnimplementedFunction(ErrorModule::FS);
+            cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
+            return error;
         }
         cmd_buff[1] = 0; // No error
-        return 0;
+        return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return 0;
+        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -228,12 +211,7 @@ public:
     FileSys::Path path; ///< Path of the directory
     std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
 
-    /**
-     * Synchronize kernel object
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result SyncRequest(bool* wait) override {
+    ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Service::GetCommandBuffer();
         DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
         switch (cmd) {
@@ -243,8 +221,9 @@ public:
         {
             u32 count = cmd_buff[1];
             u32 address = cmd_buff[3];
-            FileSys::Entry* entries = reinterpret_cast<FileSys::Entry*>(Memory::GetPointer(address));
-            DEBUG_LOG(KERNEL, "Read %s %s: count=%d", GetTypeName().c_str(), GetName().c_str(), count);
+            auto entries = reinterpret_cast<FileSys::Entry*>(Memory::GetPointer(address));
+            DEBUG_LOG(KERNEL, "Read %s %s: count=%d",
+                    GetTypeName().c_str(), GetName().c_str(), count);
 
             // Number of entries actually read
             cmd_buff[2] = backend->Read(count, entries);
@@ -261,22 +240,18 @@ public:
         // Unknown command...
         default:
             ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
-            cmd_buff[1] = -1; // TODO(Link Mauve): use the correct error code for that.
-            return -1;
+            ResultCode error = UnimplementedFunction(ErrorModule::FS);
+            cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
+            return error;
         }
         cmd_buff[1] = 0; // No error
-        return 0;
+        return MakeResult<bool>(false);
     }
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return 0;
+        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -284,89 +259,58 @@ public:
 
 std::map<FileSys::Archive::IdCode, Handle> g_archive_map; ///< Map of file archives by IdCode
 
-/**
- * Opens an archive
- * @param id_code IdCode of the archive to open
- * @return Handle to archive if it exists, otherwise a null handle (0)
- */
-Handle OpenArchive(FileSys::Archive::IdCode id_code) {
+ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code) {
     auto itr = g_archive_map.find(id_code);
     if (itr == g_archive_map.end()) {
-        return 0;
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+                ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
-    return itr->second;
+
+    return MakeResult<Handle>(itr->second);
 }
 
-/**
- * Closes an archive
- * @param id_code IdCode of the archive to open
- * @return Result of operation, 0 on success, otherwise error code
- */
-Result CloseArchive(FileSys::Archive::IdCode id_code) {
+ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
     auto itr = g_archive_map.find(id_code);
     if (itr == g_archive_map.end()) {
         ERROR_LOG(KERNEL, "Cannot close archive %d, does not exist!", (int)id_code);
-        return -1;
+        return InvalidHandle(ErrorModule::FS);
     }
 
     INFO_LOG(KERNEL, "Closed archive %d", (int) id_code);
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /**
  * Mounts an archive
  * @param archive Pointer to the archive to mount
- * @return Result of operation, 0 on success, otherwise error code
  */
-Result MountArchive(Archive* archive) {
+ResultCode MountArchive(Archive* archive) {
     FileSys::Archive::IdCode id_code = archive->backend->GetIdCode();
-    if (0 != OpenArchive(id_code)) {
+    ResultVal<Handle> archive_handle = OpenArchive(id_code);
+    if (archive_handle.Succeeded()) {
         ERROR_LOG(KERNEL, "Cannot mount two archives with the same ID code! (%d)", (int) id_code);
-        return -1;
+        return archive_handle.Code();
     }
     g_archive_map[id_code] = archive->GetHandle();
     INFO_LOG(KERNEL, "Mounted archive %s", archive->GetName().c_str());
-    return 0;
+    return RESULT_SUCCESS;
 }
 
-/**
- * Creates an Archive
- * @param handle Handle to newly created archive object
- * @param backend File system backend interface to the archive
- * @param name Optional name of Archive
- * @return Newly created Archive object
- */
-Archive* CreateArchive(Handle& handle, FileSys::Archive* backend, const std::string& name) {
+ResultCode CreateArchive(FileSys::Archive* backend, const std::string& name) {
     Archive* archive = new Archive;
-    handle = Kernel::g_object_pool.Create(archive);
+    Handle handle = Kernel::g_object_pool.Create(archive);
     archive->name = name;
     archive->backend = backend;
 
-    MountArchive(archive);
-
-    return archive;
+    ResultCode result = MountArchive(archive);
+    if (result.IsError()) {
+        return result;
+    }
+    
+    return RESULT_SUCCESS;
 }
 
-/**
- * Creates an Archive
- * @param backend File system backend interface to the archive
- * @param name Optional name of Archive
- * @return Handle to newly created Archive object
- */
-Handle CreateArchive(FileSys::Archive* backend, const std::string& name) {
-    Handle handle;
-    CreateArchive(handle, backend, name);
-    return handle;
-}
-
-/**
- * Open a File from an Archive
- * @param archive_handle Handle to an open Archive object
- * @param path Path to the File inside of the Archive
- * @param mode Mode under which to open the File
- * @return Opened File object
- */
-Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
+ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
     // TODO(bunnei): Binary type files get a raw file pointer to the archive. Currently, we create
     // the archive file handles at app loading, and then keep them persistent throughout execution.
     // Archives file handles are just reused and not actually freed until emulation shut down.
@@ -376,19 +320,24 @@ Handle OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, con
         // design. While the functionally of this is OK, our implementation decision to separate
         // normal files from archive file pointers is very likely wrong.
         // See https://github.com/citra-emu/citra/issues/205
-        return archive_handle;
+        return MakeResult<Handle>(archive_handle);
 
     File* file = new File;
     Handle handle = Kernel::g_object_pool.Create(file);
 
-    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+    Archive* archive = Kernel::g_object_pool.Get<Archive>(archive_handle);
+    if (archive == nullptr) {
+        return InvalidHandle(ErrorModule::FS);
+    }
     file->path = path;
     file->backend = archive->backend->OpenFile(path, mode);
 
-    if (!file->backend)
-        return 0;
+    if (!file->backend) {
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+                ErrorSummary::NotFound, ErrorLevel::Permanent);
+    }
 
-    return handle;
+    return MakeResult<Handle>(handle);
 }
 
 /**
@@ -442,15 +391,18 @@ Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& pa
  * @param path Path to the Directory inside of the Archive
  * @return Opened Directory object
  */
-Handle OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
+ResultVal<Handle> OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
     Directory* directory = new Directory;
     Handle handle = Kernel::g_object_pool.Create(directory);
 
-    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+    Archive* archive = Kernel::g_object_pool.Get<Archive>(archive_handle);
+    if (archive == nullptr) {
+        return InvalidHandle(ErrorModule::FS);
+    }
     directory->path = path;
     directory->backend = archive->backend->OpenDirectory(path);
 
-    return handle;
+    return MakeResult<Handle>(handle);
 }
 
 /// Initialize archives

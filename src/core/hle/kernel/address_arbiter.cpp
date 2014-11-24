@@ -25,22 +25,17 @@ public:
 
     std::string name;   ///< Name of address arbiter object (optional)
 
-    /**
-     * Wait for kernel object to synchronize
-     * @param wait Boolean wait set if current thread should wait as a result of sync operation
-     * @return Result of operation, 0 on success, otherwise error code
-     */
-    Result WaitSynchronization(bool* wait) override {
+    ResultVal<bool> WaitSynchronization() override {
         // TODO(bunnei): ImplementMe
         ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return 0;
+        return UnimplementedFunction(ErrorModule::OS);
     }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Arbitrate an address
-Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value) {
+ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value) {
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -65,9 +60,9 @@ Result ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 va
 
     default:
         ERROR_LOG(KERNEL, "unknown type=%d", type);
-        return -1;
+        return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel, ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
-    return 0;
+    return RESULT_SUCCESS;
 }
 
 /// Create an address arbiter
