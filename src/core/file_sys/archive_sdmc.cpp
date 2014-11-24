@@ -67,6 +67,16 @@ bool Archive_SDMC::DeleteFile(const FileSys::Path& path) const {
 }
 
 /**
+ * Rename a File specified by its path
+ * @param src_path Source path relative to the archive
+ * @param dest_path Destination path relative to the archive
+ * @return Whether rename succeeded
+ */
+bool Archive_SDMC::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
+}
+
+/**
  * Delete a directory specified by its path
  * @param path Path relative to the archive
  * @return Whether the directory could be deleted

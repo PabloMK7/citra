@@ -165,6 +165,48 @@ void DeleteFile(Service::Interface* self) {
 }
 
 /*
+ * FS_User::RenameFile service function
+ *  Inputs:
+ *      2 : Source archive handle lower word
+ *      3 : Source archive handle upper word
+ *      4 : Source file path type
+ *      5 : Source file path size
+ *      6 : Dest archive handle lower word
+ *      7 : Dest archive handle upper word
+ *      8 : Dest file path type
+ *      9 : Dest file path size
+ *      11: Source file path string data
+ *      13: Dest file path string
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void RenameFile(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle src_archive_handle  = static_cast<Handle>(cmd_buff[3]);
+    auto src_filename_type     = static_cast<FileSys::LowPathType>(cmd_buff[4]);
+    u32 src_filename_size      = cmd_buff[5];
+    Handle dest_archive_handle = static_cast<Handle>(cmd_buff[7]);
+    auto dest_filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[8]);
+    u32 dest_filename_size     = cmd_buff[9];
+    u32 src_filename_ptr       = cmd_buff[11];
+    u32 dest_filename_ptr      = cmd_buff[13];
+
+    FileSys::Path src_file_path(src_filename_type, src_filename_size, src_filename_ptr);
+    FileSys::Path dest_file_path(dest_filename_type, dest_filename_size, dest_filename_ptr);
+
+    DEBUG_LOG(KERNEL, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
+              src_filename_type, src_filename_size, src_file_path.DebugStr().c_str(),
+              dest_filename_type, dest_filename_size, dest_file_path.DebugStr().c_str());
+
+    cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path);
+    
+    DEBUG_LOG(KERNEL, "called");
+}
+
+/*
  * FS_User::DeleteDirectory service function
  *  Inputs:
  *      2 : Archive handle lower word
@@ -314,7 +356,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080201C2, OpenFile,              "OpenFile"},
     {0x08030204, OpenFileDirectly,      "OpenFileDirectly"},
     {0x08040142, DeleteFile,            "DeleteFile"},
-    {0x08050244, nullptr,               "RenameFile"},
+    {0x08050244, RenameFile,            "RenameFile"},
     {0x08060142, DeleteDirectory,       "DeleteDirectory"},
     {0x08070142, nullptr,               "DeleteDirectoryRecursively"},
     {0x08080202, nullptr,               "CreateFile"},

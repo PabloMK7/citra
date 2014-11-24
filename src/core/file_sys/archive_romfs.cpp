@@ -44,6 +44,17 @@ bool Archive_RomFS::DeleteFile(const FileSys::Path& path) const {
 }
 
 /**
+ * Rename a File specified by its path
+ * @param src_path Source path relative to the archive
+ * @param dest_path Destination path relative to the archive
+ * @return Whether rename succeeded
+ */
+bool Archive_RomFS::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
+    return false;
+}
+
+/**
  * Delete a directory specified by its path
  * @param path Path relative to the archive
  * @return Whether the directory could be deleted
