@@ -80,6 +80,17 @@ Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& pa
 Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
 
 /**
+ * Rename a Directory between two Archives
+ * @param src_archive_handle Handle to the source Archive object
+ * @param src_path Path to the Directory inside of the source Archive
+ * @param dest_archive_handle Handle to the destination Archive object
+ * @param dest_path Path to the Directory inside of the destination Archive
+ * @return Whether rename succeeded
+ */
+Result RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                      Handle dest_archive_handle, const FileSys::Path& dest_path);
+
+/**
  * Open a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive

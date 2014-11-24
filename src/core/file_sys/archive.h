@@ -214,6 +214,14 @@ public:
     virtual bool CreateDirectory(const Path& path) const = 0;
 
     /**
+     * Rename a Directory specified by its path
+     * @param src_path Source path relative to the archive
+     * @param dest_path Destination path relative to the archive
+     * @return Whether rename succeeded
+     */
+    virtual bool RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const = 0;
+
+    /**
      * Open a directory specified by its path
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr

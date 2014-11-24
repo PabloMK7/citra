@@ -267,6 +267,48 @@ static void CreateDirectory(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "called");
 }
 
+/*
+ * FS_User::RenameDirectory service function
+ *  Inputs:
+ *      2 : Source archive handle lower word
+ *      3 : Source archive handle upper word
+ *      4 : Source dir path type
+ *      5 : Source dir path size
+ *      6 : Dest archive handle lower word
+ *      7 : Dest archive handle upper word
+ *      8 : Dest dir path type
+ *      9 : Dest dir path size
+ *      11: Source dir path string data
+ *      13: Dest dir path string
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void RenameDirectory(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
+    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
+    Handle src_archive_handle  = static_cast<Handle>(cmd_buff[3]);
+    auto src_dirname_type      = static_cast<FileSys::LowPathType>(cmd_buff[4]);
+    u32 src_dirname_size       = cmd_buff[5];
+    Handle dest_archive_handle = static_cast<Handle>(cmd_buff[7]);
+    auto dest_dirname_type     = static_cast<FileSys::LowPathType>(cmd_buff[8]);
+    u32 dest_dirname_size      = cmd_buff[9];
+    u32 src_dirname_ptr        = cmd_buff[11];
+    u32 dest_dirname_ptr       = cmd_buff[13];
+
+    FileSys::Path src_dir_path(src_dirname_type, src_dirname_size, src_dirname_ptr);
+    FileSys::Path dest_dir_path(dest_dirname_type, dest_dirname_size, dest_dirname_ptr);
+
+    DEBUG_LOG(KERNEL, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
+              src_dirname_type, src_dirname_size, src_dir_path.DebugStr().c_str(),
+              dest_dirname_type, dest_dirname_size, dest_dir_path.DebugStr().c_str());
+
+    cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path);
+    
+    DEBUG_LOG(KERNEL, "called");
+}
+
 static void OpenDirectory(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -361,7 +403,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08070142, nullptr,               "DeleteDirectoryRecursively"},
     {0x08080202, nullptr,               "CreateFile"},
     {0x08090182, CreateDirectory,       "CreateDirectory"},
-    {0x080A0244, nullptr,               "RenameDirectory"},
+    {0x080A0244, RenameDirectory,       "RenameDirectory"},
     {0x080B0102, OpenDirectory,         "OpenDirectory"},
     {0x080C00C2, OpenArchive,           "OpenArchive"},
     {0x080D0144, nullptr,               "ControlArchive"},

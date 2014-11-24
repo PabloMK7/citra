@@ -75,6 +75,17 @@ bool Archive_RomFS::CreateDirectory(const Path& path) const {
 }
 
 /**
+ * Rename a Directory specified by its path
+ * @param src_path Source path relative to the archive
+ * @param dest_path Destination path relative to the archive
+ * @return Whether rename succeeded
+ */
+bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
+    return false;
+}
+
+/**
  * Open a directory specified by its path
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr

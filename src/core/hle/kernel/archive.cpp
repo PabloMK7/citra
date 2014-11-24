@@ -410,6 +410,30 @@ Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& pa
 }
 
 /**
+ * Rename a Directory between two Archives
+ * @param src_archive_handle Handle to the source Archive object
+ * @param src_path Path to the Directory inside of the source Archive
+ * @param dest_archive_handle Handle to the destination Archive object
+ * @param dest_path Path to the Directory inside of the destination Archive
+ * @return Whether rename succeeded
+ */
+Result RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                      Handle dest_archive_handle, const FileSys::Path& dest_path) {
+    Archive* src_archive = Kernel::g_object_pool.GetFast<Archive>(src_archive_handle);
+    Archive* dest_archive = Kernel::g_object_pool.GetFast<Archive>(dest_archive_handle);
+    if (src_archive == nullptr || dest_archive == nullptr)
+        return -1;
+    if (src_archive == dest_archive) {
+        if (src_archive->backend->RenameDirectory(src_path, dest_path))
+            return 0;
+    } else {
+        // TODO: Implement renaming across archives
+        return -1;
+    }
+    return -1;
+}
+
+/**
  * Open a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive

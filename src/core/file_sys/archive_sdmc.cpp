@@ -95,6 +95,16 @@ bool Archive_SDMC::CreateDirectory(const Path& path) const {
 }
 
 /**
+ * Rename a Directory specified by its path
+ * @param src_path Source path relative to the archive
+ * @param dest_path Destination path relative to the archive
+ * @return Whether rename succeeded
+ */
+bool Archive_SDMC::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
+}
+
+/**
  * Open a directory specified by its path
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
