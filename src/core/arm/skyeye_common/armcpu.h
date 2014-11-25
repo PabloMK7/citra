@@ -24,8 +24,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "common/thread.h"
-
 #include "core/arm/skyeye_common/armdefs.h"
 
 typedef struct ARM_CPU_State_s {
