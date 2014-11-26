@@ -88,20 +88,19 @@ bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
 
 bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
-    bool woke_threads = false;
 
     // Find the next waiting thread for the mutex...
-    while (!woke_threads && !mutex->waiting_threads.empty()) {
+    while (!mutex->waiting_threads.empty()) {
         std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
-        woke_threads |= ReleaseMutexForThread(mutex, *iter);
+        ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
+
     // Reset mutex lock thread handle, nothing is waiting
-    if (!woke_threads) {
-        mutex->locked = false;
-        mutex->lock_thread = -1;
-    }
-    return woke_threads;
+    mutex->locked = false;
+    mutex->lock_thread = -1;
+
+    return true;
 }
 
 /**
