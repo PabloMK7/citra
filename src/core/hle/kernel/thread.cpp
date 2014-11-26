@@ -143,7 +143,7 @@ void ChangeReadyState(Thread* t, bool ready) {
 /// Verify that a thread has not been released from waiting
 inline bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
     _dbg_assert_(KERNEL, thread != nullptr);
-    return type == thread->wait_type && wait_handle == thread->wait_handle;
+    return (type == thread->wait_type) && (wait_handle == thread->wait_handle) && (thread->IsWaiting());
 }
 
 /// Stops the current thread
