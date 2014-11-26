@@ -189,6 +189,8 @@ static Result CreateAddressArbiter(u32* arbiter) {
 
 /// Arbitrate address
 static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
+    DEBUG_LOG(SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", arbiter,
+        address, type, value);
     return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type),
             address, value).raw;
 }
