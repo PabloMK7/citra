@@ -58,6 +58,9 @@
 #define DEBUGGER_CONFIG   "debugger.ini"
 #define LOGGER_CONFIG     "logger.ini"
 
+// Sys files
+#define SHARED_FONT       "shared_font.bin"
+
 // Files in the directory returned by GetUserPath(D_LOGS_IDX)
 #define MAIN_LOG "emu.log"
 
