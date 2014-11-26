@@ -331,6 +331,9 @@ static Result ClearEvent(Handle evt) {
 /// Sleep the current thread
 static void SleepThread(s64 nanoseconds) {
     DEBUG_LOG(SVC, "called nanoseconds=%lld", nanoseconds);
+
+    // Check for next thread to schedule
+    HLE::Reschedule(__func__);
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
