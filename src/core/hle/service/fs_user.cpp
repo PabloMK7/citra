@@ -55,7 +55,7 @@ static void OpenFile(Service::Interface* self) {
     u32 filename_ptr      = cmd_buff[9];
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "path=%s, mode=%d attrs=%d", file_path.DebugStr().c_str(), mode, attributes);
+    DEBUG_LOG(KERNEL, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
     ResultVal<Handle> handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
@@ -102,8 +102,8 @@ static void OpenFileDirectly(Service::Interface* self) {
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "archive_path=%s file_path=%s, mode=%d attributes=%d",
-              archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode, attributes);
+    DEBUG_LOG(KERNEL, "archive_path=%s file_path=%s, mode=%u attributes=%d",
+              archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
 
     if (archive_path.GetType() != FileSys::Empty) {
         ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");

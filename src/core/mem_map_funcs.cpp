@@ -92,7 +92,7 @@ inline void Read(T &var, const VAddr vaddr) {
         var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
 
     } else {
-        ERROR_LOG(MEMMAP, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
+        ERROR_LOG(MEMMAP, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
@@ -141,7 +141,7 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // Error out...
     } else {
-        ERROR_LOG(MEMMAP, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, vaddr);
+        ERROR_LOG(MEMMAP, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, vaddr);
     }
 }
 

@@ -67,6 +67,8 @@ public:
                 u16str = std::u16string(data, size/2 - 1); // Data is always null-terminated.
                 break;
             }
+            default:
+                break;
         }
     }
 

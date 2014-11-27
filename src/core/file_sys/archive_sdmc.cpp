@@ -50,7 +50,7 @@ bool Archive_SDMC::Initialize() {
  * @return Opened file, or nullptr
  */
 std::unique_ptr<File> Archive_SDMC::OpenFile(const Path& path, const Mode mode) const {
-    DEBUG_LOG(FILESYS, "called path=%s mode=%d", path.DebugStr().c_str(), mode);
+    DEBUG_LOG(FILESYS, "called path=%s mode=%u", path.DebugStr().c_str(), mode.hex);
     File_SDMC* file = new File_SDMC(this, path, mode);
     if (!file->Open())
         return nullptr;

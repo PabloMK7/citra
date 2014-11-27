@@ -68,7 +68,7 @@ inline void Write(u32 addr, const T data) {
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        ERROR_LOG(HW, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
     }
 }
 
