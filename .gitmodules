@@ -4,3 +4,6 @@
 [submodule "externals/boost"]
 	path = externals/boost
 	url = https://github.com/citra-emu/ext-boost.git
+[submodule "externals/nihstro"]
+	path = externals/nihstro
+	url = https://github.com/neobrain/nihstro.git
