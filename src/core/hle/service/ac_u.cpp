@@ -11,6 +11,24 @@
 
 namespace AC_U {
 
+/**
+ * AC_U::GetWifiStatus service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Output connection type, 0 = none, 1 = Old3DS Internet, 2 = New3DS Internet.
+ */
+void GetWifiStatus(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    // TODO(purpasmart96): This function is only a stub,
+    // it returns a valid result without implementing full functionality.
+
+    cmd_buff[1] = 0; // No error
+    cmd_buff[2] = 0; // Connection type set to none
+
+    WARN_LOG(KERNEL, "(STUBBED) called");
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010000, nullptr,               "CreateDefaultConfig"},
     {0x00040006, nullptr,               "ConnectAsync"},
@@ -18,7 +36,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00080004, nullptr,               "CloseAsync"},
     {0x00090002, nullptr,               "GetCloseResult"},
     {0x000A0000, nullptr,               "GetLastErrorCode"},
-    {0x000D0000, nullptr,               "GetWifiStatus"},
+    {0x000D0000, GetWifiStatus,         "GetWifiStatus"},
     {0x000E0042, nullptr,               "GetCurrentAPInfo"},
     {0x00100042, nullptr,               "GetCurrentNZoneInfo"},
     {0x00110042, nullptr,               "GetNZoneApNumService"},
