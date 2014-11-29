@@ -49,7 +49,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        ERROR_LOG(GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
         return;
     }
 
@@ -140,8 +140,8 @@ inline void Write(u32 addr, const T data) {
 
             DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
                       config.output_height * config.output_width * 4,
-                      config.GetPhysicalInputAddress(), config.input_width, config.input_height,
-                      config.GetPhysicalOutputAddress(), config.output_width, config.output_height,
+                      config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
+                      config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
                       config.output_format.Value());
         }
         break;

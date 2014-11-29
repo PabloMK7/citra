@@ -15,7 +15,7 @@ inline void Read(T &var, const u32 addr) {
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    ERROR_LOG(NDMA, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+    ERROR_LOG(NDMA, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
 }
 
 // Explicitly instantiate template functions because we aren't defining this in the header:
