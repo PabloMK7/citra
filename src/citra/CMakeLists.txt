@@ -19,12 +19,15 @@ endif()
 
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra core common video_core)
-target_link_libraries(citra ${OPENGL_gl_LIBRARY} ${GLFW_LIBRARIES} inih)
+target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih)
 
 if (APPLE)
     target_link_libraries(citra iconv pthread ${COREFOUNDATION_LIBRARY})
 elseif (WIN32)
     target_link_libraries(citra winmm)
+    if (MINGW)
+        target_link_libraries(citra iconv)
+    endif()    
 else() # Unix
     target_link_libraries(citra pthread rt)
     target_link_libraries(citra ${X11_X11_LIB} ${X11_Xi_LIB} ${X11_Xcursor_LIB} ${X11_Xrandr_LIB} ${X11_xv86vmode_LIB})

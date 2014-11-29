@@ -34,6 +34,10 @@
 
 using namespace std;
 
+#ifdef _WIN32
+#undef __WIN32__
+#endif
+
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armmmu.h"
 #include "arm_dyncom_thumb.h"
