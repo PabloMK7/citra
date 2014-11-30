@@ -58,9 +58,13 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
 
     ReloadSetKeymaps();
 
+    glfwSetErrorCallback([](int error, const char *desc){
+        ERROR_LOG(GUI, "GLFW 0x%08x: %s", error, desc);
+    });
+
     // Initialize the window
     if(glfwInit() != GL_TRUE) {
-        printf("Failed to initialize GLFW! Exiting...");
+        ERROR_LOG(GUI, "Failed to initialize GLFW! Exiting...");
         exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -75,7 +79,7 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
         window_title.c_str(), NULL, NULL);
 
     if (m_render_window == NULL) {
-        printf("Failed to create GLFW window! Exiting...");
+        ERROR_LOG(GUI, "Failed to create GLFW window! Exiting...");
         exit(1);
     }
 
