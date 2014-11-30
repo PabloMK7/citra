@@ -94,9 +94,8 @@ typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
 
 /* exclusive memory access */
 static int exclusive_detect(ARMul_State* state, ARMword addr){
-	int i;
 	#if 0
-	for(i = 0; i < 128; i++){
+	for(int i = 0; i < 128; i++){
 		if(state->exclusive_tag_array[i] == addr)
 			return 0;
 	}
@@ -108,9 +107,8 @@ static int exclusive_detect(ARMul_State* state, ARMword addr){
 }
 
 static void add_exclusive_addr(ARMul_State* state, ARMword addr){
-	int i;
 	#if 0
-	for(i = 0; i < 128; i++){
+	for(int i = 0; i < 128; i++){
 		if(state->exclusive_tag_array[i] == 0xffffffff){
 			state->exclusive_tag_array[i] = addr;
 			//DEBUG_LOG(ARM11, "In %s, add  addr 0x%x\n", __func__, addr);
