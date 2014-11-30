@@ -189,6 +189,8 @@ static Result CreateAddressArbiter(u32* arbiter) {
 
 /// Arbitrate address
 static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
+    DEBUG_LOG(SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", arbiter,
+        address, type, value);
     return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type),
             address, value).raw;
 }
@@ -331,6 +333,9 @@ static Result ClearEvent(Handle evt) {
 /// Sleep the current thread
 static void SleepThread(s64 nanoseconds) {
     DEBUG_LOG(SVC, "called nanoseconds=%lld", nanoseconds);
+
+    // Check for next thread to schedule
+    HLE::Reschedule(__func__);
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
