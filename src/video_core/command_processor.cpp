@@ -60,7 +60,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 const u8* load_address = base_address + loader_config.data_offset;
 
                 // TODO: What happens if a loader overwrites a previous one's data?
-                for (int component = 0; component < loader_config.component_count; ++component) {
+                for (unsigned component = 0; component < loader_config.component_count; ++component) {
                     u32 attribute_index = loader_config.GetComponent(component);
                     vertex_attribute_sources[attribute_index] = load_address;
                     vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);

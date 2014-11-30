@@ -61,7 +61,7 @@ void RendererOpenGL::SwapBuffers() {
     for(int i : {0, 1}) {
         const auto& framebuffer = GPU::g_regs.framebuffer_config[i];
 
-        if (textures[i].width != framebuffer.width || textures[i].height != framebuffer.height) {
+        if (textures[i].width != (GLsizei)framebuffer.width || textures[i].height != (GLsizei)framebuffer.height) {
             // Reallocate texture if the framebuffer size has changed.
             // This is expected to not happen very often and hence should not be a
             // performance problem.
