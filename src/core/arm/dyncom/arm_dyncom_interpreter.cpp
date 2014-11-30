@@ -26,7 +26,7 @@
 #define CITRA_IGNORE_EXIT(x)
 
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <stdio.h>
 #include <assert.h>
 #include <cstdio>
@@ -3307,9 +3307,8 @@ const transop_fp_t arm_instruction_trans[] = {
 	INTERPRETER_TRANSLATE(blx_1_thumb)
 };
 
-typedef map<unsigned int, int> bb_map;
-bb_map CreamCache[65536];
-bb_map ProfileCache[65536];
+typedef std::unordered_map<u32, int> bb_map;
+bb_map CreamCache;
 
 //#define USE_DUMMY_CACHE
 
@@ -3317,14 +3316,12 @@ bb_map ProfileCache[65536];
 unsigned int DummyCache[0x100000];
 #endif
 
-#define HASH(x) ((x + (x << 3) + (x >> 6)) % 65536)
 void insert_bb(unsigned int addr, int start)
 {
 #ifdef USE_DUMMY_CACHE
 	DummyCache[addr] = start;
 #else
-//	CreamCache[addr] = start;
-	CreamCache[HASH(addr)][addr] = start;
+	CreamCache[addr] = start;
 #endif
 }
 
@@ -3339,8 +3336,8 @@ int find_bb(unsigned int addr, int &start)
 	} else
 		ret = -1;
 #else
-	bb_map::const_iterator it = CreamCache[HASH(addr)].find(addr);
-	if (it != CreamCache[HASH(addr)].end()) {
+	bb_map::const_iterator it = CreamCache.find(addr);
+	if (it != CreamCache.end()) {
 		start = static_cast<int>(it->second);
 		ret = 0;
 #if HYBRID_MODE
@@ -3471,30 +3468,15 @@ void flush_bb(uint32_t addr)
 	uint32_t start;
 
 	addr  &= 0xfffff000;
-	for (int i = 0; i < 65536; i ++) {
-		for (it = CreamCache[i].begin(); it != CreamCache[i].end(); ) {
-			start = static_cast<uint32_t>(it->first);
-			//start = (start >> 12) << 12;
-			start &= 0xfffff000;
-			if (start == addr) {
-				//DEBUG_LOG(ARM11, "[ERASE][0x%08x]\n", static_cast<int>(it->first));
-				CreamCache[i].erase(it ++);
-			} else
-				++it;
-		}
-	}
-
-	for (int i = 0; i < 65536; i ++) {
-		for (it = ProfileCache[i].begin(); it != ProfileCache[i].end(); ) {
-			start = static_cast<uint32_t>(it->first);
-			//start = (start >> 12) << 12;
-			start &= 0xfffff000;
-			if (start == addr) {
-				//DEBUG_LOG(ARM11, "[ERASE][0x%08x]\n", static_cast<int>(it->first));
-				ProfileCache[i].erase(it ++);
-			} else
-				++it;
-		}
+	for (it = CreamCache.begin(); it != CreamCache.end(); ) {
+		start = static_cast<uint32_t>(it->first);
+		//start = (start >> 12) << 12;
+		start &= 0xfffff000;
+		if (start == addr) {
+			//DEBUG_LOG(ARM11, "[ERASE][0x%08x]\n", static_cast<int>(it->first));
+			CreamCache.erase(it++);
+		} else
+			++it;
 	}
 
 	//DEBUG_LOG(ARM11, "flush bb @ %x\n", addr);
