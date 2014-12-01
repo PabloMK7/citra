@@ -20,7 +20,7 @@ public:
      * @return Port name of service
      */
     std::string GetPortName() const override {
-        return "dsp:DSP";
+        return "dsp::DSP";
     }
 };
 
