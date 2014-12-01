@@ -9,6 +9,8 @@ if (NOT MSVC)
 else()
     # Silence deprecation warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
+    # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif()
 add_definitions(-DSINGLETHREADED)
 
