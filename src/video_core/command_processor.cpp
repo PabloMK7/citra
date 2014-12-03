@@ -8,6 +8,7 @@
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
+#include "core/hle/service/gsp_gpu.h"
 
 #include "debug_utils/debug_utils.h"
 
@@ -40,6 +41,11 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     DebugUtils::OnPicaRegWrite(id, registers[id]);
 
     switch(id) {
+        // Trigger IRQ
+        case PICA_REG_INDEX(trigger_irq):
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
+            return;
+
         // It seems like these trigger vertex rendering
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
