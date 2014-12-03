@@ -219,7 +219,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     {
         auto& params = command.set_command_list_last;
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), Memory::VirtualToPhysicalAddress(params.address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);

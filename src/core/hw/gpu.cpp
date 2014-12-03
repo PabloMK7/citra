@@ -154,8 +154,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger & 1)
         {
             u32* buffer = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalAddress()));
-            u32 size = config.size << 3;
-            Pica::CommandProcessor::ProcessCommandList(buffer, size);
+            Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
         }
         break;
     }

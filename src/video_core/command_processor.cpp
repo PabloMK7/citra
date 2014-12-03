@@ -272,8 +272,9 @@ static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
 
 void ProcessCommandList(const u32* list, u32 size) {
     u32* read_pointer = (u32*)list;
+    u32 list_length = size / sizeof(u32);
 
-    while (read_pointer < list + size) {
+    while (read_pointer < list + list_length) {
         read_pointer += ExecuteCommandBlock(read_pointer);
     }
 }
