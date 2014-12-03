@@ -162,7 +162,8 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     _assert_msg_(GSP, (g_interrupt_event != 0), "handle is not valid!");
 
-    cmd_buff[2] = g_thread_id++; // ThreadID
+    cmd_buff[1] = 0x2A07; // Value verified by 3dmoo team, purpose unknown, but needed for GSP init
+    cmd_buff[2] = g_thread_id++; // Thread ID
     cmd_buff[4] = g_shared_memory; // GSP shared memory
 
     Kernel::SignalEvent(g_interrupt_event); // TODO(bunnei): Is this correct?
@@ -304,6 +305,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
+
+    DEBUG_LOG(GSP, "called");
 
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
