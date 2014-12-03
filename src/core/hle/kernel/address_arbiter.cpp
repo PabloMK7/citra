@@ -53,7 +53,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)Memory::Read32(address) <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle);
+            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle, address);
             HLE::Reschedule(__func__);
         }
         break;

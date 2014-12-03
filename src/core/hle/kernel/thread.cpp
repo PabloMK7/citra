@@ -63,6 +63,7 @@ public:
 
     WaitType wait_type;
     Handle wait_handle;
+    VAddr wait_address;
 
     std::vector<Handle> waiting_threads;
 
@@ -126,6 +127,7 @@ void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     }
     t->wait_type = WAITTYPE_NONE;
     t->wait_handle = 0;
+    t->wait_address = 0;
 }
 
 /// Change a thread to "ready" state
@@ -146,9 +148,15 @@ void ChangeReadyState(Thread* t, bool ready) {
 }
 
 /// Verify that a thread has not been released from waiting
-inline bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
+static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
     _dbg_assert_(KERNEL, thread != nullptr);
     return (type == thread->wait_type) && (wait_handle == thread->wait_handle) && (thread->IsWaiting());
+}
+
+/// Verify that a thread has not been released from waiting (with wait address)
+static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle, VAddr wait_address) {
+    _dbg_assert_(KERNEL, thread != nullptr);
+    return VerifyWait(thread, type, wait_handle) && (wait_address == thread->wait_address);
 }
 
 /// Stops the current thread
@@ -169,6 +177,7 @@ ResultCode StopThread(Handle handle, const char* reason) {
     // Stopped threads are never waiting.
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
+    thread->wait_address = 0;
 
     return RESULT_SUCCESS;
 }
@@ -197,12 +206,12 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
     for (Handle handle : thread_queue) {
         Thread* thread = g_object_pool.Get<Thread>(handle);
 
-        // TODO(bunnei): Verify arbiter address...
-        if (!VerifyWait(thread, WAITTYPE_ARB, arbiter))
+        if (!VerifyWait(thread, WAITTYPE_ARB, arbiter, address))
             continue;
 
         if (thread == nullptr)
             continue; // TODO(yuriks): Thread handle will hang around forever. Should clean up.
+
         if(thread->current_priority <= priority) {
             highest_priority_thread = handle;
             priority = thread->current_priority;
@@ -222,8 +231,7 @@ void ArbitrateAllThreads(u32 arbiter, u32 address) {
     for (Handle handle : thread_queue) {
         Thread* thread = g_object_pool.Get<Thread>(handle);
 
-        // TODO(bunnei): Verify arbiter address...
-        if (VerifyWait(thread, WAITTYPE_ARB, arbiter))
+        if (VerifyWait(thread, WAITTYPE_ARB, arbiter, address))
             ResumeThreadFromWait(handle);
     }
 }
@@ -277,16 +285,16 @@ Thread* NextThread() {
     return Kernel::g_object_pool.Get<Thread>(next);
 }
 
-/**
- * Puts the current thread in the wait state for the given type
- * @param wait_type Type of wait
- * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
- */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
     Thread* thread = GetCurrentThread();
     thread->wait_type = wait_type;
     thread->wait_handle = wait_handle;
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
+}
+
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_address) {
+    WaitCurrentThread(wait_type, wait_handle);
+    GetCurrentThread()->wait_address = wait_address;
 }
 
 /// Resumes a thread from waiting by marking it as "ready"
@@ -339,6 +347,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread->processor_id = processor_id;
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
+    thread->wait_address = 0;
     thread->name = name;
 
     return thread;

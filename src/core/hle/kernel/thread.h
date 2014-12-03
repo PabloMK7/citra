@@ -5,6 +5,9 @@
 #pragma once
 
 #include "common/common_types.h"
+
+#include "core/mem_map.h"
+
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
@@ -84,6 +87,14 @@ Handle GetCurrentThreadHandle();
  * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
  */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
+
+/**
+ * Puts the current thread in the wait state for the given type
+ * @param wait_type Type of wait
+ * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ * @param wait_address Arbitration address used to resume from wait
+ */
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_address);
 
 /// Put current thread in a wait state - on WaitSynchronization
 void WaitThread_Synchronization();
