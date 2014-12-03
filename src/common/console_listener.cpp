@@ -16,7 +16,7 @@
 ConsoleListener::ConsoleListener()
 {
 #ifdef _WIN32
-    hConsole = NULL;
+    hConsole = nullptr;
     bUseColor = true;
 #else
     bUseColor = isatty(fileno(stdout));
@@ -66,19 +66,19 @@ void ConsoleListener::UpdateHandle()
 void ConsoleListener::Close()
 {
 #ifdef _WIN32
-    if (hConsole == NULL)
+    if (hConsole == nullptr)
         return;
     FreeConsole();
-    hConsole = NULL;
+    hConsole = nullptr;
 #else
-    fflush(NULL);
+    fflush(nullptr);
 #endif
 }
 
 bool ConsoleListener::IsOpen()
 {
 #ifdef _WIN32
-    return (hConsole != NULL);
+    return (hConsole != nullptr);
 #else
     return true;
 #endif

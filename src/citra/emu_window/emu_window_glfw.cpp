@@ -76,9 +76,9 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     m_render_window = glfwCreateWindow(VideoCore::kScreenTopWidth,
         (VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight),
-        window_title.c_str(), NULL, NULL);
+        window_title.c_str(), nullptr, nullptr);
 
-    if (m_render_window == NULL) {
+    if (m_render_window == nullptr) {
         ERROR_LOG(GUI, "Failed to create GLFW window! Exiting...");
         exit(1);
     }
@@ -123,7 +123,7 @@ void EmuWindow_GLFW::MakeCurrent() {
 
 /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
 void EmuWindow_GLFW::DoneCurrent() {
-    glfwMakeContextCurrent(NULL);
+    glfwMakeContextCurrent(nullptr);
 }
 
 void EmuWindow_GLFW::ReloadSetKeymaps() {

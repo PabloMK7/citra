@@ -204,11 +204,11 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (it->second != NULL)
+                if (it->second != nullptr)
                     delete it->second;
             }
         }
-        T *dv = NULL;
+        T *dv = nullptr;
         DoMap(x, dv);
     }
 
@@ -264,11 +264,11 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (it->second != NULL)
+                if (it->second != nullptr)
                     delete it->second;
             }
         }
-        T *dv = NULL;
+        T *dv = nullptr;
         DoMultimap(x, dv);
     }
 
@@ -320,7 +320,7 @@ public:
     template<class T>
     void Do(std::vector<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         DoVector(x, dv);
     }
 
@@ -369,7 +369,7 @@ public:
     template<class T>
     void Do(std::deque<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         DoDeque(x, dv);
     }
 
@@ -395,7 +395,7 @@ public:
     template<class T>
     void Do(std::list<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         Do(x, dv);
     }
 
@@ -433,7 +433,7 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (*it != NULL)
+                if (*it != nullptr)
                     delete *it;
             }
         }
@@ -518,7 +518,7 @@ public:
     void DoClass(T *&x) {
         if (mode == MODE_READ)
         {
-            if (x != NULL)
+            if (x != nullptr)
                 delete x;
             x = new T();
         }
@@ -567,7 +567,7 @@ public:
                 {
                     if (mode == MODE_READ)
                     {
-                        cur->next = 0;
+                        cur->next = nullptr;
                         list_cur = cur;
                         if (prev)
                             prev->next = cur;
@@ -586,13 +586,13 @@ public:
                 if (mode == MODE_READ)
                 {
                     if (prev)
-                        prev->next = 0;
+                        prev->next = nullptr;
                     if (list_end)
                         *list_end = prev;
                     if (list_cur)
                     {
                         if (list_start == list_cur)
-                            list_start = 0;
+                            list_start = nullptr;
                         do
                         {
                             LinkedListItem<T>* next = list_cur->next;

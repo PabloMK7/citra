@@ -202,11 +202,11 @@ public:
         return WriteArray(reinterpret_cast<const char*>(data), length);
     }
 
-    bool IsOpen() { return NULL != m_file; }
+    bool IsOpen() { return nullptr != m_file; }
 
     // m_good is set to false when a read, write or other function fails
     bool IsGood() {    return m_good; }
-    operator void*() { return m_good ? m_file : NULL; }
+    operator void*() { return m_good ? m_file : nullptr; }
 
     std::FILE* ReleaseHandle();
 

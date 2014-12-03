@@ -57,7 +57,7 @@ public:
         // advance the read pointer
         m_read_ptr = m_read_ptr->next;
         // set the next element to NULL to stop the recursive deletion
-        tmpptr->next = NULL;
+        tmpptr->next = nullptr;
         delete tmpptr;    // this also deletes the element
     }
 
@@ -86,7 +86,7 @@ private:
     class ElementPtr
     {
     public:
-        ElementPtr() : current(NULL), next(NULL) {}
+        ElementPtr() : current(nullptr), next(nullptr) {}
 
         ~ElementPtr()
         {

@@ -17,8 +17,8 @@
 
 namespace VideoCore {
 
-EmuWindow*      g_emu_window    = NULL;     ///< Frontend emulator window
-RendererBase*   g_renderer      = NULL;     ///< Renderer plugin
+EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
+RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
 int             g_current_frame = 0;
 
 /// Initialize the video core

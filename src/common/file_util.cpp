@@ -140,7 +140,7 @@ bool CreateDir(const std::string &path)
 {
     INFO_LOG(COMMON, "CreateDir: directory %s", path.c_str());
 #ifdef _WIN32
-    if (::CreateDirectory(Common::UTF8ToTStr(path).c_str(), NULL))
+    if (::CreateDirectory(Common::UTF8ToTStr(path).c_str(), nullptr))
         return true;
     DWORD error = GetLastError();
     if (error == ERROR_ALREADY_EXISTS)
@@ -423,7 +423,7 @@ u32 ScanDirectoryTree(const std::string &directory, FSTEntry& parentEntry)
         FSTEntry entry;
         const std::string virtualName(Common::TStrToUTF8(ffd.cFileName));
 #else
-    struct dirent dirent, *result = NULL;
+    struct dirent dirent, *result = nullptr;
 
     DIR *dirp = opendir(directory.c_str());
     if (!dirp)
@@ -491,7 +491,7 @@ bool DeleteDirRecursively(const std::string &directory)
     {
         const std::string virtualName(Common::TStrToUTF8(ffd.cFileName));
 #else
-    struct dirent dirent, *result = NULL;
+    struct dirent dirent, *result = nullptr;
     DIR *dirp = opendir(directory.c_str());
     if (!dirp)
         return false;
@@ -552,7 +552,7 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
     if (!FileUtil::Exists(source_path)) return;
     if (!FileUtil::Exists(dest_path)) FileUtil::CreateFullPath(dest_path);
 
-    struct dirent dirent, *result = NULL;
+    struct dirent dirent, *result = nullptr;
     DIR *dirp = opendir(source_path.c_str());
     if (!dirp) return;
 
@@ -586,11 +586,11 @@ std::string GetCurrentDir()
 {
     char *dir;
     // Get the current working directory (getcwd uses malloc)
-    if (!(dir = __getcwd(NULL, 0))) {
+    if (!(dir = __getcwd(nullptr, 0))) {
 
         ERROR_LOG(COMMON, "GetCurrentDirectory failed: %s",
                 GetLastErrorMsg());
-        return NULL;
+        return nullptr;
     }
     std::string strDir = dir;
     free(dir);
@@ -626,7 +626,7 @@ std::string& GetExeDirectory()
     if (DolphinPath.empty())
     {
         TCHAR Dolphin_exe_Path[2048];
-        GetModuleFileName(NULL, Dolphin_exe_Path, 2048);
+        GetModuleFileName(nullptr, Dolphin_exe_Path, 2048);
         DolphinPath = Common::TStrToUTF8(Dolphin_exe_Path);
         DolphinPath = DolphinPath.substr(0, DolphinPath.find_last_of('\\'));
     }
@@ -826,7 +826,7 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 }
 
 IOFile::IOFile()
-    : m_file(NULL), m_good(true)
+    : m_file(nullptr), m_good(true)
 {}
 
 IOFile::IOFile(std::FILE* file)
@@ -834,7 +834,7 @@ IOFile::IOFile(std::FILE* file)
 {}
 
 IOFile::IOFile(const std::string& filename, const char openmode[])
-    : m_file(NULL), m_good(true)
+    : m_file(nullptr), m_good(true)
 {
     Open(filename, openmode);
 }
@@ -845,7 +845,7 @@ IOFile::~IOFile()
 }
 
 IOFile::IOFile(IOFile&& other)
-    : m_file(NULL), m_good(true)
+    : m_file(nullptr), m_good(true)
 {
     Swap(other);
 }
@@ -880,14 +880,14 @@ bool IOFile::Close()
     if (!IsOpen() || 0 != std::fclose(m_file))
         m_good = false;
 
-    m_file = NULL;
+    m_file = nullptr;
     return m_good;
 }
 
 std::FILE* IOFile::ReleaseHandle()
 {
     std::FILE* const ret = m_file;
-    m_file = NULL;
+    m_file = nullptr;
     return ret;
 }
 
