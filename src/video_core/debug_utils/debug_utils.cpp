@@ -155,7 +155,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 
     // This is put into a try-catch block to make sure we notice unknown configurations.
     std::vector<OutputRegisterInfo> output_info_table;
-        for (int i = 0; i < 7; ++i) {
+        for (unsigned i = 0; i < 7; ++i) {
             using OutputAttributes = Pica::Regs::VSOutputAttributes;
 
             // TODO: It's still unclear how the attribute components map to the register!
@@ -375,8 +375,8 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     png_write_info(png_ptr, info_ptr);
 
     buf = new u8[row_stride * texture_config.height];
-    for (int y = 0; y < texture_config.height; ++y) {
-        for (int x = 0; x < texture_config.width; ++x) {
+    for (unsigned y = 0; y < texture_config.height; ++y) {
+        for (unsigned x = 0; x < texture_config.width; ++x) {
             // Cf. rasterizer code for an explanation of this algorithm.
             int texel_index_within_tile = 0;
             for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
@@ -402,7 +402,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     }
 
     // Write image data
-    for (auto y = 0; y < texture_config.height; ++y)
+    for (unsigned y = 0; y < texture_config.height; ++y)
     {
         u8* row_ptr = (u8*)buf + y * row_stride;
         u8* ptr = row_ptr;
