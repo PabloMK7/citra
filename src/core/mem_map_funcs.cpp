@@ -56,7 +56,7 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        var = *((const T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK]);
+        var = *((const T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR]);
 
     // Hardware I/O register reads
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -65,23 +65,23 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        var = *((const T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK]);
+        var = *((const T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR]);
 
     // FCRAM - GSP heap
     } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
-        var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
+        var = *((const T*)&g_heap_gsp[vaddr - HEAP_GSP_VADDR]);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        var = *((const T*)&g_heap[vaddr & HEAP_MASK]);
+        var = *((const T*)&g_heap[vaddr - HEAP_VADDR]);
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
+        var = *((const T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR]);
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-        var = *((const T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK]);
+        var = *((const T*)&g_system_mem[vaddr - SYSTEM_MEMORY_VADDR]);
 
     // Config memory
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
@@ -89,7 +89,7 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
+        var = *((const T*)&g_vram[vaddr - VRAM_VADDR]);
 
     } else {
         ERROR_LOG(MEMMAP, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
@@ -101,7 +101,7 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        *(T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK] = data;
+        *(T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR] = data;
 
     // Hardware I/O register writes
     // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
@@ -110,27 +110,27 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        *(T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK] = data;
+        *(T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR] = data;
 
     // FCRAM - GSP heap
     } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
+        *(T*)&g_heap_gsp[vaddr - HEAP_GSP_VADDR] = data;
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        *(T*)&g_heap[vaddr & HEAP_MASK] = data;
+        *(T*)&g_heap[vaddr - HEAP_VADDR] = data;
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
+        *(T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR] = data;
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-         *(T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK] = data;
+        *(T*)&g_system_mem[vaddr - SYSTEM_MEMORY_VADDR] = data;
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        *(T*)&g_vram[vaddr & VRAM_MASK] = data;
+        *(T*)&g_vram[vaddr - VRAM_VADDR] = data;
 
     //} else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
     //    _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
@@ -148,31 +148,31 @@ inline void Write(const VAddr vaddr, const T data) {
 u8 *GetPointer(const VAddr vaddr) {
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
+        return g_kernel_mem + (vaddr - KERNEL_MEMORY_VADDR);
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        return g_exefs_code + (vaddr & EXEFS_CODE_MASK);
+        return g_exefs_code + (vaddr - EXEFS_CODE_VADDR);
 
     // FCRAM - GSP heap
     } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        return g_heap_gsp + (vaddr & HEAP_GSP_MASK);
+        return g_heap_gsp + (vaddr - HEAP_GSP_VADDR);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        return g_heap + (vaddr & HEAP_MASK);
+        return g_heap + (vaddr - HEAP_VADDR);
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
+        return g_shared_mem + (vaddr - SHARED_MEMORY_VADDR);
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-         return g_system_mem + (vaddr & SYSTEM_MEMORY_MASK);
+        return g_system_mem + (vaddr - SYSTEM_MEMORY_VADDR);
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        return g_vram + (vaddr & VRAM_MASK);
+        return g_vram + (vaddr - VRAM_VADDR);
 
     } else {
         ERROR_LOG(MEMMAP, "unknown GetPointer @ 0x%08x", vaddr);
