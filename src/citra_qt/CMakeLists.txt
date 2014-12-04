@@ -27,6 +27,7 @@ set(HEADERS
             debugger/disassembler.hxx
             debugger/graphics.hxx
             debugger/graphics_breakpoints.hxx
+            debugger/graphics_breakpoints_p.hxx
             debugger/graphics_cmdlists.hxx
             debugger/graphics_framebuffer.hxx
             debugger/ramview.hxx

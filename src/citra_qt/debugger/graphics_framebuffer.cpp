@@ -217,11 +217,11 @@ void GraphicsFramebufferWidget::OnUpdate()
         break;
     }
 
+    // TODO: Implement a good way to visualize alpha components!
+    // TODO: Unify this decoding code with the texture decoder
     switch (framebuffer_format) {
     case Format::RGBA8:
     {
-        // TODO: Implement a good way to visualize the alpha component
-
         QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
         u32* color_buffer = (u32*)Memory::GetPointer(framebuffer_address);
         for (int y = 0; y < framebuffer_height; ++y) {

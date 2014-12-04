@@ -9,6 +9,7 @@
 #include <QLabel>
 
 #include "graphics_breakpoints.hxx"
+#include "graphics_breakpoints_p.hxx"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
     : QAbstractListModel(parent), context_weak(debug_context),
@@ -39,7 +40,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
             std::map<Pica::DebugContext::Event, QString> map;
             map.insert({Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded")});
             map.insert({Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed")});
-            map.insert({Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incomming primitive batch")});
+            map.insert({Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch")});
             map.insert({Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch")});
 
             _dbg_assert_(GPU, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));

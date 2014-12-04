@@ -124,59 +124,49 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     setWidget(main_widget);
 }
 
-void TextureInfoDockWidget::OnAddressChanged(qint64 value)
-{
+void TextureInfoDockWidget::OnAddressChanged(qint64 value) {
     info.address = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
-void TextureInfoDockWidget::OnFormatChanged(int value)
-{
+void TextureInfoDockWidget::OnFormatChanged(int value) {
     info.format = static_cast<Pica::Regs::TextureFormat>(value);
     emit UpdatePixmap(ReloadPixmap());
 }
 
-void TextureInfoDockWidget::OnWidthChanged(int value)
-{
+void TextureInfoDockWidget::OnWidthChanged(int value) {
     info.width = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
-void TextureInfoDockWidget::OnHeightChanged(int value)
-{
+void TextureInfoDockWidget::OnHeightChanged(int value) {
     info.height = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
-void TextureInfoDockWidget::OnStrideChanged(int value)
-{
+void TextureInfoDockWidget::OnStrideChanged(int value) {
     info.stride = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
-QPixmap TextureInfoDockWidget::ReloadPixmap() const
-{
+QPixmap TextureInfoDockWidget::ReloadPixmap() const {
     u8* src = Memory::GetPointer(info.address);
     return QPixmap::fromImage(LoadTexture(src, info));
 }
 
-GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent)
-{
+GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {
 
 }
 
-int GPUCommandListModel::rowCount(const QModelIndex& parent) const
-{
+int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
     return pica_trace.writes.size();
 }
 
-int GPUCommandListModel::columnCount(const QModelIndex& parent) const
-{
+int GPUCommandListModel::columnCount(const QModelIndex& parent) const {
     return 2;
 }
 
-QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
-{
+QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
@@ -202,8 +192,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
+QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientation, int role) const {
     switch(role) {
     case Qt::DisplayRole:
     {
@@ -220,8 +209,7 @@ QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientatio
     return QVariant();
 }
 
-void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace)
-{
+void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace) {
     beginResetModel();
 
     pica_trace = trace;
@@ -233,20 +221,19 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
     (cmd_id >= PICA_REG_INDEX(reg_name) &&   \
      cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::registers.reg_name)) / 4)
 
-void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index)
-{
-
+void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
     if (COMMAND_IN_RANGE(command_id, texture0)) {
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
                                                                     Pica::registers.texture0_format);
-        QMainWindow* main_window = (QMainWindow*)parent();
+
+        // TODO: Instead, emit a signal here to be caught by the main window widget.
+        auto main_window = static_cast<QMainWindow*>(parent());
         main_window->tabifyDockWidget(this, new TextureInfoDockWidget(info, main_window));
     }
 }
 
-void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index)
-{
+void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget;
 
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
@@ -266,8 +253,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index)
 }
 #undef COMMAND_IN_RANGE
 
-GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pica Command List"), parent)
-{
+GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pica Command List"), parent) {
     setObjectName("Pica Command List");
     GPUCommandListModel* model = new GPUCommandListModel(this);
 
@@ -282,7 +268,6 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
             this, SLOT(SetCommandInfo(const QModelIndex&)));
     connect(list_widget, SIGNAL(doubleClicked(const QModelIndex&)),
             this, SLOT(OnCommandDoubleClicked(const QModelIndex&)));
-
 
     toggle_tracing = new QPushButton(tr("Start Tracing"));
 
@@ -301,8 +286,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
     setWidget(main_widget);
 }
 
-void GPUCommandListWidget::OnToggleTracing()
-{
+void GPUCommandListWidget::OnToggleTracing() {
     if (!Pica::DebugUtils::IsPicaTracing()) {
         Pica::DebugUtils::StartPicaTracing();
         toggle_tracing->setText(tr("Stop Tracing"));

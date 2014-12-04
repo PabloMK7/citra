@@ -2,8 +2,6 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <cassert>
-
 #include <algorithm>
 #include <condition_variable>
 #include <list>
@@ -359,7 +357,7 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
-    assert(info.format == Pica::Regs::TextureFormat::RGB8);
+    _dbg_assert_(GPU, info.format == Pica::Regs::TextureFormat::RGB8);
 
     // Cf. rasterizer code for an explanation of this algorithm.
     int texel_index_within_tile = 0;

@@ -15,32 +15,7 @@ class QLabel;
 class QPushButton;
 class QTreeView;
 
-class BreakPointModel : public QAbstractListModel {
-    Q_OBJECT
-
-public:
-    enum {
-        Role_IsEnabled = Qt::UserRole,
-    };
-
-    BreakPointModel(std::shared_ptr<Pica::DebugContext> context, QObject* parent);
-
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole);
-
-public slots:
-    void OnBreakPointHit(Pica::DebugContext::Event event);
-    void OnResumed();
-
-private:
-    bool at_breakpoint;
-    Pica::DebugContext::Event active_breakpoint;
-    std::weak_ptr<Pica::DebugContext> context_weak;
-};
+class BreakPointModel;
 
 class GraphicsBreakPointsWidget : public QDockWidget, Pica::DebugContext::BreakPointObserver {
     Q_OBJECT
