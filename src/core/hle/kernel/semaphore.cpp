@@ -57,17 +57,16 @@ public:
 
 /**
  * Creates a semaphore
- * @param handle Reference to handle for the newly created semaphore
  * @param initial_count number of slots reserved for other threads
  * @param max_count maximum number of holders the semaphore can have
  * @param name Optional name of semaphore
- * @return Pointer to new Semaphore object
+ * @return Handle for the newly created semaphore
  */
-Semaphore* CreateSemaphore(Handle& handle, u32 initial_count, 
+Handle CreateSemaphore(u32 initial_count, 
     u32 max_count, const std::string& name) {
 
     Semaphore* semaphore = new Semaphore;
-    handle = g_object_pool.Create(semaphore);
+    Handle handle = g_object_pool.Create(semaphore);
 
     semaphore->initial_count = initial_count;
     // When the semaphore is created, some slots are reserved for other threads,
@@ -76,7 +75,7 @@ Semaphore* CreateSemaphore(Handle& handle, u32 initial_count,
     semaphore->current_usage -= initial_count;
     semaphore->name = name;
 
-    return semaphore;
+    return handle;
 }
 
 ResultCode CreateSemaphore(Handle* handle, u32 initial_count, 
@@ -85,7 +84,7 @@ ResultCode CreateSemaphore(Handle* handle, u32 initial_count,
     if (initial_count > max_count)
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::Kernel,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
-    Semaphore* semaphore = CreateSemaphore(*handle, initial_count, max_count, name);
+    *handle = CreateSemaphore(initial_count, max_count, name);
 
     return RESULT_SUCCESS;
 }
