@@ -20,7 +20,7 @@ public:
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Semaphore; }
     Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Semaphore; }
 
-    u32 initial_count;                          ///< Number of reserved entries TODO(Subv): Make use of this
+    u32 initial_count;                          ///< Number of entries reserved for other threads
     u32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
     u32 current_usage;                          ///< Number of currently used entries in the semaphore
     std::queue<Handle> waiting_threads;         ///< Threads that are waiting for the semaphore
@@ -58,7 +58,7 @@ public:
 /**
  * Creates a semaphore
  * @param handle Reference to handle for the newly created semaphore
- * @param initial_count initial amount of times the semaphore is held
+ * @param initial_count number of slots reserved for other threads
  * @param max_count maximum number of holders the semaphore can have
  * @param name Optional name of semaphore
  * @return Pointer to new Semaphore object
@@ -70,8 +70,10 @@ Semaphore* CreateSemaphore(Handle& handle, u32 initial_count,
     handle = g_object_pool.Create(semaphore);
 
     semaphore->initial_count = initial_count;
-    // When the semaphore is created, all slots are used by the creator thread
+    // When the semaphore is created, some slots are reserved for other threads,
+    // and the rest is reserved for the caller thread
     semaphore->max_count = semaphore->current_usage = max_count;
+    semaphore->current_usage -= initial_count;
     semaphore->name = name;
 
     return semaphore;

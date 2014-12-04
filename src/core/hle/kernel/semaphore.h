@@ -13,8 +13,8 @@ namespace Kernel {
 /**
  * Creates a semaphore
  * @param handle Pointer to the handle of the newly created object
- * @param initial_count number of reserved entries in the semaphore
- * @param max_count maximum number of holders the semaphore can have
+ * @param initial_count number of slots reserved for other threads
+ * @param max_count maximum number of slots the semaphore can have
  * @param name Optional name of semaphore
  * @return ResultCode of the error
  */
