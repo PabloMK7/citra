@@ -109,7 +109,7 @@ struct Regs {
 
         u32 address;
 
-        u32 GetPhysicalAddress() {
+        u32 GetPhysicalAddress() const {
             return DecodeAddressRegister(address) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
         }
 
