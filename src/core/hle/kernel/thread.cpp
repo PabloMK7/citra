@@ -78,6 +78,17 @@ static Common::ThreadQueueList<Handle> thread_ready_queue;
 static Handle current_thread_handle;
 static Thread* current_thread;
 
+static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
+static u32 next_thread_id; ///< The next available thread id
+
+/**
+ * Gets the next available thread id and increments it
+ * @return Next available thread id
+ */
+static u32 NextThreadId() {
+    return next_thread_id++;
+}
+
 /// Gets the current thread
 inline Thread* GetCurrentThread() {
     return current_thread;
@@ -327,9 +338,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
 
-    // TODO(Subv): Assign valid ids to each thread, they are much lower than handle values
-    // they appear to begin at 276 and continue from there
-    thread->thread_id = handle; 
+    thread->thread_id = NextThreadId();
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
@@ -484,6 +493,7 @@ ResultCode GetThreadId(u32* thread_id, Handle handle) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ThreadingInit() {
+    next_thread_id = INITIAL_THREAD_ID;
 }
 
 void ThreadingShutdown() {
