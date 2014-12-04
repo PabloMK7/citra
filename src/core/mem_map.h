@@ -19,7 +19,6 @@ typedef u32 PAddr; ///< Represents a pointer in the physical address space.
 enum {
     BOOTROM_SIZE            = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
     MPCORE_PRIV_SIZE        = 0x00002000,   ///< MPCore private memory region size
-    DSP_SIZE                = 0x00080000,   ///< DSP memory size
     AXI_WRAM_SIZE           = 0x00080000,   ///< AXI WRAM size
 
     FCRAM_SIZE              = 0x08000000,   ///< FCRAM size
@@ -33,6 +32,9 @@ enum {
     SHARED_MEMORY_VADDR     = 0x10000000,   ///< Shared memory
     SHARED_MEMORY_VADDR_END = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
     SHARED_MEMORY_MASK      = (SHARED_MEMORY_SIZE - 1),
+
+    DSP_MEMORY_SIZE         = 0x00080000,   ///< DSP memory size
+    DSP_MEMORY_VADDR        = 0x1FF00000,   ///< DSP memory virtual address
 
     CONFIG_MEMORY_SIZE      = 0x00001000,   ///< Configuration memory size
     CONFIG_MEMORY_VADDR     = 0x1FF80000,   ///< Configuration memory virtual address
