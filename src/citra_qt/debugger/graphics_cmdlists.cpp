@@ -289,7 +289,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
 void GPUCommandListWidget::OnToggleTracing() {
     if (!Pica::DebugUtils::IsPicaTracing()) {
         Pica::DebugUtils::StartPicaTracing();
-        toggle_tracing->setText(tr("Stop Tracing"));
+        toggle_tracing->setText(tr("Finish Tracing"));
     } else {
         pica_trace = Pica::DebugUtils::FinishPicaTracing();
         emit TracingFinished(*pica_trace);
