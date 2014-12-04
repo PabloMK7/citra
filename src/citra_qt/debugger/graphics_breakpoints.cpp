@@ -36,7 +36,9 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
     switch (role) {
     case Qt::DisplayRole:
     {
-        if (index.column() == 0) {
+        switch (index.column()) {
+        case 0:
+        {
             std::map<Pica::DebugContext::Event, QString> map;
             map.insert({Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded")});
             map.insert({Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed")});
@@ -46,8 +48,13 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
             _dbg_assert_(GUI, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
 
             return map[event];
-        } else if (index.column() == 1) {
+        }
+
+        case 1:
             return data(index, Role_IsEnabled).toBool() ? tr("Enabled") : tr("Disabled");
+
+        default:
+            break;
         }
 
         break;

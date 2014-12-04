@@ -177,14 +177,14 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::DisplayRole) {
         QString content;
         if (index.column() == 0) {
-            content = QString::fromLatin1(Pica::Regs::GetCommandName(cmd.cmd_id).c_str());
+            QString content = QString::fromLatin1(Pica::Regs::GetCommandName(cmd.cmd_id).c_str());
             content.append(" ");
+            return content;
         } else if (index.column() == 1) {
-            content.append(QString("%1 ").arg(cmd.hex, 8, 16, QLatin1Char('0')));
+            QString content = QString("%1 ").arg(cmd.hex, 8, 16, QLatin1Char('0'));
             content.append(QString("%1 ").arg(val, 8, 16, QLatin1Char('0')));
+            return content;
         }
-
-        return QVariant(content);
     } else if (role == CommandIdRole) {
         return QVariant::fromValue<int>(cmd.cmd_id.Value());
     }
