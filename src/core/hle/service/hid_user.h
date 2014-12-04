@@ -93,8 +93,8 @@ const PadState PAD_CIRCLE_UP    = {{1u << 30}};
 const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
 
 // Methods for updating the HID module's state
-void PadButtonPress(PadState pad_state);
-void PadButtonRelease(PadState pad_state);
+void PadButtonPress(const PadState& pad_state);
+void PadButtonRelease(const PadState& pad_state);
 void PadUpdateComplete();
 
 /**
