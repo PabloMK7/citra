@@ -86,7 +86,7 @@ public:
         }
     }
 
-    bool IsValid(Handle handle);
+    bool IsValid(Handle handle) const;
 
     template <class T>
     T* Get(Handle handle) {
@@ -142,7 +142,7 @@ public:
     Object* &operator [](Handle handle);
     void List();
     void Clear();
-    int GetCount();
+    int GetCount() const;
 
 private:
 

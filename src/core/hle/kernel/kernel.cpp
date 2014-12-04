@@ -37,7 +37,7 @@ Handle ObjectPool::Create(Object* obj, int range_bottom, int range_top) {
     return 0;
 }
 
-bool ObjectPool::IsValid(Handle handle) {
+bool ObjectPool::IsValid(Handle handle) const {
     int index = handle - HANDLE_OFFSET;
     if (index < 0)
         return false;
@@ -75,7 +75,7 @@ void ObjectPool::List() {
     }
 }
 
-int ObjectPool::GetCount() {
+int ObjectPool::GetCount() const {
     int count = 0;
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i])
