@@ -281,10 +281,11 @@ static Result ReleaseMutex(Handle handle) {
     return res.raw;
 }
 
-/// Get current thread ID
-static Result GetThreadId(u32* thread_id, Handle thread) {
-    ERROR_LOG(SVC, "(UNIMPLEMENTED) called thread=0x%08X", thread);
-    return 0;
+/// Get the ID for the specified thread.
+static Result GetThreadId(u32* thread_id, Handle handle) {
+    DEBUG_LOG(SVC, "called thread=0x%08X", handle);
+    ResultCode result = Kernel::GetThreadId(thread_id, handle);
+    return result.raw;
 }
 
 /// Query memory

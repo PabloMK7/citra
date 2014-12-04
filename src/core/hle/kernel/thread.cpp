@@ -49,6 +49,8 @@ public:
 
     ThreadContext context;
 
+    u32 thread_id;
+
     u32 status;
     u32 entry_point;
     u32 stack_top;
@@ -325,6 +327,9 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
 
+    // TODO(Subv): Assign valid ids to each thread, they are much lower than handle values
+    // they appear to begin at 276 and continue from there
+    thread->thread_id = handle; 
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
@@ -463,6 +468,17 @@ void Reschedule() {
             ResumeThreadFromWait(prev->GetHandle());
         }
     }
+}
+
+ResultCode GetThreadId(u32* thread_id, Handle handle) {
+    Thread* thread = g_object_pool.Get<Thread>(handle);
+    if (thread == nullptr)
+        return ResultCode(ErrorDescription::InvalidHandle, ErrorModule::OS, 
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+
+    *thread_id = thread->thread_id;
+
+    return RESULT_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

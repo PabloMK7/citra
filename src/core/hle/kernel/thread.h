@@ -58,6 +58,9 @@ void Reschedule();
 /// Stops the current thread
 ResultCode StopThread(Handle thread, const char* reason);
 
+// Retrieves the thread id of the specified thread handle
+ResultCode GetThreadId(u32* thread_id, Handle handle);
+
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
 
