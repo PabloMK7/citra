@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <algorithm>
+
 #include "common/common.h"
 
 #include "core/core.h"
@@ -76,12 +78,7 @@ void ObjectPool::List() {
 }
 
 int ObjectPool::GetCount() const {
-    int count = 0;
-    for (int i = 0; i < MAX_COUNT; i++) {
-        if (occupied[i])
-            count++;
-    }
-    return count;
+    return std::count(occupied.begin(), occupied.end(), true);
 }
 
 Object* ObjectPool::CreateByIDType(int type) {
