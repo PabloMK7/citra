@@ -58,11 +58,6 @@ inline void Read(T &var, const VAddr vaddr) {
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
         var = *((const T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR]);
 
-    // Hardware I/O register reads
-    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
-        HW::Read<T>(var, vaddr);
-
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
         var = *((const T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR]);
@@ -102,11 +97,6 @@ inline void Write(const VAddr vaddr, const T data) {
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
         *(T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR] = data;
-
-    // Hardware I/O register writes
-    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
-        HW::Write<T>(vaddr, data);
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
