@@ -536,10 +536,6 @@ struct Regs {
     static std::string GetCommandName(int index) {
         std::map<u32, std::string> map;
 
-        // TODO: MSVC does not support using offsetof() on non-static data members even though this
-        //       is technically allowed since C++11. Hence, this functionality is disabled until
-        //       MSVC properly supports it.
-        #ifndef _MSC_VER
         Regs regs;
         #define ADD_FIELD(name)                                                                               \
             do {                                                                                              \
@@ -576,7 +572,6 @@ struct Regs {
         ADD_FIELD(vs_swizzle_patterns);
 
         #undef ADD_FIELD
-        #endif // _MSC_VER
 
         // Return empty string if no match is found
         return map[index];
