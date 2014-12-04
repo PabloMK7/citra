@@ -43,6 +43,7 @@ enum WaitType {
     WAITTYPE_MUTEX,
     WAITTYPE_SYNCH,
     WAITTYPE_ARB,
+    WAITTYPE_TIMER,
 };
 
 namespace Kernel {

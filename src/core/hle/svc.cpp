@@ -15,6 +15,7 @@
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/timer.h"
 
 #include "core/hle/function_wrappers.h"
 #include "core/hle/result.h"
@@ -139,6 +140,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
     s64 nano_seconds) {
+
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool unlock_all = true;
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
@@ -338,6 +340,32 @@ static Result ClearEvent(Handle evt) {
     return Kernel::ClearEvent(evt).raw;
 }
 
+/// Creates a timer
+static Result CreateTimer(Handle* handle, u32 reset_type) {
+    ResultCode res = Kernel::CreateTimer(handle, static_cast<ResetType>(reset_type));
+    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
+        reset_type, *handle);
+    return res.raw;
+}
+
+/// Clears a timer
+static Result ClearTimer(Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    return Kernel::ClearTimer(handle).raw;
+}
+
+/// Starts a timer
+static Result SetTimer(Handle handle, s64 initial, s64 interval) {
+    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    return Kernel::SetTimer(handle, initial, interval).raw;
+}
+
+/// Cancels a timer
+static Result CancelTimer(Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    return Kernel::CancelTimer(handle).raw;
+}
+
 /// Sleep the current thread
 static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
@@ -391,10 +419,10 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x17, HLE::Wrap<CreateEvent>,          "CreateEvent"},
     {0x18, HLE::Wrap<SignalEvent>,          "SignalEvent"},
     {0x19, HLE::Wrap<ClearEvent>,           "ClearEvent"},
-    {0x1A, nullptr,                         "CreateTimer"},
-    {0x1B, nullptr,                         "SetTimer"},
-    {0x1C, nullptr,                         "CancelTimer"},
-    {0x1D, nullptr,                         "ClearTimer"},
+    {0x1A, HLE::Wrap<CreateTimer>,          "CreateTimer"},
+    {0x1B, HLE::Wrap<SetTimer>,             "SetTimer"},
+    {0x1C, HLE::Wrap<CancelTimer>,          "CancelTimer"},
+    {0x1D, HLE::Wrap<ClearTimer>,           "ClearTimer"},
     {0x1E, HLE::Wrap<CreateMemoryBlock>,    "CreateMemoryBlock"},
     {0x1F, HLE::Wrap<MapMemoryBlock>,       "MapMemoryBlock"},
     {0x20, nullptr,                         "UnmapMemoryBlock"},
