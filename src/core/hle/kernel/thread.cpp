@@ -81,14 +81,6 @@ static Thread* current_thread;
 static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
 static u32 next_thread_id; ///< The next available thread id
 
-/**
- * Gets the next available thread id and increments it
- * @return Next available thread id
- */
-static u32 NextThreadId() {
-    return next_thread_id++;
-}
-
 /// Gets the current thread
 inline Thread* GetCurrentThread() {
     return current_thread;
@@ -338,7 +330,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
 
-    thread->thread_id = NextThreadId();
+    thread->thread_id = next_thread_id++;
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
