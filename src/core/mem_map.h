@@ -16,7 +16,7 @@ typedef u32 PAddr; ///< Represents a pointer in the physical address space.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum {
+enum : u32 {
     BOOTROM_SIZE            = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
     MPCORE_PRIV_SIZE        = 0x00002000,   ///< MPCore private memory region size
     AXI_WRAM_SIZE           = 0x00080000,   ///< AXI WRAM size
