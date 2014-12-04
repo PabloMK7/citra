@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "common_types.h"
+
 #ifdef _WIN32
 #define SLEEP(x) Sleep(x)
 #else
@@ -73,6 +75,8 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // WIN32
+#include <locale.h>
+
 // Function Cross-Compatibility
     #define strcasecmp _stricmp
     #define strncasecmp _strnicmp
