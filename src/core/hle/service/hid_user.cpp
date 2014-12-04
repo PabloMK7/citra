@@ -55,7 +55,7 @@ static void UpdateNextCirclePadState() {
 /**
  * Sets a Pad state (button or button combo) as pressed
  */
-void PadButtonPress(PadState pad_state) {
+void PadButtonPress(const PadState& pad_state) {
     next_state.hex |= pad_state.hex;
     UpdateNextCirclePadState();
 }
@@ -63,7 +63,7 @@ void PadButtonPress(PadState pad_state) {
 /**
  * Sets a Pad state (button or button combo) as released
  */
-void PadButtonRelease(PadState pad_state) {
+void PadButtonRelease(const PadState& pad_state) {
     next_state.hex &= ~pad_state.hex;
     UpdateNextCirclePadState();
 }
