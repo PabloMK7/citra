@@ -15,7 +15,7 @@ class QSpinBox;
 class CSpinBox;
 
 // Utility class which forwards calls to OnPicaBreakPointHit and OnPicaResume to public slots.
-// This is because the Pica breakpoint callbacks will called on a non-GUI thread, while
+// This is because the Pica breakpoint callbacks are called from a non-GUI thread, while
 // the widget usually wants to perform reactions in the GUI thread.
 class BreakPointObserverDock : public QDockWidget, Pica::DebugContext::BreakPointObserver {
     Q_OBJECT

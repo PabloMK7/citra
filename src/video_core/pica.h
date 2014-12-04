@@ -131,16 +131,22 @@ struct Regs {
     };
 
     static unsigned BytesPerPixel(TextureFormat format) {
-        if (format == TextureFormat::RGBA8)
+        switch (format) {
+        case TextureFormat::RGBA8:
             return 4;
-        else if (format == TextureFormat::RGB8)
+
+        case TextureFormat::RGB8:
             return 3;
-        else if (format == TextureFormat::RGBA5551 ||
-                 format == TextureFormat::RGB565 ||
-                 format == TextureFormat::RGBA4)
+
+        case TextureFormat::RGBA5551:
+        case TextureFormat::RGB565:
+        case TextureFormat::RGBA4:
             return 2;
-        else // placeholder
+
+        default:
+            // placeholder for yet unknown formats
             return 1;
+        }
     }
 
     BitField< 0, 1, u32> texturing_enable;

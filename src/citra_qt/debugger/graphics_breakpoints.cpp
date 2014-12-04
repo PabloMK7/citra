@@ -43,7 +43,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
             map.insert({Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch")});
             map.insert({Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch")});
 
-            _dbg_assert_(GPU, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
+            _dbg_assert_(GUI, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
 
             return map[event];
         } else if (index.column() == 1) {
