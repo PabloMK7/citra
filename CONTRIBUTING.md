@@ -27,6 +27,7 @@ Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spac
 ### Comments
 * For regular comments, use C++ style (`//`) comments, even for multi-line ones.
 * For doc-comments (Doxygen comments), use `/// ` if it's a single line, else use the `/**` `*/` style featured in the example. Start the text on the second line, not the first containing `/**`.
+* For items that are both defined and declared in two separate files, put the doc-comment only next to the associated declaration. (In a header file, usually.) Otherwise, put it next to the implementation. Never duplicate doc-comments in both places.
 
 ```cpp
 namespace Example {
