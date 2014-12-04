@@ -181,7 +181,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 if (!texture.enabled)
                     continue;
 
-                _dbg_assert_(GPU, 0 != texture.config.address);
+                _dbg_assert_(HW_GPU, 0 != texture.config.address);
 
                 // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
                 // of which is composed of four 2x2 subtiles each of which is composed of four texels.
@@ -206,6 +206,25 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 // somewhat inefficient code around for now.
                 int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
                 int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
+                auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
+                    switch (mode) {
+                        case Regs::TextureConfig::ClampToEdge:
+                            val = std::max(val, 0);
+                            val = std::min(val, (int)size - 1);
+                            return val;
+
+                        case Regs::TextureConfig::Repeat:
+                            return (int)(((unsigned)val) % size);
+
+                        default:
+                            LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x\n", (int)mode);
+                            _dbg_assert_(HW_GPU, 0);
+                            return 0;
+                    }
+                };
+                s = GetWrappedTexCoord(registers.texture0.wrap_s, s, registers.texture0.width);
+                t = GetWrappedTexCoord(registers.texture0.wrap_t, t, registers.texture0.height);
+
                 int texel_index_within_tile = 0;
                 for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
                     int sub_tile_width = 1 << block_size_index;

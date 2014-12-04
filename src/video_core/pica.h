@@ -104,6 +104,11 @@ struct Regs {
     INSERT_PADDING_WORDS(0x17);
 
     struct TextureConfig {
+        enum WrapMode : u32 {
+            ClampToEdge = 0,
+            Repeat      = 2,
+        };
+
         INSERT_PADDING_WORDS(0x1);
 
         union {
@@ -111,7 +116,12 @@ struct Regs {
             BitField<16, 16, u32> width;
         };
 
-        INSERT_PADDING_WORDS(0x2);
+        union {
+            BitField< 8, 2, WrapMode> wrap_s;
+            BitField<11, 2, WrapMode> wrap_t;
+        };
+
+        INSERT_PADDING_WORDS(0x1);
 
         u32 address;
 
