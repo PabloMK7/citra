@@ -121,6 +121,13 @@ template<s32 func(u32*, s32, s32)> void Wrap() {
     FuncReturn(retval);
 }
 
+template<s32 func(s32*, u32, s32)> void Wrap() {
+    s32 param_1 = 0;
+    u32 retval = func(&param_1, PARAM(1), PARAM(2));
+    Core::g_app_core->SetReg(1, param_1);
+    FuncReturn(retval);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 
