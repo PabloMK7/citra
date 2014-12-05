@@ -43,6 +43,11 @@ bool Archive_RomFS::DeleteFile(const FileSys::Path& path) const {
     return false;
 }
 
+bool Archive_RomFS::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
+    return false;
+}
+
 /**
  * Delete a directory specified by its path
  * @param path Path relative to the archive
@@ -60,6 +65,11 @@ bool Archive_RomFS::DeleteDirectory(const FileSys::Path& path) const {
  */
 bool Archive_RomFS::CreateDirectory(const Path& path) const {
     ERROR_LOG(FILESYS, "Attempted to create a directory in ROMFS.");
+    return false;
+}
+
+bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
     return false;
 }
 

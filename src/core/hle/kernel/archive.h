@@ -50,7 +50,18 @@ ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path
  * @param path Path to the File inside of the Archive
  * @return Whether deletion succeeded
  */
-Result DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path);
+
+/**
+ * Rename a File between two Archives
+ * @param src_archive_handle Handle to the source Archive object
+ * @param src_path Path to the File inside of the source Archive
+ * @param dest_archive_handle Handle to the destination Archive object
+ * @param dest_path Path to the File inside of the destination Archive
+ * @return Whether rename succeeded
+ */
+ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                     Handle dest_archive_handle, const FileSys::Path& dest_path);
 
 /**
  * Delete a Directory from an Archive
@@ -58,7 +69,7 @@ Result DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path);
  * @param path Path to the Directory inside of the Archive
  * @return Whether deletion succeeded
  */
-Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
 
 /**
  * Create a Directory from an Archive
@@ -66,7 +77,18 @@ Result DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& pa
  * @param path Path to the Directory inside of the Archive
  * @return Whether creation of directory succeeded
  */
-Result CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+
+/**
+ * Rename a Directory between two Archives
+ * @param src_archive_handle Handle to the source Archive object
+ * @param src_path Path to the Directory inside of the source Archive
+ * @param dest_archive_handle Handle to the destination Archive object
+ * @param dest_path Path to the Directory inside of the destination Archive
+ * @return Whether rename succeeded
+ */
+ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
+                                          Handle dest_archive_handle, const FileSys::Path& dest_path);
 
 /**
  * Open a Directory from an Archive

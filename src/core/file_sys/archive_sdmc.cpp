@@ -66,6 +66,10 @@ bool Archive_SDMC::DeleteFile(const FileSys::Path& path) const {
     return FileUtil::Delete(GetMountPoint() + path.AsString());
 }
 
+bool Archive_SDMC::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
+}
+
 /**
  * Delete a directory specified by its path
  * @param path Path relative to the archive
@@ -82,6 +86,10 @@ bool Archive_SDMC::DeleteDirectory(const FileSys::Path& path) const {
  */
 bool Archive_SDMC::CreateDirectory(const Path& path) const {
     return FileUtil::CreateDir(GetMountPoint() + path.AsString());
+}
+
+bool Archive_SDMC::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
 }
 
 /**
