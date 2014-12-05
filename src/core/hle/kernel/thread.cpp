@@ -49,6 +49,8 @@ public:
 
     ThreadContext context;
 
+    u32 thread_id;
+
     u32 status;
     u32 entry_point;
     u32 stack_top;
@@ -75,6 +77,9 @@ static Common::ThreadQueueList<Handle> thread_ready_queue;
 
 static Handle current_thread_handle;
 static Thread* current_thread;
+
+static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
+static u32 next_thread_id; ///< The next available thread id
 
 /// Gets the current thread
 inline Thread* GetCurrentThread() {
@@ -325,6 +330,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
 
+    thread->thread_id = next_thread_id++;
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
@@ -465,9 +471,21 @@ void Reschedule() {
     }
 }
 
+ResultCode GetThreadId(u32* thread_id, Handle handle) {
+    Thread* thread = g_object_pool.Get<Thread>(handle);
+    if (thread == nullptr)
+        return ResultCode(ErrorDescription::InvalidHandle, ErrorModule::OS, 
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+
+    *thread_id = thread->thread_id;
+
+    return RESULT_SUCCESS;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ThreadingInit() {
+    next_thread_id = INITIAL_THREAD_ID;
 }
 
 void ThreadingShutdown() {
