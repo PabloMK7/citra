@@ -27,17 +27,13 @@ public:
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
     std::string name;                           ///< Name of mutex (optional)
 
-    ResultVal<bool> SyncRequest() override {
-        // TODO(bunnei): ImplementMe
-        locked = true;
-        return MakeResult<bool>(false);
-    }
-
     ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
         bool wait = locked;
         if (locked) {
             Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
+        } else {
+            // Lock the mutex when the first thread accesses it
+            locked = true;
         }
 
         return MakeResult<bool>(wait);
@@ -90,15 +86,16 @@ bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
 
     // Find the next waiting thread for the mutex...
-    while (!mutex->waiting_threads.empty()) {
+    if (mutex->waiting_threads.empty()) {
+        // Reset mutex lock thread handle, nothing is waiting
+        mutex->locked = false;
+        mutex->lock_thread = -1;
+    } else {
+        // Resume the next waiting thread and re-lock the mutex
         std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
         ReleaseMutexForThread(mutex, *iter);
         mutex->waiting_threads.erase(iter);
     }
-
-    // Reset mutex lock thread handle, nothing is waiting
-    mutex->locked = false;
-    mutex->lock_thread = -1;
 
     return true;
 }
