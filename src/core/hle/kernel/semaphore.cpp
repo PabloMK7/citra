@@ -34,11 +34,6 @@ public:
         return current_usage == max_count;
     }
 
-    ResultVal<bool> SyncRequest() override {
-        // TODO(Subv): ImplementMe
-        return MakeResult<bool>(false);
-    }
-
     ResultVal<bool> WaitSynchronization() override {
         bool wait = current_usage == max_count;
 
