@@ -3,14 +3,12 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 
 set(SRCS
             break_points.cpp
-            console_listener.cpp
             emu_window.cpp
             extended_trace.cpp
             file_search.cpp
             file_util.cpp
             hash.cpp
             key_map.cpp
-            log_manager.cpp
             logging/filter.cpp
             logging/text_formatter.cpp
             logging/backend.cpp
@@ -36,7 +34,6 @@ set(HEADERS
             common_paths.h
             common_types.h
             concurrent_ring_buffer.h
-            console_listener.h
             cpu_detect.h
             debug_interface.h
             emu_window.h
@@ -48,7 +45,6 @@ set(HEADERS
             key_map.h
             linear_disk_cache.h
             log.h
-            log_manager.h
             logging/text_formatter.h
             logging/filter.h
             logging/log.h

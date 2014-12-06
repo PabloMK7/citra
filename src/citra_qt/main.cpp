@@ -7,7 +7,6 @@
 #include "main.hxx"
 
 #include "common/common.h"
-#include "common/log_manager.h"
 #include "common/logging/text_formatter.h"
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
