@@ -356,9 +356,29 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     return std::move(ret);
 }
 
-const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
 
-    // Cf. rasterizer code for an explanation of this algorithm.
+    // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+    // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+    // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+    // texels are laid out in a 2x2 subtile like this:
+    // 2 3
+    // 0 1
+    //
+    // The full 8x8 tile has the texels arranged like this:
+    //
+    // 42 43 46 47 58 59 62 63
+    // 40 41 44 45 56 57 60 61
+    // 34 35 38 39 50 51 54 55
+    // 32 33 36 37 48 49 52 53
+    // 10 11 14 15 26 27 30 31
+    // 08 09 12 13 24 25 28 29
+    // 02 03 06 07 18 19 22 23
+    // 00 01 04 05 16 17 20 21
+
+    // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
+    // To be flexible in case different but similar patterns are used, we keep this
+    // somewhat inefficient code around for now.
     int texel_index_within_tile = 0;
     for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
         int sub_tile_width = 1 << block_size_index;
@@ -379,7 +399,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     case Regs::TextureFormat::RGBA8:
     {
         const u8* source_ptr = source + coarse_x * block_height * 4 + coarse_y * info.stride + texel_index_within_tile * 4;
-        return { source_ptr[3], source_ptr[2], source_ptr[1], 255 };
+        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? 255 : source_ptr[0] };
     }
 
     case Regs::TextureFormat::RGB8:
@@ -394,8 +414,8 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         u8 r = (source_ptr >> 11) & 0x1F;
         u8 g = ((source_ptr) >> 6) & 0x1F;
         u8 b = (source_ptr >> 1) & 0x1F;
-        u8 a = 1;
-        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), a * 255);
+        u8 a = source_ptr & 1;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), disable_alpha ? 255 : (a * 255));
     }
 
     case Regs::TextureFormat::RGBA4:
@@ -404,16 +424,24 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         u8 r = source_ptr[1] >> 4;
         u8 g = source_ptr[1] & 0xFF;
         u8 b = source_ptr[0] >> 4;
+        u8 a = source_ptr[0] & 0xFF;
         r = (r << 4) | r;
         g = (g << 4) | g;
         b = (b << 4) | b;
-        return { r, g, b, 255 };
+        a = (a << 4) | a;
+        return { r, g, b, disable_alpha ? 255 : a };
     }
 
     case Regs::TextureFormat::A8:
     {
         const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
-        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+
+        // TODO: Better control this...
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
     }
 
     default:

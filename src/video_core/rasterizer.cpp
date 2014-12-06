@@ -183,27 +183,6 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                 _dbg_assert_(HW_GPU, 0 != texture.config.address);
 
-                // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
-                // of which is composed of four 2x2 subtiles each of which is composed of four texels.
-                // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
-                // texels are laid out in a 2x2 subtile like this:
-                // 2 3
-                // 0 1
-                //
-                // The full 8x8 tile has the texels arranged like this:
-                //
-                // 42 43 46 47 58 59 62 63
-                // 40 41 44 45 56 57 60 61
-                // 34 35 38 39 50 51 54 55
-                // 32 33 36 37 48 49 52 53
-                // 10 11 14 15 26 27 30 31
-                // 08 09 12 13 24 25 28 29
-                // 02 03 06 07 18 19 22 23
-                // 00 01 04 05 16 17 20 21
-
-                // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
-                // To be flexible in case different but similar patterns are used, we keep this
-                // somewhat inefficient code around for now.
                 int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
                 int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
                 auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
@@ -225,32 +204,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 s = GetWrappedTexCoord(registers.texture0.wrap_s, s, registers.texture0.width);
                 t = GetWrappedTexCoord(registers.texture0.wrap_t, t, registers.texture0.height);
 
-                int texel_index_within_tile = 0;
-                for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
-                    int sub_tile_width = 1 << block_size_index;
-                    int sub_tile_height = 1 << block_size_index;
+                u8* texture_data = Memory::GetPointer(texture.config.GetPhysicalAddress());
+                auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
-                    int sub_tile_index = (s & sub_tile_width) << block_size_index;
-                    sub_tile_index += 2 * ((t & sub_tile_height) << block_size_index);
-                    texel_index_within_tile += sub_tile_index;
-                }
-
-                const int block_width = 8;
-                const int block_height = 8;
-
-                int coarse_s = (s / block_width) * block_width;
-                int coarse_t = (t / block_height) * block_height;
-
-                // TODO: This is currently hardcoded for RGB8
-                u32* texture_data = (u32*)Memory::GetPointer(texture.config.GetPhysicalAddress());
-
-                const int row_stride = texture.config.width * 3;
-                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
-                texture_color[i].r() = source_ptr[2];
-                texture_color[i].g() = source_ptr[1];
-                texture_color[i].b() = source_ptr[0];
-                texture_color[i].a() = 0xFF;
-
+                texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
                 DebugUtils::DumpTexture(texture.config, (u8*)texture_data);
             }
 

@@ -202,7 +202,8 @@ struct TextureInfo {
                                         const Pica::Regs::TextureFormat& format);
 };
 
-const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info);
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info,
+                                   bool disable_alpha = false);
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data);
 
 void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages);
