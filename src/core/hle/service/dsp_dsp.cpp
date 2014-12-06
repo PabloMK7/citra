@@ -32,7 +32,7 @@ void ConvertProcessAddressFromDspDram(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = (addr << 1) + (Memory::DSP_MEMORY_VADDR + 0x40000);
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called with address %u", addr);
+    LOG_WARNING(Service_DSP, "(STUBBED) called with address %u", addr);
 }
 
 /**
@@ -55,7 +55,7 @@ void LoadComponent(Service::Interface* self) {
 
     // TODO(bunnei): Implement real DSP firmware loading
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -70,7 +70,7 @@ void GetSemaphoreEventHandle(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = semaphore_event; // Event handle
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -89,7 +89,7 @@ void RegisterInterruptEvents(Service::Interface* self) {
 
     cmd_buff[1] = 0; // No error
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -106,7 +106,7 @@ void WriteReg0x10(Service::Interface* self) {
 
     cmd_buff[1] = 0; // No error
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -140,7 +140,7 @@ void ReadPipeIfPossible(Service::Interface* self) {
             Memory::Write16(addr + offset, canned_read_pipe[read_pipe_count]);
             read_pipe_count++;
         } else {
-            ERROR_LOG(KERNEL, "canned read pipe log exceeded!");
+            LOG_ERROR(Service_DSP, "canned read pipe log exceeded!");
             break;
         }
     }
@@ -148,7 +148,7 @@ void ReadPipeIfPossible(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = (read_pipe_count - initial_size) * sizeof(u16);
 
-    DEBUG_LOG(KERNEL, "(STUBBED) called size=0x%08X, buffer=0x%08X", size, addr);
+    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x%08X, buffer=0x%08X", size, addr);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

@@ -100,7 +100,8 @@ public:
         case Wchar:
             return "[Wchar: " + AsString() + ']';
         default:
-            ERROR_LOG(KERNEL, "LowPathType cannot be converted to string!");
+            // TODO(yuriks): Add assert
+            LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
             return {};
         }
     }
@@ -114,7 +115,8 @@ public:
             case Empty:
                 return {};
             default:
-                ERROR_LOG(KERNEL, "LowPathType cannot be converted to string!");
+                // TODO(yuriks): Add assert
+                LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
                 return {};
         }
     }
@@ -128,7 +130,8 @@ public:
             case Empty:
                 return {};
             default:
-                ERROR_LOG(KERNEL, "LowPathType cannot be converted to u16string!");
+                // TODO(yuriks): Add assert
+                LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
                 return {};
         }
     }
@@ -144,7 +147,8 @@ public:
             case Empty:
                 return {};
             default:
-                ERROR_LOG(KERNEL, "LowPathType cannot be converted to binary!");
+                // TODO(yuriks): Add assert
+                LOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
                 return {};
         }
     }

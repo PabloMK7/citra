@@ -23,8 +23,6 @@
 
 //extern ARMword isize;
 
-#define DEBUG(...) DEBUG_LOG(ARM11, __VA_ARGS__)
-
 /* Shift Opcodes.  */
 #define LSL 0
 #define LSR 1
@@ -485,7 +483,7 @@ tdstate;
  * out-of-updated with the newer ISA.
  * -- Michael.Kang
  ********************************************************************************/
-#define UNDEF_WARNING WARN_LOG(ARM11, "undefined or unpredicted behavior for arm instruction.\n");
+#define UNDEF_WARNING LOG_WARNING(Core_ARM11, "undefined or unpredicted behavior for arm instruction.");
 
 /* Macros to scrutinize instructions.  */
 #define UNDEF_Test UNDEF_WARNING

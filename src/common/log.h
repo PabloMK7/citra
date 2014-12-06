@@ -126,23 +126,23 @@ void GenericLog(LOGTYPES_LEVELS level, LOGTYPES_TYPE type, const char*file, int 
 //#define INFO_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LINFO, __VA_ARGS__) } while (0)
 //#define DEBUG_LOG(t,...) do { GENERIC_LOG(LogTypes::t, LogTypes::LDEBUG, __VA_ARGS__) } while (0)
 
-#define OS_LOG(t,...) LOG_INFO(Common, __VA_ARGS__)
-#define ERROR_LOG(t,...) LOG_ERROR(Common_Filesystem, __VA_ARGS__)
-#define WARN_LOG(t,...) LOG_WARNING(Kernel_SVC, __VA_ARGS__)
-#define NOTICE_LOG(t,...) LOG_INFO(Service, __VA_ARGS__)
-#define INFO_LOG(t,...) LOG_INFO(Service_FS, __VA_ARGS__)
-#define DEBUG_LOG(t,...) LOG_DEBUG(Common, __VA_ARGS__)
+//#define OS_LOG(t,...) LOG_INFO(Common, __VA_ARGS__)
+//#define ERROR_LOG(t,...) LOG_ERROR(Common_Filesystem, __VA_ARGS__)
+//#define WARN_LOG(t,...) LOG_WARNING(Kernel_SVC, __VA_ARGS__)
+//#define NOTICE_LOG(t,...) LOG_INFO(Service, __VA_ARGS__)
+//#define INFO_LOG(t,...) LOG_INFO(Service_FS, __VA_ARGS__)
+//#define DEBUG_LOG(t,...) LOG_DEBUG(Common, __VA_ARGS__)
 
 #if MAX_LOGLEVEL >= DEBUG_LEVEL
 #define _dbg_assert_(_t_, _a_) \
     if (!(_a_)) {\
-        ERROR_LOG(_t_, "Error...\n\n  Line: %d\n  File: %s\n  Time: %s\n\nIgnore and continue?", \
+        LOG_CRITICAL(_t_, "Error...\n\n  Line: %d\n  File: %s\n  Time: %s\n\nIgnore and continue?", \
                        __LINE__, __FILE__, __TIME__); \
         if (!PanicYesNo("*** Assertion (see log)***\n")) {Crash();} \
     }
 #define _dbg_assert_msg_(_t_, _a_, ...)\
     if (!(_a_)) {\
-        ERROR_LOG(_t_, __VA_ARGS__); \
+        LOG_CRITICAL(_t_, __VA_ARGS__); \
         if (!PanicYesNo(__VA_ARGS__)) {Crash();} \
     }
 #define _dbg_update_() Host_UpdateLogDisplay();

@@ -24,12 +24,6 @@ public:
     Kernel::HandleType GetHandleType() const override { return HandleType::AddressArbiter; }
 
     std::string name;   ///< Name of address arbiter object (optional)
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::OS);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +53,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
         break;
 
     default:
-        ERROR_LOG(KERNEL, "unknown type=%d", type);
+        LOG_ERROR(Kernel, "unknown type=%d", type);
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel, ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
     return RESULT_SUCCESS;

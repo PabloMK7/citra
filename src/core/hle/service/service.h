@@ -91,7 +91,7 @@ public:
 
             std::string name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
 
-            ERROR_LOG(OSHLE, error.c_str(), name.c_str(), GetPortName().c_str());
+            LOG_ERROR(Service, error.c_str(), name.c_str(), GetPortName().c_str());
 
             // TODO(bunnei): Hack - ignore error
             cmd_buff[1] = 0;
@@ -101,12 +101,6 @@ public:
         itr->second.func(this);
 
         return MakeResult<bool>(false); // TODO: Implement return from actual function
-    }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "unimplemented function");
-        return UnimplementedFunction(ErrorModule::OS);
     }
 
 protected:

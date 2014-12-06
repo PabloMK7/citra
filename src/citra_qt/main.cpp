@@ -158,18 +158,18 @@ GMainWindow::~GMainWindow()
 
 void GMainWindow::BootGame(std::string filename)
 {
-    NOTICE_LOG(MASTER_LOG, "Citra starting...\n");
+    LOG_INFO(Frontend, "Citra starting...\n");
     System::Init(render_window);
 
     if (Core::Init()) {
-        ERROR_LOG(MASTER_LOG, "Core initialization failed, exiting...");
+        LOG_CRITICAL(Frontend, "Core initialization failed, exiting...");
         Core::Stop();
         exit(1);
     }
 
     // Load a game or die...
     if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
-        ERROR_LOG(BOOT, "Failed to load ROM!");
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
     }
 
     disasmWidget->Init();

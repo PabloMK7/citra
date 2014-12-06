@@ -23,7 +23,7 @@ namespace Loader {
  */
 FileType IdentifyFile(const std::string &filename) {
     if (filename.size() == 0) {
-        ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
+        LOG_ERROR(Loader, "invalid filename %s", filename.c_str());
         return FileType::Error;
     }
 
@@ -55,7 +55,7 @@ FileType IdentifyFile(const std::string &filename) {
  * @return ResultStatus result of function
  */
 ResultStatus LoadFile(const std::string& filename) {
-    INFO_LOG(LOADER, "Loading file %s...", filename.c_str());
+    LOG_INFO(Loader, "Loading file %s...", filename.c_str());
 
     switch (IdentifyFile(filename)) {
 
@@ -83,7 +83,7 @@ ResultStatus LoadFile(const std::string& filename) {
     // Raw BIN file format...
     case FileType::BIN:
     {
-        INFO_LOG(LOADER, "Loading BIN file %s...", filename.c_str());
+        LOG_INFO(Loader, "Loading BIN file %s...", filename.c_str());
 
         FileUtil::IOFile file(filename, "rb");
 

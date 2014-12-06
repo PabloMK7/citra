@@ -19,7 +19,7 @@ namespace FileSys {
 
 Archive_SDMC::Archive_SDMC(const std::string& mount_point) {
     this->mount_point = mount_point;
-    DEBUG_LOG(FILESYS, "Directory %s set as SDMC.", mount_point.c_str());
+    LOG_INFO(Service_FS, "Directory %s set as SDMC.", mount_point.c_str());
 }
 
 Archive_SDMC::~Archive_SDMC() {
@@ -31,12 +31,12 @@ Archive_SDMC::~Archive_SDMC() {
  */
 bool Archive_SDMC::Initialize() {
     if (!Settings::values.use_virtual_sd) {
-        WARN_LOG(FILESYS, "SDMC disabled by config.");
+        LOG_WARNING(Service_FS, "SDMC disabled by config.");
         return false;
     }
 
     if (!FileUtil::CreateFullPath(mount_point)) {
-        WARN_LOG(FILESYS, "Unable to create SDMC path.");
+        LOG_ERROR(Service_FS, "Unable to create SDMC path.");
         return false;
     }
 
@@ -50,7 +50,7 @@ bool Archive_SDMC::Initialize() {
  * @return Opened file, or nullptr
  */
 std::unique_ptr<File> Archive_SDMC::OpenFile(const Path& path, const Mode mode) const {
-    DEBUG_LOG(FILESYS, "called path=%s mode=%u", path.DebugStr().c_str(), mode.hex);
+    LOG_DEBUG(Service_FS, "called path=%s mode=%u", path.DebugStr().c_str(), mode.hex);
     File_SDMC* file = new File_SDMC(this, path, mode);
     if (!file->Open())
         return nullptr;
@@ -98,7 +98,7 @@ bool Archive_SDMC::RenameDirectory(const FileSys::Path& src_path, const FileSys:
  * @return Opened directory, or nullptr
  */
 std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const Path& path) const {
-    DEBUG_LOG(FILESYS, "called path=%s", path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
     Directory_SDMC* directory = new Directory_SDMC(this, path);
     if (!directory->Open())
         return nullptr;
@@ -113,7 +113,7 @@ std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const Path& path) const {
  * @return Number of bytes read
  */
 size_t Archive_SDMC::Read(const u64 offset, const u32 length, u8* buffer) const {
-    ERROR_LOG(FILESYS, "(UNIMPLEMENTED)");
+    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
     return -1;
 }
 
@@ -126,7 +126,7 @@ size_t Archive_SDMC::Read(const u64 offset, const u32 length, u8* buffer) const 
  * @return Number of bytes written
  */
 size_t Archive_SDMC::Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) {
-    ERROR_LOG(FILESYS, "(UNIMPLEMENTED)");
+    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
     return -1;
 }
 
@@ -135,7 +135,7 @@ size_t Archive_SDMC::Write(const u64 offset, const u32 length, const u32 flush, 
  * @return Size of the archive in bytes
  */
 size_t Archive_SDMC::GetSize() const {
-    ERROR_LOG(FILESYS, "(UNIMPLEMENTED)");
+    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
     return 0;
 }
 
@@ -143,7 +143,7 @@ size_t Archive_SDMC::GetSize() const {
  * Set the size of the archive in bytes
  */
 void Archive_SDMC::SetSize(const u64 size) {
-    ERROR_LOG(FILESYS, "(UNIMPLEMENTED)");
+    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
 }
 
 /**

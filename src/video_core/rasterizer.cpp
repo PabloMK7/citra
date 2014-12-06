@@ -252,7 +252,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return combiner_output.rgb();
 
                     default:
-                        ERROR_LOG(GPU, "Unknown color combiner source %d\n", (int)source);
+                        LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
                         return {};
                     }
                 };
@@ -272,7 +272,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return combiner_output.a();
 
                     default:
-                        ERROR_LOG(GPU, "Unknown alpha combiner source %d\n", (int)source);
+                        LOG_ERROR(HW_GPU, "Unknown alpha combiner source %d\n", (int)source);
                         return 0;
                     }
                 };
@@ -283,7 +283,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case ColorModifier::SourceColor:
                         return values;
                     default:
-                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
                         return {};
                     }
                 };
@@ -293,7 +293,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case AlphaModifier::SourceAlpha:
                         return value;
                     default:
-                        ERROR_LOG(GPU, "Unknown color factor %d\n", (int)factor);
+                        LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
                         return 0;
                     }
                 };
@@ -307,7 +307,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return ((input[0] * input[1]) / 255).Cast<u8>();
 
                     default:
-                        ERROR_LOG(GPU, "Unknown color combiner operation %d\n", (int)op);
+                        LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         return {};
                     }
                 };
@@ -321,7 +321,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return input[0] * input[1] / 255;
 
                     default:
-                        ERROR_LOG(GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
                         return 0;
                     }
                 };

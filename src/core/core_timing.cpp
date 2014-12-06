@@ -124,7 +124,7 @@ int RegisterEvent(const char *name, TimedCallback callback)
 
 void AntiCrashCallback(u64 userdata, int cyclesLate)
 {
-    ERROR_LOG(TIME, "Savestate broken: an unregistered event was called.");
+    LOG_CRITICAL(Core, "Savestate broken: an unregistered event was called.");
     Core::Halt("invalid timing events");
 }
 
@@ -176,7 +176,7 @@ void Shutdown()
 
 u64 GetTicks()
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     return 0;
     //return (u64)globalTimer + slicelength - currentMIPS->downcount;
 }
@@ -510,7 +510,7 @@ void MoveEvents()
 
 void Advance()
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     //int cyclesExecuted = slicelength - currentMIPS->downcount;
     //globalTimer += cyclesExecuted;
     //currentMIPS->downcount = slicelength;
@@ -547,7 +547,7 @@ void LogPendingEvents()
 
 void Idle(int maxIdle)
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     //int cyclesDown = currentMIPS->downcount;
     //if (maxIdle != 0 && cyclesDown > maxIdle)
     //    cyclesDown = maxIdle;

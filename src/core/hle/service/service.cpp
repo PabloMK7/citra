@@ -106,13 +106,13 @@ void Init() {
     g_manager->AddService(new SOC_U::Interface);
     g_manager->AddService(new SSL_C::Interface);
 
-    NOTICE_LOG(HLE, "initialized OK");
+    LOG_DEBUG(Service, "initialized OK");
 }
 
 /// Shutdown ServiceManager
 void Shutdown() {
     delete g_manager;
-    NOTICE_LOG(HLE, "shutdown OK");
+    LOG_DEBUG(Service, "shutdown OK");
 }
 
 

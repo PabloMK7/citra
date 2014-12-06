@@ -949,7 +949,7 @@ ARMul_Emulate26 (ARMul_State * state)
                 //printf("t decode %04lx -> %08lx\n", instr & 0xffff, armOp);
 
                 if (armOp == 0xDEADC0DE) {
-                    DEBUG("Failed to decode thumb opcode %04X at %08X\n", instr, pc);
+                    LOG_ERROR(Core_ARM11, "Failed to decode thumb opcode %04X at %08X", instr, pc);
                 }
 
                 instr = armOp;
@@ -3437,7 +3437,7 @@ mainswitch:
 
                 case 0x7f:	/* Load Byte, WriteBack, Pre Inc, Reg.  */
                     if (BIT (4)) {
-                        DEBUG("got unhandled special breakpoint\n");
+                        LOG_DEBUG(Core_ARM11, "got unhandled special breakpoint");
                         return 1;
                     }
                     UNDEF_LSRBaseEQOffWb;

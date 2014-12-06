@@ -57,7 +57,7 @@ public:
      * @return True if the current thread should wait as a result of the sync
      */
     virtual ResultVal<bool> SyncRequest() {
-        ERROR_LOG(KERNEL, "(UNIMPLEMENTED)");
+        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
         return UnimplementedFunction(ErrorModule::Kernel);
     }
 
@@ -65,7 +65,10 @@ public:
      * Wait for kernel object to synchronize.
      * @return True if the current thread should wait as a result of the wait
      */
-    virtual ResultVal<bool> WaitSynchronization() = 0;
+    virtual ResultVal<bool> WaitSynchronization() {
+        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
+        return UnimplementedFunction(ErrorModule::Kernel);
+    }
 };
 
 class ObjectPool : NonCopyable {
@@ -92,13 +95,13 @@ public:
     T* Get(Handle handle) {
         if (handle < HANDLE_OFFSET || handle >= HANDLE_OFFSET + MAX_COUNT || !occupied[handle - HANDLE_OFFSET]) {
             if (handle != 0) {
-                WARN_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
+                LOG_ERROR(Kernel, "Bad object handle %08x", handle, handle);
             }
             return nullptr;
         } else {
             Object* t = pool[handle - HANDLE_OFFSET];
             if (t->GetHandleType() != T::GetStaticHandleType()) {
-                WARN_LOG(KERNEL, "Kernel: Wrong object type for %i (%08x)", handle, handle);
+                LOG_ERROR(Kernel, "Wrong object type for %08x", handle, handle);
                 return nullptr;
             }
             return static_cast<T*>(t);
@@ -109,7 +112,7 @@ public:
     template <class T>
     T *GetFast(Handle handle) {
         const Handle realHandle = handle - HANDLE_OFFSET;
-        _dbg_assert_(KERNEL, realHandle >= 0 && realHandle < MAX_COUNT && occupied[realHandle]);
+        _dbg_assert_(Kernel, realHandle >= 0 && realHandle < MAX_COUNT && occupied[realHandle]);
         return static_cast<T*>(pool[realHandle]);
     }
 
@@ -130,8 +133,8 @@ public:
 
     bool GetIDType(Handle handle, HandleType* type) const {
         if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) ||
-            !occupied[handle - HANDLE_OFFSET]) {
-            ERROR_LOG(KERNEL, "Kernel: Bad object handle %i (%08x)", handle, handle);
+                !occupied[handle - HANDLE_OFFSET]) {
+            LOG_ERROR(Kernel, "Bad object handle %08X", handle, handle);
             return false;
         }
         Object* t = pool[handle - HANDLE_OFFSET];

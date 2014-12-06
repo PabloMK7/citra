@@ -42,7 +42,7 @@ static void GetAdapterState(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = battery_is_charging ? 1 : 0;
 
-    WARN_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 /*
@@ -57,7 +57,7 @@ static void GetShellState(Service::Interface* self) {
     cmd_buff[1] = 0;
     cmd_buff[2] = shell_open ? 1 : 0;
 
-    DEBUG_LOG(KERNEL, "PTM_U::GetShellState called");
+    LOG_TRACE(Service_PTM, "PTM_U::GetShellState called");
 }
 
 /**
@@ -76,7 +76,7 @@ static void GetBatteryLevel(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = static_cast<u32>(ChargeLevels::CompletelyFull); // Set to a completely full battery
 
-    WARN_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 /**
@@ -94,7 +94,7 @@ static void GetBatteryChargeState(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = battery_is_charging ? 1 : 0;
 
-    WARN_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

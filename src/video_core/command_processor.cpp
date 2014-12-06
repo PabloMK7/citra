@@ -114,7 +114,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                              (vertex_attribute_formats[i] == 2) ? *(s16*)srcdata :
                                                                                   *(float*)srcdata;
                         input.attr[i][comp] = float24::FromFloat32(srcval);
-                        DEBUG_LOG(GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
+                        LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
                                   comp, i, vertex, index,
                                   attribute_config.GetBaseAddress(),
                                   vertex_attribute_sources[i] - base_address,
@@ -176,7 +176,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 auto& uniform = VertexShader::GetFloatUniform(uniform_setup.index);
 
                 if (uniform_setup.index > 95) {
-                    ERROR_LOG(GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
+                    LOG_ERROR(HW_GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
                     break;
                 }
 
@@ -192,7 +192,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     uniform.x = float24::FromRawFloat24(uniform_write_buffer[2] & 0xFFFFFF);
                 }
 
-                DEBUG_LOG(GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
+                LOG_TRACE(HW_GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
                           uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
                           uniform.w.ToFloat32());
 

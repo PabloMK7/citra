@@ -75,7 +75,7 @@ bool MsgAlert(bool yes_no, int Style, const char* format, ...)
     Common::CharArrayFromFormatV(buffer, sizeof(buffer)-1, str_translator(format).c_str(), args);
     va_end(args);
 
-    ERROR_LOG(MASTER_LOG, "%s: %s", caption.c_str(), buffer);
+    LOG_INFO(Common, "%s: %s", caption.c_str(), buffer);
 
     // Don't ignore questions, especially AskYesNo, PanicYesNo could be ignored
     if (msg_handler && (AlertEnabled || Style == QUESTION || Style == CRITICAL))

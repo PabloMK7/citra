@@ -56,7 +56,7 @@ static void GetCountryCodeString(Service::Interface* self) {
     u32 country_code_id = cmd_buffer[1];
 
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
-        ERROR_LOG(KERNEL, "requested country code id=%d is invalid", country_code_id);
+        LOG_ERROR(Service_CFG, "requested country code id=%d is invalid", country_code_id);
         cmd_buffer[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
         return;
     }
@@ -79,7 +79,7 @@ static void GetCountryCodeID(Service::Interface* self) {
     u16 country_code_id = 0;
 
     // The following algorithm will fail if the first country code isn't 0.
-    _dbg_assert_(HLE, country_codes[0] == 0);
+    _dbg_assert_(Service_CFG, country_codes[0] == 0);
 
     for (size_t id = 0; id < country_codes.size(); ++id) {
         if (country_codes[id] == country_code) {
@@ -89,7 +89,7 @@ static void GetCountryCodeID(Service::Interface* self) {
     }
 
     if (0 == country_code_id) {
-        ERROR_LOG(KERNEL, "requested country code name=%c%c is invalid", country_code & 0xff, country_code >> 8);
+        LOG_ERROR(Service_CFG, "requested country code name=%c%c is invalid", country_code & 0xff, country_code >> 8);
         cmd_buffer[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
         cmd_buffer[2] = 0xFFFF;
         return;

@@ -71,7 +71,7 @@ int ashmem_create_region(const char *name, size_t size)
     return fd;
 
 error:
-    ERROR_LOG(MEMMAP, "NASTY ASHMEM ERROR: ret = %08x", ret);
+    LOG_ERROR(Common_Memory, "NASTY ASHMEM ERROR: ret = %08x", ret);
     close(fd);
     return ret;
 }
@@ -130,7 +130,7 @@ void MemArena::GrabLowMemSpace(size_t size)
     // Note that it appears that ashmem is pinned by default, so no need to pin.
     if (fd < 0)
     {
-        ERROR_LOG(MEMMAP, "Failed to grab ashmem space of size: %08x  errno: %d", (int)size, (int)(errno));
+        LOG_ERROR(Common_Memory, "Failed to grab ashmem space of size: %08x  errno: %d", (int)size, (int)(errno));
         return;
     }
 #else
@@ -148,12 +148,12 @@ void MemArena::GrabLowMemSpace(size_t size)
         }
         else if (errno != EEXIST)
         {
-            ERROR_LOG(MEMMAP, "shm_open failed: %s", strerror(errno));
+            LOG_ERROR(Common_Memory, "shm_open failed: %s", strerror(errno));
             return;
         }
     }
     if (ftruncate(fd, size) < 0)
-        ERROR_LOG(MEMMAP, "Failed to allocate low memory space");
+        LOG_ERROR(Common_Memory, "Failed to allocate low memory space");
 #endif
 }
 
@@ -197,7 +197,7 @@ void *MemArena::CreateView(s64 offset, size_t size, void *base)
 
     if (retval == MAP_FAILED)
     {
-        NOTICE_LOG(MEMMAP, "mmap failed");
+        LOG_ERROR(Common_Memory, "mmap failed");
         return nullptr;
     }
     return retval;
@@ -423,7 +423,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
         base = (u8 *)base_addr;
         if (Memory_TryBase(base, views, num_views, flags, arena))
         {
-            INFO_LOG(MEMMAP, "Found valid memory base at %p after %i tries.", base, base_attempts);
+            LOG_DEBUG(Common_Memory, "Found valid memory base at %p after %i tries.", base, base_attempts);
             base_attempts = 0;
             break;
         }
@@ -442,7 +442,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
     u8 *base = MemArena::Find4GBBase();
     if (!Memory_TryBase(base, views, num_views, flags, arena))
     {
-        ERROR_LOG(MEMMAP, "MemoryMap_Setup: Failed finding a memory base.");
+        LOG_ERROR(Common_Memory, "MemoryMap_Setup: Failed finding a memory base.");
         PanicAlert("MemoryMap_Setup: Failed finding a memory base.");
         return 0;
     }

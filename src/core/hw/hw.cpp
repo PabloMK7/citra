@@ -44,7 +44,7 @@ inline void Read(T &var, const u32 addr) {
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
+        LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
     }
 }
 
@@ -57,7 +57,7 @@ inline void Write(u32 addr, const T data) {
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
+        LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
     }
 }
 
@@ -81,12 +81,12 @@ void Update() {
 /// Initialize hardware
 void Init() {
     GPU::Init();
-    NOTICE_LOG(HW, "initialized OK");
+    LOG_DEBUG(HW, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(HW, "shutdown OK");
+    LOG_DEBUG(HW, "shutdown OK");
 }
 
 }

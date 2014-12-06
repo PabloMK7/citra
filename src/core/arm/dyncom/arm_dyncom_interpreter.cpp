@@ -433,9 +433,7 @@ typedef struct _ldst_inst {
 	unsigned int inst;
 	get_addr_fp_t get_addr;
 } ldst_inst;
-#define DEBUG_MSG	DEBUG_LOG(ARM11, "in %s %d\n", __FUNCTION__, __LINE__);		\
-			DEBUG_LOG(ARM11, "inst is %x\n", inst);				\
-			CITRA_IGNORE_EXIT(0)
+#define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
 int CondPassed(arm_processor *cpu, unsigned int cond);
 #define LnSWoUB(s)	glue(LnSWoUB, s)
@@ -1423,7 +1421,7 @@ inline void *AllocBuffer(unsigned int size)
 	int start = top;
 	top += size;
 	if (top > CACHE_BUFFER_SIZE) {
-		DEBUG_LOG(ARM11, "inst_buf is full\n");
+		LOG_ERROR(Core_ARM11, "inst_buf is full");
 		CITRA_IGNORE_EXIT(-1);
 	}
 	return (void *)&inst_buf[start];
@@ -1609,6 +1607,10 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst)
 #define CHECK_RM			(inst_cream->Rm == 15)
 #define CHECK_RS			(inst_cream->Rs == 15)
 
+#define UNIMPLEMENTED_INSTRUCTION(mnemonic) \
+    LOG_ERROR(Core_ARM11, "unimplemented instruction: %s", mnemonic); \
+    CITRA_IGNORE_EXIT(-1); \
+    return nullptr;
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(adc)(unsigned int inst, int index)
 {
@@ -1723,7 +1725,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(unsigned int inst, int index)
 		inst_base->br = INDIRECT_BRANCH;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("BKPT"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(blx)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(blx_inst));
@@ -1758,7 +1760,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bx)(unsigned int inst, int index)
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("BXJ"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cdp_inst));
 	cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
@@ -1775,7 +1777,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){
 	inst_cream->opcode_1   = BITS(inst, 20, 23);
 	inst_cream->inst = inst;
 
-	DEBUG_LOG(ARM11, "in func %s inst %x index %x\n", __FUNCTION__, inst, index);
+	LOG_TRACE(Core_ARM11, "inst %x index %x", inst, index);
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(clrex)(unsigned int inst, int index)
@@ -2205,7 +2207,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(mcr)(unsigned int inst, int index)
 	inst_cream->inst     = inst;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(mcrr)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(mcrr)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("MCRR"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(mla)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mla_inst));
@@ -2264,7 +2266,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(mrc)(unsigned int inst, int index)
 	inst_cream->inst     = inst;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(mrrc)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(mrrc)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("MRRC"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(mrs)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mrs_inst));
@@ -2358,8 +2360,8 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(pkhtb)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("PKHBT"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(pkhtb)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("PKHTB"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(pld_inst));
@@ -2371,16 +2373,16 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QADD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("QADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("QADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDADD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDSUB"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QSUB"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("QSUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("QSUBADDX"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
@@ -2410,8 +2412,8 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(rev16)(unsigned int inst, int index){
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("REVSH"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("RFE"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rsb_inst));
@@ -2460,9 +2462,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(saddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(saddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SADDSUBX"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sbc_inst));
@@ -2487,14 +2489,14 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shaddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)       { UNIMPLEMENTED_INSTRUCTION("SEL"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SETEND"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SHADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SHADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SHADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SHSUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SHSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SHSUBADDX"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smla_inst));
@@ -2553,15 +2555,15 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlsd)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(smuad)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLALD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLAW"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlsd)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLSD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLSLD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLA"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLS"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMUL"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smuad)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMUAD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smul_inst));
@@ -2624,13 +2626,13 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SMUSD"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("SRS"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("SSAT"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SSAT16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SSUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SSUBADDX"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(stc)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(stc_inst));
@@ -2937,9 +2939,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SXTAB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
-	DEBUG_LOG(ARM11, "in func %s, SXTAH untested\n", __func__);
+	LOG_WARNING(Core_ARM11, "SXTAH untested");
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtah_inst));
 	sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
 
@@ -2955,7 +2957,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
 
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SXTB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(teq)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(teq_inst));
@@ -2999,16 +3001,16 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uaddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhaddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("UADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uaddsubx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("UADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UHADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UHADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UHADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UHSUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UHSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UHSUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("UMAAL"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(umlal)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
@@ -3111,21 +3113,21 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(unsigned int tinst, int index)
 	return inst_base;
 }
 
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqaddsubx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
-ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index){DEBUG_LOG(ARM11, "in func %s\n", __FUNCTION__);CITRA_IGNORE_EXIT(-1); return nullptr;}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UQADD16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UQADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UQADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UQSUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UQSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UQSUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USAD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USADA8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("USAT"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USAT16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("USUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UXTAB16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UXTB16"); }
 
 
 
@@ -3391,7 +3393,7 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr
 			}
 			else{
 			/* something wrong */
-				DEBUG_LOG(ARM11, "In %s, thumb decoder error\n", __FUNCTION__);
+				LOG_ERROR(Core_ARM11, "thumb decoder error");
 			}
 			break;
 		case 28:
@@ -3599,7 +3601,7 @@ int InterpreterTranslate(arm_processor *cpu, int &bb_start, addr_t addr)
                        bank->bank_read(32, phys_addr, &inst);
                }
                else {
-                       DEBUG_LOG(ARM11, "SKYEYE: Read physical addr 0x%x error!!\n", phys_addr);
+                       LOG_ERROR(Core_ARM11, "SKYEYE: Read physical addr 0x%x error!!\n", phys_addr);
                        return FETCH_FAILURE;
                }
 #else
@@ -3629,8 +3631,8 @@ int InterpreterTranslate(arm_processor *cpu, int &bb_start, addr_t addr)
 
 		ret = decode_arm_instr(inst, &idx);
 		if (ret == DECODE_FAILURE) {
-			DEBUG_LOG(ARM11, "[info] : Decode failure.\tPC : [0x%x]\tInstruction : [%x]\n", phys_addr, inst);
-			DEBUG_LOG(ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x\n", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
+			LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : [%x]", phys_addr, inst);
+			LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
 			CITRA_IGNORE_EXIT(-1);
 		}
 //		DEBUG_LOG(ARM11, "PC : [0x%x] INST : %s\n", cpu->translate_pc, arm_instruction[idx].name);
@@ -3674,7 +3676,7 @@ void InterpreterInitInstLength(unsigned long long int *ptr, size_t size)
 		}
 	}
 	for (int i = 0; i < array_size - 4; i ++)
-		DEBUG_LOG(ARM11, "[%d]:%d\n", i, InstLength[i]);
+		LOG_DEBUG(Core_ARM11, "[%d]:%d", i, InstLength[i]);
 }
 
 int clz(unsigned int x)
@@ -3721,7 +3723,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 						//if (debug_function(core))                                          \
 							if (core->check_int_flag)                                  \
 								goto END
-						//DEBUG_LOG(ARM11, "icounter is %llx line is %d pc is %x\n", cpu->icounter, __LINE__, cpu->Reg[15])
+						//LOG_TRACE(Core_ARM11, "icounter is %llx pc is %x\n", cpu->icounter, cpu->Reg[15])
 	#else
 	#define INC_ICOUNTER			;                                                   
 	#endif
@@ -4348,7 +4350,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		bx_inst *inst_cream = (bx_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			if (inst_cream->Rm == 15)
-				DEBUG_LOG(ARM11, "In %s, BX at pc %x: use of Rm = R15 is discouraged\n", __FUNCTION__, cpu->Reg[15]);
+				LOG_WARNING(Core_ARM11, "BX at pc %x: use of Rm = R15 is discouraged", cpu->Reg[15]);
 			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
 			cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
 //			cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
@@ -4373,10 +4375,10 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 				cpu->NumInstrsToExecute = 0;
 				return num_instrs;
 			}
-			ERROR_LOG(ARM11, "CDP insn inst=0x%x, pc=0x%x\n", inst_cream->inst, cpu->Reg[15]);
+			LOG_ERROR(Core_ARM11, "CDP insn inst=0x%x, pc=0x%x\n", inst_cream->inst, cpu->Reg[15]);
 			unsigned cpab = (cpu->CDP[inst_cream->cp_num]) (cpu, ARMul_FIRST, inst_cream->inst);
 			if(cpab != ARMul_DONE){
-				ERROR_LOG(ARM11, "CDP insn wrong, inst=0x%x, cp_num=0x%x\n", inst_cream->inst, inst_cream->cp_num);
+				LOG_ERROR(Core_ARM11, "CDP insn wrong, inst=0x%x, cp_num=0x%x\n", inst_cream->inst, inst_cream->cp_num);
 				//CITRA_IGNORE_EXIT(-1);
 			}
 		}
@@ -4803,7 +4805,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 						& 0xffff;
 			RD = RN + operand2;
 			if (inst_cream->Rn == 15 || inst_cream->Rm == 15) {
-				DEBUG_LOG(ARM11, "in line %d\n", __LINE__);
+				LOG_ERROR(Core_ARM11, "invalid operands for UXTAH");
 				CITRA_IGNORE_EXIT(-1);
 			}
 		}
@@ -4866,7 +4868,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 			uint32_t rear_phys_addr;
 			 fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 1);
 			if(fault){
-				ERROR_LOG(ARM11, "mmu fault , should rollback the above get_addr\n");
+				LOG_ERROR(Core_ARM11, "mmu fault , should rollback the above get_addr\n");
 				CITRA_IGNORE_EXIT(-1);
 				goto MMU_EXCEPTION;
 			}
@@ -5089,7 +5091,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 							switch(OPCODE_2){
 							case 0: /* invalidate all */
 								//invalidate_all_tlb(state);
-								DEBUG_LOG(ARM11, "{TLB} [INSN] invalidate all\n");
+								LOG_DEBUG(Core_ARM11, "{TLB} [INSN] invalidate all");
 								//remove_tlb(INSN_TLB);
 								//erase_all(core, INSN_TLB);
 								break;
@@ -5115,7 +5117,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 								//invalidate_all_tlb(state);
 								//remove_tlb(DATA_TLB);
 								//erase_all(core, DATA_TLB);
-								DEBUG_LOG(ARM11, "{TLB} [DATA] invalidate all\n");
+								LOG_DEBUG(Core_ARM11, "{TLB} [DATA] invalidate all");
 								break;
 							case 1: /* invalidate by MVA */
 								//invalidate_by_mva(state, value);
@@ -5147,13 +5149,13 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 								//invalidate_by_mva(state, value);
 								//erase_by_mva(core, RD, DATA_TLB);
 								//erase_by_mva(core, RD, INSN_TLB);
-								DEBUG_LOG(ARM11, "{TLB} [UNIFILED] invalidate by mva\n");
+								LOG_DEBUG(Core_ARM11, "{TLB} [UNIFILED] invalidate by mva");
 								break;
 							case 2: /* invalidate by asid */
 								//invalidate_by_asid(state, value);
 								//erase_by_asid(core, RD, DATA_TLB);
 								//erase_by_asid(core, RD, INSN_TLB);
-								DEBUG_LOG(ARM11, "{TLB} [UNIFILED] invalidate by asid\n");
+								LOG_DEBUG(Core_ARM11, "{TLB} [UNIFILED] invalidate by asid");
 								break;
 							default:
 								break;
@@ -5175,7 +5177,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 						}
 
 					} else {
-						DEBUG_LOG(ARM11, "mcr is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
+						LOG_ERROR(Core_ARM11, "mcr CRn=%d, CRm=%d OP2=%d is not implemented", CRn, CRm, OPCODE_2);
 					}
 				}
 			}
@@ -5195,7 +5197,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 			uint64_t rs = RS;
 			uint64_t rn = RN;
 			if (inst_cream->Rm == 15 || inst_cream->Rs == 15 || inst_cream->Rn == 15) {
-				DEBUG_LOG(ARM11, "in __line__\n", __LINE__);
+				LOG_ERROR(Core_ARM11, "invalid operands for MLA");
 				CITRA_IGNORE_EXIT(-1);
 			}
 //			RD = dst = RM * RS + RN;
@@ -5309,7 +5311,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 						}
 					}
 					else {
-						DEBUG_LOG(ARM11, "mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
+					    LOG_ERROR(Core_ARM11, "mrc CRn=%d, CRm=%d, OP2=%d is not implemented", CRn, CRm, OPCODE_2);
 					}
 				}
 				//DEBUG_LOG(ARM11, "mrc is not implementated. CRn is %d, CRm is %d, OPCODE_2 is %d\n", CRn, CRm, OPCODE_2);
@@ -5500,7 +5502,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 				(((RM >> 16) & 0xff) << 8) |
 				((RM >> 24) & 0xff);
 			if (inst_cream->Rm == 15) {
-				DEBUG_LOG(ARM11, "in line %d\n", __LINE__);
+				LOG_ERROR(Core_ARM11, "invalid operand for REV");
 				CITRA_IGNORE_EXIT(-1);
 			}
 		}
@@ -5953,7 +5955,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		sxtb_inst *inst_cream = (sxtb_inst *)inst_base->component;
 		if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 			if (inst_cream->Rm == 15) {
-				DEBUG_LOG(ARM11, "line is %d\n", __LINE__);
+				LOG_ERROR(Core_ARM11, "invalid operand for SXTB");
 				CITRA_IGNORE_EXIT(-1);
 			}
 			unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate);
@@ -6059,7 +6061,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 			uint32_t rear_phys_addr;
 			fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 0);
                         if (fault){
-				ERROR_LOG(ARM11, "mmu fault , should rollback the above get_addr\n");
+				LOG_ERROR(Core_ARM11, "mmu fault , should rollback the above get_addr\n");
 				CITRA_IGNORE_EXIT(-1);
 				goto MMU_EXCEPTION;
 			}

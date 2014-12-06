@@ -27,7 +27,7 @@ int __cdecl main(int argc, char **argv) {
     });
 
     if (argc < 2) {
-        ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
+        LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
     }
 
@@ -40,7 +40,7 @@ int __cdecl main(int argc, char **argv) {
 
     Loader::ResultStatus load_result = Loader::LoadFile(boot_filename);
     if (Loader::ResultStatus::Success != load_result) {
-        ERROR_LOG(BOOT, "Failed to load ROM (Error %i)!", load_result);
+        LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
         return -1;
     }
 

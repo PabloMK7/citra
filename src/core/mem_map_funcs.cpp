@@ -28,7 +28,7 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
         return addr - FCRAM_PADDR + FCRAM_VADDR;
     }
 
-    ERROR_LOG(MEMMAP, "Unknown physical address @ 0x%08x", addr);
+    LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08x", addr);
     return addr;
 }
 
@@ -44,7 +44,7 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
         return addr - FCRAM_VADDR + FCRAM_PADDR;
     }
 
-    ERROR_LOG(MEMMAP, "Unknown virtual address @ 0x%08x", addr);
+    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08x", addr);
     return addr;
 }
 
@@ -92,7 +92,7 @@ inline void Read(T &var, const VAddr vaddr) {
         var = *((const T*)&g_vram[vaddr - VRAM_VADDR]);
 
     } else {
-        ERROR_LOG(MEMMAP, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
+        LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
@@ -141,7 +141,7 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // Error out...
     } else {
-        ERROR_LOG(MEMMAP, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, vaddr);
+        LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, vaddr);
     }
 }
 
@@ -175,7 +175,7 @@ u8 *GetPointer(const VAddr vaddr) {
         return g_vram + (vaddr - VRAM_VADDR);
 
     } else {
-        ERROR_LOG(MEMMAP, "unknown GetPointer @ 0x%08x", vaddr);
+        LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
 }
@@ -239,7 +239,7 @@ u16 Read16(const VAddr addr) {
     // Check for 16-bit unaligned memory reads...
     if (addr & 1) {
         // TODO(bunnei): Implement 16-bit unaligned memory reads
-        ERROR_LOG(MEMMAP, "16-bit unaligned memory reads are not implemented!");
+        LOG_ERROR(HW_Memory, "16-bit unaligned memory reads are not implemented!");
     }
 
     return (u16)data;
