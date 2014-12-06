@@ -357,7 +357,6 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
-    _dbg_assert_(Debug_GPU, info.format == Pica::Regs::TextureFormat::RGB8);
 
     // Cf. rasterizer code for an explanation of this algorithm.
     int texel_index_within_tile = 0;
@@ -376,8 +375,52 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     int coarse_x = (x / block_width) * block_width;
     int coarse_y = (y / block_height) * block_height;
 
-    const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
-    return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+    switch (info.format) {
+    case Regs::TextureFormat::RGBA8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 4 + coarse_y * info.stride + texel_index_within_tile * 4;
+        return { source_ptr[3], source_ptr[2], source_ptr[1], 255 };
+    }
+
+    case Regs::TextureFormat::RGB8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
+        return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+    }
+
+    case Regs::TextureFormat::RGBA5551:
+    {
+        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 6) & 0x1F;
+        u8 b = (source_ptr >> 1) & 0x1F;
+        u8 a = 1;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), a * 255);
+    }
+
+    case Regs::TextureFormat::RGBA4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+        u8 r = source_ptr[1] >> 4;
+        u8 g = source_ptr[1] & 0xFF;
+        u8 b = source_ptr[0] >> 4;
+        r = (r << 4) | r;
+        g = (g << 4) | g;
+        b = (b << 4) | b;
+        return { r, g, b, 255 };
+    }
+
+    case Regs::TextureFormat::A8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+    }
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown texture format: %x", (u32)info.format);
+        _dbg_assert_(HW_GPU, 0);
+        return {};
+    }
 }
 
 TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
