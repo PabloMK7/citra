@@ -11,6 +11,7 @@ namespace Log {
 
 class Logger;
 struct Entry;
+class Filter;
 
 /**
  * Attempts to trim an arbitrary prefix from `path`, leaving only the part starting at `root`. It's
@@ -33,6 +34,6 @@ void PrintMessage(const Entry& entry);
  * Logging loop that repeatedly reads messages from the provided logger and prints them to the
  * console. It is the baseline barebones log outputter.
  */
-void TextLoggingLoop(std::shared_ptr<Logger> logger);
+void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter);
 
 }

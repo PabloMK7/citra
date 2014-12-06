@@ -34,7 +34,7 @@ gpu_refresh_rate = ## 60 (default)
 use_virtual_sd =
 
 [Miscellaneous]
-enable_log =
+log_filter = *:Info  ## Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
 )";
 
 }

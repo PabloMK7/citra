@@ -11,6 +11,7 @@ set(SRCS
             hash.cpp
             key_map.cpp
             log_manager.cpp
+            logging/filter.cpp
             logging/text_formatter.cpp
             logging/backend.cpp
             math_util.cpp
@@ -49,6 +50,7 @@ set(HEADERS
             log.h
             log_manager.h
             logging/text_formatter.h
+            logging/filter.h
             logging/log.h
             logging/backend.h
             math_util.h

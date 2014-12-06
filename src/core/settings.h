@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace Settings {
 
 struct Values {
@@ -33,7 +35,7 @@ struct Values {
     // Data Storage
     bool use_virtual_sd;
 
-    bool enable_log;
+    std::string log_filter;
 } extern values;
 
 }

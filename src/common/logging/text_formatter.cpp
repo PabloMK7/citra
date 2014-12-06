@@ -11,6 +11,7 @@
 #endif
 
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 
@@ -105,7 +106,7 @@ void PrintMessage(const Entry& entry) {
     fputc('\n', stderr);
 }
 
-void TextLoggingLoop(std::shared_ptr<Logger> logger) {
+void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter) {
     std::array<Entry, 256> entry_buffer;
 
     while (true) {
@@ -114,7 +115,10 @@ void TextLoggingLoop(std::shared_ptr<Logger> logger) {
             break;
         }
         for (size_t i = 0; i < num_entries; ++i) {
-            PrintMessage(entry_buffer[i]);
+            const Entry& entry = entry_buffer[i];
+            if (filter->CheckMessage(entry.log_class, entry.log_level)) {
+                PrintMessage(entry);
+            }
         }
     }
 }

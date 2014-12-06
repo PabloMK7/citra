@@ -64,7 +64,7 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // Miscellaneous
-    Settings::values.enable_log = glfw_config->GetBoolean("Miscellaneous", "enable_log", true);
+    Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
 }
 
 void Config::Reload() {

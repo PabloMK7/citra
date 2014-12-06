@@ -52,7 +52,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Miscellaneous");
-    Settings::values.enable_log = qt_config->value("enable_log", true).toBool();
+    Settings::values.log_filter = qt_config->value("log_filter", "*:Info").toString().toStdString();
     qt_config->endGroup();
 }
 
@@ -87,7 +87,7 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Miscellaneous");
-    qt_config->setValue("enable_log", Settings::values.enable_log);
+    qt_config->setValue("log_filter", QString::fromStdString(Settings::values.log_filter));
     qt_config->endGroup();
 }
 

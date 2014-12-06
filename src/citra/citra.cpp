@@ -7,6 +7,7 @@
 #include "common/common.h"
 #include "common/logging/text_formatter.h"
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/scope_exit.h"
 
 #include "core/settings.h"
@@ -20,7 +21,8 @@
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
     std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
-    std::thread logging_thread(Log::TextLoggingLoop, logger);
+    Log::Filter log_filter(Log::Level::Debug);
+    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
     SCOPE_EXIT({
         logger->Close();
         logging_thread.join();
@@ -32,6 +34,7 @@ int __cdecl main(int argc, char **argv) {
     }
 
     Config config;
+    log_filter.ParseFilterString(Settings::values.log_filter);
 
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;

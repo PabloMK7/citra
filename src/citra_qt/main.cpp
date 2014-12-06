@@ -11,6 +11,7 @@
 #include "common/logging/text_formatter.h"
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/platform.h"
 #include "common/scope_exit.h"
 
@@ -42,13 +43,9 @@
 
 GMainWindow::GMainWindow()
 {
-
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
     Config config;
-
-    if (!Settings::values.enable_log)
-        LogManager::Shutdown();
 
     ui.setupUi(this);
     statusBar()->hide();
@@ -277,7 +274,8 @@ void GMainWindow::closeEvent(QCloseEvent* event)
 int __cdecl main(int argc, char* argv[])
 {
     std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
-    std::thread logging_thread(Log::TextLoggingLoop, logger);
+    Log::Filter log_filter(Log::Level::Info);
+    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
     SCOPE_EXIT({
         logger->Close();
         logging_thread.join();
@@ -285,7 +283,11 @@ int __cdecl main(int argc, char* argv[])
 
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
+
     GMainWindow main_window;
+    // After settings have been loaded by GMainWindow, apply the filter
+    log_filter.ParseFilterString(Settings::values.log_filter);
+
     main_window.show();
     return app.exec();
 }
