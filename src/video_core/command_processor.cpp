@@ -56,10 +56,11 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
 
             const auto& attribute_config = registers.vertex_attributes;
-            const u8* const base_address = Memory::GetPointer(PAddrToVAddr(attribute_config.GetPhysicalBaseAddress()));
+            const u32 base_address = attribute_config.GetPhysicalBaseAddress();
 
             // Information about internal vertex attributes
-            const u8* vertex_attribute_sources[16];
+            u32 vertex_attribute_sources[16];
+            std::fill(vertex_attribute_sources, &vertex_attribute_sources[16], 0xdeadbeef);
             u32 vertex_attribute_strides[16];
             u32 vertex_attribute_formats[16];
             u32 vertex_attribute_elements[16];
@@ -69,7 +70,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             for (int loader = 0; loader < 12; ++loader) {
                 const auto& loader_config = attribute_config.attribute_loaders[loader];
 
-                const u8* load_address = base_address + loader_config.data_offset;
+                u32 load_address = base_address + loader_config.data_offset;
 
                 // TODO: What happens if a loader overwrites a previous one's data?
                 for (unsigned component = 0; component < loader_config.component_count; ++component) {
@@ -87,7 +88,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
             const auto& index_info = registers.index_array;
-            const u8* index_address_8 = (u8*)base_address + index_info.offset;
+            const u8* index_address_8 = Memory::GetPointer(PAddrToVAddr(base_address + index_info.offset));
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = (bool)index_info.format;
 
@@ -108,7 +109,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                        const u8* srcdata = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
+                        const u8* srcdata = Memory::GetPointer(PAddrToVAddr(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]));
                         const float srcval = (vertex_attribute_formats[i] == 0) ? *(s8*)srcdata :
                                              (vertex_attribute_formats[i] == 1) ? *(u8*)srcdata :
                                              (vertex_attribute_formats[i] == 2) ? *(s16*)srcdata :
@@ -116,9 +117,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                         input.attr[i][comp] = float24::FromFloat32(srcval);
                         LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
                                   comp, i, vertex, index,
-                                  PAddrToVAddr(attribute_config.GetPhysicalBaseAddress()),
+                                  attribute_config.GetPhysicalBaseAddress(),
                                   vertex_attribute_sources[i] - base_address,
-                                  srcdata - vertex_attribute_sources[i],
+                                  vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
