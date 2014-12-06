@@ -155,12 +155,34 @@ struct Regs {
         }
     }
 
-    BitField< 0, 1, u32> texturing_enable;
+    union {
+        BitField< 0, 1, u32> texture0_enable;
+        BitField< 1, 1, u32> texture1_enable;
+        BitField< 2, 1, u32> texture2_enable;
+    };
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
+    INSERT_PADDING_WORDS(0x2);
+    TextureConfig texture1;
+    BitField<0, 4, TextureFormat> texture1_format;
+    INSERT_PADDING_WORDS(0x2);
+    TextureConfig texture2;
+    BitField<0, 4, TextureFormat> texture2_format;
+    INSERT_PADDING_WORDS(0x21);
 
-    INSERT_PADDING_WORDS(0x31);
+    struct FullTextureConfig {
+        const bool enabled;
+        const TextureConfig config;
+        const TextureFormat format;
+    };
+    const std::array<FullTextureConfig, 3> GetTextures() const {
+        return {{
+                   { static_cast<bool>(texture0_enable), texture0, texture0_format },
+                   { static_cast<bool>(texture1_enable), texture1, texture1_format },
+                   { static_cast<bool>(texture2_enable), texture2, texture2_format }
+               }};
+    }
 
     // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
     struct TevStageConfig {
@@ -556,9 +578,13 @@ struct Regs {
         ADD_FIELD(viewport_depth_range);
         ADD_FIELD(viewport_depth_far_plane);
         ADD_FIELD(viewport_corner);
-        ADD_FIELD(texturing_enable);
+        ADD_FIELD(texture0_enable);
         ADD_FIELD(texture0);
         ADD_FIELD(texture0_format);
+        ADD_FIELD(texture1);
+        ADD_FIELD(texture1_format);
+        ADD_FIELD(texture2);
+        ADD_FIELD(texture2_format);
         ADD_FIELD(tev_stage0);
         ADD_FIELD(tev_stage1);
         ADD_FIELD(tev_stage2);
@@ -622,9 +648,13 @@ ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
-ASSERT_REG_POSITION(texturing_enable, 0x80);
+ASSERT_REG_POSITION(texture0_enable, 0x80);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
+ASSERT_REG_POSITION(texture1, 0x91);
+ASSERT_REG_POSITION(texture1_format, 0x96);
+ASSERT_REG_POSITION(texture2, 0x99);
+ASSERT_REG_POSITION(texture2_format, 0x9e);
 ASSERT_REG_POSITION(tev_stage0, 0xc0);
 ASSERT_REG_POSITION(tev_stage1, 0xc8);
 ASSERT_REG_POSITION(tev_stage2, 0xd0);

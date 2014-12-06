@@ -167,10 +167,22 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
             };
 
-            Math::Vec4<u8> texture_color{};
-            float24 u = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
-            float24 v = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
-            if (registers.texturing_enable) {
+            Math::Vec2<float24> uv[3];
+            uv[0].u() = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
+            uv[0].v() = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
+            uv[1].u() = GetInterpolatedAttribute(v0.tc1.u(), v1.tc1.u(), v2.tc1.u());
+            uv[1].v() = GetInterpolatedAttribute(v0.tc1.v(), v1.tc1.v(), v2.tc1.v());
+            uv[2].u() = GetInterpolatedAttribute(v0.tc2.u(), v1.tc2.u(), v2.tc2.u());
+            uv[2].v() = GetInterpolatedAttribute(v0.tc2.v(), v1.tc2.v(), v2.tc2.v());
+
+            Math::Vec4<u8> texture_color[3]{};
+            for (int i = 0; i < 3; ++i) {
+                auto texture = registers.GetTextures()[i];
+                if (!texture.enabled)
+                    continue;
+
+                _dbg_assert_(GPU, 0 != texture.config.address);
+
                 // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
                 // of which is composed of four 2x2 subtiles each of which is composed of four texels.
                 // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
@@ -189,14 +201,11 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 // 02 03 06 07 18 19 22 23
                 // 00 01 04 05 16 17 20 21
 
-                // TODO: This is currently hardcoded for RGB8
-                u32* texture_data = (u32*)Memory::GetPointer(registers.texture0.GetPhysicalAddress());
-
                 // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
                 // To be flexible in case different but similar patterns are used, we keep this
                 // somewhat inefficient code around for now.
-                int s = (int)(u * float24::FromFloat32(static_cast<float>(registers.texture0.width))).ToFloat32();
-                int t = (int)(v * float24::FromFloat32(static_cast<float>(registers.texture0.height))).ToFloat32();
+                int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
+                int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
                 int texel_index_within_tile = 0;
                 for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
                     int sub_tile_width = 1 << block_size_index;
@@ -213,14 +222,17 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 int coarse_s = (s / block_width) * block_width;
                 int coarse_t = (t / block_height) * block_height;
 
-                const int row_stride = registers.texture0.width * 3;
-                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
-                texture_color.r() = source_ptr[2];
-                texture_color.g() = source_ptr[1];
-                texture_color.b() = source_ptr[0];
-                texture_color.a() = 0xFF;
+                // TODO: This is currently hardcoded for RGB8
+                u32* texture_data = (u32*)Memory::GetPointer(texture.config.GetPhysicalAddress());
 
-                DebugUtils::DumpTexture(registers.texture0, (u8*)texture_data);
+                const int row_stride = texture.config.width * 3;
+                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
+                texture_color[i].r() = source_ptr[2];
+                texture_color[i].g() = source_ptr[1];
+                texture_color[i].b() = source_ptr[0];
+                texture_color[i].a() = 0xFF;
+
+                DebugUtils::DumpTexture(texture.config, (u8*)texture_data);
             }
 
             // Texture environment - consists of 6 stages of color and alpha combining.
@@ -243,7 +255,13 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return primary_color.rgb();
 
                     case Source::Texture0:
-                        return texture_color.rgb();
+                        return texture_color[0].rgb();
+
+                    case Source::Texture1:
+                        return texture_color[1].rgb();
+
+                    case Source::Texture2:
+                        return texture_color[2].rgb();
 
                     case Source::Constant:
                         return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
@@ -263,7 +281,13 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return primary_color.a();
 
                     case Source::Texture0:
-                        return texture_color.a();
+                        return texture_color[0].a();
+
+                    case Source::Texture1:
+                        return texture_color[1].a();
+
+                    case Source::Texture2:
+                        return texture_color[2].a();
 
                     case Source::Constant:
                         return tev_stage.const_a;

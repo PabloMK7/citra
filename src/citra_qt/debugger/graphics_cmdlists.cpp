@@ -223,9 +223,21 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
-    if (COMMAND_IN_RANGE(command_id, texture0)) {
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
-                                                                    Pica::registers.texture0_format);
+    if (COMMAND_IN_RANGE(command_id, texture0) ||
+        COMMAND_IN_RANGE(command_id, texture1) ||
+        COMMAND_IN_RANGE(command_id, texture2)) {
+
+        unsigned index;
+        if (COMMAND_IN_RANGE(command_id, texture0)) {
+            index = 0;
+        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+            index = 1;
+        } else {
+            index = 2;
+        }
+        auto config = Pica::registers.GetTextures()[index].config;
+        auto format = Pica::registers.GetTextures()[index].format;
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
 
         // TODO: Instead, emit a signal here to be caught by the main window widget.
         auto main_window = static_cast<QMainWindow*>(parent());
@@ -237,10 +249,23 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget;
 
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
-    if (COMMAND_IN_RANGE(command_id, texture0)) {
-        u8* src = Memory::GetPointer(Pica::registers.texture0.GetPhysicalAddress());
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
-                                                                    Pica::registers.texture0_format);
+    if (COMMAND_IN_RANGE(command_id, texture0) ||
+        COMMAND_IN_RANGE(command_id, texture1) ||
+        COMMAND_IN_RANGE(command_id, texture2)) {
+
+        unsigned index;
+        if (COMMAND_IN_RANGE(command_id, texture0)) {
+            index = 0;
+        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+            index = 1;
+        } else {
+            index = 2;
+        }
+        auto config = Pica::registers.GetTextures()[index].config;
+        auto format = Pica::registers.GetTextures()[index].format;
+
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
+        u8* src = Memory::GetPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     } else {
         new_info_widget = new QWidget;
