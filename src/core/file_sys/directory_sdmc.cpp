@@ -19,13 +19,20 @@ Directory_SDMC::Directory_SDMC(const Archive_SDMC* archive, const Path& path) {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../usr/bin can give the emulated program your installed programs.
-    std::string absolute_path = archive->GetMountPoint() + path.AsString();
-    FileUtil::ScanDirectoryTree(absolute_path, directory);
-    children_iterator = directory.children.begin();
+    this->path = archive->GetMountPoint() + path.AsString();
+
 }
 
 Directory_SDMC::~Directory_SDMC() {
     Close();
+}
+
+bool Directory_SDMC::Open() {
+    if (!FileUtil::IsDirectory(path))
+        return false;
+    FileUtil::ScanDirectoryTree(path, directory);
+    children_iterator = directory.children.begin();
+    return true;
 }
 
 /**

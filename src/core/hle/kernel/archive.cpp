@@ -421,6 +421,11 @@ ResultVal<Handle> OpenDirectoryFromArchive(Handle archive_handle, const FileSys:
     directory->path = path;
     directory->backend = archive->backend->OpenDirectory(path);
 
+    if (!directory->backend) {
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+                          ErrorSummary::NotFound, ErrorLevel::Permanent);
+    }
+
     return MakeResult<Handle>(handle);
 }
 
