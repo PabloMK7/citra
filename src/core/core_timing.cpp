@@ -67,7 +67,7 @@ s64 idledCycles;
 static std::recursive_mutex externalEventSection;
 
 // Warning: not included in save state.
-void(*advanceCallback)(int cyclesExecuted) = NULL;
+void(*advanceCallback)(int cyclesExecuted) = nullptr;
 
 void SetClockFrequencyMHz(int cpuMhz)
 {
@@ -231,7 +231,7 @@ void ClearPendingEvents()
 
 void AddEventToQueue(Event* ne)
 {
-    Event* prev = NULL;
+    Event* prev = nullptr;
     Event** pNext = &first;
     for (;;)
     {
@@ -327,7 +327,7 @@ s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata)
     }
     if (!tsFirst)
     {
-        tsLast = NULL;
+        tsLast = nullptr;
         return result;
     }
 
@@ -433,7 +433,7 @@ void RemoveThreadsafeEvent(int event_type)
     }
     if (!tsFirst)
     {
-        tsLast = NULL;
+        tsLast = nullptr;
         return;
     }
     Event *prev = tsFirst;
@@ -495,7 +495,7 @@ void MoveEvents()
         AddEventToQueue(tsFirst);
         tsFirst = next;
     }
-    tsLast = NULL;
+    tsLast = nullptr;
 
     // Move free events to threadsafe pool
     while (allocatedTsEvents > 0 && eventPool)
@@ -614,7 +614,7 @@ void DoState(PointerWrap &p)
     // These (should) be filled in later by the modules.
     event_types.resize(n, EventType(AntiCrashCallback, "INVALID EVENT"));
 
-    p.DoLinkedList<BaseEvent, GetNewEvent, FreeEvent, Event_DoState>(first, (Event **)NULL);
+    p.DoLinkedList<BaseEvent, GetNewEvent, FreeEvent, Event_DoState>(first, (Event **)nullptr);
     p.DoLinkedList<BaseEvent, GetNewTsEvent, FreeTsEvent, Event_DoState>(tsFirst, &tsLast);
 
     p.Do(g_clock_rate_arm11);

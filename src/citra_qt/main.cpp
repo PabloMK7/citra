@@ -131,7 +131,7 @@ GMainWindow::GMainWindow()
 GMainWindow::~GMainWindow()
 {
     // will get automatically deleted otherwise
-    if (render_window->parent() == NULL)
+    if (render_window->parent() == nullptr)
         delete render_window;
 }
 
@@ -213,14 +213,14 @@ void GMainWindow::OnOpenHotkeysDialog()
 void GMainWindow::ToggleWindowMode()
 {
     bool enable = ui.action_Popout_Window_Mode->isChecked();
-    if (enable && render_window->parent() != NULL)
+    if (enable && render_window->parent() != nullptr)
     {
         ui.horizontalLayout->removeWidget(render_window);
-        render_window->setParent(NULL);
+        render_window->setParent(nullptr);
         render_window->setVisible(true);
         render_window->RestoreGeometry();
     }
-    else if (!enable && render_window->parent() == NULL)
+    else if (!enable && render_window->parent() == nullptr)
     {
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);

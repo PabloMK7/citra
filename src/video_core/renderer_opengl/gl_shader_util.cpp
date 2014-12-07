@@ -22,7 +22,7 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
     // Compile Vertex Shader
     DEBUG_LOG(GPU, "Compiling vertex shader.");
 
-    glShaderSource(vertex_shader_id, 1, &vertex_shader, NULL);
+    glShaderSource(vertex_shader_id, 1, &vertex_shader, nullptr);
     glCompileShader(vertex_shader_id);
 
     // Check Vertex Shader
@@ -31,14 +31,14 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
 
     if (info_log_length > 1) {
         std::vector<char> vertex_shader_error(info_log_length);
-        glGetShaderInfoLog(vertex_shader_id, info_log_length, NULL, &vertex_shader_error[0]);
+        glGetShaderInfoLog(vertex_shader_id, info_log_length, nullptr, &vertex_shader_error[0]);
         DEBUG_LOG(GPU, "%s", &vertex_shader_error[0]);
     }
 
     // Compile Fragment Shader
     DEBUG_LOG(GPU, "Compiling fragment shader.");
 
-    glShaderSource(fragment_shader_id, 1, &fragment_shader, NULL);
+    glShaderSource(fragment_shader_id, 1, &fragment_shader, nullptr);
     glCompileShader(fragment_shader_id);
 
     // Check Fragment Shader
@@ -47,7 +47,7 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
 
     if (info_log_length > 1) {
         std::vector<char> fragment_shader_error(info_log_length);
-        glGetShaderInfoLog(fragment_shader_id, info_log_length, NULL, &fragment_shader_error[0]);
+        glGetShaderInfoLog(fragment_shader_id, info_log_length, nullptr, &fragment_shader_error[0]);
         DEBUG_LOG(GPU, "%s", &fragment_shader_error[0]);
     }
 
@@ -65,7 +65,7 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
 
     if (info_log_length > 1) {
         std::vector<char> program_error(info_log_length);
-        glGetProgramInfoLog(program_id, info_log_length, NULL, &program_error[0]);
+        glGetProgramInfoLog(program_id, info_log_length, nullptr, &program_error[0]);
         DEBUG_LOG(GPU, "%s", &program_error[0]);
     }
 

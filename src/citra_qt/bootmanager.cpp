@@ -230,7 +230,7 @@ QByteArray GRenderWindow::saveGeometry()
 {
     // If we are a top-level widget, store the current geometry
     // otherwise, store the last backup
-    if (parent() == NULL)
+    if (parent() == nullptr)
         return ((QGLWidget*)this)->saveGeometry();
     else
         return geometry;
