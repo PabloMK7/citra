@@ -13,6 +13,9 @@
 
 namespace Kernel {
 
+class Mutex;
+void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThreadHandle());
+
 class Mutex : public Object {
 public:
     std::string GetTypeName() const override { return "Mutex"; }
@@ -34,6 +37,7 @@ public:
         } else {
             // Lock the mutex when the first thread accesses it
             locked = true;
+            MutexAcquireLock(this);
         }
 
         return MakeResult<bool>(wait);
@@ -45,26 +49,64 @@ public:
 typedef std::multimap<Handle, Handle> MutexMap;
 static MutexMap g_mutex_held_locks;
 
+/**
+ * Acquires the specified mutex for the specified thread
+ * @param mutex Mutex that is to be acquired
+ * @param thread Thread that will acquired
+ */
 void MutexAcquireLock(Mutex* mutex, Handle thread) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex->GetHandle()));
     mutex->lock_thread = thread;
 }
 
-void MutexAcquireLock(Mutex* mutex) {
-    Handle thread = GetCurrentThreadHandle();
+bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
     MutexAcquireLock(mutex, thread);
+    Kernel::ResumeThreadFromWait(thread);
+    return true;
+}
+
+/**
+ * Resumes a thread waiting for the specified mutex
+ * @param mutex The mutex that some thread is waiting on
+ */
+void ResumeWaitingThread(Mutex* mutex) {
+    // Find the next waiting thread for the mutex...
+    if (mutex->waiting_threads.empty()) {
+        // Reset mutex lock thread handle, nothing is waiting
+        mutex->locked = false;
+        mutex->lock_thread = -1;
+    }
+    else {
+        // Resume the next waiting thread and re-lock the mutex
+        std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
+        ReleaseMutexForThread(mutex, *iter);
+        mutex->waiting_threads.erase(iter);
+    }
 }
 
 void MutexEraseLock(Mutex* mutex) {
     Handle handle = mutex->GetHandle();
     auto locked = g_mutex_held_locks.equal_range(mutex->lock_thread);
     for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
-        if ((*iter).second == handle) {
+        if (iter->second == handle) {
             g_mutex_held_locks.erase(iter);
             break;
         }
     }
     mutex->lock_thread = -1;
+}
+
+void ReleaseThreadMutexes(Handle thread) {
+    auto locked = g_mutex_held_locks.equal_range(thread);
+    
+    // Release every mutex that the thread holds, and resume execution on the waiting threads
+    for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
+        Mutex* mutex = g_object_pool.GetFast<Mutex>(iter->second);
+        ResumeWaitingThread(mutex);
+    }
+
+    // Erase all the locks that this thread holds
+    g_mutex_held_locks.erase(thread);
 }
 
 bool LockMutex(Mutex* mutex) {
@@ -76,27 +118,9 @@ bool LockMutex(Mutex* mutex) {
     return true;
 }
 
-bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
-    MutexAcquireLock(mutex, thread);
-    Kernel::ResumeThreadFromWait(thread);
-    return true;
-}
-
 bool ReleaseMutex(Mutex* mutex) {
     MutexEraseLock(mutex);
-
-    // Find the next waiting thread for the mutex...
-    if (mutex->waiting_threads.empty()) {
-        // Reset mutex lock thread handle, nothing is waiting
-        mutex->locked = false;
-        mutex->lock_thread = -1;
-    } else {
-        // Resume the next waiting thread and re-lock the mutex
-        std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
-        ReleaseMutexForThread(mutex, *iter);
-        mutex->waiting_threads.erase(iter);
-    }
-
+    ResumeWaitingThread(mutex);
     return true;
 }
 
