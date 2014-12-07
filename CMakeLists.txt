@@ -19,6 +19,14 @@ if (PNG_FOUND)
     add_definitions(-DHAVE_PNG)
 endif ()
 
+find_package(Boost)
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(STATUS "Boost not found, falling back to externals")
+    include_directories(externals/boost)
+endif()
+
 # Include bundled CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 
