@@ -13,9 +13,6 @@
 
 namespace Kernel {
 
-class Mutex;
-void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThreadHandle());
-
 class Mutex : public Object {
 public:
     std::string GetTypeName() const override { return "Mutex"; }
@@ -30,18 +27,7 @@ public:
     std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
     std::string name;                           ///< Name of mutex (optional)
 
-    ResultVal<bool> WaitSynchronization() override {
-        bool wait = locked;
-        if (locked) {
-            Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
-        } else {
-            // Lock the mutex when the first thread accesses it
-            locked = true;
-            MutexAcquireLock(this);
-        }
-
-        return MakeResult<bool>(wait);
-    }
+    ResultVal<bool> WaitSynchronization() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +40,7 @@ static MutexMap g_mutex_held_locks;
  * @param mutex Mutex that is to be acquired
  * @param thread Thread that will acquired
  */
-void MutexAcquireLock(Mutex* mutex, Handle thread) {
+void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThreadHandle()) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex->GetHandle()));
     mutex->lock_thread = thread;
 }
@@ -178,4 +164,17 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
     return handle;
 }
 
+ResultVal<bool> Mutex::WaitSynchronization() {
+    bool wait = locked;
+    if (locked) {
+        Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
+    }
+    else {
+        // Lock the mutex when the first thread accesses it
+        locked = true;
+        MutexAcquireLock(this);
+    }
+
+    return MakeResult<bool>(wait);
+}
 } // namespace
