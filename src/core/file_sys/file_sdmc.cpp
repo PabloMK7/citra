@@ -38,12 +38,15 @@ bool File_SDMC::Open() {
     }
 
     std::string mode_string;
-    if (mode.read_flag && mode.write_flag)
+    if (mode.create_flag)
         mode_string = "w+";
+    else if (mode.write_flag)
+        mode_string = "r+"; // Files opened with Write access can be read from
     else if (mode.read_flag)
         mode_string = "r";
-    else if (mode.write_flag)
-        mode_string = "w";
+    
+    // Open the file in binary mode, to avoid problems with CR/LF on Windows systems
+    mode_string += "b";
 
     file = new FileUtil::IOFile(path, mode_string.c_str());
     return true;
