@@ -5760,7 +5760,7 @@ L_stm_s_takeabort:
                 s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
                 s16 b1 = (state->Reg[src2] & 0xFFFF);
                 s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                state->Reg[tar] = ((a2 - b1) & 0xFFFF) | (((a2 + b1) & 0xFFFF) << 0x10);
+                state->Reg[tar] = ((a1 - b2) & 0xFFFF) | (((a2 + b1) & 0xFFFF) << 0x10);
                 return 1;
             }
             else printf ("Unhandled v6 insn: sadd/ssub\n");
