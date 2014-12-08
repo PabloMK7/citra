@@ -100,6 +100,8 @@ bool Archive_SDMC::RenameDirectory(const FileSys::Path& src_path, const FileSys:
 std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const Path& path) const {
     DEBUG_LOG(FILESYS, "called path=%s", path.DebugStr().c_str());
     Directory_SDMC* directory = new Directory_SDMC(this, path);
+    if (!directory->Open())
+        return nullptr;
     return std::unique_ptr<Directory>(directory);
 }
 

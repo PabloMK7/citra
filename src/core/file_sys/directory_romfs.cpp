@@ -17,6 +17,10 @@ Directory_RomFS::Directory_RomFS() {
 Directory_RomFS::~Directory_RomFS() {
 }
 
+bool Directory_RomFS::Open() {
+    return false;
+}
+
 /**
  * List files contained in the directory
  * @param count Number of entries to return at once in entries
