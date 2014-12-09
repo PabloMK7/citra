@@ -59,6 +59,7 @@ enum class Class : ClassType {
     Service_CFG,                ///< The CFG (Configuration) service
     Service_DSP,                ///< The DSP (DSP control) service
     Service_HID,                ///< The HID (User input) service
+    Service_SOC,                ///< The SOC (Socket) service
     HW,                         ///< Low-level hardware emulation
     HW_Memory,                  ///< Memory-map and address translation
     HW_GPU,                     ///< GPU control emulation

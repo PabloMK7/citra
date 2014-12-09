@@ -352,6 +352,18 @@ static s64 GetSystemTick() {
     return (s64)Core::g_app_core->GetTicks();
 }
 
+/// Creates a memory block at the specified address with the specified permissions and size
+static Result CreateMemoryBlock(Handle* memblock, u32 addr, u32 size, u32 my_permission,
+    u32 other_permission) {
+
+    // TODO(Subv): Implement this function
+
+    Handle shared_memory = Kernel::CreateSharedMemory();
+    *memblock = shared_memory;
+    LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);
+    return 0;
+}
+
 const HLE::FunctionDef SVC_Table[] = {
     {0x00, nullptr,                         "Unknown"},
     {0x01, HLE::Wrap<ControlMemory>,        "ControlMemory"},
@@ -383,7 +395,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x1B, nullptr,                         "SetTimer"},
     {0x1C, nullptr,                         "CancelTimer"},
     {0x1D, nullptr,                         "ClearTimer"},
-    {0x1E, nullptr,                         "CreateMemoryBlock"},
+    {0x1E, HLE::Wrap<CreateMemoryBlock>,    "CreateMemoryBlock"},
     {0x1F, HLE::Wrap<MapMemoryBlock>,       "MapMemoryBlock"},
     {0x20, nullptr,                         "UnmapMemoryBlock"},
     {0x21, HLE::Wrap<CreateAddressArbiter>, "CreateAddressArbiter"},
