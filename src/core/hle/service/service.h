@@ -10,6 +10,7 @@
 #include <string>
 
 #include "common/common.h"
+#include "common/string_util.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
@@ -79,21 +80,20 @@ public:
         u32* cmd_buff = GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
-        if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X",
-                GetPortName().c_str(), cmd_buff[0]);
+        if (itr == m_functions.end() || itr->second.func == nullptr) {
+            // Number of params == bits 0-5 + bits 6-11
+            int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
+
+            std::string error = "unknown/unimplemented function '%s': port=%s";
+            for (int i = 1; i <= num_params; ++i) {
+                error += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
+            }
+
+            std::string name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
+
+            ERROR_LOG(OSHLE, error.c_str(), name.c_str(), GetPortName().c_str());
 
             // TODO(bunnei): Hack - ignore error
-            u32* cmd_buff = Service::GetCommandBuffer();
-            cmd_buff[1] = 0;
-            return MakeResult<bool>(false);
-        }
-        if (itr->second.func == nullptr) {
-            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s",
-                GetPortName().c_str(), itr->second.name.c_str());
-
-            // TODO(bunnei): Hack - ignore error
-            u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
             return MakeResult<bool>(false);
         }
