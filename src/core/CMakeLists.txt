@@ -63,6 +63,7 @@ set(SRCS
             loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
+            loader/3dsx.cpp
             core.cpp
             core_timing.cpp
             mem_map.cpp
@@ -143,6 +144,7 @@ set(HEADERS
             loader/elf.h
             loader/loader.h
             loader/ncch.h
+            loader/3dsx.h
             core.h
             core_timing.h
             mem_map.h

@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "core/file_sys/archive_romfs.h"
+#include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
 #include "core/hle/kernel/archive.h"
@@ -42,6 +43,8 @@ FileType IdentifyFile(const std::string &filename) {
         return FileType::CCI;
     } else if (extension == ".bin") {
         return FileType::BIN;
+    } else if (extension == ".3dsx") {
+        return FileType::THREEDSX;
     }
     return FileType::Unknown;
 }
@@ -55,6 +58,10 @@ ResultStatus LoadFile(const std::string& filename) {
     INFO_LOG(LOADER, "Loading file %s...", filename.c_str());
 
     switch (IdentifyFile(filename)) {
+
+    //3DSX file format...
+    case FileType::THREEDSX:
+        return AppLoader_THREEDSX(filename).Load();
 
     // Standard ELF file format...
     case FileType::ELF:

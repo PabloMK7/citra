@@ -22,6 +22,7 @@ enum class FileType {
     CIA,
     ELF,
     BIN,
+    THREEDSX, //3DSX
 };
 
 /// Return type for functions in Loader namespace
