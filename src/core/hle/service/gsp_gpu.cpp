@@ -323,6 +323,9 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
             command_buffer->number_commands = command_buffer->number_commands - 1;
         }
     }
+
+    u32* cmd_buff = Service::GetCommandBuffer();
+    cmd_buff[1] = 0; // No error
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
