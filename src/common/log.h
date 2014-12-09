@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include "common/common_funcs.h"
+#include "common/msg_handler.h"
+
 #ifndef LOGGING
 #define LOGGING
 #endif

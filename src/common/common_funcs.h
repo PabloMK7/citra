@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "common_types.h"
+
 #ifdef _WIN32
 #define SLEEP(x) Sleep(x)
 #else
@@ -36,6 +38,8 @@ template<> struct CompileTimeAssert<true> {};
 #elif defined __FreeBSD__
 #include <sys/endian.h>
 #endif
+
+#include "common_types.h"
 
 // go to debugger mode
     #ifdef GEKKO
@@ -73,6 +77,8 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // WIN32
+#include <locale.h>
+
 // Function Cross-Compatibility
     #define strcasecmp _stricmp
     #define strncasecmp _strnicmp

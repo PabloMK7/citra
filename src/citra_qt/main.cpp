@@ -20,7 +20,9 @@
 #include "debugger/callstack.hxx"
 #include "debugger/ramview.hxx"
 #include "debugger/graphics.hxx"
+#include "debugger/graphics_breakpoints.hxx"
 #include "debugger/graphics_cmdlists.hxx"
+#include "debugger/graphics_framebuffer.hxx"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -35,6 +37,8 @@
 GMainWindow::GMainWindow()
 {
     LogManager::Init();
+
+    Pica::g_debug_context = Pica::DebugContext::Construct();
 
     Config config;
 
@@ -67,12 +71,22 @@ GMainWindow::GMainWindow()
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
 
+    auto graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+    graphicsBreakpointsWidget->hide();
+
+    auto graphicsFramebufferWidget = new GraphicsFramebufferWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsFramebufferWidget);
+    graphicsFramebufferWidget->hide();
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());
     debug_menu->addAction(graphicsWidget->toggleViewAction());
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
+    debug_menu->addAction(graphicsFramebufferWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
@@ -133,6 +147,8 @@ GMainWindow::~GMainWindow()
     // will get automatically deleted otherwise
     if (render_window->parent() == nullptr)
         delete render_window;
+
+    Pica::g_debug_context.reset();
 }
 
 void GMainWindow::BootGame(std::string filename)

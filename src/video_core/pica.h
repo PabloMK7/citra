@@ -109,7 +109,7 @@ struct Regs {
 
         u32 address;
 
-        u32 GetPhysicalAddress() {
+        u32 GetPhysicalAddress() const {
             return DecodeAddressRegister(address) - Memory::FCRAM_PADDR + Memory::HEAP_GSP_VADDR;
         }
 
@@ -130,7 +130,26 @@ struct Regs {
         // Seems like they are luminance formats and compressed textures.
     };
 
-    BitField<0, 1, u32> texturing_enable;
+    static unsigned BytesPerPixel(TextureFormat format) {
+        switch (format) {
+        case TextureFormat::RGBA8:
+            return 4;
+
+        case TextureFormat::RGB8:
+            return 3;
+
+        case TextureFormat::RGBA5551:
+        case TextureFormat::RGB565:
+        case TextureFormat::RGBA4:
+            return 2;
+
+        default:
+            // placeholder for yet unknown formats
+            return 1;
+        }
+    }
+
+    BitField< 0, 1, u32> texturing_enable;
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
@@ -517,10 +536,6 @@ struct Regs {
     static std::string GetCommandName(int index) {
         std::map<u32, std::string> map;
 
-        // TODO: MSVC does not support using offsetof() on non-static data members even though this
-        //       is technically allowed since C++11. Hence, this functionality is disabled until
-        //       MSVC properly supports it.
-        #ifndef _MSC_VER
         Regs regs;
         #define ADD_FIELD(name)                                                                               \
             do {                                                                                              \
@@ -557,7 +572,6 @@ struct Regs {
         ADD_FIELD(vs_swizzle_patterns);
 
         #undef ADD_FIELD
-        #endif // _MSC_VER
 
         // Return empty string if no match is found
         return map[index];

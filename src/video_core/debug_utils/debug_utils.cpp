@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <condition_variable>
+#include <list>
 #include <map>
 #include <fstream>
 #include <mutex>
@@ -12,13 +14,55 @@
 #include <png.h>
 #endif
 
+#include "common/log.h"
 #include "common/file_util.h"
 
+#include "video_core/math.h"
 #include "video_core/pica.h"
 
 #include "debug_utils.h"
 
 namespace Pica {
+
+void DebugContext::OnEvent(Event event, void* data) {
+    if (!breakpoints[event].enabled)
+        return;
+
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // TODO: Should stop the CPU thread here once we multithread emulation.
+
+        active_breakpoint = event;
+        at_breakpoint = true;
+
+        // Tell all observers that we hit a breakpoint
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaBreakPointHit(event, data);
+        }
+
+        // Wait until another thread tells us to Resume()
+        resume_from_breakpoint.wait(lock, [&]{ return !at_breakpoint; });
+    }
+}
+
+void DebugContext::Resume() {
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // Tell all observers that we are about to resume
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaResume();
+        }
+
+        // Resume the waiting thread (i.e. OnEvent())
+        at_breakpoint = false;
+    }
+
+    resume_from_breakpoint.notify_one();
+}
+
+std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
@@ -312,6 +356,42 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     return std::move(ret);
 }
 
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
+    _dbg_assert_(GPU, info.format == Pica::Regs::TextureFormat::RGB8);
+
+    // Cf. rasterizer code for an explanation of this algorithm.
+    int texel_index_within_tile = 0;
+    for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
+        int sub_tile_width = 1 << block_size_index;
+        int sub_tile_height = 1 << block_size_index;
+
+        int sub_tile_index = (x & sub_tile_width) << block_size_index;
+        sub_tile_index += 2 * ((y & sub_tile_height) << block_size_index);
+        texel_index_within_tile += sub_tile_index;
+    }
+
+    const int block_width = 8;
+    const int block_height = 8;
+
+    int coarse_x = (x / block_width) * block_width;
+    int coarse_y = (y / block_height) * block_height;
+
+    const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
+    return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+}
+
+TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
+                                          const Regs::TextureFormat& format)
+{
+    TextureInfo info;
+    info.address = config.GetPhysicalAddress();
+    info.width = config.width;
+    info.height = config.height;
+    info.format = format;
+    info.stride = Pica::Regs::BytesPerPixel(info.format) * info.width;
+    return info;
+}
+
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // NOTE: Permanently enabling this just trashes hard disks for no reason.
     //       Hence, this is currently disabled.
@@ -377,27 +457,15 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     buf = new u8[row_stride * texture_config.height];
     for (unsigned y = 0; y < texture_config.height; ++y) {
         for (unsigned x = 0; x < texture_config.width; ++x) {
-            // Cf. rasterizer code for an explanation of this algorithm.
-            int texel_index_within_tile = 0;
-            for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
-                int sub_tile_width = 1 << block_size_index;
-                int sub_tile_height = 1 << block_size_index;
-
-                int sub_tile_index = (x & sub_tile_width) << block_size_index;
-                sub_tile_index += 2 * ((y & sub_tile_height) << block_size_index);
-                texel_index_within_tile += sub_tile_index;
-            }
-
-            const int block_width = 8;
-            const int block_height = 8;
-
-            int coarse_x = (x / block_width) * block_width;
-            int coarse_y = (y / block_height) * block_height;
-
-            u8* source_ptr = (u8*)data + coarse_x * block_height * 3 + coarse_y * row_stride + texel_index_within_tile * 3;
-            buf[3 * x + y * row_stride    ] = source_ptr[2];
-            buf[3 * x + y * row_stride + 1] = source_ptr[1];
-            buf[3 * x + y * row_stride + 2] = source_ptr[0];
+            TextureInfo info;
+            info.width = texture_config.width;
+            info.height = texture_config.height;
+            info.stride = row_stride;
+            info.format = registers.texture0_format;
+            Math::Vec4<u8> texture_color = LookupTexture(data, x, y, info);
+            buf[3 * x + y * row_stride    ] = texture_color.r();
+            buf[3 * x + y * row_stride + 1] = texture_color.g();
+            buf[3 * x + y * row_stride + 2] = texture_color.b();
         }
     }
 
