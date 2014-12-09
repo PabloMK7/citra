@@ -6,7 +6,6 @@
 
 #include "core/hw/hw.h"
 #include "core/hw/gpu.h"
-#include "core/hw/ndma.h"
 
 namespace HW {
 
@@ -40,11 +39,6 @@ template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
 
-    // TODO(bunnei): What is the virtual address of NDMA?
-    // case VADDR_NDMA:
-    //     NDMA::Read(var, addr);
-    //     break;
-
     case VADDR_GPU:
         GPU::Read(var, addr);
         break;
@@ -57,11 +51,6 @@ inline void Read(T &var, const u32 addr) {
 template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
-
-    // TODO(bunnei): What is the virtual address of NDMA?
-    // case VADDR_NDMA
-    //     NDMA::Write(addr, data);
-    //     break;
 
     case VADDR_GPU:
         GPU::Write(addr, data);
@@ -87,13 +76,11 @@ template void Write<u8>(u32 addr, const u8 data);
 /// Update hardware
 void Update() {
     GPU::Update();
-    NDMA::Update();
 }
 
 /// Initialize hardware
 void Init() {
     GPU::Init();
-    NDMA::Init();
     NOTICE_LOG(HW, "initialized OK");
 }
 
