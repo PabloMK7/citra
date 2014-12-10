@@ -26,6 +26,7 @@ public:
         CommandProcessed,
         IncomingPrimitiveBatch,
         FinishedPrimitiveBatch,
+        VertexLoaded,
 
         NumEvents
     };

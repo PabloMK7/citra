@@ -131,6 +131,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     }
                 }
 
+                if (g_debug_context)
+                    g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
+
                 // NOTE: When dumping geometry, we simply assume that the first input attribute
                 //       corresponds to the position for now.
                 DebugUtils::GeometryDumper::Vertex dumped_vertex = {
