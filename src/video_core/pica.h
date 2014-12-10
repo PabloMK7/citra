@@ -142,29 +142,39 @@ struct Regs {
         RGBA5551     =  2,
         RGB565       =  3,
         RGBA4        =  4,
+        IA8          =  5,
 
+        I8           =  7,
         A8           =  8,
+        IA4          =  9,
 
+        A4           = 11,
         // TODO: Support for the other formats is not implemented, yet.
         // Seems like they are luminance formats and compressed textures.
     };
 
-    static unsigned BytesPerPixel(TextureFormat format) {
+    static unsigned NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
-            return 4;
+            return 8;
 
         case TextureFormat::RGB8:
-            return 3;
+            return 6;
 
         case TextureFormat::RGBA5551:
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
-            return 2;
+        case TextureFormat::IA8:
+            return 4;
 
-        default:
-            // placeholder for yet unknown formats
+        case TextureFormat::A4:
             return 1;
+
+        case TextureFormat::I8:
+        case TextureFormat::A8:
+        case TextureFormat::IA4:
+        default:  // placeholder for yet unknown formats
+            return 2;
         }
     }
 

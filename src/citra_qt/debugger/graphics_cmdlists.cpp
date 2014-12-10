@@ -69,6 +69,13 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     format_choice->addItem(tr("RGBA5551"));
     format_choice->addItem(tr("RGB565"));
     format_choice->addItem(tr("RGBA4"));
+    format_choice->addItem(tr("IA8"));
+    format_choice->addItem(tr("UNK6"));
+    format_choice->addItem(tr("I8"));
+    format_choice->addItem(tr("A8"));
+    format_choice->addItem(tr("IA4"));
+    format_choice->addItem(tr("UNK10"));
+    format_choice->addItem(tr("A4"));
     format_choice->setCurrentIndex(static_cast<int>(info.format));
     connect(format_choice, SIGNAL(currentIndexChanged(int)), this, SLOT(OnFormatChanged(int)));
 
@@ -265,7 +272,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         auto format = Pica::registers.GetTextures()[index].format;
 
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
-        u8* src = Memory::GetPointer(config.GetPhysicalAddress());
+        u8* src = Memory::GetPointer(Pica::PAddrToVAddr(config.GetPhysicalAddress()));
         new_info_widget = new TextureInfoWidget(src, info);
     } else {
         new_info_widget = new QWidget;

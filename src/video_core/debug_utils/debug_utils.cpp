@@ -418,6 +418,15 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), disable_alpha ? 255 : (a * 255));
     }
 
+    case Regs::TextureFormat::RGB565:
+    {
+        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 5) & 0x3F;
+        u8 b = (source_ptr) & 0x1F;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2), 255);
+    }
+
     case Regs::TextureFormat::RGBA4:
     {
         const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
@@ -432,9 +441,63 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         return { r, g, b, disable_alpha ? 255 : a };
     }
 
+    case Regs::TextureFormat::IA8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+
+        // TODO: Better control this...
+        if (disable_alpha) {
+            return { *source_ptr, *(source_ptr+1), 0, 255 };
+        } else {
+            return { *source_ptr, *source_ptr, *source_ptr, *(source_ptr+1)};
+        }
+    }
+
+    case Regs::TextureFormat::I8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+
+        // TODO: Better control this...
+        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+    }
+
     case Regs::TextureFormat::A8:
     {
         const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+
+        // TODO: Better control this...
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
+    }
+
+    case Regs::TextureFormat::IA4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+
+        // TODO: Order?
+        u8 i = (*source_ptr)&0xF;
+        u8 a = ((*source_ptr) & 0xF0) >> 4;
+        a |= a << 4;
+        i |= i << 4;
+
+        // TODO: Better control this...
+        if (disable_alpha) {
+            return { i, a, 0, 255 };
+        } else {
+            return { i, i, i, a };
+        }
+    }
+
+    case Regs::TextureFormat::A4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+
+        // TODO: Order?
+        u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
+        a |= a << 4;
 
         // TODO: Better control this...
         if (disable_alpha) {
@@ -459,7 +522,7 @@ TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
     info.width = config.width;
     info.height = config.height;
     info.format = format;
-    info.stride = Pica::Regs::BytesPerPixel(info.format) * info.width;
+    info.stride = Pica::Regs::NibblesPerPixel(info.format) * info.width / 2;
     return info;
 }
 
