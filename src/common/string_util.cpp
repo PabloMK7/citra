@@ -528,7 +528,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
 {
     std::u16string result;
 
-    iconv_t const conv_desc = iconv_open("UTF-16", "UTF-8");
+    iconv_t const conv_desc = iconv_open("UTF-16LE", "UTF-8");
     if ((iconv_t)(-1) == conv_desc)
     {
         ERROR_LOG(COMMON, "Iconv initialization failure [UTF-8]: %s", strerror(errno));
@@ -582,7 +582,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {
-    return CodeToUTF8("UTF-16", input);
+    return CodeToUTF8("UTF-16LE", input);
 }
 
 std::string CP1252ToUTF8(const std::string& input)
