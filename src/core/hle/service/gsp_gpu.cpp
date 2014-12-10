@@ -162,7 +162,8 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     _assert_msg_(GSP, (g_interrupt_event != 0), "handle is not valid!");
 
-    cmd_buff[2] = g_thread_id++; // ThreadID
+    cmd_buff[1] = 0x2A07; // Value verified by 3dmoo team, purpose unknown, but needed for GSP init
+    cmd_buff[2] = g_thread_id++; // Thread ID
     cmd_buff[4] = g_shared_memory; // GSP shared memory
 
     Kernel::SignalEvent(g_interrupt_event); // TODO(bunnei): Is this correct?
@@ -172,6 +173,7 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
  * @todo This should probably take a thread_id parameter and only signal this thread?
+ * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == g_interrupt_event) {
@@ -210,6 +212,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         memcpy(Memory::GetPointer(command.dma_request.dest_address),
                Memory::GetPointer(command.dma_request.source_address),
                command.dma_request.size);
+        SignalInterrupt(InterruptId::DMA);
         break;
 
     // ctrulib homebrew sends all relevant command list data with this command,
@@ -218,13 +221,13 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
+
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), Memory::VirtualToPhysicalAddress(params.address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
 
-        SignalInterrupt(InterruptId::P3D);
         break;
     }
 
@@ -242,6 +245,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
+
+        SignalInterrupt(InterruptId::PSC0);
         break;
     }
 
@@ -255,14 +260,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
 
-        // TODO(bunnei): Signalling all of these interrupts here is totally wrong, but it seems to
-        // work well enough for running demos. Need to figure out how these all work and trigger
-        // them correctly.
-        SignalInterrupt(InterruptId::PSC0);
+        // TODO(bunnei): Determine if these interrupts should be signalled here.
         SignalInterrupt(InterruptId::PSC1);
         SignalInterrupt(InterruptId::PPF);
-        SignalInterrupt(InterruptId::P3D);
-        SignalInterrupt(InterruptId::DMA);
 
         // Update framebuffer information if requested
         for (int screen_id = 0; screen_id < 2; ++screen_id) {
@@ -305,6 +305,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
 
+    DEBUG_LOG(GSP, "called");
+
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
         CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(thread_id);
@@ -320,6 +322,9 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
             command_buffer->number_commands = command_buffer->number_commands - 1;
         }
     }
+
+    u32* cmd_buff = Service::GetCommandBuffer();
+    cmd_buff[1] = 0; // No error
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

@@ -169,7 +169,7 @@ struct Regs {
     INSERT_PADDING_WORDS(0x331);
 
     struct {
-        // command list size
+        // command list size (in bytes)
         u32 size;
 
         INSERT_PADDING_WORDS(0x1);

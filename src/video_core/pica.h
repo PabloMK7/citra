@@ -45,10 +45,16 @@ struct Regs {
 #define INSERT_PADDING_WORDS_HELPER2(x, y) INSERT_PADDING_WORDS_HELPER1(x, y)
 #define INSERT_PADDING_WORDS(num_words) u32 INSERT_PADDING_WORDS_HELPER2(pad, __LINE__)[(num_words)];
 
-    INSERT_PADDING_WORDS(0x41);
+    INSERT_PADDING_WORDS(0x10);
+
+    u32 trigger_irq;
+
+    INSERT_PADDING_WORDS(0x30);
 
     BitField<0, 24, u32> viewport_size_x;
+
     INSERT_PADDING_WORDS(0x1);
+
     BitField<0, 24, u32> viewport_size_y;
 
     INSERT_PADDING_WORDS(0x9);
@@ -544,6 +550,7 @@ struct Regs {
                     map.insert({i, #name + std::string("+") + std::to_string(i-PICA_REG_INDEX(name))});       \
             } while(false)
 
+        ADD_FIELD(trigger_irq);
         ADD_FIELD(viewport_size_x);
         ADD_FIELD(viewport_size_y);
         ADD_FIELD(viewport_depth_range);
@@ -607,6 +614,7 @@ private:
 #ifndef _MSC_VER
 #define ASSERT_REG_POSITION(field_name, position) static_assert(offsetof(Regs, field_name) == position * 4, "Field "#field_name" has invalid position")
 
+ASSERT_REG_POSITION(trigger_irq, 0x10);
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
 ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
