@@ -14,6 +14,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/mem_map.h"
 
@@ -163,6 +164,9 @@ static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle, 
 ResultCode StopThread(Handle handle, const char* reason) {
     Thread* thread = g_object_pool.Get<Thread>(handle);
     if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
+
+    // Release all the mutexes that this thread holds
+    ReleaseThreadMutexes(handle);
 
     ChangeReadyState(thread, false);
     thread->status = THREADSTATUS_DORMANT;
