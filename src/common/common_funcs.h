@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common_types.h"
+#include <cstdlib>
 
 #ifdef _WIN32
 #define SLEEP(x) Sleep(x)
