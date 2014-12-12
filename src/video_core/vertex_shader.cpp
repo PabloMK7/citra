@@ -10,10 +10,10 @@
 
 #include <nihstro/shader_bytecode.h>
 
-#include "debug_utils/debug_utils.h"
 
 #include "pica.h"
 #include "vertex_shader.h"
+#include "debug_utils/debug_utils.h"
 
 using nihstro::Instruction;
 using nihstro::RegisterType;
@@ -99,6 +99,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
         const bool negate_src1 = (swizzle.negate_src1 != 0);
+        const bool negate_src2 = (swizzle.negate_src2 != 0);
 
         float24 src1[4] = {
             src1_[(int)swizzle.GetSelectorSrc1(0)],
@@ -112,12 +113,18 @@ static void ProcessShaderCode(VertexShaderState& state) {
             src1[2] = src1[2] * float24::FromFloat32(-1);
             src1[3] = src1[3] * float24::FromFloat32(-1);
         }
-        const float24 src2[4] = {
+        float24 src2[4] = {
             src2_[(int)swizzle.GetSelectorSrc2(0)],
             src2_[(int)swizzle.GetSelectorSrc2(1)],
             src2_[(int)swizzle.GetSelectorSrc2(2)],
             src2_[(int)swizzle.GetSelectorSrc2(3)],
         };
+        if (negate_src2) {
+            src2[0] = src2[0] * float24::FromFloat32(-1);
+            src2[1] = src2[1] * float24::FromFloat32(-1);
+            src2[2] = src2[2] * float24::FromFloat32(-1);
+            src2[3] = src2[3] * float24::FromFloat32(-1);
+        }
 
         switch (instr.opcode) {
             case Instruction::OpCode::ADD:

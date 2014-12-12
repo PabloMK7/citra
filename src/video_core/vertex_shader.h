@@ -66,7 +66,6 @@ struct OutputVertex {
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
-
 void SubmitShaderMemoryChange(u32 addr, u32 value);
 void SubmitSwizzleDataChange(u32 addr, u32 value);
 
