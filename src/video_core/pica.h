@@ -771,6 +771,14 @@ struct float24 {
         return ToFloat32() <= flt.ToFloat32();
     }
 
+    bool operator == (const float24& flt) const {
+        return ToFloat32() == flt.ToFloat32();
+    }
+
+    bool operator != (const float24& flt) const {
+        return ToFloat32() != flt.ToFloat32();
+    }
+
 private:
     // Stored as a regular float, merely for convenience
     // TODO: Perform proper arithmetic on this!
