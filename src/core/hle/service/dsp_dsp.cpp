@@ -12,6 +12,7 @@
 
 namespace DSP_DSP {
 
+static u32 read_pipe_count;
 static Handle semaphore_event;
 static Handle interrupt_event;
 
@@ -108,6 +109,48 @@ void WriteReg0x10(Service::Interface* self) {
     DEBUG_LOG(KERNEL, "(STUBBED) called");
 }
 
+/**
+ * DSP_DSP::ReadPipeIfPossible service function
+ *  Inputs:
+ *      1 : Unknown
+ *      2 : Unknown
+ *      3 : Size in bytes of read (observed only lower half word used)
+ *      0x41 : Virtual address to read from DSP pipe to in memory
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Number of bytes read from pipe
+ */
+void ReadPipeIfPossible(Service::Interface* self) {
+    u32* cmd_buff = Service::GetCommandBuffer();
+
+    u32 size = cmd_buff[3] & 0xFFFF;// Lower 16 bits are size
+    VAddr addr = cmd_buff[0x41];
+
+    // Canned DSP responses that games expect. These were taken from HW by 3dmoo team.
+    // TODO: Remove this hack :)
+    static const std::array<u16, 16> canned_read_pipe = {
+        0x000F, 0xBFFF, 0x9E8E, 0x8680, 0xA78E, 0x9430, 0x8400, 0x8540,
+        0x948E, 0x8710, 0x8410, 0xA90E, 0xAA0E, 0xAACE, 0xAC4E, 0xAC58
+    };
+
+    u32 initial_size = read_pipe_count;
+
+    for (unsigned offset = 0; offset < size; offset += sizeof(u16)) {
+        if (read_pipe_count < canned_read_pipe.size()) {
+            Memory::Write16(addr + offset, canned_read_pipe[read_pipe_count]);
+            read_pipe_count++;
+        } else {
+            ERROR_LOG(KERNEL, "canned read pipe log exceeded!");
+            break;
+        }
+    }
+
+    cmd_buff[1] = 0; // No error
+    cmd_buff[2] = (read_pipe_count - initial_size) * sizeof(u16);
+
+    DEBUG_LOG(KERNEL, "(STUBBED) called size=0x%08X, buffer=0x%08X", size, addr);
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, nullptr,                          "RecvData"},
     {0x00020040, nullptr,                          "RecvDataIsReady"},
@@ -119,7 +162,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000B0000, nullptr,                          "CheckSemaphoreRequest"},
     {0x000C0040, ConvertProcessAddressFromDspDram, "ConvertProcessAddressFromDspDram"},
     {0x000D0082, nullptr,                          "WriteProcessPipe"},
-    {0x001000C0, nullptr,                          "ReadPipeIfPossible"},
+    {0x001000C0, ReadPipeIfPossible,               "ReadPipeIfPossible"},
     {0x001100C2, LoadComponent,                    "LoadComponent"},
     {0x00120000, nullptr,                          "UnloadComponent"},
     {0x00130082, nullptr,                          "FlushDataCache"},
@@ -142,6 +185,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 Interface::Interface() {
     semaphore_event = Kernel::CreateEvent(RESETTYPE_ONESHOT, "DSP_DSP::semaphore_event");
     interrupt_event = 0;
+    read_pipe_count = 0;
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
