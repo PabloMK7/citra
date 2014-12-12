@@ -86,6 +86,8 @@ static void ProcessShaderCode(VertexShaderState& state) {
         bool increment_pc = true;
         bool exit_loop = false;
         const Instruction& instr = *(const Instruction*)state.program_counter;
+        const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
+
         state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + (state.program_counter - shader_memory.data()));
 
         auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
@@ -100,47 +102,52 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 return &shader_uniforms.f[source_reg.GetIndex()].x;
             }
         };
-        bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
-        const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted));
-        const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted));
-        float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
-                      : (instr.common.dest < 0x10) ? nullptr
-                      : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
-                      : nullptr;
 
-        const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
-        const bool negate_src1 = (swizzle.negate_src1 != 0);
-        const bool negate_src2 = (swizzle.negate_src2 != 0);
+        switch (instr.opcode.GetInfo().type) {
+        case Instruction::OpCodeType::Arithmetic:
+        {
+            bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
+            const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted));
+            const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted));
 
-        float24 src1[4] = {
-            src1_[(int)swizzle.GetSelectorSrc1(0)],
-            src1_[(int)swizzle.GetSelectorSrc1(1)],
-            src1_[(int)swizzle.GetSelectorSrc1(2)],
-            src1_[(int)swizzle.GetSelectorSrc1(3)],
-        };
-        if (negate_src1) {
-            src1[0] = src1[0] * float24::FromFloat32(-1);
-            src1[1] = src1[1] * float24::FromFloat32(-1);
-            src1[2] = src1[2] * float24::FromFloat32(-1);
-            src1[3] = src1[3] * float24::FromFloat32(-1);
-        }
-        float24 src2[4] = {
-            src2_[(int)swizzle.GetSelectorSrc2(0)],
-            src2_[(int)swizzle.GetSelectorSrc2(1)],
-            src2_[(int)swizzle.GetSelectorSrc2(2)],
-            src2_[(int)swizzle.GetSelectorSrc2(3)],
-        };
-        if (negate_src2) {
-            src2[0] = src2[0] * float24::FromFloat32(-1);
-            src2[1] = src2[1] * float24::FromFloat32(-1);
-            src2[2] = src2[2] * float24::FromFloat32(-1);
-            src2[3] = src2[3] * float24::FromFloat32(-1);
-        }
+            const bool negate_src1 = (swizzle.negate_src1 != 0);
+            const bool negate_src2 = (swizzle.negate_src2 != 0);
 
-        switch (instr.opcode) {
+            float24 src1[4] = {
+                src1_[(int)swizzle.GetSelectorSrc1(0)],
+                src1_[(int)swizzle.GetSelectorSrc1(1)],
+                src1_[(int)swizzle.GetSelectorSrc1(2)],
+                src1_[(int)swizzle.GetSelectorSrc1(3)],
+            };
+            if (negate_src1) {
+                src1[0] = src1[0] * float24::FromFloat32(-1);
+                src1[1] = src1[1] * float24::FromFloat32(-1);
+                src1[2] = src1[2] * float24::FromFloat32(-1);
+                src1[3] = src1[3] * float24::FromFloat32(-1);
+            }
+            float24 src2[4] = {
+                src2_[(int)swizzle.GetSelectorSrc2(0)],
+                src2_[(int)swizzle.GetSelectorSrc2(1)],
+                src2_[(int)swizzle.GetSelectorSrc2(2)],
+                src2_[(int)swizzle.GetSelectorSrc2(3)],
+            };
+            if (negate_src2) {
+                src2[0] = src2[0] * float24::FromFloat32(-1);
+                src2[1] = src2[1] * float24::FromFloat32(-1);
+                src2[2] = src2[2] * float24::FromFloat32(-1);
+                src2[3] = src2[3] * float24::FromFloat32(-1);
+            }
+
+            float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
+                        : (instr.common.dest < 0x10) ? nullptr
+                        : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
+                        : nullptr;
+
+            state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
+
+            switch (instr.opcode) {
             case Instruction::OpCode::ADD:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -153,7 +160,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case Instruction::OpCode::MUL:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -167,7 +173,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
             case Instruction::OpCode::DP3:
             case Instruction::OpCode::DP4:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 float24 dot = float24::FromFloat32(0.f);
                 int num_components = (instr.opcode == Instruction::OpCode::DP3) ? 3 : 4;
                 for (int i = 0; i < num_components; ++i)
@@ -185,7 +190,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
             // Reciprocal
             case Instruction::OpCode::RCP:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -201,7 +205,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
             // Reciprocal Square Root
             case Instruction::OpCode::RSQ:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -216,7 +219,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case Instruction::OpCode::MOV:
             {
-                state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -226,6 +228,17 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
+            default:
+                LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x%02x (%s): 0x%08x",
+                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
+                break;
+            }
+
+            break;
+        }
+        default:
+            // Process instruction explicitly
+            switch (instr.opcode) {
             // NOP is currently used as a heuristic for leaving from a function.
             // TODO: This is completely incorrect.
             case Instruction::OpCode::NOP:
@@ -256,6 +269,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
                 break;
+            }
+
+            break;
         }
 
         if (increment_pc)
