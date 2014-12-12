@@ -2,11 +2,16 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <boost/range/algorithm.hpp>
+
+#include <common/file_util.h>
+
+#include <core/mem_map.h>
+
+#include "debug_utils/debug_utils.h"
+
 #include "pica.h"
 #include "vertex_shader.h"
-#include "debug_utils/debug_utils.h"
-#include <core/mem_map.h>
-#include <common/file_util.h>
 
 namespace Pica {
 
@@ -238,7 +243,7 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
     // Setup input register table
     const auto& attribute_register_map = registers.vs_input_register_map;
     float24 dummy_register;
-    std::fill(&state.input_register_table[0], &state.input_register_table[16], &dummy_register);
+    boost::fill(state.input_register_table, &dummy_register);
     if(num_attributes > 0) state.input_register_table[attribute_register_map.attribute0_register] = &input.attr[0].x;
     if(num_attributes > 1) state.input_register_table[attribute_register_map.attribute1_register] = &input.attr[1].x;
     if(num_attributes > 2) state.input_register_table[attribute_register_map.attribute2_register] = &input.attr[2].x;
@@ -272,8 +277,7 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
 
     state.status_registers[0] = false;
     state.status_registers[1] = false;
-    std::fill(state.call_stack, state.call_stack + sizeof(state.call_stack) / sizeof(state.call_stack[0]),
-              VertexShaderState::INVALID_ADDRESS);
+    boost::fill(state.call_stack, VertexShaderState::INVALID_ADDRESS);
     state.call_stack_pointer = &state.call_stack[0];
 
     ProcessShaderCode(state);

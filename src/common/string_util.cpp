@@ -2,7 +2,7 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <algorithm>
+#include <boost/range/algorithm.hpp>
 
 #include "common/common.h"
 #include "common/string_util.h"
@@ -18,13 +18,13 @@ namespace Common {
 
 /// Make a string lowercase
 std::string ToLower(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    boost::transform(str, str.begin(), ::tolower);
     return str;
 }
 
 /// Make a string uppercase
 std::string ToUpper(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+    boost::transform(str, str.begin(), ::toupper);
     return str;
 }
 
