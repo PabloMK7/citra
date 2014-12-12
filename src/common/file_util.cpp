@@ -676,6 +676,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
         paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
         paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
         paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
+        paths[D_SYSDATA_IDX]        = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
         paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
         paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
         paths[D_STATESAVES_IDX]     = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
@@ -752,19 +753,6 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
 
     return paths[DirIDX];
 }
-
-//std::string GetThemeDir(const std::string& theme_name)
-//{
-//    std::string dir = FileUtil::GetUserPath(D_THEMES_IDX) + theme_name + "/";
-//
-//#if !defined(_WIN32)
-//    // If theme does not exist in user's dir load from shared directory
-//    if (!FileUtil::Exists(dir))
-//        dir = SHARED_USER_DIR THEMES_DIR "/" + theme_name + "/";
-//#endif
-//
-//    return dir;
-//}
 
 size_t WriteStringToFile(bool text_file, const std::string &str, const char *filename)
 {

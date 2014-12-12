@@ -29,19 +29,6 @@
     #endif
 #endif
 
-// Shared data dirs (Sys and shared User for linux)
-#ifdef _WIN32
-    #define SYSDATA_DIR "sys"
-#else
-    #ifdef DATA_DIR
-        #define SYSDATA_DIR DATA_DIR "sys"
-        #define SHARED_USER_DIR  DATA_DIR USERDATA_DIR DIR_SEP
-    #else
-        #define SYSDATA_DIR "sys"
-        #define SHARED_USER_DIR  ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP
-    #endif
-#endif
-
 // Dirs in both User and Sys
 #define EUR_DIR "EUR"
 #define USA_DIR "USA"
@@ -53,6 +40,7 @@
 #define MAPS_DIR          "maps"
 #define CACHE_DIR         "cache"
 #define SDMC_DIR          "sdmc"
+#define SYSDATA_DIR       "sysdata"
 #define SHADERCACHE_DIR   "shader_cache"
 #define STATESAVES_DIR    "state_saves"
 #define SCREENSHOTS_DIR   "screenShots"
