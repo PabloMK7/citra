@@ -162,6 +162,12 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
         }
 
+        case PICA_REG_INDEX(vs_bool_uniforms):
+            for (unsigned i = 0; i < 16; ++i)
+                VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i));
+
+            break;
+
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[2], 0x2c3):

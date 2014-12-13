@@ -26,8 +26,9 @@ namespace VertexShader {
 
 static struct {
     Math::Vec4<float24> f[96];
-} shader_uniforms;
 
+    std::array<bool,16> b;
+} shader_uniforms;
 
 // TODO: Not sure where the shader binary and swizzle patterns are supposed to be loaded to!
 // For now, we just keep these local arrays around.
@@ -47,6 +48,11 @@ void SubmitSwizzleDataChange(u32 addr, u32 value)
 Math::Vec4<float24>& GetFloatUniform(u32 index)
 {
     return shader_uniforms.f[index];
+}
+
+bool& GetBoolUniform(u32 index)
+{
+    return shader_uniforms.b[index];
 }
 
 const std::array<u32, 1024>& GetShaderBinary()

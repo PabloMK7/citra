@@ -492,7 +492,11 @@ struct Regs {
 
     BitField<8, 2, TriangleTopology> triangle_topology;
 
-    INSERT_PADDING_WORDS(0x5b);
+    INSERT_PADDING_WORDS(0x51);
+
+    BitField<0, 16, u32> vs_bool_uniforms;
+
+    INSERT_PADDING_WORDS(0x9);
 
     // Offset to shader program entry point (in words)
     BitField<0, 16, u32> vs_main_offset;
@@ -620,6 +624,7 @@ struct Regs {
         ADD_FIELD(trigger_draw);
         ADD_FIELD(trigger_draw_indexed);
         ADD_FIELD(triangle_topology);
+        ADD_FIELD(vs_bool_uniforms);
         ADD_FIELD(vs_main_offset);
         ADD_FIELD(vs_input_register_map);
         ADD_FIELD(vs_uniform_setup);
@@ -690,6 +695,7 @@ ASSERT_REG_POSITION(num_vertices, 0x228);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
+ASSERT_REG_POSITION(vs_bool_uniforms, 0x2b0);
 ASSERT_REG_POSITION(vs_main_offset, 0x2ba);
 ASSERT_REG_POSITION(vs_input_register_map, 0x2bb);
 ASSERT_REG_POSITION(vs_uniform_setup, 0x2c0);
