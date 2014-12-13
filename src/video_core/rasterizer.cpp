@@ -82,9 +82,30 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     auto ScreenToRasterizerCoordinates = [FloatToFix](const Math::Vec3<float24> vec) {
                                              return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
                                          };
+    static auto orient2d = [](const Math::Vec2<Fix12P4>& vtx1,
+                              const Math::Vec2<Fix12P4>& vtx2,
+                              const Math::Vec2<Fix12P4>& vtx3) {
+        const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
+        const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
+        // TODO: There is a very small chance this will overflow for sizeof(int) == 4
+        return Math::Cross(vec1, vec2).z;
+    };
+
     Math::Vec3<Fix12P4> vtxpos[3]{ ScreenToRasterizerCoordinates(v0.screenpos),
                                    ScreenToRasterizerCoordinates(v1.screenpos),
                                    ScreenToRasterizerCoordinates(v2.screenpos) };
+
+    if (registers.cull_mode == Regs::CullMode::KeepClockWise) {
+        // Reverse vertex order and use the CCW code path.
+        std::swap(vtxpos[1], vtxpos[2]);
+    }
+
+    if (registers.cull_mode != Regs::CullMode::KeepAll) {
+        // Cull away triangles which are wound clockwise.
+        // TODO: A check for degenerate triangles ("== 0") should be considered for CullMode::KeepAll
+        if (orient2d(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
+            return;
+    }
 
     // TODO: Proper scissor rect test!
     u16 min_x = std::min({vtxpos[0].x, vtxpos[1].x, vtxpos[2].x});
@@ -128,15 +149,6 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
         for (u16 x = min_x; x < max_x; x += 0x10) {
 
             // Calculate the barycentric coordinates w0, w1 and w2
-            auto orient2d = [](const Math::Vec2<Fix12P4>& vtx1,
-                               const Math::Vec2<Fix12P4>& vtx2,
-                               const Math::Vec2<Fix12P4>& vtx3) {
-                const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
-                const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
-                // TODO: There is a very small chance this will overflow for sizeof(int) == 4
-                return Math::Cross(vec1, vec2).z;
-            };
-
             int w0 = bias0 + orient2d(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
             int w1 = bias1 + orient2d(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
             int w2 = bias2 + orient2d(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});

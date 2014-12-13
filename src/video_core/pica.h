@@ -50,7 +50,19 @@ struct Regs {
 
     u32 trigger_irq;
 
-    INSERT_PADDING_WORDS(0x30);
+    INSERT_PADDING_WORDS(0x2f);
+
+    enum class CullMode : u32 {
+        // Select which polygons are considered to be "frontfacing".
+        KeepAll              = 0,
+        KeepClockWise        = 1,
+        KeepCounterClockWise = 2,
+        // TODO: What does the third value imply?
+    };
+
+    union {
+        BitField<0, 2, CullMode> cull_mode;
+    };
 
     BitField<0, 24, u32> viewport_size_x;
 
@@ -659,6 +671,7 @@ struct Regs {
             } while(false)
 
         ADD_FIELD(trigger_irq);
+        ADD_FIELD(cull_mode);
         ADD_FIELD(viewport_size_x);
         ADD_FIELD(viewport_size_y);
         ADD_FIELD(viewport_depth_range);
@@ -730,6 +743,7 @@ private:
 #define ASSERT_REG_POSITION(field_name, position) static_assert(offsetof(Regs, field_name) == position * 4, "Field "#field_name" has invalid position")
 
 ASSERT_REG_POSITION(trigger_irq, 0x10);
+ASSERT_REG_POSITION(cull_mode, 0x40);
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
 ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
