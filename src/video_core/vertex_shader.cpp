@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <stack>
+
 #include <boost/range/algorithm.hpp>
 
 #include <common/file_util.h>
@@ -65,9 +67,6 @@ const std::array<u32, 1024>& GetSwizzlePatterns()
     return swizzle_data;
 }
 
-// TODO: Is there actually a limit on hardware?
-const int if_stack_size = 8;
-
 struct VertexShaderState {
     u32* program_counter;
 
@@ -84,14 +83,14 @@ struct VertexShaderState {
     enum {
         INVALID_ADDRESS = 0xFFFFFFFF
     };
-    u32 call_stack[8]; // TODO: What is the maximal call stack depth?
-    u32* call_stack_pointer;
 
-    struct IfStackElement {
-        u32 else_addr;
-        u32 else_instructions;
-    } if_stack[if_stack_size];
-    IfStackElement* if_stack_pointer;
+    struct CallStackElement {
+        u32 final_address;
+        u32 return_address;
+    };
+
+    // TODO: Is there a maximal size for this?
+    std::stack<CallStackElement> call_stack;
 
     struct {
         u32 max_offset; // maximum program counter ever reached
@@ -101,12 +100,27 @@ struct VertexShaderState {
 
 static void ProcessShaderCode(VertexShaderState& state) {
     while (true) {
-        bool increment_pc = true;
+        if (!state.call_stack.empty()) {
+            if (state.program_counter - shader_memory.data() == state.call_stack.top().final_address) {
+                state.program_counter = &shader_memory[state.call_stack.top().return_address];
+                state.call_stack.pop();
+
+                // TODO: Is "trying again" accurate to hardware?
+                continue;
+            }
+        }
+
         bool exit_loop = false;
         const Instruction& instr = *(const Instruction*)state.program_counter;
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
 
-        state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + (state.program_counter - shader_memory.data()));
+        auto call = [&](std::stack<VertexShaderState::CallStackElement>& stack, u32 offset, u32 num_instructions, u32 return_offset) {
+            state.program_counter = &shader_memory[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
+            stack.push({ offset + num_instructions, return_offset });
+        };
+        u32 binary_offset = state.program_counter - shader_memory.data();
+
+        state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + binary_offset);
 
         auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
             switch (source_reg.GetRegisterType()) {
@@ -328,30 +342,33 @@ static void ProcessShaderCode(VertexShaderState& state) {
         default:
             // Handle each instruction on its own
             switch (instr.opcode) {
-            // NOP is currently used as a heuristic for leaving from a function.
-            // TODO: This is completely incorrect.
-            case Instruction::OpCode::NOP:
-                if (*state.call_stack_pointer == VertexShaderState::INVALID_ADDRESS) {
-                    exit_loop = true;
-                } else {
-                    // Jump back to call stack position, invalidate call stack entry, move up call stack pointer
-                    state.program_counter = &shader_memory[*state.call_stack_pointer];
-                    *state.call_stack_pointer-- = VertexShaderState::INVALID_ADDRESS;
-                }
-
+            case Instruction::OpCode::END:
+                exit_loop = true;
                 break;
 
             case Instruction::OpCode::CALL:
-                increment_pc = false;
-
-                _dbg_assert_(HW_GPU, state.call_stack_pointer - state.call_stack < sizeof(state.call_stack));
-
-                *++state.call_stack_pointer = state.program_counter - shader_memory.data();
-                state.program_counter = &shader_memory[instr.flow_control.dest_offset];
+                call(state.call_stack,
+                     instr.flow_control.dest_offset,
+                     instr.flow_control.num_instructions,
+                     binary_offset + 1);
                 break;
 
-            case Instruction::OpCode::END:
-                // TODO
+            case Instruction::OpCode::NOP:
+                break;
+
+            case Instruction::OpCode::IFU:
+                if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
+                    call(state.call_stack,
+                         binary_offset + 1,
+                         instr.flow_control.dest_offset - binary_offset - 1,
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                } else {
+                    call(state.call_stack,
+                         instr.flow_control.dest_offset,
+                         instr.flow_control.num_instructions,
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                }
+
                 break;
 
             case Instruction::OpCode::IFC:
@@ -381,12 +398,15 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
 
                 if (results[2]) {
-                    ++state.if_stack_pointer;
-
-                    state.if_stack_pointer->else_addr = instr.flow_control.dest_offset;
-                    state.if_stack_pointer->else_instructions = instr.flow_control.num_instructions;
+                    call(state.call_stack,
+                         binary_offset + 1,
+                         instr.flow_control.dest_offset - binary_offset - 1,
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
                 } else {
-                    state.program_counter = &shader_memory[instr.flow_control.dest_offset] - 1;
+                    call(state.call_stack,
+                         instr.flow_control.dest_offset,
+                         instr.flow_control.num_instructions,
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
                 }
 
                 break;
@@ -401,15 +421,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             break;
         }
 
-        if (increment_pc)
-            ++state.program_counter;
-
-        if (state.if_stack_pointer >= &state.if_stack[0]) {
-            if (state.program_counter - shader_memory.data() == state.if_stack_pointer->else_addr) {
-                state.program_counter += state.if_stack_pointer->else_instructions;
-                state.if_stack_pointer--;
-            }
-        }
+        ++state.program_counter;
 
         if (exit_loop)
             break;
@@ -462,12 +474,6 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
 
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
-    boost::fill(state.call_stack, VertexShaderState::INVALID_ADDRESS);
-    state.call_stack_pointer = &state.call_stack[0];
-
-    std::fill(state.if_stack, state.if_stack + sizeof(state.if_stack) / sizeof(state.if_stack[0]),
-              VertexShaderState::IfStackElement{VertexShaderState::INVALID_ADDRESS, VertexShaderState::INVALID_ADDRESS});
-    state.if_stack_pointer = state.if_stack - 1; // Meh. TODO: Make this less ugly
 
     ProcessShaderCode(state);
     DebugUtils::DumpShader(shader_memory.data(), state.debug.max_offset, swizzle_data.data(),
