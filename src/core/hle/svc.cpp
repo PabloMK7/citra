@@ -292,14 +292,14 @@ static Result GetThreadId(u32* thread_id, Handle handle) {
 /// Creates a semaphore
 static Result CreateSemaphore(Handle* semaphore, s32 initial_count, s32 max_count) {
     ResultCode res = Kernel::CreateSemaphore(semaphore, initial_count, max_count);
-    DEBUG_LOG(SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
+    LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
         initial_count, max_count, *semaphore);
     return res.raw;
 }
 
 /// Releases a certain number of slots in a semaphore
 static Result ReleaseSemaphore(s32* count, Handle semaphore, s32 release_count) {
-    DEBUG_LOG(SVC, "called release_count=%d, handle=0x%08X", release_count, semaphore);
+    LOG_TRACE(Kernel_SVC, "called release_count=%d, handle=0x%08X", release_count, semaphore);
     ResultCode res = Kernel::ReleaseSemaphore(count, semaphore, release_count);
     return res.raw;
 }
