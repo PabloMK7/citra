@@ -95,13 +95,13 @@ public:
     T* Get(Handle handle) {
         if (handle < HANDLE_OFFSET || handle >= HANDLE_OFFSET + MAX_COUNT || !occupied[handle - HANDLE_OFFSET]) {
             if (handle != 0) {
-                LOG_ERROR(Kernel, "Bad object handle %08x", handle, handle);
+                LOG_ERROR(Kernel, "Bad object handle %08x", handle);
             }
             return nullptr;
         } else {
             Object* t = pool[handle - HANDLE_OFFSET];
             if (t->GetHandleType() != T::GetStaticHandleType()) {
-                LOG_ERROR(Kernel, "Wrong object type for %08x", handle, handle);
+                LOG_ERROR(Kernel, "Wrong object type for %08x", handle);
                 return nullptr;
             }
             return static_cast<T*>(t);
@@ -134,7 +134,7 @@ public:
     bool GetIDType(Handle handle, HandleType* type) const {
         if ((handle < HANDLE_OFFSET) || (handle >= HANDLE_OFFSET + MAX_COUNT) ||
                 !occupied[handle - HANDLE_OFFSET]) {
-            LOG_ERROR(Kernel, "Bad object handle %08X", handle, handle);
+            LOG_ERROR(Kernel, "Bad object handle %08X", handle);
             return false;
         }
         Object* t = pool[handle - HANDLE_OFFSET];
