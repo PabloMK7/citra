@@ -18,7 +18,7 @@ static MemArena arena;                       ///< The MemArena class
 u8* g_exefs_code                = nullptr;   ///< ExeFS:/.code is loaded here
 u8* g_system_mem                = nullptr;   ///< System memory
 u8* g_heap                      = nullptr;   ///< Application heap (main memory)
-u8* g_heap_gsp                  = nullptr;   ///< GSP heap (main memory)
+u8* g_heap_linear               = nullptr;   ///< Linear heap
 u8* g_vram                      = nullptr;   ///< Video memory (VRAM) pointer
 u8* g_shared_mem                = nullptr;   ///< Shared memory
 u8* g_kernel_mem;                              ///< Kernel memory
@@ -36,13 +36,13 @@ static u8* physical_kernel_mem;              ///< Kernel memory
 
 // We don't declare the IO region in here since its handled by other means.
 static MemoryView g_views[] = {
-    {&g_exefs_code, &physical_exefs_code, EXEFS_CODE_VADDR,       EXEFS_CODE_SIZE,    0},
-    {&g_vram,       &physical_vram,       VRAM_VADDR,             VRAM_SIZE,          0},
-    {&g_heap,       &physical_fcram,      HEAP_VADDR,             HEAP_SIZE,          MV_IS_PRIMARY_RAM},
-    {&g_shared_mem, &physical_shared_mem, SHARED_MEMORY_VADDR,    SHARED_MEMORY_SIZE, 0},
-    {&g_system_mem, &physical_system_mem, SYSTEM_MEMORY_VADDR,    SYSTEM_MEMORY_SIZE,    0},
-    {&g_kernel_mem, &physical_kernel_mem, KERNEL_MEMORY_VADDR,    KERNEL_MEMORY_SIZE, 0},
-    {&g_heap_gsp,   &physical_heap_gsp,   HEAP_GSP_VADDR,         HEAP_GSP_SIZE,      0},
+    {&g_exefs_code,     &physical_exefs_code,   EXEFS_CODE_VADDR,       EXEFS_CODE_SIZE,    0},
+    {&g_vram,           &physical_vram,         VRAM_VADDR,             VRAM_SIZE,          0},
+    {&g_heap,           &physical_fcram,        HEAP_VADDR,             HEAP_SIZE,          MV_IS_PRIMARY_RAM},
+    {&g_shared_mem,     &physical_shared_mem,   SHARED_MEMORY_VADDR,    SHARED_MEMORY_SIZE, 0},
+    {&g_system_mem,     &physical_system_mem,   SYSTEM_MEMORY_VADDR,    SYSTEM_MEMORY_SIZE, 0},
+    {&g_kernel_mem,     &physical_kernel_mem,   KERNEL_MEMORY_VADDR,    KERNEL_MEMORY_SIZE, 0},
+    {&g_heap_linear,    &physical_heap_gsp,     HEAP_LINEAR_VADDR,      HEAP_LINEAR_SIZE,   0},
 };
 
 /*static MemoryView views[] =
