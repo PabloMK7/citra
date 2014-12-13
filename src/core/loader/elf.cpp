@@ -254,18 +254,18 @@ const char *ElfReader::GetSectionName(int section) const {
 }
 
 bool ElfReader::LoadInto(u32 vaddr) {
-    DEBUG_LOG(MASTER_LOG, "String section: %i", header->e_shstrndx);
+    LOG_DEBUG(Loader, "String section: %i", header->e_shstrndx);
 
     // Should we relocate?
     relocate = (header->e_type != ET_EXEC);
 
     if (relocate) {
-        DEBUG_LOG(MASTER_LOG, "Relocatable module");
+        LOG_DEBUG(Loader, "Relocatable module");
         entryPoint += vaddr;
     } else {
-        DEBUG_LOG(MASTER_LOG, "Prerelocated executable");
+        LOG_DEBUG(Loader, "Prerelocated executable");
     }
-    INFO_LOG(MASTER_LOG, "%i segments:", header->e_phnum);
+    LOG_DEBUG(Loader, "%i segments:", header->e_phnum);
 
     // First pass : Get the bits into RAM
     u32 segment_addr[32];
@@ -273,17 +273,17 @@ bool ElfReader::LoadInto(u32 vaddr) {
 
     for (int i = 0; i < header->e_phnum; i++) {
         Elf32_Phdr *p = segments + i;
-        INFO_LOG(MASTER_LOG, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr,
+        LOG_DEBUG(Loader, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr,
             p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
             segment_addr[i] = base_addr + p->p_vaddr;
             memcpy(Memory::GetPointer(segment_addr[i]), GetSegmentPtr(i), p->p_filesz);
-            INFO_LOG(MASTER_LOG, "Loadable Segment Copied to %08x, size %08x", segment_addr[i],
+            LOG_DEBUG(Loader, "Loadable Segment Copied to %08x, size %08x", segment_addr[i],
                 p->p_memsz);
         }
     }
-    INFO_LOG(MASTER_LOG, "Done loading.");
+    LOG_DEBUG(Loader, "Done loading.");
     return true;
 }
 
@@ -346,7 +346,7 @@ AppLoader_ELF::~AppLoader_ELF() {
  * @return True on success, otherwise false
  */
 ResultStatus AppLoader_ELF::Load() {
-    INFO_LOG(LOADER, "Loading ELF file %s...", filename.c_str());
+    LOG_INFO(Loader, "Loading ELF file %s...", filename.c_str());
 
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;

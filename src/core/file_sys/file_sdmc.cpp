@@ -33,7 +33,7 @@ File_SDMC::~File_SDMC() {
  */
 bool File_SDMC::Open() {
     if (!mode.create_flag && !FileUtil::Exists(path)) {
-        ERROR_LOG(FILESYS, "Non-existing file %s can’t be open without mode create.", path.c_str());
+        LOG_ERROR(Service_FS, "Non-existing file %s can’t be open without mode create.", path.c_str());
         return false;
     }
 

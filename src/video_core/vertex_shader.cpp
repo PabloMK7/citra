@@ -206,7 +206,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             case Instruction::OpCode::CALL:
                 increment_pc = false;
 
-                _dbg_assert_(GPU, state.call_stack_pointer - state.call_stack < sizeof(state.call_stack));
+                _dbg_assert_(HW_GPU, state.call_stack_pointer - state.call_stack < sizeof(state.call_stack));
 
                 *++state.call_stack_pointer = state.program_counter - shader_memory;
                 // TODO: Does this offset refer to the beginning of shader memory?
@@ -218,7 +218,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
 
             default:
-                ERROR_LOG(GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
+                LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value(), instr.GetOpCodeName().c_str(), instr.hex);
                 break;
         }
@@ -285,7 +285,7 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
                            state.debug.max_opdesc_id, registers.vs_main_offset,
                            registers.vs_output_attributes);
 
-    DEBUG_LOG(GPU, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
+    LOG_TRACE(Render_Software, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
         ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
         ret.color.x.ToFloat32(), ret.color.y.ToFloat32(), ret.color.z.ToFloat32(), ret.color.w.ToFloat32(),
         ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32());

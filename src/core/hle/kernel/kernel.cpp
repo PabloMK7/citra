@@ -35,7 +35,7 @@ Handle ObjectPool::Create(Object* obj, int range_bottom, int range_top) {
             return i + HANDLE_OFFSET;
         }
     }
-    ERROR_LOG(HLE, "Unable to allocate kernel object, too many objects slots in use.");
+    LOG_ERROR(Kernel, "Unable to allocate kernel object, too many objects slots in use.");
     return 0;
 }
 
@@ -62,7 +62,7 @@ void ObjectPool::Clear() {
 
 Object* &ObjectPool::operator [](Handle handle)
 {
-    _dbg_assert_msg_(KERNEL, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
+    _dbg_assert_msg_(Kernel, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
     return pool[handle - HANDLE_OFFSET];
 }
 
@@ -70,7 +70,7 @@ void ObjectPool::List() {
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i]) {
             if (pool[i]) {
-                INFO_LOG(KERNEL, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(),
+                LOG_DEBUG(Kernel, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(),
                     pool[i]->GetName().c_str());
             }
         }
@@ -82,7 +82,7 @@ int ObjectPool::GetCount() const {
 }
 
 Object* ObjectPool::CreateByIDType(int type) {
-    ERROR_LOG(COMMON, "Unimplemented: %d.", type);
+    LOG_ERROR(Kernel, "Unimplemented: %d.", type);
     return nullptr;
 }
 

@@ -53,7 +53,7 @@ void Initialize(Service::Interface* self) {
 
     cmd_buff[1] = 0; // No error
 
-    DEBUG_LOG(KERNEL, "called");
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void GetLockHandle(Service::Interface* self) {
@@ -74,14 +74,14 @@ void GetLockHandle(Service::Interface* self) {
     cmd_buff[4] = 0;
 
     cmd_buff[5] = lock_handle;
-    DEBUG_LOG(KERNEL, "called handle=0x%08X", cmd_buff[5]);
+    LOG_TRACE(Service_APT, "called handle=0x%08X", cmd_buff[5]);
 }
 
 void Enable(Service::Interface* self) {
     u32* cmd_buff = Service::GetCommandBuffer();
     u32 unk = cmd_buff[1]; // TODO(bunnei): What is this field used for?
     cmd_buff[1] = 0; // No error
-    WARN_LOG(KERNEL, "(STUBBED) called unk=0x%08X", unk);
+    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X", unk);
 }
 
 void InquireNotification(Service::Interface* self) {
@@ -89,7 +89,7 @@ void InquireNotification(Service::Interface* self) {
     u32 app_id = cmd_buff[2];
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = static_cast<u32>(SignalType::None); // Signal type
-    WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X", app_id);
+    LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
 }
 
 /**
@@ -122,7 +122,7 @@ void ReceiveParameter(Service::Interface* self) {
     cmd_buff[5] = 0;
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
-    WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
 
 /**
@@ -155,7 +155,7 @@ void GlanceParameter(Service::Interface* self) {
     cmd_buff[6] = 0;
     cmd_buff[7] = 0;
 
-    WARN_LOG(KERNEL, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
 
 /**
@@ -181,7 +181,7 @@ void AppletUtility(Service::Interface* self) {
 
     cmd_buff[1] = 0; // No error
 
-    WARN_LOG(KERNEL, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
+    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
              "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size,
              buffer1_addr, buffer2_addr);
 }
@@ -194,7 +194,7 @@ void AppletUtility(Service::Interface* self) {
  *      4 : Handle to shared font memory
  */
 void GetSharedFont(Service::Interface* self) {
-    DEBUG_LOG(KERNEL, "called");
+    LOG_TRACE(Kernel_SVC, "called");
 
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -210,7 +210,7 @@ void GetSharedFont(Service::Interface* self) {
         cmd_buff[4] = shared_font_mem;
     } else {
         cmd_buff[1] = -1; // Generic error (not really possible to verify this on hardware)
-        ERROR_LOG(KERNEL, "called, but %s has not been loaded!", SHARED_FONT);
+        LOG_ERROR(Kernel_SVC, "called, but %s has not been loaded!", SHARED_FONT);
     }
 }
 
@@ -321,7 +321,7 @@ Interface::Interface() {
         // Create shared font memory object
         shared_font_mem = Kernel::CreateSharedMemory("APT_U:shared_font_mem");
     } else {
-        WARN_LOG(KERNEL, "Unable to load shared font: %s", filepath.c_str());
+        LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
         shared_font_mem = 0;
     }
 

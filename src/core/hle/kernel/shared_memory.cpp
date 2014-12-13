@@ -16,12 +16,6 @@ public:
     static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
     Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
 
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::OS);
-    }
-
     u32 base_address;                   ///< Address of shared memory block in RAM
     MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
     MemoryPermission other_permissions; ///< Other permissions of shared memory block (SVC field)
@@ -61,7 +55,7 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
     MemoryPermission other_permissions) {
 
     if (address < Memory::SHARED_MEMORY_VADDR || address >= Memory::SHARED_MEMORY_VADDR_END) {
-        ERROR_LOG(KERNEL, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
+        LOG_ERROR(Kernel_SVC, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
             handle, address);
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
@@ -83,7 +77,7 @@ ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset) {
     if (0 != shared_memory->base_address)
         return MakeResult<u8*>(Memory::GetPointer(shared_memory->base_address + offset));
 
-    ERROR_LOG(KERNEL, "memory block handle=0x%08X not mapped!", handle);
+    LOG_ERROR(Kernel_SVC, "memory block handle=0x%08X not mapped!", handle);
     // TODO(yuriks): Verify error code.
     return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
             ErrorSummary::InvalidState, ErrorLevel::Permanent);

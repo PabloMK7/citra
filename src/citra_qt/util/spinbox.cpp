@@ -244,7 +244,7 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const
     if (strpos >= input.length() - HasSign() - suffix.length())
         return QValidator::Intermediate;
 
-    _dbg_assert_(GUI, base <= 10 || base == 16);
+    _dbg_assert_(Frontend, base <= 10 || base == 16);
     QString regexp;
 
     // Demand sign character for negative ranges

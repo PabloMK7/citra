@@ -94,25 +94,19 @@ public:
         }
         case FileCommand::Close:
         {
-            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
             CloseArchive(backend->GetIdCode());
             break;
         }
         // Unknown command...
         default:
         {
-            ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
+            LOG_ERROR(Service_FS, "Unknown command=0x%08X", cmd);
             return UnimplementedFunction(ErrorModule::FS);
         }
         }
         cmd_buff[1] = 0; // No error
         return MakeResult<bool>(false);
-    }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -138,7 +132,7 @@ public:
             u64 offset = cmd_buff[1] | ((u64) cmd_buff[2]) << 32;
             u32 length  = cmd_buff[3];
             u32 address = cmd_buff[5];
-            DEBUG_LOG(KERNEL, "Read %s %s: offset=0x%llx length=%d address=0x%x",
+            LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address);
             cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
             break;
@@ -151,7 +145,7 @@ public:
             u32 length  = cmd_buff[3];
             u32 flush   = cmd_buff[4];
             u32 address = cmd_buff[6];
-            DEBUG_LOG(KERNEL, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
+            LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
             cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
             break;
@@ -159,7 +153,7 @@ public:
 
         case FileCommand::GetSize:
         {
-            DEBUG_LOG(KERNEL, "GetSize %s %s", GetTypeName().c_str(), GetName().c_str());
+            LOG_TRACE(Service_FS, "GetSize %s %s", GetTypeName().c_str(), GetName().c_str());
             u64 size = backend->GetSize();
             cmd_buff[2] = (u32)size;
             cmd_buff[3] = size >> 32;
@@ -169,7 +163,7 @@ public:
         case FileCommand::SetSize:
         {
             u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-            DEBUG_LOG(KERNEL, "SetSize %s %s size=%llu",
+            LOG_TRACE(Service_FS, "SetSize %s %s size=%llu",
                     GetTypeName().c_str(), GetName().c_str(), size);
             backend->SetSize(size);
             break;
@@ -177,26 +171,20 @@ public:
 
         case FileCommand::Close:
         {
-            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
             Kernel::g_object_pool.Destroy<File>(GetHandle());
             break;
         }
 
         // Unknown command...
         default:
-            ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
+            LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
             ResultCode error = UnimplementedFunction(ErrorModule::FS);
             cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
             return error;
         }
         cmd_buff[1] = 0; // No error
         return MakeResult<bool>(false);
-    }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -222,7 +210,7 @@ public:
             u32 count = cmd_buff[1];
             u32 address = cmd_buff[3];
             auto entries = reinterpret_cast<FileSys::Entry*>(Memory::GetPointer(address));
-            DEBUG_LOG(KERNEL, "Read %s %s: count=%d",
+            LOG_TRACE(Service_FS, "Read %s %s: count=%d",
                     GetTypeName().c_str(), GetName().c_str(), count);
 
             // Number of entries actually read
@@ -232,26 +220,20 @@ public:
 
         case DirectoryCommand::Close:
         {
-            DEBUG_LOG(KERNEL, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+            LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
             Kernel::g_object_pool.Destroy<Directory>(GetHandle());
             break;
         }
 
         // Unknown command...
         default:
-            ERROR_LOG(KERNEL, "Unknown command=0x%08X!", cmd);
+            LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
             ResultCode error = UnimplementedFunction(ErrorModule::FS);
             cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
             return error;
         }
         cmd_buff[1] = 0; // No error
         return MakeResult<bool>(false);
-    }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::FS);
     }
 };
 
@@ -272,11 +254,11 @@ ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code) {
 ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
     auto itr = g_archive_map.find(id_code);
     if (itr == g_archive_map.end()) {
-        ERROR_LOG(KERNEL, "Cannot close archive %d, does not exist!", (int)id_code);
+        LOG_ERROR(Service_FS, "Cannot close archive %d, does not exist!", (int)id_code);
         return InvalidHandle(ErrorModule::FS);
     }
 
-    INFO_LOG(KERNEL, "Closed archive %d", (int) id_code);
+    LOG_TRACE(Service_FS, "Closed archive %d", (int) id_code);
     return RESULT_SUCCESS;
 }
 
@@ -288,11 +270,11 @@ ResultCode MountArchive(Archive* archive) {
     FileSys::Archive::IdCode id_code = archive->backend->GetIdCode();
     ResultVal<Handle> archive_handle = OpenArchive(id_code);
     if (archive_handle.Succeeded()) {
-        ERROR_LOG(KERNEL, "Cannot mount two archives with the same ID code! (%d)", (int) id_code);
+        LOG_ERROR(Service_FS, "Cannot mount two archives with the same ID code! (%d)", (int) id_code);
         return archive_handle.Code();
     }
     g_archive_map[id_code] = archive->GetHandle();
-    INFO_LOG(KERNEL, "Mounted archive %s", archive->GetName().c_str());
+    LOG_TRACE(Service_FS, "Mounted archive %s", archive->GetName().c_str());
     return RESULT_SUCCESS;
 }
 
@@ -442,7 +424,7 @@ void ArchiveInit() {
     if (archive->Initialize())
         CreateArchive(archive, "SDMC");
     else
-        ERROR_LOG(KERNEL, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
+        LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 }
 
 /// Shutdown archives

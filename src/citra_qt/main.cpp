@@ -1,3 +1,5 @@
+#include <thread>
+
 #include <QtGui>
 #include <QDesktopWidget>
 #include <QFileDialog>
@@ -5,8 +7,13 @@
 #include "main.hxx"
 
 #include "common/common.h"
+#include "common/logging/text_formatter.h"
+#include "common/logging/log.h"
+#include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/platform.h"
-#include "common/log_manager.h"
+#include "common/scope_exit.h"
+
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <unistd.h>
 #endif
@@ -33,17 +40,11 @@
 
 #include "version.h"
 
-
 GMainWindow::GMainWindow()
 {
-    LogManager::Init();
-
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
     Config config;
-
-    if (!Settings::values.enable_log)
-        LogManager::Shutdown();
 
     ui.setupUi(this);
     statusBar()->hide();
@@ -153,18 +154,18 @@ GMainWindow::~GMainWindow()
 
 void GMainWindow::BootGame(std::string filename)
 {
-    NOTICE_LOG(MASTER_LOG, "Citra starting...\n");
+    LOG_INFO(Frontend, "Citra starting...\n");
     System::Init(render_window);
 
     if (Core::Init()) {
-        ERROR_LOG(MASTER_LOG, "Core initialization failed, exiting...");
+        LOG_CRITICAL(Frontend, "Core initialization failed, exiting...");
         Core::Stop();
         exit(1);
     }
 
     // Load a game or die...
     if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
-        ERROR_LOG(BOOT, "Failed to load ROM!");
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
     }
 
     disasmWidget->Init();
@@ -271,9 +272,21 @@ void GMainWindow::closeEvent(QCloseEvent* event)
 
 int __cdecl main(int argc, char* argv[])
 {
+    std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
+    Log::Filter log_filter(Log::Level::Info);
+    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
+    SCOPE_EXIT({
+        logger->Close();
+        logging_thread.join();
+    });
+
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
+
     GMainWindow main_window;
+    // After settings have been loaded by GMainWindow, apply the filter
+    log_filter.ParseFilterString(Settings::values.log_filter);
+
     main_window.show();
     return app.exec();
 }

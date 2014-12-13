@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common_types.h"
+#include <cstdlib>
 
 #ifdef _WIN32
 #define SLEEP(x) Sleep(x)
@@ -38,8 +39,6 @@ template<> struct CompileTimeAssert<true> {};
 #elif defined __FreeBSD__
 #include <sys/endian.h>
 #endif
-
-#include "common_types.h"
 
 // go to debugger mode
     #ifdef GEKKO

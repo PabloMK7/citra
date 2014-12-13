@@ -163,7 +163,7 @@ static void GetIPCHandles(Service::Interface* self) {
     cmd_buff[7] = event_gyroscope;
     cmd_buff[8] = event_debug_pad;
 
-    DEBUG_LOG(KERNEL, "called");
+    LOG_TRACE(Service_HID, "called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

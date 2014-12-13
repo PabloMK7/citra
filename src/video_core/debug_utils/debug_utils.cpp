@@ -248,8 +248,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                         it->component_mask = it->component_mask | component_mask;
                     }
                 } catch (const std::out_of_range& ) {
-                    _dbg_assert_msg_(GPU, 0, "Unknown output attribute mapping");
-                    ERROR_LOG(GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
+                    _dbg_assert_msg_(HW_GPU, 0, "Unknown output attribute mapping");
+                    LOG_ERROR(HW_GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
                               (int)output_attributes[i].map_x.Value(),
                               (int)output_attributes[i].map_y.Value(),
                               (int)output_attributes[i].map_z.Value(),
@@ -309,7 +309,7 @@ static int is_pica_tracing = false;
 void StartPicaTracing()
 {
     if (is_pica_tracing) {
-        ERROR_LOG(GPU, "StartPicaTracing called even though tracing already running!");
+        LOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
         return;
     }
 
@@ -342,7 +342,7 @@ void OnPicaRegWrite(u32 id, u32 value)
 std::unique_ptr<PicaTrace> FinishPicaTracing()
 {
     if (!is_pica_tracing) {
-        ERROR_LOG(GPU, "FinishPicaTracing called even though tracing already running!");
+        LOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
         return {};
     }
 
@@ -357,7 +357,7 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
-    _dbg_assert_(GPU, info.format == Pica::Regs::TextureFormat::RGB8);
+    _dbg_assert_(Debug_GPU, info.format == Pica::Regs::TextureFormat::RGB8);
 
     // Cf. rasterizer code for an explanation of this algorithm.
     int texel_index_within_tile = 0;
@@ -421,7 +421,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize write structure
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (png_ptr == nullptr) {
-        ERROR_LOG(GPU, "Could not allocate write struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate write struct\n");
         goto finalise;
 
     }
@@ -429,13 +429,13 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize info structure
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == nullptr) {
-        ERROR_LOG(GPU, "Could not allocate info struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate info struct\n");
         goto finalise;
     }
 
     // Setup Exception handling
     if (setjmp(png_jmpbuf(png_ptr))) {
-        ERROR_LOG(GPU, "Error during png creation\n");
+        LOG_ERROR(Debug_GPU, "Error during png creation\n");
         goto finalise;
     }
 
@@ -582,7 +582,7 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
         stage_info += "Stage " + std::to_string(index) + ": " + GetColorCombinerStr(tev_stage) + "   " + GetAlphaCombinerStr(tev_stage) + "\n";
     }
 
-    DEBUG_LOG(GPU, "%s", stage_info.c_str());
+    LOG_TRACE(HW_GPU, "%s", stage_info.c_str());
 }
 
 } // namespace

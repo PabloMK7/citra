@@ -22,17 +22,17 @@ Config::Config() {
 bool Config::LoadINI(INIReader* config, const char* location, const std::string& default_contents, bool retry) {
     if (config->ParseError() < 0) {
         if (retry) {
-            ERROR_LOG(CONFIG, "Failed to load %s. Creating file from defaults...", location);
+            LOG_WARNING(Config, "Failed to load %s. Creating file from defaults...", location);
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, default_contents, location);
             *config = INIReader(location); // Reopen file
 
             return LoadINI(config, location, default_contents, false);
         }
-        ERROR_LOG(CONFIG, "Failed.");
+        LOG_ERROR(Config, "Failed.");
         return false;
     }
-    INFO_LOG(CONFIG, "Successfully loaded %s", location);
+    LOG_INFO(Config, "Successfully loaded %s", location);
     return true;
 }
 
@@ -64,7 +64,7 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // Miscellaneous
-    Settings::values.enable_log = glfw_config->GetBoolean("Miscellaneous", "enable_log", true);
+    Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
 }
 
 void Config::Reload() {

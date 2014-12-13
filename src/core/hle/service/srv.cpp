@@ -14,7 +14,7 @@ namespace SRV {
 static Handle g_event_handle = 0;
 
 static void Initialize(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "called");
+    LOG_DEBUG(Service_SRV, "called");
 
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -22,7 +22,7 @@ static void Initialize(Service::Interface* self) {
 }
 
 static void GetProcSemaphore(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "called");
+    LOG_TRACE(Service_SRV, "called");
 
     u32* cmd_buff = Service::GetCommandBuffer();
 
@@ -43,9 +43,9 @@ static void GetServiceHandle(Service::Interface* self) {
 
     if (nullptr != service) {
         cmd_buff[3] = service->GetHandle();
-        DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
+        LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
+        LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
         res = UnimplementedFunction(ErrorModule::SRV);
     }
     cmd_buff[1] = res.raw;

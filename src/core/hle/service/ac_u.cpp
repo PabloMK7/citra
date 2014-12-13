@@ -26,7 +26,7 @@ void GetWifiStatus(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 0; // Connection type set to none
 
-    WARN_LOG(KERNEL, "(STUBBED) called");
+    LOG_WARNING(Service_AC, "(STUBBED) called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

@@ -16,7 +16,7 @@ namespace FileSys {
 Archive_RomFS::Archive_RomFS(const Loader::AppLoader& app_loader) {
     // Load the RomFS from the app
     if (Loader::ResultStatus::Success != app_loader.ReadRomFS(raw_data)) {
-        WARN_LOG(FILESYS, "Unable to read RomFS!");
+        LOG_ERROR(Service_FS, "Unable to read RomFS!");
     }
 }
 
@@ -39,12 +39,12 @@ std::unique_ptr<File> Archive_RomFS::OpenFile(const Path& path, const Mode mode)
  * @return Whether the file could be deleted
  */
 bool Archive_RomFS::DeleteFile(const FileSys::Path& path) const {
-    ERROR_LOG(FILESYS, "Attempted to delete a file from ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to delete a file from ROMFS.");
     return false;
 }
 
 bool Archive_RomFS::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
-    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to rename a file within ROMFS.");
     return false;
 }
 
@@ -54,7 +54,7 @@ bool Archive_RomFS::RenameFile(const FileSys::Path& src_path, const FileSys::Pat
  * @return Whether the directory could be deleted
  */
 bool Archive_RomFS::DeleteDirectory(const FileSys::Path& path) const {
-    ERROR_LOG(FILESYS, "Attempted to delete a directory from ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to delete a directory from ROMFS.");
     return false;
 }
 
@@ -64,12 +64,12 @@ bool Archive_RomFS::DeleteDirectory(const FileSys::Path& path) const {
  * @return Whether the directory could be created
  */
 bool Archive_RomFS::CreateDirectory(const Path& path) const {
-    ERROR_LOG(FILESYS, "Attempted to create a directory in ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to create a directory in ROMFS.");
     return false;
 }
 
 bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
-    ERROR_LOG(FILESYS, "Attempted to rename a file within ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to rename a file within ROMFS.");
     return false;
 }
 
@@ -90,7 +90,7 @@ std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const Path& path) const 
  * @return Number of bytes read
  */
 size_t Archive_RomFS::Read(const u64 offset, const u32 length, u8* buffer) const {
-    DEBUG_LOG(FILESYS, "called offset=%llu, length=%d", offset, length);
+    LOG_TRACE(Service_FS, "called offset=%llu, length=%d", offset, length);
     memcpy(buffer, &raw_data[(u32)offset], length);
     return length;
 }
@@ -104,7 +104,7 @@ size_t Archive_RomFS::Read(const u64 offset, const u32 length, u8* buffer) const
  * @return Number of bytes written
  */
 size_t Archive_RomFS::Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) {
-    ERROR_LOG(FILESYS, "Attempted to write to ROMFS.");
+    LOG_WARNING(Service_FS, "Attempted to write to ROMFS.");
     return 0;
 }
 
@@ -120,7 +120,7 @@ size_t Archive_RomFS::GetSize() const {
  * Set the size of the archive in bytes
  */
 void Archive_RomFS::SetSize(const u64 size) {
-    ERROR_LOG(FILESYS, "Attempted to set the size of ROMFS");
+    LOG_WARNING(Service_FS, "Attempted to set the size of ROMFS");
 }
 
 } // namespace FileSys

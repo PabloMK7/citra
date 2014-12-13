@@ -157,7 +157,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
 
         InitScreenCoordinates(vtx2);
 
-        DEBUG_LOG(GPU,
+        LOG_TRACE(Render_Software,
                   "Triangle %lu/%lu (%lu buffer vertices) at position (%.3f, %.3f, %.3f, %.3f), "
                   "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
                   "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",

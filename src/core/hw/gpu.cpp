@@ -35,7 +35,7 @@ inline void Read(T &var, const u32 raw_addr) {
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
+        LOG_ERROR(HW_GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
         return;
     }
 
@@ -49,7 +49,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
+        LOG_ERROR(HW_GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
         return;
     }
 
@@ -73,7 +73,7 @@ inline void Write(u32 addr, const T data) {
             for (u32* ptr = start; ptr < end; ++ptr)
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
-            DEBUG_LOG(GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+            LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
         }
         break;
     }
@@ -105,7 +105,7 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown source framebuffer format %x", config.input_format.Value());
+                        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", config.input_format.Value());
                         break;
                     }
 
@@ -132,13 +132,13 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown destination framebuffer format %x", config.output_format.Value());
+                        LOG_ERROR(HW_GPU, "Unknown destination framebuffer format %x", config.output_format.Value());
                         break;
                     }
                 }
             }
 
-            DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
+            LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
                       config.output_height * config.output_width * 4,
                       config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
                       config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
@@ -251,12 +251,12 @@ void Init() {
     framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
     framebuffer_sub.active_fb = 0;
 
-    NOTICE_LOG(GPU, "initialized OK");
+    LOG_DEBUG(HW_GPU, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(GPU, "shutdown OK");
+    LOG_DEBUG(HW_GPU, "shutdown OK");
 }
 
 } // namespace

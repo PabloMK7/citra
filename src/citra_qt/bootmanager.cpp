@@ -62,7 +62,7 @@ void EmuThread::Stop()
 {
     if (!isRunning())
     {
-        INFO_LOG(MASTER_LOG, "EmuThread::Stop called while emu thread wasn't running, returning...");
+        LOG_WARNING(Frontend, "EmuThread::Stop called while emu thread wasn't running, returning...");
         return;
     }
     stop_run = true;
@@ -76,7 +76,7 @@ void EmuThread::Stop()
     wait(1000);
     if (isRunning())
     {
-        WARN_LOG(MASTER_LOG, "EmuThread still running, terminating...");
+        LOG_WARNING(Frontend, "EmuThread still running, terminating...");
         quit();
 
         // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
@@ -84,11 +84,11 @@ void EmuThread::Stop()
         wait(50000);
         if (isRunning())
         {
-            WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");
+            LOG_CRITICAL(Frontend, "EmuThread STILL running, something is wrong here...");
             terminate();
         }
     }
-    INFO_LOG(MASTER_LOG, "EmuThread stopped");
+    LOG_INFO(Frontend, "EmuThread stopped");
 }
 
 

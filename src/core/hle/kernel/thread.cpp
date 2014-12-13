@@ -150,13 +150,13 @@ void ChangeReadyState(Thread* t, bool ready) {
 
 /// Verify that a thread has not been released from waiting
 static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
-    _dbg_assert_(KERNEL, thread != nullptr);
+    _dbg_assert_(Kernel, thread != nullptr);
     return (type == thread->wait_type) && (wait_handle == thread->wait_handle) && (thread->IsWaiting());
 }
 
 /// Verify that a thread has not been released from waiting (with wait address)
 static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle, VAddr wait_address) {
-    _dbg_assert_(KERNEL, thread != nullptr);
+    _dbg_assert_(Kernel, thread != nullptr);
     return VerifyWait(thread, type, wait_handle) && (wait_address == thread->wait_address);
 }
 
@@ -196,7 +196,7 @@ void ChangeThreadState(Thread* t, ThreadStatus new_status) {
 
     if (new_status == THREADSTATUS_WAIT) {
         if (t->wait_type == WAITTYPE_NONE) {
-            ERROR_LOG(KERNEL, "Waittype none not allowed");
+            LOG_ERROR(Kernel, "Waittype none not allowed");
         }
     }
 }
@@ -318,12 +318,12 @@ void DebugThreadQueue() {
     if (!thread) {
         return;
     }
-    INFO_LOG(KERNEL, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
+    LOG_DEBUG(Kernel, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
     for (u32 i = 0; i < thread_queue.size(); i++) {
         Handle handle = thread_queue[i];
         s32 priority = thread_ready_queue.contains(handle);
         if (priority != -1) {
-            INFO_LOG(KERNEL, "0x%02X 0x%08X", priority, handle);
+            LOG_DEBUG(Kernel, "0x%02X 0x%08X", priority, handle);
         }
     }
 }
@@ -333,7 +333,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     s32 processor_id, u32 stack_top, int stack_size) {
 
     _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST),
-        "CreateThread priority=%d, outside of allowable range!", priority)
+        "priority=%d, outside of allowable range!", priority)
 
     Thread* thread = new Thread;
 
@@ -362,24 +362,24 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
     u32 stack_top, int stack_size) {
 
     if (name == nullptr) {
-        ERROR_LOG(KERNEL, "CreateThread(): nullptr name");
+        LOG_ERROR(Kernel_SVC, "nullptr name");
         return -1;
     }
     if ((u32)stack_size < 0x200) {
-        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid stack_size=0x%08X", name,
+        LOG_ERROR(Kernel_SVC, "(name=%s): invalid stack_size=0x%08X", name,
             stack_size);
         return -1;
     }
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
         s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        WARN_LOG(KERNEL, "CreateThread(name=%s): invalid priority=0x%08X, clamping to %08X",
+        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
             name, priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
         // validity of this
         priority = new_priority;
     }
     if (!Memory::GetPointer(entry_point)) {
-        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid entry %08x", name, entry_point);
+        LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name, entry_point);
         return -1;
     }
     Handle handle;
@@ -416,7 +416,7 @@ ResultCode SetThreadPriority(Handle handle, s32 priority) {
     // If priority is invalid, clamp to valid range
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
         s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        WARN_LOG(KERNEL, "invalid priority=0x%08X, clamping to %08X", priority, new_priority);
+        LOG_WARNING(Kernel_SVC, "invalid priority=%d, clamping to %d", priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
         // validity of this
         priority = new_priority;
@@ -470,7 +470,7 @@ void Reschedule() {
     Thread* next = NextThread();
     HLE::g_reschedule = false;
     if (next > 0) {
-        INFO_LOG(KERNEL, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
+        LOG_TRACE(Kernel, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
 
         SwitchContext(next);
 

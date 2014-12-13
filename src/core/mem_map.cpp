@@ -71,7 +71,7 @@ void Init() {
 
     g_base = MemoryMap_Setup(g_views, kNumMemViews, flags, &arena);
 
-    NOTICE_LOG(MEMMAP, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_heap,
+    LOG_DEBUG(HW_Memory, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_heap,
         physical_fcram);
 }
 
@@ -82,7 +82,7 @@ void Shutdown() {
     arena.ReleaseSpace();
     g_base = nullptr;
 
-    NOTICE_LOG(MEMMAP, "shutdown OK");
+    LOG_DEBUG(HW_Memory, "shutdown OK");
 }
 
 } // namespace

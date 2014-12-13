@@ -33,7 +33,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
 }
 
 static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    _dbg_assert_msg_(GSP, screen_index < 2, "Invalid screen index");
+    _dbg_assert_msg_(Service_GSP, screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
@@ -50,14 +50,14 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
 static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
     // TODO: Return proper error codes
     if (base_address + size_in_bytes >= 0x420000) {
-        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)",
+        LOG_ERROR(Service_GSP, "Write address out of range! (address=0x%08x, size=0x%08x)",
                   base_address, size_in_bytes);
         return;
     }
 
     // size should be word-aligned
     if ((size_in_bytes % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size_in_bytes);
+        LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size_in_bytes);
         return;
     }
 
@@ -89,13 +89,13 @@ static void ReadHWRegs(Service::Interface* self) {
 
     // TODO: Return proper error codes
     if (reg_addr + size >= 0x420000) {
-        ERROR_LOG(GPU, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        LOG_ERROR(Service_GSP, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
         return;
     }
 
     // size should be word-aligned
     if ((size % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size);
         return;
     }
 
@@ -177,11 +177,11 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
  */
 void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == g_interrupt_event) {
-        WARN_LOG(GSP, "cannot synchronize until GSP event has been created!");
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
     if (0 == g_shared_memory) {
-        WARN_LOG(GSP, "cannot synchronize until GSP shared memory has been created!");
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
@@ -298,14 +298,14 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     }
 
     default:
-        ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
+        LOG_ERROR(Service_GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
 
-    DEBUG_LOG(GSP, "called");
+    LOG_TRACE(Service_GSP, "called");
 
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {

@@ -23,7 +23,7 @@ static void Initialize(Service::Interface* self) {
     // http://3dbrew.org/wiki/FS:Initialize#Request
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    DEBUG_LOG(KERNEL, "called");
+    LOG_DEBUG(Service_FS, "called");
 }
 
 /**
@@ -55,17 +55,15 @@ static void OpenFile(Service::Interface* self) {
     u32 filename_ptr      = cmd_buff[9];
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
+    LOG_DEBUG(Service_FS, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
     ResultVal<Handle> handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
+        LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
-
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /**
@@ -102,11 +100,11 @@ static void OpenFileDirectly(Service::Interface* self) {
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "archive_path=%s file_path=%s, mode=%u attributes=%d",
+    LOG_DEBUG(Service_FS, "archive_path=%s file_path=%s, mode=%u attributes=%d",
               archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
 
     if (archive_path.GetType() != FileSys::Empty) {
-        ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
+        LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
         return;
     }
@@ -116,7 +114,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     ResultVal<Handle> archive_handle = Kernel::OpenArchive(archive_id);
     cmd_buff[1] = archive_handle.Code().raw;
     if (archive_handle.Failed()) {
-        ERROR_LOG(KERNEL, "failed to get a handle for archive");
+        LOG_ERROR(Service_FS, "failed to get a handle for archive");
         return;
     }
     // cmd_buff[2] isn't used according to 3dmoo's implementation.
@@ -127,10 +125,8 @@ static void OpenFileDirectly(Service::Interface* self) {
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for file %s", file_path.DebugStr().c_str());
+        LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
-
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -156,12 +152,10 @@ void DeleteFile(Service::Interface* self) {
 
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
+    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               filename_type, filename_size, file_path.DebugStr().c_str());
 
     cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path).raw;
-    
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -197,13 +191,11 @@ void RenameFile(Service::Interface* self) {
     FileSys::Path src_file_path(src_filename_type, src_filename_size, src_filename_ptr);
     FileSys::Path dest_file_path(dest_filename_type, dest_filename_size, dest_filename_ptr);
 
-    DEBUG_LOG(KERNEL, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
+    LOG_DEBUG(Service_FS, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
               src_filename_type, src_filename_size, src_file_path.DebugStr().c_str(),
               dest_filename_type, dest_filename_size, dest_file_path.DebugStr().c_str());
 
     cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
-    
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -229,12 +221,10 @@ void DeleteDirectory(Service::Interface* self) {
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s",
+    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               dirname_type, dirname_size, dir_path.DebugStr().c_str());
     
     cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
-    
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -260,11 +250,9 @@ static void CreateDirectory(Service::Interface* self) {
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
     cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path).raw;
-
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -300,13 +288,11 @@ void RenameDirectory(Service::Interface* self) {
     FileSys::Path src_dir_path(src_dirname_type, src_dirname_size, src_dirname_ptr);
     FileSys::Path dest_dir_path(dest_dirname_type, dest_dirname_size, dest_dirname_ptr);
 
-    DEBUG_LOG(KERNEL, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
+    LOG_DEBUG(Service_FS, "src_type=%d src_size=%d src_data=%s dest_type=%d dest_size=%d dest_data=%s",
               src_dirname_type, src_dirname_size, src_dir_path.DebugStr().c_str(),
               dest_dirname_type, dest_dirname_size, dest_dir_path.DebugStr().c_str());
 
     cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
-    
-    DEBUG_LOG(KERNEL, "called");
 }
 
 static void OpenDirectory(Service::Interface* self) {
@@ -321,17 +307,15 @@ static void OpenDirectory(Service::Interface* self) {
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
 
-    DEBUG_LOG(KERNEL, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
     ResultVal<Handle> handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for directory");
+        LOG_ERROR(Service_FS, "failed to get a handle for directory");
     }
-
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /**
@@ -356,10 +340,10 @@ static void OpenArchive(Service::Interface* self) {
     u32 archivename_ptr   = cmd_buff[5];
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
 
-    DEBUG_LOG(KERNEL, "archive_path=%s", archive_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
 
     if (archive_path.GetType() != FileSys::Empty) {
-        ERROR_LOG(KERNEL, "archive LowPath type other than empty is currently unsupported");
+        LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
         return;
     }
@@ -370,10 +354,8 @@ static void OpenArchive(Service::Interface* self) {
         // cmd_buff[2] isn't used according to 3dmoo's implementation.
         cmd_buff[3] = *handle;
     } else {
-        ERROR_LOG(KERNEL, "failed to get a handle for archive");
+        LOG_ERROR(Service_FS, "failed to get a handle for archive");
     }
-
-    DEBUG_LOG(KERNEL, "called");
 }
 
 /*
@@ -388,7 +370,7 @@ static void IsSdmcDetected(Service::Interface* self) {
     cmd_buff[1] = 0;
     cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
 
-    DEBUG_LOG(KERNEL, "called");
+    LOG_DEBUG(Service_FS, "called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

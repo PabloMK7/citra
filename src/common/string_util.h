@@ -115,4 +115,19 @@ inline std::string UTF8ToTStr(const std::string& str)
 
 #endif
 
+/**
+ * Compares the string defined by the range [`begin`, `end`) to the null-terminated C-string
+ * `other` for equality.
+ */
+template <typename InIt>
+bool ComparePartialString(InIt begin, InIt end, const char* other) {
+    for (; begin != end && *other != '\0'; ++begin, ++other) {
+        if (*begin != *other) {
+            return false;
+        }
+    }
+    // Only return true if both strings finished at the same point
+    return (begin == end) == (*other == '\0');
+}
+
 }

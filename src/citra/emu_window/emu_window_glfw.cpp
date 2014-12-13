@@ -36,15 +36,15 @@ const bool EmuWindow_GLFW::IsOpen() {
 }
 
 void EmuWindow_GLFW::OnFramebufferResizeEvent(GLFWwindow* win, int width, int height) {
-    _dbg_assert_(GUI, width > 0);
-    _dbg_assert_(GUI, height > 0);
+    _dbg_assert_(Frontend, width > 0);
+    _dbg_assert_(Frontend, height > 0);
 
     GetEmuWindow(win)->NotifyFramebufferSizeChanged(std::pair<unsigned,unsigned>(width, height));
 }
 
 void EmuWindow_GLFW::OnClientAreaResizeEvent(GLFWwindow* win, int width, int height) {
-    _dbg_assert_(GUI, width > 0);
-    _dbg_assert_(GUI, height > 0);
+    _dbg_assert_(Frontend, width > 0);
+    _dbg_assert_(Frontend, height > 0);
 
     // NOTE: GLFW provides no proper way to set a minimal window size.
     //       Hence, we just ignore the corresponding EmuWindow hint.
@@ -59,12 +59,12 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
     ReloadSetKeymaps();
 
     glfwSetErrorCallback([](int error, const char *desc){
-        ERROR_LOG(GUI, "GLFW 0x%08x: %s", error, desc);
+        LOG_ERROR(Frontend, "GLFW 0x%08x: %s", error, desc);
     });
 
     // Initialize the window
     if(glfwInit() != GL_TRUE) {
-        ERROR_LOG(GUI, "Failed to initialize GLFW! Exiting...");
+        LOG_CRITICAL(Frontend, "Failed to initialize GLFW! Exiting...");
         exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -79,7 +79,7 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
         window_title.c_str(), nullptr, nullptr);
 
     if (m_render_window == nullptr) {
-        ERROR_LOG(GUI, "Failed to create GLFW window! Exiting...");
+        LOG_CRITICAL(Frontend, "Failed to create GLFW window! Exiting...");
         exit(1);
     }
 
@@ -149,7 +149,7 @@ void EmuWindow_GLFW::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,u
     std::pair<int,int> current_size;
     glfwGetWindowSize(m_render_window, &current_size.first, &current_size.second);
 
-    _dbg_assert_(GUI, (int)minimal_size.first > 0 && (int)minimal_size.second > 0);
+    _dbg_assert_(Frontend, (int)minimal_size.first > 0 && (int)minimal_size.second > 0);
     int new_width  = std::max(current_size.first,  (int)minimal_size.first);
     int new_height = std::max(current_size.second, (int)minimal_size.second);
 

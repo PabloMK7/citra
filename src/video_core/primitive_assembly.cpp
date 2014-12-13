@@ -43,7 +43,7 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandl
             break;
 
         default:
-            ERROR_LOG(GPU, "Unknown triangle topology %x:", (int)topology);
+            LOG_ERROR(Render_Software, "Unknown triangle topology %x:", (int)topology);
             break;
     }
 }

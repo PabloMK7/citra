@@ -90,7 +90,7 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     const VAddr framebuffer_vaddr = Memory::PhysicalToVirtualAddress(
         framebuffer.active_fb == 1 ? framebuffer.address_left2 : framebuffer.address_left1);
 
-    DEBUG_LOG(GPU, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
+    LOG_TRACE(Render_OpenGL, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
         framebuffer.stride * framebuffer.height,
         framebuffer_vaddr, (int)framebuffer.width,
         (int)framebuffer.height, (int)framebuffer.format);
@@ -98,15 +98,15 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
 
     // TODO: Handle other pixel formats
-    _dbg_assert_msg_(RENDER, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
+    _dbg_assert_msg_(Render_OpenGL, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
                      "Unsupported 3DS pixel format.");
 
     size_t pixel_stride = framebuffer.stride / 3;
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
-    _dbg_assert_(RENDER, pixel_stride * 3 == framebuffer.stride);
+    _dbg_assert_(Render_OpenGL, pixel_stride * 3 == framebuffer.stride);
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
     // only allows rows to have a memory alignement of 4.
-    _dbg_assert_(RENDER, pixel_stride % 4 == 0);
+    _dbg_assert_(Render_OpenGL, pixel_stride % 4 == 0);
 
     glBindTexture(GL_TEXTURE_2D, texture.handle);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);
@@ -263,11 +263,11 @@ void RendererOpenGL::Init() {
 
     int err = ogl_LoadFunctions();
     if (ogl_LOAD_SUCCEEDED != err) {
-        ERROR_LOG(RENDER, "Failed to initialize GL functions! Exiting...");
+        LOG_CRITICAL(Render_OpenGL, "Failed to initialize GL functions! Exiting...");
         exit(-1);
     }
 
-    NOTICE_LOG(RENDER, "GL_VERSION: %s\n", glGetString(GL_VERSION));
+    LOG_INFO(Render_OpenGL, "GL_VERSION: %s", glGetString(GL_VERSION));
     InitOpenGLObjects();
 }
 

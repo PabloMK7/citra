@@ -174,14 +174,14 @@ int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
                     return ERROR_READ;
 
                 for (u32 current_inprogress = 0; current_inprogress < remaining && pos < end_pos; current_inprogress++) {
-                    DEBUG_LOG(LOADER, "(t=%d,skip=%u,patch=%u)\n",
+                    LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)\n",
                         current_segment_reloc_table, (u32)reloc_table[current_inprogress].skip, (u32)reloc_table[current_inprogress].patch);
                     pos += reloc_table[current_inprogress].skip;
                     s32 num_patches = reloc_table[current_inprogress].patch;
                     while (0 < num_patches && pos < end_pos) {
                         u32 in_addr = (char*)pos - (char*)&all_mem[0];
                         u32 addr = TranslateAddr(*pos, &loadinfo, offsets);
-                        DEBUG_LOG(LOADER, "Patching %08X <-- rel(%08X,%d) (%08X)\n",
+                        LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)\n",
                             base_addr + in_addr, addr, current_segment_reloc_table, *pos);
                         switch (current_segment_reloc_table) {
                         case 0: *pos = (addr); break;
@@ -199,10 +199,10 @@ int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
     // Write the data
     memcpy(Memory::GetPointer(base_addr), &all_mem[0], loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1] + loadinfo.seg_sizes[2]);
 
-    DEBUG_LOG(LOADER, "CODE:   %u pages\n", loadinfo.seg_sizes[0] / 0x1000);
-    DEBUG_LOG(LOADER, "RODATA: %u pages\n", loadinfo.seg_sizes[1] / 0x1000);
-    DEBUG_LOG(LOADER, "DATA:   %u pages\n", data_load_size / 0x1000);
-    DEBUG_LOG(LOADER, "BSS:    %u pages\n", bss_load_size / 0x1000);
+    LOG_DEBUG(Loader, "CODE:   %u pages\n", loadinfo.seg_sizes[0] / 0x1000);
+    LOG_DEBUG(Loader, "RODATA: %u pages\n", loadinfo.seg_sizes[1] / 0x1000);
+    LOG_DEBUG(Loader, "DATA:   %u pages\n", data_load_size / 0x1000);
+    LOG_DEBUG(Loader, "BSS:    %u pages\n", bss_load_size / 0x1000);
 
     return ERROR_NONE;
 }
@@ -220,7 +220,7 @@ int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
     * @return Success on success, otherwise Error
     */
     ResultStatus AppLoader_THREEDSX::Load() {
-        INFO_LOG(LOADER, "Loading 3DSX file %s...", filename.c_str());
+        LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
         FileUtil::IOFile file(filename, "rb");
         if (file.IsOpen()) {
 

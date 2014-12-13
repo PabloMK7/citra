@@ -665,7 +665,7 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
     //if (!CP_ACCESS_ALLOWED (state, CPNum)) {
     if (!state->MCR[CPNum]) {
         //chy 2004-07-19 should fix in the future ????!!!!
-        DEBUG("SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x\n",CPNum, source);
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x",CPNum, source);
         ARMul_UndefInstr (state, instr);
         return;
     }
@@ -690,7 +690,7 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
     }
 
     if (cpab == ARMul_CANT) {
-        DEBUG("SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x\n", instr, CPNum, source); //ichfly todo
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x", instr, CPNum, source); //ichfly todo
         //ARMul_Abort (state, ARMul_UndefinedInstrV);
     } else {
         BUSUSEDINCPCN;
@@ -762,7 +762,7 @@ ARMword ARMul_MRC (ARMul_State * state, ARMword instr)
     //if (!CP_ACCESS_ALLOWED (state, CPNum)) {
     if (!state->MRC[CPNum]) {
         //chy 2004-07-19 should fix in the future????!!!!
-        DEBUG("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x", CPNum, instr);
         ARMul_UndefInstr (state, instr);
         return -1;
     }
@@ -865,7 +865,7 @@ void
 ARMul_UndefInstr (ARMul_State * state, ARMword instr)
 {
     std::string disasm = ARM_Disasm::Disassemble(state->pc, instr);
-    ERROR_LOG(ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", disasm.c_str(), instr);
+    LOG_ERROR(Core_ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", disasm.c_str(), instr);
     ARMul_Abort (state, ARMul_UndefinedInstrV);
 }
 
