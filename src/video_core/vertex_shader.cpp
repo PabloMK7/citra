@@ -197,6 +197,15 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
+            case Instruction::OpCode::MAX:
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = std::max(src1[i], src2[i]);
+                }
+                break;
+
             case Instruction::OpCode::DP3:
             case Instruction::OpCode::DP4:
             {
