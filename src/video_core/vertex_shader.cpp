@@ -172,7 +172,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
 
-            switch (instr.opcode) {
+            switch (instr.opcode.EffectiveOpCode()) {
             case Instruction::OpCode::ADD:
             {
                 for (int i = 0; i < 4; ++i) {
