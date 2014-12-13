@@ -34,7 +34,7 @@ public:
     }
 
     ResultVal<bool> WaitSynchronization() override {
-        bool wait = available_count == 0;
+        bool wait = !IsAvailable();
 
         if (wait) {
             Kernel::WaitCurrentThread(WAITTYPE_SEMA, GetHandle());
