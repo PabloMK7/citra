@@ -164,7 +164,7 @@ static bool CheckWaitType(const Thread* thread, WaitType type, Handle wait_handl
 
 /// Stops the current thread
 ResultCode StopThread(Handle handle, const char* reason) {
-    Thread* thread = g_object_pool.Get<Thread>(handle);
+    Thread* thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     // Release all the mutexes that this thread holds
@@ -173,7 +173,7 @@ ResultCode StopThread(Handle handle, const char* reason) {
     ChangeReadyState(thread, false);
     thread->status = THREADSTATUS_DORMANT;
     for (Handle waiting_handle : thread->waiting_threads) {
-        Thread* waiting_thread = g_object_pool.Get<Thread>(waiting_handle);
+        Thread* waiting_thread = g_handle_table.Get<Thread>(waiting_handle);
 
         if (CheckWaitType(waiting_thread, WAITTYPE_THREADEND, handle))
             ResumeThreadFromWait(waiting_handle);
@@ -210,7 +210,7 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (Handle handle : thread_queue) {
-        Thread* thread = g_object_pool.Get<Thread>(handle);
+        Thread* thread = g_handle_table.Get<Thread>(handle);
 
         if (!CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             continue;
@@ -235,7 +235,7 @@ void ArbitrateAllThreads(u32 arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (Handle handle : thread_queue) {
-        Thread* thread = g_object_pool.Get<Thread>(handle);
+        Thread* thread = g_handle_table.Get<Thread>(handle);
 
         if (CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             ResumeThreadFromWait(handle);
@@ -288,7 +288,7 @@ Thread* NextThread() {
     if (next == 0) {
         return nullptr;
     }
-    return Kernel::g_object_pool.Get<Thread>(next);
+    return Kernel::g_handle_table.Get<Thread>(next);
 }
 
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
@@ -305,7 +305,7 @@ void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_addres
 
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle) {
-    Thread* thread = Kernel::g_object_pool.Get<Thread>(handle);
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(handle);
     if (thread) {
         thread->status &= ~THREADSTATUS_WAIT;
         thread->wait_handle = 0;
@@ -341,7 +341,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
 
     Thread* thread = new Thread;
 
-    handle = Kernel::g_object_pool.Create(thread);
+    handle = Kernel::g_handle_table.Create(thread);
 
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
@@ -398,7 +398,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 
 /// Get the priority of the thread specified by handle
 ResultVal<u32> GetThreadPriority(const Handle handle) {
-    Thread* thread = g_object_pool.Get<Thread>(handle);
+    Thread* thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     return MakeResult<u32>(thread->current_priority);
@@ -410,7 +410,7 @@ ResultCode SetThreadPriority(Handle handle, s32 priority) {
     if (!handle) {
         thread = GetCurrentThread(); // TODO(bunnei): Is this correct behavior?
     } else {
-        thread = g_object_pool.Get<Thread>(handle);
+        thread = g_handle_table.Get<Thread>(handle);
         if (thread == nullptr) {
             return InvalidHandle(ErrorModule::Kernel);
         }
@@ -481,7 +481,7 @@ void Reschedule() {
         LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
 
         for (Handle handle : thread_queue) {
-            Thread* thread = g_object_pool.Get<Thread>(handle);
+            Thread* thread = g_handle_table.Get<Thread>(handle);
             LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X wait_handle=0x%08X",
                 thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_handle);
         }
@@ -497,7 +497,7 @@ void Reschedule() {
 }
 
 ResultCode GetThreadId(u32* thread_id, Handle handle) {
-    Thread* thread = g_object_pool.Get<Thread>(handle);
+    Thread* thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr)
         return ResultCode(ErrorDescription::InvalidHandle, ErrorModule::OS, 
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);

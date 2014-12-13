@@ -57,7 +57,7 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
     Semaphore* semaphore = new Semaphore;
-    *handle = g_object_pool.Create(semaphore);
+    *handle = g_handle_table.Create(semaphore);
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
@@ -69,7 +69,7 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
 }
 
 ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
-    Semaphore* semaphore = g_object_pool.Get<Semaphore>(handle);
+    Semaphore* semaphore = g_handle_table.Get<Semaphore>(handle);
     if (semaphore == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 

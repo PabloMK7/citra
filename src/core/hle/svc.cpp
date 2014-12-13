@@ -92,7 +92,7 @@ static Result ConnectToPort(Handle* out, const char* port_name) {
 
 /// Synchronize to an OS service
 static Result SendSyncRequest(Handle handle) {
-    Kernel::Session* session = Kernel::g_object_pool.Get<Kernel::Session>(handle);
+    Kernel::Session* session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
     if (session == nullptr) {
         return InvalidHandle(ErrorModule::Kernel).raw;
     }
@@ -119,10 +119,10 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
-    if (!Kernel::g_object_pool.IsValid(handle)) {
+    if (!Kernel::g_handle_table.IsValid(handle)) {
         return InvalidHandle(ErrorModule::Kernel).raw;
     }
-    Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
+    Kernel::Object* object = Kernel::g_handle_table.GetFast<Kernel::Object>(handle);
     _dbg_assert_(Kernel, object != nullptr);
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(),
@@ -150,10 +150,10 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
     // Iterate through each handle, synchronize kernel object
     for (s32 i = 0; i < handle_count; i++) {
-        if (!Kernel::g_object_pool.IsValid(handles[i])) {
+        if (!Kernel::g_handle_table.IsValid(handles[i])) {
             return InvalidHandle(ErrorModule::Kernel).raw;
         }
-        Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handles[i]);
+        Kernel::Object* object = Kernel::g_handle_table.GetFast<Kernel::Object>(handles[i]);
 
         LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(),
             object->GetName().c_str());

@@ -13,14 +13,14 @@
 namespace Kernel {
 
 Handle g_main_thread = 0;
-ObjectPool g_object_pool;
+HandleTable g_handle_table;
 u64 g_program_id = 0;
 
-ObjectPool::ObjectPool() {
+HandleTable::HandleTable() {
     next_id = INITIAL_NEXT_ID;
 }
 
-Handle ObjectPool::Create(Object* obj, int range_bottom, int range_top) {
+Handle HandleTable::Create(Object* obj, int range_bottom, int range_top) {
     if (range_top > MAX_COUNT) {
         range_top = MAX_COUNT;
     }
@@ -39,7 +39,7 @@ Handle ObjectPool::Create(Object* obj, int range_bottom, int range_top) {
     return 0;
 }
 
-bool ObjectPool::IsValid(Handle handle) const {
+bool HandleTable::IsValid(Handle handle) const {
     int index = handle - HANDLE_OFFSET;
     if (index < 0)
         return false;
@@ -49,7 +49,7 @@ bool ObjectPool::IsValid(Handle handle) const {
     return occupied[index];
 }
 
-void ObjectPool::Clear() {
+void HandleTable::Clear() {
     for (int i = 0; i < MAX_COUNT; i++) {
         //brutally clear everything, no validation
         if (occupied[i])
@@ -60,13 +60,13 @@ void ObjectPool::Clear() {
     next_id = INITIAL_NEXT_ID;
 }
 
-Object* &ObjectPool::operator [](Handle handle)
+Object* &HandleTable::operator [](Handle handle)
 {
     _dbg_assert_msg_(Kernel, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
     return pool[handle - HANDLE_OFFSET];
 }
 
-void ObjectPool::List() {
+void HandleTable::List() {
     for (int i = 0; i < MAX_COUNT; i++) {
         if (occupied[i]) {
             if (pool[i]) {
@@ -77,11 +77,11 @@ void ObjectPool::List() {
     }
 }
 
-int ObjectPool::GetCount() const {
+int HandleTable::GetCount() const {
     return std::count(occupied.begin(), occupied.end(), true);
 }
 
-Object* ObjectPool::CreateByIDType(int type) {
+Object* HandleTable::CreateByIDType(int type) {
     LOG_ERROR(Kernel, "Unimplemented: %d.", type);
     return nullptr;
 }
@@ -95,7 +95,7 @@ void Init() {
 void Shutdown() {
     Kernel::ThreadingShutdown();
 
-    g_object_pool.Clear(); // Free all kernel objects
+    g_handle_table.Clear(); // Free all kernel objects
 }
 
 /**

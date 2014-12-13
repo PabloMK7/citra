@@ -41,10 +41,10 @@ enum {
     DEFAULT_STACK_SIZE  = 0x4000,
 };
 
-class ObjectPool;
+class HandleTable;
 
 class Object : NonCopyable {
-    friend class ObjectPool;
+    friend class HandleTable;
     u32 handle;
 public:
     virtual ~Object() {}
@@ -63,10 +63,10 @@ public:
     }
 };
 
-class ObjectPool : NonCopyable {
+class HandleTable : NonCopyable {
 public:
-    ObjectPool();
-    ~ObjectPool() {}
+    HandleTable();
+    ~HandleTable() {}
 
     // Allocates a handle within the range and inserts the object into the map.
     Handle Create(Object* obj, int range_bottom=INITIAL_NEXT_ID, int range_top=0x7FFFFFFF);
@@ -160,7 +160,7 @@ private:
     int next_id;
 };
 
-extern ObjectPool g_object_pool;
+extern HandleTable g_handle_table;
 extern Handle g_main_thread;
 
 /// The ID code of the currently running game

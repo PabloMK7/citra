@@ -56,7 +56,7 @@ Manager::~Manager() {
 
 /// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
-    m_port_map[service->GetPortName()] = Kernel::g_object_pool.Create(service);
+    m_port_map[service->GetPortName()] = Kernel::g_handle_table.Create(service);
     m_services.push_back(service);
 }
 
@@ -70,7 +70,7 @@ void Manager::DeleteService(const std::string& port_name) {
 
 /// Get a Service Interface from its Handle
 Interface* Manager::FetchFromHandle(Handle handle) {
-    return Kernel::g_object_pool.Get<Interface>(handle);
+    return Kernel::g_handle_table.Get<Interface>(handle);
 }
 
 /// Get a Service Interface from its port
