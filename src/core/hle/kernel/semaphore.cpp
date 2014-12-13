@@ -20,9 +20,8 @@ public:
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Semaphore; }
     Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Semaphore; }
 
-    u32 initial_count;                          ///< Number of entries reserved for other threads
     u32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
-    u32 current_usage;                          ///< Number of currently used entries in the semaphore
+    u32 available_count;                        ///< Number of free slots left in the semaphore
     std::queue<Handle> waiting_threads;         ///< Threads that are waiting for the semaphore
     std::string name;                           ///< Name of semaphore (optional)
 
@@ -31,17 +30,17 @@ public:
      * @return Whether the semaphore is available
      */
     bool IsAvailable() const {
-        return current_usage < max_count;
+        return available_count > 0;
     }
 
     ResultVal<bool> WaitSynchronization() override {
-        bool wait = current_usage == max_count;
+        bool wait = available_count == 0;
 
         if (wait) {
             Kernel::WaitCurrentThread(WAITTYPE_SEMA, GetHandle());
             waiting_threads.push(GetCurrentThreadHandle());
         } else {
-            ++current_usage;
+            --available_count;
         }
 
         return MakeResult<bool>(wait);
@@ -60,11 +59,10 @@ ResultCode CreateSemaphore(Handle* handle, u32 initial_count,
     Semaphore* semaphore = new Semaphore;
     *handle = g_object_pool.Create(semaphore);
 
-    semaphore->initial_count = initial_count;
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
     semaphore->max_count = max_count;
-    semaphore->current_usage = max_count - initial_count;
+    semaphore->available_count = initial_count;
     semaphore->name = name;
 
     return RESULT_SUCCESS;
@@ -75,19 +73,19 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
     if (semaphore == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 
-    if (semaphore->current_usage < release_count)
+    if (semaphore->max_count - semaphore->available_count < release_count)
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel, 
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
-    *count = semaphore->max_count - semaphore->current_usage;
-    semaphore->current_usage = semaphore->current_usage - release_count;
+    *count = semaphore->available_count;
+    semaphore->available_count += release_count;
 
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
     while (!semaphore->waiting_threads.empty() && semaphore->IsAvailable()) {
         Kernel::ResumeThreadFromWait(semaphore->waiting_threads.front());
         semaphore->waiting_threads.pop();
-        semaphore->current_usage++;
+        --semaphore->available_count;
     }
 
     return RESULT_SUCCESS;
