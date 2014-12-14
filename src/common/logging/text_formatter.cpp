@@ -54,12 +54,22 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
         TrimSourcePath(entry.location.c_str()), entry.message.c_str());
 }
 
-static void ChangeConsoleColor(Level level) {
+void PrintMessage(const Entry& entry) {
+    std::array<char, 4 * 1024> format_buffer;
+    FormatLogMessage(entry, format_buffer.data(), format_buffer.size());
+    fputs(format_buffer.data(), stderr);
+    fputc('\n', stderr);
+}
+
+void PrintColoredMessage(const Entry& entry) {
 #ifdef _WIN32
     static HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
 
+    CONSOLE_SCREEN_BUFFER_INFO original_info = {0};
+    GetConsoleScreenBufferInfo(console_handle, &original_info);
+
     WORD color = 0;
-    switch (level) {
+    switch (entry.log_level) {
     case Level::Trace: // Grey
         color = FOREGROUND_INTENSITY; break;
     case Level::Debug: // Cyan
@@ -76,9 +86,9 @@ static void ChangeConsoleColor(Level level) {
 
     SetConsoleTextAttribute(console_handle, color);
 #else
-#define ESC "\x1b"
+#   define ESC "\x1b"
     const char* color = "";
-    switch (level) {
+    switch (entry.log_level) {
     case Level::Trace: // Grey
         color = ESC "[1;30m"; break;
     case Level::Debug: // Cyan
@@ -92,18 +102,18 @@ static void ChangeConsoleColor(Level level) {
     case Level::Critical: // Bright magenta
         color = ESC "[1;35m"; break;
     }
-#undef ESC
 
     fputs(color, stderr);
 #endif
-}
 
-void PrintMessage(const Entry& entry) {
-    ChangeConsoleColor(entry.log_level);
-    std::array<char, 4 * 1024> format_buffer;
-    FormatLogMessage(entry, format_buffer.data(), format_buffer.size());
-    fputs(format_buffer.data(), stderr);
-    fputc('\n', stderr);
+    PrintMessage(entry);
+
+#ifdef _WIN32
+    SetConsoleTextAttribute(console_handle, original_info.wAttributes);
+#else
+    fputs(ESC "[0m", stderr);
+#   undef ESC
+#endif
 }
 
 void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter) {
@@ -117,7 +127,7 @@ void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter) {
         for (size_t i = 0; i < num_entries; ++i) {
             const Entry& entry = entry_buffer[i];
             if (filter->CheckMessage(entry.log_class, entry.log_level)) {
-                PrintMessage(entry);
+                PrintColoredMessage(entry);
             }
         }
     }
