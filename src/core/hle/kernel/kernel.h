@@ -22,7 +22,7 @@ enum KernelHandle {
 enum class HandleType : u32 {
     Unknown         = 0,
     Port            = 1,
-    Service         = 2,
+    Session         = 2,
     Event           = 3,
     Mutex           = 4,
     SharedMemory    = 5,
@@ -30,10 +30,7 @@ enum class HandleType : u32 {
     Thread          = 7,
     Process         = 8,
     AddressArbiter  = 9,
-    File            = 10,
-    Semaphore       = 11,
-    Archive         = 12,
-    Directory       = 13,
+    Semaphore       = 10,
 };
 
 enum {
@@ -51,15 +48,6 @@ public:
     virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
-
-    /**
-     * Synchronize kernel object.
-     * @return True if the current thread should wait as a result of the sync
-     */
-    virtual ResultVal<bool> SyncRequest() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
-    }
 
     /**
      * Wait for kernel object to synchronize.

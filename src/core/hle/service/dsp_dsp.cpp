@@ -25,7 +25,7 @@ static Handle interrupt_event;
  *      2 : (inaddr << 1) + 0x1FF40000 (where 0x1FF00000 is the DSP RAM address)
  */
 void ConvertProcessAddressFromDspDram(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 addr = cmd_buff[1];
 
@@ -48,7 +48,7 @@ void ConvertProcessAddressFromDspDram(Service::Interface* self) {
  *      2 : Component loaded, 0 on not loaded, 1 on loaded
  */
 void LoadComponent(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = 1; // Pretend that we actually loaded the DSP firmware
@@ -65,7 +65,7 @@ void LoadComponent(Service::Interface* self) {
  *      3 : Semaphore event handle
  */
 void GetSemaphoreEventHandle(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = semaphore_event; // Event handle
@@ -83,7 +83,7 @@ void GetSemaphoreEventHandle(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void RegisterInterruptEvents(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     interrupt_event = static_cast<Handle>(cmd_buff[4]);
 
@@ -100,7 +100,7 @@ void RegisterInterruptEvents(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void WriteReg0x10(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     Kernel::SignalEvent(interrupt_event);
 
@@ -121,7 +121,7 @@ void WriteReg0x10(Service::Interface* self) {
  *      2 : Number of bytes read from pipe
  */
 void ReadPipeIfPossible(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size = cmd_buff[3] & 0xFFFF;// Lower 16 bits are size
     VAddr addr = cmd_buff[0x41];

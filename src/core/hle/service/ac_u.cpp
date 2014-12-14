@@ -18,7 +18,7 @@ namespace AC_U {
  *      2 : Output connection type, 0 = none, 1 = Old3DS Internet, 2 = New3DS Internet.
  */
 void GetWifiStatus(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart96): This function is only a stub,
     // it returns a valid result without implementing full functionality.

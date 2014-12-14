@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <map>
+
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/math_util.h"
@@ -10,8 +12,8 @@
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory.h"
 #include "core/hle/kernel/archive.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
-#include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
@@ -41,19 +43,15 @@ enum class DirectoryCommand : u32 {
     Close           = 0x08020000,
 };
 
-class Archive : public Object {
+class Archive : public Kernel::Session {
 public:
-    std::string GetTypeName() const override { return "Archive"; }
-    std::string GetName() const override { return name; }
-
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::Archive; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::Archive; }
+    std::string GetName() const override { return "Archive: " + name; }
 
     std::string name;           ///< Name of archive (optional)
     FileSys::Archive* backend;  ///< Archive backend interface
 
     ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Service::GetCommandBuffer();
+        u32* cmd_buff = Kernel::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
 
         switch (cmd) {
@@ -102,7 +100,8 @@ public:
         default:
         {
             LOG_ERROR(Service_FS, "Unknown command=0x%08X", cmd);
-            return UnimplementedFunction(ErrorModule::FS);
+            cmd_buff[0] = UnimplementedFunction(ErrorModule::FS).raw;
+            return MakeResult<bool>(false);
         }
         }
         cmd_buff[1] = 0; // No error
@@ -110,19 +109,15 @@ public:
     }
 };
 
-class File : public Object {
+class File : public Kernel::Session {
 public:
-    std::string GetTypeName() const override { return "File"; }
-    std::string GetName() const override { return path.DebugStr(); }
-
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::File; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::File; }
+    std::string GetName() const override { return "Path: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the file
     std::unique_ptr<FileSys::File> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Service::GetCommandBuffer();
+        u32* cmd_buff = Kernel::GetCommandBuffer();
         FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
         switch (cmd) {
 
@@ -188,19 +183,15 @@ public:
     }
 };
 
-class Directory : public Object {
+class Directory : public Kernel::Session {
 public:
-    std::string GetTypeName() const override { return "Directory"; }
-    std::string GetName() const override { return path.DebugStr(); }
-
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::Directory; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::Directory; }
+    std::string GetName() const override { return "Directory: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the directory
     std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Service::GetCommandBuffer();
+        u32* cmd_buff = Kernel::GetCommandBuffer();
         DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
         switch (cmd) {
 
@@ -230,7 +221,7 @@ public:
             LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
             ResultCode error = UnimplementedFunction(ErrorModule::FS);
             cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-            return error;
+            return MakeResult<bool>(false);
         }
         cmd_buff[1] = 0; // No error
         return MakeResult<bool>(false);

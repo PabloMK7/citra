@@ -34,7 +34,7 @@ static bool battery_is_charging = true;
  *      2 : Output of function, 0 = not charging, 1 = charging.
  */
 static void GetAdapterState(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart96): This function is only a stub,
     // it returns a valid result without implementing full functionality.
@@ -52,7 +52,7 @@ static void GetAdapterState(Service::Interface* self) {
  *      2 : Whether the 3DS's physical shell casing is open (1) or closed (0)
  */
 static void GetShellState(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0;
     cmd_buff[2] = shell_open ? 1 : 0;
@@ -68,7 +68,7 @@ static void GetShellState(Service::Interface* self) {
  *          3 = half full battery, 2 =  low battery, 1 = critical battery.
  */
 static void GetBatteryLevel(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart96): This function is only a stub,
     // it returns a valid result without implementing full functionality.
@@ -86,7 +86,7 @@ static void GetBatteryLevel(Service::Interface* self) {
  *      2 : Output of function, 0 = not charging, 1 = charging.
  */
 static void GetBatteryChargeState(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart96): This function is only a stub,
     // it returns a valid result without implementing full functionality.
