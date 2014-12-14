@@ -8,3 +8,19 @@ src/common/scm_rev.cpp
 # Project/editor files
 *.swp
 .idea/
+
+# *nix related
+# Common convention for backup or temporary files
+*~
+
+# OSX global filetypes
+# Created by Finder or Spotlight in directories for various OS functionality (indexing, etc)
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Windows global filetypes
+Thumbs.db
+
