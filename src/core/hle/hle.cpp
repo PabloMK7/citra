@@ -8,6 +8,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/fs/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +57,7 @@ void RegisterAllModules() {
 
 void Init() {
     Service::Init();
+    Service::FS::ArchiveInit();
 
     RegisterAllModules();
 
@@ -63,6 +65,7 @@ void Init() {
 }
 
 void Shutdown() {
+    Service::FS::ArchiveShutdown();
     Service::Shutdown();
 
     g_module_db.clear();

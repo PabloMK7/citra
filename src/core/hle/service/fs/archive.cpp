@@ -15,10 +15,8 @@
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Kernel namespace
-
-namespace Kernel {
+namespace Service {
+namespace FS {
 
 // Command to access archive file
 enum class FileCommand : u32 {
@@ -423,4 +421,5 @@ void ArchiveShutdown() {
     g_archive_map.clear();
 }
 
-} // namespace Kernel
+} // namespace FS
+} // namespace Service

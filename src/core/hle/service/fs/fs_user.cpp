@@ -13,7 +13,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
 
-namespace FS_User {
+namespace Service {
+namespace FS {
 
 static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -56,7 +57,7 @@ static void OpenFile(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
-    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
+    ResultVal<Handle> handle = OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
@@ -110,7 +111,7 @@ static void OpenFileDirectly(Service::Interface* self) {
 
     // TODO(Link Mauve): Check if we should even get a handle for the archive, and don't leak it
     // TODO(yuriks): Why is there all this duplicate (and seemingly useless) code up here?
-    ResultVal<Handle> archive_handle = Kernel::OpenArchive(archive_id);
+    ResultVal<Handle> archive_handle = OpenArchive(archive_id);
     cmd_buff[1] = archive_handle.Code().raw;
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS, "failed to get a handle for archive");
@@ -119,7 +120,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     // cmd_buff[2] isn't used according to 3dmoo's implementation.
     cmd_buff[3] = *archive_handle;
 
-    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(*archive_handle, file_path, mode);
+    ResultVal<Handle> handle = OpenFileFromArchive(*archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
@@ -154,7 +155,7 @@ void DeleteFile(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               filename_type, filename_size, file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path).raw;
+    cmd_buff[1] = DeleteFileFromArchive(archive_handle, file_path).raw;
 }
 
 /*
@@ -194,7 +195,7 @@ void RenameFile(Service::Interface* self) {
               src_filename_type, src_filename_size, src_file_path.DebugStr().c_str(),
               dest_filename_type, dest_filename_size, dest_file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
+    cmd_buff[1] = RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
 }
 
 /*
@@ -223,7 +224,7 @@ void DeleteDirectory(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               dirname_type, dirname_size, dir_path.DebugStr().c_str());
     
-    cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
+    cmd_buff[1] = DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
 }
 
 /*
@@ -251,7 +252,7 @@ static void CreateDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path).raw;
+    cmd_buff[1] = CreateDirectoryFromArchive(archive_handle, dir_path).raw;
 }
 
 /*
@@ -291,7 +292,7 @@ void RenameDirectory(Service::Interface* self) {
               src_dirname_type, src_dirname_size, src_dir_path.DebugStr().c_str(),
               dest_dirname_type, dest_dirname_size, dest_dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
+    cmd_buff[1] = RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
 }
 
 static void OpenDirectory(Service::Interface* self) {
@@ -308,7 +309,7 @@ static void OpenDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    ResultVal<Handle> handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
+    ResultVal<Handle> handle = OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
@@ -347,7 +348,7 @@ static void OpenArchive(Service::Interface* self) {
         return;
     }
 
-    ResultVal<Handle> handle = Kernel::OpenArchive(archive_id);
+    ResultVal<Handle> handle = OpenArchive(archive_id);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         // cmd_buff[2] isn't used according to 3dmoo's implementation.
@@ -372,7 +373,7 @@ static void IsSdmcDetected(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "called");
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
+const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
     {0x08010002, Initialize,            "Initialize"},
@@ -464,11 +465,12 @@ const Interface::FunctionInfo FunctionTable[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
-Interface::Interface() {
+FSUserInterface::FSUserInterface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
-Interface::~Interface() {
+FSUserInterface::~FSUserInterface() {
 }
 
-} // namespace
+} // namespace FS
+} // namespace Service

@@ -9,7 +9,6 @@
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hle/service/fs/archive.h"
 
 namespace Kernel {
 
@@ -89,13 +88,11 @@ Object* ObjectPool::CreateByIDType(int type) {
 /// Initialize the kernel
 void Init() {
     Kernel::ThreadingInit();
-    Kernel::ArchiveInit();
 }
 
 /// Shutdown the kernel
 void Shutdown() {
     Kernel::ThreadingShutdown();
-    Kernel::ArchiveShutdown();
 
     g_object_pool.Clear(); // Free all kernel objects
 }
@@ -106,8 +103,6 @@ void Shutdown() {
  * @return True on success, otherwise false
  */
 bool LoadExec(u32 entry_point) {
-    Init();
-
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far

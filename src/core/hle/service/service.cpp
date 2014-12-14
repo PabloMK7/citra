@@ -93,7 +93,7 @@ void Init() {
     g_manager->AddService(new DSP_DSP::Interface);
     g_manager->AddService(new ERR_F::Interface);
     g_manager->AddService(new FRD_U::Interface);
-    g_manager->AddService(new FS_User::Interface);
+    g_manager->AddService(new FS::FSUserInterface);
     g_manager->AddService(new GSP_GPU::Interface);
     g_manager->AddService(new HID_User::Interface);
     g_manager->AddService(new IR_RST::Interface);

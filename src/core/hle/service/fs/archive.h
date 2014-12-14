@@ -10,10 +10,8 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Kernel namespace
-
-namespace Kernel {
+namespace Service {
+namespace FS {
 
 /**
  * Opens an archive
@@ -104,4 +102,5 @@ void ArchiveInit();
 /// Shutdown archives
 void ArchiveShutdown();
 
-} // namespace FileSys
+} // namespace FS
+} // namespace Service
