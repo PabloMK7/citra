@@ -5,10 +5,9 @@
 #include "common/common.h"
 
 #include "common/string_util.h"
-#include "core/hle/kernel/archive.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/result.h"
-#include "core/hle/service/fs_user.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

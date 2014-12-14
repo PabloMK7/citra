@@ -15,7 +15,7 @@
 #include "core/hle/service/csnd_snd.h"
 #include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/err_f.h"
-#include "core/hle/service/fs_user.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/frd_u.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid_user.h"

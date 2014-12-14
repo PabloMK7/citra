@@ -11,7 +11,7 @@
 #include "core/file_sys/archive.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 

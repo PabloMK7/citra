@@ -24,7 +24,6 @@ set(SRCS
             file_sys/directory_romfs.cpp
             file_sys/directory_sdmc.cpp
             hle/kernel/address_arbiter.cpp
-            hle/kernel/archive.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
@@ -40,7 +39,8 @@ set(SRCS
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
-            hle/service/fs_user.cpp
+            hle/service/fs/archive.cpp
+            hle/service/fs/fs_user.cpp
             hle/service/frd_u.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
@@ -103,7 +103,6 @@ set(HEADERS
             file_sys/directory_romfs.h
             file_sys/directory_sdmc.h
             hle/kernel/address_arbiter.h
-            hle/kernel/archive.h
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
@@ -120,7 +119,8 @@ set(HEADERS
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
-            hle/service/fs_user.h
+            hle/service/fs/archive.h
+            hle/service/fs/fs_user.h
             hle/service/frd_u.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h

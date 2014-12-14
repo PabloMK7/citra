@@ -9,7 +9,7 @@
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 
 namespace Kernel {
 

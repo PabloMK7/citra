@@ -8,7 +8,7 @@
 #include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
