@@ -50,6 +50,7 @@ set(SRCS
             hle/service/ir_u.cpp
             hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
+            hle/service/nim_aoc.cpp
             hle/service/ndm_u.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
@@ -132,6 +133,7 @@ set(HEADERS
             hle/service/ir_u.h
             hle/service/ldr_ro.h
             hle/service/mic_u.h
+            hle/service/nim_aoc.h
             hle/service/ndm_u.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h

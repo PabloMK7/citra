@@ -25,6 +25,7 @@
 #include "core/hle/service/ir_u.h"
 #include "core/hle/service/ldr_ro.h"
 #include "core/hle/service/mic_u.h"
+#include "core/hle/service/nim_aoc.h"
 #include "core/hle/service/ndm_u.h"
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
@@ -105,6 +106,7 @@ void Init() {
     g_manager->AddService(new IR_U::Interface);
     g_manager->AddService(new LDR_RO::Interface);
     g_manager->AddService(new MIC_U::Interface);
+    g_manager->AddService(new NIM_AOC::Interface);
     g_manager->AddService(new NDM_U::Interface);
     g_manager->AddService(new NWM_UDS::Interface);
     g_manager->AddService(new PM_APP::Interface);
