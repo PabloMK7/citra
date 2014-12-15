@@ -32,6 +32,7 @@ set(SRCS
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
+            hle/service/am_app.cpp
             hle/service/am_net.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
@@ -111,6 +112,7 @@ set(HEADERS
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h
+            hle/service/am_app.h
             hle/service/am_net.h
             hle/service/apt_u.h
             hle/service/boss_u.h

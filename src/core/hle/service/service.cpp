@@ -7,6 +7,7 @@
 
 #include "core/hle/service/service.h"
 #include "core/hle/service/ac_u.h"
+#include "core/hle/service/am_app.h"
 #include "core/hle/service/am_net.h"
 #include "core/hle/service/apt_u.h"
 #include "core/hle/service/boss_u.h"
@@ -84,6 +85,7 @@ void Init() {
 
     g_manager->AddService(new SRV::Interface);
     g_manager->AddService(new AC_U::Interface);
+    g_manager->AddService(new AM_APP::Interface);
     g_manager->AddService(new AM_NET::Interface);
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new BOSS_U::Interface);
