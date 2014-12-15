@@ -125,7 +125,8 @@ GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::Debug
     setWidget(main_widget);
 
     // Load current data - TODO: Make sure this works when emulation is not running
-    emit Update();
+    if (debug_context && debug_context->at_breakpoint)
+        emit Update();
     widget()->setEnabled(false); // TODO: Only enable if currently at breakpoint
 }
 
