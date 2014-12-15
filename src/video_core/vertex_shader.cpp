@@ -8,10 +8,17 @@
 
 #include <core/mem_map.h>
 
+#include <nihstro/shader_bytecode.h>
+
 #include "debug_utils/debug_utils.h"
 
 #include "pica.h"
 #include "vertex_shader.h"
+
+using nihstro::Instruction;
+using nihstro::RegisterType;
+using nihstro::SourceRegister;
+using nihstro::SwizzlePattern;
 
 namespace Pica {
 
@@ -70,19 +77,28 @@ static void ProcessShaderCode(VertexShaderState& state) {
         const Instruction& instr = *(const Instruction*)state.program_counter;
         state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + (state.program_counter - shader_memory));
 
-        const float24* src1_ = (instr.common.src1 < 0x10) ? state.input_register_table[instr.common.src1.GetIndex()]
-                             : (instr.common.src1 < 0x20) ? &state.temporary_registers[instr.common.src1.GetIndex()].x
-                             : (instr.common.src1 < 0x80) ? &shader_uniforms.f[instr.common.src1.GetIndex()].x
-                             : nullptr;
-        const float24* src2_ = (instr.common.src2 < 0x10) ? state.input_register_table[instr.common.src2.GetIndex()]
-                             : &state.temporary_registers[instr.common.src2.GetIndex()].x;
+        auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
+            switch (source_reg.GetRegisterType()) {
+            case RegisterType::Input:
+                return state.input_register_table[source_reg.GetIndex()];
+
+            case RegisterType::Temporary:
+                return &state.temporary_registers[source_reg.GetIndex()].x;
+
+            case RegisterType::FloatUniform:
+                return &shader_uniforms.f[source_reg.GetIndex()].x;
+            }
+        };
+        bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
+        const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted));
+        const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted));
         float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
                       : (instr.common.dest < 0x10) ? nullptr
                       : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
                       : nullptr;
 
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
-        const bool negate_src1 = (swizzle.negate != 0);
+        const bool negate_src1 = (swizzle.negate_src1 != 0);
 
         float24 src1[4] = {
             src1_[(int)swizzle.GetSelectorSrc1(0)],
@@ -192,7 +208,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::RET:
+            // NOP is currently used as a heuristic for leaving from a function.
+            // TODO: This is completely incorrect.
+            case Instruction::OpCode::NOP:
                 if (*state.call_stack_pointer == VertexShaderState::INVALID_ADDRESS) {
                     exit_loop = true;
                 } else {
@@ -209,17 +227,16 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 _dbg_assert_(HW_GPU, state.call_stack_pointer - state.call_stack < sizeof(state.call_stack));
 
                 *++state.call_stack_pointer = state.program_counter - shader_memory;
-                // TODO: Does this offset refer to the beginning of shader memory?
-                state.program_counter = &shader_memory[instr.flow_control.offset_words];
+                state.program_counter = &shader_memory[instr.flow_control.dest_offset];
                 break;
 
-            case Instruction::OpCode::FLS:
-                // TODO: Do whatever needs to be done here?
+            case Instruction::OpCode::END:
+                // TODO
                 break;
 
             default:
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
-                          (int)instr.opcode.Value(), instr.GetOpCodeName().c_str(), instr.hex);
+                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
                 break;
         }
 
