@@ -6101,18 +6101,18 @@ L_stm_s_takeabort:
 
 			return 1;
 		}
-        case 0x6c:
-            if ((instr & 0xf03f0) == 0xf0070) { //uxtb16
-                u8 src1 = BITS(0, 3);
-                u8 tar = BITS(12, 15);
-                u32 base = state->Reg[src1];
-                u32 shamt = BITS(9,10)* 8;
-                u32 in = ((base << (32 - shamt)) | (base >> shamt));
-                state->Reg[tar] = in & 0x00FF00FF;
-                return 1;
-            } else
-                printf ("Unhandled v6 insn: uxtab16\n");
-            break;
+		case 0x6c:
+			if ((instr & 0xf03f0) == 0xf0070) { //uxtb16
+				u8 rm_idx = BITS(0, 3);
+				u8 rd_idx = BITS(12, 15);
+				u32 rm_val = state->Reg[rm_idx];
+				u32 rotation = BITS(10, 11) * 8;
+				u32 in = ((rm_val << (32 - rotation)) | (rm_val >> rotation));
+				state->Reg[rd_idx] = in & 0x00FF00FF;
+				return 1;
+			} else
+				printf ("Unhandled v6 insn: uxtab16\n");
+			break;
 		case 0x6e: {
 			ARMword Rm;
 			int ror = -1;
