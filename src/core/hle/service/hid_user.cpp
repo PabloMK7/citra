@@ -153,7 +153,7 @@ void PadUpdateComplete() {
  *      8 : Event signaled by HID_User
  */
 static void GetIPCHandles(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = shared_mem;

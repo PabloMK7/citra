@@ -16,7 +16,7 @@ static Handle g_event_handle = 0;
 static void Initialize(Service::Interface* self) {
     LOG_DEBUG(Service_SRV, "called");
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
 }
@@ -24,7 +24,7 @@ static void Initialize(Service::Interface* self) {
 static void GetProcSemaphore(Service::Interface* self) {
     LOG_TRACE(Service_SRV, "called");
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
     g_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "SRV:Event");
@@ -36,7 +36,7 @@ static void GetProcSemaphore(Service::Interface* self) {
 
 static void GetServiceHandle(Service::Interface* self) {
     ResultCode res = RESULT_SUCCESS;
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);

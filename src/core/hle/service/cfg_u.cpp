@@ -52,7 +52,7 @@ static const std::array<u16, 187> country_codes = {
  *      2 : Country's 2-char string
  */
 static void GetCountryCodeString(Service::Interface* self) {
-    u32* cmd_buffer = Service::GetCommandBuffer();
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 country_code_id = cmd_buffer[1];
 
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
@@ -74,7 +74,7 @@ static void GetCountryCodeString(Service::Interface* self) {
  *      2 : Country Code ID
  */
 static void GetCountryCodeID(Service::Interface* self) {
-    u32* cmd_buffer = Service::GetCommandBuffer();
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
     u16 country_code = cmd_buffer[1];
     u16 country_code_id = 0;
 

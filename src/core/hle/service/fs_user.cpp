@@ -17,7 +17,7 @@
 namespace FS_User {
 
 static void Initialize(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
     // http://3dbrew.org/wiki/FS:Initialize#Request
@@ -43,7 +43,7 @@ static void Initialize(Service::Interface* self) {
  *      3 : File handle
  */
 static void OpenFile(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -86,7 +86,7 @@ static void OpenFile(Service::Interface* self) {
  *      3 : File handle
  */
 static void OpenFileDirectly(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[3]);
@@ -141,7 +141,7 @@ static void OpenFileDirectly(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void DeleteFile(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -175,7 +175,7 @@ void DeleteFile(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void RenameFile(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -210,7 +210,7 @@ void RenameFile(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void DeleteDirectory(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -239,7 +239,7 @@ void DeleteDirectory(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void CreateDirectory(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO: cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -272,7 +272,7 @@ static void CreateDirectory(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void RenameDirectory(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -296,7 +296,7 @@ void RenameDirectory(Service::Interface* self) {
 }
 
 static void OpenDirectory(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
     // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
@@ -332,7 +332,7 @@ static void OpenDirectory(Service::Interface* self) {
  *      3 : Archive handle upper word (same as file handle)
  */
 static void OpenArchive(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
@@ -365,7 +365,7 @@ static void OpenArchive(Service::Interface* self) {
 *      2 : Whether the Sdmc could be detected
 */
 static void IsSdmcDetected(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0;
     cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;

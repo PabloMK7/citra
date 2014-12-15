@@ -88,17 +88,14 @@ static Result ConnectToPort(Handle* out, const char* port_name) {
 
 /// Synchronize to an OS service
 static Result SendSyncRequest(Handle handle) {
-    // TODO(yuriks): ObjectPool::Get tries to check the Object type, which fails since this is a generic base Object,
-    // so we are forced to use GetFast and manually verify the handle.
-    if (!Kernel::g_object_pool.IsValid(handle)) {
+    Kernel::Session* session = Kernel::g_object_pool.Get<Kernel::Session>(handle);
+    if (session == nullptr) {
         return InvalidHandle(ErrorModule::Kernel).raw;
     }
-    Kernel::Object* object = Kernel::g_object_pool.GetFast<Kernel::Object>(handle);
 
-    _assert_msg_(KERNEL, (object != nullptr), "called, but kernel object is nullptr!");
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, object->GetTypeName().c_str());
+    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    ResultVal<bool> wait = object->SyncRequest();
+    ResultVal<bool> wait = session->SyncRequest();
     if (wait.Succeeded() && *wait) {
         Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
     }

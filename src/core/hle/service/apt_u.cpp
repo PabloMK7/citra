@@ -40,7 +40,7 @@ enum class SignalType : u32 {
 };
 
 void Initialize(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[3] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Menu");  // APT menu event handle
     cmd_buff[4] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause"); // APT pause event handle
@@ -57,7 +57,7 @@ void Initialize(Service::Interface* self) {
 }
 
 void GetLockHandle(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
 
     if (0 == lock_handle) {
@@ -78,14 +78,14 @@ void GetLockHandle(Service::Interface* self) {
 }
 
 void Enable(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 unk = cmd_buff[1]; // TODO(bunnei): What is this field used for?
     cmd_buff[1] = 0; // No error
     LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X", unk);
 }
 
 void InquireNotification(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[2];
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = static_cast<u32>(SignalType::None); // Signal type
@@ -112,7 +112,7 @@ void InquireNotification(Service::Interface* self) {
  *      8 : Output parameter buffer ptr
  */
 void ReceiveParameter(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     u32 buffer_size = cmd_buff[2];
     cmd_buff[1] = 0; // No error
@@ -143,7 +143,7 @@ void ReceiveParameter(Service::Interface* self) {
  *      8 : Output parameter buffer ptr
  */
 void GlanceParameter(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     u32 buffer_size = cmd_buff[2];
 
@@ -170,7 +170,7 @@ void GlanceParameter(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void AppletUtility(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // These are from 3dbrew - I'm not really sure what they're used for.
     u32 unk = cmd_buff[1];
@@ -196,7 +196,7 @@ void AppletUtility(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     LOG_TRACE(Kernel_SVC, "called");
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     if (!shared_font.empty()) {
         // TODO(bunnei): This function shouldn't copy the shared font every time it's called.

@@ -108,6 +108,7 @@ set(HEADERS
             hle/kernel/kernel.h
             hle/kernel/mutex.h
             hle/kernel/semaphore.h
+            hle/kernel/session.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h

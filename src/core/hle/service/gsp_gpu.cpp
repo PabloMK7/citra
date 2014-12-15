@@ -72,7 +72,7 @@ static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
 
 /// Write a GSP GPU hardware register
 static void WriteHWRegs(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
@@ -83,7 +83,7 @@ static void WriteHWRegs(Service::Interface* self) {
 
 /// Read a GSP GPU hardware register
 static void ReadHWRegs(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
@@ -136,7 +136,7 @@ static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
  *      1: Result code
  */
 static void SetBufferSwap(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 screen_id = cmd_buff[1];
     FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
     SetBufferSwap(screen_id, *fb_info);
@@ -155,7 +155,7 @@ static void SetBufferSwap(Service::Interface* self) {
  *      4 : Handle to GSP shared memory
  */
 static void RegisterInterruptRelayQueue(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1];
     g_interrupt_event = cmd_buff[3];
     g_shared_memory = Kernel::CreateSharedMemory("GSPSharedMem");
@@ -323,7 +323,7 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
         }
     }
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = 0; // No error
 }
 

@@ -14,6 +14,7 @@
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/svc.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,30 +22,19 @@
 
 namespace Service {
 
-static const int kMaxPortSize           = 0x08; ///< Maximum size of a port name (8 characters)
-static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer of header
-
-/**
- * Returns a pointer to the command buffer in kernel memory
- * @param offset Optional offset into command buffer
- * @return Pointer to command buffer
- */
-inline static u32* GetCommandBuffer(const int offset=0) {
-    return (u32*)Memory::GetPointer(Memory::KERNEL_MEMORY_VADDR + kCommandHeaderOffset + offset);
-}
+static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
 
 class Manager;
 
 /// Interface to a CTROS service
-class Interface  : public Kernel::Object {
+class Interface  : public Kernel::Session {
+    // TODO(yuriks): An "Interface" being a Kernel::Object is mostly non-sense. Interface should be
+    // just something that encapsulates a session and acts as a helper to implement service
+    // processes.
+
     friend class Manager;
 public:
-
     std::string GetName() const override { return GetPortName(); }
-    std::string GetTypeName() const override { return GetPortName(); }
-
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Service; }
 
     typedef void (*Function)(Interface*);
 
@@ -77,7 +67,7 @@ public:
     }
 
     ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = GetCommandBuffer();
+        u32* cmd_buff = Kernel::GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end() || itr->second.func == nullptr) {
