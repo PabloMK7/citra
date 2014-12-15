@@ -28,6 +28,7 @@ set(SRCS
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
+            hle/kernel/semaphore.cpp
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
@@ -106,6 +107,7 @@ set(HEADERS
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
+            hle/kernel/semaphore.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h

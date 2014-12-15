@@ -12,6 +12,7 @@
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 
@@ -288,6 +289,21 @@ static Result GetThreadId(u32* thread_id, Handle handle) {
     return result.raw;
 }
 
+/// Creates a semaphore
+static Result CreateSemaphore(Handle* semaphore, s32 initial_count, s32 max_count) {
+    ResultCode res = Kernel::CreateSemaphore(semaphore, initial_count, max_count);
+    LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
+        initial_count, max_count, *semaphore);
+    return res.raw;
+}
+
+/// Releases a certain number of slots in a semaphore
+static Result ReleaseSemaphore(s32* count, Handle semaphore, s32 release_count) {
+    LOG_TRACE(Kernel_SVC, "called release_count=%d, handle=0x%08X", release_count, semaphore);
+    ResultCode res = Kernel::ReleaseSemaphore(count, semaphore, release_count);
+    return res.raw;
+}
+
 /// Query memory
 static Result QueryMemory(void* info, void* out, u32 addr) {
     LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called addr=0x%08X", addr);
@@ -366,8 +382,8 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x12, nullptr,                         "Run"},
     {0x13, HLE::Wrap<CreateMutex>,          "CreateMutex"},
     {0x14, HLE::Wrap<ReleaseMutex>,         "ReleaseMutex"},
-    {0x15, nullptr,                         "CreateSemaphore"},
-    {0x16, nullptr,                         "ReleaseSemaphore"},
+    {0x15, HLE::Wrap<CreateSemaphore>,      "CreateSemaphore"},
+    {0x16, HLE::Wrap<ReleaseSemaphore>,     "ReleaseSemaphore"},
     {0x17, HLE::Wrap<CreateEvent>,          "CreateEvent"},
     {0x18, HLE::Wrap<SignalEvent>,          "SignalEvent"},
     {0x19, HLE::Wrap<ClearEvent>,           "ClearEvent"},
