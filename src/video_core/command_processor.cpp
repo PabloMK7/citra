@@ -110,6 +110,13 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
                         const u8* srcdata = Memory::GetPointer(PAddrToVAddr(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]));
+
+                        // TODO(neobrain): Ocarina of Time 3D has GetNumTotalAttributes return 8,
+                        // yet only provides 2 valid source data addresses. Need to figure out
+                        // what's wrong there, until then we just continue when address lookup fails
+                        if (srcdata == nullptr)
+                            continue;
+
                         const float srcval = (vertex_attribute_formats[i] == 0) ? *(s8*)srcdata :
                                              (vertex_attribute_formats[i] == 1) ? *(u8*)srcdata :
                                              (vertex_attribute_formats[i] == 2) ? *(s16*)srcdata :
