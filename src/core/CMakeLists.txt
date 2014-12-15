@@ -93,7 +93,7 @@ set(HEADERS
             arm/skyeye_common/vfp/vfp.h
             arm/skyeye_common/vfp/vfp_helper.h
             arm/arm_interface.h
-            file_sys/archive.h
+            file_sys/archive_backend.h
             file_sys/archive_romfs.h
             file_sys/archive_sdmc.h
             file_sys/file.h

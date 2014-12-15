@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/archive.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 namespace FileSys {
 
 /// File system interface to the SDMC archive
-class Archive_SDMC final : public Archive {
+class Archive_SDMC final : public ArchiveBackend {
 public:
     Archive_SDMC(const std::string& mount_point);
     ~Archive_SDMC() override;

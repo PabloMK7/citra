@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/archive.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
@@ -42,7 +42,7 @@ ResultCode CloseArchive(ArchiveIdCode id_code);
  * @param backend File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
-ResultCode CreateArchive(FileSys::Archive* backend, ArchiveIdCode id_code);
+ResultCode CreateArchive(FileSys::ArchiveBackend* backend, ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive

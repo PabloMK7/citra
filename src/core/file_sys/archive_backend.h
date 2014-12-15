@@ -160,9 +160,9 @@ private:
     std::u16string u16str;
 };
 
-class Archive : NonCopyable {
+class ArchiveBackend : NonCopyable {
 public:
-    virtual ~Archive() { }
+    virtual ~ArchiveBackend() { }
 
     /**
      * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)

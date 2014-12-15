@@ -8,7 +8,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/archive.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 namespace FileSys {
 
 /// File system interface to the RomFS archive
-class Archive_RomFS final : public Archive {
+class Archive_RomFS final : public ArchiveBackend {
 public:
     Archive_RomFS(const Loader::AppLoader& app_loader);
     ~Archive_RomFS() override;

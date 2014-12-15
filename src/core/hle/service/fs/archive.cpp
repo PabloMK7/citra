@@ -8,7 +8,7 @@
 #include "common/file_util.h"
 #include "common/math_util.h"
 
-#include "core/file_sys/archive.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory.h"
 #include "core/hle/service/fs/archive.h"
@@ -46,7 +46,7 @@ public:
     std::string GetName() const override { return "Archive: " + backend->GetName(); }
 
     ArchiveIdCode id_code;      ///< Id code of the archive
-    FileSys::Archive* backend;  ///< Archive backend interface
+    FileSys::ArchiveBackend* backend;  ///< Archive backend interface
 
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -267,7 +267,7 @@ ResultCode MountArchive(Archive* archive) {
     return RESULT_SUCCESS;
 }
 
-ResultCode CreateArchive(FileSys::Archive* backend, ArchiveIdCode id_code) {
+ResultCode CreateArchive(FileSys::ArchiveBackend* backend, ArchiveIdCode id_code) {
     Archive* archive = new Archive;
     Handle handle = Kernel::g_object_pool.Create(archive);
     archive->id_code = id_code;
