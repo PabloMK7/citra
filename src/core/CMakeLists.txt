@@ -47,6 +47,7 @@ set(SRCS
             hle/service/hid_user.cpp
             hle/service/ir_rst.cpp
             hle/service/ir_u.cpp
+            hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
             hle/service/ndm_u.cpp
             hle/service/nwm_uds.cpp
@@ -127,6 +128,7 @@ set(HEADERS
             hle/service/hid_user.h
             hle/service/ir_rst.h
             hle/service/ir_u.h
+            hle/service/ldr_ro.h
             hle/service/mic_u.h
             hle/service/ndm_u.h
             hle/service/nwm_uds.h

@@ -22,6 +22,7 @@
 #include "core/hle/service/hid_user.h"
 #include "core/hle/service/ir_rst.h"
 #include "core/hle/service/ir_u.h"
+#include "core/hle/service/ldr_ro.h"
 #include "core/hle/service/mic_u.h"
 #include "core/hle/service/ndm_u.h"
 #include "core/hle/service/nwm_uds.h"
@@ -100,6 +101,7 @@ void Init() {
     g_manager->AddService(new HID_User::Interface);
     g_manager->AddService(new IR_RST::Interface);
     g_manager->AddService(new IR_U::Interface);
+    g_manager->AddService(new LDR_RO::Interface);
     g_manager->AddService(new MIC_U::Interface);
     g_manager->AddService(new NDM_U::Interface);
     g_manager->AddService(new NWM_UDS::Interface);
