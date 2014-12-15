@@ -78,8 +78,8 @@ bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
  */
-std::unique_ptr<Directory> Archive_RomFS::OpenDirectory(const Path& path) const {
-    return std::unique_ptr<Directory>(new Directory_RomFS);
+std::unique_ptr<DirectoryBackend> Archive_RomFS::OpenDirectory(const Path& path) const {
+    return std::unique_ptr<DirectoryBackend>(new Directory_RomFS);
 }
 
 /**

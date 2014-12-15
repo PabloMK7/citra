@@ -78,7 +78,7 @@ public:
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    std::unique_ptr<Directory> OpenDirectory(const Path& path) const override;
+    std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
     /**
      * Read data from the archive

@@ -97,12 +97,12 @@ bool Archive_SDMC::RenameDirectory(const FileSys::Path& src_path, const FileSys:
  * @param path Path relative to the archive
  * @return Opened directory, or nullptr
  */
-std::unique_ptr<Directory> Archive_SDMC::OpenDirectory(const Path& path) const {
+std::unique_ptr<DirectoryBackend> Archive_SDMC::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
     Directory_SDMC* directory = new Directory_SDMC(this, path);
     if (!directory->Open())
         return nullptr;
-    return std::unique_ptr<Directory>(directory);
+    return std::unique_ptr<DirectoryBackend>(directory);
 }
 
 /**

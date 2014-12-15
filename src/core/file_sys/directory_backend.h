@@ -36,10 +36,10 @@ static_assert(offsetof(Entry, extension) == 0x216, "Wrong offset for extension i
 static_assert(offsetof(Entry, is_archive) == 0x21E, "Wrong offset for is_archive in Entry.");
 static_assert(offsetof(Entry, file_size) == 0x220, "Wrong offset for file_size in Entry.");
 
-class Directory : NonCopyable {
+class DirectoryBackend : NonCopyable {
 public:
-    Directory() { }
-    virtual ~Directory() { }
+    DirectoryBackend() { }
+    virtual ~DirectoryBackend() { }
 
     /**
     * Open the directory

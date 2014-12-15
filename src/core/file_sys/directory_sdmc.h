@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 
-#include "core/file_sys/directory.h"
+#include "core/file_sys/directory_backend.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/loader/loader.h"
 
@@ -16,7 +16,7 @@
 
 namespace FileSys {
 
-class Directory_SDMC final : public Directory {
+class Directory_SDMC final : public DirectoryBackend {
 public:
     Directory_SDMC();
     Directory_SDMC(const Archive_SDMC* archive, const Path& path);

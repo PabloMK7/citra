@@ -99,7 +99,7 @@ set(HEADERS
             file_sys/file.h
             file_sys/file_romfs.h
             file_sys/file_sdmc.h
-            file_sys/directory.h
+            file_sys/directory_backend.h
             file_sys/directory_romfs.h
             file_sys/directory_sdmc.h
             hle/kernel/address_arbiter.h

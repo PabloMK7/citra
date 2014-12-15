@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/directory.h"
+#include "core/file_sys/directory_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
 
 namespace FileSys {
 
-class Directory_RomFS final : public Directory {
+class Directory_RomFS final : public DirectoryBackend {
 public:
     Directory_RomFS();
     ~Directory_RomFS() override;

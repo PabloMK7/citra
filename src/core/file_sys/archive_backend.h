@@ -11,7 +11,7 @@
 #include "common/bit_field.h"
 
 #include "core/file_sys/file.h"
-#include "core/file_sys/directory.h"
+#include "core/file_sys/directory_backend.h"
 
 #include "core/mem_map.h"
 #include "core/hle/kernel/kernel.h"
@@ -219,7 +219,7 @@ public:
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    virtual std::unique_ptr<Directory> OpenDirectory(const Path& path) const = 0;
+    virtual std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const = 0;
 
     /**
      * Read data from the archive

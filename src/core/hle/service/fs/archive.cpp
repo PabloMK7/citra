@@ -10,7 +10,7 @@
 
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_sdmc.h"
-#include "core/file_sys/directory.h"
+#include "core/file_sys/directory_backend.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
@@ -186,7 +186,7 @@ public:
     std::string GetName() const override { return "Directory: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the directory
-    std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
+    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
