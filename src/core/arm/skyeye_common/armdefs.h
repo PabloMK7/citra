@@ -281,6 +281,7 @@ struct ARMul_State
 
     ARMword currentexaddr;
     ARMword currentexval;
+    ARMword currentexvald;
     ARMword servaddr;
 
     unsigned NextInstr;

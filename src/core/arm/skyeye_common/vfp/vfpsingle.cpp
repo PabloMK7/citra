@@ -522,8 +522,7 @@ static s64 vfp_single_to_doubleintern(ARMul_State* state, s32 m, u32 fpscr) //ic
         if (tm == VFP_QNAN)
             vdd.significand |= VFP_DOUBLE_SIGNIFICAND_QNAN;
         goto pack_nan;
-    }
-    else if (tm & VFP_ZERO)
+    } else if (tm & VFP_ZERO)
         vdd.exponent = 0;
     else
         vdd.exponent = vsm.exponent + (1023 - 127);
@@ -620,7 +619,7 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
     if (vsm.exponent >= 127 + 32) {
         d = vsm.sign ? 0 : 0xffffffff;
         exceptions = FPSCR_IOC;
-    } else if (vsm.exponent >= 127 - 1) {
+    } else if (vsm.exponent >= 127) {
         int shift = 127 + 31 - vsm.exponent;
         u32 rem, incr = 0;
 
@@ -705,7 +704,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
         if (vsm.sign)
             d = ~d;
         exceptions |= FPSCR_IOC;
-    } else if (vsm.exponent >= 127 - 1) {
+    } else if (vsm.exponent >= 127) {
         int shift = 127 + 31 - vsm.exponent;
         u32 rem, incr = 0;
 
