@@ -11,6 +11,7 @@
 #include "core/hle/service/am_net.h"
 #include "core/hle/service/apt_u.h"
 #include "core/hle/service/boss_u.h"
+#include "core/hle/service/cecd_u.h"
 #include "core/hle/service/cfg_i.h"
 #include "core/hle/service/cfg_u.h"
 #include "core/hle/service/csnd_snd.h"
@@ -90,6 +91,7 @@ void Init() {
     g_manager->AddService(new AM_NET::Interface);
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new BOSS_U::Interface);
+    g_manager->AddService(new CECD_U::Interface);
     g_manager->AddService(new CFG_I::Interface);
     g_manager->AddService(new CFG_U::Interface);
     g_manager->AddService(new CSND_SND::Interface);

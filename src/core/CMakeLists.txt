@@ -36,6 +36,7 @@ set(SRCS
             hle/service/am_net.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
+            hle/service/cecd_u.cpp
             hle/service/cfg_i.cpp
             hle/service/cfg_u.cpp
             hle/service/csnd_snd.cpp
@@ -117,6 +118,7 @@ set(HEADERS
             hle/service/am_net.h
             hle/service/apt_u.h
             hle/service/boss_u.h
+            hle/service/cecd_u.h
             hle/service/cfg_i.h
             hle/service/cfg_u.h
             hle/service/csnd_snd.h
