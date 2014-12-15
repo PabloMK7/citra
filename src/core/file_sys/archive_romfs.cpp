@@ -2,6 +2,8 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "common/common_types.h"
 
 #include "core/file_sys/archive_romfs.h"
@@ -20,9 +22,6 @@ Archive_RomFS::Archive_RomFS(const Loader::AppLoader& app_loader) {
     }
 }
 
-Archive_RomFS::~Archive_RomFS() {
-}
-
 /**
  * Open a file specified by its path, using the specified mode
  * @param path Path relative to the archive
@@ -30,7 +29,7 @@ Archive_RomFS::~Archive_RomFS() {
  * @return Opened file, or nullptr
  */
 std::unique_ptr<FileBackend> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
-    return std::unique_ptr<FileBackend>(new File_RomFS);
+    return std::make_unique<File_RomFS>(this);
 }
 
 /**
@@ -79,48 +78,7 @@ bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys
  * @return Opened directory, or nullptr
  */
 std::unique_ptr<DirectoryBackend> Archive_RomFS::OpenDirectory(const Path& path) const {
-    return std::unique_ptr<DirectoryBackend>(new Directory_RomFS);
-}
-
-/**
- * Read data from the archive
- * @param offset Offset in bytes to start reading data from
- * @param length Length in bytes of data to read from archive
- * @param buffer Buffer to read data into
- * @return Number of bytes read
- */
-size_t Archive_RomFS::Read(const u64 offset, const u32 length, u8* buffer) const {
-    LOG_TRACE(Service_FS, "called offset=%llu, length=%d", offset, length);
-    memcpy(buffer, &raw_data[(u32)offset], length);
-    return length;
-}
-
-/**
- * Write data to the archive
- * @param offset Offset in bytes to start writing data to
- * @param length Length in bytes of data to write to archive
- * @param buffer Buffer to write data from
- * @param flush  The flush parameters (0 == do not flush)
- * @return Number of bytes written
- */
-size_t Archive_RomFS::Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) {
-    LOG_WARNING(Service_FS, "Attempted to write to ROMFS.");
-    return 0;
-}
-
-/**
- * Get the size of the archive in bytes
- * @return Size of the archive in bytes
- */
-size_t Archive_RomFS::GetSize() const {
-    return sizeof(u8) * raw_data.size();
-}
-
-/**
- * Set the size of the archive in bytes
- */
-void Archive_RomFS::SetSize(const u64 size) {
-    LOG_WARNING(Service_FS, "Attempted to set the size of ROMFS");
+    return std::make_unique<Directory_RomFS>();
 }
 
 } // namespace FileSys

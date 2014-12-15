@@ -106,47 +106,6 @@ std::unique_ptr<DirectoryBackend> Archive_SDMC::OpenDirectory(const Path& path) 
 }
 
 /**
- * Read data from the archive
- * @param offset Offset in bytes to start reading archive from
- * @param length Length in bytes to read data from archive
- * @param buffer Buffer to read data into
- * @return Number of bytes read
- */
-size_t Archive_SDMC::Read(const u64 offset, const u32 length, u8* buffer) const {
-    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
-    return -1;
-}
-
-/**
- * Write data to the archive
- * @param offset Offset in bytes to start writing data to
- * @param length Length in bytes of data to write to archive
- * @param buffer Buffer to write data from
- * @param flush  The flush parameters (0 == do not flush)
- * @return Number of bytes written
- */
-size_t Archive_SDMC::Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) {
-    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
-    return -1;
-}
-
-/**
- * Get the size of the archive in bytes
- * @return Size of the archive in bytes
- */
-size_t Archive_SDMC::GetSize() const {
-    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
-    return 0;
-}
-
-/**
- * Set the size of the archive in bytes
- */
-void Archive_SDMC::SetSize(const u64 size) {
-    LOG_ERROR(Service_FS, "(UNIMPLEMENTED)");
-}
-
-/**
  * Getter for the path used for this Archive
  * @return Mount point of that passthrough archive
  */

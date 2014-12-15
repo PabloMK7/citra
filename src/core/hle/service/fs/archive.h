@@ -24,25 +24,27 @@ enum class ArchiveIdCode : u32 {
     SDMCWriteOnly       = 0x0000000A,
 };
 
+typedef u64 ArchiveHandle;
+
 /**
  * Opens an archive
  * @param id_code IdCode of the archive to open
  * @return Handle to the opened archive
  */
-ResultVal<Handle> OpenArchive(ArchiveIdCode id_code);
+ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code);
 
 /**
  * Closes an archive
  * @param id_code IdCode of the archive to open
  */
-ResultCode CloseArchive(ArchiveIdCode id_code);
+ResultCode CloseArchive(ArchiveHandle handle);
 
 /**
  * Creates an Archive
  * @param backend File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
-ResultCode CreateArchive(FileSys::ArchiveBackend* backend, ArchiveIdCode id_code);
+ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive
@@ -51,7 +53,7 @@ ResultCode CreateArchive(FileSys::ArchiveBackend* backend, ArchiveIdCode id_code
  * @param mode Mode under which to open the File
  * @return Handle to the opened File object
  */
-ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
+ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
  * Delete a File from an Archive
@@ -59,7 +61,7 @@ ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path
  * @param path Path to the File inside of the Archive
  * @return Whether deletion succeeded
  */
-ResultCode DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
 /**
  * Rename a File between two Archives
@@ -69,8 +71,8 @@ ResultCode DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& pat
  * @param dest_path Path to the File inside of the destination Archive
  * @return Whether rename succeeded
  */
-ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                     Handle dest_archive_handle, const FileSys::Path& dest_path);
+ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
+                                     ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path);
 
 /**
  * Delete a Directory from an Archive
@@ -78,7 +80,7 @@ ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::P
  * @param path Path to the Directory inside of the Archive
  * @return Whether deletion succeeded
  */
-ResultCode DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
 /**
  * Create a Directory from an Archive
@@ -86,7 +88,7 @@ ResultCode DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path
  * @param path Path to the Directory inside of the Archive
  * @return Whether creation of directory succeeded
  */
-ResultCode CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
 /**
  * Rename a Directory between two Archives
@@ -96,8 +98,8 @@ ResultCode CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path
  * @param dest_path Path to the Directory inside of the destination Archive
  * @return Whether rename succeeded
  */
-ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                          Handle dest_archive_handle, const FileSys::Path& dest_path);
+ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
+                                          ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path);
 
 /**
  * Open a Directory from an Archive
@@ -105,7 +107,7 @@ ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileS
  * @param path Path to the Directory inside of the Archive
  * @return Handle to the opened File object
  */
-ResultVal<Handle> OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path);
+ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
 /// Initialize archives
 void ArchiveInit();
