@@ -192,7 +192,7 @@ void OnPicaRegWrite(u32 id, u32 value);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
 struct TextureInfo {
-    unsigned int address;
+    PAddr physical_address;
     int width;
     int height;
     int stride;

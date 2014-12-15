@@ -127,7 +127,7 @@ struct Regs {
         u32 address;
 
         u32 GetPhysicalAddress() const {
-            return DecodeAddressRegister(address) - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+            return DecodeAddressRegister(address);
         }
 
         // texture1 and texture2 store the texture format directly after the address
@@ -317,11 +317,11 @@ struct Regs {
 
         INSERT_PADDING_WORDS(0x1);
 
-        inline u32 GetColorBufferAddress() const {
-            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(color_buffer_address));
+        inline u32 GetColorBufferPhysicalAddress() const {
+            return DecodeAddressRegister(color_buffer_address);
         }
-        inline u32 GetDepthBufferAddress() const {
-            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(depth_buffer_address));
+        inline u32 GetDepthBufferPhysicalAddress() const {
+            return DecodeAddressRegister(depth_buffer_address);
         }
 
         inline u32 GetWidth() const {
@@ -345,9 +345,8 @@ struct Regs {
 
         BitField<0, 29, u32> base_address;
 
-        inline u32 GetBaseAddress() const {
-            // TODO: Ugly, should fix PhysicalToVirtualAddress instead
-            return DecodeAddressRegister(base_address) - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+        u32 GetPhysicalBaseAddress() const {
+            return DecodeAddressRegister(base_address);
         }
 
         // Descriptor for internal vertex attributes
@@ -779,5 +778,15 @@ union CommandHeader {
     BitField<31,  1, u32> group_commands;
 };
 
+// TODO: Ugly, should fix PhysicalToVirtualAddress instead
+inline static u32 PAddrToVAddr(u32 addr) {
+    if (addr >= Memory::VRAM_PADDR && addr < Memory::VRAM_PADDR + Memory::VRAM_SIZE) {
+        return addr - Memory::VRAM_PADDR + Memory::VRAM_VADDR;
+    } else if (addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        return addr - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+    } else {
+        return 0;
+    }
+}
 
 } // namespace

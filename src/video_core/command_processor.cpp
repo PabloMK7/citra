@@ -56,7 +56,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
 
             const auto& attribute_config = registers.vertex_attributes;
-            const u8* const base_address = Memory::GetPointer(attribute_config.GetBaseAddress());
+            const u8* const base_address = Memory::GetPointer(PAddrToVAddr(attribute_config.GetPhysicalBaseAddress()));
 
             // Information about internal vertex attributes
             const u8* vertex_attribute_sources[16];
@@ -116,7 +116,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                         input.attr[i][comp] = float24::FromFloat32(srcval);
                         LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
                                   comp, i, vertex, index,
-                                  attribute_config.GetBaseAddress(),
+                                  PAddrToVAddr(attribute_config.GetPhysicalBaseAddress()),
                                   vertex_attribute_sources[i] - base_address,
                                   srcdata - vertex_attribute_sources[i],
                                   input.attr[i][comp].ToFloat32());

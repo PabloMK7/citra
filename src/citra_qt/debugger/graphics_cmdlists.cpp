@@ -47,7 +47,7 @@ public:
 };
 
 TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo& info, QWidget* parent)
-    : QDockWidget(tr("Texture 0x%1").arg(info.address, 8, 16, QLatin1Char('0'))),
+    : QDockWidget(tr("Texture 0x%1").arg(info.physical_address, 8, 16, QLatin1Char('0'))),
       info(info) {
 
     QWidget* main_widget = new QWidget;
@@ -60,7 +60,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     phys_address_spinbox->SetBase(16);
     phys_address_spinbox->SetRange(0, 0xFFFFFFFF);
     phys_address_spinbox->SetPrefix("0x");
-    phys_address_spinbox->SetValue(info.address);
+    phys_address_spinbox->SetValue(info.physical_address);
     connect(phys_address_spinbox, SIGNAL(ValueChanged(qint64)), this, SLOT(OnAddressChanged(qint64)));
 
     QComboBox* format_choice = new QComboBox;
@@ -125,7 +125,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
 }
 
 void TextureInfoDockWidget::OnAddressChanged(qint64 value) {
-    info.address = value;
+    info.physical_address = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
@@ -150,7 +150,7 @@ void TextureInfoDockWidget::OnStrideChanged(int value) {
 }
 
 QPixmap TextureInfoDockWidget::ReloadPixmap() const {
-    u8* src = Memory::GetPointer(info.address);
+    u8* src = Memory::GetPointer(Pica::PAddrToVAddr(info.physical_address));
     return QPixmap::fromImage(LoadTexture(src, info));
 }
 
