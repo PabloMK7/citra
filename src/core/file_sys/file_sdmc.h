@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 
-#include "core/file_sys/file.h"
+#include "core/file_sys/file_backend.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/loader/loader.h"
 
@@ -16,7 +16,7 @@
 
 namespace FileSys {
 
-class File_SDMC final : public File {
+class File_SDMC final : public FileBackend {
 public:
     File_SDMC();
     File_SDMC(const Archive_SDMC* archive, const Path& path, const Mode mode);

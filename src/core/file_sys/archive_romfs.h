@@ -30,7 +30,7 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const override;
+    std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
 
     /**
      * Delete a file specified by its path

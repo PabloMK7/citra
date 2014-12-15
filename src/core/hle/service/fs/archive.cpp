@@ -112,7 +112,7 @@ public:
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the file
-    std::unique_ptr<FileSys::File> backend; ///< File backend interface
+    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();

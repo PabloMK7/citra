@@ -96,7 +96,7 @@ set(HEADERS
             file_sys/archive_backend.h
             file_sys/archive_romfs.h
             file_sys/archive_sdmc.h
-            file_sys/file.h
+            file_sys/file_backend.h
             file_sys/file_romfs.h
             file_sys/file_sdmc.h
             file_sys/directory_backend.h

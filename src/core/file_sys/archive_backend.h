@@ -10,7 +10,7 @@
 #include "common/string_util.h"
 #include "common/bit_field.h"
 
-#include "core/file_sys/file.h"
+#include "core/file_sys/file_backend.h"
 #include "core/file_sys/directory_backend.h"
 
 #include "core/mem_map.h"
@@ -175,7 +175,7 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    virtual std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const = 0;
+    virtual std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Delete a file specified by its path

@@ -29,8 +29,8 @@ Archive_RomFS::~Archive_RomFS() {
  * @param mode Mode to open the file with
  * @return Opened file, or nullptr
  */
-std::unique_ptr<File> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
-    return std::unique_ptr<File>(new File_RomFS);
+std::unique_ptr<FileBackend> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
+    return std::unique_ptr<FileBackend>(new File_RomFS);
 }
 
 /**

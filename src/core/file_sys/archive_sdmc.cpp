@@ -49,12 +49,12 @@ bool Archive_SDMC::Initialize() {
  * @param mode Mode to open the file with
  * @return Opened file, or nullptr
  */
-std::unique_ptr<File> Archive_SDMC::OpenFile(const Path& path, const Mode mode) const {
+std::unique_ptr<FileBackend> Archive_SDMC::OpenFile(const Path& path, const Mode mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%u", path.DebugStr().c_str(), mode.hex);
     File_SDMC* file = new File_SDMC(this, path, mode);
     if (!file->Open())
         return nullptr;
-    return std::unique_ptr<File>(file);
+    return std::unique_ptr<FileBackend>(file);
 }
 
 /**

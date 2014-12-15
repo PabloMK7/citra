@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/file.h"
+#include "core/file_sys/file_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
 
 namespace FileSys {
 
-class File_RomFS final : public File {
+class File_RomFS final : public FileBackend {
 public:
     File_RomFS();
     ~File_RomFS() override;

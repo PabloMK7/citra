@@ -13,10 +13,10 @@
 
 namespace FileSys {
 
-class File : NonCopyable {
+class FileBackend : NonCopyable {
 public:
-    File() { }
-    virtual ~File() { }
+    FileBackend() { }
+    virtual ~FileBackend() { }
 
     /**
      * Open the file
