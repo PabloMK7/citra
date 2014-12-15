@@ -26,11 +26,7 @@ public:
      */
     bool Initialize();
 
-    /**
-     * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
-     * @return IdCode of the archive
-     */
-    IdCode GetIdCode() const override { return IdCode::SDMC; }
+    std::string GetName() const override { return "SDMC"; }
 
     /**
      * Open a file specified by its path, using the specified mode

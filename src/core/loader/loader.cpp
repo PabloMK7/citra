@@ -74,7 +74,7 @@ ResultStatus LoadFile(const std::string& filename) {
 
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
-            Service::FS::CreateArchive(new FileSys::Archive_RomFS(app_loader), "RomFS");
+            Service::FS::CreateArchive(new FileSys::Archive_RomFS(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;

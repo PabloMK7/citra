@@ -43,9 +43,9 @@ enum class DirectoryCommand : u32 {
 
 class Archive : public Kernel::Session {
 public:
-    std::string GetName() const override { return "Archive: " + name; }
+    std::string GetName() const override { return "Archive: " + backend->GetName(); }
 
-    std::string name;           ///< Name of archive (optional)
+    ArchiveIdCode id_code;      ///< Id code of the archive
     FileSys::Archive* backend;  ///< Archive backend interface
 
     ResultVal<bool> SyncRequest() override {
@@ -91,7 +91,7 @@ public:
         case FileCommand::Close:
         {
             LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            CloseArchive(backend->GetIdCode());
+            CloseArchive(id_code);
             break;
         }
         // Unknown command...
@@ -228,9 +228,9 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::map<FileSys::Archive::IdCode, Handle> g_archive_map; ///< Map of file archives by IdCode
+std::map<ArchiveIdCode, Handle> g_archive_map; ///< Map of file archives by IdCode
 
-ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code) {
+ResultVal<Handle> OpenArchive(ArchiveIdCode id_code) {
     auto itr = g_archive_map.find(id_code);
     if (itr == g_archive_map.end()) {
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
@@ -240,7 +240,7 @@ ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code) {
     return MakeResult<Handle>(itr->second);
 }
 
-ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
+ResultCode CloseArchive(ArchiveIdCode id_code) {
     auto itr = g_archive_map.find(id_code);
     if (itr == g_archive_map.end()) {
         LOG_ERROR(Service_FS, "Cannot close archive %d, does not exist!", (int)id_code);
@@ -256,7 +256,7 @@ ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
  * @param archive Pointer to the archive to mount
  */
 ResultCode MountArchive(Archive* archive) {
-    FileSys::Archive::IdCode id_code = archive->backend->GetIdCode();
+    ArchiveIdCode id_code = archive->id_code;
     ResultVal<Handle> archive_handle = OpenArchive(id_code);
     if (archive_handle.Succeeded()) {
         LOG_ERROR(Service_FS, "Cannot mount two archives with the same ID code! (%d)", (int) id_code);
@@ -267,10 +267,10 @@ ResultCode MountArchive(Archive* archive) {
     return RESULT_SUCCESS;
 }
 
-ResultCode CreateArchive(FileSys::Archive* backend, const std::string& name) {
+ResultCode CreateArchive(FileSys::Archive* backend, ArchiveIdCode id_code) {
     Archive* archive = new Archive;
     Handle handle = Kernel::g_object_pool.Create(archive);
-    archive->name = name;
+    archive->id_code = id_code;
     archive->backend = backend;
 
     ResultCode result = MountArchive(archive);
@@ -411,7 +411,7 @@ void ArchiveInit() {
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     auto archive = new FileSys::Archive_SDMC(sdmc_directory);
     if (archive->Initialize())
-        CreateArchive(archive, "SDMC");
+        CreateArchive(archive, ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 }

@@ -88,7 +88,7 @@ static void OpenFile(Service::Interface* self) {
 static void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+    auto archive_id       = static_cast<FS::ArchiveIdCode>(cmd_buff[2]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[3]);
     u32 archivename_size  = cmd_buff[4];
     auto filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[5]);
@@ -334,7 +334,7 @@ static void OpenDirectory(Service::Interface* self) {
 static void OpenArchive(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
+    auto archive_id       = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
     u32 archivename_size  = cmd_buff[3];
     u32 archivename_ptr   = cmd_buff[5];

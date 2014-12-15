@@ -162,25 +162,12 @@ private:
 
 class Archive : NonCopyable {
 public:
-    /// Supported archive types
-    enum class IdCode : u32 {
-        RomFS               = 0x00000003,
-        SaveData            = 0x00000004,
-        ExtSaveData         = 0x00000006,
-        SharedExtSaveData   = 0x00000007,
-        SystemSaveData      = 0x00000008,
-        SDMC                = 0x00000009,
-        SDMCWriteOnly       = 0x0000000A,
-    };
-
-    Archive() { }
     virtual ~Archive() { }
 
     /**
-     * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
-     * @return IdCode of the archive
+     * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)
      */
-    virtual IdCode GetIdCode() const = 0;
+    virtual std::string GetName() const = 0;
 
     /**
      * Open a file specified by its path, using the specified mode

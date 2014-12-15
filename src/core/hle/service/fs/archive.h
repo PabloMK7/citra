@@ -13,25 +13,36 @@
 namespace Service {
 namespace FS {
 
+/// Supported archive types
+enum class ArchiveIdCode : u32 {
+    RomFS               = 0x00000003,
+    SaveData            = 0x00000004,
+    ExtSaveData         = 0x00000006,
+    SharedExtSaveData   = 0x00000007,
+    SystemSaveData      = 0x00000008,
+    SDMC                = 0x00000009,
+    SDMCWriteOnly       = 0x0000000A,
+};
+
 /**
  * Opens an archive
  * @param id_code IdCode of the archive to open
  * @return Handle to the opened archive
  */
-ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code);
+ResultVal<Handle> OpenArchive(ArchiveIdCode id_code);
 
 /**
  * Closes an archive
  * @param id_code IdCode of the archive to open
  */
-ResultCode CloseArchive(FileSys::Archive::IdCode id_code);
+ResultCode CloseArchive(ArchiveIdCode id_code);
 
 /**
  * Creates an Archive
  * @param backend File system backend interface to the archive
- * @param name Name of Archive
+ * @param id_code Id code used to access this type of archive
  */
-ResultCode CreateArchive(FileSys::Archive* backend, const std::string& name);
+ResultCode CreateArchive(FileSys::Archive* backend, ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive
