@@ -20,7 +20,7 @@ If you want to contribute please take a took at the [Contributor's Guide](CONTRI
 
 
 ### Support
-If you like, you can [donate by PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K899FANUJ2ZXW) - any donation received will go towards thing like:
+If you like, you can [donate by PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K899FANUJ2ZXW) - any donation received will go towards things like:
 * 3DS consoles for developers to explore the hardware
 * 3DS games for testing
 * Any equipment required for homebrew
