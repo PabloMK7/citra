@@ -142,13 +142,17 @@ public:
 
     __forceinline BitField& operator=(T val)
     {
-        storage = (storage & ~GetMask()) | (((StorageType)val << position) & GetMask());
+        Assign(val);
         return *this;
     }
 
     __forceinline operator T() const
     {
         return Value();
+    }
+
+    __forceinline void Assign(const T& value) {
+        storage = (storage & ~GetMask()) | (((StorageType)value << position) & GetMask());
     }
 
     __forceinline T Value() const
