@@ -15,3 +15,7 @@ If you want to contribute please take a took at the [Contributor's Guide](CONTRI
 * __Windows__: [Windows Build](https://github.com/citra-emu/citra/wiki/Windows-Build)
 * __Linux__: [Linux Build](https://github.com/citra-emu/citra/wiki/Linux-Build)
 * __OSX__: [OS X Build](https://github.com/citra-emu/citra/wiki/OS-X-Build)
+
+
+### Support
+* [Donate by PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K899FANUJ2ZXW)
