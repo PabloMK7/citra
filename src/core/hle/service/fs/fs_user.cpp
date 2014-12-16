@@ -3,18 +3,23 @@
 // Refer to the license.txt file included.
 
 #include "common/common.h"
+#include "common/scope_exit.h"
 
 #include "common/string_util.h"
-#include "core/hle/kernel/archive.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/result.h"
-#include "core/hle/service/fs_user.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
 
-namespace FS_User {
+namespace Service {
+namespace FS {
+
+static ArchiveHandle MakeArchiveHandle(u32 low_word, u32 high_word) {
+    return (u64)low_word | ((u64)high_word << 32);
+}
 
 static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -57,11 +62,12 @@ static void OpenFile(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
-    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(archive_handle, file_path, mode);
+    ResultVal<Handle> handle = OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
     } else {
+        cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
 }
@@ -88,7 +94,7 @@ static void OpenFile(Service::Interface* self) {
 static void OpenFileDirectly(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[2]);
+    auto archive_id       = static_cast<FS::ArchiveIdCode>(cmd_buff[2]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[3]);
     u32 archivename_size  = cmd_buff[4];
     auto filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[5]);
@@ -106,25 +112,25 @@ static void OpenFileDirectly(Service::Interface* self) {
     if (archive_path.GetType() != FileSys::Empty) {
         LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
         cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
+        cmd_buff[3] = 0;
         return;
     }
 
-    // TODO(Link Mauve): Check if we should even get a handle for the archive, and don't leak it
-    // TODO(yuriks): Why is there all this duplicate (and seemingly useless) code up here?
-    ResultVal<Handle> archive_handle = Kernel::OpenArchive(archive_id);
-    cmd_buff[1] = archive_handle.Code().raw;
+    ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id);
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS, "failed to get a handle for archive");
+        cmd_buff[1] = archive_handle.Code().raw;
+        cmd_buff[3] = 0;
         return;
     }
-    // cmd_buff[2] isn't used according to 3dmoo's implementation.
-    cmd_buff[3] = *archive_handle;
+    SCOPE_EXIT({ CloseArchive(*archive_handle); });
 
-    ResultVal<Handle> handle = Kernel::OpenFileFromArchive(*archive_handle, file_path, mode);
+    ResultVal<Handle> handle = OpenFileFromArchive(*archive_handle, file_path, mode);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
     } else {
+        cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
 }
@@ -140,12 +146,10 @@ static void OpenFileDirectly(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void DeleteFile(Service::Interface* self) {
+static void DeleteFile(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 filename_size     = cmd_buff[5];
     u32 filename_ptr      = cmd_buff[7];
@@ -155,7 +159,7 @@ void DeleteFile(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               filename_type, filename_size, file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::DeleteFileFromArchive(archive_handle, file_path).raw;
+    cmd_buff[1] = DeleteFileFromArchive(archive_handle, file_path).raw;
 }
 
 /*
@@ -174,15 +178,13 @@ void DeleteFile(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void RenameFile(Service::Interface* self) {
+static void RenameFile(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle src_archive_handle  = static_cast<Handle>(cmd_buff[3]);
+    ArchiveHandle src_archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto src_filename_type     = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 src_filename_size      = cmd_buff[5];
-    Handle dest_archive_handle = static_cast<Handle>(cmd_buff[7]);
+    ArchiveHandle dest_archive_handle = MakeArchiveHandle(cmd_buff[6], cmd_buff[7]);;
     auto dest_filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[8]);
     u32 dest_filename_size     = cmd_buff[9];
     u32 src_filename_ptr       = cmd_buff[11];
@@ -195,7 +197,7 @@ void RenameFile(Service::Interface* self) {
               src_filename_type, src_filename_size, src_file_path.DebugStr().c_str(),
               dest_filename_type, dest_filename_size, dest_file_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
+    cmd_buff[1] = RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle, dest_file_path).raw;
 }
 
 /*
@@ -209,12 +211,10 @@ void RenameFile(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void DeleteDirectory(Service::Interface* self) {
+static void DeleteDirectory(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto dirname_type     = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 dirname_size      = cmd_buff[5];
     u32 dirname_ptr       = cmd_buff[7];
@@ -224,7 +224,7 @@ void DeleteDirectory(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s",
               dirname_type, dirname_size, dir_path.DebugStr().c_str());
     
-    cmd_buff[1] = Kernel::DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
+    cmd_buff[1] = DeleteDirectoryFromArchive(archive_handle, dir_path).raw;
 }
 
 /*
@@ -241,9 +241,7 @@ void DeleteDirectory(Service::Interface* self) {
 static void CreateDirectory(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO: cmd_buff[2], aka archive handle lower word, isn't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle archive_handle = static_cast<Handle>(cmd_buff[3]);
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 dirname_size = cmd_buff[5];
     u32 dirname_ptr = cmd_buff[8];
@@ -252,7 +250,7 @@ static void CreateDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::CreateDirectoryFromArchive(archive_handle, dir_path).raw;
+    cmd_buff[1] = CreateDirectoryFromArchive(archive_handle, dir_path).raw;
 }
 
 /*
@@ -271,15 +269,13 @@ static void CreateDirectory(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void RenameDirectory(Service::Interface* self) {
+static void RenameDirectory(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(Link Mauve): cmd_buff[2] and cmd_buff[6], aka archive handle lower word, aren't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle src_archive_handle  = static_cast<Handle>(cmd_buff[3]);
+    ArchiveHandle src_archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto src_dirname_type      = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 src_dirname_size       = cmd_buff[5];
-    Handle dest_archive_handle = static_cast<Handle>(cmd_buff[7]);
+    ArchiveHandle dest_archive_handle = MakeArchiveHandle(cmd_buff[6], cmd_buff[7]);
     auto dest_dirname_type     = static_cast<FileSys::LowPathType>(cmd_buff[8]);
     u32 dest_dirname_size      = cmd_buff[9];
     u32 src_dirname_ptr        = cmd_buff[11];
@@ -292,15 +288,26 @@ void RenameDirectory(Service::Interface* self) {
               src_dirname_type, src_dirname_size, src_dir_path.DebugStr().c_str(),
               dest_dirname_type, dest_dirname_size, dest_dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = Kernel::RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
+    cmd_buff[1] = RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle, dest_dir_path).raw;
 }
 
+/**
+ * FS_User::OpenDirectory service function
+ *  Inputs:
+ *      1 : Archive handle low word
+ *      2 : Archive handle high word
+ *      3 : Low path type
+ *      4 : Low path size
+ *      7 : (LowPathSize << 14) | 2
+ *      8 : Low path data pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      3 : Directory handle
+ */
 static void OpenDirectory(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(Link Mauve): cmd_buff[2], aka archive handle lower word, isn't used according to
-    // 3dmoo's or ctrulib's implementations.  Triple check if it's really the case.
-    Handle archive_handle = static_cast<Handle>(cmd_buff[2]);
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
     auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[3]);
     u32 dirname_size = cmd_buff[4];
     u32 dirname_ptr = cmd_buff[6];
@@ -309,7 +316,7 @@ static void OpenDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    ResultVal<Handle> handle = Kernel::OpenDirectoryFromArchive(archive_handle, dir_path);
+    ResultVal<Handle> handle = OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[3] = *handle;
@@ -334,7 +341,7 @@ static void OpenDirectory(Service::Interface* self) {
 static void OpenArchive(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    auto archive_id       = static_cast<FileSys::Archive::IdCode>(cmd_buff[1]);
+    auto archive_id       = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
     u32 archivename_size  = cmd_buff[3];
     u32 archivename_ptr   = cmd_buff[5];
@@ -348,14 +355,32 @@ static void OpenArchive(Service::Interface* self) {
         return;
     }
 
-    ResultVal<Handle> handle = Kernel::OpenArchive(archive_id);
+    ResultVal<ArchiveHandle> handle = OpenArchive(archive_id);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
-        // cmd_buff[2] isn't used according to 3dmoo's implementation.
-        cmd_buff[3] = *handle;
+        cmd_buff[2] = *handle & 0xFFFFFFFF;
+        cmd_buff[3] = (*handle >> 32) & 0xFFFFFFFF;
     } else {
+        cmd_buff[2] = cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for archive");
     }
+}
+
+/**
+ * FS_User::CloseArchive service function
+ *  Inputs:
+ *      0 : 0x080E0080
+ *      1 : Archive handle low word
+ *      2 : Archive handle high word
+ *  Outputs:
+ *      0 : ??? TODO(yuriks): Verify return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void CloseArchive(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
+    cmd_buff[1] = CloseArchive(archive_handle).raw;
 }
 
 /*
@@ -373,7 +398,7 @@ static void IsSdmcDetected(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "called");
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
+const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
     {0x08010002, Initialize,            "Initialize"},
@@ -389,7 +414,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080B0102, OpenDirectory,         "OpenDirectory"},
     {0x080C00C2, OpenArchive,           "OpenArchive"},
     {0x080D0144, nullptr,               "ControlArchive"},
-    {0x080E0080, nullptr,               "CloseArchive"},
+    {0x080E0080, CloseArchive,          "CloseArchive"},
     {0x080F0180, nullptr,               "FormatThisUserSaveData"},
     {0x08100200, nullptr,               "CreateSystemSaveData"},
     {0x08110040, nullptr,               "DeleteSystemSaveData"},
@@ -465,11 +490,12 @@ const Interface::FunctionInfo FunctionTable[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
-Interface::Interface() {
+FSUserInterface::FSUserInterface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
-Interface::~Interface() {
+FSUserInterface::~FSUserInterface() {
 }
 
-} // namespace
+} // namespace FS
+} // namespace Service

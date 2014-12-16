@@ -8,7 +8,7 @@
 #include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ ResultStatus LoadFile(const std::string& filename) {
 
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
-            Kernel::CreateArchive(new FileSys::Archive_RomFS(app_loader), "RomFS");
+            Service::FS::CreateArchive(std::make_unique<FileSys::Archive_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;

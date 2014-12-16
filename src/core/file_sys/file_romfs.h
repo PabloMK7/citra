@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/file_sys/file.h"
+#include "core/file_sys/file_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,10 +14,11 @@
 
 namespace FileSys {
 
-class File_RomFS final : public File {
+class Archive_RomFS;
+
+class File_RomFS final : public FileBackend {
 public:
-    File_RomFS();
-    ~File_RomFS() override;
+    File_RomFS(const Archive_RomFS* archive) : archive(archive) {}
 
     /**
      * Open the file
@@ -62,6 +63,9 @@ public:
      * @return true if the file closed correctly
      */
     bool Close() const override;
+
+private:
+    const Archive_RomFS* archive;
 };
 
 } // namespace FileSys

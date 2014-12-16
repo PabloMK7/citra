@@ -10,8 +10,8 @@
 #include "common/string_util.h"
 #include "common/bit_field.h"
 
-#include "core/file_sys/file.h"
-#include "core/file_sys/directory.h"
+#include "core/file_sys/file_backend.h"
+#include "core/file_sys/directory_backend.h"
 
 #include "core/mem_map.h"
 #include "core/hle/kernel/kernel.h"
@@ -160,27 +160,14 @@ private:
     std::u16string u16str;
 };
 
-class Archive : NonCopyable {
+class ArchiveBackend : NonCopyable {
 public:
-    /// Supported archive types
-    enum class IdCode : u32 {
-        RomFS               = 0x00000003,
-        SaveData            = 0x00000004,
-        ExtSaveData         = 0x00000006,
-        SharedExtSaveData   = 0x00000007,
-        SystemSaveData      = 0x00000008,
-        SDMC                = 0x00000009,
-        SDMCWriteOnly       = 0x0000000A,
-    };
-
-    Archive() { }
-    virtual ~Archive() { }
+    virtual ~ArchiveBackend() { }
 
     /**
-     * Get the IdCode of the archive (e.g. RomFS, SaveData, etc.)
-     * @return IdCode of the archive
+     * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)
      */
-    virtual IdCode GetIdCode() const = 0;
+    virtual std::string GetName() const = 0;
 
     /**
      * Open a file specified by its path, using the specified mode
@@ -188,7 +175,7 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or nullptr
      */
-    virtual std::unique_ptr<File> OpenFile(const Path& path, const Mode mode) const = 0;
+    virtual std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Delete a file specified by its path
@@ -232,37 +219,7 @@ public:
      * @param path Path relative to the archive
      * @return Opened directory, or nullptr
      */
-    virtual std::unique_ptr<Directory> OpenDirectory(const Path& path) const = 0;
-
-    /**
-     * Read data from the archive
-     * @param offset Offset in bytes to start reading data from
-     * @param length Length in bytes of data to read from archive
-     * @param buffer Buffer to read data into
-     * @return Number of bytes read
-     */
-    virtual size_t Read(const u64 offset, const u32 length, u8* buffer) const = 0;
-
-    /**
-     * Write data to the archive
-     * @param offset Offset in bytes to start writing data to
-     * @param length Length in bytes of data to write to archive
-     * @param buffer Buffer to write data from
-     * @param flush  The flush parameters (0 == do not flush)
-     * @return Number of bytes written
-     */
-    virtual size_t Write(const u64 offset, const u32 length, const u32 flush, u8* buffer) = 0;
-
-    /**
-     * Get the size of the archive in bytes
-     * @return Size of the archive in bytes
-     */
-    virtual size_t GetSize() const = 0;
-
-    /**
-     * Set the size of the archive in bytes
-     */
-    virtual void SetSize(const u64 size) = 0;
+    virtual std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const = 0;
 };
 
 } // namespace FileSys

@@ -2,23 +2,37 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <map>
+#include <memory>
+#include <unordered_map>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/math_util.h"
 
-#include "core/file_sys/archive.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_sdmc.h"
-#include "core/file_sys/directory.h"
-#include "core/hle/kernel/archive.h"
+#include "core/file_sys/directory_backend.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Kernel namespace
+// Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
+// Workaroung for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970
+namespace std {
+    template <>
+    struct hash<Service::FS::ArchiveIdCode> {
+        typedef Service::FS::ArchiveIdCode argument_type;
+        typedef std::size_t result_type;
 
-namespace Kernel {
+        result_type operator()(const argument_type& id_code) const {
+            typedef std::underlying_type<argument_type>::type Type;
+            return std::hash<Type>()(static_cast<Type>(id_code));
+        }
+    };
+}
+
+namespace Service {
+namespace FS {
 
 // Command to access archive file
 enum class FileCommand : u32 {
@@ -43,78 +57,28 @@ enum class DirectoryCommand : u32 {
     Close           = 0x08020000,
 };
 
-class Archive : public Kernel::Session {
+class Archive {
 public:
-    std::string GetName() const override { return "Archive: " + name; }
-
-    std::string name;           ///< Name of archive (optional)
-    FileSys::Archive* backend;  ///< Archive backend interface
-
-    ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Kernel::GetCommandBuffer();
-        FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
-
-        switch (cmd) {
-        // Read from archive...
-        case FileCommand::Read:
-        {
-            u64 offset  = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-            u32 length  = cmd_buff[3];
-            u32 address = cmd_buff[5];
-
-            // Number of bytes read
-            cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
-            break;
-        }
-        // Write to archive...
-        case FileCommand::Write:
-        {
-            u64 offset  = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-            u32 length  = cmd_buff[3];
-            u32 flush   = cmd_buff[4];
-            u32 address = cmd_buff[6];
-
-            // Number of bytes written
-            cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
-            break;
-        }
-        case FileCommand::GetSize:
-        {
-            u64 filesize = (u64) backend->GetSize();
-            cmd_buff[2]  = (u32) filesize;         // Lower word
-            cmd_buff[3]  = (u32) (filesize >> 32); // Upper word
-            break;
-        }
-        case FileCommand::SetSize:
-        {
-            backend->SetSize(cmd_buff[1] | ((u64)cmd_buff[2] << 32));
-            break;
-        }
-        case FileCommand::Close:
-        {
-            LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            CloseArchive(backend->GetIdCode());
-            break;
-        }
-        // Unknown command...
-        default:
-        {
-            LOG_ERROR(Service_FS, "Unknown command=0x%08X", cmd);
-            cmd_buff[0] = UnimplementedFunction(ErrorModule::FS).raw;
-            return MakeResult<bool>(false);
-        }
-        }
-        cmd_buff[1] = 0; // No error
-        return MakeResult<bool>(false);
+    Archive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code)
+            : backend(std::move(backend)), id_code(id_code) {
     }
+
+    std::string GetName() const { return "Archive: " + backend->GetName(); }
+
+    ArchiveIdCode id_code; ///< Id code of the archive
+    std::unique_ptr<FileSys::ArchiveBackend> backend; ///< Archive backend interface
 };
 
 class File : public Kernel::Session {
 public:
+    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
+            : backend(std::move(backend)), path(path) {
+    }
+
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the file
-    std::unique_ptr<FileSys::File> backend; ///< File backend interface
+    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -185,10 +149,14 @@ public:
 
 class Directory : public Kernel::Session {
 public:
+    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
+            : backend(std::move(backend)), path(path) {
+    }
+
     std::string GetName() const override { return "Directory: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the directory
-    std::unique_ptr<FileSys::Directory> backend; ///< File backend interface
+    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -230,105 +198,95 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::map<FileSys::Archive::IdCode, Handle> g_archive_map; ///< Map of file archives by IdCode
-
-ResultVal<Handle> OpenArchive(FileSys::Archive::IdCode id_code) {
-    auto itr = g_archive_map.find(id_code);
-    if (itr == g_archive_map.end()) {
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
-                ErrorSummary::NotFound, ErrorLevel::Permanent);
-    }
-
-    return MakeResult<Handle>(itr->second);
-}
-
-ResultCode CloseArchive(FileSys::Archive::IdCode id_code) {
-    auto itr = g_archive_map.find(id_code);
-    if (itr == g_archive_map.end()) {
-        LOG_ERROR(Service_FS, "Cannot close archive %d, does not exist!", (int)id_code);
-        return InvalidHandle(ErrorModule::FS);
-    }
-
-    LOG_TRACE(Service_FS, "Closed archive %d", (int) id_code);
-    return RESULT_SUCCESS;
-}
+/**
+ * Map of registered archives, identified by id code. Once an archive is registered here, it is
+ * never removed until the FS service is shut down.
+ */
+static std::unordered_map<ArchiveIdCode, std::unique_ptr<Archive>> id_code_map;
 
 /**
- * Mounts an archive
- * @param archive Pointer to the archive to mount
+ * Map of active archive handles. Values are pointers to the archives in `idcode_map`.
  */
-ResultCode MountArchive(Archive* archive) {
-    FileSys::Archive::IdCode id_code = archive->backend->GetIdCode();
-    ResultVal<Handle> archive_handle = OpenArchive(id_code);
-    if (archive_handle.Succeeded()) {
-        LOG_ERROR(Service_FS, "Cannot mount two archives with the same ID code! (%d)", (int) id_code);
-        return archive_handle.Code();
-    }
-    g_archive_map[id_code] = archive->GetHandle();
-    LOG_TRACE(Service_FS, "Mounted archive %s", archive->GetName().c_str());
-    return RESULT_SUCCESS;
+static std::unordered_map<ArchiveHandle, Archive*> handle_map;
+static ArchiveHandle next_handle;
+
+static Archive* GetArchive(ArchiveHandle handle) {
+    auto itr = handle_map.find(handle);
+    return (itr == handle_map.end()) ? nullptr : itr->second;
 }
 
-ResultCode CreateArchive(FileSys::Archive* backend, const std::string& name) {
-    Archive* archive = new Archive;
-    Handle handle = Kernel::g_object_pool.Create(archive);
-    archive->name = name;
-    archive->backend = backend;
+ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code) {
+    LOG_TRACE(Service_FS, "Opening archive with id code 0x%08X", id_code);
 
-    ResultCode result = MountArchive(archive);
-    if (result.IsError()) {
-        return result;
-    }
-    
-    return RESULT_SUCCESS;
-}
-
-ResultVal<Handle> OpenFileFromArchive(Handle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
-    // TODO(bunnei): Binary type files get a raw file pointer to the archive. Currently, we create
-    // the archive file handles at app loading, and then keep them persistent throughout execution.
-    // Archives file handles are just reused and not actually freed until emulation shut down.
-    // Verify if real hardware works this way, or if new handles are created each time
-    if (path.GetType() == FileSys::Binary)
-        // TODO(bunnei): FixMe - this is a hack to compensate for an incorrect FileSys backend
-        // design. While the functionally of this is OK, our implementation decision to separate
-        // normal files from archive file pointers is very likely wrong.
-        // See https://github.com/citra-emu/citra/issues/205
-        return MakeResult<Handle>(archive_handle);
-
-    File* file = new File;
-    Handle handle = Kernel::g_object_pool.Create(file);
-
-    Archive* archive = Kernel::g_object_pool.Get<Archive>(archive_handle);
-    if (archive == nullptr) {
-        return InvalidHandle(ErrorModule::FS);
-    }
-    file->path = path;
-    file->backend = archive->backend->OpenFile(path, mode);
-
-    if (!file->backend) {
+    auto itr = id_code_map.find(id_code);
+    if (itr == id_code_map.end()) {
+        // TODO: Verify error against hardware
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
                 ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
+    // This should never even happen in the first place with 64-bit handles, 
+    while (handle_map.count(next_handle) != 0) {
+        ++next_handle;
+    }
+    handle_map.emplace(next_handle, itr->second.get());
+    return MakeResult<ArchiveHandle>(next_handle++);
+}
+
+ResultCode CloseArchive(ArchiveHandle handle) {
+    if (handle_map.erase(handle) == 0)
+        return InvalidHandle(ErrorModule::FS);
+    else
+        return RESULT_SUCCESS;
+}
+
+// TODO(yuriks): This might be what the fs:REG service is for. See the Register/Unregister calls in
+// http://3dbrew.org/wiki/Filesystem_services#ProgramRegistry_service_.22fs:REG.22
+ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code) {
+    auto result = id_code_map.emplace(id_code, std::make_unique<Archive>(std::move(backend), id_code));
+
+    bool inserted = result.second;
+    _dbg_assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
+
+    auto& archive = result.first->second;
+    LOG_DEBUG(Service_FS, "Registered archive %s with id code 0x%08X", archive->GetName().c_str(), id_code);
+    return RESULT_SUCCESS;
+}
+
+ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
+    Archive* archive = GetArchive(archive_handle);
+    if (archive == nullptr)
+        return InvalidHandle(ErrorModule::FS);
+
+    std::unique_ptr<FileSys::FileBackend> backend = archive->backend->OpenFile(path, mode);
+    if (backend == nullptr) {
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+                          ErrorSummary::NotFound, ErrorLevel::Permanent);
+    }
+
+    auto file = std::make_unique<File>(std::move(backend), path);
+    Handle handle = Kernel::g_object_pool.Create(file.release());
     return MakeResult<Handle>(handle);
 }
 
-ResultCode DeleteFileFromArchive(Handle archive_handle, const FileSys::Path& path) {
-    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
+    Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
+
     if (archive->backend->DeleteFile(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                     Handle dest_archive_handle, const FileSys::Path& dest_path) {
-    Archive* src_archive = Kernel::g_object_pool.GetFast<Archive>(src_archive_handle);
-    Archive* dest_archive = Kernel::g_object_pool.GetFast<Archive>(dest_archive_handle);
+ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
+                                     ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path) {
+    Archive* src_archive = GetArchive(src_archive_handle);
+    Archive* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
+
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameFile(src_path, dest_path))
             return RESULT_SUCCESS;
@@ -336,36 +294,42 @@ ResultCode RenameFileBetweenArchives(Handle src_archive_handle, const FileSys::P
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
     }
+
+    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-ResultCode DeleteDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
-    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
+    Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
+
     if (archive->backend->DeleteDirectory(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode CreateDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
-    Archive* archive = Kernel::g_object_pool.GetFast<Archive>(archive_handle);
+ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
+    Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
+
     if (archive->backend->CreateDirectory(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileSys::Path& src_path,
-                                          Handle dest_archive_handle, const FileSys::Path& dest_path) {
-    Archive* src_archive = Kernel::g_object_pool.GetFast<Archive>(src_archive_handle);
-    Archive* dest_archive = Kernel::g_object_pool.GetFast<Archive>(dest_archive_handle);
+ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
+                                          ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path) {
+    Archive* src_archive = GetArchive(src_archive_handle);
+    Archive* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
+
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameDirectory(src_path, dest_path))
             return RESULT_SUCCESS;
@@ -373,6 +337,9 @@ ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileS
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
     }
+
+    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // exist or similar. Verify.
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
@@ -383,44 +350,43 @@ ResultCode RenameDirectoryBetweenArchives(Handle src_archive_handle, const FileS
  * @param path Path to the Directory inside of the Archive
  * @return Opened Directory object
  */
-ResultVal<Handle> OpenDirectoryFromArchive(Handle archive_handle, const FileSys::Path& path) {
-    Directory* directory = new Directory;
-    Handle handle = Kernel::g_object_pool.Create(directory);
-
-    Archive* archive = Kernel::g_object_pool.Get<Archive>(archive_handle);
-    if (archive == nullptr) {
+ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
+    Archive* archive = GetArchive(archive_handle);
+    if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
-    }
-    directory->path = path;
-    directory->backend = archive->backend->OpenDirectory(path);
 
-    if (!directory->backend) {
+    std::unique_ptr<FileSys::DirectoryBackend> backend = archive->backend->OpenDirectory(path);
+    if (backend == nullptr) {
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
+    auto directory = std::make_unique<Directory>(std::move(backend), path);
+    Handle handle = Kernel::g_object_pool.Create(directory.release());
     return MakeResult<Handle>(handle);
 }
 
 /// Initialize archives
 void ArchiveInit() {
-    g_archive_map.clear();
+    next_handle = 1;
 
     // TODO(Link Mauve): Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).  Currently the only half-finished
     // archive type is SDMC, so it is the only one getting exposed.
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
-    auto archive = new FileSys::Archive_SDMC(sdmc_directory);
+    auto archive = std::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
     if (archive->Initialize())
-        CreateArchive(archive, "SDMC");
+        CreateArchive(std::move(archive), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 }
 
 /// Shutdown archives
 void ArchiveShutdown() {
-    g_archive_map.clear();
+    handle_map.clear();
+    id_code_map.clear();
 }
 
-} // namespace Kernel
+} // namespace FS
+} // namespace Service

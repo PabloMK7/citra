@@ -9,15 +9,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
 
-namespace FS_User {
+namespace Service {
+namespace FS {
 
 /// Interface to "fs:USER" service
-class Interface : public Service::Interface {
+class FSUserInterface : public Service::Interface {
 public:
 
-    Interface();
+    FSUserInterface();
 
-    ~Interface();
+    ~FSUserInterface();
 
     /**
      * Gets the string port name used by CTROS for the service
@@ -28,4 +29,5 @@ public:
     }
 };
 
-} // namespace
+} // namespace FS
+} // namespace Service
