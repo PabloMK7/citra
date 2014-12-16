@@ -18,11 +18,11 @@ set(SRCS
             arm/skyeye_common/vfp/vfpinstr.cpp
             arm/skyeye_common/vfp/vfpsingle.cpp
             file_sys/archive_romfs.cpp
+            file_sys/archive_savedata.cpp
             file_sys/archive_sdmc.cpp
+            file_sys/disk_archive.cpp
             file_sys/file_romfs.cpp
-            file_sys/file_sdmc.cpp
             file_sys/directory_romfs.cpp
-            file_sys/directory_sdmc.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
@@ -99,13 +99,13 @@ set(HEADERS
             arm/arm_interface.h
             file_sys/archive_backend.h
             file_sys/archive_romfs.h
+            file_sys/archive_savedata.h
             file_sys/archive_sdmc.h
+            file_sys/disk_archive.h
             file_sys/file_backend.h
             file_sys/file_romfs.h
-            file_sys/file_sdmc.h
             file_sys/directory_backend.h
             file_sys/directory_romfs.h
-            file_sys/directory_sdmc.h
             hle/kernel/address_arbiter.h
             hle/kernel/event.h
             hle/kernel/kernel.h

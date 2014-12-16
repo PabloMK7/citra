@@ -191,6 +191,12 @@ public:
      */
     ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
 
+    /*
+     * Gets the program id from the NCCH header
+     * @return u64 Program id
+     */
+    u64 GetProgramId() const;
+
 private:
 
     /**

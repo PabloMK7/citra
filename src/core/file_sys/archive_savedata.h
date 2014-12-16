@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2+
 // Refer to the license.txt file included.
 
 #pragma once
@@ -14,18 +14,19 @@
 
 namespace FileSys {
 
-/// File system interface to the SDMC archive
-class Archive_SDMC final : public DiskArchive {
+/// File system interface to the SaveData archive
+class Archive_SaveData final : public DiskArchive {
 public:
-    Archive_SDMC(const std::string& mount_point);
+    Archive_SaveData(const std::string& mount_point, u64 program_id);
 
     /**
      * Initialize the archive.
-     * @return true if it initialized successfully
+     * @return CreateSaveDataResult AlreadyExists if the SaveData folder already exists,
+     * Success if it was created properly and Failure if there was any error
      */
     bool Initialize();
 
-    std::string GetName() const override { return "SDMC"; }
+    std::string GetName() const override { return "SaveData"; }
 };
 
 } // namespace FileSys

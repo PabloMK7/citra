@@ -315,4 +315,8 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
     return ResultStatus::Error;
 }
 
+u64 AppLoader_NCCH::GetProgramId() const {
+    return *reinterpret_cast<u64 const*>(&ncch_header.program_id[0]);
+}
+
 } // namespace Loader
