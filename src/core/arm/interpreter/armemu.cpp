@@ -6243,16 +6243,16 @@ L_stm_s_takeabort:
 
                 // SMUAD
                 if ((instr & 0xf0d0) == 0xf010) {
-                    state->Reg[rd_idx] = (rn_lo * rn_hi) + (rm_lo * rm_hi);
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi);
                 }
                 // SMUSD
                 else if ((instr & 0xf0d0) == 0xf050) {
-                    state->Reg[rd_idx] = (rn_lo * rn_hi) - (rm_lo * rm_hi);
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) - (rn_hi * rm_hi);
                 }
                 // SMLAD
                 else {
                     const u8 ra_idx = BITS(12, 15);
-                    state->Reg[rd_idx] = (rn_lo * rn_hi) + (rm_lo * rm_hi) + (s32)state->Reg[ra_idx];
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi) + (s32)state->Reg[ra_idx];
                 }
                 return 1;
             } else {
