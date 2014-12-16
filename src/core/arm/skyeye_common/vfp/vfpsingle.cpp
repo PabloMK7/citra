@@ -614,7 +614,7 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
         exceptions |= FPSCR_IDC;
 
     if (tm & VFP_NAN)
-        vsm.sign = 0;
+        vsm.sign = 1;
 
     if (vsm.exponent >= 127 + 32) {
         d = vsm.sign ? 0 : 0xffffffff;
