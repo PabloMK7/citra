@@ -16,6 +16,21 @@
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
+// Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
+// Workaroung for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970
+namespace std {
+    template <>
+    struct hash<Service::FS::ArchiveIdCode> {
+        typedef Service::FS::ArchiveIdCode argument_type;
+        typedef std::size_t result_type;
+
+        result_type operator()(const argument_type& id_code) const {
+            typedef std::underlying_type<argument_type>::type Type;
+            return std::hash<Type>()(static_cast<Type>(id_code));
+        }
+    };
+}
+
 namespace Service {
 namespace FS {
 
