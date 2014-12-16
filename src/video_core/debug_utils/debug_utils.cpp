@@ -14,6 +14,8 @@
 #include <png.h>
 #endif
 
+#include <nihstro/shader_binary.h>
+
 #include "common/log.h"
 #include "common/file_util.h"
 
@@ -21,6 +23,10 @@
 #include "video_core/pica.h"
 
 #include "debug_utils.h"
+
+using nihstro::DVLBHeader;
+using nihstro::DVLEHeader;
+using nihstro::DVLPHeader;
 
 namespace Pica {
 
@@ -98,65 +104,6 @@ void GeometryDumper::Dump() {
     }
 }
 
-#pragma pack(1)
-struct DVLBHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x424C5644, // "DVLB"
-    };
-
-    u32 magic_word;
-    u32 num_programs;
-//    u32 dvle_offset_table[];
-};
-static_assert(sizeof(DVLBHeader) == 0x8, "Incorrect structure size");
-
-struct DVLPHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x504C5644, // "DVLP"
-    };
-
-    u32 magic_word;
-    u32 version;
-    u32 binary_offset;  // relative to DVLP start
-    u32 binary_size_words;
-    u32 swizzle_patterns_offset;
-    u32 swizzle_patterns_num_entries;
-    u32 unk2;
-};
-static_assert(sizeof(DVLPHeader) == 0x1C, "Incorrect structure size");
-
-struct DVLEHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x454c5644, // "DVLE"
-    };
-
-    enum class ShaderType : u8 {
-        VERTEX = 0,
-        GEOMETRY = 1,
-    };
-
-    u32 magic_word;
-    u16 pad1;
-    ShaderType type;
-    u8 pad2;
-    u32 main_offset_words; // offset within binary blob
-    u32 endmain_offset_words;
-    u32 pad3;
-    u32 pad4;
-    u32 constant_table_offset;
-    u32 constant_table_size; // number of entries
-    u32 label_table_offset;
-    u32 label_table_size;
-    u32 output_register_table_offset;
-    u32 output_register_table_size;
-    u32 uniform_table_offset;
-    u32 uniform_table_size;
-    u32 symbol_table_offset;
-    u32 symbol_table_size;
-
-};
-static_assert(sizeof(DVLEHeader) == 0x40, "Incorrect structure size");
-#pragma pack()
 
 void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
                 u32 main_offset, const Regs::VSOutputAttributes* output_attributes)
@@ -276,8 +223,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     dvlp.binary_size_words = binary_size;
     QueueForWriting((u8*)binary_data, binary_size * sizeof(u32));
 
-    dvlp.swizzle_patterns_offset = write_offset - dvlp_offset;
-    dvlp.swizzle_patterns_num_entries = swizzle_size;
+    dvlp.swizzle_info_offset = write_offset - dvlp_offset;
+    dvlp.swizzle_info_num_entries = swizzle_size;
     u32 dummy = 0;
     for (unsigned int i = 0; i < swizzle_size; ++i) {
         QueueForWriting((u8*)&swizzle_data[i], sizeof(swizzle_data[i]));
