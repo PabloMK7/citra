@@ -5867,12 +5867,12 @@ L_stm_s_takeabort:
 
                 if (lo_result > 0x7FFF)
                     lo_result = 0x7FFF;
-                else if (lo_result < 0x7FFF)
+                else if (lo_result < -0x8000)
                     lo_result = -0x8000;
 
                 if (hi_result > 0x7FFF)
                     hi_result = 0x7FFF;
-                else if (hi_result < 0x7FFF)
+                else if (hi_result < -0x8000)
                     hi_result = -0x8000;
 
                 state->Reg[rd_idx] = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
