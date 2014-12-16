@@ -11,13 +11,14 @@
 
 namespace CECD_U {
 
-const Interface::FunctionInfo FunctionTable[] = {
-};
+// Empty arrays are illegal -- commented out until an entry is added.
+//const Interface::FunctionInfo FunctionTable[] = { };
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
 Interface::Interface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    //Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
 } // namespace
