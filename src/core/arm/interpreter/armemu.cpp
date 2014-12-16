@@ -6101,17 +6101,32 @@ L_stm_s_takeabort:
 
 			return 1;
 		}
-		case 0x6c:
-			if ((instr & 0xf03f0) == 0xf0070) { //uxtb16
-				u8 rm_idx = BITS(0, 3);
-				u8 rd_idx = BITS(12, 15);
-				u32 rm_val = state->Reg[rm_idx];
-				u32 rotation = BITS(10, 11) * 8;
-				u32 in = ((rm_val << (32 - rotation)) | (rm_val >> rotation));
-				state->Reg[rd_idx] = in & 0x00FF00FF;
+		case 0x6c: // UXTB16 and UXTAB16
+			{
+				const u8 rm_idx = BITS(0, 3);
+				const u8 rn_idx = BITS(16, 19);
+				const u8 rd_idx = BITS(12, 15);
+				const u32 rm_val = state->Reg[rm_idx];
+				const u32 rn_val = state->Reg[rn_idx];
+				const u32 rotation = BITS(10, 11) * 8;
+				const u32 rotated_rm = ((rm_val << (32 - rotation)) | (rm_val >> rotation));
+
+				// UXTB16
+				if ((instr & 0xf03f0) == 0xf0070) {
+					state->Reg[rd_idx] = rotated_rm & 0x00FF00FF;
+				}
+				else { // UXTAB16
+					const u8 lo_rotated = (rotated_rm & 0xFF);
+					const u16 lo_result = (rn_val & 0xFFFF) + (u16)lo_rotated;
+
+					const u8 hi_rotated = (rotated_rm >> 16) & 0xFF;
+					const u16 hi_result = (rn_val >> 16) + (u16)hi_rotated;
+
+					state->Reg[rd_idx] = ((hi_result << 16) | (lo_result & 0xFFFF));
+				}
+
 				return 1;
-			} else
-				printf ("Unhandled v6 insn: uxtab16\n");
+			}
 			break;
 		case 0x6e: {
 			ARMword Rm;
