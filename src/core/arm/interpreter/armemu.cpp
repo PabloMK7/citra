@@ -5842,40 +5842,44 @@ L_stm_s_takeabort:
                 return 1;
             } else printf ("Unhandled v6 insn: sadd/ssub/ssax/sasx\n");
             break;
-        case 0x62:
-            if ((instr & 0xFF0) == 0xf70) { //QSUB16
-                u8 tar = BITS(12, 15);
-                u8 src1 = BITS(16, 19);
-                u8 src2 = BITS(0, 3);
-                s16 a1 = (state->Reg[src1] & 0xFFFF);
-                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
-                s16 b1 = (state->Reg[src2] & 0xFFFF);
-                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                s32 res1 = (a1 - b1);
-                s32 res2 = (a2 - b2);
-                if (res1 > 0x7FFF) res1 = 0x7FFF;
-                if (res2 > 0x7FFF) res2 = 0x7FFF;
-                if (res1 < 0x7FFF) res1 = -0x8000;
-                if (res2 < 0x7FFF) res2 = -0x8000;
-                state->Reg[tar] = (res1 & 0xFFFF) | ((res2 & 0xFFFF) << 0x10);
+        case 0x62: // QSUB16 and QADD16
+            if ((instr & 0xFF0) == 0xf70 || (instr & 0xFF0) == 0xf10) {
+                const u8 rd_idx = BITS(12, 15);
+                const u8 rn_idx = BITS(16, 19);
+                const u8 rm_idx = BITS(0, 3);
+                const s16 rm_lo = (state->Reg[rm_idx] & 0xFFFF);
+                const s16 rm_hi = ((state->Reg[rm_idx] >> 0x10) & 0xFFFF);
+                const s16 rn_lo = (state->Reg[rn_idx] & 0xFFFF);
+                const s16 rn_hi = ((state->Reg[rn_idx] >> 0x10) & 0xFFFF);
+
+                s32 lo_result;
+                s32 hi_result;
+
+                // QSUB16
+                if ((instr & 0xFF0) == 0xf70) {
+                    lo_result = (rn_lo - rm_lo);
+                    hi_result = (rn_hi - rm_hi);
+                }
+                else { // QADD16
+                    lo_result = (rn_lo + rm_lo);
+                    hi_result = (rn_hi + rm_hi);
+                }
+
+                if (lo_result > 0x7FFF)
+                    lo_result = 0x7FFF;
+                else if (lo_result < -0x8000)
+                    lo_result = -0x8000;
+
+                if (hi_result > 0x7FFF)
+                    hi_result = 0x7FFF;
+                else if (hi_result < -0x8000)
+                    hi_result = -0x8000;
+
+                state->Reg[rd_idx] = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
                 return 1;
-            } else if ((instr & 0xFF0) == 0xf10) { //QADD16
-                u8 tar = BITS(12, 15);
-                u8 src1 = BITS(16, 19);
-                u8 src2 = BITS(0, 3);
-                s16 a1 = (state->Reg[src1] & 0xFFFF);
-                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
-                s16 b1 = (state->Reg[src2] & 0xFFFF);
-                s16 b2 = ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                s32 res1 = (a1 + b1);
-                s32 res2 = (a2 + b2);
-                if (res1 > 0x7FFF) res1 = 0x7FFF;
-                if (res2 > 0x7FFF) res2 = 0x7FFF;
-                if (res1 < 0x7FFF) res1 = -0x8000;
-                if (res2 < 0x7FFF) res2 = -0x8000;
-                state->Reg[tar] = ((res1) & 0xFFFF) | (((res2) & 0xFFFF) << 0x10);
-                return 1;
-            } else printf ("Unhandled v6 insn: qadd16/qsub16\n");
+            } else {
+                printf("Unhandled v6 insn: %08x", BITS(20, 27));
+            }
             break;
         case 0x63:
             printf ("Unhandled v6 insn: shadd/shsub\n");
