@@ -6237,45 +6237,42 @@ L_stm_s_takeabort:
 			return 1;
 		}
         case 0x70:
-            if ((instr & 0xf0d0) == 0xf010) { //smuad //ichfly
-                u8 tar = BITS(16, 19);
-                u8 src1 = BITS(0, 3);
-                u8 src2 = BITS(8, 11);
-                u8 swap = BIT(5);
-                s16 a1 = (state->Reg[src1] & 0xFFFF);
-                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
-                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
-                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                state->Reg[tar] = a1*a2 + b1*b2;
-                return 1;
+            // ichfly
+            // SMUAD, SMUSD, SMLAD
+            if ((instr & 0xf0d0) == 0xf010 || (instr & 0xf0d0) == 0xf050 || (instr & 0xd0) == 0x10) {
+                const u8 rd_idx = BITS(16, 19);
+                const u8 rn_idx = BITS(0, 3);
+                const u8 rm_idx = BITS(8, 11);
+                const bool do_swap = (BIT(5) == 1);
 
-            } else if ((instr & 0xf0d0) == 0xf050) { //smusd
-                u8 tar = BITS(16, 19);
-                u8 src1 = BITS(0, 3);
-                u8 src2 = BITS(8, 11);
-                u8 swap = BIT(5);
-                s16 a1 = (state->Reg[src1] & 0xFFFF);
-                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
-                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
-                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                state->Reg[tar] = a1*a2 - b1*b2;
-                return 1;
-            } else if ((instr & 0xd0) == 0x10) { //smlad
-                u8 tar = BITS(16, 19);
-                u8 src1 = BITS(0, 3);
-                u8 src2 = BITS(8, 11);
-                u8 src3 = BITS(12, 15);
-                u8 swap = BIT(5);
+                u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
 
-                u32 a3 = state->Reg[src3];
+                if (do_swap)
+                    rm_val = (((rm_val & 0xFFFF) << 16) | (rm_val >> 16));
 
-                s16 a1 = (state->Reg[src1] & 0xFFFF);
-                s16 a2 = ((state->Reg[src1] >> 0x10) & 0xFFFF);
-                s16 b1 = swap ? ((state->Reg[src2] >> 0x10) & 0xFFFF) : (state->Reg[src2] & 0xFFFF);
-                s16 b2 = swap ? (state->Reg[src2] & 0xFFFF) : ((state->Reg[src2] >> 0x10) & 0xFFFF);
-                state->Reg[tar] = a1*a2 + b1*b2 + a3;
+                const s16 rm_lo = (rm_val & 0xFFFF);
+                const s16 rm_hi = ((rm_val >> 16) & 0xFFFF);
+                const s16 rn_lo = (rn_val & 0xFFFF);
+                const s16 rn_hi = ((rn_val >> 16) & 0xFFFF);
+
+                // SMUAD
+                if ((instr & 0xf0d0) == 0xf010) {
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi);
+                }
+                // SMUSD
+                else if ((instr & 0xf0d0) == 0xf050) {
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) - (rn_hi * rm_hi);
+                }
+                // SMLAD
+                else {
+                    const u8 ra_idx = BITS(12, 15);
+                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi) + (s32)state->Reg[ra_idx];
+                }
                 return 1;
-            } else printf ("Unhandled v6 insn: smuad/smusd/smlad/smlsd\n");
+            } else {
+                printf ("Unhandled v6 insn: smlsd\n");
+            }
             break;
         case 0x74:
             printf ("Unhandled v6 insn: smlald/smlsld\n");
