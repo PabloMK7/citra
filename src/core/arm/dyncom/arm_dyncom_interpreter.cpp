@@ -1266,6 +1266,13 @@ typedef struct _smla_inst {
 	unsigned int Rn;
 } smla_inst;
 
+typedef struct umaal_inst {
+	unsigned int Rn;
+	unsigned int Rm;
+	unsigned int RdHi;
+	unsigned int RdLo;
+} umaal_inst;
+
 typedef struct _umlal_inst {
 	unsigned int S;
 	unsigned int Rm;
@@ -3010,7 +3017,26 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(uhaddsubx)(unsigned int inst, int index) { UN
 ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UHSUB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UHSUB8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(uhsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UHSUBADDX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("UMAAL"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(umaal_inst));
+	umaal_inst* const inst_cream = (umaal_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm   = BITS(inst, 8, 11);
+	inst_cream->Rn   = BITS(inst, 0, 3);
+	inst_cream->RdLo = BITS(inst, 12, 15);
+	inst_cream->RdHi = BITS(inst, 16, 19);
+
+	if (CHECK_RM || CHECK_RN)
+		inst_base->load_r15 = 1;
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(umlal)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
@@ -6374,6 +6400,26 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 	UHSUB8_INST:
 	UHSUBADDX_INST:
 	UMAAL_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			umaal_inst* const inst_cream = (umaal_inst*)inst_base->component;
+
+			const u32 rm = RM;
+			const u32 rn = RN;
+			const u32 rd_lo = RDLO;
+			const u32 rd_hi = RDHI;
+
+			const u64 result = (rm * rn) + rd_lo + rd_hi;
+
+			RDLO = (result & 0xFFFFFFFF);
+			RDHI = ((result >> 32) & 0xFFFFFFFF);
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(umaal_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
 	UMLAL_INST:
 	{
 		INC_ICOUNTER;
