@@ -6176,7 +6176,7 @@ L_stm_s_takeabort:
 				break;
 			}
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF;
 
 			if (BITS(16, 19) == 0xf)
 				/* UXTB */
@@ -6216,13 +6216,13 @@ L_stm_s_takeabort:
 			if (ror == -1)
 				break;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF;
 
 			/* UXT */
 			/* state->Reg[BITS (12, 15)] = Rm; */
 			/* dyf add */
 			if (BITS(16, 19) == 0xf) {
-				state->Reg[BITS(12, 15)] = (Rm >> (8 * BITS(10, 11))) & 0x0000FFFF;
+				state->Reg[BITS(12, 15)] = Rm;
 			}
 			else {
 				/* UXTAH */
@@ -6230,7 +6230,7 @@ L_stm_s_takeabort:
 				//            printf("rd is %x rn is %x rm is %x rotate is %x\n", state->Reg[BITS (12, 15)], state->Reg[BITS (16, 19)]
 				//                   , Rm, BITS(10, 11));
 				//            printf("icounter is %lld\n", state->NumInstrs);
-				state->Reg[BITS(12, 15)] = (state->Reg[BITS(16, 19)] >> (8 * (BITS(10, 11)))) + Rm;
+				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
 				//        printf("rd is %x\n", state->Reg[BITS (12, 15)]);
 				//        exit(-1);
 			}
