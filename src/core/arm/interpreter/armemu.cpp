@@ -5930,11 +5930,29 @@ L_stm_s_takeabort:
                         b2 = ((u8)(from >> 8) + (u8)(to >> 8));
                         b3 = ((u8)(from >> 16) + (u8)(to >> 16));
                         b4 = ((u8)(from >> 24) + (u8)(to >> 24));
-                        if (b1 & 0xffffff00) state->Cpsr |= (1 << 16);
-                        if (b2 & 0xffffff00) state->Cpsr |= (1 << 17);
-                        if (b3 & 0xffffff00) state->Cpsr |= (1 << 18);
-                        if (b4 & 0xffffff00) state->Cpsr |= (1 << 19);
+
+                        if (b1 & 0xffffff00)
+                            state->Cpsr |= (1 << 16);
+                        else
+                            state->Cpsr &= ~(1 << 16);
+
+                        if (b2 & 0xffffff00)
+                            state->Cpsr |= (1 << 17);
+                        else
+                            state->Cpsr &= ~(1 << 17);
+
+                        if (b3 & 0xffffff00)
+                            state->Cpsr |= (1 << 18);
+                        else
+                            state->Cpsr &= ~(1 << 18);
+
+
+                        if (b4 & 0xffffff00)
+                            state->Cpsr |= (1 << 19);
+                        else
+                            state->Cpsr &= ~(1 << 19);
                     }
+
                     state->Reg[rd] = (u32)(b1 | (b2 & 0xff) << 8 | (b3 & 0xff) << 16 | (b4 & 0xff) << 24);
                     return 1;
                 }
