@@ -64,6 +64,10 @@ static Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other
     case Kernel::MemoryPermission::Read:
     case Kernel::MemoryPermission::Write:
     case Kernel::MemoryPermission::ReadWrite:
+    case Kernel::MemoryPermission::Execute:
+    case Kernel::MemoryPermission::ReadExecute:
+    case Kernel::MemoryPermission::WriteExecute:
+    case Kernel::MemoryPermission::ReadWriteExecute:
     case Kernel::MemoryPermission::DontCare:
         Kernel::MapSharedMemory(handle, addr, permissions_type,
             static_cast<Kernel::MemoryPermission>(other_permissions));
