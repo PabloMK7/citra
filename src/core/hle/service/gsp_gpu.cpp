@@ -145,6 +145,30 @@ static void SetBufferSwap(Service::Interface* self) {
 }
 
 /**
+ * GSP_GPU::FlushDataCache service function
+ *
+ * This Function is a no-op, We aren't emulating the CPU cache any time soon.
+ *
+ *  Inputs:
+ *      1 : Address
+ *      2 : Size
+ *      3 : Value 0, some descriptor for the KProcess Handle
+ *      4 : KProcess handle
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void FlushDataCache(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 address = cmd_buff[1];
+    u32 size    = cmd_buff[2];
+    u32 process = cmd_buff[4];
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+}
+
+/**
  * GSP_GPU::RegisterInterruptRelayQueue service function
  *  Inputs:
  *      1 : "Flags" field, purpose is unknown
@@ -335,7 +359,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00050200, SetBufferSwap,                 "SetBufferSwap"},
     {0x00060082, nullptr,                       "SetCommandList"},
     {0x000700C2, nullptr,                       "RequestDma"},
-    {0x00080082, nullptr,                       "FlushDataCache"},
+    {0x00080082, FlushDataCache,                "FlushDataCache"},
     {0x00090082, nullptr,                       "InvalidateDataCache"},
     {0x000A0044, nullptr,                       "RegisterInterruptEvents"},
     {0x000B0040, nullptr,                       "SetLcdForceBlack"},
