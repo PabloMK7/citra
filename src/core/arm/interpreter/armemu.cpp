@@ -6084,7 +6084,7 @@ L_stm_s_takeabort:
 				break;
 			}
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF;
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF);
 			if (Rm & 0x80)
 				Rm |= 0xffffff00;
 
@@ -6129,7 +6129,7 @@ L_stm_s_takeabort:
 			if (ror == -1)
 				break;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF;
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF);
 			if (Rm & 0x8000)
 				Rm |= 0xffff0000;
 
@@ -6216,7 +6216,7 @@ L_stm_s_takeabort:
 				break;
 			}
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF;
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF);
 
 			if (BITS(16, 19) == 0xf)
 				/* UXTB */
@@ -6260,7 +6260,7 @@ L_stm_s_takeabort:
 			if (ror == -1)
 				break;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF;
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF);
 
 			/* UXT */
 			/* state->Reg[BITS (12, 15)] = Rm; */
