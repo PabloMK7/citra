@@ -6201,10 +6201,15 @@ L_stm_s_takeabort:
 					
 					if (max < rn_lo)
 						rn_lo = max;
+					else if (rn_lo < 0)
+						rn_lo = 0;
+
 					if (max < rn_hi)
 						rn_hi = max;
+					else if (rn_hi < 0)
+						rn_hi = 0;
 					
-					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | (rn_hi);
+					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi << 16) & 0xFFFF);
 					return 1;
 				}
 
