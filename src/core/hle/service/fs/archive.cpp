@@ -419,6 +419,15 @@ void ArchiveInit() {
         CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
+
+    std::string systemsavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
+    auto systemsavedata_archive = std::make_unique<FileSys::Archive_SDMC>(systemsavedata_directory);
+    if (systemsavedata_archive->Initialize()) {
+        CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SystemSaveData);
+    } else {
+        LOG_ERROR(Service_FS, "Can't instantiate SystemSaveData archive with path %s",
+            systemsavedata_directory.c_str());
+    }
 }
 
 /// Shutdown archives

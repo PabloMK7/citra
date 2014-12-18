@@ -20,6 +20,7 @@ set(SRCS
             file_sys/archive_romfs.cpp
             file_sys/archive_savedata.cpp
             file_sys/archive_sdmc.cpp
+            file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/file_romfs.cpp
             file_sys/directory_romfs.cpp
@@ -101,6 +102,7 @@ set(HEADERS
             file_sys/archive_romfs.h
             file_sys/archive_savedata.h
             file_sys/archive_sdmc.h
+            file_sys/archive_systemsavedata.h
             file_sys/disk_archive.h
             file_sys/file_backend.h
             file_sys/file_romfs.h
