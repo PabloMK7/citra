@@ -14,10 +14,12 @@
 
 namespace FileSys {
 
-/// File system interface to the SaveData archive
-class Archive_SaveData final : public DiskArchive {
+/// File system interface to the SystemSaveData archive
+/// TODO(Subv): This archive should point to a location in the NAND, 
+/// specifically nand:/data/<ID0>/sysdata/<SaveID-Low>/<SaveID-High>
+class Archive_SystemSaveData final : public DiskArchive {
 public:
-    Archive_SaveData(const std::string& mount_point, u64 program_id);
+    Archive_SystemSaveData(const std::string& mount_point);
 
     /**
      * Initialize the archive.
@@ -25,7 +27,7 @@ public:
      */
     bool Initialize();
 
-    std::string GetName() const override { return "SaveData"; }
+    std::string GetName() const override { return "SystemSaveData"; }
 };
 
 } // namespace FileSys
