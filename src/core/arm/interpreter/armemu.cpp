@@ -1356,7 +1356,13 @@ mainswitch:
                     }
                     break;
 
-                case 0x04:	/* SUB reg */
+                case 0x04: /* SUB reg */
+                    // Signifies UMAAL
+                    if (state->is_v6 && BITS(4, 7) == 0x09) {
+                        if (handle_v6_insn(state, instr))
+                            break;
+                    }
+
 #ifdef MODET
                     if (BITS (4, 7) == 0xB) {
                         /* STRH immediate offset, no write-back, down, post indexed.  */
@@ -5683,8 +5689,24 @@ L_stm_s_takeabort:
         case 0x03:
             printf ("Unhandled v6 insn: ldr\n");
             break;
-        case 0x04:
-            printf ("Unhandled v6 insn: umaal\n");
+        case 0x04: // UMAAL
+            {
+                const u8 rm_idx = BITS(8, 11);
+                const u8 rn_idx = BITS(0, 3);
+                const u8 rd_lo_idx = BITS(12, 15);
+                const u8 rd_hi_idx = BITS(16, 19);
+
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
+                const u32 rd_lo_val = state->Reg[rd_lo_idx];
+                const u32 rd_hi_val = state->Reg[rd_hi_idx];
+
+                const u64 result = (rn_val * rm_val) + rd_lo_val + rd_hi_val;
+
+                state->Reg[rd_lo_idx] = (result & 0xFFFFFFFF);
+                state->Reg[rd_hi_idx] = ((result >> 32) & 0xFFFFFFFF);
+                return 1;
+            }
             break;
         case 0x06:
             printf ("Unhandled v6 insn: mls/str\n");
