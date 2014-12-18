@@ -9,6 +9,7 @@
 #include "common/file_util.h"
 #include "common/math_util.h"
 
+#include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_backend.h"
@@ -135,6 +136,13 @@ public:
             break;
         }
 
+        case FileCommand::Flush:
+        {
+            LOG_TRACE(Service_FS, "Flush");
+            backend->Flush();
+            break;
+        }
+
         // Unknown command...
         default:
             LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
@@ -220,9 +228,18 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code) {
 
     auto itr = id_code_map.find(id_code);
     if (itr == id_code_map.end()) {
+        if (id_code == ArchiveIdCode::SaveData) {
+            // When a SaveData archive is created for the first time, it is not yet formatted
+            // and the save file/directory structure expected by the game has not yet been initialized. 
+            // Returning the NotFormatted error code will signal the game to provision the SaveData archive 
+            // with the files and folders that it expects. 
+            // The FormatSaveData service call will create the SaveData archive when it is called.
+            return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
+                              ErrorSummary::InvalidState, ErrorLevel::Status);
+        }
         // TODO: Verify error against hardware
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
-                ErrorSummary::NotFound, ErrorLevel::Permanent);
+                          ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
     // This should never even happen in the first place with 64-bit handles, 
@@ -260,8 +277,8 @@ ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSy
 
     std::unique_ptr<FileSys::FileBackend> backend = archive->backend->OpenFile(path, mode);
     if (backend == nullptr) {
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
-                          ErrorSummary::NotFound, ErrorLevel::Permanent);
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
+                          ErrorSummary::NotFound, ErrorLevel::Status);
     }
 
     auto file = std::make_unique<File>(std::move(backend), path);
@@ -366,6 +383,28 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
     return MakeResult<Handle>(handle);
 }
 
+ResultCode FormatSaveData() {
+    // TODO(Subv): Actually wipe the savedata folder after creating or opening it
+
+    // Do not create the archive again if it already exists
+    if (id_code_map.find(ArchiveIdCode::SaveData) != id_code_map.end())
+        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the correct error code
+
+    // Create the SaveData archive
+    std::string savedata_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX);
+    auto savedata_archive = std::make_unique<FileSys::Archive_SaveData>(savedata_directory,
+        Kernel::g_program_id);
+
+    if (savedata_archive->Initialize()) {
+        CreateArchive(std::move(savedata_archive), ArchiveIdCode::SaveData);
+        return RESULT_SUCCESS;
+    } else {
+        LOG_ERROR(Service_FS, "Can't instantiate SaveData archive with path %s",
+            savedata_archive->GetMountPoint().c_str());
+        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the proper error code
+    }
+}
+
 /// Initialize archives
 void ArchiveInit() {
     next_handle = 1;
@@ -375,9 +414,9 @@ void ArchiveInit() {
     // archive type is SDMC, so it is the only one getting exposed.
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
-    auto archive = std::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
-    if (archive->Initialize())
-        CreateArchive(std::move(archive), ArchiveIdCode::SDMC);
+    auto sdmc_archive = std::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
+    if (sdmc_archive->Initialize())
+        CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 }

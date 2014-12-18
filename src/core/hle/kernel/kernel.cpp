@@ -14,6 +14,7 @@ namespace Kernel {
 
 Handle g_main_thread = 0;
 ObjectPool g_object_pool;
+u64 g_program_id = 0;
 
 ObjectPool::ObjectPool() {
     next_id = INITIAL_NEXT_ID;

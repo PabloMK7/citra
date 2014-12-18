@@ -61,6 +61,11 @@ public:
      * @return true if the file closed correctly
      */
     virtual bool Close() const = 0;
+
+    /**
+     * Flushes the file
+     */
+    virtual void Flush() const = 0;
 };
 
 } // namespace FileSys

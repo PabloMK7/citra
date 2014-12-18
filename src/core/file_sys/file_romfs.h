@@ -64,6 +64,8 @@ public:
      */
     bool Close() const override;
 
+    void Flush() const override { }
+
 private:
     const Archive_RomFS* archive;
 };

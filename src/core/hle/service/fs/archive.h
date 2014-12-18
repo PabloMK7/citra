@@ -109,6 +109,12 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
  */
 ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
+/**
+ * Creates a blank SaveData archive.
+ * @return ResultCode 0 on success or the corresponding code on error
+ */
+ResultCode FormatSaveData();
+
 /// Initialize archives
 void ArchiveInit();
 

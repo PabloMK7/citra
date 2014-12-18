@@ -17,6 +17,8 @@
 /// Detailed description of the error. This listing is likely incomplete.
 enum class ErrorDescription : u32 {
     Success = 0,
+    FS_NotFound = 100,
+    FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,
