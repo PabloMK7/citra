@@ -6192,18 +6192,22 @@ L_stm_s_takeabort:
 					//ichfly
 					//USAT16
 				{
-					u8 tar = BITS(12, 15);
-					u8 src = BITS(0, 3);
-					u8 val = BITS(16, 19);
-					s16 a1 = (state->Reg[src]);
-					s16 a2 = (state->Reg[src] >> 0x10);
-					s16 max = 0xFFFF >> (16 - val);
-					if (max < a1) a1 = max;
-					if (max < a2) a2 = max;
-					u32 temp2 = ((u32)(a2)) << 0x10;
-					state->Reg[tar] = (a1 & 0xFFFF) | (temp2);
+					const u8 rd_idx = BITS(12, 15);
+					const u8 rn_idx = BITS(0, 3);
+					const u8 num_bits = BITS(16, 19);
+					const s16 max = 0xFFFF >> (16 - num_bits);
+					s16 rn_lo = (state->Reg[rn_idx]);
+					s16 rn_hi = (state->Reg[rn_idx] >> 16);
+					
+					if (max < rn_lo)
+						rn_lo = max;
+					if (max < rn_hi)
+						rn_hi = max;
+					
+					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | (rn_hi);
+					return 1;
 				}
-				return 1;
+
 				default:
 					break;
 			}
