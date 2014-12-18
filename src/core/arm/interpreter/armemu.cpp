@@ -3103,12 +3103,18 @@ mainswitch:
                         state->Reg[idest] = (state->Reg[rfis] & 0xFFFF) | ((state->Reg[rlast] << ishi) & 0xFFFF0000);
                         break;
                     } else if ((instr & 0x70) == 0x50) { //pkhtb
-                        u8 idest = BITS(12, 15);
-                        u8 rfis = BITS(16, 19);
-                        u8 rlast = BITS(0, 3);
-                        u8 ishi = BITS(7, 11);
-                        if (ishi == 0)ishi = 0x20;
-                        state->Reg[idest] = (((int)(state->Reg[rlast]) >> (int)(ishi))& 0xFFFF) | ((state->Reg[rfis]) & 0xFFFF0000);
+                        const u8 rd_idx = BITS(12, 15);
+                        const u8 rn_idx = BITS(16, 19);
+                        const u8 rm_idx = BITS(0, 3);
+                        const u8 imm5 = BITS(7, 11);
+
+                        ARMword val;
+                        if (imm5 >= 32)
+                            val = (state->Reg[rm_idx] >> 31);
+                        else
+                            val = (state->Reg[rm_idx] >> imm5);
+
+                        state->Reg[rd_idx] = (val & 0xFFFF) | ((state->Reg[rn_idx]) & 0xFFFF0000);
                         break;
                     } else if (BIT (4)) {
 #ifdef MODE32
@@ -6049,7 +6055,7 @@ L_stm_s_takeabort:
 				break;
 			}
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF;
 			if (Rm & 0x80)
 				Rm |= 0xffffff00;
 
@@ -6058,11 +6064,12 @@ L_stm_s_takeabort:
 				state->Reg[BITS(12, 15)] = Rm;
 			else
 				/* SXTAB */
-				state->Reg[BITS(12, 15)] += Rm;
+				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
 
 			return 1;
 		}
-		case 0x6b: {
+		case 0x6b:
+		{
 			ARMword Rm;
 			int ror = -1;
 
@@ -6080,10 +6087,10 @@ L_stm_s_takeabort:
 					ror = 24;
 					break;
 
-				case 0xf3:
+				case 0xf3: // REV
 					DEST = ((RHS & 0xFF) << 24) | ((RHS & 0xFF00)) << 8 | ((RHS & 0xFF0000) >> 8) | ((RHS & 0xFF000000) >> 24);
 					return 1;
-				case 0xfb:
+				case 0xfb: // REV16
 					DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00)) >> 8 | ((RHS & 0xFF0000) << 8) | ((RHS & 0xFF000000) >> 8);
 					return 1;
 				default:
@@ -6093,7 +6100,7 @@ L_stm_s_takeabort:
 			if (ror == -1)
 				break;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF;
 			if (Rm & 0x8000)
 				Rm |= 0xffff0000;
 
@@ -6180,7 +6187,7 @@ L_stm_s_takeabort:
 				break;
 			}
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF;
 
 			if (BITS(16, 19) == 0xf)
 				/* UXTB */
@@ -6210,9 +6217,13 @@ L_stm_s_takeabort:
 					ror = 24;
 					break;
 
-				case 0xfb:
-					printf("Unhandled v6 insn: revsh\n");
-					return 0;
+				case 0xfb: // REVSH
+				{
+					DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00) >> 8);
+					if (DEST & 0x8000)
+						DEST |= 0xffff0000;
+					return 1;
+				}
 				default:
 					break;
 			}
@@ -6220,13 +6231,13 @@ L_stm_s_takeabort:
 			if (ror == -1)
 				break;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF);
+			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | ((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF;
 
 			/* UXT */
 			/* state->Reg[BITS (12, 15)] = Rm; */
 			/* dyf add */
 			if (BITS(16, 19) == 0xf) {
-				state->Reg[BITS(12, 15)] = (Rm >> (8 * BITS(10, 11))) & 0x0000FFFF;
+				state->Reg[BITS(12, 15)] = Rm;
 			}
 			else {
 				/* UXTAH */
@@ -6234,7 +6245,7 @@ L_stm_s_takeabort:
 				//            printf("rd is %x rn is %x rm is %x rotate is %x\n", state->Reg[BITS (12, 15)], state->Reg[BITS (16, 19)]
 				//                   , Rm, BITS(10, 11));
 				//            printf("icounter is %lld\n", state->NumInstrs);
-				state->Reg[BITS(12, 15)] = (state->Reg[BITS(16, 19)] >> (8 * (BITS(10, 11)))) + Rm;
+				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
 				//        printf("rd is %x\n", state->Reg[BITS (12, 15)]);
 				//        exit(-1);
 			}
