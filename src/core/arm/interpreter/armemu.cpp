@@ -6081,22 +6081,28 @@ L_stm_s_takeabort:
 					//ichfly
 					//SSAT16
 				{
-					u8 tar = BITS(12, 15);
-					u8 src = BITS(0, 3);
-					u8 val = BITS(16, 19) + 1;
-					s16 a1 = (state->Reg[src]);
-					s16 a2 = (state->Reg[src] >> 0x10);
-					s16 min = (s16)(0x8000 >> (16 - val));
-					s16 max = 0x7FFF >> (16 - val);
-					if (min > a1) a1 = min;
-					if (max < a1) a1 = max;
-					if (min > a2) a2 = min;
-					if (max < a2) a2 = max;
-					u32 temp2 = ((u32)(a2)) << 0x10;
-					state->Reg[tar] = (a1 & 0xFFFF) | (temp2);
+					const u8 rd_idx = BITS(12, 15);
+					const u8 rn_idx = BITS(0, 3);
+					const u8 num_bits = BITS(16, 19) + 1;
+					const s16 min = (0x8000 >> (16 - num_bits));
+					const s16 max = (0x7FFF >> (16 - num_bits));
+					s16 rn_lo = (state->Reg[rn_idx]);
+					s16 rn_hi = (state->Reg[rn_idx] >> 16);
+
+					if (rn_lo > max)
+						rn_lo = max;
+					else if (rn_lo < min)
+						rn_lo = min;
+
+					if (rn_hi > max)
+						rn_hi = max;
+					else if (rn_hi < min)
+						rn_hi = min;
+
+					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi & 0xFFFF) << 16);
+					return 1;
 				}
 
-				return 1;
 				default:
 					break;
 			}
