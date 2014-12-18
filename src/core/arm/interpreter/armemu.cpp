@@ -5839,21 +5839,46 @@ L_stm_s_takeabort:
                 const s16 rm_lo = (state->Reg[rm_idx] & 0xFFFF);
                 const s16 rm_hi = ((state->Reg[rm_idx] >> 16) & 0xFFFF);
 
+                s32 lo_result;
+                s32 hi_result;
+
                 // SSUB16
                 if ((instr & 0xFF0) == 0xf70) {
-                    state->Reg[rd_idx] = ((rn_lo - rm_lo) & 0xFFFF) | (((rn_hi - rm_hi) & 0xFFFF) << 16);
+                    lo_result = (rn_lo - rm_lo);
+                    hi_result = (rn_hi - rm_hi);
                 }
                 // SADD16
                 else if ((instr & 0xFF0) == 0xf10) {
-                    state->Reg[rd_idx] = ((rn_lo + rm_lo) & 0xFFFF) | (((rn_hi + rm_hi) & 0xFFFF) << 16);
+                    lo_result = (rn_lo + rm_lo);
+                    hi_result = (rn_hi + rm_hi);
                 }
                 // SSAX
                 else if ((instr & 0xFF0) == 0xf50) {
-                    state->Reg[rd_idx] = ((rn_lo + rm_hi) & 0xFFFF) | (((rn_hi - rm_lo) & 0xFFFF) << 16);
+                    lo_result = (rn_lo + rm_hi);
+                    hi_result = (rn_hi - rm_lo);
                 }
                 // SASX
                 else {
-                    state->Reg[rd_idx] = ((rn_lo - rm_hi) & 0xFFFF) | (((rn_hi + rm_lo) & 0xFFFF) << 16);
+                    lo_result = (rn_lo - rm_hi);
+                    hi_result = (rn_hi + rm_lo);
+                }
+
+                state->Reg[rd_idx] = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
+
+                if (lo_result >= 0) {
+                    state->Cpsr |= (1 << 16);
+                    state->Cpsr |= (1 << 17);
+                } else {
+                    state->Cpsr &= ~(1 << 16);
+                    state->Cpsr &= ~(1 << 17);
+                }
+
+                if (hi_result >= 0) {
+                    state->Cpsr |= (1 << 18);
+                    state->Cpsr |= (1 << 19);
+                } else {
+                    state->Cpsr &= ~(1 << 18);
+                    state->Cpsr &= ~(1 << 19);
                 }
                 return 1;
             } else {
