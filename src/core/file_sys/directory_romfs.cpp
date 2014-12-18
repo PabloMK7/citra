@@ -21,20 +21,10 @@ bool Directory_RomFS::Open() {
     return false;
 }
 
-/**
- * List files contained in the directory
- * @param count Number of entries to return at once in entries
- * @param entries Buffer to read data into
- * @return Number of entries listed
- */
 u32 Directory_RomFS::Read(const u32 count, Entry* entries) {
     return 0;
 }
 
-/**
- * Close the directory
- * @return true if the directory closed correctly
- */
 bool Directory_RomFS::Close() const {
     return false;
 }

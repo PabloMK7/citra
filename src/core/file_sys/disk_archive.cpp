@@ -23,15 +23,15 @@ std::unique_ptr<FileBackend> DiskArchive::OpenFile(const Path& path, const Mode 
     return std::unique_ptr<FileBackend>(file);
 }
 
-bool DiskArchive::DeleteFile(const FileSys::Path& path) const {
+bool DiskArchive::DeleteFile(const Path& path) const {
     return FileUtil::Delete(GetMountPoint() + path.AsString());
 }
 
-bool DiskArchive::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+bool DiskArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
     return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
 }
 
-bool DiskArchive::DeleteDirectory(const FileSys::Path& path) const {
+bool DiskArchive::DeleteDirectory(const Path& path) const {
     return FileUtil::DeleteDir(GetMountPoint() + path.AsString());
 }
 
@@ -60,7 +60,7 @@ bool DiskArchive::CreateDirectory(const Path& path) const {
     return FileUtil::CreateDir(GetMountPoint() + path.AsString());
 }
 
-bool DiskArchive::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+bool DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
 }
 
@@ -85,7 +85,7 @@ DiskFile::DiskFile(const DiskArchive* archive, const Path& path, const Mode mode
 
 bool DiskFile::Open() {
     if (!mode.create_flag && !FileUtil::Exists(path)) {
-        LOG_ERROR(Service_FS, "Non-existing file %s can’t be open without mode create.", path.c_str());
+        LOG_ERROR(Service_FS, "Non-existing file %s can't be open without mode create.", path.c_str());
         return false;
     }
 

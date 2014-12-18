@@ -40,40 +40,37 @@ union Mode {
 class Path {
 public:
 
-    Path():
-        type(Invalid)
-    {
+    Path() : type(Invalid) {
     }
 
-    Path(const char* path):
-        type(Char), string(path)
-    {
+    Path(const char* path) : type(Char), string(path) {
     }
 
-    Path(LowPathType type, u32 size, u32 pointer):
-        type(type)
-    {
+    Path(LowPathType type, u32 size, u32 pointer) : type(type) {
         switch (type) {
-            case Binary:
-            {
-                u8* data = Memory::GetPointer(pointer);
-                binary = std::vector<u8>(data, data + size);
-                break;
-            }
-            case Char:
-            {
-                const char* data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
-                string = std::string(data, size - 1); // Data is always null-terminated.
-                break;
-            }
-            case Wchar:
-            {
-                const char16_t* data = reinterpret_cast<const char16_t*>(Memory::GetPointer(pointer));
-                u16str = std::u16string(data, size/2 - 1); // Data is always null-terminated.
-                break;
-            }
-            default:
-                break;
+        case Binary:
+        {
+            u8* data = Memory::GetPointer(pointer);
+            binary = std::vector<u8>(data, data + size);
+            break;
+        }
+
+        case Char:
+        {
+            const char* data = reinterpret_cast<const char*>(Memory::GetPointer(pointer));
+            string = std::string(data, size - 1); // Data is always null-terminated.
+            break;
+        }
+
+        case Wchar:
+        {
+            const char16_t* data = reinterpret_cast<const char16_t*>(Memory::GetPointer(pointer));
+            u16str = std::u16string(data, size/2 - 1); // Data is always null-terminated.
+            break;
+        }
+
+        default:
+            break;
         }
     }
 
@@ -104,66 +101,64 @@ public:
             return "[Char: " + AsString() + ']';
         case Wchar:
             return "[Wchar: " + AsString() + ']';
-        default:
+        }
+    }
+
+    const std::string AsString() const {
+        switch (GetType()) {
+        case Char:
+            return string;
+        case Wchar:
+            return Common::UTF16ToUTF8(u16str);
+        case Empty:
+            return {};
+        case Invalid:
+        case Binary:
             // TODO(yuriks): Add assert
             LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
             return {};
         }
     }
 
-    const std::string AsString() const {
-        switch (GetType()) {
-            case Char:
-                return string;
-            case Wchar:
-                return Common::UTF16ToUTF8(u16str);
-            case Empty:
-                return {};
-            default:
-                // TODO(yuriks): Add assert
-                LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
-                return {};
-        }
-    }
-
     const std::u16string AsU16Str() const {
         switch (GetType()) {
-            case Char:
-                return Common::UTF8ToUTF16(string);
-            case Wchar:
-                return u16str;
-            case Empty:
-                return {};
-            default:
-                // TODO(yuriks): Add assert
-                LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
-                return {};
+        case Char:
+            return Common::UTF8ToUTF16(string);
+        case Wchar:
+            return u16str;
+        case Empty:
+            return {};
+        case Invalid:
+        case Binary:
+            // TODO(yuriks): Add assert
+            LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
+            return {};
         }
     }
 
     const std::vector<u8> AsBinary() const {
         switch (GetType()) {
-            case Binary:
-                return binary;
-            case Char:
-                return std::vector<u8>(string.begin(), string.end());
-            case Wchar:
-            {
-                // use two u8 for each character of u16str
-                std::vector<u8> to_return(u16str.size() * 2);
-                for (size_t i = 0; i < u16str.size(); ++i) {
-                    u16 tmp_char = u16str.at(i);
-                    to_return[i*2] = (tmp_char & 0xFF00) >> 8;
-                    to_return[i*2 + 1] = (tmp_char & 0x00FF);
-                }
-                return to_return;
+        case Binary:
+            return binary;
+        case Char:
+            return std::vector<u8>(string.begin(), string.end());
+        case Wchar:
+        {
+            // use two u8 for each character of u16str
+            std::vector<u8> to_return(u16str.size() * 2);
+            for (size_t i = 0; i < u16str.size(); ++i) {
+                u16 tmp_char = u16str.at(i);
+                to_return[i*2] = (tmp_char & 0xFF00) >> 8;
+                to_return[i*2 + 1] = (tmp_char & 0x00FF);
             }
-            case Empty:
-                return {};
-            default:
-                // TODO(yuriks): Add assert
-                LOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
-                return {};
+            return to_return;
+        }
+        case Empty:
+            return {};
+        case Invalid:
+            // TODO(yuriks): Add assert
+            LOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
+            return {};
         }
     }
 
@@ -176,7 +171,8 @@ private:
 
 class ArchiveBackend : NonCopyable {
 public:
-    virtual ~ArchiveBackend() { }
+    virtual ~ArchiveBackend() {
+    }
 
     /**
      * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)
@@ -196,7 +192,7 @@ public:
      * @param path Path relative to the archive
      * @return Whether the file could be deleted
      */
-    virtual bool DeleteFile(const FileSys::Path& path) const = 0;
+    virtual bool DeleteFile(const Path& path) const = 0;
 
     /**
      * Rename a File specified by its path
@@ -204,14 +200,14 @@ public:
      * @param dest_path Destination path relative to the archive
      * @return Whether rename succeeded
      */
-    virtual bool RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const = 0;
+    virtual bool RenameFile(const Path& src_path, const Path& dest_path) const = 0;
 
     /**
      * Delete a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be deleted
      */
-    virtual bool DeleteDirectory(const FileSys::Path& path) const = 0;
+    virtual bool DeleteDirectory(const Path& path) const = 0;
 
     /**
      * Create a file specified by its path
@@ -234,7 +230,7 @@ public:
      * @param dest_path Destination path relative to the archive
      * @return Whether rename succeeded
      */
-    virtual bool RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const = 0;
+    virtual bool RenameDirectory(const Path& src_path, const Path& dest_path) const = 0;
 
     /**
      * Open a directory specified by its path

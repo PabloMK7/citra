@@ -36,7 +36,7 @@ public:
      * @param path Path relative to the archive
      * @return Whether the file could be deleted
      */
-    bool DeleteFile(const FileSys::Path& path) const override;
+    bool DeleteFile(const Path& path) const override;
 
     /**
      * Rename a File specified by its path
@@ -44,14 +44,14 @@ public:
      * @param dest_path Destination path relative to the archive
      * @return Whether rename succeeded
      */
-    bool RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
+    bool RenameFile(const Path& src_path, const Path& dest_path) const override;
 
     /**
      * Delete a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be deleted
      */
-    bool DeleteDirectory(const FileSys::Path& path) const override;
+    bool DeleteDirectory(const Path& path) const override;
 
     /**
      * Create a file specified by its path
@@ -74,7 +74,7 @@ public:
      * @param dest_path Destination path relative to the archive
      * @return Whether rename succeeded
      */
-    bool RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
+    bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
 
     /**
      * Open a directory specified by its path
