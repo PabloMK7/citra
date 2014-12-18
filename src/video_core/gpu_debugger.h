@@ -85,7 +85,7 @@ public:
 
     void UnregisterObserver(DebuggerObserver* observer)
     {
-        std::remove(observers.begin(), observers.end(), observer);
+        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
         observer->observed = nullptr;
     }
 
