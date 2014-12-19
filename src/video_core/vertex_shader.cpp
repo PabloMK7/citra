@@ -99,6 +99,10 @@ struct VertexShaderState {
 };
 
 static void ProcessShaderCode(VertexShaderState& state) {
+
+    // Placeholder for invalid inputs
+    static float24 dummy_vec4_float24[4];
+
     while (true) {
         if (!state.call_stack.empty()) {
             if (state.program_counter - shader_memory.data() == state.call_stack.top().final_address) {
@@ -132,6 +136,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case RegisterType::FloatUniform:
                 return &shader_uniforms.f[source_reg.GetIndex()].x;
+
+            default:
+                return dummy_vec4_float24;
             }
         };
 
@@ -182,9 +189,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
             }
 
             float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
-                        : (instr.common.dest < 0x10) ? nullptr
+                        : (instr.common.dest < 0x10) ? dummy_vec4_float24
                         : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
-                        : nullptr;
+                        : dummy_vec4_float24;
 
             state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
 
