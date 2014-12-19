@@ -140,7 +140,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
         {
             bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
             if (is_inverted) {
-                // We don't really support this properly and/or reliably
+                // TODO: We don't really support this properly: For instance, the address register
+                //       offset needs to be applied to SRC2 instead, etc.
+                //       For now, we just abort in this situation.
                 LOG_ERROR(HW_GPU, "Bad condition...");
                 exit(0);
             }
