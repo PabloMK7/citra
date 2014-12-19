@@ -390,10 +390,11 @@ Interface::Interface() {
     FileSys::Path path("config");
     auto file = cfg_system_save_data->OpenFile(path, mode);
 
-    // Don't do anything if the file already exists
-    if (file != nullptr)
+    // Load the config if it already exists
+    if (file != nullptr) {
+        file->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return;
-
+    }
     FormatConfig();
 }
 
