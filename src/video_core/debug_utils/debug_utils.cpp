@@ -346,7 +346,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     case Regs::TextureFormat::RGBA8:
     {
         const u8* source_ptr = source + coarse_x * block_height * 4 + coarse_y * info.stride + texel_index_within_tile * 4;
-        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? 255 : source_ptr[0] };
+        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
     }
 
     case Regs::TextureFormat::RGB8:
@@ -385,7 +385,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         g = (g << 4) | g;
         b = (b << 4) | b;
         a = (a << 4) | a;
-        return { r, g, b, disable_alpha ? 255 : a };
+        return { r, g, b, disable_alpha ? (u8)255 : a };
     }
 
     case Regs::TextureFormat::IA8:
