@@ -18,7 +18,7 @@ namespace Pica {
 namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
-    u32* color_buffer = (u32*)Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress()));
+    u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress())));
     u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
     // Assuming RGBA8 format until actual framebuffer format handling is implemented
@@ -26,14 +26,14 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 }
 
 static u32 GetDepth(int x, int y) {
-    u16* depth_buffer = (u16*)Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress()));
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
 
 static void SetDepth(int x, int y, u16 value) {
-    u16* depth_buffer = (u16*)Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress()));
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
@@ -208,7 +208,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
                 texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
-                DebugUtils::DumpTexture(texture.config, (u8*)texture_data);
+                DebugUtils::DumpTexture(texture.config, texture_data);
             }
 
             // Texture environment - consists of 6 stages of color and alpha combining.
