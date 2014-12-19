@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/file_util.h"
 #include "common/log.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/cfg_u.h"
 
@@ -10,6 +12,19 @@
 // Namespace CFG_U
 
 namespace CFG_U {
+
+static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
+static const u64 CFG_SAVE_ID = 0x00010017;
+static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
+static const char CONSOLE_USERNAME[0x1C] = "THIS IS CITRAAAAAAAAAAAAAA";
+
+enum SystemModel {
+    NINTENDO_3DS,
+    NINTENDO_3DS_XL,
+    NEW_NINTENDO_3DS,
+    NINTENDO_2DS,
+    NEW_NINTENDO_3DS_XL
+};
 
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) ((code)[0] | ((code)[1] << 8))
@@ -99,13 +114,137 @@ static void GetCountryCodeID(Service::Interface* self) {
     cmd_buffer[2] = country_code_id;
 }
 
+/// Block header in the config savedata file
+struct SaveConfigBlockEntry {
+    u32 block_id;
+    u32 offset_or_data;
+    u16 size;
+    u16 flags;
+};
+
+/// The header of the config savedata file,
+/// contains information about the blocks in the file
+struct SaveFileConfig {
+    u16 total_entries;
+    u16 data_entries_offset;
+    SaveConfigBlockEntry block_entries[1479];
+};
+
+/* Reads a block with the specified id and flag from the Config savegame file
+ * and writes the output to output.
+ * The input size must match exactly the size of the requested block
+ * TODO(Subv): This should actually be in some file common to the CFG process
+ * @param block_id The id of the block we want to read
+ * @param size The size of the block we want to read
+ * @param flag The requested block must have this flag set
+ * @param output A pointer where we will write the read data
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
+    FileSys::Mode mode;
+    mode.hex = 0;
+    mode.read_flag = 1;
+    FileSys::Path path("config");
+    auto file = cfg_system_save_data->OpenFile(path, mode);
+    _dbg_assert_msg_(Service_CFG, file != nullptr, "Could not open the CFG service config file");
+    SaveFileConfig config;
+    size_t read = file->Read(0, sizeof(SaveFileConfig), reinterpret_cast<u8*>(&config));
+    
+    if (read != sizeof(SaveFileConfig)) {
+        LOG_CRITICAL(Service_CFG, "The config savefile is corrupted");
+        return ResultCode(-1); // TODO(Subv): Find the correct error code
+    }
+
+    auto itr = std::find_if(std::begin(config.block_entries), std::end(config.block_entries), 
+        [&](SaveConfigBlockEntry const& entry) {
+            return entry.block_id == block_id && entry.size == size && (entry.flags & flag);
+    });
+
+    if (itr == std::end(config.block_entries)) {
+        LOG_TRACE(Service_CFG, "Config block %u with size %u and flags %u not found", block_id, size, flag);
+        return ResultCode(-1); // TODO(Subv): Find the correct error code
+    }
+
+    // The data is located in the block header itself if the size is less than 4 bytes
+    if (itr->size <= 4) {
+        memcpy(output, &itr->offset_or_data, itr->size);
+    } else {
+        size_t data_read = file->Read(itr->offset_or_data, itr->size, output);
+        if (data_read != itr->size) {
+            LOG_CRITICAL(Service_CFG, "The config savefile is corrupted");
+            return ResultCode(-1); // TODO(Subv): Find the correct error code
+        }
+    }
+
+    return RESULT_SUCCESS;
+}
+
+/**
+ * CFG_User::GetConfigInfoBlk2 service function
+ *  Inputs:
+ *      1 : Size
+ *      2 : Block ID
+ *      3 : Descriptor for the output buffer
+ *      4 : Output buffer pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void GetConfigInfoBlk2(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 size = cmd_buffer[1];
+    u32 block_id = cmd_buffer[2];
+    u8* data_pointer = Memory::GetPointer(cmd_buffer[4]);
+    
+    if (data_pointer == nullptr) {
+        cmd_buffer[1] = -1; // TODO(Subv): Find the right error code
+        return;
+    }
+
+    cmd_buffer[1] = GetConfigInfoBlock(block_id, size, 0x2, data_pointer).raw;
+}
+
+/**
+ * CFG_User::GetSystemModel service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Model of the console
+ */
+static void GetSystemModel(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 data;
+
+    cmd_buffer[1] = GetConfigInfoBlock(0x000F0004, 4, 0x8,
+        reinterpret_cast<u8*>(&data)).raw; // TODO(Subv): Find out the correct error codes
+    cmd_buffer[2] = data & 0xFF;
+}
+
+/**
+ * CFG_User::GetModelNintendo2DS service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : 0 if the system is a Nintendo 2DS, 1 otherwise
+ */
+static void GetModelNintendo2DS(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 data;
+
+    cmd_buffer[1] = GetConfigInfoBlock(0x000F0004, 4, 0x8,
+        reinterpret_cast<u8*>(&data)).raw; // TODO(Subv): Find out the correct error codes
+    
+    u8 model = data & 0xFF;
+    if (model == NINTENDO_2DS)
+        cmd_buffer[2] = 0;
+    else
+        cmd_buffer[2] = 1;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, nullptr,               "GetConfigInfoBlk2"},
+    {0x00010082, GetConfigInfoBlk2,     "GetConfigInfoBlk2"},
     {0x00020000, nullptr,               "SecureInfoGetRegion"},
     {0x00030000, nullptr,               "GenHashConsoleUnique"},
     {0x00040000, nullptr,               "GetRegionCanadaUSA"},
-    {0x00050000, nullptr,               "GetSystemModel"},
-    {0x00060000, nullptr,               "GetModelNintendo2DS"},
+    {0x00050000, GetSystemModel,        "GetSystemModel"},
+    {0x00060000, GetModelNintendo2DS,   "GetModelNintendo2DS"},
     {0x00070040, nullptr,               "unknown"},
     {0x00080080, nullptr,               "unknown"},
     {0x00090040, GetCountryCodeString,  "GetCountryCodeString"},
@@ -116,6 +255,52 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    // TODO(Subv): In the future we should use the FS service to query this archive, 
+    // currently it is not possible because you can only have one open archive of the same type at any time
+    std::string syssavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
+    cfg_system_save_data = std::make_unique<FileSys::Archive_SystemSaveData>(syssavedata_directory, 
+        CFG_SAVE_ID);
+    if (!cfg_system_save_data->Initialize()) {
+        LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
+        return;
+    }
+
+    // Try to open the file in read-only mode to check its existence
+    FileSys::Mode mode;
+    mode.hex = 0;
+    mode.read_flag = 1;
+    FileSys::Path path("config");
+    auto file = cfg_system_save_data->OpenFile(path, mode);
+
+    // Don't do anything if the file already exists
+    if (file != nullptr)
+        return;
+
+    mode.create_flag = 1;
+    mode.write_flag = 1;
+    mode.read_flag = 0;
+    // Re-open the file in write-create mode
+    file = cfg_system_save_data->OpenFile(path, mode);
+
+    // Setup the default config file data header
+    SaveFileConfig config = { 3, 0, {} };
+    u32 offset = sizeof(SaveFileConfig);
+    // Console-unique ID
+    config.block_entries[0] = { 0x00090001, offset, 0x8, 0xE };
+    offset += 0x8;
+    // Username
+    config.block_entries[1] = { 0x000A0000, offset, 0x1C, 0xE };
+    offset += 0x1C;
+    // System Model (Nintendo 3DS XL)
+    config.block_entries[2] = { 0x000F0004, NINTENDO_3DS_XL, 0x4, 0x8 };
+
+    // Write the config file data header to the config file
+    file->Write(0, sizeof(SaveFileConfig), 1, reinterpret_cast<u8*>(&config));
+    // Write the data itself
+    file->Write(config.block_entries[0].offset_or_data, 0x8, 1, 
+        reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
+    file->Write(config.block_entries[1].offset_or_data, 0x1C, 1, 
+        reinterpret_cast<u8 const*>(CONSOLE_USERNAME));
 }
 
 Interface::~Interface() {
