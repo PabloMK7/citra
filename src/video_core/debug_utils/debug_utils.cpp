@@ -392,13 +392,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
 
-        // TODO: compoent order not verified
+        // TODO: component order not verified
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
-            return { *source_ptr, *(source_ptr+1), 0, 255 };
+            return { source_ptr[0], source_ptr[1], 0, 255 };
         } else {
-            return { *source_ptr, *source_ptr, *source_ptr, *(source_ptr+1)};
+            return { source_ptr[0], source_ptr[0], source_ptr[0], source_ptr[1]};
         }
     }
 
@@ -423,9 +423,9 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
 
-        // TODO: compoent order not verified
+        // TODO: component order not verified
 
-        u8 i = (*source_ptr)&0xF;
+        u8 i = (*source_ptr) & 0xF;
         u8 a = ((*source_ptr) & 0xF0) >> 4;
         a |= a << 4;
         i |= i << 4;
@@ -442,11 +442,11 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
 
-        // TODO: Order?
+        // TODO: component order not verified
+
         u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
         a |= a << 4;
 
-        // TODO: Better control this...
         if (disable_alpha) {
             return { *source_ptr, *source_ptr, *source_ptr, 255 };
         } else {
