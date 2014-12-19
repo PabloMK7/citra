@@ -16,7 +16,13 @@ namespace CFG_U {
 static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
 static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
-static const char CONSOLE_USERNAME[0x1C] = "THIS IS CITRAAAAAAAAAAAAAA";
+
+/// TODO(Subv): Find out what this actually is
+/// Thanks Normmatt for providing this information
+static const u8 STEREO_CAMERA_SETTINGS[32] = {
+    0x00, 0x00, 0x78, 0x42, 0x00, 0x80, 0x90, 0x43, 0x9A, 0x99, 0x99, 0x42, 0xEC, 0x51, 0x38, 0x42,
+    0x00, 0x00, 0x20, 0x41, 0x00, 0x00, 0xA0, 0x40, 0xEC, 0x51, 0x5E, 0x42, 0x5C, 0x8F, 0xAC, 0x41
+};
 
 enum SystemModel {
     NINTENDO_3DS,
@@ -288,9 +294,9 @@ Interface::Interface() {
     // Console-unique ID
     config.block_entries[0] = { 0x00090001, offset, 0x8, 0xE };
     offset += 0x8;
-    // Username
-    config.block_entries[1] = { 0x000A0000, offset, 0x1C, 0xE };
-    offset += 0x1C;
+    // Stereo Camera Settings?
+    config.block_entries[1] = { 0x00050005, offset, 0x20, 0xE };
+    offset += 0x20;
     // System Model (Nintendo 3DS XL)
     config.block_entries[2] = { 0x000F0004, NINTENDO_3DS_XL, 0x4, 0x8 };
 
@@ -299,8 +305,7 @@ Interface::Interface() {
     // Write the data itself
     file->Write(config.block_entries[0].offset_or_data, 0x8, 1, 
         reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
-    file->Write(config.block_entries[1].offset_or_data, 0x1C, 1, 
-        reinterpret_cast<u8 const*>(CONSOLE_USERNAME));
+    file->Write(config.block_entries[1].offset_or_data, 0x20, 1, STEREO_CAMERA_SETTINGS);
 }
 
 Interface::~Interface() {
