@@ -5681,11 +5681,8 @@ L_stm_s_takeabort:
     /* Attempt to emulate an ARMv6 instruction.
        Returns non-zero upon success.  */
 
-    static int
-    handle_v6_insn (ARMul_State * state, ARMword instr) {
-		ARMword lhs, temp;
-
-        switch (BITS (20, 27)) {
+    static int handle_v6_insn(ARMul_State* state, ARMword instr) {
+        switch (BITS(20, 27)) {
         case 0x03:
             printf ("Unhandled v6 insn: ldr\n");
             break;
@@ -5719,7 +5716,7 @@ L_stm_s_takeabort:
 				/* strex */
 				u32 l = LHSReg;
 				u32 r = RHSReg;
-				lhs = LHS;
+				u32 lhs = LHS;
 
 				bool enter = false;
 
@@ -5744,7 +5741,7 @@ L_stm_s_takeabort:
         case 0x19:
 			/* ldrex */
 			if (BITS(4, 7) == 0x9) {
-				lhs = LHS;
+				u32 lhs = LHS;
 
 				state->currentexaddr = lhs;
 				state->currentexval = ARMul_ReadWord(state, lhs);
@@ -5763,7 +5760,7 @@ L_stm_s_takeabort:
         case 0x1c:
 			if (BITS(4, 7) == 0x9) {
 				/* strexb */
-				lhs = LHS;
+				u32 lhs = LHS;
 
 				bool enter = false;
 
@@ -5793,11 +5790,11 @@ L_stm_s_takeabort:
         case 0x1d:
 			if ((BITS(4, 7)) == 0x9) {
 				/* ldrexb */
-				temp = LHS;
-				LoadByte(state, instr, temp, LUNSIGNED);
+				u32 lhs = LHS;
+				LoadByte(state, instr, lhs, LUNSIGNED);
 
-				state->currentexaddr = temp;
-				state->currentexval = (u32)ARMul_ReadByte(state, temp);
+				state->currentexaddr = lhs;
+				state->currentexval = (u32)ARMul_ReadByte(state, lhs);
 
 				//state->Reg[BITS(12, 15)] = ARMul_LoadByte(state, state->Reg[BITS(16, 19)]);
 				//printf("ldrexb\n");
