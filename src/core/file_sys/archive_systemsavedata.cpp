@@ -18,7 +18,7 @@ namespace FileSys {
 
 Archive_SystemSaveData::Archive_SystemSaveData(const std::string& mount_point, u64 save_id)
         : DiskArchive(Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(),
-        static_cast<u32>(save_id & 0xFFFFFFFF), static_cast<u32>((save_id >> 31) & 0xFFFFFFFF))) {
+        static_cast<u32>(save_id & 0xFFFFFFFF), static_cast<u32>((save_id >> 32) & 0xFFFFFFFF))) {
     LOG_INFO(Service_FS, "Directory %s set as SystemSaveData.", this->mount_point.c_str());
 }
 

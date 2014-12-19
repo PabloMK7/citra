@@ -13,23 +13,26 @@
 
 namespace CFG_U {
 
-static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
-static const u64 CFG_SAVE_ID = 0x00010017;
-static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
-
-/// TODO(Subv): Find out what this actually is
-/// Thanks Normmatt for providing this information
-static const u8 STEREO_CAMERA_SETTINGS[32] = {
-    0x00, 0x00, 0x78, 0x42, 0x00, 0x80, 0x90, 0x43, 0x9A, 0x99, 0x99, 0x42, 0xEC, 0x51, 0x38, 0x42,
-    0x00, 0x00, 0x20, 0x41, 0x00, 0x00, 0xA0, 0x40, 0xEC, 0x51, 0x5E, 0x42, 0x5C, 0x8F, 0xAC, 0x41
-};
-
 enum SystemModel {
     NINTENDO_3DS,
     NINTENDO_3DS_XL,
     NEW_NINTENDO_3DS,
     NINTENDO_2DS,
     NEW_NINTENDO_3DS_XL
+};
+
+static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
+static const u64 CFG_SAVE_ID = 0x00010017;
+static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
+static const u32 CONSOLE_MODEL = NINTENDO_3DS_XL;
+static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
+static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
+
+/// TODO(Subv): Find out what this actually is
+/// Thanks Normmatt for providing this information
+static const u8 STEREO_CAMERA_SETTINGS[32] = {
+    0x00, 0x00, 0x78, 0x42, 0x00, 0x80, 0x90, 0x43, 0x9A, 0x99, 0x99, 0x42, 0xEC, 0x51, 0x38, 0x42,
+    0x00, 0x00, 0x20, 0x41, 0x00, 0x00, 0xA0, 0x40, 0xEC, 0x51, 0x5E, 0x42, 0x5C, 0x8F, 0xAC, 0x41
 };
 
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
@@ -134,9 +137,11 @@ struct SaveFileConfig {
     u16 total_entries;
     u16 data_entries_offset;
     SaveConfigBlockEntry block_entries[1479];
+    u32 unknown;
 };
 
-/* Reads a block with the specified id and flag from the Config savegame file
+/**
+ * Reads a block with the specified id and flag from the Config savegame buffer
  * and writes the output to output.
  * The input size must match exactly the size of the requested block
  * TODO(Subv): This should actually be in some file common to the CFG process
@@ -147,41 +152,128 @@ struct SaveFileConfig {
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
 ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
-    FileSys::Mode mode;
-    mode.hex = 0;
-    mode.read_flag = 1;
-    FileSys::Path path("config");
-    auto file = cfg_system_save_data->OpenFile(path, mode);
-    _dbg_assert_msg_(Service_CFG, file != nullptr, "Could not open the CFG service config file");
-    SaveFileConfig config;
-    size_t read = file->Read(0, sizeof(SaveFileConfig), reinterpret_cast<u8*>(&config));
+    // Read the header
+    SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     
-    if (read != sizeof(SaveFileConfig)) {
-        LOG_CRITICAL(Service_CFG, "The config savefile is corrupted");
-        return ResultCode(-1); // TODO(Subv): Find the correct error code
-    }
-
-    auto itr = std::find_if(std::begin(config.block_entries), std::end(config.block_entries), 
+    auto itr = std::find_if(std::begin(config->block_entries), std::end(config->block_entries), 
         [&](SaveConfigBlockEntry const& entry) {
             return entry.block_id == block_id && entry.size == size && (entry.flags & flag);
     });
 
-    if (itr == std::end(config.block_entries)) {
-        LOG_TRACE(Service_CFG, "Config block %u with size %u and flags %u not found", block_id, size, flag);
+    if (itr == std::end(config->block_entries)) {
+        LOG_ERROR(Service_CFG, "Config block %u with size %u and flags %u not found", block_id, size, flag);
         return ResultCode(-1); // TODO(Subv): Find the correct error code
     }
 
     // The data is located in the block header itself if the size is less than 4 bytes
-    if (itr->size <= 4) {
+    if (itr->size <= 4)
         memcpy(output, &itr->offset_or_data, itr->size);
-    } else {
-        size_t data_read = file->Read(itr->offset_or_data, itr->size, output);
-        if (data_read != itr->size) {
-            LOG_CRITICAL(Service_CFG, "The config savefile is corrupted");
-            return ResultCode(-1); // TODO(Subv): Find the correct error code
+    else
+        memcpy(output, &cfg_config_file_buffer[config->data_entries_offset + itr->offset_or_data], itr->size);
+
+    return RESULT_SUCCESS;
+}
+
+/**
+ * Creates a block with the specified id and writes the input data to the cfg savegame buffer in memory.
+ * The config savegame file in the filesystem is not updated.
+ * TODO(Subv): This should actually be in some file common to the CFG process
+ * @param block_id The id of the block we want to create
+ * @param size The size of the block we want to create
+ * @param flag The flags of the new block
+ * @param data A pointer containing the data we will write to the new block
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data) {
+    SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
+    // Insert the block header with offset 0 for now
+    config->block_entries[config->total_entries] = { block_id, 0, size, flags };
+    if (size > 4) {
+        s32 total_entries = config->total_entries - 1;
+        u32 offset = 0;
+        // Perform a search to locate the next offset for the new data
+        while (total_entries >= 0) {
+            // Ignore the blocks that don't have a separate data offset
+            if (config->block_entries[total_entries].size <= 4) {
+                --total_entries;
+                continue;
+            }
+
+            offset = config->block_entries[total_entries].offset_or_data +
+                config->block_entries[total_entries].size;
+            break;
         }
+
+        config->block_entries[config->total_entries].offset_or_data = offset;
+
+        // Write the data at the new offset
+        memcpy(&cfg_config_file_buffer[config->data_entries_offset + offset], data, size);
+    } else {
+        // The offset_or_data field in the header contains the data itself if it's 4 bytes or less
+        memcpy(&config->block_entries[config->total_entries].offset_or_data, data, size);
     }
 
+    ++config->total_entries;
+    return RESULT_SUCCESS;
+}
+
+/**
+ * Deletes the config savegame file from the filesystem, the buffer in memory is not affected
+ * TODO(Subv): This should actually be in some file common to the CFG process
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode DeleteConfigNANDSaveFile() {
+    FileSys::Path path("config");
+    if (cfg_system_save_data->DeleteFile(path))
+        return RESULT_SUCCESS;
+    return ResultCode(-1); // TODO(Subv): Find the right error code
+}
+
+/**
+ * Writes the config savegame memory buffer to the config savegame file in the filesystem
+ * TODO(Subv): This should actually be in some file common to the CFG process
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode UpdateConfigNANDSavegame() {
+    FileSys::Mode mode;
+    mode.hex = 0;
+    mode.write_flag = 1;
+    mode.create_flag = 1;
+    FileSys::Path path("config");
+    auto file = cfg_system_save_data->OpenFile(path, mode);
+    _dbg_assert_msg_(Service_CFG, file != nullptr, "could not open file");
+    file->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
+    return RESULT_SUCCESS;
+}
+
+/**
+ * Re-creates the config savegame file in memory and the filesystem with the default blocks
+ * TODO(Subv): This should actually be in some file common to the CFG process
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode FormatConfig() {
+    ResultCode res = DeleteConfigNANDSaveFile();
+    if (!res.IsSuccess())
+        return res;
+    // Delete the old data
+    std::fill(cfg_config_file_buffer.begin(), cfg_config_file_buffer.end(), 0);
+    // Create the header
+    SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
+    config->data_entries_offset = 0x455C;
+    // Insert the default blocks
+    res = CreateConfigInfoBlk(0x00050005, 0x20, 0xE, STEREO_CAMERA_SETTINGS);
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x00090001, 0x8, 0xE, reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x000F0004, 0x4, 0x8, reinterpret_cast<u8 const*>(&CONSOLE_MODEL));
+    if (!res.IsSuccess())
+        return res;
+    // Save the buffer to the file
+    res = UpdateConfigNANDSavegame();
+    if (!res.IsSuccess())
+        return res;
     return RESULT_SUCCESS;
 }
 
@@ -271,6 +363,8 @@ Interface::Interface() {
         return;
     }
 
+    // TODO(Subv): All this code should be moved to cfg:i, 
+    // it's only here because we do not currently emulate the lower level code that uses that service
     // Try to open the file in read-only mode to check its existence
     FileSys::Mode mode;
     mode.hex = 0;
@@ -282,30 +376,7 @@ Interface::Interface() {
     if (file != nullptr)
         return;
 
-    mode.create_flag = 1;
-    mode.write_flag = 1;
-    mode.read_flag = 0;
-    // Re-open the file in write-create mode
-    file = cfg_system_save_data->OpenFile(path, mode);
-
-    // Setup the default config file data header
-    SaveFileConfig config = { 3, 0, {} };
-    u32 offset = sizeof(SaveFileConfig);
-    // Console-unique ID
-    config.block_entries[0] = { 0x00090001, offset, 0x8, 0xE };
-    offset += 0x8;
-    // Stereo Camera Settings?
-    config.block_entries[1] = { 0x00050005, offset, 0x20, 0xE };
-    offset += 0x20;
-    // System Model (Nintendo 3DS XL)
-    config.block_entries[2] = { 0x000F0004, NINTENDO_3DS_XL, 0x4, 0x8 };
-
-    // Write the config file data header to the config file
-    file->Write(0, sizeof(SaveFileConfig), 1, reinterpret_cast<u8*>(&config));
-    // Write the data itself
-    file->Write(config.block_entries[0].offset_or_data, 0x8, 1, 
-        reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
-    file->Write(config.block_entries[1].offset_or_data, 0x20, 1, STEREO_CAMERA_SETTINGS);
+    FormatConfig();
 }
 
 Interface::~Interface() {
