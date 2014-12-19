@@ -6084,7 +6084,7 @@ L_stm_s_takeabort:
 					const u8 rd_idx = BITS(12, 15);
 					const u8 rn_idx = BITS(0, 3);
 					const u8 num_bits = BITS(16, 19) + 1;
-					const s16 min = (0x8000 >> (16 - num_bits));
+					const s16 min = -(0x8000 >> (16 - num_bits));
 					const s16 max = (0x7FFF >> (16 - num_bits));
 					s16 rn_lo = (state->Reg[rn_idx]);
 					s16 rn_hi = (state->Reg[rn_idx] >> 16);
