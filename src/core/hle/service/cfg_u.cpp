@@ -21,10 +21,25 @@ enum SystemModel {
     NEW_NINTENDO_3DS_XL
 };
 
+enum SystemLanguage {
+    LANGUAGE_JP,
+    LANGUAGE_EN,
+    LANGUAGE_FR,
+    LANGUAGE_DE,
+    LANGUAGE_IT,
+    LANGUAGE_ES,
+    LANGUAGE_ZH,
+    LANGUAGE_KO,
+    LANGUAGE_NL,
+    LANGUAGE_PT,
+    LANGUAGE_RU
+};
+
 static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
 static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const u32 CONSOLE_MODEL = NINTENDO_3DS_XL;
+static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
@@ -268,6 +283,9 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000F0004, 0x4, 0x8, reinterpret_cast<u8 const*>(&CONSOLE_MODEL));
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x000A0002, 0x1, 0xA, &CONSOLE_LANGUAGE);
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
