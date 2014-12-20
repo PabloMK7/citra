@@ -400,6 +400,7 @@ static void IsSdmcDetected(Service::Interface* self) {
  * FS_User::FormatSaveData service function, 
  * formats the SaveData specified by the input path.
  *  Inputs:
+ *      0  : 0x084C0242
  *      1  : Archive ID
  *      2  : Archive low path type
  *      3  : Archive low path size
@@ -441,6 +442,7 @@ static void FormatSaveData(Service::Interface* self) {
 /**
  * FS_User::FormatThisUserSaveData service function
  *  Inputs:
+ *      0: 0x080F0180
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
