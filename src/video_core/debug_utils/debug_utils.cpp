@@ -14,6 +14,8 @@
 #include <png.h>
 #endif
 
+#include <nihstro/shader_binary.h>
+
 #include "common/log.h"
 #include "common/file_util.h"
 
@@ -21,6 +23,10 @@
 #include "video_core/pica.h"
 
 #include "debug_utils.h"
+
+using nihstro::DVLBHeader;
+using nihstro::DVLEHeader;
+using nihstro::DVLPHeader;
 
 namespace Pica {
 
@@ -98,65 +104,6 @@ void GeometryDumper::Dump() {
     }
 }
 
-#pragma pack(1)
-struct DVLBHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x424C5644, // "DVLB"
-    };
-
-    u32 magic_word;
-    u32 num_programs;
-//    u32 dvle_offset_table[];
-};
-static_assert(sizeof(DVLBHeader) == 0x8, "Incorrect structure size");
-
-struct DVLPHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x504C5644, // "DVLP"
-    };
-
-    u32 magic_word;
-    u32 version;
-    u32 binary_offset;  // relative to DVLP start
-    u32 binary_size_words;
-    u32 swizzle_patterns_offset;
-    u32 swizzle_patterns_num_entries;
-    u32 unk2;
-};
-static_assert(sizeof(DVLPHeader) == 0x1C, "Incorrect structure size");
-
-struct DVLEHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x454c5644, // "DVLE"
-    };
-
-    enum class ShaderType : u8 {
-        VERTEX = 0,
-        GEOMETRY = 1,
-    };
-
-    u32 magic_word;
-    u16 pad1;
-    ShaderType type;
-    u8 pad2;
-    u32 main_offset_words; // offset within binary blob
-    u32 endmain_offset_words;
-    u32 pad3;
-    u32 pad4;
-    u32 constant_table_offset;
-    u32 constant_table_size; // number of entries
-    u32 label_table_offset;
-    u32 label_table_size;
-    u32 output_register_table_offset;
-    u32 output_register_table_size;
-    u32 uniform_table_offset;
-    u32 uniform_table_size;
-    u32 symbol_table_offset;
-    u32 symbol_table_size;
-
-};
-static_assert(sizeof(DVLEHeader) == 0x40, "Incorrect structure size");
-#pragma pack()
 
 void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
                 u32 main_offset, const Regs::VSOutputAttributes* output_attributes)
@@ -276,8 +223,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     dvlp.binary_size_words = binary_size;
     QueueForWriting((u8*)binary_data, binary_size * sizeof(u32));
 
-    dvlp.swizzle_patterns_offset = write_offset - dvlp_offset;
-    dvlp.swizzle_patterns_num_entries = swizzle_size;
+    dvlp.swizzle_info_offset = write_offset - dvlp_offset;
+    dvlp.swizzle_info_num_entries = swizzle_size;
     u32 dummy = 0;
     for (unsigned int i = 0; i < swizzle_size; ++i) {
         QueueForWriting((u8*)&swizzle_data[i], sizeof(swizzle_data[i]));
@@ -356,10 +303,29 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     return std::move(ret);
 }
 
-const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info) {
-    _dbg_assert_(Debug_GPU, info.format == Pica::Regs::TextureFormat::RGB8);
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
 
-    // Cf. rasterizer code for an explanation of this algorithm.
+    // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+    // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+    // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+    // texels are laid out in a 2x2 subtile like this:
+    // 2 3
+    // 0 1
+    //
+    // The full 8x8 tile has the texels arranged like this:
+    //
+    // 42 43 46 47 58 59 62 63
+    // 40 41 44 45 56 57 60 61
+    // 34 35 38 39 50 51 54 55
+    // 32 33 36 37 48 49 52 53
+    // 10 11 14 15 26 27 30 31
+    // 08 09 12 13 24 25 28 29
+    // 02 03 06 07 18 19 22 23
+    // 00 01 04 05 16 17 20 21
+
+    // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
+    // To be flexible in case different but similar patterns are used, we keep this
+    // somewhat inefficient code around for now.
     int texel_index_within_tile = 0;
     for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
         int sub_tile_width = 1 << block_size_index;
@@ -376,19 +342,134 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     int coarse_x = (x / block_width) * block_width;
     int coarse_y = (y / block_height) * block_height;
 
-    const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
-    return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+    switch (info.format) {
+    case Regs::TextureFormat::RGBA8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 4 + coarse_y * info.stride + texel_index_within_tile * 4;
+        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
+    }
+
+    case Regs::TextureFormat::RGB8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
+        return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+    }
+
+    case Regs::TextureFormat::RGBA5551:
+    {
+        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 6) & 0x1F;
+        u8 b = (source_ptr >> 1) & 0x1F;
+        u8 a = source_ptr & 1;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), disable_alpha ? 255 : (a * 255));
+    }
+
+    case Regs::TextureFormat::RGB565:
+    {
+        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 5) & 0x3F;
+        u8 b = (source_ptr) & 0x1F;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2), 255);
+    }
+
+    case Regs::TextureFormat::RGBA4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+        u8 r = source_ptr[1] >> 4;
+        u8 g = source_ptr[1] & 0xFF;
+        u8 b = source_ptr[0] >> 4;
+        u8 a = source_ptr[0] & 0xFF;
+        r = (r << 4) | r;
+        g = (g << 4) | g;
+        b = (b << 4) | b;
+        a = (a << 4) | a;
+        return { r, g, b, disable_alpha ? (u8)255 : a };
+    }
+
+    case Regs::TextureFormat::IA8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+
+        // TODO: component order not verified
+
+        if (disable_alpha) {
+            // Show intensity as red, alpha as green
+            return { source_ptr[0], source_ptr[1], 0, 255 };
+        } else {
+            return { source_ptr[0], source_ptr[0], source_ptr[0], source_ptr[1]};
+        }
+    }
+
+    case Regs::TextureFormat::I8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+    }
+
+    case Regs::TextureFormat::A8:
+    {
+        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
+    }
+
+    case Regs::TextureFormat::IA4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+
+        // TODO: component order not verified
+
+        u8 i = (*source_ptr) & 0xF;
+        u8 a = ((*source_ptr) & 0xF0) >> 4;
+        a |= a << 4;
+        i |= i << 4;
+
+        if (disable_alpha) {
+            // Show intensity as red, alpha as green
+            return { i, a, 0, 255 };
+        } else {
+            return { i, i, i, a };
+        }
+    }
+
+    case Regs::TextureFormat::A4:
+    {
+        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+
+        // TODO: component order not verified
+
+        u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
+        a |= a << 4;
+
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
+    }
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown texture format: %x", (u32)info.format);
+        _dbg_assert_(HW_GPU, 0);
+        return {};
+    }
 }
 
 TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
                                           const Regs::TextureFormat& format)
 {
     TextureInfo info;
-    info.address = config.GetPhysicalAddress();
+    info.physical_address = config.GetPhysicalAddress();
     info.width = config.width;
     info.height = config.height;
     info.format = format;
-    info.stride = Pica::Regs::BytesPerPixel(info.format) * info.width;
+    info.stride = Pica::Regs::NibblesPerPixel(info.format) * info.width / 2;
     return info;
 }
 
@@ -499,26 +580,32 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
     for (size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];
 
-        const std::map<Source, std::string> source_map = {
+        static const std::map<Source, std::string> source_map = {
             { Source::PrimaryColor, "PrimaryColor" },
             { Source::Texture0, "Texture0" },
+            { Source::Texture1, "Texture1" },
+            { Source::Texture2, "Texture2" },
             { Source::Constant, "Constant" },
             { Source::Previous, "Previous" },
         };
 
-        const std::map<ColorModifier, std::string> color_modifier_map = {
-            { ColorModifier::SourceColor, { "%source.rgb" } }
+        static const std::map<ColorModifier, std::string> color_modifier_map = {
+            { ColorModifier::SourceColor, { "%source.rgb" } },
+            { ColorModifier::SourceAlpha, { "%source.aaa" } },
         };
-        const std::map<AlphaModifier, std::string> alpha_modifier_map = {
-            { AlphaModifier::SourceAlpha, "%source.a" }
+        static const std::map<AlphaModifier, std::string> alpha_modifier_map = {
+            { AlphaModifier::SourceAlpha, "%source.a" },
+            { AlphaModifier::OneMinusSourceAlpha, "(255 - %source.a)" },
         };
 
-        std::map<Operation, std::string> combiner_map = {
+        static const std::map<Operation, std::string> combiner_map = {
             { Operation::Replace, "%source1" },
             { Operation::Modulate, "(%source1 * %source2) / 255" },
+            { Operation::Add, "(%source1 + %source2)" },
+            { Operation::Lerp, "lerp(%source1, %source2, %source3)" },
         };
 
-        auto ReplacePattern =
+        static auto ReplacePattern =
                 [](const std::string& input, const std::string& pattern, const std::string& replacement) -> std::string {
                     size_t start = input.find(pattern);
                     if (start == std::string::npos)
@@ -528,8 +615,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
                     ret.replace(start, pattern.length(), replacement);
                     return ret;
                 };
-        auto GetColorSourceStr =
-                [&source_map,&color_modifier_map,&ReplacePattern](const Source& src, const ColorModifier& modifier) {
+        static auto GetColorSourceStr =
+                [](const Source& src, const ColorModifier& modifier) {
                     auto src_it = source_map.find(src);
                     std::string src_str = "Unknown";
                     if (src_it != source_map.end())
@@ -542,8 +629,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
 
                     return ReplacePattern(modifier_str, "%source", src_str);
                 };
-        auto GetColorCombinerStr =
-                [&](const Regs::TevStageConfig& tev_stage) {
+        static auto GetColorCombinerStr =
+                [](const Regs::TevStageConfig& tev_stage) {
                     auto op_it = combiner_map.find(tev_stage.color_op);
                     std::string op_str = "Unknown op (%source1, %source2, %source3)";
                     if (op_it != combiner_map.end())
@@ -553,8 +640,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
                     op_str = ReplacePattern(op_str, "%source2", GetColorSourceStr(tev_stage.color_source2, tev_stage.color_modifier2));
                     return   ReplacePattern(op_str, "%source3", GetColorSourceStr(tev_stage.color_source3, tev_stage.color_modifier3));
                 };
-        auto GetAlphaSourceStr =
-                [&source_map,&alpha_modifier_map,&ReplacePattern](const Source& src, const AlphaModifier& modifier) {
+        static auto GetAlphaSourceStr =
+                [](const Source& src, const AlphaModifier& modifier) {
                     auto src_it = source_map.find(src);
                     std::string src_str = "Unknown";
                     if (src_it != source_map.end())
@@ -567,8 +654,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
 
                     return ReplacePattern(modifier_str, "%source", src_str);
                 };
-        auto GetAlphaCombinerStr =
-                [&](const Regs::TevStageConfig& tev_stage) {
+        static auto GetAlphaCombinerStr =
+                [](const Regs::TevStageConfig& tev_stage) {
                     auto op_it = combiner_map.find(tev_stage.alpha_op);
                     std::string op_str = "Unknown op (%source1, %source2, %source3)";
                     if (op_it != combiner_map.end())

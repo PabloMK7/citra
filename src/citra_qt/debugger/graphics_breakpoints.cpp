@@ -39,15 +39,17 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
         switch (index.column()) {
         case 0:
         {
-            std::map<Pica::DebugContext::Event, QString> map;
-            map.insert({Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded")});
-            map.insert({Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed")});
-            map.insert({Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch")});
-            map.insert({Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch")});
+            static const std::map<Pica::DebugContext::Event, QString> map = {
+                { Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded") },
+                { Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed") },
+                { Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch") },
+                { Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch") },
+                { Pica::DebugContext::Event::VertexLoaded, tr("Vertex Loaded") }
+            };
 
             _dbg_assert_(Debug_GPU, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
 
-            return map[event];
+            return (map.find(event) != map.end()) ? map.at(event) : QString();
         }
 
         case 1:

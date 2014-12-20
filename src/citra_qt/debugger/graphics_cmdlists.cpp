@@ -24,7 +24,7 @@ QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (int y = 0; y < info.height; ++y) {
         for (int x = 0; x < info.width; ++x) {
-            Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(src, x, y, info);
+            Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(src, x, y, info, true);
             decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
         }
     }
@@ -47,7 +47,7 @@ public:
 };
 
 TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo& info, QWidget* parent)
-    : QDockWidget(tr("Texture 0x%1").arg(info.address, 8, 16, QLatin1Char('0'))),
+    : QDockWidget(tr("Texture 0x%1").arg(info.physical_address, 8, 16, QLatin1Char('0'))),
       info(info) {
 
     QWidget* main_widget = new QWidget;
@@ -60,7 +60,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     phys_address_spinbox->SetBase(16);
     phys_address_spinbox->SetRange(0, 0xFFFFFFFF);
     phys_address_spinbox->SetPrefix("0x");
-    phys_address_spinbox->SetValue(info.address);
+    phys_address_spinbox->SetValue(info.physical_address);
     connect(phys_address_spinbox, SIGNAL(ValueChanged(qint64)), this, SLOT(OnAddressChanged(qint64)));
 
     QComboBox* format_choice = new QComboBox;
@@ -69,6 +69,13 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     format_choice->addItem(tr("RGBA5551"));
     format_choice->addItem(tr("RGB565"));
     format_choice->addItem(tr("RGBA4"));
+    format_choice->addItem(tr("IA8"));
+    format_choice->addItem(tr("UNK6"));
+    format_choice->addItem(tr("I8"));
+    format_choice->addItem(tr("A8"));
+    format_choice->addItem(tr("IA4"));
+    format_choice->addItem(tr("UNK10"));
+    format_choice->addItem(tr("A4"));
     format_choice->setCurrentIndex(static_cast<int>(info.format));
     connect(format_choice, SIGNAL(currentIndexChanged(int)), this, SLOT(OnFormatChanged(int)));
 
@@ -125,7 +132,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
 }
 
 void TextureInfoDockWidget::OnAddressChanged(qint64 value) {
-    info.address = value;
+    info.physical_address = value;
     emit UpdatePixmap(ReloadPixmap());
 }
 
@@ -150,7 +157,7 @@ void TextureInfoDockWidget::OnStrideChanged(int value) {
 }
 
 QPixmap TextureInfoDockWidget::ReloadPixmap() const {
-    u8* src = Memory::GetPointer(info.address);
+    u8* src = Memory::GetPointer(Pica::PAddrToVAddr(info.physical_address));
     return QPixmap::fromImage(LoadTexture(src, info));
 }
 
@@ -223,9 +230,21 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
-    if (COMMAND_IN_RANGE(command_id, texture0)) {
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
-                                                                    Pica::registers.texture0_format);
+    if (COMMAND_IN_RANGE(command_id, texture0) ||
+        COMMAND_IN_RANGE(command_id, texture1) ||
+        COMMAND_IN_RANGE(command_id, texture2)) {
+
+        unsigned index;
+        if (COMMAND_IN_RANGE(command_id, texture0)) {
+            index = 0;
+        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+            index = 1;
+        } else {
+            index = 2;
+        }
+        auto config = Pica::registers.GetTextures()[index].config;
+        auto format = Pica::registers.GetTextures()[index].format;
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
 
         // TODO: Instead, emit a signal here to be caught by the main window widget.
         auto main_window = static_cast<QMainWindow*>(parent());
@@ -237,10 +256,23 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget;
 
     const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
-    if (COMMAND_IN_RANGE(command_id, texture0)) {
-        u8* src = Memory::GetPointer(Pica::registers.texture0.GetPhysicalAddress());
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(Pica::registers.texture0,
-                                                                    Pica::registers.texture0_format);
+    if (COMMAND_IN_RANGE(command_id, texture0) ||
+        COMMAND_IN_RANGE(command_id, texture1) ||
+        COMMAND_IN_RANGE(command_id, texture2)) {
+
+        unsigned index;
+        if (COMMAND_IN_RANGE(command_id, texture0)) {
+            index = 0;
+        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+            index = 1;
+        } else {
+            index = 2;
+        }
+        auto config = Pica::registers.GetTextures()[index].config;
+        auto format = Pica::registers.GetTextures()[index].format;
+
+        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
+        u8* src = Memory::GetPointer(Pica::PAddrToVAddr(config.GetPhysicalAddress()));
         new_info_widget = new TextureInfoWidget(src, info);
     } else {
         new_info_widget = new QWidget;

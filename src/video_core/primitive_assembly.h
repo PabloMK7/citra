@@ -37,6 +37,7 @@ private:
 
     int buffer_index;
     VertexType buffer[2];
+    bool strip_ready = false;
 };
 
 

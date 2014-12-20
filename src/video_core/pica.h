@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <map>
+#include <vector>
 
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -104,6 +105,11 @@ struct Regs {
     INSERT_PADDING_WORDS(0x17);
 
     struct TextureConfig {
+        enum WrapMode : u32 {
+            ClampToEdge = 0,
+            Repeat      = 2,
+        };
+
         INSERT_PADDING_WORDS(0x1);
 
         union {
@@ -111,12 +117,17 @@ struct Regs {
             BitField<16, 16, u32> width;
         };
 
-        INSERT_PADDING_WORDS(0x2);
+        union {
+            BitField< 8, 2, WrapMode> wrap_s;
+            BitField<11, 2, WrapMode> wrap_t;
+        };
+
+        INSERT_PADDING_WORDS(0x1);
 
         u32 address;
 
         u32 GetPhysicalAddress() const {
-            return DecodeAddressRegister(address) - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+            return DecodeAddressRegister(address);
         }
 
         // texture1 and texture2 store the texture format directly after the address
@@ -131,36 +142,70 @@ struct Regs {
         RGBA5551     =  2,
         RGB565       =  3,
         RGBA4        =  4,
+        IA8          =  5,
 
+        I8           =  7,
+        A8           =  8,
+        IA4          =  9,
+
+        A4           = 11,
         // TODO: Support for the other formats is not implemented, yet.
         // Seems like they are luminance formats and compressed textures.
     };
 
-    static unsigned BytesPerPixel(TextureFormat format) {
+    static unsigned NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
-            return 4;
+            return 8;
 
         case TextureFormat::RGB8:
-            return 3;
+            return 6;
 
         case TextureFormat::RGBA5551:
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
-            return 2;
+        case TextureFormat::IA8:
+            return 4;
 
-        default:
-            // placeholder for yet unknown formats
+        case TextureFormat::A4:
             return 1;
+
+        case TextureFormat::I8:
+        case TextureFormat::A8:
+        case TextureFormat::IA4:
+        default:  // placeholder for yet unknown formats
+            return 2;
         }
     }
 
-    BitField< 0, 1, u32> texturing_enable;
+    union {
+        BitField< 0, 1, u32> texture0_enable;
+        BitField< 1, 1, u32> texture1_enable;
+        BitField< 2, 1, u32> texture2_enable;
+    };
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
+    INSERT_PADDING_WORDS(0x2);
+    TextureConfig texture1;
+    BitField<0, 4, TextureFormat> texture1_format;
+    INSERT_PADDING_WORDS(0x2);
+    TextureConfig texture2;
+    BitField<0, 4, TextureFormat> texture2_format;
+    INSERT_PADDING_WORDS(0x21);
 
-    INSERT_PADDING_WORDS(0x31);
+    struct FullTextureConfig {
+        const bool enabled;
+        const TextureConfig config;
+        const TextureFormat format;
+    };
+    const std::array<FullTextureConfig, 3> GetTextures() const {
+        return {{
+                   { static_cast<bool>(texture0_enable), texture0, texture0_format },
+                   { static_cast<bool>(texture1_enable), texture1, texture1_format },
+                   { static_cast<bool>(texture2_enable), texture2, texture2_format }
+               }};
+    }
 
     // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
     struct TevStageConfig {
@@ -282,11 +327,11 @@ struct Regs {
 
         INSERT_PADDING_WORDS(0x1);
 
-        inline u32 GetColorBufferAddress() const {
-            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(color_buffer_address));
+        inline u32 GetColorBufferPhysicalAddress() const {
+            return DecodeAddressRegister(color_buffer_address);
         }
-        inline u32 GetDepthBufferAddress() const {
-            return Memory::PhysicalToVirtualAddress(DecodeAddressRegister(depth_buffer_address));
+        inline u32 GetDepthBufferPhysicalAddress() const {
+            return DecodeAddressRegister(depth_buffer_address);
         }
 
         inline u32 GetWidth() const {
@@ -310,9 +355,8 @@ struct Regs {
 
         BitField<0, 29, u32> base_address;
 
-        inline u32 GetBaseAddress() const {
-            // TODO: Ugly, should fix PhysicalToVirtualAddress instead
-            return DecodeAddressRegister(base_address) - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+        u32 GetPhysicalBaseAddress() const {
+            return DecodeAddressRegister(base_address);
         }
 
         // Descriptor for internal vertex attributes
@@ -448,7 +492,11 @@ struct Regs {
 
     BitField<8, 2, TriangleTopology> triangle_topology;
 
-    INSERT_PADDING_WORDS(0x5b);
+    INSERT_PADDING_WORDS(0x51);
+
+    BitField<0, 16, u32> vs_bool_uniforms;
+
+    INSERT_PADDING_WORDS(0x9);
 
     // Offset to shader program entry point (in words)
     BitField<0, 16, u32> vs_main_offset;
@@ -556,9 +604,13 @@ struct Regs {
         ADD_FIELD(viewport_depth_range);
         ADD_FIELD(viewport_depth_far_plane);
         ADD_FIELD(viewport_corner);
-        ADD_FIELD(texturing_enable);
+        ADD_FIELD(texture0_enable);
         ADD_FIELD(texture0);
         ADD_FIELD(texture0_format);
+        ADD_FIELD(texture1);
+        ADD_FIELD(texture1_format);
+        ADD_FIELD(texture2);
+        ADD_FIELD(texture2_format);
         ADD_FIELD(tev_stage0);
         ADD_FIELD(tev_stage1);
         ADD_FIELD(tev_stage2);
@@ -572,6 +624,7 @@ struct Regs {
         ADD_FIELD(trigger_draw);
         ADD_FIELD(trigger_draw_indexed);
         ADD_FIELD(triangle_topology);
+        ADD_FIELD(vs_bool_uniforms);
         ADD_FIELD(vs_main_offset);
         ADD_FIELD(vs_input_register_map);
         ADD_FIELD(vs_uniform_setup);
@@ -622,9 +675,13 @@ ASSERT_REG_POSITION(viewport_depth_far_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
-ASSERT_REG_POSITION(texturing_enable, 0x80);
+ASSERT_REG_POSITION(texture0_enable, 0x80);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
+ASSERT_REG_POSITION(texture1, 0x91);
+ASSERT_REG_POSITION(texture1_format, 0x96);
+ASSERT_REG_POSITION(texture2, 0x99);
+ASSERT_REG_POSITION(texture2_format, 0x9e);
 ASSERT_REG_POSITION(tev_stage0, 0xc0);
 ASSERT_REG_POSITION(tev_stage1, 0xc8);
 ASSERT_REG_POSITION(tev_stage2, 0xd0);
@@ -638,6 +695,7 @@ ASSERT_REG_POSITION(num_vertices, 0x228);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
+ASSERT_REG_POSITION(vs_bool_uniforms, 0x2b0);
 ASSERT_REG_POSITION(vs_main_offset, 0x2ba);
 ASSERT_REG_POSITION(vs_input_register_map, 0x2bb);
 ASSERT_REG_POSITION(vs_uniform_setup, 0x2c0);
@@ -719,6 +777,14 @@ struct float24 {
         return ToFloat32() <= flt.ToFloat32();
     }
 
+    bool operator == (const float24& flt) const {
+        return ToFloat32() == flt.ToFloat32();
+    }
+
+    bool operator != (const float24& flt) const {
+        return ToFloat32() != flt.ToFloat32();
+    }
+
 private:
     // Stored as a regular float, merely for convenience
     // TODO: Perform proper arithmetic on this!
@@ -736,5 +802,15 @@ union CommandHeader {
     BitField<31,  1, u32> group_commands;
 };
 
+// TODO: Ugly, should fix PhysicalToVirtualAddress instead
+inline static u32 PAddrToVAddr(u32 addr) {
+    if (addr >= Memory::VRAM_PADDR && addr < Memory::VRAM_PADDR + Memory::VRAM_SIZE) {
+        return addr - Memory::VRAM_PADDR + Memory::VRAM_VADDR;
+    } else if (addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+        return addr - Memory::FCRAM_PADDR + Memory::HEAP_LINEAR_VADDR;
+    } else {
+        return 0;
+    }
+}
 
 } // namespace

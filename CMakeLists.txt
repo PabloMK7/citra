@@ -141,6 +141,8 @@ set(INI_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/inih")
 include_directories(${INI_PREFIX})
 add_subdirectory(${INI_PREFIX})
 
+include_directories(externals/nihstro/include)
+
 # process subdirectories
 if(ENABLE_QT)
     include_directories(externals/qhexedit)

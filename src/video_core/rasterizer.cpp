@@ -18,7 +18,7 @@ namespace Pica {
 namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
-    u32* color_buffer = (u32*)Memory::GetPointer(registers.framebuffer.GetColorBufferAddress());
+    u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress())));
     u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
     // Assuming RGBA8 format until actual framebuffer format handling is implemented
@@ -26,14 +26,14 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 }
 
 static u32 GetDepth(int x, int y) {
-    u16* depth_buffer = (u16*)Memory::GetPointer(registers.framebuffer.GetDepthBufferAddress());
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
 
 static void SetDepth(int x, int y, u16 value) {
-    u16* depth_buffer = (u16*)Memory::GetPointer(registers.framebuffer.GetDepthBufferAddress());
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
@@ -167,60 +167,48 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
             };
 
-            Math::Vec4<u8> texture_color{};
-            float24 u = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
-            float24 v = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
-            if (registers.texturing_enable) {
-                // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
-                // of which is composed of four 2x2 subtiles each of which is composed of four texels.
-                // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
-                // texels are laid out in a 2x2 subtile like this:
-                // 2 3
-                // 0 1
-                //
-                // The full 8x8 tile has the texels arranged like this:
-                //
-                // 42 43 46 47 58 59 62 63
-                // 40 41 44 45 56 57 60 61
-                // 34 35 38 39 50 51 54 55
-                // 32 33 36 37 48 49 52 53
-                // 10 11 14 15 26 27 30 31
-                // 08 09 12 13 24 25 28 29
-                // 02 03 06 07 18 19 22 23
-                // 00 01 04 05 16 17 20 21
+            Math::Vec2<float24> uv[3];
+            uv[0].u() = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
+            uv[0].v() = GetInterpolatedAttribute(v0.tc0.v(), v1.tc0.v(), v2.tc0.v());
+            uv[1].u() = GetInterpolatedAttribute(v0.tc1.u(), v1.tc1.u(), v2.tc1.u());
+            uv[1].v() = GetInterpolatedAttribute(v0.tc1.v(), v1.tc1.v(), v2.tc1.v());
+            uv[2].u() = GetInterpolatedAttribute(v0.tc2.u(), v1.tc2.u(), v2.tc2.u());
+            uv[2].v() = GetInterpolatedAttribute(v0.tc2.v(), v1.tc2.v(), v2.tc2.v());
 
-                // TODO: This is currently hardcoded for RGB8
-                u32* texture_data = (u32*)Memory::GetPointer(registers.texture0.GetPhysicalAddress());
+            Math::Vec4<u8> texture_color[3]{};
+            for (int i = 0; i < 3; ++i) {
+                auto texture = registers.GetTextures()[i];
+                if (!texture.enabled)
+                    continue;
 
-                // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
-                // To be flexible in case different but similar patterns are used, we keep this
-                // somewhat inefficient code around for now.
-                int s = (int)(u * float24::FromFloat32(static_cast<float>(registers.texture0.width))).ToFloat32();
-                int t = (int)(v * float24::FromFloat32(static_cast<float>(registers.texture0.height))).ToFloat32();
-                int texel_index_within_tile = 0;
-                for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
-                    int sub_tile_width = 1 << block_size_index;
-                    int sub_tile_height = 1 << block_size_index;
+                _dbg_assert_(HW_GPU, 0 != texture.config.address);
 
-                    int sub_tile_index = (s & sub_tile_width) << block_size_index;
-                    sub_tile_index += 2 * ((t & sub_tile_height) << block_size_index);
-                    texel_index_within_tile += sub_tile_index;
-                }
+                int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
+                int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
+                auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
+                    switch (mode) {
+                        case Regs::TextureConfig::ClampToEdge:
+                            val = std::max(val, 0);
+                            val = std::min(val, (int)size - 1);
+                            return val;
 
-                const int block_width = 8;
-                const int block_height = 8;
+                        case Regs::TextureConfig::Repeat:
+                            return (int)(((unsigned)val) % size);
 
-                int coarse_s = (s / block_width) * block_width;
-                int coarse_t = (t / block_height) * block_height;
+                        default:
+                            LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x\n", (int)mode);
+                            _dbg_assert_(HW_GPU, 0);
+                            return 0;
+                    }
+                };
+                s = GetWrappedTexCoord(registers.texture0.wrap_s, s, registers.texture0.width);
+                t = GetWrappedTexCoord(registers.texture0.wrap_t, t, registers.texture0.height);
 
-                const int row_stride = registers.texture0.width * 3;
-                u8* source_ptr = (u8*)texture_data + coarse_s * block_height * 3 + coarse_t * row_stride + texel_index_within_tile * 3;
-                texture_color.r() = source_ptr[2];
-                texture_color.g() = source_ptr[1];
-                texture_color.b() = source_ptr[0];
-                texture_color.a() = 0xFF;
+                u8* texture_data = Memory::GetPointer(PAddrToVAddr(texture.config.GetPhysicalAddress()));
+                auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
-                DebugUtils::DumpTexture(registers.texture0, (u8*)texture_data);
+                texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
+                DebugUtils::DumpTexture(texture.config, texture_data);
             }
 
             // Texture environment - consists of 6 stages of color and alpha combining.
@@ -237,22 +225,29 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
                 using Operation = Regs::TevStageConfig::Operation;
 
-                auto GetColorSource = [&](Source source) -> Math::Vec3<u8> {
+                auto GetColorSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
                     case Source::PrimaryColor:
-                        return primary_color.rgb();
+                        return primary_color;
 
                     case Source::Texture0:
-                        return texture_color.rgb();
+                        return texture_color[0];
+
+                    case Source::Texture1:
+                        return texture_color[1];
+
+                    case Source::Texture2:
+                        return texture_color[2];
 
                     case Source::Constant:
-                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b};
+                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b, tev_stage.const_a};
 
                     case Source::Previous:
-                        return combiner_output.rgb();
+                        return combiner_output;
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -263,7 +258,13 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return primary_color.a();
 
                     case Source::Texture0:
-                        return texture_color.a();
+                        return texture_color[0].a();
+
+                    case Source::Texture1:
+                        return texture_color[1].a();
+
+                    case Source::Texture2:
+                        return texture_color[2].a();
 
                     case Source::Constant:
                         return tev_stage.const_a;
@@ -273,17 +274,23 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner source %d\n", (int)source);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };
 
-                auto GetColorModifier = [](ColorModifier factor, const Math::Vec3<u8>& values) -> Math::Vec3<u8> {
+                auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
                     switch (factor)
                     {
                     case ColorModifier::SourceColor:
-                        return values;
+                        return values.rgb();
+
+                    case ColorModifier::SourceAlpha:
+                        return { values.a(), values.a(), values.a() };
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -292,8 +299,13 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     switch (factor) {
                     case AlphaModifier::SourceAlpha:
                         return value;
+
+                    case AlphaModifier::OneMinusSourceAlpha:
+                        return 255 - value;
+
                     default:
-                        LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
+                        LOG_ERROR(HW_GPU, "Unknown alpha factor %d\n", (int)factor);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };
@@ -306,8 +318,21 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Operation::Modulate:
                         return ((input[0] * input[1]) / 255).Cast<u8>();
 
+                    case Operation::Add:
+                    {
+                        auto result = input[0] + input[1];
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        return result.Cast<u8>();
+                    }
+
+                    case Operation::Lerp:
+                        return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
+                        _dbg_assert_(HW_GPU, 0);
                         return {};
                     }
                 };
@@ -320,8 +345,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Operation::Modulate:
                         return input[0] * input[1] / 255;
 
+                    case Operation::Add:
+                        return std::min(255, input[0] + input[1]);
+
+                    case Operation::Lerp:
+                        return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        _dbg_assert_(HW_GPU, 0);
                         return 0;
                     }
                 };
