@@ -6374,7 +6374,30 @@ L_stm_s_takeabort:
             printf ("Unhandled v6 insn: smmla/smmls/smmul\n");
             break;
         case 0x78:
-            printf ("Unhandled v6 insn: usad/usada8\n");
+            if (BITS(20, 24) == 0x18)
+            {
+                const u8 rm_idx = BITS(8, 11);
+                const u8 rn_idx = BITS(0, 3);
+                const u8 rd_idx = BITS(16, 19);
+
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
+
+                const u8 diff1 = (u8)::abs((rn_val & 0xFF) - (rm_val & 0xFF));
+                const u8 diff2 = (u8)::abs(((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF));
+                const u8 diff3 = (u8)::abs(((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF));
+                const u8 diff4 = (u8)::abs(((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF));
+
+                u32 finalDif = (diff1 + diff2 + diff3 + diff4);
+
+                // Op is USADA8 if true.
+                const u8 ra_idx = BITS(12, 15);
+                if (ra_idx != 15)
+                    finalDif += state->Reg[ra_idx];
+
+                state->Reg[rd_idx] = finalDif;
+                return 1;
+            }
             break;
         case 0x7a:
             printf ("Unhandled v6 insn: usbfx\n");
