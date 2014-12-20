@@ -238,7 +238,7 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const
     if (!prefix.isEmpty() && input.left(prefix.length()) != prefix)
         return QValidator::Invalid;
 
-    unsigned strpos = prefix.length();
+    int strpos = prefix.length();
 
     // Empty "numbers" allowed as intermediate values
     if (strpos >= input.length() - HasSign() - suffix.length())

@@ -240,14 +240,14 @@ MathUtil::Rectangle<unsigned> RendererOpenGL::GetViewportExtent() {
     MathUtil::Rectangle<unsigned> viewport_extent;
     if (window_aspect_ratio > emulation_aspect_ratio) {
         // Window is narrower than the emulation content => apply borders to the top and bottom
-        unsigned viewport_height = std::round(emulation_aspect_ratio * framebuffer_width);
+        unsigned viewport_height = static_cast<unsigned>(std::round(emulation_aspect_ratio * framebuffer_width));
         viewport_extent.left = 0;
         viewport_extent.top = (framebuffer_height - viewport_height) / 2;
         viewport_extent.right = viewport_extent.left + framebuffer_width;
         viewport_extent.bottom = viewport_extent.top + viewport_height;
     } else {
         // Otherwise, apply borders to the left and right sides of the window.
-        unsigned viewport_width = std::round(framebuffer_height / emulation_aspect_ratio);
+        unsigned viewport_width = static_cast<unsigned>(std::round(framebuffer_height / emulation_aspect_ratio));
         viewport_extent.left = (framebuffer_width - viewport_width) / 2;
         viewport_extent.top = 0;
         viewport_extent.right = viewport_extent.left + viewport_width;

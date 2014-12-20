@@ -27,10 +27,10 @@ void CallstackWidget::OnCPUStepped()
     ARM_Interface* app_core = Core::g_app_core;
 
     u32 sp = app_core->GetReg(13); //stack pointer
-    u32 addr, ret_addr, call_addr, func_addr;
+    u32 ret_addr, call_addr, func_addr;
 
     int counter = 0;
-    for (int addr = 0x10000000; addr >= sp; addr -= 4)
+    for (u32 addr = 0x10000000; addr >= sp; addr -= 4)
     {
         ret_addr = Memory::Read32(addr);
         call_addr = ret_addr - 4; //get call address???

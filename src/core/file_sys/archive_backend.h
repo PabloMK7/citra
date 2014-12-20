@@ -143,7 +143,16 @@ public:
             case Char:
                 return std::vector<u8>(string.begin(), string.end());
             case Wchar:
-                return std::vector<u8>(u16str.begin(), u16str.end());
+            {
+                // use two u8 for each character of u16str
+                std::vector<u8> to_return(u16str.size() * 2);
+                for (size_t i = 0; i < u16str.size(); ++i) {
+                    u16 tmp_char = u16str.at(i);
+                    to_return[i*2] = (tmp_char & 0xFF00) >> 8;
+                    to_return[i*2 + 1] = (tmp_char & 0x00FF);
+                }
+                return to_return;
+            }
             case Empty:
                 return {};
             default:
