@@ -6327,11 +6327,14 @@ L_stm_s_takeabort:
 		}
         case 0x70:
             // ichfly
-            // SMUAD, SMUSD, SMLAD
-            if ((instr & 0xf0d0) == 0xf010 || (instr & 0xf0d0) == 0xf050 || (instr & 0xd0) == 0x10) {
+            // SMUAD, SMUSD, SMLAD, and SMLSD
+            if ((instr & 0xf0d0) == 0xf010 || (instr & 0xf0d0) == 0xf050 ||
+                (instr & 0xd0) == 0x10     || (instr & 0xd0) == 0x50)
+            {
                 const u8 rd_idx = BITS(16, 19);
                 const u8 rn_idx = BITS(0, 3);
                 const u8 rm_idx = BITS(8, 11);
+                const u8 ra_idx = BITS(12, 15);
                 const bool do_swap = (BIT(5) == 1);
 
                 u32 rm_val = state->Reg[rm_idx];
@@ -6354,13 +6357,14 @@ L_stm_s_takeabort:
                     state->Reg[rd_idx] = (rn_lo * rm_lo) - (rn_hi * rm_hi);
                 }
                 // SMLAD
-                else {
-                    const u8 ra_idx = BITS(12, 15);
+                else if ((instr & 0xd0) == 0x10) {
                     state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi) + (s32)state->Reg[ra_idx];
                 }
+                // SMLSD
+                else {
+                    state->Reg[rd_idx] = ((rn_lo * rm_lo) - (rn_hi * rm_hi)) + (s32)state->Reg[ra_idx];
+                }
                 return 1;
-            } else {
-                printf ("Unhandled v6 insn: smlsd\n");
             }
             break;
         case 0x74:
