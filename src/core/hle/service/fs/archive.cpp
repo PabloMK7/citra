@@ -7,6 +7,7 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/make_unique.h"
 #include "common/math_util.h"
 
 #include "core/file_sys/archive_savedata.h"
@@ -260,7 +261,7 @@ ResultCode CloseArchive(ArchiveHandle handle) {
 // TODO(yuriks): This might be what the fs:REG service is for. See the Register/Unregister calls in
 // http://3dbrew.org/wiki/Filesystem_services#ProgramRegistry_service_.22fs:REG.22
 ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code) {
-    auto result = id_code_map.emplace(id_code, std::make_unique<Archive>(std::move(backend), id_code));
+    auto result = id_code_map.emplace(id_code, Common::make_unique<Archive>(std::move(backend), id_code));
 
     bool inserted = result.second;
     _dbg_assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
@@ -281,7 +282,7 @@ ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSy
                           ErrorSummary::NotFound, ErrorLevel::Status);
     }
 
-    auto file = std::make_unique<File>(std::move(backend), path);
+    auto file = Common::make_unique<File>(std::move(backend), path);
     Handle handle = Kernel::g_object_pool.Create(file.release());
     return MakeResult<Handle>(handle);
 }
@@ -378,7 +379,7 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
-    auto directory = std::make_unique<Directory>(std::move(backend), path);
+    auto directory = Common::make_unique<Directory>(std::move(backend), path);
     Handle handle = Kernel::g_object_pool.Create(directory.release());
     return MakeResult<Handle>(handle);
 }
@@ -392,7 +393,7 @@ ResultCode FormatSaveData() {
 
     // Create the SaveData archive
     std::string savedata_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX);
-    auto savedata_archive = std::make_unique<FileSys::Archive_SaveData>(savedata_directory,
+    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(savedata_directory,
         Kernel::g_program_id);
 
     if (savedata_archive->Initialize()) {
@@ -414,14 +415,14 @@ void ArchiveInit() {
     // archive type is SDMC, so it is the only one getting exposed.
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
-    auto sdmc_archive = std::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
+    auto sdmc_archive = Common::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
     if (sdmc_archive->Initialize())
         CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 
     std::string systemsavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
-    auto systemsavedata_archive = std::make_unique<FileSys::Archive_SDMC>(systemsavedata_directory);
+    auto systemsavedata_archive = Common::make_unique<FileSys::Archive_SDMC>(systemsavedata_directory);
     if (systemsavedata_archive->Initialize()) {
         CreateArchive(std::move(systemsavedata_archive), ArchiveIdCode::SystemSaveData);
     } else {
