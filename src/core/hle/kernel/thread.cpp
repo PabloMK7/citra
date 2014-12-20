@@ -83,8 +83,7 @@ static Thread* current_thread;
 static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
 static u32 next_thread_id; ///< The next available thread id
 
-/// Gets the current thread
-inline Thread* GetCurrentThread() {
+Thread* GetCurrentThread() {
     return current_thread;
 }
 

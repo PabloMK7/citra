@@ -14,6 +14,10 @@ typedef s32 Result;
 
 namespace Kernel {
 
+// From kernel.h. Declarations duplicated here to avoid a circular header dependency.
+class Thread;
+Thread* GetCurrentThread();
+
 enum KernelHandle {
     CurrentThread   = 0xFFFF8000,
     CurrentProcess  = 0xFFFF8001,
@@ -81,6 +85,10 @@ public:
 
     template <class T>
     T* Get(Handle handle) {
+        if (handle == CurrentThread) {
+            return reinterpret_cast<T*>(GetCurrentThread());
+        }
+
         if (handle < HANDLE_OFFSET || handle >= HANDLE_OFFSET + MAX_COUNT || !occupied[handle - HANDLE_OFFSET]) {
             if (handle != 0) {
                 LOG_ERROR(Kernel, "Bad object handle %08x", handle);
@@ -99,6 +107,10 @@ public:
     // ONLY use this when you know the handle is valid.
     template <class T>
     T *GetFast(Handle handle) {
+        if (handle == CurrentThread) {
+            return reinterpret_cast<T*>(GetCurrentThread());
+        }
+
         const Handle realHandle = handle - HANDLE_OFFSET;
         _dbg_assert_(Kernel, realHandle >= 0 && realHandle < MAX_COUNT && occupied[realHandle]);
         return static_cast<T*>(pool[realHandle]);
