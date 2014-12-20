@@ -184,7 +184,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     if (itr->size <= 4)
         memcpy(output, &itr->offset_or_data, itr->size);
     else
-        memcpy(output, &cfg_config_file_buffer[config->data_entries_offset + itr->offset_or_data], itr->size);
+        memcpy(output, &cfg_config_file_buffer[itr->offset_or_data], itr->size);
 
     return RESULT_SUCCESS;
 }
@@ -218,6 +218,8 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data
                 config->block_entries[total_entries].size;
             break;
         }
+
+        offset += config->data_entries_offset;
 
         config->block_entries[config->total_entries].offset_or_data = offset;
 
