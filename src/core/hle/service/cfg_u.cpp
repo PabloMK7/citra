@@ -40,6 +40,8 @@ static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const u32 CONSOLE_MODEL = NINTENDO_3DS_XL;
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
+/// TODO(Subv): Find out what this actually is
+static const u8 SOUND_OUTPUT_MODE = 2;
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
@@ -288,6 +290,9 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000A0002, 0x1, 0xA, &CONSOLE_LANGUAGE);
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x00070001, 0x1, 0xE, &SOUND_OUTPUT_MODE);
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
