@@ -49,6 +49,7 @@ set(HEADERS
             logging/filter.h
             logging/log.h
             logging/backend.h
+            make_unique.h
             math_util.h
             mem_arena.h
             memory_util.h

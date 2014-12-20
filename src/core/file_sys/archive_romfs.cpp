@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "common/common_types.h"
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_romfs.h"
 #include "core/file_sys/directory_romfs.h"
@@ -29,7 +30,7 @@ Archive_RomFS::Archive_RomFS(const Loader::AppLoader& app_loader) {
  * @return Opened file, or nullptr
  */
 std::unique_ptr<FileBackend> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
-    return std::make_unique<File_RomFS>(this);
+    return Common::make_unique<File_RomFS>(this);
 }
 
 /**
@@ -78,7 +79,7 @@ bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys
  * @return Opened directory, or nullptr
  */
 std::unique_ptr<DirectoryBackend> Archive_RomFS::OpenDirectory(const Path& path) const {
-    return std::make_unique<Directory_RomFS>();
+    return Common::make_unique<Directory_RomFS>();
 }
 
 } // namespace FileSys

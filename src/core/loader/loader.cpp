@@ -2,7 +2,9 @@
 // Licensed under GPLv2
 // Refer to the license.txt file included.
 
-#include <memory>
+#include <string>
+
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_romfs.h"
 #include "core/loader/3dsx.h"
@@ -75,7 +77,7 @@ ResultStatus LoadFile(const std::string& filename) {
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
             Kernel::g_program_id = app_loader.GetProgramId();
-            Service::FS::CreateArchive(std::make_unique<FileSys::Archive_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
+            Service::FS::CreateArchive(Common::make_unique<FileSys::Archive_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;
