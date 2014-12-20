@@ -352,7 +352,8 @@ static Result ClearEvent(Handle evt) {
 static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
 
-    // Check for next thread to schedule
+    // Sleep current thread and check for next thread to schedule
+    Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
     HLE::Reschedule(__func__);
 }
 

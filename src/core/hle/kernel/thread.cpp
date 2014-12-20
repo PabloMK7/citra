@@ -147,16 +147,19 @@ void ChangeReadyState(Thread* t, bool ready) {
     }
 }
 
-/// Verify that a thread has not been released from waiting
-static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
-    _dbg_assert_(Kernel, thread != nullptr);
-    return (type == thread->wait_type) && (wait_handle == thread->wait_handle) && (thread->IsWaiting());
+/// Check if a thread is blocking on a specified wait type
+static bool CheckWaitType(const Thread* thread, WaitType type) {
+    return (type == thread->wait_type) && (thread->IsWaiting());
 }
 
-/// Verify that a thread has not been released from waiting (with wait address)
-static bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle, VAddr wait_address) {
-    _dbg_assert_(Kernel, thread != nullptr);
-    return VerifyWait(thread, type, wait_handle) && (wait_address == thread->wait_address);
+/// Check if a thread is blocking on a specified wait type with a specified handle
+static bool CheckWaitType(const Thread* thread, WaitType type, Handle wait_handle) {
+    return CheckWaitType(thread, type) && (wait_handle == thread->wait_handle);
+}
+
+/// Check if a thread is blocking on a specified wait type with a specified handle and address
+static bool CheckWaitType(const Thread* thread, WaitType type, Handle wait_handle, VAddr wait_address) {
+    return CheckWaitType(thread, type, wait_handle) && (wait_address == thread->wait_address);
 }
 
 /// Stops the current thread
@@ -171,9 +174,9 @@ ResultCode StopThread(Handle handle, const char* reason) {
     thread->status = THREADSTATUS_DORMANT;
     for (Handle waiting_handle : thread->waiting_threads) {
         Thread* waiting_thread = g_object_pool.Get<Thread>(waiting_handle);
-        if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, handle)) {
+
+        if (CheckWaitType(waiting_thread, WAITTYPE_THREADEND, handle))
             ResumeThreadFromWait(waiting_handle);
-        }
     }
     thread->waiting_threads.clear();
 
@@ -209,7 +212,7 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
     for (Handle handle : thread_queue) {
         Thread* thread = g_object_pool.Get<Thread>(handle);
 
-        if (!VerifyWait(thread, WAITTYPE_ARB, arbiter, address))
+        if (!CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             continue;
 
         if (thread == nullptr)
@@ -234,7 +237,7 @@ void ArbitrateAllThreads(u32 arbiter, u32 address) {
     for (Handle handle : thread_queue) {
         Thread* thread = g_object_pool.Get<Thread>(handle);
 
-        if (VerifyWait(thread, WAITTYPE_ARB, arbiter, address))
+        if (CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             ResumeThreadFromWait(handle);
     }
 }
@@ -305,6 +308,8 @@ void ResumeThreadFromWait(Handle handle) {
     Thread* thread = Kernel::g_object_pool.Get<Thread>(handle);
     if (thread) {
         thread->status &= ~THREADSTATUS_WAIT;
+        thread->wait_handle = 0;
+        thread->wait_type = WAITTYPE_NONE;
         if (!(thread->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
             ChangeReadyState(thread, true);
         }
@@ -468,19 +473,27 @@ void Reschedule() {
     Thread* prev = GetCurrentThread();
     Thread* next = NextThread();
     HLE::g_reschedule = false;
-    if (next > 0) {
+
+    if (next != nullptr) {
         LOG_TRACE(Kernel, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
-
         SwitchContext(next);
+    } else {
+        LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
 
-        // Hack - There is no mechanism yet to waken the primary thread if it has been put to sleep
-        // by a simulated VBLANK thread switch. So, we'll just immediately set it to "ready" again.
-        // This results in the current thread yielding on a VBLANK once, and then it will be
-        // immediately placed back in the queue for execution.
-        if (prev->wait_type == WAITTYPE_VBLANK) {
-            ResumeThreadFromWait(prev->GetHandle());
+        for (Handle handle : thread_queue) {
+            Thread* thread = g_object_pool.Get<Thread>(handle);
+            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X wait_handle=0x%08X",
+                thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_handle);
         }
     }
+
+    // TODO(bunnei): Hack - There is no timing mechanism yet to wake up a thread if it has been put
+    // to sleep. So, we'll just immediately set it to "ready" again after an attempted context
+    // switch has occurred. This results in the current thread yielding on a sleep once, and then it
+    // will immediately be placed back in the queue for execution.
+
+    if (CheckWaitType(prev, WAITTYPE_SLEEP))
+        ResumeThreadFromWait(prev->GetHandle());
 }
 
 ResultCode GetThreadId(u32* thread_id, Handle handle) {
