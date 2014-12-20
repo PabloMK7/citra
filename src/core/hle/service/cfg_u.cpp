@@ -4,6 +4,7 @@
 
 #include "common/file_util.h"
 #include "common/log.h"
+#include "common/make_unique.h"
 #include "common/string_util.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"
@@ -399,7 +400,7 @@ Interface::Interface() {
     // TODO(Subv): In the future we should use the FS service to query this archive, 
     // currently it is not possible because you can only have one open archive of the same type at any time
     std::string syssavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
-    cfg_system_save_data = std::make_unique<FileSys::Archive_SystemSaveData>(syssavedata_directory, 
+    cfg_system_save_data = Common::make_unique<FileSys::Archive_SystemSaveData>(syssavedata_directory, 
         CFG_SAVE_ID);
     if (!cfg_system_save_data->Initialize()) {
         LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
