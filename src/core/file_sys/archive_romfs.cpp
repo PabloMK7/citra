@@ -58,6 +58,12 @@ bool Archive_RomFS::DeleteDirectory(const FileSys::Path& path) const {
     return false;
 }
 
+ResultCode Archive_RomFS::CreateFile(const Path& path, u32 size) const {
+    LOG_WARNING(Service_FS, "Attempted to create a file in ROMFS.");
+    // TODO: Verify error code
+    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported, ErrorLevel::Permanent);
+}
+
 /**
  * Create a directory specified by its path
  * @param path Path relative to the archive

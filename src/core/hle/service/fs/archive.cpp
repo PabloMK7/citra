@@ -330,6 +330,14 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
+ResultCode CreateFileInArchive(Handle archive_handle, const FileSys::Path& path, u32 file_size) {
+    Archive* archive = GetArchive(archive_handle);
+    if (archive == nullptr)
+        return InvalidHandle(ErrorModule::FS);
+
+    return archive->backend->CreateFile(path, file_size);
+}
+
 ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
