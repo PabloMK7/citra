@@ -150,7 +150,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 // TODO: We don't really support this properly: For instance, the address register
                 //       offset needs to be applied to SRC2 instead, etc.
                 //       For now, we just abort in this situation.
-                LOG_ERROR(HW_GPU, "Bad condition...");
+                LOG_CRITICAL(HW_GPU, "Bad condition...");
                 exit(0);
             }
 
