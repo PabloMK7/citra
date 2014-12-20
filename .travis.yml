@@ -4,6 +4,8 @@ os:
 
 language: cpp
 
+cache: apt
+
 before_install:
  - sh .travis-deps.sh
 
