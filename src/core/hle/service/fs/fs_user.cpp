@@ -397,16 +397,44 @@ static void IsSdmcDetected(Service::Interface* self) {
 }
 
 /**
- * FS_User::FormatSaveData service function
+ * FS_User::FormatSaveData service function, 
+ * formats the SaveData specified by the input path.
  *  Inputs:
+ *      0  : 0x084C0242
+ *      1  : Archive ID
+ *      2  : Archive low path type
+ *      3  : Archive low path size
+ *      10 : (LowPathSize << 14) | 2
+ *      11 : Archive low path
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void FormatSaveData(Service::Interface* self) {
+    // TODO(Subv): Find out what the other inputs and outputs of this function are
     u32* cmd_buff = Kernel::GetCommandBuffer();
     LOG_DEBUG(Service_FS, "(STUBBED)");
 
-    // TODO(Subv): Find out what the inputs and outputs of this function are
+    auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
+    auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
+    u32 archivename_size = cmd_buff[3];
+    u32 archivename_ptr = cmd_buff[11];
+    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+
+    LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
+
+    if (archive_id != FS::ArchiveIdCode::SaveData) {
+        // TODO(Subv): What should happen if somebody attempts to format a different archive?
+        LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, %u", cmd_buff[1]);
+        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
+        return;
+    }
+
+    if (archive_path.GetType() != FileSys::LowPathType::Empty) {
+        // TODO(Subv): Implement formatting the SaveData of other games
+        LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
+        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
+        return;
+    }
 
     cmd_buff[1] = FormatSaveData().raw;
 }
@@ -414,6 +442,7 @@ static void FormatSaveData(Service::Interface* self) {
 /**
  * FS_User::FormatThisUserSaveData service function
  *  Inputs:
+ *      0: 0x080F0180
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
