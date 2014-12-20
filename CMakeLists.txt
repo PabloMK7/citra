@@ -5,8 +5,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(citra)
 
 if (NOT MSVC)
-    # -std=c++14 is only supported on very new compilers, so use the old c++1y alias instead.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wno-attributes")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes")
 else()
     # Silence deprecation warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
