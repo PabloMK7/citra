@@ -201,9 +201,9 @@ struct Regs {
     };
     const std::array<FullTextureConfig, 3> GetTextures() const {
         return {{
-                   { static_cast<bool>(texture0_enable), texture0, texture0_format },
-                   { static_cast<bool>(texture1_enable), texture1, texture1_format },
-                   { static_cast<bool>(texture2_enable), texture2, texture2_format }
+                   { texture0_enable.ToBool(), texture0, texture0_format },
+                   { texture1_enable.ToBool(), texture1, texture1_format },
+                   { texture2_enable.ToBool(), texture2, texture2_format }
                }};
     }
 
@@ -590,11 +590,11 @@ struct Regs {
     static std::string GetCommandName(int index) {
         std::map<u32, std::string> map;
 
-        Regs regs;
         #define ADD_FIELD(name)                                                                               \
             do {                                                                                              \
                 map.insert({PICA_REG_INDEX(name), #name});                                                    \
-                for (u32 i = PICA_REG_INDEX(name) + 1; i < PICA_REG_INDEX(name) + sizeof(regs.name) / 4; ++i) \
+                /* TODO: change to Regs::name when VS2015 and other compilers support it  */                   \
+                for (u32 i = PICA_REG_INDEX(name) + 1; i < PICA_REG_INDEX(name) + sizeof(Regs().name) / 4; ++i) \
                     map.insert({i, #name + std::string("+") + std::to_string(i-PICA_REG_INDEX(name))});       \
             } while(false)
 

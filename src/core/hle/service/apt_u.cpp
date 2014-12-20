@@ -315,8 +315,8 @@ Interface::Interface() {
 
     if (file.IsOpen()) {
         // Read shared font data
-        shared_font.resize(file.GetSize());
-        file.ReadBytes(shared_font.data(), file.GetSize());
+        shared_font.resize((size_t)file.GetSize());
+        file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
 
         // Create shared font memory object
         shared_font_mem = Kernel::CreateSharedMemory("APT_U:shared_font_mem");

@@ -29,7 +29,6 @@
 
 void switch_mode(arm_core_t *core, uint32_t mode)
 {
-    uint32_t tmp1, tmp2;
     if (core->Mode == mode) {
         //Mode not changed.
         //printf("mode not changed\n");

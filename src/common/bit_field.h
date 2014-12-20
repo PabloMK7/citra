@@ -168,6 +168,12 @@ public:
         }
     }
 
+    // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
+    __forceinline bool ToBool() const
+    {
+        return Value() != 0;
+    }
+
 private:
     // StorageType is T for non-enum types and the underlying type of T if
     // T is an enumeration. Note that T is wrapped within an enable_if in the

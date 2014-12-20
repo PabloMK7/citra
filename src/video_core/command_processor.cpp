@@ -90,7 +90,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             const auto& index_info = registers.index_array;
             const u8* index_address_8 = Memory::GetPointer(PAddrToVAddr(base_address + index_info.offset));
             const u16* index_address_16 = (u16*)index_address_8;
-            bool index_u16 = (bool)index_info.format;
+            bool index_u16 = index_info.format != 0;
 
             DebugUtils::GeometryDumper geometry_dumper;
             PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
@@ -164,7 +164,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         case PICA_REG_INDEX(vs_bool_uniforms):
             for (unsigned i = 0; i < 16; ++i)
-                VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i));
+                VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i)) != 0;
 
             break;
 

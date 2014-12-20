@@ -56,8 +56,6 @@
 #define RN ((instr >> 16) & 0xF)
 /*xxxx xxxx xxxx xxxx xxxx xxxx xxxx 1111 */
 #define RM (instr & 0xF)
-#define BIT(n) ((instr >> (n)) & 1)
-#define BITS(a,b) ((instr >> (a)) & ((1 << (1+(b)-(a)))-1))
 
 /* CP15 registers */
 #define OPCODE_1        BITS(21, 23)
