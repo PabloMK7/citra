@@ -118,9 +118,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
         const Instruction& instr = *(const Instruction*)state.program_counter;
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
 
-        auto call = [&](std::stack<VertexShaderState::CallStackElement>& stack, u32 offset, u32 num_instructions, u32 return_offset) {
+        auto call = [&](VertexShaderState& state, u32 offset, u32 num_instructions, u32 return_offset) {
             state.program_counter = &shader_memory[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
-            stack.push({ offset + num_instructions, return_offset });
+            state.call_stack.push({ offset + num_instructions, return_offset });
         };
         u32 binary_offset = state.program_counter - shader_memory.data();
 
@@ -356,7 +356,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
 
             case Instruction::OpCode::CALL:
-                call(state.call_stack,
+                call(state,
                      instr.flow_control.dest_offset,
                      instr.flow_control.num_instructions,
                      binary_offset + 1);
@@ -367,12 +367,12 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             case Instruction::OpCode::IFU:
                 if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
-                    call(state.call_stack,
+                    call(state,
                          binary_offset + 1,
                          instr.flow_control.dest_offset - binary_offset - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions);
                 } else {
-                    call(state.call_stack,
+                    call(state,
                          instr.flow_control.dest_offset,
                          instr.flow_control.num_instructions,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions);
@@ -407,12 +407,12 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
 
                 if (results[2]) {
-                    call(state.call_stack,
+                    call(state,
                          binary_offset + 1,
                          instr.flow_control.dest_offset - binary_offset - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions);
                 } else {
-                    call(state.call_stack,
+                    call(state,
                          instr.flow_control.dest_offset,
                          instr.flow_control.num_instructions,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions);
