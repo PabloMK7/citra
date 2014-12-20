@@ -18,7 +18,7 @@ namespace Kernel {
  * @param name Optional name of semaphore
  * @return ResultCode of the error
  */
-ResultCode CreateSemaphore(Handle* handle, u32 initial_count, u32 max_count, const std::string& name = "Unknown");
+ResultCode CreateSemaphore(Handle* handle, s32 initial_count, s32 max_count, const std::string& name = "Unknown");
 
 /**
  * Releases a certain number of slots from a semaphore.

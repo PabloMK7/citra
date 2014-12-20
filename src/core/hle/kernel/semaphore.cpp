@@ -20,8 +20,8 @@ public:
     static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Semaphore; }
     Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Semaphore; }
 
-    u32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
-    u32 available_count;                        ///< Number of free slots left in the semaphore
+    s32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
+    s32 available_count;                        ///< Number of free slots left in the semaphore
     std::queue<Handle> waiting_threads;         ///< Threads that are waiting for the semaphore
     std::string name;                           ///< Name of semaphore (optional)
 
@@ -49,8 +49,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ResultCode CreateSemaphore(Handle* handle, u32 initial_count, 
-    u32 max_count, const std::string& name) {
+ResultCode CreateSemaphore(Handle* handle, s32 initial_count, 
+    s32 max_count, const std::string& name) {
 
     if (initial_count > max_count)
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::Kernel,

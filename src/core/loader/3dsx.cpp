@@ -223,9 +223,7 @@ int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
         LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
         FileUtil::IOFile file(filename, "rb");
         if (file.IsOpen()) {
-
-            THREEDSXReader reader;
-            reader.Load3DSXFile(filename, 0x00100000);
+            THREEDSXReader::Load3DSXFile(filename, 0x00100000);
             Kernel::LoadExec(0x00100000);
         } else {
             return ResultStatus::Error;
