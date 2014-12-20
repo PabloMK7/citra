@@ -4,6 +4,7 @@
 
 #include "common/file_util.h"
 #include "common/log.h"
+#include "common/string_util.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/cfg_u.h"
@@ -35,11 +36,21 @@ enum SystemLanguage {
     LANGUAGE_RU
 };
 
+struct UsernameBlock {
+    char16_t username[10]; ///< Exactly 20 bytes long, padded with zeros at the end if necessary
+    u32 zero;
+    u32 ng_word;
+};
+static_assert(sizeof(UsernameBlock) == 0x1C, "Size of UsernameBlock must be 0x1C");
+
 static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
 static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const u32 CONSOLE_MODEL = NINTENDO_3DS_XL;
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
+static const char CONSOLE_USERNAME[0x14] = "CITRA";
+/// This will be initialized in the Interface constructor, and will be used when creating the block
+static UsernameBlock CONSOLE_USERNAME_BLOCK;
 /// TODO(Subv): Find out what this actually is
 static const u8 SOUND_OUTPUT_MODE = 2;
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
@@ -54,6 +65,9 @@ static const u8 STEREO_CAMERA_SETTINGS[32] = {
 
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) ((code)[0] | ((code)[1] << 8))
+
+/// TODO(Subv): Find what the other bytes are
+static const std::array<u8, 4> COUNTRY_INFO = { 0, 0, 0, C("US") };
 
 static const std::array<u16, 187> country_codes = {
     0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
@@ -207,7 +221,7 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data
     config->block_entries[config->total_entries] = { block_id, 0, size, flags };
     if (size > 4) {
         s32 total_entries = config->total_entries - 1;
-        u32 offset = 0;
+        u32 offset = config->data_entries_offset;
         // Perform a search to locate the next offset for the new data
         while (total_entries >= 0) {
             // Ignore the blocks that don't have a separate data offset
@@ -221,12 +235,10 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data
             break;
         }
 
-        offset += config->data_entries_offset;
-
         config->block_entries[config->total_entries].offset_or_data = offset;
 
         // Write the data at the new offset
-        memcpy(&cfg_config_file_buffer[config->data_entries_offset + offset], data, size);
+        memcpy(&cfg_config_file_buffer[offset], data, size);
     } else {
         // The offset_or_data field in the header contains the data itself if it's 4 bytes or less
         memcpy(&config->block_entries[config->total_entries].offset_or_data, data, size);
@@ -293,6 +305,12 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x00070001, 0x1, 0xE, &SOUND_OUTPUT_MODE);
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x000B0000, 0x4, 0xE, COUNTRY_INFO.data());
+    if (!res.IsSuccess())
+        return res;
+    res = CreateConfigInfoBlk(0x000A0000, 0x1C, 0xE, reinterpret_cast<u8*>(&CONSOLE_USERNAME_BLOCK));
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
@@ -402,6 +420,14 @@ Interface::Interface() {
         file->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return;
     }
+
+    // Initialize the Username block
+    // TODO(Subv): Do this somewhere else, or in another way
+    CONSOLE_USERNAME_BLOCK.ng_word = 0;
+    CONSOLE_USERNAME_BLOCK.zero = 0;
+    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + 
+        Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14), 
+        std::end(CONSOLE_USERNAME_BLOCK.username), 0);
     FormatConfig();
 }
 
