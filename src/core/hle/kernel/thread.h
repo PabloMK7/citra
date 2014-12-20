@@ -78,6 +78,9 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address);
 /// Arbitrate all threads currently waiting...
 void ArbitrateAllThreads(u32 arbiter, u32 address);
 
+/// Gets the current thread
+Thread* GetCurrentThread();
+
 /// Gets the current thread handle
 Handle GetCurrentThreadHandle();
 
