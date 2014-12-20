@@ -5882,8 +5882,10 @@ L_stm_s_takeabort:
                 printf("Unhandled v6 insn: %08x", BITS(20, 27));
             }
             break;
-        case 0x62: // QSUB16 and QADD16
-            if ((instr & 0xFF0) == 0xf70 || (instr & 0xFF0) == 0xf10) {
+        case 0x62: // QADD16, QASX, QSAX, and QSUB16
+            if ((instr & 0xFF0) == 0xf10 || (instr & 0xFF0) == 0xf30 ||
+                (instr & 0xFF0) == 0xf50 || (instr & 0xFF0) == 0xf70)
+            {
                 const u8 rd_idx = BITS(12, 15);
                 const u8 rn_idx = BITS(16, 19);
                 const u8 rm_idx = BITS(0, 3);
@@ -5895,14 +5897,25 @@ L_stm_s_takeabort:
                 s32 lo_result;
                 s32 hi_result;
 
-                // QSUB16
-                if ((instr & 0xFF0) == 0xf70) {
-                    lo_result = (rn_lo - rm_lo);
-                    hi_result = (rn_hi - rm_hi);
-                }
-                else { // QADD16
+                // QADD16
+                if ((instr & 0xFF0) == 0xf10) {
                     lo_result = (rn_lo + rm_lo);
                     hi_result = (rn_hi + rm_hi);
+                }
+                // QASX
+                else if ((instr & 0xFF0) == 0xf30) {
+                    lo_result = (rn_lo - rm_hi);
+                    hi_result = (rn_hi + rm_lo);
+                }
+                // QSAX
+                else if ((instr & 0xFF0) == 0xf50) {
+                    lo_result = (rn_lo + rm_hi);
+                    hi_result = (rn_hi - rm_lo);
+                }
+                // QSUB16
+                else {
+                    lo_result = (rn_lo - rm_lo);
+                    hi_result = (rn_hi - rm_hi);
                 }
 
                 if (lo_result > 0x7FFF)
