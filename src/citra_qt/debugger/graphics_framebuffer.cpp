@@ -202,7 +202,8 @@ void GraphicsFramebufferWidget::OnUpdate()
         framebuffer_address = framebuffer.GetColorBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();
         framebuffer_height = framebuffer.GetHeight();
-        framebuffer_format = static_cast<Format>(framebuffer.color_format);
+        // TODO: It's unknown how this format is actually specified
+        framebuffer_format = Format::RGBA8;
 
         break;
     }
