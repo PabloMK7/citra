@@ -28,6 +28,7 @@ public:
     bool DeleteFile(const FileSys::Path& path) const override;
     bool RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
     bool DeleteDirectory(const FileSys::Path& path) const override;
+    ResultCode CreateFile(const Path& path, u32 size) const override;
     bool CreateDirectory(const Path& path) const override;
     bool RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;

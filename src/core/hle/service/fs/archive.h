@@ -83,6 +83,15 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const Fil
 ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
 
 /**
+ * Create a File in an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @param path Path to the File inside of the Archive
+ * @param file_size The size of the new file, filled with zeroes
+ * @return File creation result code
+ */
+ResultCode CreateFileInArchive(Handle archive_handle, const FileSys::Path& path, u32 file_size);
+
+/**
  * Create a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive

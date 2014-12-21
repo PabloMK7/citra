@@ -54,6 +54,14 @@ public:
     bool DeleteDirectory(const FileSys::Path& path) const override;
 
     /**
+     * Create a file specified by its path
+     * @param path Path relative to the Archive
+     * @param size The size of the new file, filled with zeroes
+     * @return File creation result code
+     */
+    ResultCode CreateFile(const Path& path, u32 size) const override;
+
+    /**
      * Create a directory specified by its path
      * @param path Path relative to the archive
      * @return Whether the directory could be created

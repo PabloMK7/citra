@@ -35,6 +35,27 @@ bool DiskArchive::DeleteDirectory(const FileSys::Path& path) const {
     return FileUtil::DeleteDir(GetMountPoint() + path.AsString());
 }
 
+ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u32 size) const {
+    std::string full_path = GetMountPoint() + path.AsString();
+
+    if (FileUtil::Exists(full_path))
+        return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::FS, ErrorSummary::NothingHappened, ErrorLevel::Info);
+
+    if (size == 0) {
+        FileUtil::CreateEmptyFile(full_path);
+        return RESULT_SUCCESS;
+    }
+
+    FileUtil::IOFile file(full_path, "wb");
+    // Creates a sparse file (or a normal file on filesystems without the concept of sparse files)
+    // We do this by seeking to the right size, then writing a single null byte.
+    if (file.Seek(size - 1, SEEK_SET) && file.WriteBytes("", 1) == 1)
+        return RESULT_SUCCESS;
+
+    return ResultCode(ErrorDescription::TooLarge, ErrorModule::FS, ErrorSummary::OutOfResource, ErrorLevel::Info);
+}
+
+
 bool DiskArchive::CreateDirectory(const Path& path) const {
     return FileUtil::CreateDir(GetMountPoint() + path.AsString());
 }
