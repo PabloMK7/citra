@@ -13,7 +13,7 @@ namespace CFG {
 
 const u64 CFG_SAVE_ID = 0x00010017;
 const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
-const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, 0, 0, 0 };
+const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
 const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 const char CONSOLE_USERNAME[0x14] = "CITRA";
 /// This will be initialized in CFGInit, and will be used when creating the block
@@ -22,7 +22,7 @@ UsernameBlock CONSOLE_USERNAME_BLOCK;
 const u8 SOUND_OUTPUT_MODE = 2;
 const u8 UNITED_STATES_COUNTRY_ID = 49;
 /// TODO(Subv): Find what the other bytes are
-const ConsoleCountryInfo COUNTRY_INFO = { 0, 0, 0, UNITED_STATES_COUNTRY_ID };
+const ConsoleCountryInfo COUNTRY_INFO = { { 0, 0, 0 }, UNITED_STATES_COUNTRY_ID };
 
 /**
  * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
@@ -62,7 +62,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     return RESULT_SUCCESS;
 }
 
-ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, const u8* data) {
+ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const u8* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
         return ResultCode(-1); // TODO(Subv): Find the right error code
