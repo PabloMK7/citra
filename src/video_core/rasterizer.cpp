@@ -25,6 +25,18 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
 }
 
+static const Math::Vec4<u8> GetPixel(int x, int y) {
+    u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress())));
+
+    u32 value = *(color_buffer_u32 + x + y * registers.framebuffer.GetWidth());
+    Math::Vec4<u8> ret;
+    ret.a() = value >> 24;
+    ret.r() = (value >> 16) & 0xFF;
+    ret.g() = (value >> 8) & 0xFF;
+    ret.b() = value & 0xFF;
+    return ret;
+ }
+
 static u32 GetDepth(int x, int y) {
     u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
 
@@ -428,6 +440,78 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                 if (registers.output_merger.depth_write_enable)
                     SetDepth(x >> 4, y >> 4, z);
+            }
+
+            auto dest = GetPixel(x >> 4, y >> 4);
+
+            if (registers.output_merger.alphablend_enable) {
+                auto params = registers.output_merger.alpha_blending;
+
+                auto LookupFactorRGB = [&](decltype(params)::BlendFactor factor) -> Math::Vec3<u8> {
+                    switch(factor) {
+                    case params.Zero:
+                        return Math::Vec3<u8>(0, 0, 0);
+
+                    case params.One:
+                        return Math::Vec3<u8>(255, 255, 255);
+
+                    case params.SourceAlpha:
+                        return Math::MakeVec(combiner_output.a(), combiner_output.a(), combiner_output.a());
+
+                    case params.OneMinusSourceAlpha:
+                        return Math::Vec3<u8>(255-combiner_output.a(), 255-combiner_output.a(), 255-combiner_output.a());
+
+                    default:
+                        LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
+                        exit(0);
+                        break;
+                    }
+                };
+
+                auto LookupFactorA = [&](decltype(params)::BlendFactor factor) -> u8 {
+                    switch(factor) {
+                    case params.Zero:
+                        return 0;
+
+                    case params.One:
+                        return 255;
+
+                    case params.SourceAlpha:
+                        return combiner_output.a();
+
+                    case params.OneMinusSourceAlpha:
+                        return 255 - combiner_output.a();
+
+                    default:
+                        LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);
+                        exit(0);
+                        break;
+                    }
+                };
+
+                auto srcfactor = Math::MakeVec(LookupFactorRGB(params.factor_source_rgb),
+                                               LookupFactorA(params.factor_source_a));
+                auto dstfactor = Math::MakeVec(LookupFactorRGB(params.factor_dest_rgb),
+                                               LookupFactorA(params.factor_dest_a));
+
+                switch (params.blend_equation_rgb) {
+                case params.Add:
+                {
+                    auto result = (combiner_output * srcfactor + dest * dstfactor) / 255;
+                    result.r() = std::min(255, result.r());
+                    result.g() = std::min(255, result.g());
+                    result.b() = std::min(255, result.b());
+                    combiner_output = result.Cast<u8>();
+                    break;
+                }
+
+                default:
+                    LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", params.blend_equation_rgb.Value());
+                    exit(0);
+                }
+            } else {
+                LOG_CRITICAL(HW_GPU, "logic op: %x", registers.output_merger.logic_op);
+                exit(0);
             }
 
             DrawPixel(x >> 4, y >> 4, combiner_output);
