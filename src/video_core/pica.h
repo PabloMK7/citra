@@ -289,13 +289,66 @@ struct Regs {
     TevStageConfig tev_stage4;
     INSERT_PADDING_WORDS(0x3);
     TevStageConfig tev_stage5;
-    INSERT_PADDING_WORDS(0x13);
+    INSERT_PADDING_WORDS(0x3);
 
     const std::array<Regs::TevStageConfig,6> GetTevStages() const {
         return { tev_stage0, tev_stage1,
                  tev_stage2, tev_stage3,
                  tev_stage4, tev_stage5 };
     };
+
+    struct {
+        enum DepthFunc : u32 {
+            Always      = 1,
+            GreaterThan = 6,
+        };
+
+        union {
+            // If false, logic blending is used
+            BitField<8, 1, u32> alphablend_enable;
+        };
+
+        union {
+            enum BlendEquation : u32 {
+                Add = 0,
+            };
+
+            enum BlendFactor : u32 {
+                Zero = 0,
+                One = 1,
+
+                SourceAlpha = 6,
+                OneMinusSourceAlpha = 7,
+            };
+
+            BitField< 0, 8, BlendEquation> blend_equation_rgb;
+            BitField< 8, 8, BlendEquation> blend_equation_a;
+
+            BitField<16, 4, BlendFactor> factor_source_rgb;
+            BitField<20, 4, BlendFactor> factor_dest_rgb;
+
+            BitField<24, 4, BlendFactor> factor_source_a;
+            BitField<28, 4, BlendFactor> factor_dest_a;
+        } alpha_blending;
+
+        union {
+            enum Op {
+                Set = 4,
+            };
+
+            BitField<0, 4, Op> op;
+        } logic_op;
+
+        INSERT_PADDING_WORDS(0x4);
+
+        union {
+            BitField< 0, 1, u32> depth_test_enable;
+            BitField< 4, 3, DepthFunc> depth_test_func;
+            BitField<12, 1, u32> depth_write_enable;
+        };
+
+        INSERT_PADDING_WORDS(0x8);
+    } output_merger;
 
     struct {
         enum ColorFormat : u32 {
@@ -623,6 +676,7 @@ struct Regs {
         ADD_FIELD(tev_stage3);
         ADD_FIELD(tev_stage4);
         ADD_FIELD(tev_stage5);
+        ADD_FIELD(output_merger);
         ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
@@ -695,6 +749,7 @@ ASSERT_REG_POSITION(tev_stage2, 0xd0);
 ASSERT_REG_POSITION(tev_stage3, 0xd8);
 ASSERT_REG_POSITION(tev_stage4, 0xf0);
 ASSERT_REG_POSITION(tev_stage5, 0xf8);
+ASSERT_REG_POSITION(output_merger, 0x100);
 ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
