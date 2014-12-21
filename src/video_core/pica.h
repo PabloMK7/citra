@@ -300,6 +300,7 @@ struct Regs {
     struct {
         enum DepthFunc : u32 {
             Always      = 1,
+            LessThan    = 4,
             GreaterThan = 6,
         };
 

@@ -396,12 +396,39 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 combiner_output = Math::MakeVec(color_output, alpha_output);
             }
 
-            // TODO: Not sure if the multiplication by 65535 has already been taken care
-            // of when transforming to screen coordinates or not.
-            u16 z = (u16)(((float)v0.screenpos[2].ToFloat32() * w0 +
-                           (float)v1.screenpos[2].ToFloat32() * w1 +
-                           (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
-            SetDepth(x >> 4, y >> 4, z);
+            // TODO: Does depth indeed only get written even if depth testing is enabled?
+            if (registers.output_merger.depth_test_enable) {
+                u16 z = (u16)(-((float)v0.screenpos[2].ToFloat32() * w0 +
+                            (float)v1.screenpos[2].ToFloat32() * w1 +
+                            (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
+                u16 ref_z = GetDepth(x >> 4, y >> 4);
+
+                bool pass = false;
+
+                switch (registers.output_merger.depth_test_func) {
+                case registers.output_merger.Always:
+                    pass = true;
+                    break;
+
+                case registers.output_merger.LessThan:
+                    pass = z < ref_z;
+                    break;
+
+                case registers.output_merger.GreaterThan:
+                    pass = z > ref_z;
+                    break;
+
+                default:
+                    LOG_ERROR(HW_GPU, "Unknown depth test function %x", registers.output_merger.depth_test_func.Value());
+                    break;
+                }
+
+                if (!pass)
+                    continue;
+
+                if (registers.output_merger.depth_write_enable)
+                    SetDepth(x >> 4, y >> 4, z);
+            }
 
             DrawPixel(x >> 4, y >> 4, combiner_output);
         }
