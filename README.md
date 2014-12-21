@@ -2,7 +2,7 @@ Citra Emulator
 ==============
 [![Travis CI Build Status](https://travis-ci.org/citra-emu/citra.svg)](https://travis-ci.org/citra-emu/citra)
 
-Citra is an experimental open-source Nintendo 3DS emulator/debugger written in C++. It is written with portability in mind, with builds actively maintained for Windows, Linux and OS X. At this time, it only emulates a subset of 3DS hardware, and therefore is generally only useful for booting/debugging very simple homebrew demos. However, this is changing as more and more progress is being made on running commercial titles, too.
+Citra is an experimental open-source Nintendo 3DS emulator/debugger written in C++. It is written with portability in mind, with builds actively maintained for Windows, Linux and OS X. Citra only emulates a subset of 3DS hardware, and therefore is generally only useful for running/debugging homebrew applications. At this time, Citra is even able to boot several commercial games! None of these run to a playable state, but we are working every day to advance the project forward.
 
 Citra is licensed under the GPLv2. Refer to the license.txt file included. Please read the [FAQ](https://github.com/citra-emu/citra/wiki/FAQ) before getting started with the project.
 
