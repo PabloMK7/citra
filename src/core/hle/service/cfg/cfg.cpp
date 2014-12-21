@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include "common/log.h"
 #include "common/make_unique.h"
 #include "core/file_sys/archive_systemsavedata.h"
@@ -33,8 +34,8 @@ const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
     10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
 };
 
-const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
-std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = {};
+static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
+static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
 
 static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
 
@@ -118,7 +119,7 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
     // Delete the old data
-    std::fill(cfg_config_file_buffer.begin(), cfg_config_file_buffer.end(), 0);
+    cfg_config_file_buffer.fill(0);
     // Create the header
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     // This value is hardcoded, taken from 3dbrew, verified by hardware, it's always the same value
@@ -160,9 +161,8 @@ ResultCode FormatConfig() {
 void CFGInit() {
     // TODO(Subv): In the future we should use the FS service to query this archive, 
     // currently it is not possible because you can only have one open archive of the same type at any time
-    using Common::make_unique;
     std::string syssavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
-    cfg_system_save_data = make_unique<FileSys::Archive_SystemSaveData>(
+    cfg_system_save_data = Common::make_unique<FileSys::Archive_SystemSaveData>(
                            syssavedata_directory, CFG_SAVE_ID);
     if (!cfg_system_save_data->Initialize()) {
         LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
