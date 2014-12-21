@@ -173,6 +173,19 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             break;
 
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[1], 0x2b2):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[2], 0x2b3):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[3], 0x2b4):
+        {
+            int index = (id - PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1));
+            auto values = registers.vs_int_uniforms[index];
+            VertexShader::GetIntUniform(index) = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
+            LOG_ERROR(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
+                      index, values.x.Value(), values.y.Value(), values.z.Value(), values.w.Value());
+            break;
+        }
+
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[2], 0x2c3):
