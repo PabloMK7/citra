@@ -279,11 +279,14 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
+                static auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
                     switch (factor)
                     {
                     case ColorModifier::SourceColor:
                         return values.rgb();
+
+                    case ColorModifier::OneMinusSourceColor:
+                        return (Math::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
 
                     case ColorModifier::SourceAlpha:
                         return { values.a(), values.a(), values.a() };
@@ -295,7 +298,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto GetAlphaModifier = [](AlphaModifier factor, u8 value) -> u8 {
+                static auto GetAlphaModifier = [](AlphaModifier factor, u8 value) -> u8 {
                     switch (factor) {
                     case AlphaModifier::SourceAlpha:
                         return value;
@@ -310,7 +313,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto ColorCombine = [](Operation op, const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
+                static auto ColorCombine = [](Operation op, const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
                     switch (op) {
                     case Operation::Replace:
                         return input[0];
@@ -330,6 +333,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     case Operation::Lerp:
                         return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
 
+                    case Operation::Subtract:
+                    {
+                        auto result = input[0].Cast<int>() - input[1].Cast<int>();
+                        result.r() = std::max(0, result.r());
+                        result.g() = std::max(0, result.g());
+                        result.b() = std::max(0, result.b());
+                        return result.Cast<u8>();
+                    }
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         _dbg_assert_(HW_GPU, 0);
@@ -337,7 +349,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto AlphaCombine = [](Operation op, const std::array<u8,3>& input) -> u8 {
+                static auto AlphaCombine = [](Operation op, const std::array<u8,3>& input) -> u8 {
                     switch (op) {
                     case Operation::Replace:
                         return input[0];
@@ -350,6 +362,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     case Operation::Lerp:
                         return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
+
+                    case Operation::Subtract:
+                        return std::max(0, (int)input[0] - (int)input[1]);
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
