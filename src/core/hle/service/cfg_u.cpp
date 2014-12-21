@@ -44,16 +44,32 @@ struct UsernameBlock {
 };
 static_assert(sizeof(UsernameBlock) == 0x1C, "Size of UsernameBlock must be 0x1C");
 
+struct ConsoleModelInfo {
+    u8 model;       ///< The console model (3DS, 2DS, etc)
+    u8 unknown[3];  ///< Unknown data
+};
+static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
+
+struct ConsoleCountryInfo {
+    u8 unknown[3];   ///< Unknown data
+    u8 country_code; ///< The country code of the console
+};
+static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
+
 static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
 static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
-static const u32 CONSOLE_MODEL = NINTENDO_3DS_XL;
+static const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, 0, 0, 0 };
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const char CONSOLE_USERNAME[0x14] = "CITRA";
 /// This will be initialized in the Interface constructor, and will be used when creating the block
 static UsernameBlock CONSOLE_USERNAME_BLOCK;
 /// TODO(Subv): Find out what this actually is
 static const u8 SOUND_OUTPUT_MODE = 2;
+static const u8 UNITED_STATES_COUNTRY_ID = 49;
+/// TODO(Subv): Find what the other bytes are
+static const ConsoleCountryInfo COUNTRY_INFO = { 0, 0, 0, UNITED_STATES_COUNTRY_ID };
+
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
@@ -67,12 +83,13 @@ static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
     10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
 };
 
+static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20, "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
+static_assert(sizeof(CONSOLE_UNIQUE_ID) == 8, "CONSOLE_UNIQUE_ID must be exactly 8 bytes");
+static_assert(sizeof(CONSOLE_LANGUAGE) == 1, "CONSOLE_LANGUAGE must be exactly 1 byte");
+static_assert(sizeof(SOUND_OUTPUT_MODE) == 1, "SOUND_OUTPUT_MODE must be exactly 1 byte");
+
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) ((code)[0] | ((code)[1] << 8))
-
-static const u8 UNITED_STATES_COUNTRY_ID = 49;
-/// TODO(Subv): Find what the other bytes are
-static const std::array<u8, 4> COUNTRY_INFO = { 0, 0, 0, UNITED_STATES_COUNTRY_ID };
 
 static const std::array<u16, 187> country_codes = {
     0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
@@ -305,26 +322,30 @@ ResultCode FormatConfig() {
     // This value is hardcoded, taken from 3dbrew, verified by hardware, it's always the same value
     config->data_entries_offset = 0x455C;
     // Insert the default blocks
-    res = CreateConfigInfoBlk(0x00050005, 0x20, 0xE, 
+    res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE,
                               reinterpret_cast<const u8*>(STEREO_CAMERA_SETTINGS.data()));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x00090001, 0x8, 0xE, reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
+    res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE, 
+                              reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000F0004, 0x4, 0x8, reinterpret_cast<const u8*>(&CONSOLE_MODEL));
+    res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8, 
+                              reinterpret_cast<const u8*>(&CONSOLE_MODEL));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000A0002, 0x1, 0xA, &CONSOLE_LANGUAGE);
+    res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xA, &CONSOLE_LANGUAGE);
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x00070001, 0x1, 0xE, &SOUND_OUTPUT_MODE);
+    res = CreateConfigInfoBlk(0x00070001, sizeof(SOUND_OUTPUT_MODE), 0xE, &SOUND_OUTPUT_MODE);
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000B0000, 0x4, 0xE, COUNTRY_INFO.data());
+    res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, 
+                              reinterpret_cast<const u8*>(&COUNTRY_INFO));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000A0000, 0x1C, 0xE, reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
+    res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, 
+                              reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
