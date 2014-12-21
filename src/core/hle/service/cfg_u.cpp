@@ -16,25 +16,25 @@
 namespace CFG_U {
 
 enum SystemModel {
-    NINTENDO_3DS,
-    NINTENDO_3DS_XL,
-    NEW_NINTENDO_3DS,
-    NINTENDO_2DS,
-    NEW_NINTENDO_3DS_XL
+    NINTENDO_3DS        = 0,
+    NINTENDO_3DS_XL     = 1,
+    NEW_NINTENDO_3DS    = 2,
+    NINTENDO_2DS        = 3,
+    NEW_NINTENDO_3DS_XL = 4
 };
 
 enum SystemLanguage {
-    LANGUAGE_JP,
-    LANGUAGE_EN,
-    LANGUAGE_FR,
-    LANGUAGE_DE,
-    LANGUAGE_IT,
-    LANGUAGE_ES,
-    LANGUAGE_ZH,
-    LANGUAGE_KO,
-    LANGUAGE_NL,
-    LANGUAGE_PT,
-    LANGUAGE_RU
+    LANGUAGE_JP = 0,
+    LANGUAGE_EN = 1,
+    LANGUAGE_FR = 2,
+    LANGUAGE_DE = 3,
+    LANGUAGE_IT = 4,
+    LANGUAGE_ES = 5,
+    LANGUAGE_ZH = 6,
+    LANGUAGE_KO = 7,
+    LANGUAGE_NL = 8,
+    LANGUAGE_PT = 9,
+    LANGUAGE_RU = 10
 };
 
 struct UsernameBlock {
@@ -57,8 +57,11 @@ static const u8 SOUND_OUTPUT_MODE = 2;
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
-/// TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games
-/// Thanks Normmatt for providing this information
+/**
+ * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
+ * for example Nintendo Zone
+ * Thanks Normmatt for providing this information
+ */
 static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
     62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
     10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
@@ -158,19 +161,24 @@ static void GetCountryCodeID(Service::Interface* self) {
 
 /// Block header in the config savedata file
 struct SaveConfigBlockEntry {
-    u32 block_id;
-    u32 offset_or_data;
-    u16 size;
-    u16 flags;
+    u32 block_id;       ///< The id of the current block
+    u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater than 4 bytes, otherwise it contains the data itself
+    u16 size;           ///< The size of the block
+    u16 flags;          ///< The flags of the block, possibly used for access control
 };
 
-/// The header of the config savedata file,
-/// contains information about the blocks in the file
+/// The maximum number of block entries that can exist in the config file
+static const u32 CONFIG_FILE_MAX_BLOCK_ENTRIES = 1479;
+
+/**
+ * The header of the config savedata file,
+ * contains information about the blocks in the file
+ */
 struct SaveFileConfig {
-    u16 total_entries;
-    u16 data_entries_offset;
-    SaveConfigBlockEntry block_entries[1479];
-    u32 unknown;
+    u16 total_entries;                        ///< The total number of set entries in the config file
+    u16 data_entries_offset;                  ///< The offset where the data for the blocks start, this is hardcoded to 0x455C as per hardware
+    SaveConfigBlockEntry block_entries[CONFIG_FILE_MAX_BLOCK_ENTRIES]; ///< The block headers, the maximum possible value is 1479 as per hardware
+    u32 unknown;                              ///< This field is unknown, possibly padding, 0 has been observed in hardware
 };
 
 /**
@@ -189,7 +197,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     
     auto itr = std::find_if(std::begin(config->block_entries), std::end(config->block_entries), 
-        [&](SaveConfigBlockEntry const& entry) {
+        [&](const SaveConfigBlockEntry& entry) {
             return entry.block_id == block_id && entry.size == size && (entry.flags & flag);
     });
 
@@ -217,8 +225,11 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
  * @param data A pointer containing the data we will write to the new block
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
-ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data) {
+ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, const u8* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
+    if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+
     // Insert the block header with offset 0 for now
     config->block_entries[config->total_entries] = { block_id, 0, size, flags };
     if (size > 4) {
@@ -268,13 +279,12 @@ ResultCode DeleteConfigNANDSaveFile() {
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
 ResultCode UpdateConfigNANDSavegame() {
-    FileSys::Mode mode;
-    mode.hex = 0;
+    FileSys::Mode mode = {};
     mode.write_flag = 1;
     mode.create_flag = 1;
     FileSys::Path path("config");
     auto file = cfg_system_save_data->OpenFile(path, mode);
-    _dbg_assert_msg_(Service_CFG, file != nullptr, "could not open file");
+    _assert_msg_(Service_CFG, file != nullptr, "could not open file");
     file->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
     return RESULT_SUCCESS;
 }
@@ -292,16 +302,17 @@ ResultCode FormatConfig() {
     std::fill(cfg_config_file_buffer.begin(), cfg_config_file_buffer.end(), 0);
     // Create the header
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
+    // This value is hardcoded, taken from 3dbrew, verified by hardware, it's always the same value
     config->data_entries_offset = 0x455C;
     // Insert the default blocks
     res = CreateConfigInfoBlk(0x00050005, 0x20, 0xE, 
-        reinterpret_cast<u8 const*>(STEREO_CAMERA_SETTINGS.data()));
+                              reinterpret_cast<const u8*>(STEREO_CAMERA_SETTINGS.data()));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x00090001, 0x8, 0xE, reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
+    res = CreateConfigInfoBlk(0x00090001, 0x8, 0xE, reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000F0004, 0x4, 0x8, reinterpret_cast<u8 const*>(&CONSOLE_MODEL));
+    res = CreateConfigInfoBlk(0x000F0004, 0x4, 0x8, reinterpret_cast<const u8*>(&CONSOLE_MODEL));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000A0002, 0x1, 0xA, &CONSOLE_LANGUAGE);
@@ -313,7 +324,7 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000B0000, 0x4, 0xE, COUNTRY_INFO.data());
     if (!res.IsSuccess())
         return res;
-    res = CreateConfigInfoBlk(0x000A0000, 0x1C, 0xE, reinterpret_cast<u8*>(&CONSOLE_USERNAME_BLOCK));
+    res = CreateConfigInfoBlk(0x000A0000, 0x1C, 0xE, reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
@@ -357,8 +368,9 @@ static void GetSystemModel(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 data;
 
+    // TODO(Subv): Find out the correct error codes
     cmd_buffer[1] = GetConfigInfoBlock(0x000F0004, 4, 0x8,
-        reinterpret_cast<u8*>(&data)).raw; // TODO(Subv): Find out the correct error codes
+                                       reinterpret_cast<u8*>(&data)).raw; 
     cmd_buffer[2] = data & 0xFF;
 }
 
@@ -372,8 +384,9 @@ static void GetModelNintendo2DS(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 data;
 
+    // TODO(Subv): Find out the correct error codes
     cmd_buffer[1] = GetConfigInfoBlock(0x000F0004, 4, 0x8,
-        reinterpret_cast<u8*>(&data)).raw; // TODO(Subv): Find out the correct error codes
+                                       reinterpret_cast<u8*>(&data)).raw; 
     
     u8 model = data & 0xFF;
     if (model == NINTENDO_2DS)
@@ -412,8 +425,7 @@ Interface::Interface() {
     // TODO(Subv): All this code should be moved to cfg:i, 
     // it's only here because we do not currently emulate the lower level code that uses that service
     // Try to open the file in read-only mode to check its existence
-    FileSys::Mode mode;
-    mode.hex = 0;
+    FileSys::Mode mode = {};
     mode.read_flag = 1;
     FileSys::Path path("config");
     auto file = cfg_system_save_data->OpenFile(path, mode);
@@ -429,8 +441,8 @@ Interface::Interface() {
     CONSOLE_USERNAME_BLOCK.ng_word = 0;
     CONSOLE_USERNAME_BLOCK.zero = 0;
     // Copy string to buffer and pad with zeros at the end
-    auto itr = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
-    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + itr, 
+    auto size = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
+    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + size, 
         std::end(CONSOLE_USERNAME_BLOCK.username), 0);
     FormatConfig();
 }
