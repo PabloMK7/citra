@@ -389,13 +389,11 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + offset * 2;
 
-        // TODO: component order not verified
-
         if (disable_alpha) {
             // Show intensity as red, alpha as green
-            return { source_ptr[0], source_ptr[1], 0, 255 };
+            return { source_ptr[1], source_ptr[0], 0, 255 };
         } else {
-            return { source_ptr[0], source_ptr[0], source_ptr[0], source_ptr[1]};
+            return { source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0]};
         }
     }
 
@@ -418,12 +416,10 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA4:
     {
-        const u8* source_ptr = source + offset / 2;
+        const u8* source_ptr = source + offset;
 
-        // TODO: component order not verified
-
-        u8 i = (*source_ptr) & 0xF;
-        u8 a = ((*source_ptr) & 0xF0) >> 4;
+        u8 i = ((*source_ptr) & 0xF0) >> 4;
+        u8 a = (*source_ptr) & 0xF;
         a |= a << 4;
         i |= i << 4;
 
@@ -439,15 +435,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + offset / 2;
 
-        // TODO: component order not verified
-
         u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
         a |= a << 4;
 
         if (disable_alpha) {
-            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+            return { a, a, a, 255 };
         } else {
-            return { 0, 0, 0, *source_ptr };
+            return { 0, 0, 0, a };
         }
     }
 
