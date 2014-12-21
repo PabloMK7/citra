@@ -18,8 +18,8 @@ public:
     std::string GetTypeName() const override { return "Mutex"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Mutex; }
+    static const HandleType HANDLE_TYPE = HandleType::Mutex;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     bool initial_locked;                        ///< Initial lock state when mutex was created
     bool locked;                                ///< Current locked state

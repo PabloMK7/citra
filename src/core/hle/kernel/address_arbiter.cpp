@@ -20,8 +20,8 @@ public:
     std::string GetTypeName() const override { return "Arbiter"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::AddressArbiter; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::AddressArbiter; }
+    static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     std::string name;   ///< Name of address arbiter object (optional)
 };

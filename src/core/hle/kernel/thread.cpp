@@ -26,8 +26,8 @@ public:
     std::string GetName() const override { return name; }
     std::string GetTypeName() const override { return "Thread"; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Thread; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Thread; }
+    static const HandleType HANDLE_TYPE = HandleType::Thread;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
     inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }

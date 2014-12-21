@@ -96,7 +96,7 @@ public:
             return nullptr;
         } else {
             Object* t = pool[handle - HANDLE_OFFSET];
-            if (t->GetHandleType() != T::GetStaticHandleType()) {
+            if (t->GetHandleType() != T::HANDLE_TYPE) {
                 LOG_ERROR(Kernel, "Wrong object type for %08x", handle);
                 return nullptr;
             }

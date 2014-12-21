@@ -13,8 +13,8 @@ class SharedMemory : public Object {
 public:
     std::string GetTypeName() const override { return "SharedMemory"; }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
+    static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     u32 base_address;                   ///< Address of shared memory block in RAM
     MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
