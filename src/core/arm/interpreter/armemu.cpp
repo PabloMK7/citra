@@ -5824,9 +5824,9 @@ L_stm_s_takeabort:
         case 0x3f:
             printf ("Unhandled v6 insn: rbit\n");
             break;
-        case 0x61: // SSUB16, SADD16, SSAX, and SASX
-            if ((instr & 0xFF0) == 0xf70 || (instr & 0xFF0) == 0xf10 ||
-                (instr & 0xFF0) == 0xf50 || (instr & 0xFF0) == 0xf30)
+        case 0x61: // SADD16, SASX, SSAX, and SSUB16
+            if ((instr & 0xFF0) == 0xf10 || (instr & 0xFF0) == 0xf30 ||
+                (instr & 0xFF0) == 0xf50 || (instr & 0xFF0) == 0xf70)
             {
                 const u8 rd_idx = BITS(12, 15);
                 const u8 rm_idx = BITS(0, 3);
@@ -5839,25 +5839,25 @@ L_stm_s_takeabort:
                 s32 lo_result;
                 s32 hi_result;
 
-                // SSUB16
-                if ((instr & 0xFF0) == 0xf70) {
-                    lo_result = (rn_lo - rm_lo);
-                    hi_result = (rn_hi - rm_hi);
-                }
                 // SADD16
-                else if ((instr & 0xFF0) == 0xf10) {
+                if ((instr & 0xFF0) == 0xf10) {
                     lo_result = (rn_lo + rm_lo);
                     hi_result = (rn_hi + rm_hi);
+                }
+                // SASX
+                else if ((instr & 0xFF0) == 0xf30) {
+                    lo_result = (rn_lo - rm_hi);
+                    hi_result = (rn_hi + rm_lo);
                 }
                 // SSAX
                 else if ((instr & 0xFF0) == 0xf50) {
                     lo_result = (rn_lo + rm_hi);
                     hi_result = (rn_hi - rm_lo);
                 }
-                // SASX
+                // SSUB16
                 else {
-                    lo_result = (rn_lo - rm_hi);
-                    hi_result = (rn_hi + rm_lo);
+                    lo_result = (rn_lo - rm_lo);
+                    hi_result = (rn_hi - rm_hi);
                 }
 
                 state->Reg[rd_idx] = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
@@ -5878,8 +5878,81 @@ L_stm_s_takeabort:
                     state->Cpsr &= ~(1 << 19);
                 }
                 return 1;
-            } else {
-                printf("Unhandled v6 insn: %08x", BITS(20, 27));
+            }
+            // SADD8/SSUB8
+            else  if ((instr & 0xFF0) == 0xf90 || (instr & 0xFF0) == 0xff0)
+            {
+                const u8 rd_idx = BITS(12, 15);
+                const u8 rm_idx = BITS(0, 3);
+                const u8 rn_idx = BITS(16, 19);
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
+
+                u8 lo_val1;
+                u8 lo_val2;
+                u8 hi_val1;
+                u8 hi_val2;
+
+                // SADD8
+                if ((instr & 0xFF0) == 0xf90) {
+                    lo_val1 = (u8)((rn_val & 0xFF) + (rm_val & 0xFF));
+                    lo_val2 = (u8)(((rn_val >> 8) & 0xFF) + ((rm_val >> 8) & 0xFF));
+                    hi_val1 = (u8)(((rn_val >> 16) & 0xFF) + ((rm_val >> 16) & 0xFF));
+                    hi_val2 = (u8)(((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF));
+
+                    if (lo_val1 & 0x80)
+                        state->Cpsr |= (1 << 16);
+                    else
+                        state->Cpsr &= ~(1 << 16);
+
+                    if (lo_val2 & 0x80)
+                        state->Cpsr |= (1 << 17);
+                    else
+                        state->Cpsr &= ~(1 << 17);
+
+                    if (hi_val1 & 0x80)
+                        state->Cpsr |= (1 << 18);
+                    else
+                        state->Cpsr &= ~(1 << 18);
+
+                    if (hi_val2 & 0x80)
+                        state->Cpsr |= (1 << 19);
+                    else
+                        state->Cpsr &= ~(1 << 19);
+                }
+                // SSUB8
+                else {
+                    lo_val1 = (u8)((rn_val & 0xFF) - (rm_val & 0xFF));
+                    lo_val2 = (u8)(((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF));
+                    hi_val1 = (u8)(((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF));
+                    hi_val2 = (u8)(((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF));
+
+                    if (!(lo_val1 & 0x80))
+                        state->Cpsr |= (1 << 16);
+                    else
+                        state->Cpsr &= ~(1 << 16);
+
+                    if (!(lo_val2 & 0x80))
+                        state->Cpsr |= (1 << 17);
+                    else
+                        state->Cpsr &= ~(1 << 17);
+
+                    if (!(hi_val1 & 0x80))
+                        state->Cpsr |= (1 << 18);
+                    else
+                        state->Cpsr &= ~(1 << 18);
+
+                    if (!(hi_val2 & 0x80))
+                        state->Cpsr |= (1 << 19);
+                    else
+                        state->Cpsr &= ~(1 << 19);
+                }
+
+                state->Reg[rd_idx] = (lo_val1 | lo_val2 << 8 | hi_val1 << 16 | hi_val2 << 24);
+                return 1;
+            }
+            else {
+                printf("Unhandled v6 insn: %08x", instr);
             }
             break;
         case 0x62: // QADD16, QASX, QSAX, and QSUB16
