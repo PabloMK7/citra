@@ -57,7 +57,7 @@ static const u8 SOUND_OUTPUT_MODE = 2;
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
-/// TODO(Subv): Find out what this actually is
+/// TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games
 /// Thanks Normmatt for providing this information
 static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
     62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
@@ -67,8 +67,9 @@ static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) ((code)[0] | ((code)[1] << 8))
 
+static const u8 UNITED_STATES_COUNTRY_ID = 49;
 /// TODO(Subv): Find what the other bytes are
-static const std::array<u8, 4> COUNTRY_INFO = { 0, 0, 0, C("US") };
+static const std::array<u8, 4> COUNTRY_INFO = { 0, 0, 0, UNITED_STATES_COUNTRY_ID };
 
 static const std::array<u16, 187> country_codes = {
     0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
@@ -224,16 +225,16 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, u8 const* data
         s32 total_entries = config->total_entries - 1;
         u32 offset = config->data_entries_offset;
         // Perform a search to locate the next offset for the new data
+        // use the offset and size of the previous block to determine the new position
         while (total_entries >= 0) {
             // Ignore the blocks that don't have a separate data offset
-            if (config->block_entries[total_entries].size <= 4) {
-                --total_entries;
-                continue;
+            if (config->block_entries[total_entries].size > 4) {
+                offset = config->block_entries[total_entries].offset_or_data +
+                    config->block_entries[total_entries].size;
+                break;
             }
 
-            offset = config->block_entries[total_entries].offset_or_data +
-                config->block_entries[total_entries].size;
-            break;
+            --total_entries;
         }
 
         config->block_entries[config->total_entries].offset_or_data = offset;
@@ -424,11 +425,12 @@ Interface::Interface() {
     }
 
     // Initialize the Username block
-    // TODO(Subv): Do this somewhere else, or in another way
+    // TODO(Subv): Initialize this directly in the variable when MSVC supports char16_t string literals
     CONSOLE_USERNAME_BLOCK.ng_word = 0;
     CONSOLE_USERNAME_BLOCK.zero = 0;
-    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + 
-        Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14), 
+    // Copy string to buffer and pad with zeros at the end
+    auto itr = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
+    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + itr, 
         std::end(CONSOLE_USERNAME_BLOCK.username), 0);
     FormatConfig();
 }
