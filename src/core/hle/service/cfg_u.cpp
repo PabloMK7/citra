@@ -59,9 +59,9 @@ static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer = { };
 
 /// TODO(Subv): Find out what this actually is
 /// Thanks Normmatt for providing this information
-static const u8 STEREO_CAMERA_SETTINGS[32] = {
-    0x00, 0x00, 0x78, 0x42, 0x00, 0x80, 0x90, 0x43, 0x9A, 0x99, 0x99, 0x42, 0xEC, 0x51, 0x38, 0x42,
-    0x00, 0x00, 0x20, 0x41, 0x00, 0x00, 0xA0, 0x40, 0xEC, 0x51, 0x5E, 0x42, 0x5C, 0x8F, 0xAC, 0x41
+static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
+    62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
+    10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
 };
 
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
@@ -293,7 +293,8 @@ ResultCode FormatConfig() {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     config->data_entries_offset = 0x455C;
     // Insert the default blocks
-    res = CreateConfigInfoBlk(0x00050005, 0x20, 0xE, STEREO_CAMERA_SETTINGS);
+    res = CreateConfigInfoBlk(0x00050005, 0x20, 0xE, 
+        reinterpret_cast<u8 const*>(STEREO_CAMERA_SETTINGS.data()));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x00090001, 0x8, 0xE, reinterpret_cast<u8 const*>(&CONSOLE_UNIQUE_ID));
