@@ -69,19 +69,16 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, const u8* data
     // Insert the block header with offset 0 for now
     config->block_entries[config->total_entries] = { block_id, 0, size, flags };
     if (size > 4) {
-        s32 total_entries = config->total_entries - 1;
         u32 offset = config->data_entries_offset;
         // Perform a search to locate the next offset for the new data
         // use the offset and size of the previous block to determine the new position
-        while (total_entries >= 0) {
+        for (int i = config->total_entries - 1; i >= 0; --i) {
             // Ignore the blocks that don't have a separate data offset
-            if (config->block_entries[total_entries].size > 4) {
-                offset = config->block_entries[total_entries].offset_or_data +
-                    config->block_entries[total_entries].size;
+            if (config->block_entries[i].size > 4) {
+                offset = config->block_entries[i].offset_or_data +
+                    config->block_entries[i].size;
                 break;
             }
-
-            --total_entries;
         }
 
         config->block_entries[config->total_entries].offset_or_data = offset;
