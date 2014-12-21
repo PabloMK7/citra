@@ -56,7 +56,8 @@ Manager::~Manager() {
 
 /// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
-    m_port_map[service->GetPortName()] = Kernel::g_handle_table.Create(service);
+    // TOOD(yuriks): Fix error reporting
+    m_port_map[service->GetPortName()] = Kernel::g_handle_table.Create(service).ValueOr(INVALID_HANDLE);
     m_services.push_back(service);
 }
 

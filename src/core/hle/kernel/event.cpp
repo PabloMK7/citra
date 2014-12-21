@@ -129,7 +129,8 @@ ResultCode ClearEvent(Handle handle) {
 Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
     Event* evt = new Event;
 
-    handle = Kernel::g_handle_table.Create(evt);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(evt).ValueOr(INVALID_HANDLE);
 
     evt->locked = true;
     evt->permanent_locked = false;

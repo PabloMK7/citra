@@ -17,73 +17,89 @@ HandleTable g_handle_table;
 u64 g_program_id = 0;
 
 HandleTable::HandleTable() {
-    next_id = INITIAL_NEXT_ID;
+    next_generation = 1;
+    Clear();
 }
 
-Handle HandleTable::Create(Object* obj, int range_bottom, int range_top) {
-    if (range_top > MAX_COUNT) {
-        range_top = MAX_COUNT;
+ResultVal<Handle> HandleTable::Create(Object* obj) {
+    _dbg_assert_(Kernel, obj != nullptr);
+
+    u16 slot = next_free_slot;
+    if (slot >= generations.size()) {
+        LOG_ERROR(Kernel, "Unable to allocate Handle, too many slots in use.");
+        return ERR_OUT_OF_HANDLES;
     }
-    if (next_id >= range_bottom && next_id < range_top) {
-        range_bottom = next_id++;
+    next_free_slot = generations[slot];
+
+    u16 generation = next_generation++;
+
+    // Overflow count so it fits in the 15 bits dedicated to the generation in the handle.
+    // CTR-OS doesn't use generation 0, so skip straight to 1.
+    if (next_generation >= (1 << 15)) next_generation = 1;
+
+    generations[slot] = generation;
+    intrusive_ptr_add_ref(obj);
+    objects[slot] = obj;
+
+    Handle handle = generation | (slot << 15);
+    obj->handle = handle;
+    return MakeResult<Handle>(handle);
+}
+
+ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
+    Object* object = GetGeneric(handle);
+    if (object == nullptr) {
+        LOG_ERROR(Kernel, "Tried to duplicate invalid handle: %08X", handle);
+        return ERR_INVALID_HANDLE;
     }
-    for (int i = range_bottom; i < range_top; i++) {
-        if (!occupied[i]) {
-            occupied[i] = true;
-            pool[i] = obj;
-            pool[i]->handle = i + HANDLE_OFFSET;
-            return i + HANDLE_OFFSET;
-        }
-    }
-    LOG_ERROR(Kernel, "Unable to allocate kernel object, too many objects slots in use.");
-    return 0;
+    return Create(object);
+}
+
+ResultCode HandleTable::Close(Handle handle) {
+    if (!IsValid(handle))
+        return ERR_INVALID_HANDLE;
+
+    size_t slot = GetSlot(handle);
+    u16 generation = GetGeneration(handle);
+
+    intrusive_ptr_release(objects[slot]);
+    objects[slot] = nullptr;
+
+    generations[generation] = next_free_slot;
+    next_free_slot = slot;
+    return RESULT_SUCCESS;
 }
 
 bool HandleTable::IsValid(Handle handle) const {
-    int index = handle - HANDLE_OFFSET;
-    if (index < 0)
-        return false;
-    if (index >= MAX_COUNT)
-        return false;
+    size_t slot = GetSlot(handle);
+    u16 generation = GetGeneration(handle);
 
-    return occupied[index];
+    return slot < MAX_COUNT && objects[slot] != nullptr && generations[slot] == generation;
+}
+
+Object* HandleTable::GetGeneric(Handle handle) const {
+    if (handle == CurrentThread) {
+        // TODO(yuriks) Directly return the pointer once this is possible.
+        handle = GetCurrentThreadHandle();
+    } else if (handle == CurrentProcess) {
+        LOG_ERROR(Kernel, "Current process (%08X) pseudo-handle not supported", CurrentProcess);
+        return nullptr;
+    }
+
+    if (!IsValid(handle)) {
+        return nullptr;
+    }
+    return objects[GetSlot(handle)];
 }
 
 void HandleTable::Clear() {
-    for (int i = 0; i < MAX_COUNT; i++) {
-        //brutally clear everything, no validation
-        if (occupied[i])
-            delete pool[i];
-        occupied[i] = false;
+    for (size_t i = 0; i < MAX_COUNT; ++i) {
+        generations[i] = i + 1;
+        if (objects[i] != nullptr)
+            intrusive_ptr_release(objects[i]);
+        objects[i] = nullptr;
     }
-    pool.fill(nullptr);
-    next_id = INITIAL_NEXT_ID;
-}
-
-Object* &HandleTable::operator [](Handle handle)
-{
-    _dbg_assert_msg_(Kernel, IsValid(handle), "GRABBING UNALLOCED KERNEL OBJ");
-    return pool[handle - HANDLE_OFFSET];
-}
-
-void HandleTable::List() {
-    for (int i = 0; i < MAX_COUNT; i++) {
-        if (occupied[i]) {
-            if (pool[i]) {
-                LOG_DEBUG(Kernel, "KO %i: %s \"%s\"", i + HANDLE_OFFSET, pool[i]->GetTypeName().c_str(),
-                    pool[i]->GetName().c_str());
-            }
-        }
-    }
-}
-
-int HandleTable::GetCount() const {
-    return std::count(occupied.begin(), occupied.end(), true);
-}
-
-Object* HandleTable::CreateByIDType(int type) {
-    LOG_ERROR(Kernel, "Unimplemented: %d.", type);
-    return nullptr;
+    next_free_slot = 0;
 }
 
 /// Initialize the kernel

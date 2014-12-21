@@ -87,7 +87,7 @@ void ReleaseThreadMutexes(Handle thread) {
     
     // Release every mutex that the thread holds, and resume execution on the waiting threads
     for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
-        Mutex* mutex = g_handle_table.GetFast<Mutex>(iter->second);
+        Mutex* mutex = g_handle_table.Get<Mutex>(iter->second);
         ResumeWaitingThread(mutex);
     }
 
@@ -136,7 +136,8 @@ ResultCode ReleaseMutex(Handle handle) {
  */
 Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
     Mutex* mutex = new Mutex;
-    handle = Kernel::g_handle_table.Create(mutex);
+    // TODO(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(mutex).ValueOr(INVALID_HANDLE);
 
     mutex->locked = mutex->initial_locked = initial_locked;
     mutex->name = name;

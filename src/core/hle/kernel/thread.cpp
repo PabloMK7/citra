@@ -341,7 +341,8 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
 
     Thread* thread = new Thread;
 
-    handle = Kernel::g_handle_table.Create(thread);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(thread).ValueOr(INVALID_HANDLE);
 
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);

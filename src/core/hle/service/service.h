@@ -54,7 +54,8 @@ public:
 
     /// Allocates a new handle for the service
     Handle CreateHandle(Kernel::Object *obj) {
-        Handle handle = Kernel::g_handle_table.Create(obj);
+        // TODO(yuriks): Fix error reporting
+        Handle handle = Kernel::g_handle_table.Create(obj).ValueOr(INVALID_HANDLE);
         m_handles.push_back(handle);
         return handle;
     }
@@ -62,7 +63,7 @@ public:
     /// Frees a handle from the service
     template <class T>
     void DeleteHandle(const Handle handle) {
-        Kernel::g_handle_table.Destroy<T>(handle);
+        Kernel::g_handle_table.Close(handle);
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 

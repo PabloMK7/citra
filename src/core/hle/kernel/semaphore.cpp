@@ -57,7 +57,8 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
     Semaphore* semaphore = new Semaphore;
-    *handle = g_handle_table.Create(semaphore);
+    // TOOD(yuriks): Fix error reporting
+    *handle = g_handle_table.Create(semaphore).ValueOr(INVALID_HANDLE);
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread

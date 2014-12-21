@@ -133,7 +133,7 @@ public:
         case FileCommand::Close:
         {
             LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            Kernel::g_handle_table.Destroy<File>(GetHandle());
+            backend->Close();
             break;
         }
 
@@ -189,7 +189,7 @@ public:
         case DirectoryCommand::Close:
         {
             LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
-            Kernel::g_handle_table.Destroy<Directory>(GetHandle());
+            backend->Close();
             break;
         }
 
@@ -283,7 +283,8 @@ ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSy
     }
 
     auto file = Common::make_unique<File>(std::move(backend), path);
-    Handle handle = Kernel::g_handle_table.Create(file.release());
+    // TOOD(yuriks): Fix error reporting
+    Handle handle = Kernel::g_handle_table.Create(file.release()).ValueOr(INVALID_HANDLE);
     return MakeResult<Handle>(handle);
 }
 
@@ -388,7 +389,8 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
     }
 
     auto directory = Common::make_unique<Directory>(std::move(backend), path);
-    Handle handle = Kernel::g_handle_table.Create(directory.release());
+    // TOOD(yuriks): Fix error reporting
+    Handle handle = Kernel::g_handle_table.Create(directory.release()).ValueOr(INVALID_HANDLE);
     return MakeResult<Handle>(handle);
 }
 

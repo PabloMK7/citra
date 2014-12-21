@@ -62,7 +62,8 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
 /// Create an address arbiter
 AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
     AddressArbiter* address_arbiter = new AddressArbiter;
-    handle = Kernel::g_handle_table.Create(address_arbiter);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(address_arbiter).ValueOr(INVALID_HANDLE);
     address_arbiter->name = name;
     return address_arbiter;
 }

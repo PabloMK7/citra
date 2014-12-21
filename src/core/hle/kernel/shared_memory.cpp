@@ -32,7 +32,8 @@ public:
  */
 SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
     SharedMemory* shared_memory = new SharedMemory;
-    handle = Kernel::g_handle_table.Create(shared_memory);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(shared_memory).ValueOr(INVALID_HANDLE);
     shared_memory->name = name;
     return shared_memory;
 }

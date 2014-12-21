@@ -119,11 +119,9 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
-    if (!Kernel::g_handle_table.IsValid(handle)) {
+    Kernel::Object* object = Kernel::g_handle_table.GetGeneric(handle);
+    if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
-    }
-    Kernel::Object* object = Kernel::g_handle_table.GetFast<Kernel::Object>(handle);
-    _dbg_assert_(Kernel, object != nullptr);
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(),
             object->GetName().c_str(), nano_seconds);
@@ -150,10 +148,9 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
     // Iterate through each handle, synchronize kernel object
     for (s32 i = 0; i < handle_count; i++) {
-        if (!Kernel::g_handle_table.IsValid(handles[i])) {
+        Kernel::Object* object = Kernel::g_handle_table.GetGeneric(handles[i]);
+        if (object == nullptr)
             return InvalidHandle(ErrorModule::Kernel).raw;
-        }
-        Kernel::Object* object = Kernel::g_handle_table.GetFast<Kernel::Object>(handles[i]);
 
         LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(),
             object->GetName().c_str());
@@ -321,19 +318,12 @@ static Result CreateEvent(Handle* evt, u32 reset_type) {
 
 /// Duplicates a kernel handle
 static Result DuplicateHandle(Handle* out, Handle handle) {
-    LOG_WARNING(Kernel_SVC, "(STUBBED) called handle=0x%08X", handle);
-
-    // Translate kernel handles -> real handles
-    if (handle == Kernel::CurrentThread) {
-        handle = Kernel::GetCurrentThreadHandle();
+    ResultVal<Handle> out_h = Kernel::g_handle_table.Duplicate(handle);
+    if (out_h.Succeeded()) {
+        *out = *out_h;
+        LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
     }
-    _assert_msg_(KERNEL, (handle != Kernel::CurrentProcess),
-        "(UNIMPLEMENTED) process handle duplication!");
-
-    // TODO(bunnei): FixMe - This is a hack to return the handle that we were asked to duplicate.
-    *out = handle;
-
-    return 0;
+    return out_h.Code().raw;
 }
 
 /// Signals an event
