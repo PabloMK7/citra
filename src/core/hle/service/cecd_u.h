@@ -15,10 +15,6 @@ class Interface : public Service::Interface {
 public:
     Interface();
 
-    /**
-     * Gets the string port name used by CTROS for the service
-     * @return Port name of service
-     */
     std::string GetPortName() const override {
         return "cecd:u";
     }

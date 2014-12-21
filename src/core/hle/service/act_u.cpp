@@ -4,22 +4,21 @@
 
 #include "common/log.h"
 #include "core/hle/hle.h"
-#include "core/hle/service/boss_u.h"
+#include "core/hle/service/act_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace BOSS_U
+// Namespace ACT_U
 
-namespace BOSS_U {
+namespace ACT_U {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00020100, nullptr,               "GetStorageInfo"},
-};
+// Empty arrays are illegal -- commented out until an entry is added.
+//const Interface::FunctionInfo FunctionTable[] = { };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
 Interface::Interface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    //Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
 } // namespace
