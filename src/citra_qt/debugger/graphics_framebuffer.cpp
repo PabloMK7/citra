@@ -263,6 +263,10 @@ void GraphicsFramebufferWidget::OnUpdate()
                 u8 g = (value >> 6) & 0x1F;
                 u8 b = (value >> 1) & 0x1F;
                 u8 a = value & 1;
+                r = (r << 3) | (r >> 2);
+                g = (g << 3) | (g >> 2);
+                b = (b << 3) | (b >> 2);
+                a *= 255;
 
                 decoded_image.setPixel(x, y, qRgba(r, g, b, 255/*a*/));
             }
