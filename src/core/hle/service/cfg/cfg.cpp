@@ -43,8 +43,9 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
 
     auto itr = std::find_if(std::begin(config->block_entries), std::end(config->block_entries),
-        [&](const SaveConfigBlockEntry& entry) {
-        return entry.block_id == block_id && entry.size == size && (entry.flags & flag);
+                            [&](const SaveConfigBlockEntry& entry) {
+                                return entry.block_id == block_id && entry.size == size && 
+                                       (entry.flags & flag);
     });
 
     if (itr == std::end(config->block_entries)) {
@@ -76,7 +77,7 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u32 size, u32 flags, const u8* data
             // Ignore the blocks that don't have a separate data offset
             if (config->block_entries[i].size > 4) {
                 offset = config->block_entries[i].offset_or_data +
-                    config->block_entries[i].size;
+                         config->block_entries[i].size;
                 break;
             }
         }
@@ -125,15 +126,15 @@ ResultCode FormatConfig() {
     config->data_entries_offset = 0x455C;
     // Insert the default blocks
     res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE,
-        reinterpret_cast<const u8*>(STEREO_CAMERA_SETTINGS.data()));
+                              reinterpret_cast<const u8*>(STEREO_CAMERA_SETTINGS.data()));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE,
-        reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
+                              reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8,
-        reinterpret_cast<const u8*>(&CONSOLE_MODEL));
+                              reinterpret_cast<const u8*>(&CONSOLE_MODEL));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xA, &CONSOLE_LANGUAGE);
@@ -143,11 +144,11 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE,
-        reinterpret_cast<const u8*>(&COUNTRY_INFO));
+                              reinterpret_cast<const u8*>(&COUNTRY_INFO));
     if (!res.IsSuccess())
         return res;
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE,
-        reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
+                              reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
     if (!res.IsSuccess())
         return res;
     // Save the buffer to the file
@@ -160,9 +161,10 @@ ResultCode FormatConfig() {
 void CFGInit() {
     // TODO(Subv): In the future we should use the FS service to query this archive, 
     // currently it is not possible because you can only have one open archive of the same type at any time
+    using Common::make_unique;
     std::string syssavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
-    cfg_system_save_data = Common::make_unique<FileSys::Archive_SystemSaveData>(syssavedata_directory,
-        CFG_SAVE_ID);
+    cfg_system_save_data = make_unique<FileSys::Archive_SystemSaveData>(
+                           syssavedata_directory, CFG_SAVE_ID);
     if (!cfg_system_save_data->Initialize()) {
         LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
         return;
@@ -189,7 +191,7 @@ void CFGInit() {
     // Copy string to buffer and pad with zeros at the end
     auto size = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
     std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + size,
-        std::end(CONSOLE_USERNAME_BLOCK.username), 0);
+              std::end(CONSOLE_USERNAME_BLOCK.username), 0);
     FormatConfig();
 }
 
