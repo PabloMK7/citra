@@ -2390,15 +2390,41 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QADD"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("QADD16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("QADDSUBX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm  = BITS(inst, 0, 3);
+	inst_cream->Rn  = BITS(inst, 16, 19);
+	inst_cream->Rd  = BITS(inst, 12, 15);
+	inst_cream->op1 = BITS(inst, 20, 21);
+	inst_cream->op2 = BITS(inst, 5, 7);
+
+	return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDADD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDSUB"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QSUB"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("QSUB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QSUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("QSUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
@@ -5561,15 +5587,69 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		GOTO_NEXT_INST;
 	}
 	QADD_INST:
-	QADD16_INST:
 	QADD8_INST:
+
+	QADD16_INST:
 	QADDSUBX_INST:
+	QSUB16_INST:
+	QSUBADDX_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+			const s16 rm_lo = (RM & 0xFFFF);
+			const s16 rm_hi = ((RM >> 16) & 0xFFFF);
+			const s16 rn_lo = (RN & 0xFFFF);
+			const s16 rn_hi = ((RN >> 16) & 0xFFFF);
+			const u8 op2    = inst_cream->op2;
+
+			s32 lo_result = 0;
+			s32 hi_result = 0;
+
+			// QADD16
+			if (op2 == 0x00) {
+				lo_result = (rn_lo + rm_lo);
+				hi_result = (rn_hi + rm_hi);
+			}
+			// QASX
+			else if (op2 == 0x01) {
+				lo_result = (rn_lo - rm_hi);
+				hi_result = (rn_hi + rm_lo);
+			}
+			// QSAX
+			else if (op2 == 0x02) {
+				lo_result = (rn_lo + rm_hi);
+				hi_result = (rn_hi - rm_lo);
+			}
+			// QSUB16
+			else if (op2 == 0x03) {
+				lo_result = (rn_lo - rm_lo);
+				hi_result = (rn_hi - rm_hi);
+			}
+
+			if (lo_result > 0x7FFF)
+				lo_result = 0x7FFF;
+			else if (lo_result < -0x8000)
+				lo_result = -0x8000;
+
+			if (hi_result > 0x7FFF)
+				hi_result = 0x7FFF;
+			else if (hi_result < -0x8000)
+				hi_result = -0x8000;
+
+			RD = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(generic_arm_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	QDADD_INST:
 	QDSUB_INST:
 	QSUB_INST:
-	QSUB16_INST:
 	QSUB8_INST:
-	QSUBADDX_INST:
 	REV_INST:
 	{
 		INC_ICOUNTER;
