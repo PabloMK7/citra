@@ -81,8 +81,7 @@ bool HandleTable::IsValid(Handle handle) const {
 
 Object* HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
-        // TODO(yuriks) Directly return the pointer once this is possible.
-        handle = GetCurrentThreadHandle();
+        return GetCurrentThread();
     } else if (handle == CurrentProcess) {
         LOG_ERROR(Kernel, "Current process (%08X) pseudo-handle not supported", CurrentProcess);
         return nullptr;

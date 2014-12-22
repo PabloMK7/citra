@@ -4,8 +4,12 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "common/common_types.h"
 
+#include "core/core.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
@@ -48,6 +52,56 @@ enum WaitType {
 
 namespace Kernel {
 
+class Thread : public Kernel::Object {
+public:
+    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override { return "Thread"; }
+
+    static const HandleType HANDLE_TYPE = HandleType::Thread;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
+    inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
+    inline bool IsReady() const { return (status & THREADSTATUS_READY) != 0; }
+    inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
+    inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
+    inline bool IsIdle() const { return idle; }
+
+    ResultVal<bool> WaitSynchronization() override;
+
+    Core::ThreadContext context;
+
+    u32 thread_id;
+
+    u32 status;
+    u32 entry_point;
+    u32 stack_top;
+    u32 stack_size;
+
+    s32 initial_priority;
+    s32 current_priority;
+
+    s32 processor_id;
+
+    WaitType wait_type;
+    Handle wait_handle;
+    VAddr wait_address;
+
+    std::vector<Handle> waiting_threads;
+
+    std::string name;
+
+    /// Whether this thread is intended to never actually be executed, i.e. always idle
+    bool idle = false;
+
+private:
+    // TODO(yuriks) Temporary until the creation logic can be moved into a static function
+    friend Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 priority,
+            s32 processor_id, u32 stack_top, int stack_size);
+
+    Thread() = default;
+};
+
 /// Creates a new thread - wrapper for external user
 Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
     u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
@@ -77,6 +131,9 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address);
 
 /// Arbitrate all threads currently waiting...
 void ArbitrateAllThreads(u32 arbiter, u32 address);
+
+/// Gets the current thread
+Thread* GetCurrentThread();
 
 /// Gets the current thread handle
 Handle GetCurrentThreadHandle();

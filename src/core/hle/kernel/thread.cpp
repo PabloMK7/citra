@@ -22,60 +22,18 @@
 
 namespace Kernel {
 
-class Thread : public Kernel::Object {
-public:
-
-    std::string GetName() const override { return name; }
-    std::string GetTypeName() const override { return "Thread"; }
-
-    static const HandleType HANDLE_TYPE = HandleType::Thread;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
-
-    inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
-    inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
-    inline bool IsReady() const { return (status & THREADSTATUS_READY) != 0; }
-    inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
-    inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
-    inline bool IsIdle() const { return idle; }
-
-    ResultVal<bool> WaitSynchronization() override {
-        const bool wait = status != THREADSTATUS_DORMANT;
-        if (wait) {
-            Handle thread = GetCurrentThreadHandle();
-            if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
-                waiting_threads.push_back(thread);
-            }
-            WaitCurrentThread(WAITTYPE_THREADEND, this->GetHandle());
+ResultVal<bool> Thread::WaitSynchronization() {
+    const bool wait = status != THREADSTATUS_DORMANT;
+    if (wait) {
+        Handle thread = GetCurrentThreadHandle();
+        if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
+            waiting_threads.push_back(thread);
         }
-
-        return MakeResult<bool>(wait);
+        WaitCurrentThread(WAITTYPE_THREADEND, this->GetHandle());
     }
 
-    Core::ThreadContext context;
-
-    u32 thread_id;
-
-    u32 status;
-    u32 entry_point;
-    u32 stack_top;
-    u32 stack_size;
-
-    s32 initial_priority;
-    s32 current_priority;
-
-    s32 processor_id;
-
-    WaitType wait_type;
-    Handle wait_handle;
-    VAddr wait_address;
-
-    std::vector<Handle> waiting_threads;
-
-    std::string name;
-
-    /// Whether this thread is intended to never actually be executed, i.e. always idle
-    bool idle = false;
-};
+    return MakeResult<bool>(wait);
+}
 
 // Lists all thread ids that aren't deleted/etc.
 static std::vector<Handle> thread_queue;
