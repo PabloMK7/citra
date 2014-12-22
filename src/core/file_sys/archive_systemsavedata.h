@@ -19,7 +19,7 @@ namespace FileSys {
 /// specifically nand:/data/<ID0>/sysdata/<SaveID-Low>/<SaveID-High>
 class Archive_SystemSaveData final : public DiskArchive {
 public:
-    Archive_SystemSaveData(const std::string& mount_point);
+    Archive_SystemSaveData(const std::string& mount_point, u64 save_id);
 
     /**
      * Initialize the archive.

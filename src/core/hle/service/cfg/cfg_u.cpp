@@ -2,9 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/file_util.h"
 #include "common/log.h"
+#include "common/string_util.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"
-#include "core/hle/service/cfg_u.h"
+#include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace CFG_U
@@ -99,13 +103,79 @@ static void GetCountryCodeID(Service::Interface* self) {
     cmd_buffer[2] = country_code_id;
 }
 
+/**
+ * CFG_User::GetConfigInfoBlk2 service function
+ *  Inputs:
+ *      0 : 0x00010082
+ *      1 : Size
+ *      2 : Block ID
+ *      3 : Descriptor for the output buffer
+ *      4 : Output buffer pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void GetConfigInfoBlk2(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 size = cmd_buffer[1];
+    u32 block_id = cmd_buffer[2];
+    u8* data_pointer = Memory::GetPointer(cmd_buffer[4]);
+    
+    if (data_pointer == nullptr) {
+        cmd_buffer[1] = -1; // TODO(Subv): Find the right error code
+        return;
+    }
+
+    cmd_buffer[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x2, data_pointer).raw;
+}
+
+/**
+ * CFG_User::GetSystemModel service function
+ *  Inputs:
+ *      0 : 0x00050000
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Model of the console
+ */
+static void GetSystemModel(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 data;
+
+    // TODO(Subv): Find out the correct error codes
+    cmd_buffer[1] = Service::CFG::GetConfigInfoBlock(0x000F0004, 4, 0x8,
+                                                     reinterpret_cast<u8*>(&data)).raw; 
+    cmd_buffer[2] = data & 0xFF;
+}
+
+/**
+ * CFG_User::GetModelNintendo2DS service function
+ *  Inputs:
+ *      0 : 0x00060000
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : 0 if the system is a Nintendo 2DS, 1 otherwise
+ */
+static void GetModelNintendo2DS(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 data;
+
+    // TODO(Subv): Find out the correct error codes
+    cmd_buffer[1] = Service::CFG::GetConfigInfoBlock(0x000F0004, 4, 0x8,
+                                                     reinterpret_cast<u8*>(&data)).raw; 
+    
+    u8 model = data & 0xFF;
+    if (model == Service::CFG::NINTENDO_2DS)
+        cmd_buffer[2] = 0;
+    else
+        cmd_buffer[2] = 1;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, nullptr,               "GetConfigInfoBlk2"},
+    {0x00010082, GetConfigInfoBlk2,     "GetConfigInfoBlk2"},
     {0x00020000, nullptr,               "SecureInfoGetRegion"},
     {0x00030000, nullptr,               "GenHashConsoleUnique"},
     {0x00040000, nullptr,               "GetRegionCanadaUSA"},
-    {0x00050000, nullptr,               "GetSystemModel"},
-    {0x00060000, nullptr,               "GetModelNintendo2DS"},
+    {0x00050000, GetSystemModel,        "GetSystemModel"},
+    {0x00060000, GetModelNintendo2DS,   "GetModelNintendo2DS"},
     {0x00070040, nullptr,               "unknown"},
     {0x00080080, nullptr,               "unknown"},
     {0x00090040, GetCountryCodeString,  "GetCountryCodeString"},

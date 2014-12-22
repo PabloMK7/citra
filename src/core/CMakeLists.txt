@@ -37,8 +37,9 @@ set(SRCS
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
             hle/service/cecd_u.cpp
-            hle/service/cfg_i.cpp
-            hle/service/cfg_u.cpp
+            hle/service/cfg/cfg.cpp
+            hle/service/cfg/cfg_i.cpp
+            hle/service/cfg/cfg_u.cpp
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
@@ -122,8 +123,9 @@ set(HEADERS
             hle/service/apt_u.h
             hle/service/boss_u.h
             hle/service/cecd_u.h
-            hle/service/cfg_i.h
-            hle/service/cfg_u.h
+            hle/service/cfg/cfg.h
+            hle/service/cfg/cfg_i.h
+            hle/service/cfg/cfg_u.h
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
