@@ -6,6 +6,7 @@ project(citra)
 
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes")
+    add_definitions(-pthread)
 else()
     # Silence deprecation warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
@@ -96,10 +97,6 @@ if (ENABLE_GLFW)
 
         set(GLFW_LIBRARIES glfw3)
     else()
-        if (NOT APPLE)
-            find_package(X11 REQUIRED)
-        endif()
-
         find_package(PkgConfig REQUIRED)
         pkg_search_module(GLFW REQUIRED glfw3)
     endif()

@@ -12,7 +12,11 @@ if [ "$TRAVIS_OS_NAME" = linux -o -z "$TRAVIS_OS_NAME" ]; then
     (
         git clone https://github.com/glfw/glfw.git --branch 3.0.4 --depth 1
         mkdir glfw/build && cd glfw/build
-        cmake .. && make -j2 && sudo make install
+        cmake -DBUILD_SHARED_LIBS=ON \
+              -DGLFW_BUILD_EXAMPLES=OFF \
+              -DGLFW_BUILD_TESTS=OFF \
+              ..
+        make -j4 && sudo make install
     )
 
     sudo apt-get install lib32stdc++6

@@ -60,6 +60,10 @@ add_executable(citra-qt ${SRCS} ${HEADERS} ${UI_HDRS})
 target_link_libraries(citra-qt core common video_core qhexedit)
 target_link_libraries(citra-qt ${OPENGL_gl_LIBRARY} ${CITRA_QT_LIBS})
 
+if (UNIX)
+    target_link_libraries(citra-qt -pthread)
+endif()
+
 if (APPLE)
     target_link_libraries(citra-qt iconv ${COREFOUNDATION_LIBRARY})
 elseif (WIN32)
