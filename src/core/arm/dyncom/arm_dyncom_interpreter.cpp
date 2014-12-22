@@ -3798,9 +3798,9 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 	#define INC_ICOUNTER			cpu->icounter++;                                                   \
 						if(cpu->Reg[15] > 0xc0000000) 					\
 							cpu->kernel_icounter++;
-						//if (debug_function(core))                                          \
+						/*if (debug_function(core))                                          \
 							if (core->check_int_flag)                                  \
-								goto END
+								goto END*/
 						//LOG_TRACE(Core_ARM11, "icounter is %llx pc is %x\n", cpu->icounter, cpu->Reg[15])
 	#else
 	#define INC_ICOUNTER			;                                                   
@@ -4021,18 +4021,18 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 
 	#define UPDATE_NFLAG(dst)		(cpu->NFlag = BIT(dst, 31) ? 1 : 0)
 	#define UPDATE_ZFLAG(dst)		(cpu->ZFlag = dst ? 0 : 1)
-//	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((ISNEG(lop) && ISPOS(rop)) ||                        \
+/*	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((ISNEG(lop) && ISPOS(rop)) ||                        \
 								(ISNEG(lop) && ISPOS(dst)) ||                       \
-								(ISPOS(rop) && ISPOS(dst))))
+								(ISPOS(rop) && ISPOS(dst)))) */
 	#define UPDATE_CFLAG(dst, lop, rop)	(cpu->CFlag = ((dst < lop) || (dst < rop)))
 	#define UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, flag)	(cpu->CFlag = (((uint64_t) lop + (uint64_t) rop + (uint64_t) flag) > 0xffffffff) )
 	#define UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, flag) (cpu->CFlag = ((uint64_t) lop >= ((uint64_t) rop + (uint64_t) flag)))
 	#define UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop)	(cpu->CFlag = (lop >= rop))
 	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	(cpu->CFlag = !(dst < lop))
 	#define UPDATE_CFLAG_WITH_SC		cpu->CFlag = cpu->shifter_carry_out
-//	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) ||                        \
+/*	#define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)	cpu->CFlag = !((ISNEG(lop) && ISPOS(rop)) ||                        \
 								(ISNEG(lop) && ISPOS(dst)) ||                       \
-								(ISPOS(rop) && ISPOS(dst)))
+								(ISPOS(rop) && ISPOS(dst))) */
 	#define UPDATE_VFLAG(dst, lop, rop)	(cpu->VFlag = (((lop < 0) && (rop < 0) && (dst >= 0)) ||            \
 								((lop >= 0) && (rop) >= 0 && (dst < 0))))
 	#define UPDATE_VFLAG_WITH_NOT(dst, lop, rop)	(cpu->VFlag = !(((lop < 0) && (rop < 0) && (dst >= 0)) ||            \
