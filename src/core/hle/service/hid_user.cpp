@@ -4,6 +4,7 @@
 
 #include "common/log.h"
 
+#include "core/arm/arm_interface.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"

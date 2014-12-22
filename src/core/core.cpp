@@ -8,6 +8,7 @@
 #include "core/core_timing.h"
 
 #include "core/settings.h"
+#include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/interpreter/arm_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom.h"

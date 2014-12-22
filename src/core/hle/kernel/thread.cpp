@@ -10,6 +10,7 @@
 #include "common/common.h"
 #include "common/thread_queue_list.h"
 
+#include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/hle.h"
@@ -50,7 +51,7 @@ public:
         return MakeResult<bool>(wait);
     }
 
-    ThreadContext context;
+    Core::ThreadContext context;
 
     u32 thread_id;
 
@@ -104,18 +105,18 @@ inline void SetCurrentThread(Thread* t) {
 }
 
 /// Saves the current CPU context
-void SaveContext(ThreadContext& ctx) {
+void SaveContext(Core::ThreadContext& ctx) {
     Core::g_app_core->SaveContext(ctx);
 }
 
 /// Loads a CPU context
-void LoadContext(ThreadContext& ctx) {
+void LoadContext(Core::ThreadContext& ctx) {
     Core::g_app_core->LoadContext(ctx);
 }
 
 /// Resets a thread
 void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
-    memset(&t->context, 0, sizeof(ThreadContext));
+    memset(&t->context, 0, sizeof(Core::ThreadContext));
 
     t->context.cpu_registers[0] = arg;
     t->context.pc = t->context.reg_15 = t->entry_point;

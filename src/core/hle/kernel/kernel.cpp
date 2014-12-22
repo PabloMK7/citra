@@ -6,6 +6,7 @@
 
 #include "common/common.h"
 
+#include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"

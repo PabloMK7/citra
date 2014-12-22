@@ -7,7 +7,9 @@
 #include "common/common.h"
 #include "common/common_types.h"
 
-#include "core/hle/svc.h"
+namespace Core {
+    struct ThreadContext;
+}
 
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
@@ -87,13 +89,13 @@ public:
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    virtual void SaveContext(ThreadContext& ctx) = 0;
+    virtual void SaveContext(Core::ThreadContext& ctx) = 0;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    virtual void LoadContext(const ThreadContext& ctx) = 0;
+    virtual void LoadContext(const Core::ThreadContext& ctx) = 0;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;

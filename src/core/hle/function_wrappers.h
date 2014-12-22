@@ -5,6 +5,8 @@
 #pragma once
 
 #include "common/common_types.h"
+
+#include "core/arm/arm_interface.h"
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
 

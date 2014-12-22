@@ -7,6 +7,7 @@
 #include "common/string_util.h"
 #include "common/symbols.h"
 
+#include "core/arm/arm_interface.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/address_arbiter.h"

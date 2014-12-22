@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "core/arm/arm_interface.h"
-#include "core/arm/skyeye_common/armdefs.h"
+#include "common/common_types.h"
+
+class ARM_Interface;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,6 +15,21 @@ namespace Core {
 enum CPUCore {
     CPU_Interpreter,
     CPU_OldInterpreter,
+};
+
+struct ThreadContext {
+    u32 cpu_registers[13];
+    u32 sp;
+    u32 lr;
+    u32 pc;
+    u32 cpsr;
+    u32 fpu_registers[32];
+    u32 fpscr;
+    u32 fpexc;
+
+    // These are not part of native ThreadContext, but needed by emu
+    u32 reg_15;
+    u32 mode;
 };
 
 extern ARM_Interface*   g_app_core;     ///< ARM11 application core
