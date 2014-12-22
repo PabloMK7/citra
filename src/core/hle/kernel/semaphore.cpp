@@ -37,8 +37,8 @@ public:
         bool wait = !IsAvailable();
 
         if (wait) {
-            Kernel::WaitCurrentThread(WAITTYPE_SEMA, GetHandle());
-            waiting_threads.push(GetCurrentThreadHandle());
+            Kernel::WaitCurrentThread(WAITTYPE_SEMA, this);
+            waiting_threads.push(GetCurrentThread()->GetHandle());
         } else {
             --available_count;
         }
@@ -84,7 +84,9 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
     while (!semaphore->waiting_threads.empty() && semaphore->IsAvailable()) {
-        Kernel::ResumeThreadFromWait(semaphore->waiting_threads.front());
+        Thread* thread = Kernel::g_handle_table.Get<Thread>(semaphore->waiting_threads.front());
+        if (thread != nullptr)
+            thread->ResumeFromWait();
         semaphore->waiting_threads.pop();
         --semaphore->available_count;
     }

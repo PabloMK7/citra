@@ -33,8 +33,8 @@ public:
     ResultVal<bool> WaitSynchronization() override {
         bool wait = !signaled;
         if (wait) {
-            waiting_threads.insert(GetCurrentThreadHandle());
-            Kernel::WaitCurrentThread(WAITTYPE_TIMER, GetHandle());
+            waiting_threads.insert(GetCurrentThread()->GetHandle());
+            Kernel::WaitCurrentThread(WAITTYPE_TIMER, this);
         }
         return MakeResult<bool>(wait);
     }
@@ -92,8 +92,10 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
     timer->signaled = true;
 
     // Resume all waiting threads
-    for (Handle thread : timer->waiting_threads)
-        ResumeThreadFromWait(thread);
+    for (Handle thread_handle : timer->waiting_threads) {
+        if (Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle))
+            thread->ResumeFromWait();
+    }
 
     timer->waiting_threads.clear();
 

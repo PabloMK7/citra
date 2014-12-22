@@ -30,24 +30,28 @@ public:
 
 /// Arbitrate an address
 ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value) {
+    Object* object = Kernel::g_handle_table.GetGeneric(handle);
+    if (object == nullptr)
+        return InvalidHandle(ErrorModule::Kernel);
+
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
     case ArbitrationType::Signal:
         // Negative value means resume all threads
         if (value < 0) {
-            ArbitrateAllThreads(handle, address);
+            ArbitrateAllThreads(object, address);
         } else {
             // Resume first N threads
             for(int i = 0; i < value; i++)
-                ArbitrateHighestPriorityThread(handle, address);
+                ArbitrateHighestPriorityThread(object, address);
         }
         break;
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)Memory::Read32(address) <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle, address);
+            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
             HLE::Reschedule(__func__);
         }
         break;
@@ -57,7 +61,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
         s32 memory_value = Memory::Read32(address) - 1;
         Memory::Write32(address, memory_value);
         if (memory_value <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle, address);
+            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
             HLE::Reschedule(__func__);
         }
         break;

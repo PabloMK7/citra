@@ -231,41 +231,47 @@ static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top
         name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
-    Handle thread = Kernel::CreateThread(name.c_str(), entry_point, priority, arg, processor_id,
-        stack_top);
+    ResultVal<Kernel::Thread*> thread_res = Kernel::Thread::Create(name.c_str(), entry_point, priority, arg,
+            processor_id, stack_top);
+    if (thread_res.Failed())
+        return thread_res.Code().raw;
+    Kernel::Thread* thread = *thread_res;
 
-    Core::g_app_core->SetReg(1, thread);
+    Core::g_app_core->SetReg(1, thread->GetHandle());
 
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
-        name.c_str(), arg, stack_top, priority, processor_id, thread);
+        name.c_str(), arg, stack_top, priority, processor_id, thread->GetHandle());
 
     return 0;
 }
 
 /// Called when a thread exits
-static u32 ExitThread() {
-    Handle thread = Kernel::GetCurrentThreadHandle();
+static void ExitThread() {
+    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC());
 
-    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC()); // PC = 0x0010545C
-
-    Kernel::StopThread(thread, __func__);
+    Kernel::GetCurrentThread()->Stop(__func__);
     HLE::Reschedule(__func__);
-    return 0;
 }
 
 /// Gets the priority for the specified thread
 static Result GetThreadPriority(s32* priority, Handle handle) {
-    ResultVal<u32> priority_result = Kernel::GetThreadPriority(handle);
-    if (priority_result.Succeeded()) {
-        *priority = *priority_result;
-    }
-    return priority_result.Code().raw;
+    const Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    if (thread == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    *priority = thread->GetPriority();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Sets the priority for the specified thread
 static Result SetThreadPriority(Handle handle, s32 priority) {
-    return Kernel::SetThreadPriority(handle, priority).raw;
+    Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    if (thread == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    thread->SetPriority(priority);
+    return RESULT_SUCCESS.raw;
 }
 
 /// Create a mutex
@@ -286,8 +292,13 @@ static Result ReleaseMutex(Handle handle) {
 /// Get the ID for the specified thread.
 static Result GetThreadId(u32* thread_id, Handle handle) {
     LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
-    ResultCode result = Kernel::GetThreadId(thread_id, handle);
-    return result.raw;
+
+    const Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    if (thread == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    *thread_id = thread->GetThreadId();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Creates a semaphore
@@ -375,7 +386,7 @@ static void SleepThread(s64 nanoseconds) {
     Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
-    Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThreadHandle(), nanoseconds);
+    Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);
 
     HLE::Reschedule(__func__);
 }
@@ -407,7 +418,7 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x06, nullptr,                         "GetProcessIdealProcessor"},
     {0x07, nullptr,                         "SetProcessIdealProcessor"},
     {0x08, HLE::Wrap<CreateThread>,         "CreateThread"},
-    {0x09, HLE::Wrap<ExitThread>,           "ExitThread"},
+    {0x09, ExitThread,                      "ExitThread"},
     {0x0A, HLE::Wrap<SleepThread>,          "SleepThread"},
     {0x0B, HLE::Wrap<GetThreadPriority>,    "GetThreadPriority"},
     {0x0C, HLE::Wrap<SetThreadPriority>,    "SetThreadPriority"},

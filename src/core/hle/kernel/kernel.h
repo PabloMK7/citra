@@ -16,6 +16,8 @@ const Handle INVALID_HANDLE = 0;
 
 namespace Kernel {
 
+class Thread;
+
 // TODO: Verify code
 const ResultCode ERR_OUT_OF_HANDLES(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
         ErrorSummary::OutOfResource, ErrorLevel::Temporary);
@@ -190,7 +192,7 @@ private:
 };
 
 extern HandleTable g_handle_table;
-extern Handle g_main_thread;
+extern Thread* g_main_thread;
 
 /// The ID code of the currently running game
 /// TODO(Subv): This variable should not be here, 

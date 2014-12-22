@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-Handle g_main_thread = 0;
+Thread* g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
