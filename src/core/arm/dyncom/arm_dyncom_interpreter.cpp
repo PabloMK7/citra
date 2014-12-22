@@ -2525,7 +2525,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)       { UNIMPLEMENTED_INSTRUCTION("SEL"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm  = BITS(inst, 0, 3);
+	inst_cream->Rn  = BITS(inst, 16, 19);
+	inst_cream->Rd  = BITS(inst, 12, 15);
+	inst_cream->op1 = BITS(inst, 20, 22);
+	inst_cream->op2 = BITS(inst, 5, 7);
+
+	return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SETEND"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(shadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SHADD16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SHADD8"); }
@@ -5764,7 +5781,47 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		FETCH_INST;
 		GOTO_NEXT_INST;
 	}
+
 	SEL_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+			const u32 to = RM;
+			const u32 from = RN;
+			const u32 cpsr = cpu->Cpsr;
+
+			u32 result;
+			if (cpsr & (1 << 16))
+				result = from & 0xff;
+			else
+				result = to & 0xff;
+
+			if (cpsr & (1 << 17))
+				result |= from & 0x0000ff00;
+			else
+				result |= to & 0x0000ff00;
+
+			if (cpsr & (1 << 18))
+				result |= from & 0x00ff0000;
+			else
+				result |= to & 0x00ff0000;
+
+			if (cpsr & (1 << 19))
+				result |= from & 0xff000000;
+			else
+				result |= to & 0xff000000;
+
+			RD = result;
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(generic_arm_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	SETEND_INST:
 	SHADD16_INST:
 	SHADD8_INST:
