@@ -1670,7 +1670,7 @@ mainswitch:
                             op1 *= op2;
                             //printf("SMLA_INST:BB,op1=0x%x, op2=0x%x. Rn=0x%x\n", op1, op2, Rn);
                             if (AddOverflow(op1, Rn, op1 + Rn))
-                                SETS;
+                                SETQ;
                             state->Reg[BITS (16, 19)] = op1 + Rn;
                             break;
                         }
@@ -1682,7 +1682,7 @@ mainswitch:
                             ARMword result = op1 + op2;
                             if (AddOverflow(op1, op2, result)) {
                                 result = POS (result) ? 0x80000000 : 0x7fffffff;
-                                SETS;
+                                SETQ;
                             }
                             state->Reg[BITS (12, 15)] = result;
                             break;
@@ -1795,7 +1795,7 @@ mainswitch:
                                 ARMword Rn = state->Reg[BITS(12, 15)];
 
                                 if (AddOverflow((ARMword)result, Rn, (ARMword)(result + Rn)))
-                                    SETS;
+                                    SETQ;
                                 result += Rn;
                             }
                             state->Reg[BITS (16, 19)] = (ARMword)result;
@@ -1811,7 +1811,7 @@ mainswitch:
                             if (SubOverflow
                                     (op1, op2, result)) {
                                 result = POS (result) ? 0x80000000 : 0x7fffffff;
-                                SETS;
+                                SETQ;
                             }
 
                             state->Reg[BITS (12, 15)] = result;
@@ -1934,13 +1934,13 @@ mainswitch:
 
                             if (AddOverflow
                                     (op2, op2, op2d)) {
-                                SETS;
+                                SETQ;
                                 op2d = POS (op2d) ? 0x80000000 : 0x7fffffff;
                             }
 
                             result = op1 + op2d;
                             if (AddOverflow(op1, op2d, result)) {
-                                SETS;
+                                SETQ;
                                 result = POS (result) ? 0x80000000 : 0x7fffffff;
                             }
 
@@ -2053,13 +2053,13 @@ mainswitch:
                             ARMword result;
 
                             if (AddOverflow(op2, op2, op2d)) {
-                                SETS;
+                                SETQ;
                                 op2d = POS (op2d) ? 0x80000000 : 0x7fffffff;
                             }
 
                             result = op1 - op2d;
                             if (SubOverflow(op1, op2d, result)) {
-                                SETS;
+                                SETQ;
                                 result = POS (result) ? 0x80000000 : 0x7fffffff;
                             }
 
