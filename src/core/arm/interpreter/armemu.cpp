@@ -6153,7 +6153,7 @@ L_stm_s_takeabort:
             u32 rm = (instr >> 0) & 0xF;
             u32 from = state->Reg[rn];
             u32 to = state->Reg[rm];
-            u32 cpsr = state->Cpsr;
+            u32 cpsr = ARMul_GetCPSR(state);
             if ((instr & 0xFF0) == 0xFB0) { // SEL
                 u32 result;
                 if (cpsr & (1 << 16))
