@@ -1724,7 +1724,7 @@ mainswitch:
                             TAKEABORT;
                     } else if ((BITS (0, 11) == 0) && (LHSReg == 15)) {	/* MRS CPSR */
                         UNDEF_MRSPC;
-                        DEST = ECC | EINT | EMODE;
+                        DEST = ARMul_GetCPSR(state);
                     } else {
                         UNDEF_Test;
                     }
