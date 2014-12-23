@@ -6209,16 +6209,23 @@ L_stm_s_takeabort:
 					s16 rn_lo = (state->Reg[rn_idx]);
 					s16 rn_hi = (state->Reg[rn_idx] >> 16);
 
-					if (rn_lo > max)
+					if (rn_lo > max) {
 						rn_lo = max;
-					else if (rn_lo < min)
+						state->Cpsr |= (1 << 27);
+					} else if (rn_lo < min) {
 						rn_lo = min;
+						state->Cpsr |= (1 << 27);
+					}
 
-					if (rn_hi > max)
+					if (rn_hi > max) {
 						rn_hi = max;
-					else if (rn_hi < min)
+						state->Cpsr |= (1 << 27);
+					} else if (rn_hi < min) {
 						rn_hi = min;
+						state->Cpsr |= (1 << 27);
+					}
 
+					ARMul_CPSRAltered(state);
 					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi & 0xFFFF) << 16);
 					return 1;
 				}
@@ -6350,16 +6357,23 @@ L_stm_s_takeabort:
 					s16 rn_lo = (state->Reg[rn_idx]);
 					s16 rn_hi = (state->Reg[rn_idx] >> 16);
 					
-					if (max < rn_lo)
+					if (max < rn_lo) {
 						rn_lo = max;
-					else if (rn_lo < 0)
+						state->Cpsr |= (1 << 27);
+					} else if (rn_lo < 0) {
 						rn_lo = 0;
+						state->Cpsr |= (1 << 27);
+					}
 
-					if (max < rn_hi)
+					if (max < rn_hi) {
 						rn_hi = max;
-					else if (rn_hi < 0)
+						state->Cpsr |= (1 << 27);
+					} else if (rn_hi < 0) {
 						rn_hi = 0;
-					
+						state->Cpsr |= (1 << 27);
+					}
+
+					ARMul_CPSRAltered(state);
 					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi << 16) & 0xFFFF);
 					return 1;
 				}
