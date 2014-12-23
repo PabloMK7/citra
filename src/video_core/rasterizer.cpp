@@ -106,6 +106,14 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     int bias1 = IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
     int bias2 = IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
 
+    const Math::Vec3<float24> w_inverse = Math::MakeVec(
+            float24::FromFloat32(1.0f) / v0.pos.w,
+            float24::FromFloat32(1.0f) / v1.pos.w,
+            float24::FromFloat32(1.0f) / v2.pos.w);
+
+    auto textures = registers.GetTextures();
+    auto tev_stages = registers.GetTevStages();
+
     // TODO: Not sure if looping through x first might be faster
     for (u16 y = min_y; y < max_y; y += 0x10) {
         for (u16 x = min_x; x < max_x; x += 0x10) {
@@ -129,6 +137,11 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             if (w0 < 0 || w1 < 0 || w2 < 0)
                 continue;
 
+            auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(static_cast<float>(w0)),
+                                                float24::FromFloat32(static_cast<float>(w1)),
+                                                float24::FromFloat32(static_cast<float>(w2)));
+            float24 interpolated_w_inverse = float24::FromFloat32(1.0f) / Math::Dot(w_inverse, baricentric_coordinates);
+
             // Perspective correct attribute interpolation:
             // Attribute values cannot be calculated by simple linear interpolation since
             // they are not linear in screen space. For example, when interpolating a
@@ -145,19 +158,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             //
             // The generalization to three vertices is straightforward in baricentric coordinates.
             auto GetInterpolatedAttribute = [&](float24 attr0, float24 attr1, float24 attr2) {
-                auto attr_over_w = Math::MakeVec(attr0 / v0.pos.w,
-                                                 attr1 / v1.pos.w,
-                                                 attr2 / v2.pos.w);
-                auto w_inverse   = Math::MakeVec(float24::FromFloat32(1.f) / v0.pos.w,
-                                                 float24::FromFloat32(1.f) / v1.pos.w,
-                                                 float24::FromFloat32(1.f) / v2.pos.w);
-                auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(static_cast<float>(w0)),
-                                                             float24::FromFloat32(static_cast<float>(w1)),
-                                                             float24::FromFloat32(static_cast<float>(w2)));
-
+                auto attr_over_w = Math::MakeVec(attr0, attr1, attr2) * w_inverse;
                 float24 interpolated_attr_over_w = Math::Dot(attr_over_w, baricentric_coordinates);
-                float24 interpolated_w_inverse   = Math::Dot(w_inverse,   baricentric_coordinates);
-                return interpolated_attr_over_w / interpolated_w_inverse;
+                return interpolated_attr_over_w * interpolated_w_inverse;
             };
 
             Math::Vec4<u8> primary_color{
@@ -177,7 +180,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
             Math::Vec4<u8> texture_color[3]{};
             for (int i = 0; i < 3; ++i) {
-                auto texture = registers.GetTextures()[i];
+                const auto& texture = textures[i];
                 if (!texture.enabled)
                     continue;
 
@@ -219,7 +222,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             // with some basic arithmetic. Alpha combiners can be configured separately but work
             // analogously.
             Math::Vec4<u8> combiner_output;
-            for (auto tev_stage : registers.GetTevStages()) {
+            for (const auto& tev_stage : tev_stages) {
                 using Source = Regs::TevStageConfig::Source;
                 using ColorModifier = Regs::TevStageConfig::ColorModifier;
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
