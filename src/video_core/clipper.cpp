@@ -91,10 +91,17 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     viewport.zscale     = float24::FromRawFloat24(registers.viewport_depth_range);
     viewport.offset_z   = float24::FromRawFloat24(registers.viewport_depth_far_plane);
 
+    float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
+    vtx.color *= inv_w;
+    vtx.tc0 *= inv_w;
+    vtx.tc1 *= inv_w;
+    vtx.tc2 *= inv_w;
+    vtx.pos.w = inv_w;
+
     // TODO: Not sure why the viewport width needs to be divided by 2 but the viewport height does not
-    vtx.screenpos[0] = (vtx.pos.x / vtx.pos.w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
-    vtx.screenpos[1] = (vtx.pos.y / vtx.pos.w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
-    vtx.screenpos[2] = viewport.offset_z - vtx.pos.z / vtx.pos.w * viewport.zscale;
+    vtx.screenpos[0] = (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
+    vtx.screenpos[1] = (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
+    vtx.screenpos[2] = viewport.offset_z - vtx.pos.z * inv_w * viewport.zscale;
 }
 
 void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {

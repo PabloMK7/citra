@@ -106,10 +106,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     int bias1 = IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
     int bias2 = IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
 
-    const Math::Vec3<float24> w_inverse = Math::MakeVec(
-            float24::FromFloat32(1.0f) / v0.pos.w,
-            float24::FromFloat32(1.0f) / v1.pos.w,
-            float24::FromFloat32(1.0f) / v2.pos.w);
+    auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
     auto textures = registers.GetTextures();
     auto tev_stages = registers.GetTevStages();
@@ -158,7 +155,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             //
             // The generalization to three vertices is straightforward in baricentric coordinates.
             auto GetInterpolatedAttribute = [&](float24 attr0, float24 attr1, float24 attr2) {
-                auto attr_over_w = Math::MakeVec(attr0, attr1, attr2) * w_inverse;
+                auto attr_over_w = Math::MakeVec(attr0, attr1, attr2);
                 float24 interpolated_attr_over_w = Math::Dot(attr_over_w, baricentric_coordinates);
                 return interpolated_attr_over_w * interpolated_w_inverse;
             };
