@@ -6478,22 +6478,28 @@ L_stm_s_takeabort:
                 const s16 rn_lo = (rn_val & 0xFFFF);
                 const s16 rn_hi = ((rn_val >> 16) & 0xFFFF);
 
-                // SMUAD
-                if ((instr & 0xf0d0) == 0xf010) {
-                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi);
+                const u32 product1 = (rn_lo * rm_lo);
+                const u32 product2 = (rn_hi * rm_hi);
+
+                // SMUAD and SMLAD
+                if (BIT(6) == 0) {
+                    state->Reg[rd_idx] = product1 + product2;
+
+                    if (BITS(12, 15) != 15) {
+                        state->Reg[rd_idx] += state->Reg[ra_idx];
+                        ARMul_AddOverflowQ(state, product1 + product2, state->Reg[ra_idx]);
+                    }
+
+                    ARMul_AddOverflowQ(state, product1, product2);
                 }
-                // SMUSD
-                else if ((instr & 0xf0d0) == 0xf050) {
-                    state->Reg[rd_idx] = (rn_lo * rm_lo) - (rn_hi * rm_hi);
-                }
-                // SMLAD
-                else if ((instr & 0xd0) == 0x10) {
-                    state->Reg[rd_idx] = (rn_lo * rm_lo) + (rn_hi * rm_hi) + (s32)state->Reg[ra_idx];
-                }
-                // SMLSD
+                // SMUSD and SMLSD
                 else {
-                    state->Reg[rd_idx] = ((rn_lo * rm_lo) - (rn_hi * rm_hi)) + (s32)state->Reg[ra_idx];
+                    state->Reg[rd_idx] = product1 - product2;
+                    
+                    if (BITS(12, 15) != 15)
+                        state->Reg[rd_idx] += state->Reg[ra_idx];
                 }
+
                 return 1;
             }
             break;
