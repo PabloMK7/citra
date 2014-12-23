@@ -227,8 +227,9 @@ ARMul_CPSRAltered (ARMul_State * state)
     //state->Cpsr &= ~CBIT;
     ASSIGNV ((state->Cpsr & VBIT) != 0);
     //state->Cpsr &= ~VBIT;
-    ASSIGNS ((state->Cpsr & SBIT) != 0);
-    //state->Cpsr &= ~SBIT;
+    ASSIGNQ ((state->Cpsr & QBIT) != 0);
+    //state->Cpsr &= ~QBIT;
+    state->GEFlag = (state->Cpsr & 0x000F0000);
 #ifdef MODET
     ASSIGNT ((state->Cpsr & TBIT) != 0);
     //state->Cpsr &= ~TBIT;
