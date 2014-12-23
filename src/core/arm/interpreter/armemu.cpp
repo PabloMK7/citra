@@ -5877,6 +5877,8 @@ L_stm_s_takeabort:
                     state->Cpsr &= ~(1 << 18);
                     state->Cpsr &= ~(1 << 19);
                 }
+
+                ARMul_CPSRAltered(state);
                 return 1;
             }
             // SADD8/SSUB8
@@ -5948,6 +5950,7 @@ L_stm_s_takeabort:
                         state->Cpsr &= ~(1 << 19);
                 }
 
+                ARMul_CPSRAltered(state);
                 state->Reg[rd_idx] = (lo_val1 | lo_val2 << 8 | hi_val1 << 16 | hi_val2 << 24);
                 return 1;
             }
@@ -6024,15 +6027,33 @@ L_stm_s_takeabort:
                 if ((instr & 0x0F0) == 0x070) { // USUB16
                     h1 = ((u16)from - (u16)to);
                     h2 = ((u16)(from >> 16) - (u16)(to >> 16));
-                    if (!(h1 & 0xffff0000)) state->Cpsr |= (3 << 16);
-                    if (!(h2 & 0xffff0000)) state->Cpsr |= (3 << 18);
+
+                    if (!(h1 & 0xffff0000))
+                        state->Cpsr |= (3 << 16);
+                    else
+                        state->Cpsr &= ~(3 << 16);
+
+                    if (!(h2 & 0xffff0000))
+                        state->Cpsr |= (3 << 18);
+                    else
+                        state->Cpsr &= ~(3 << 18);
                 }
                 else { // UADD16
                     h1 = ((u16)from + (u16)to);
                     h2 = ((u16)(from >> 16) + (u16)(to >> 16));
-                    if (h1 & 0xffff0000) state->Cpsr |= (3 << 16);
-                    if (h2 & 0xffff0000) state->Cpsr |= (3 << 18);
+
+                    if (h1 & 0xffff0000)
+                        state->Cpsr |= (3 << 16);
+                    else
+                        state->Cpsr &= ~(3 << 16);
+
+                    if (h2 & 0xffff0000)
+                        state->Cpsr |= (3 << 18);
+                    else
+                        state->Cpsr &= ~(3 << 18);
                 }
+
+                ARMul_CPSRAltered(state);
                 state->Reg[rd] = (u32)((h1 & 0xffff) | ((h2 & 0xffff) << 16));
                 return 1;
             }
@@ -6045,10 +6066,26 @@ L_stm_s_takeabort:
                         b2 = ((u8)(from >> 8) - (u8)(to >> 8));
                         b3 = ((u8)(from >> 16) - (u8)(to >> 16));
                         b4 = ((u8)(from >> 24) - (u8)(to >> 24));
-                        if (!(b1 & 0xffffff00)) state->Cpsr |= (1 << 16);
-                        if (!(b2 & 0xffffff00)) state->Cpsr |= (1 << 17);
-                        if (!(b3 & 0xffffff00)) state->Cpsr |= (1 << 18);
-                        if (!(b4 & 0xffffff00)) state->Cpsr |= (1 << 19);
+
+                        if (!(b1 & 0xffffff00))
+                            state->Cpsr |= (1 << 16);
+                        else
+                            state->Cpsr &= ~(1 << 16);
+
+                        if (!(b2 & 0xffffff00))
+                            state->Cpsr |= (1 << 17);
+                        else
+                            state->Cpsr &= ~(1 << 17);
+
+                        if (!(b3 & 0xffffff00))
+                            state->Cpsr |= (1 << 18);
+                        else
+                            state->Cpsr &= ~(1 << 18);
+
+                        if (!(b4 & 0xffffff00))
+                            state->Cpsr |= (1 << 19);
+                        else
+                            state->Cpsr &= ~(1 << 19);
                     }
                     else { // UADD8
                         b1 = ((u8)from + (u8)to);
@@ -6071,13 +6108,13 @@ L_stm_s_takeabort:
                         else
                             state->Cpsr &= ~(1 << 18);
 
-
                         if (b4 & 0xffffff00)
                             state->Cpsr |= (1 << 19);
                         else
                             state->Cpsr &= ~(1 << 19);
                     }
 
+                    ARMul_CPSRAltered(state);
                     state->Reg[rd] = (u32)(b1 | (b2 & 0xff) << 8 | (b3 & 0xff) << 16 | (b4 & 0xff) << 24);
                     return 1;
                 }

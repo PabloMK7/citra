@@ -198,7 +198,7 @@ struct ARMul_State
         //ARMword translate_pc;
 
     /* add armv6 flags dyf:2010-08-09 */
-    ARMword GEFlag, EFlag, AFlag, QFlags;
+    ARMword GEFlag, EFlag, AFlag, QFlag;
     //chy:2003-08-19, used in arm v5e|xscale
     ARMword SFlag;
 #ifdef MODET
