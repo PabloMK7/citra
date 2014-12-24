@@ -6503,8 +6503,39 @@ L_stm_s_takeabort:
                 return 1;
             }
             break;
-        case 0x74:
-            printf ("Unhandled v6 insn: smlald/smlsld\n");
+        case 0x74: // SMLALD and SMLSLD
+            {
+                const u8 rm_idx = BITS(8, 11);
+                const u8 rn_idx = BITS(0, 3);
+                const u8 rdlo_idx = BITS(12, 15);
+                const u8 rdhi_idx = BITS(16, 19);
+                const bool do_swap = (BIT(5) == 1);
+
+                const u32 rdlo_val = state->Reg[rdlo_idx];
+                const u32 rdhi_val = state->Reg[rdhi_idx];
+                const u32 rn_val   = state->Reg[rn_idx];
+                u32 rm_val         = state->Reg[rm_idx];
+
+                if (do_swap)
+                    rm_val = (((rm_val & 0xFFFF) << 16) | (rm_val >> 16));
+
+                const s32 product1 = (s16)(rn_val & 0xFFFF) * (s16)(rm_val & 0xFFFF);
+                const s32 product2 = (s16)((rn_val >> 16) & 0xFFFF) * (s16)((rm_val >> 16) & 0xFFFF);
+                s64 result;
+
+                // SMLALD
+                if (BIT(6) == 0) {
+                    result = (product1 + product2) + (s64)(rdlo_val | ((s64)rdhi_val << 32));
+                }
+                // SMLSLD
+                else {
+                    result = (product1 - product2) + (s64)(rdlo_val | ((s64)rdhi_val << 32));
+                }
+
+                state->Reg[rdlo_idx] = (result & 0xFFFFFFFF);
+                state->Reg[rdhi_idx] = ((result >> 32) & 0xFFFFFFFF);
+                return 1;
+            }
             break;
         case 0x75:
             printf ("Unhandled v6 insn: smmla/smmls/smmul\n");
