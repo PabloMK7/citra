@@ -78,6 +78,12 @@ public:
     virtual u64 GetTicks() const = 0;
 
     /**
+     * Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
+     * @param ticks Number of ticks to advance the CPU core
+     */
+    virtual void AddTicks(u64 ticks) = 0;
+
+    /**
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
