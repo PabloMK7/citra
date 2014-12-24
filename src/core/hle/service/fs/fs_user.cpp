@@ -426,6 +426,23 @@ static void IsSdmcDetected(Service::Interface* self) {
 }
 
 /**
+ * FS_User::IsSdmcWriteable service function
+ *  Outputs:
+ *      0 : Command header 0x08180000
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Whether the Sdmc is currently writeable
+ */
+static void IsSdmcWriteable(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    // If the SD isn't enabled, it can't be writeable...else, stubbed true
+    cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
+    
+    LOG_DEBUG(Service_FS, " (STUBBED)");
+}
+
+/**
  * FS_User::FormatSaveData service function, 
  * formats the SaveData specified by the input path.
  *  Inputs:
@@ -510,7 +527,7 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x08150000, nullptr,               "GetNandArchiveResource"},
     {0x08160000, nullptr,               "GetSdmcFatfsErro"},
     {0x08170000, IsSdmcDetected,        "IsSdmcDetected"},
-    {0x08180000, nullptr,               "IsSdmcWritable"},
+    {0x08180000, IsSdmcWriteable,       "IsSdmcWritable"},
     {0x08190042, nullptr,               "GetSdmcCid"},
     {0x081A0042, nullptr,               "GetNandCid"},
     {0x081B0000, nullptr,               "GetSdmcSpeedInfo"},
