@@ -108,8 +108,14 @@ endif()
 IF (APPLE)
     # CoreFoundation is required only on OSX
     FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
+    SET(PLATFORM_LIBRARIES iconv ${COREFOUNDATION_LIBRARY})
+    
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+ELSEIF(WIN32)
+    set(PLATFORM_LIBRARIES winmm)
+ELSE()
+    set(PLATFORM_LIBRARIES rt)
 ENDIF (APPLE)
 
 option(ENABLE_QT "Enable the Qt frontend" ON)
