@@ -106,9 +106,10 @@ if (ENABLE_GLFW)
 endif()
 
 IF (APPLE)
-    # CoreFoundation is required only on OSX
-    FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
-    SET(PLATFORM_LIBRARIES iconv ${COREFOUNDATION_LIBRARY})
+    FIND_LIBRARY(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
+    FIND_LIBRARY(IOKIT_LIBRARY IOKit)           # GLFW dependency
+    FIND_LIBRARY(COREVIDEO_LIBRARY CoreVideo)   # GLFW dependency
+    set(PLATFORM_LIBRARIES iconv ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
