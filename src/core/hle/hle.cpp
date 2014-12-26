@@ -43,7 +43,15 @@ void CallSVC(u32 opcode) {
 
 void Reschedule(const char *reason) {
     _dbg_assert_msg_(Kernel, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
+
+    // TODO(bunnei): It seems that games depend on some CPU execution time elapsing during HLE
+    // routines. This simulates that time by artificially advancing the number of CPU "ticks".
+    // The value was chosen empirically, it seems to work well enough for everything tested, but
+    // is likely not ideal. We should find a more accurate way to simulate timing with HLE.
+    Core::g_app_core->AddTicks(4000);
+
     Core::g_app_core->PrepareReschedule();
+
     g_reschedule = true;
 }
 
