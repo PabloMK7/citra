@@ -170,13 +170,6 @@ void GMainWindow::BootGame(std::string filename)
     render_window->GetEmuThread().start();
 
     render_window->show();
-
-    // Allow manually setting focus to the render widget if not using popout mode.
-    if (!ui.action_Popout_Window_Mode->isChecked()) {
-        render_window->setFocusPolicy(Qt::ClickFocus);
-        render_window->setFocus();
-    }
-
     OnStartGame();
 }
 
