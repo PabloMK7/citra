@@ -170,6 +170,7 @@ void GMainWindow::BootGame(std::string filename)
     render_window->GetEmuThread().start();
 
     render_window->show();
+    render_window->setFocus();
     OnStartGame();
 }
 
