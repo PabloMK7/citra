@@ -5,12 +5,8 @@ cmake_minimum_required(VERSION 2.8.11)
 project(citra)
 
 if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes")
-    
-    if (NOT APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes -pthread")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 else()
     # Silence deprecation warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
