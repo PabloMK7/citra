@@ -597,8 +597,5 @@ FSUserInterface::FSUserInterface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
-FSUserInterface::~FSUserInterface() {
-}
-
 } // namespace FS
 } // namespace Service

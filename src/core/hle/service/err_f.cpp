@@ -11,17 +11,15 @@
 
 namespace ERR_F {
 
-    const Interface::FunctionInfo FunctionTable[] = {
-        {0x00010800, nullptr,               "ThrowFatalError"}
-    };
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Interface class
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x00010800, nullptr,               "ThrowFatalError"}
+};
 
-    Interface::Interface() {
-        Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-    }
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Interface class
 
-    Interface::~Interface() {
-    }
+Interface::Interface() {
+    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+}
 
 } // namespace

@@ -68,7 +68,4 @@ Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }
 
-Interface::~Interface() {
-}
-
 } // namespace

@@ -179,7 +179,6 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00170000, nullptr,       "GetSoundVolume"},
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
@@ -194,9 +193,6 @@ Interface::Interface() {
     event_debug_pad = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventDebugPad");
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-}
-
-Interface::~Interface() {
 }
 
 } // namespace

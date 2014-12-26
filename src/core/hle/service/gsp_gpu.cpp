@@ -396,7 +396,4 @@ Interface::Interface() {
     g_thread_id = 1;
 }
 
-Interface::~Interface() {
-}
-
 } // namespace

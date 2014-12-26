@@ -32,8 +32,10 @@ set(SRCS
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
+            hle/service/act_u.cpp
             hle/service/am_app.cpp
             hle/service/am_net.cpp
+            hle/service/apt_a.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
             hle/service/cecd_u.cpp
@@ -43,17 +45,19 @@ set(SRCS
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
+            hle/service/frd_u.cpp
             hle/service/fs/archive.cpp
             hle/service/fs/fs_user.cpp
-            hle/service/frd_u.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
+            hle/service/http_c.cpp
             hle/service/ir_rst.cpp
             hle/service/ir_u.cpp
             hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
-            hle/service/nim_aoc.cpp
             hle/service/ndm_u.cpp
+            hle/service/news_u.cpp
+            hle/service/nim_aoc.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
             hle/service/ptm_u.cpp
@@ -118,8 +122,10 @@ set(HEADERS
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h
+            hle/service/act_u.h
             hle/service/am_app.h
             hle/service/am_net.h
+            hle/service/apt_a.h
             hle/service/apt_u.h
             hle/service/boss_u.h
             hle/service/cecd_u.h
@@ -129,17 +135,19 @@ set(HEADERS
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
+            hle/service/frd_u.h
             hle/service/fs/archive.h
             hle/service/fs/fs_user.h
-            hle/service/frd_u.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h
+            hle/service/http_c.h
             hle/service/ir_rst.h
             hle/service/ir_u.h
             hle/service/ldr_ro.h
             hle/service/mic_u.h
-            hle/service/nim_aoc.h
             hle/service/ndm_u.h
+            hle/service/news_u.h
+            hle/service/nim_aoc.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h
             hle/service/ptm_u.h

@@ -11,21 +11,12 @@ namespace SRV {
 
 /// Interface to "srv:" service
 class Interface : public Service::Interface {
-
 public:
-
     Interface();
 
-    ~Interface();
-
-    /**
-     * Gets the string name used by CTROS for the service
-     * @return Port name of service
-     */
     std::string GetPortName() const override {
         return "srv:";
     }
-
 };
 
 } // namespace

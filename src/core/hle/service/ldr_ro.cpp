@@ -18,6 +18,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000402C2, nullptr,               "CRO_LoadAndFix"},
     {0x000500C2, nullptr,               "CRO_ApplyRelocationPatchesAndLink"}
 };
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 

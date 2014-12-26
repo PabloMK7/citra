@@ -181,14 +181,12 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00090040, GetCountryCodeString,  "GetCountryCodeString"},
     {0x000A0040, GetCountryCodeID,      "GetCountryCodeID"},
 };
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-}
-
-Interface::~Interface() {
 }
 
 } // namespace

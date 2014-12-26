@@ -7,16 +7,16 @@
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace DSP_DSP
+// Namespace ACT_U
 
-namespace DSP_DSP {
+namespace ACT_U {
 
 class Interface : public Service::Interface {
 public:
     Interface();
 
     std::string GetPortName() const override {
-        return "dsp::DSP";
+        return "act:u";
     }
 };
 
