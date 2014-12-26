@@ -6531,8 +6531,36 @@ L_stm_s_takeabort:
                 return 1;
             }
             break;
-        case 0x75:
-            printf ("Unhandled v6 insn: smmla/smmls/smmul\n");
+        case 0x75: // SMMLA, SMMUL, and SMMLS
+            {
+                const u8 rm_idx = BITS(8, 11);
+                const u8 rn_idx = BITS(0, 3);
+                const u8 ra_idx = BITS(12, 15);
+                const u8 rd_idx = BITS(16, 19);
+                const bool do_round = (BIT(5) == 1);
+
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
+
+                // Assume SMMUL by default.
+                s64 result = (s64)(s32)rn_val * (s64)(s32)rm_val;
+
+                if (ra_idx != 15) {
+                    const u32 ra_val = state->Reg[ra_idx];
+
+                    // SMMLA, otherwise SMMLS
+                    if (BIT(6) == 0)
+                        result += ((s64)ra_val << 32);
+                    else
+                        result = ((s64)ra_val << 32) - result;
+                }
+
+                if (do_round)
+                    result += 0x80000000;
+
+                state->Reg[rd_idx] = ((result >> 32) & 0xFFFFFFFF);
+                return 1;
+            }
             break;
         case 0x78:
             if (BITS(20, 24) == 0x18)
