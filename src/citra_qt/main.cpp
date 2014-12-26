@@ -170,7 +170,13 @@ void GMainWindow::BootGame(std::string filename)
     render_window->GetEmuThread().start();
 
     render_window->show();
-    render_window->setFocus();
+
+    // Allow manually setting focus to the render widget if not using popout mode.
+    if (!ui.action_Popout_Window_Mode->isChecked()) {
+        render_window->setFocusPolicy(Qt::ClickFocus);
+        render_window->setFocus();
+    }
+
     OnStartGame();
 }
 
@@ -231,12 +237,15 @@ void GMainWindow::ToggleWindowMode()
         render_window->setParent(nullptr);
         render_window->setVisible(true);
         render_window->RestoreGeometry();
+        render_window->setFocusPolicy(Qt::NoFocus);
     }
     else if (!enable && render_window->parent() == nullptr)
     {
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
+        render_window->setFocusPolicy(Qt::ClickFocus);
+        render_window->setFocus();
     }
 }
 

@@ -123,9 +123,6 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
-    // Allow manually setting focus to the widget.
-    setFocusPolicy(Qt::ClickFocus);
-
     keyboard_id = KeyMap::NewDeviceId();
     ReloadSetKeymaps();
 
