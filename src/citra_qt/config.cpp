@@ -45,6 +45,7 @@ void Config::ReadValues() {
     qt_config->beginGroup("Core");
     Settings::values.cpu_core = qt_config->value("cpu_core", Core::CPU_Interpreter).toInt();
     Settings::values.gpu_refresh_rate = qt_config->value("gpu_refresh_rate", 30).toInt();
+    Settings::values.frame_skip = qt_config->value("frame_skip", 0).toInt();
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");
@@ -80,6 +81,7 @@ void Config::SaveValues() {
     qt_config->beginGroup("Core");
     qt_config->setValue("cpu_core", Settings::values.cpu_core);
     qt_config->setValue("gpu_refresh_rate", Settings::values.gpu_refresh_rate);
+    qt_config->setValue("frame_skip", Settings::values.frame_skip);
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");

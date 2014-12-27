@@ -29,6 +29,7 @@ pad_sright =
 [Core]
 cpu_core = ## 0: Interpreter (default), 1: FastInterpreter (experimental)
 gpu_refresh_rate = ## 30 (default)
+frame_skip = ## 0: No frameskip (default), 1 : 2x frameskip, 2 : 4x frameskip, etc.
 
 [Data Storage]
 use_virtual_sd =

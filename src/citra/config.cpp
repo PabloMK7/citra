@@ -59,6 +59,7 @@ void Config::ReadValues() {
     // Core
     Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
     Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 30);
+    Settings::values.frame_skip = glfw_config->GetInteger("Core", "frame_skip", 0);
 
     // Data Storage
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
