@@ -6139,8 +6139,79 @@ L_stm_s_takeabort:
                 printf ("Unhandled v6 insn: uqsub16\n");
             }
             break;
-        case 0x67:
-            printf ("Unhandled v6 insn: uhadd/uhsub\n");
+        case 0x67: // UHADD16, UHASX, UHSAX, UHSUB16, UHADD8, and UHSUB8.
+            {
+                const u8 op2 = BITS(5, 7);
+
+                const u8 rm_idx = BITS(0, 3);
+                const u8 rn_idx = BITS(16, 19);
+                const u8 rd_idx = BITS(12, 15);
+
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
+
+                if (op2 == 0x00 || op2 == 0x01 || op2 == 0x02 || op2 == 0x03)
+                {
+                    u32 lo_val = 0;
+                    u32 hi_val = 0;
+
+                    // UHADD16
+                    if (op2 == 0x00) {
+                        lo_val = (rn_val & 0xFFFF) + (rm_val & 0xFFFF);
+                        hi_val = ((rn_val >> 16) & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+                    }
+                    // UHASX
+                    else if (op2 == 0x01) {
+                        lo_val = (rn_val & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+                        hi_val = ((rn_val >> 16) & 0xFFFF) + (rm_val & 0xFFFF);
+                    }
+                    // UHSAX
+                    else if (op2 == 0x02) {
+                        lo_val = (rn_val & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+                        hi_val = ((rn_val >> 16) & 0xFFFF) - (rm_val & 0xFFFF);
+                    }
+                    // UHSUB16
+                    else if (op2 == 0x03) {
+                        lo_val = (rn_val & 0xFFFF) - (rm_val & 0xFFFF);
+                        hi_val = ((rn_val >> 16) & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+                    }
+
+                    lo_val >>= 1;
+                    hi_val >>= 1;
+
+                    state->Reg[rd_idx] = (lo_val & 0xFFFF) | ((hi_val & 0xFFFF) << 16);
+                    return 1;
+                }
+                else if (op2 == 0x04 || op2 == 0x07) {
+                    u32 sum1;
+                    u32 sum2;
+                    u32 sum3;
+                    u32 sum4;
+
+                    // UHADD8
+                    if (op2 == 0x04) {
+                        sum1 = (rn_val & 0xFF) + (rm_val & 0xFF);
+                        sum2 = ((rn_val >> 8) & 0xFF) + ((rm_val >> 8) & 0xFF);
+                        sum3 = ((rn_val >> 16) & 0xFF) + ((rm_val >> 16) & 0xFF);
+                        sum4 = ((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF);
+                    }
+                    // UHSUB8
+                    else {
+                        sum1 = (rn_val & 0xFF) - (rm_val & 0xFF);
+                        sum2 = ((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF);
+                        sum3 = ((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF);
+                        sum4 = ((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF);
+                    }
+
+                    sum1 >>= 1;
+                    sum2 >>= 1;
+                    sum3 >>= 1;
+                    sum4 >>= 1;
+
+                    state->Reg[rd_idx] = (sum1 & 0xFF) | ((sum2 & 0xFF) << 8) | ((sum3 & 0xFF) << 16) | ((sum4 & 0xFF) << 24);
+                    return 1;
+                }
+            }
             break;
         case 0x68:
         {
