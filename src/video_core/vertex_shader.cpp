@@ -160,8 +160,8 @@ static void ProcessShaderCode(VertexShaderState& state) {
             const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) + address_offset);
             const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted));
 
-            const bool negate_src1 = (swizzle.negate_src1 != false);
-            const bool negate_src2 = (swizzle.negate_src2 != false);
+            const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
+            const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
 
             float24 src1[4] = {
                 src1_[(int)swizzle.GetSelectorSrc1(0)],
@@ -385,8 +385,8 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 // TODO: Do we need to consider swizzlers here?
 
                 auto flow_control = instr.flow_control;
-                bool results[3] = { flow_control.refx == state.conditional_code[0],
-                                    flow_control.refy == state.conditional_code[1] };
+                bool results[3] = { (bool)flow_control.refx == state.conditional_code[0],
+                                    (bool)flow_control.refy == state.conditional_code[1] };
 
                 switch (flow_control.op) {
                 case flow_control.Or:
