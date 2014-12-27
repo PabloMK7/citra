@@ -44,7 +44,7 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("Core");
     Settings::values.cpu_core = qt_config->value("cpu_core", Core::CPU_Interpreter).toInt();
-    Settings::values.gpu_refresh_rate = qt_config->value("gpu_refresh_rate", 60).toInt();
+    Settings::values.gpu_refresh_rate = qt_config->value("gpu_refresh_rate", 30).toInt();
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");

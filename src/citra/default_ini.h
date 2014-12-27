@@ -28,7 +28,7 @@ pad_sright =
 
 [Core]
 cpu_core = ## 0: Interpreter (default), 1: FastInterpreter (experimental)
-gpu_refresh_rate = ## 60 (default)
+gpu_refresh_rate = ## 30 (default)
 
 [Data Storage]
 use_virtual_sd =
