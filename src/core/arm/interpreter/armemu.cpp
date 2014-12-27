@@ -6117,26 +6117,55 @@ L_stm_s_takeabort:
         }
             printf("Unhandled v6 insn: uasx/usax\n");
             break;
-        case 0x66:
-			if ((instr & 0x0FF00FF0) == 0x06600FF0) { //uqsub8
-                u32 rd = (instr >> 12) & 0xF;
-                u32 rm = (instr >> 16) & 0xF;
-                u32 rn = (instr >> 0) & 0xF;
-                u32 subfrom = state->Reg[rm];
-                u32 tosub = state->Reg[rn];
+        case 0x66: // UQADD16, UQASX, UQSAX, UQSUB16, UQADD8, and UQSUB8
+            {
+                const u8 rd_idx = BITS(12, 15);
+                const u8 rm_idx = BITS(0, 3);
+                const u8 rn_idx = BITS(16, 19);
+                const u8 op2    = BITS(5, 7);
+                const u32 rm_val = state->Reg[rm_idx];
+                const u32 rn_val = state->Reg[rn_idx];
 
-                u8 b1 = (u8)((u8)(subfrom)-(u8)(tosub));
-                if (b1 > (u8)(subfrom)) b1 = 0;
-                u8 b2 = (u8)((u8)(subfrom >> 8) - (u8)(tosub >> 8));
-                if (b2 > (u8)(subfrom >> 8)) b2 = 0;
-                u8 b3 = (u8)((u8)(subfrom >> 16) - (u8)(tosub >> 16));
-                if (b3 > (u8)(subfrom >> 16)) b3 = 0;
-                u8 b4 = (u8)((u8)(subfrom >> 24) - (u8)(tosub >> 24));
-                if (b4 > (u8)(subfrom >> 24)) b4 = 0;
-                state->Reg[rd] = (u32)(b1 | b2 << 8 | b3 << 16 | b4 << 24);
+                u16 lo_val = 0;
+                u16 hi_val = 0;
+
+                // UQADD16
+                if (op2 == 0x00) {
+                    lo_val = ARMul_UnsignedSaturatedAdd16(rn_val & 0xFFFF, rm_val & 0xFFFF);
+                    hi_val = ARMul_UnsignedSaturatedAdd16((rn_val >> 16) & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+                }
+                // UQASX
+                else if (op2 == 0x01) {
+                    lo_val = ARMul_UnsignedSaturatedSub16(rn_val & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+                    hi_val = ARMul_UnsignedSaturatedAdd16((rn_val >> 16) & 0xFFFF, rm_val & 0xFFFF);
+                }
+                // UQSAX
+                else if (op2 == 0x02) {
+                    lo_val = ARMul_UnsignedSaturatedAdd16(rn_val & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+                    hi_val = ARMul_UnsignedSaturatedSub16((rn_val >> 16) & 0xFFFF, rm_val & 0xFFFF);
+                }
+                // UQSUB16
+                else if (op2 == 0x03) {
+                    lo_val = ARMul_UnsignedSaturatedSub16(rn_val & 0xFFFF, rm_val & 0xFFFF);
+                    hi_val = ARMul_UnsignedSaturatedSub16((rn_val >> 16) & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+                }
+                // UQADD8
+                else if (op2 == 0x04) {
+                    lo_val = ARMul_UnsignedSaturatedAdd8(rn_val, rm_val) |
+                             ARMul_UnsignedSaturatedAdd8(rn_val >> 8,  rm_val >> 8) << 8;
+                    hi_val = ARMul_UnsignedSaturatedAdd8(rn_val >> 16, rm_val >> 16) |
+                             ARMul_UnsignedSaturatedAdd8(rn_val >> 24, rm_val >> 24) << 8;
+                }
+                // UQSUB8
+                else {
+                    lo_val = ARMul_UnsignedSaturatedSub8(rn_val, rm_val) |
+                             ARMul_UnsignedSaturatedSub8(rn_val >> 8,  rm_val >> 8) << 8;
+                    hi_val = ARMul_UnsignedSaturatedSub8(rn_val >> 16, rm_val >> 16) |
+                             ARMul_UnsignedSaturatedSub8(rn_val >> 24, rm_val >> 24) << 8;
+                }
+
+                state->Reg[rd_idx] = ((lo_val & 0xFFFF) | hi_val << 16);
                 return 1;
-            } else {
-                printf ("Unhandled v6 insn: uqsub16\n");
             }
             break;
         case 0x67: // UHADD16, UHASX, UHSAX, UHSUB16, UHADD8, and UHSUB8.

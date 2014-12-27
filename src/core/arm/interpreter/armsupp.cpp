@@ -469,6 +469,47 @@ ARMul_SubOverflow (ARMul_State * state, ARMword a, ARMword b, ARMword result)
     ASSIGNV (SubOverflow (a, b, result));
 }
 
+/* 8-bit unsigned saturated addition */
+u8 ARMul_UnsignedSaturatedAdd8(u8 left, u8 right)
+{
+    u8 result = left + right;
+
+    if (result < left)
+        result = 0xFF;
+
+    return result;
+}
+
+/* 16-bit unsigned saturated addition */
+u16 ARMul_UnsignedSaturatedAdd16(u16 left, u16 right)
+{
+    u16 result = left + right;
+
+    if (result < left)
+        result = 0xFFFF;
+
+    return result;
+}
+
+/* 8-bit unsigned saturated subtraction */
+u8 ARMul_UnsignedSaturatedSub8(u8 left, u8 right)
+{
+    if (left <= right)
+        return 0;
+
+    return left - right;
+}
+
+/* 16-bit unsigned saturated subtraction */
+u16 ARMul_UnsignedSaturatedSub16(u16 left, u16 right)
+{
+    if (left <= right)
+        return 0;
+
+    return left - right;
+}
+
+
 /* This function does the work of generating the addresses used in an
    LDC instruction.  The code here is always post-indexed, it's up to the
    caller to get the input address correct and to handle base register
