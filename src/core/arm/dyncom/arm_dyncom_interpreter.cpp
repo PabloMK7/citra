@@ -3086,15 +3086,47 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
 		inst_base->load_r15 = 1;
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UADD16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("UADD8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UADD16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(uaddsubx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("UADDSUBX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UHADD16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UHADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UHADDSUBX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UHSUB16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UHSUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uhsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UHSUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->op1 = BITS(inst, 20, 21);
+	inst_cream->op2 = BITS(inst, 5, 7);
+	inst_cream->Rm  = BITS(inst, 0, 3);
+	inst_cream->Rn  = BITS(inst, 16, 19);
+	inst_cream->Rd  = BITS(inst, 12, 15);
+
+	return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uhadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhaddsubx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uhadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub8)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uhadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsub16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uhadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uhsubaddx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uhadd8)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index)
 {
 	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(umaal_inst));
@@ -6622,15 +6654,95 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		FETCH_INST;
 		GOTO_NEXT_INST;
 	}
-	UADD16_INST:
 	UADD8_INST:
+	UADD16_INST:
 	UADDSUBX_INST:
-	UHADD16_INST:
+
 	UHADD8_INST:
+	UHADD16_INST:
 	UHADDSUBX_INST:
-	UHSUB16_INST:
-	UHSUB8_INST:
 	UHSUBADDX_INST:
+	UHSUB8_INST:
+	UHSUB16_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+			const u32 rm_val = RM;
+			const u32 rn_val = RN;
+			const u8 op2 = inst_cream->op2;
+
+			
+			if (op2 == 0x00 || op2 == 0x01 || op2 == 0x02 || op2 == 0x03)
+			{
+				u32 lo_val = 0;
+				u32 hi_val = 0;
+				
+				// UHADD16
+				if (op2 == 0x00) {
+					lo_val = (rn_val & 0xFFFF) + (rm_val & 0xFFFF);
+					hi_val = ((rn_val >> 16) & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+				}
+				// UHASX
+				else if (op2 == 0x01) {
+					lo_val = (rn_val & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+					hi_val = ((rn_val >> 16) & 0xFFFF) + (rm_val & 0xFFFF);
+				}
+				// UHSAX
+				else if (op2 == 0x02) {
+					lo_val = (rn_val & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+					hi_val = ((rn_val >> 16) & 0xFFFF) - (rm_val & 0xFFFF);
+				}
+				// UHSUB16
+				else if (op2 == 0x03) {
+					lo_val = (rn_val & 0xFFFF) - (rm_val & 0xFFFF);
+					hi_val = ((rn_val >> 16) & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+				}
+				
+				lo_val >>= 1;
+				hi_val >>= 1;
+				
+				RD = (lo_val & 0xFFFF) | ((hi_val & 0xFFFF) << 16);
+			}
+			else if (op2 == 0x04 || op2 == 0x07) {
+				u32 sum1;
+				u32 sum2;
+				u32 sum3;
+				u32 sum4;
+				
+				// UHADD8
+				if (op2 == 0x04) {
+					sum1 = (rn_val & 0xFF) + (rm_val & 0xFF);
+					sum2 = ((rn_val >> 8) & 0xFF) + ((rm_val >> 8) & 0xFF);
+					sum3 = ((rn_val >> 16) & 0xFF) + ((rm_val >> 16) & 0xFF);
+					sum4 = ((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF);
+				}
+				// UHSUB8
+				else {
+					sum1 = (rn_val & 0xFF) - (rm_val & 0xFF);
+					sum2 = ((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF);
+					sum3 = ((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF);
+					sum4 = ((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF);
+				}
+				
+				sum1 >>= 1;
+				sum2 >>= 1;
+				sum3 >>= 1;
+				sum4 >>= 1;
+				
+				RD = (sum1 & 0xFF) | ((sum2 & 0xFF) << 8) | ((sum3 & 0xFF) << 16) | ((sum4 & 0xFF) << 24);
+			}
+			
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(generic_arm_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+	
+	
 	UMAAL_INST:
 	{
 		INC_ICOUNTER;
