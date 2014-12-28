@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <vector>
+#include <boost/container/static_vector.hpp>
 
 #include "clipper.h"
 #include "pica.h"
@@ -98,18 +98,15 @@ static void InitScreenCoordinates(OutputVertex& vtx)
 }
 
 void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
+    using boost::container::static_vector;
 
     // TODO (neobrain):
     // The list of output vertices has some fixed maximum size,
     // however I haven't taken the time to figure out what it is exactly.
-    // For now, we hence just assume a maximal size of 1000 vertices.
-    const size_t max_vertices = 1000;
-    std::vector<OutputVertex> buffer_vertices;
-    std::vector<OutputVertex*> output_list{ &v0, &v1, &v2 };
-
-    // Make sure to reserve space for all vertices.
-    // Without this, buffer reallocation would invalidate references.
-    buffer_vertices.reserve(max_vertices);
+    // For now, we hence just assume a maximal size of 256 vertices.
+    static const size_t MAX_VERTICES = 256;
+    static_vector<OutputVertex, MAX_VERTICES> buffer_vertices;
+    static_vector<OutputVertex*, MAX_VERTICES> output_list = { &v0, &v1, &v2 };
 
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.
     // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
@@ -120,7 +117,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
                        ClippingEdge(ClippingEdge::POS_Z, float24::FromFloat32(+1.0)),
                        ClippingEdge(ClippingEdge::NEG_Z, float24::FromFloat32(-1.0)) }) {
 
-        const std::vector<OutputVertex*> input_list = output_list;
+        const static_vector<OutputVertex*, MAX_VERTICES> input_list = output_list;
         output_list.clear();
 
         const OutputVertex* reference_vertex = input_list.back();
