@@ -157,6 +157,9 @@ struct Regs {
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
             BitField<16, 1, u32> output_tiled;     // stores output in a tiled format
+
+            // TODO: Not really sure if this actually scales, or even resizes at all.
+            BitField<24, 1, u32> scale_horizontally;
         };
 
         INSERT_PADDING_WORDS(0x1);
