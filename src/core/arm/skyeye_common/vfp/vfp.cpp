@@ -32,8 +32,7 @@
 
 //ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
 
-unsigned
-VFPInit (ARMul_State *state)
+unsigned VFPInit(ARMul_State* state)
 {
     state->VFP[VFP_OFFSET(VFP_FPSID)] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 |
                                         VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
@@ -46,8 +45,7 @@ VFPInit (ARMul_State *state)
     return 0;
 }
 
-unsigned
-VFPMRC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
+unsigned VFPMRC(ARMul_State* state, unsigned type, u32 instr, u32* value)
 {
     /* MRC<c> <coproc>,<opc1>,<Rt>,<CRn>,<CRm>{,<opc2>} */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -61,10 +59,21 @@ VFPMRC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
 
     /* CRn/opc1 CRm/opc2 */
 
-    if (CoProc == 10 || CoProc == 11) {
-#define VFP_MRC_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MRC_TRANS
+    if (CoProc == 10 || CoProc == 11)
+    {
+        if (OPC_1 == 0x0 && CRm == 0 && (OPC_2 & 0x3) == 0)
+        {
+            /* VMOV r to s */
+            /* Transfering Rt is not mandatory, as the value of interest is pointed by value */
+            VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, value);
+            return ARMul_DONE;
+        }
+
+        if (OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+        {
+            VMRS(state, CRn, Rt, value);
+            return ARMul_DONE;
+        }
     }
     DEBUG("Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n",
           instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
@@ -72,8 +81,7 @@ VFPMRC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
     return ARMul_CANT;
 }
 
-unsigned
-VFPMCR (ARMul_State * state, unsigned type, u32 instr, u32 value)
+unsigned VFPMCR(ARMul_State* state, unsigned type, u32 instr, u32 value)
 {
     /* MCR<c> <coproc>,<opc1>,<Rt>,<CRn>,<CRm>{,<opc2>} */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -86,10 +94,33 @@ VFPMCR (ARMul_State * state, unsigned type, u32 instr, u32 value)
     /* TODO check access permission */
 
     /* CRn/opc1 CRm/opc2 */
-    if (CoProc == 10 || CoProc == 11) {
-#define VFP_MCR_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MCR_TRANS
+    if (CoProc == 10 || CoProc == 11)
+    {
+        if (OPC_1 == 0x0 && CRm == 0 && (OPC_2 & 0x3) == 0)
+        {
+            /* VMOV s to r */
+            /* Transfering Rt is not mandatory, as the value of interest is pointed by value */
+            VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, &value);
+            return ARMul_DONE;
+        }
+
+        if (OPC_1 == 0x7 && CRm == 0 && OPC_2 == 0)
+        {
+            VMSR(state, CRn, Rt);
+            return ARMul_DONE;
+        }
+
+        if ((OPC_1 & 0x4) == 0 && CoProc == 11 && CRm == 0)
+        {
+            VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
+            return ARMul_DONE;
+        }
+
+        if (CoProc == 11 && CRm == 0)
+        {
+            VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
+            return ARMul_DONE;
+        }
     }
     DEBUG("Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, CRn %x, CRm %x, OPC_2 %x\n",
           instr, CoProc, OPC_1, Rt, CRn, CRm, OPC_2);
@@ -97,8 +128,7 @@ VFPMCR (ARMul_State * state, unsigned type, u32 instr, u32 value)
     return ARMul_CANT;
 }
 
-unsigned
-VFPMRRC (ARMul_State * state, unsigned type, u32 instr, u32 * value1, u32 * value2)
+unsigned VFPMRRC(ARMul_State* state, unsigned type, u32 instr, u32* value1, u32* value2)
 {
     /* MCRR<c> <coproc>,<opc1>,<Rt>,<Rt2>,<CRm> */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -107,10 +137,20 @@ VFPMRRC (ARMul_State * state, unsigned type, u32 instr, u32 * value1, u32 * valu
     int Rt2 = BITS (16, 19);
     int CRm = BITS (0, 3);
 
-    if (CoProc == 10 || CoProc == 11) {
-#define VFP_MRRC_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MRRC_TRANS
+    if (CoProc == 10 || CoProc == 11)
+    {
+        if (CoProc == 10 && (OPC_1 & 0xD) == 1)
+        {
+            VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+            return ARMul_DONE;
+        }
+
+        if (CoProc == 11 && (OPC_1 & 0xD) == 1)
+        {
+            /* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
+            VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, value1, value2);
+            return ARMul_DONE;
+        }
     }
     DEBUG("Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n",
           instr, CoProc, OPC_1, Rt, Rt2, CRm);
@@ -118,8 +158,7 @@ VFPMRRC (ARMul_State * state, unsigned type, u32 instr, u32 * value1, u32 * valu
     return ARMul_CANT;
 }
 
-unsigned
-VFPMCRR (ARMul_State * state, unsigned type, u32 instr, u32 value1, u32 value2)
+unsigned VFPMCRR(ARMul_State* state, unsigned type, u32 instr, u32 value1, u32 value2)
 {
     /* MCRR<c> <coproc>,<opc1>,<Rt>,<Rt2>,<CRm> */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -132,10 +171,20 @@ VFPMCRR (ARMul_State * state, unsigned type, u32 instr, u32 value1, u32 value2)
 
     /* CRn/opc1 CRm/opc2 */
 
-    if (CoProc == 11 || CoProc == 10) {
-#define VFP_MCRR_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MCRR_TRANS
+    if (CoProc == 11 || CoProc == 10)
+    {
+        if (CoProc == 10 && (OPC_1 & 0xD) == 1)
+        {
+            VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+            return ARMul_DONE;
+        }
+
+        if (CoProc == 11 && (OPC_1 & 0xD) == 1)
+        {
+            /* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
+            VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, &value1, &value2);
+            return ARMul_DONE;
+        }
     }
     DEBUG("Can't identify %x, CoProc %x, OPC_1 %x, Rt %x, Rt2 %x, CRm %x\n",
           instr, CoProc, OPC_1, Rt, Rt2, CRm);
@@ -143,8 +192,7 @@ VFPMCRR (ARMul_State * state, unsigned type, u32 instr, u32 value1, u32 value2)
     return ARMul_CANT;
 }
 
-unsigned
-VFPSTC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
+unsigned VFPSTC(ARMul_State* state, unsigned type, u32 instr, u32 * value)
 {
     /* STC{L}<c> <coproc>,<CRd>,[<Rn>],<option> */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -175,9 +223,17 @@ VFPSTC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
         }
 #endif
 
-#define VFP_STC_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_STC_TRANS
+        if (P == 1 && W == 0)
+        {
+            return VSTR(state, type, instr, value);
+        }
+
+        if (P == 1 && U == 0 && W == 1 && Rn == 0xD)
+        {
+            return VPUSH(state, type, instr, value);
+        }
+
+        return VSTM(state, type, instr, value);
     }
     DEBUG("Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n",
           instr, CoProc, CRd, Rn, imm8, P, U, D, W);
@@ -185,8 +241,7 @@ VFPSTC (ARMul_State * state, unsigned type, u32 instr, u32 * value)
     return ARMul_CANT;
 }
 
-unsigned
-VFPLDC (ARMul_State * state, unsigned type, u32 instr, u32 value)
+unsigned VFPLDC(ARMul_State* state, unsigned type, u32 instr, u32 value)
 {
     /* LDC{L}<c> <coproc>,<CRd>,[<Rn>] */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -204,10 +259,19 @@ VFPLDC (ARMul_State * state, unsigned type, u32 instr, u32 value)
         DEBUG("In %s, UNDEFINED\n", __FUNCTION__);
         exit(-1);
     }
-    if (CoProc == 10 || CoProc == 11) {
-#define VFP_LDC_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_LDC_TRANS
+    if (CoProc == 10 || CoProc == 11)
+    {
+        if (P == 1 && W == 0)
+        {
+            return VLDR(state, type, instr, value);
+        }
+
+        if (P == 0 && U == 1 && W == 1 && Rn == 0xD)
+        {
+            return VPOP(state, type, instr, value);
+        }
+
+        return VLDM(state, type, instr, value);
     }
     DEBUG("Can't identify %x, CoProc %x, CRd %x, Rn %x, imm8 %x, P %x, U %x, D %x, W %x\n",
           instr, CoProc, CRd, Rn, imm8, P, U, D, W);
@@ -215,8 +279,7 @@ VFPLDC (ARMul_State * state, unsigned type, u32 instr, u32 value)
     return ARMul_CANT;
 }
 
-unsigned
-VFPCDP (ARMul_State * state, unsigned type, u32 instr)
+unsigned VFPCDP(ARMul_State* state, unsigned type, u32 instr)
 {
     /* CDP<c> <coproc>,<opc1>,<CRd>,<CRn>,<CRm>,<opc2> */
     int CoProc = BITS (8, 11); /* 10 or 11 */
@@ -275,10 +338,83 @@ VFPCDP (ARMul_State * state, unsigned type, u32 instr)
 
     /* CRn/opc1 CRm/opc2 */
 
-    if (CoProc == 10 || CoProc == 11) {
-#define VFP_CDP_TRANS
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_CDP_TRANS
+    if (CoProc == 10 || CoProc == 11)
+    {
+        if ((OPC_1 & 0xB) == 0 && (OPC_2 & 0x2) == 0)
+            DBG("VMLA :\n");
+
+        if ((OPC_1 & 0xB) == 0 && (OPC_2 & 0x2) == 2)
+            DBG("VMLS :\n");
+
+        if ((OPC_1 & 0xB) == 1 && (OPC_2 & 0x2) == 2)
+            DBG("VNMLA :\n");
+
+        if ((OPC_1 & 0xB) == 1 && (OPC_2 & 0x2) == 0)
+            DBG("VNMLS :\n");
+
+        if ((OPC_1 & 0xB) == 2 && (OPC_2 & 0x2) == 2)
+            DBG("VNMUL :\n");
+
+        if ((OPC_1 & 0xB) == 2 && (OPC_2 & 0x2) == 0)
+            DBG("VMUL :\n");
+
+        if ((OPC_1 & 0xB) == 3 && (OPC_2 & 0x2) == 0)
+            DBG("VADD :\n");
+
+        if ((OPC_1 & 0xB) == 3 && (OPC_2 & 0x2) == 2)
+            DBG("VSUB :\n");
+
+        if ((OPC_1 & 0xB) == 0xA && (OPC_2 & 0x2) == 0)
+            DBG("VDIV :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && BITS(4, 7) == 0)
+        {
+            unsigned int single   = BIT(8) == 0;
+            unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+            unsigned int imm;
+            instr = BITS(16, 19) << 4 | BITS(0, 3); /* FIXME dirty workaround to get a correct imm */
+
+            if (single)
+                imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0x1f : 0)<<25 | BITS(0, 5)<<19;
+            else
+                imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0xff : 0)<<22 | BITS(0, 5)<<16;
+
+            VMOVI(state, single, d, imm);
+            return ARMul_DONE;
+        }
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 0 && (OPC_2 & 0x6) == 0x2)
+        {
+            unsigned int single   = BIT(8) == 0;
+            unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+            unsigned int m        = (single ? BITS( 0, 3)<<1 | BIT( 5) : BITS( 0, 3) | BIT( 5)<<4);;
+            VMOVR(state, single, d, m);
+            return ARMul_DONE;
+        }
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 0 && (OPC_2 & 0x7) == 6)
+            DBG("VABS :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 1 && (OPC_2 & 0x7) == 2)
+            DBG("VNEG :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 1 && (OPC_2 & 0x7) == 6)
+            DBG("VSQRT :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 4 && (OPC_2 & 0x2) == 2)
+            DBG("VCMP(1) :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 5 && (OPC_2 & 0x2) == 2 && CRm == 0)
+            DBG("VCMP(2) :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn == 7 && (OPC_2 & 0x6) == 6)
+            DBG("VCVT(BDS) :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn >= 0xA && (OPC_2 & 0x2) == 2)
+            DBG("VCVT(BFF) :\n");
+
+        if ((OPC_1 & 0xB) == 0xB && CRn > 7 && (OPC_2 & 0x2) == 2)
+            DBG("VCVT(BFI) :\n");
 
         int exceptions = 0;
         if (CoProc == 10)
@@ -296,23 +432,93 @@ VFPCDP (ARMul_State * state, unsigned type, u32 instr)
 
 
 /* ----------- MRC ------------ */
-#define VFP_MRC_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MRC_IMPL
-
-#define VFP_MRRC_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MRRC_IMPL
-
+void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value)
+{
+    DBG("VMOV(BRS) :\n");
+    if (to_arm)
+    {
+        DBG("\tr%d <= s%d=[%x]\n", t, n, state->ExtReg[n]);
+        *value = state->ExtReg[n];
+    }
+    else
+    {
+        DBG("\ts%d <= r%d=[%x]\n", n, t, *value);
+        state->ExtReg[n] = *value;
+    }
+}
+void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value)
+{
+    DBG("VMRS :");
+    if (reg == 1)
+    {
+        if (Rt != 15)
+        {
+            *value = state->VFP[VFP_OFFSET(VFP_FPSCR)];
+            DBG("\tr%d <= fpscr[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
+        }
+        else
+        {
+            *value = state->VFP[VFP_OFFSET(VFP_FPSCR)] ;
+            DBG("\tflags <= fpscr[%1xxxxxxxx]\n", state->VFP[VFP_OFFSET(VFP_FPSCR)]>>28);
+        }
+    }
+    else
+    {
+        switch (reg)
+        {
+            case 0:
+                *value = state->VFP[VFP_OFFSET(VFP_FPSID)];
+                DBG("\tr%d <= fpsid[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPSID)]);
+                break;
+            case 6:
+                /* MVFR1, VFPv3 only ? */
+                DBG("\tr%d <= MVFR1 unimplemented\n", Rt);
+                break;
+            case 7:
+                /* MVFR0, VFPv3 only? */
+                DBG("\tr%d <= MVFR0 unimplemented\n", Rt);
+                break;
+            case 8:
+                *value = state->VFP[VFP_OFFSET(VFP_FPEXC)];
+                DBG("\tr%d <= fpexc[%08x]\n", Rt, state->VFP[VFP_OFFSET(VFP_FPEXC)]);
+                break;
+            default:
+                DBG("\tSUBARCHITECTURE DEFINED\n");
+                break;
+        }
+    }
+}
+void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2)
+{
+    DBG("VMOV(BRRD) :\n");
+    if (to_arm)
+    {
+        DBG("\tr[%d-%d] <= s[%d-%d]=[%x-%x]\n", t2, t, n*2+1, n*2, state->ExtReg[n*2+1], state->ExtReg[n*2]);
+        *value2 = state->ExtReg[n*2+1];
+        *value1 = state->ExtReg[n*2];
+    }
+    else
+    {
+        DBG("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n*2+1, n*2, t2, t, *value2, *value1);
+        state->ExtReg[n*2+1] = *value2;
+        state->ExtReg[n*2] = *value1;
+    }
+}
 
 /* ----------- MCR ------------ */
-#define VFP_MCR_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MCR_IMPL
-
-#define VFP_MCRR_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_MCRR_IMPL
+void VMSR(ARMul_State* state, ARMword reg, ARMword Rt)
+{
+    if (reg == 1)
+    {
+        DBG("VMSR :\tfpscr <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+        state->VFP[VFP_OFFSET(VFP_FPSCR)] = state->Reg[Rt];
+    }
+    else if (reg == 8)
+    {
+        DBG("VMSR :\tfpexc <= r%d=[%x]\n", Rt, state->Reg[Rt]);
+        state->VFP[VFP_OFFSET(VFP_FPEXC)] = state->Reg[Rt];
+    }
+}
 
 /* Memory operation are not inlined, as old Interpreter and Fast interpreter
    don't have the same memory operation interface.
@@ -322,21 +528,342 @@ VFPCDP (ARMul_State * state, unsigned type, u32 instr)
    of vfp instructions in old interpreter and fast interpreter are separate. */
 
 /* ----------- STC ------------ */
-#define VFP_STC_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_STC_IMPL
+int VSTR(ARMul_State* state, int type, ARMword instr, ARMword* value)
+{
+    static int i = 0;
+    static int single_reg, add, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_reg = BIT(8) == 0;	/* Double precision */
+        add = BIT(23);		/* */
+        imm32 = BITS(0,7)<<2;	/* may not be used */
+        d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        n = BITS(16, 19);	/* destination register */
 
+        DBG("VSTR :\n");
+
+        i = 0;
+        regs = 1;
+
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_reg)
+        {
+            *value = state->ExtReg[d+i];
+            DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d+i]);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            *value = state->ExtReg[d*2+i];
+            DBG("\taddr[?] <= s[%d]=[%x]\n", d*2+i, state->ExtReg[d*2+i]);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+
+    return -1;
+}
+int VPUSH(ARMul_State* state, int type, ARMword instr, ARMword* value)
+{
+    static int i = 0;
+    static int single_regs, add, wback, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_regs = BIT(8) == 0;	/* Single precision */
+        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        imm32 = BITS(0,7)<<2;	/* may not be used */
+        regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FSTMX if regs is odd */
+
+        DBG("VPUSH :\n");
+        DBG("\tsp[%x]", state->Reg[R13]);
+        state->Reg[R13] = state->Reg[R13] - imm32;
+        DBG("=>[%x]\n", state->Reg[R13]);
+
+        i = 0;
+
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_regs)
+        {
+            *value = state->ExtReg[d + i];
+            DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            *value = state->ExtReg[d*2 + i];
+            DBG("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+
+    return -1;
+}
+int VSTM(ARMul_State* state, int type, ARMword instr, ARMword* value)
+{
+    static int i = 0;
+    static int single_regs, add, wback, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_regs = BIT(8) == 0;	/* Single precision */
+        add = BIT(23);		/* */
+        wback = BIT(21);	/* write-back */
+        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        n = BITS(16, 19);	/* destination register */
+        imm32 = BITS(0,7) * 4;	/* may not be used */
+        regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FSTMX if regs is odd */
+
+        DBG("VSTM :\n");
+
+        if (wback) {
+            state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
+            DBG("\twback r%d[%x]\n", n, state->Reg[n]);
+        }
+
+        i = 0;
+
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_regs)
+        {
+            *value = state->ExtReg[d + i];
+            DBG("\taddr[?] <= s%d=[%x]\n", d+i, state->ExtReg[d + i]);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            *value = state->ExtReg[d*2 + i];
+            DBG("\taddr[?] <= s[%d]=[%x]\n", d*2 + i, state->ExtReg[d*2 + i]);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+
+    return -1;
+}
 
 /* ----------- LDC ------------ */
-#define VFP_LDC_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_LDC_IMPL
+int VPOP(ARMul_State* state, int type, ARMword instr, ARMword value)
+{
+    static int i = 0;
+    static int single_regs, add, wback, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_regs = BIT(8) == 0;	/* Single precision */
+        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        imm32 = BITS(0,7)<<2;	/* may not be used */
+        regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FLDMX if regs is odd */
 
+        DBG("VPOP :\n");
+        DBG("\tsp[%x]", state->Reg[R13]);
+        state->Reg[R13] = state->Reg[R13] + imm32;
+        DBG("=>[%x]\n", state->Reg[R13]);
+
+        i = 0;
+
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_TRANSFER)
+    {
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_regs)
+        {
+            state->ExtReg[d + i] = value;
+            DBG("\ts%d <= [%x]\n", d + i, value);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            state->ExtReg[d*2 + i] = value;
+            DBG("\ts%d <= [%x]\n", d*2 + i, value);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+
+    return -1;
+}
+int VLDR(ARMul_State* state, int type, ARMword instr, ARMword value)
+{
+    static int i = 0;
+    static int single_reg, add, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_reg = BIT(8) == 0;	/* Double precision */
+        add = BIT(23);		/* */
+        imm32 = BITS(0,7)<<2;	/* may not be used */
+        d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        n = BITS(16, 19);	/* destination register */
+
+        DBG("VLDR :\n");
+
+        i = 0;
+        regs = 1;
+        
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_TRANSFER)
+    {
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_reg)
+        {
+            state->ExtReg[d+i] = value;
+            DBG("\ts%d <= [%x]\n", d+i, value);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            state->ExtReg[d*2+i] = value;
+            DBG("\ts[%d] <= [%x]\n", d*2+i, value);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+
+    return -1;
+}
+int VLDM(ARMul_State* state, int type, ARMword instr, ARMword value)
+{
+    static int i = 0;
+    static int single_regs, add, wback, d, n, imm32, regs;
+    if (type == ARMul_FIRST)
+    {
+        single_regs = BIT(8) == 0;	/* Single precision */
+        add = BIT(23);		/* */
+        wback = BIT(21);	/* write-back */
+        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
+        n = BITS(16, 19);	/* destination register */
+        imm32 = BITS(0,7) * 4;	/* may not be used */
+        regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FLDMX if regs is odd */
+        
+        DBG("VLDM :\n");
+        
+        if (wback) {
+            state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
+            DBG("\twback r%d[%x]\n", n, state->Reg[n]);
+        }
+
+        i = 0;
+
+        return ARMul_DONE;
+    }
+    else if (type == ARMul_DATA)
+    {
+        if (single_regs)
+        {
+            state->ExtReg[d + i] = value;
+            DBG("\ts%d <= [%x] addr[?]\n", d+i, state->ExtReg[d + i]);
+            i++;
+            if (i < regs)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+        else
+        {
+            /* FIXME Careful of endianness, may need to rework this */
+            state->ExtReg[d*2 + i] = value;
+            DBG("\ts[%d] <= [%x] addr[?]\n", d*2 + i, state->ExtReg[d*2 + i]);
+            i++;
+            if (i < regs*2)
+                return ARMul_INC;
+            else
+                return ARMul_DONE;
+        }
+    }
+	
+    return -1;
+}
 
 /* ----------- CDP ------------ */
-#define VFP_CDP_IMPL
-#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-#undef VFP_CDP_IMPL
+void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm)
+{
+    DBG("VMOV(I) :\n");
+
+    if (single)
+    {
+        DBG("\ts%d <= [%x]\n", d, imm);
+        state->ExtReg[d] = imm;
+    }
+    else
+    {
+        /* Check endian please */
+        DBG("\ts[%d-%d] <= [%x-%x]\n", d*2+1, d*2, imm, 0);
+        state->ExtReg[d*2+1] = imm;
+        state->ExtReg[d*2] = 0;
+    }
+}
+void VMOVR(ARMul_State* state, ARMword single, ARMword d, ARMword m)
+{
+    DBG("VMOV(R) :\n");
+
+    if (single)
+    {
+        DBG("\ts%d <= s%d[%x]\n", d, m, state->ExtReg[m]);
+        state->ExtReg[d] = state->ExtReg[m];
+    }
+    else
+    {
+        /* Check endian please */
+        DBG("\ts[%d-%d] <= s[%d-%d][%x-%x]\n", d*2+1, d*2, m*2+1, m*2, state->ExtReg[m*2+1], state->ExtReg[m*2]);
+        state->ExtReg[d*2+1] = state->ExtReg[m*2+1];
+        state->ExtReg[d*2] = state->ExtReg[m*2];
+    }
+}
 
 /* Miscellaneous functions */
 int32_t vfp_get_float(arm_core_t* state, unsigned int reg)
@@ -365,8 +892,6 @@ void vfp_put_double(arm_core_t* state, uint64_t val, unsigned int reg)
     state->ExtReg[reg*2] = (uint32_t) (val & 0xffffffff);
     state->ExtReg[reg*2+1] = (uint32_t) (val>>32);
 }
-
-
 
 /*
  * Process bitmask of exception conditions. (from vfpmodule.c)

@@ -27,6 +27,12 @@
 
 #include "core/arm/skyeye_common/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
+#define VFP_DEBUG_TRANSLATE DBG("in func %s, %x\n", __FUNCTION__, inst);
+#define VFP_DEBUG_UNIMPLEMENTED(x) printf("in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
+#define VFP_DEBUG_UNTESTED(x) printf("in func %s, " #x " untested\n", __FUNCTION__);
+#define CHECK_VFP_ENABLED
+#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
+
 unsigned VFPInit (ARMul_State *state);
 unsigned VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value);
 unsigned VFPMCR (ARMul_State * state, unsigned type, ARMword instr, ARMword value);

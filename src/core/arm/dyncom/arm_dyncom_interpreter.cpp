@@ -3363,9 +3363,40 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index)    { UN
 typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
 
 const transop_fp_t arm_instruction_trans[] = {
-	#define VFP_INTERPRETER_TABLE
-	#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-	#undef VFP_INTERPRETER_TABLE
+	INTERPRETER_TRANSLATE(vmla),
+	INTERPRETER_TRANSLATE(vmls),
+	INTERPRETER_TRANSLATE(vnmla),
+	INTERPRETER_TRANSLATE(vnmla),
+	INTERPRETER_TRANSLATE(vnmls),
+	INTERPRETER_TRANSLATE(vnmul),
+	INTERPRETER_TRANSLATE(vmul),
+	INTERPRETER_TRANSLATE(vadd),
+	INTERPRETER_TRANSLATE(vsub),
+	INTERPRETER_TRANSLATE(vdiv),
+	INTERPRETER_TRANSLATE(vmovi),
+	INTERPRETER_TRANSLATE(vmovr),
+	INTERPRETER_TRANSLATE(vabs),
+	INTERPRETER_TRANSLATE(vneg),
+	INTERPRETER_TRANSLATE(vsqrt),
+	INTERPRETER_TRANSLATE(vcmp),
+	INTERPRETER_TRANSLATE(vcmp2),
+	INTERPRETER_TRANSLATE(vcvtbds),
+	INTERPRETER_TRANSLATE(vcvtbff),
+	INTERPRETER_TRANSLATE(vcvtbfi),
+	INTERPRETER_TRANSLATE(vmovbrs),
+	INTERPRETER_TRANSLATE(vmsr),
+	INTERPRETER_TRANSLATE(vmovbrc),
+	INTERPRETER_TRANSLATE(vmrs),
+	INTERPRETER_TRANSLATE(vmovbcr),
+	INTERPRETER_TRANSLATE(vmovbrrss),
+	INTERPRETER_TRANSLATE(vmovbrrd),
+	INTERPRETER_TRANSLATE(vstr),
+	INTERPRETER_TRANSLATE(vpush),
+	INTERPRETER_TRANSLATE(vstm),
+	INTERPRETER_TRANSLATE(vpop),
+	INTERPRETER_TRANSLATE(vldr),
+	INTERPRETER_TRANSLATE(vldm),
+	
 	INTERPRETER_TRANSLATE(srs),
 	INTERPRETER_TRANSLATE(rfe),
 	INTERPRETER_TRANSLATE(bkpt),
@@ -4206,10 +4237,12 @@ unsigned InterpreterMainLoop(ARMul_State* state)
     // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback
     // to a clunky switch statement.
 #if defined __GNUC__ || defined __clang__
-    void *InstLabel[] = {
-		#define VFP_INTERPRETER_LABEL
-		#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
-		#undef VFP_INTERPRETER_LABEL
+	void *InstLabel[] = {
+		&&VMLA_INST, &&VMLS_INST, &&VNMLA_INST, &&VNMLA_INST, &&VNMLS_INST, &&VNMUL_INST, &&VMUL_INST, &&VADD_INST, &&VSUB_INST,
+		&&VDIV_INST, &&VMOVI_INST, &&VMOVR_INST, &&VABS_INST, &&VNEG_INST, &&VSQRT_INST, &&VCMP_INST, &&VCMP2_INST, &&VCVTBDS_INST,
+		&&VCVTBFF_INST, &&VCVTBFI_INST, &&VMOVBRS_INST, &&VMSR_INST, &&VMOVBRC_INST, &&VMRS_INST, &&VMOVBCR_INST, &&VMOVBRRSS_INST,
+		&&VMOVBRRD_INST, &&VSTR_INST, &&VPUSH_INST, &&VSTM_INST, &&VPOP_INST, &&VLDR_INST, &&VLDM_INST,
+
 		&&SRS_INST,&&RFE_INST,&&BKPT_INST,&&BLX_INST,&&CPS_INST,&&PLD_INST,&&SETEND_INST,&&CLREX_INST,&&REV16_INST,&&USAD8_INST,&&SXTB_INST,
 		&&UXTB_INST,&&SXTH_INST,&&SXTB16_INST,&&UXTH_INST,&&UXTB16_INST,&&CPY_INST,&&UXTAB_INST,&&SSUB8_INST,&&SHSUB8_INST,&&SSUBADDX_INST,
 		&&STREX_INST,&&STREXB_INST,&&SWP_INST,&&SWPB_INST,&&SSUB16_INST,&&SSAT16_INST,&&SHSUBADDX_INST,&&QSUBADDX_INST,&&SHADDSUBX_INST,
@@ -4243,7 +4276,7 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 	DISPATCH:
 	{
 		if (!cpu->NirqSig) {
-                	if (!(cpu->Cpsr & 0x80)) {
+			if (!(cpu->Cpsr & 0x80)) {
 				goto END;
 			}
 		}
