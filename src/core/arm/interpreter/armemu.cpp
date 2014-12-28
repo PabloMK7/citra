@@ -6422,79 +6422,56 @@ L_stm_s_takeabort:
 				return 1;
 			}
 			break;
-		case 0x6e: {
-			ARMword Rm;
-			int ror = -1;
+		case 0x6e: // USAT, USAT16, UXTB, and UXTAB
+		{
+			const u8 op2 = BITS(5, 7);
 
-			switch (BITS(4, 11)) {
-				case 0x07:
-					ror = 0;
-					break;
-				case 0x47:
-					ror = 8;
-					break;
-				case 0x87:
-					ror = 16;
-					break;
-				case 0xc7:
-					ror = 24;
-					break;
-
-				case 0x01:
-				case 0xf3:
-					//ichfly
-					//USAT16
-				{
-					const u8 rd_idx = BITS(12, 15);
-					const u8 rn_idx = BITS(0, 3);
-					const u8 num_bits = BITS(16, 19);
-					const s16 max = 0xFFFF >> (16 - num_bits);
-					s16 rn_lo = (state->Reg[rn_idx]);
-					s16 rn_hi = (state->Reg[rn_idx] >> 16);
-					
-					if (max < rn_lo) {
-						rn_lo = max;
-						SETQ;
-					} else if (rn_lo < 0) {
-						rn_lo = 0;
-						SETQ;
-					}
-
-					if (max < rn_hi) {
-						rn_hi = max;
-						SETQ;
-					} else if (rn_hi < 0) {
-						rn_hi = 0;
-						SETQ;
-					}
-
-					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi << 16) & 0xFFFF);
-					return 1;
+			// USAT16
+			if (op2 == 0x01) {
+				const u8 rd_idx = BITS(12, 15);
+				const u8 rn_idx = BITS(0, 3);
+				const u8 num_bits = BITS(16, 19);
+				const s16 max = 0xFFFF >> (16 - num_bits);
+				s16 rn_lo = (state->Reg[rn_idx]);
+				s16 rn_hi = (state->Reg[rn_idx] >> 16);
+				
+				if (max < rn_lo) {
+					rn_lo = max;
+					SETQ;
+				} else if (rn_lo < 0) {
+					rn_lo = 0;
+					SETQ;
 				}
-
-				default:
-					break;
-			}
-
-			if (ror == -1) {
-				if (BITS(4, 6) == 0x7) {
-					printf("Unhandled v6 insn: usat\n");
-					return 0;
+				
+				if (max < rn_hi) {
+					rn_hi = max;
+					SETQ;
+				} else if (rn_hi < 0) {
+					rn_hi = 0;
+					SETQ;
 				}
-				break;
+				
+				state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi << 16) & 0xFFFF);
+				return 1;
 			}
-
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF);
-
-			if (BITS(16, 19) == 0xf)
+			else if (op2 == 0x03) {
+				const u8 rotate = BITS(10, 11) * 8;
+				const u32 rm = ((state->Reg[BITS(0, 3)] >> rotate) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - rotate)) & 0xFF) & 0xFF);
+				
+				if (BITS(16, 19) == 0xf)
 				/* UXTB */
-				state->Reg[BITS(12, 15)] = Rm;
-			else
+					state->Reg[BITS(12, 15)] = rm;
+				else
 				/* UXTAB */
-				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
+					state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + rm;
 
-			return 1;
+				return 1;
+			}
+			else {
+				printf("Unimplemented op: USAT");
+			}
 		}
+		break;
 
 		case 0x6f: // UXTH, UXTAH, and REVSH.
 		{
