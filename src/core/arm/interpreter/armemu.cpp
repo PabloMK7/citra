@@ -6496,58 +6496,33 @@ L_stm_s_takeabort:
 			return 1;
 		}
 
-		case 0x6f: {
-			ARMword Rm;
-			int ror = -1;
+		case 0x6f: // UXTH, UXTAH, and REVSH.
+		{
+			const u8 op2 = BITS(5, 7);
 
-			switch (BITS(4, 11)) {
-				case 0x07:
-					ror = 0;
-					break;
-				case 0x47:
-					ror = 8;
-					break;
-				case 0x87:
-					ror = 16;
-					break;
-				case 0xc7:
-					ror = 24;
-					break;
+			// REVSH
+			if (op2 == 0x05) {
+				DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00) >> 8);
+				if (DEST & 0x8000)
+					DEST |= 0xffff0000;
+				return 1;
+			}
+			// UXTH and UXTAH
+			else if (op2 == 0x03) {
+				const u8 rotate = BITS(10, 11) * 8;
+				const ARMword rm = ((state->Reg[BITS(0, 3)] >> rotate) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - rotate)) & 0xFFFF) & 0xFFFF);
 
-				case 0xfb: // REVSH
-				{
-					DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00) >> 8);
-					if (DEST & 0x8000)
-						DEST |= 0xffff0000;
-					return 1;
+				// UXTH
+				if (BITS(16, 19) == 0xf) {
+					state->Reg[BITS(12, 15)] = rm;
 				}
-				default:
-					break;
+				// UXTAH
+				else {
+					state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + rm;
+				}
+
+				return 1;
 			}
-
-			if (ror == -1)
-				break;
-
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF);
-
-			/* UXT */
-			/* state->Reg[BITS (12, 15)] = Rm; */
-			/* dyf add */
-			if (BITS(16, 19) == 0xf) {
-				state->Reg[BITS(12, 15)] = Rm;
-			}
-			else {
-				/* UXTAH */
-				/* state->Reg[BITS (12, 15)] = state->Reg [BITS (16, 19)] + Rm; */
-				//            printf("rd is %x rn is %x rm is %x rotate is %x\n", state->Reg[BITS (12, 15)], state->Reg[BITS (16, 19)]
-				//                   , Rm, BITS(10, 11));
-				//            printf("icounter is %lld\n", state->NumInstrs);
-				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
-				//        printf("rd is %x\n", state->Reg[BITS (12, 15)]);
-				//        exit(-1);
-			}
-
-			return 1;
 		}
         case 0x70:
             // ichfly
