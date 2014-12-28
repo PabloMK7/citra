@@ -1427,6 +1427,13 @@ typedef struct _blx_1_thumb {
 	unsigned int instr;
 }blx_1_thumb;
 
+typedef struct _pkh_inst {
+	u32 Rm;
+	u32 Rn;
+	u32 Rd;
+	u8 imm;
+} pkh_inst;
+
 typedef arm_inst * ARM_INST_PTR;
 
 #define CACHE_BUFFER_SIZE	(64 * 1024 * 2000)
@@ -2376,8 +2383,30 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
 	}
 	return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("PKHBT"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(pkhtb)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("PKHTB"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index)
+{
+	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(pkh_inst));
+	pkh_inst *inst_cream = (pkh_inst *)inst_base->component;
+
+	inst_base->cond = BITS(inst, 28, 31);
+	inst_base->idx = index;
+	inst_base->br = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rd = BITS(inst, 12, 15);
+	inst_cream->Rn = BITS(inst, 16, 19);
+	inst_cream->Rm = BITS(inst, 0, 3);
+	inst_cream->imm = BITS(inst, 7, 11);
+
+	return inst_base;
+}
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(pkhtb)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(pkhbt)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 {
 	arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(pld_inst));
@@ -5659,8 +5688,34 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		FETCH_INST;
 		GOTO_NEXT_INST;
 	}
+
 	PKHBT_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			pkh_inst *inst_cream = (pkh_inst *)inst_base->component;
+			RD = (RN & 0xFFFF) | ((RM << inst_cream->imm) & 0xFFFF0000);
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(pkh_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	PKHTB_INST:
+	{
+		INC_ICOUNTER;
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			pkh_inst *inst_cream = (pkh_inst *)inst_base->component;
+			int shift_imm = inst_cream->imm ? inst_cream->imm : 31;
+			RD = ((static_cast<s32>(RM) >> shift_imm) & 0xFFFF) | (RN & 0xFFFF0000);
+		}
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(pkh_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	PLD_INST:
 	{
 		INC_ICOUNTER;

@@ -3100,7 +3100,6 @@ mainswitch:
                     break;
 
                 case 0x68:	/* Store Word, No WriteBack, Post Inc, Reg.  */
-                    //ichfly PKHBT PKHTB todo check this
                     if ((instr & 0x70) == 0x10) { //pkhbt
                         u8 idest = BITS(12, 15);
                         u8 rfis = BITS(16, 19);
@@ -3109,18 +3108,11 @@ mainswitch:
                         state->Reg[idest] = (state->Reg[rfis] & 0xFFFF) | ((state->Reg[rlast] << ishi) & 0xFFFF0000);
                         break;
                     } else if ((instr & 0x70) == 0x50) { //pkhtb
-                        const u8 rd_idx = BITS(12, 15);
-                        const u8 rn_idx = BITS(16, 19);
-                        const u8 rm_idx = BITS(0, 3);
-                        const u8 imm5 = BITS(7, 11);
-
-                        ARMword val;
-                        if (imm5 >= 32)
-                            val = (state->Reg[rm_idx] >> 31);
-                        else
-                            val = (state->Reg[rm_idx] >> imm5);
-
-                        state->Reg[rd_idx] = (val & 0xFFFF) | ((state->Reg[rn_idx]) & 0xFFFF0000);
+                        u8 rd_idx = BITS(12, 15);
+                        u8 rn_idx = BITS(16, 19);
+                        u8 rm_idx = BITS(0, 3);
+                        u8 imm5 = BITS(7, 11) ? BITS(7, 11) : 31;
+                        state->Reg[rd_idx] = ((static_cast<s32>(state->Reg[rm_idx]) >> imm5) & 0xFFFF) | ((state->Reg[rn_idx]) & 0xFFFF0000);
                         break;
                     } else if (BIT (4)) {
 #ifdef MODE32
