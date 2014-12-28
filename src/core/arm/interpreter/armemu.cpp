@@ -6272,84 +6272,61 @@ L_stm_s_takeabort:
                 return 1;
             }
         }
-            printf("Unhandled v6 insn: pkh/sxtab/selsxtb\n");
-            break;
-		case 0x6a: {
-			ARMword Rm;
-			int ror = -1;
+        printf("Unhandled v6 insn: pkh/sxtab/selsxtb\n");
+        break;
 
-			switch (BITS(4, 11)) {
-				case 0x07:
-					ror = 0;
-					break;
-				case 0x47:
-					ror = 8;
-					break;
-				case 0x87:
-					ror = 16;
-					break;
-				case 0xc7:
-					ror = 24;
-					break;
+		case 0x6a: // SSAT, SSAT16, SXTB, and SXTAB
+		{
+			const u8 op2 = BITS(5, 7);
 
-				case 0x01:
-				case 0xf3:
-					//ichfly
-					//SSAT16
-				{
-					const u8 rd_idx = BITS(12, 15);
-					const u8 rn_idx = BITS(0, 3);
-					const u8 num_bits = BITS(16, 19) + 1;
-					const s16 min = -(0x8000 >> (16 - num_bits));
-					const s16 max = (0x7FFF >> (16 - num_bits));
-					s16 rn_lo = (state->Reg[rn_idx]);
-					s16 rn_hi = (state->Reg[rn_idx] >> 16);
+			// SSAT16
+			if (op2 == 0x01) {
+				const u8 rd_idx = BITS(12, 15);
+				const u8 rn_idx = BITS(0, 3);
+				const u8 num_bits = BITS(16, 19) + 1;
+				const s16 min = -(0x8000 >> (16 - num_bits));
+				const s16 max = (0x7FFF >> (16 - num_bits));
+				s16 rn_lo = (state->Reg[rn_idx]);
+				s16 rn_hi = (state->Reg[rn_idx] >> 16);
 
-					if (rn_lo > max) {
-						rn_lo = max;
-						SETQ;
-					} else if (rn_lo < min) {
-						rn_lo = min;
-						SETQ;
-					}
-
-					if (rn_hi > max) {
-						rn_hi = max;
-						SETQ;
-					} else if (rn_hi < min) {
-						rn_hi = min;
-						SETQ;
-					}
-
-					state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi & 0xFFFF) << 16);
-					return 1;
+				if (rn_lo > max) {
+					rn_lo = max;
+					SETQ;
+				} else if (rn_lo < min) {
+					rn_lo = min;
+					SETQ;
 				}
 
-				default:
-					break;
-			}
-
-			if (ror == -1) {
-				if (BITS(4, 6) == 0x7) {
-					printf("Unhandled v6 insn: ssat\n");
-					return 0;
+				if (rn_hi > max) {
+					rn_hi = max;
+					SETQ;
+				} else if (rn_hi < min) {
+					rn_hi = min;
+					SETQ;
 				}
-				break;
+
+				state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi & 0xFFFF) << 16);
+				return 1;
 			}
+			else if (op2 == 0x03) {
+				const u8 rotation = BITS(10, 11) * 8;
+				u32 rm = ((state->Reg[BITS(0, 3)] >> rotation) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - rotation)) & 0xFF) & 0xFF);
+				if (rm & 0x80)
+					rm |= 0xffffff00;
+	
+				// SXTB, otherwise SXTAB
+				if (BITS(16, 19) == 0xf)
+					state->Reg[BITS(12, 15)] = rm;
+				else
+					state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + rm;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFF) & 0xFF);
-			if (Rm & 0x80)
-				Rm |= 0xffffff00;
-
-			if (BITS(16, 19) == 0xf)
-				/* SXTB */
-				state->Reg[BITS(12, 15)] = Rm;
-			else
-				/* SXTAB */
-				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
-
-			return 1;
+				return 1;
+			}
+			else {
+				printf("Unimplemented op: SSAT");
+			}
 		}
+		break;
 
 		case 0x6b: // REV, REV16, SXTH, and SXTAH
 		{
