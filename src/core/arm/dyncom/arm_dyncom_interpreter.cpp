@@ -3249,12 +3249,44 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(unsigned int tinst, int index)
 	return inst_base;
 }
 
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UQADD16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UQADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UQADDSUBX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UQSUB16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UQSUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uqsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("UQSUBADDX"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd8)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm  = BITS(inst, 0, 3);
+	inst_cream->Rn  = BITS(inst, 16, 19);
+	inst_cream->Rd  = BITS(inst, 12, 15);
+	inst_cream->op1 = BITS(inst, 20, 21);
+	inst_cream->op2 = BITS(inst, 5, 7);
+
+	return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqaddsubx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub8)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsub16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uqsubaddx)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USAD8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USADA8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("USAT"); }
@@ -6876,12 +6908,69 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		goto DISPATCH;
 	}
 
-	UQADD16_INST:
 	UQADD8_INST:
+	UQADD16_INST:
 	UQADDSUBX_INST:
-	UQSUB16_INST:
 	UQSUB8_INST:
+	UQSUB16_INST:
 	UQSUBADDX_INST:
+	{
+		INC_ICOUNTER;
+
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+			const u8 op2 = inst_cream->op2;
+			const u32 rm_val = RM;
+			const u32 rn_val = RN;
+
+			u16 lo_val = 0;
+			u16 hi_val = 0;
+			
+			// UQADD16
+			if (op2 == 0x00) {
+				lo_val = ARMul_UnsignedSaturatedAdd16(rn_val & 0xFFFF, rm_val & 0xFFFF);
+				hi_val = ARMul_UnsignedSaturatedAdd16((rn_val >> 16) & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+			}
+			// UQASX
+			else if (op2 == 0x01) {
+				lo_val = ARMul_UnsignedSaturatedSub16(rn_val & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+				hi_val = ARMul_UnsignedSaturatedAdd16((rn_val >> 16) & 0xFFFF, rm_val & 0xFFFF);
+			}
+			// UQSAX
+			else if (op2 == 0x02) {
+				lo_val = ARMul_UnsignedSaturatedAdd16(rn_val & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+				hi_val = ARMul_UnsignedSaturatedSub16((rn_val >> 16) & 0xFFFF, rm_val & 0xFFFF);
+			}
+			// UQSUB16
+			else if (op2 == 0x03) {
+				lo_val = ARMul_UnsignedSaturatedSub16(rn_val & 0xFFFF, rm_val & 0xFFFF);
+				hi_val = ARMul_UnsignedSaturatedSub16((rn_val >> 16) & 0xFFFF, (rm_val >> 16) & 0xFFFF);
+			}
+			// UQADD8
+			else if (op2 == 0x04) {
+				lo_val = ARMul_UnsignedSaturatedAdd8(rn_val, rm_val) |
+				         ARMul_UnsignedSaturatedAdd8(rn_val >> 8,  rm_val >> 8) << 8;
+				hi_val = ARMul_UnsignedSaturatedAdd8(rn_val >> 16, rm_val >> 16) |
+				         ARMul_UnsignedSaturatedAdd8(rn_val >> 24, rm_val >> 24) << 8;
+			}
+			// UQSUB8
+			else {
+				lo_val = ARMul_UnsignedSaturatedSub8(rn_val, rm_val) |
+				         ARMul_UnsignedSaturatedSub8(rn_val >> 8,  rm_val >> 8) << 8;
+				hi_val = ARMul_UnsignedSaturatedSub8(rn_val >> 16, rm_val >> 16) |
+				         ARMul_UnsignedSaturatedSub8(rn_val >> 24, rm_val >> 24) << 8;
+			}
+			
+			RD = ((lo_val & 0xFFFF) | hi_val << 16);
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(generic_arm_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	USAD8_INST:
 	USADA8_INST:
 	USAT_INST:
