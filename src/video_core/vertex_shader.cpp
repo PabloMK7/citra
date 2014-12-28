@@ -469,6 +469,10 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes)
 
     // Setup output register table
     OutputVertex ret;
+    // Zero output so that attributes which aren't output won't have denormals in them, which will
+    // slow us down later.
+    memset(&ret, 0, sizeof(ret));
+
     for (int i = 0; i < 7; ++i) {
         const auto& output_register_map = registers.vs_output_attributes[i];
 
