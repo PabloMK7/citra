@@ -375,9 +375,9 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + offset * 2;
         u8 r = source_ptr[1] >> 4;
-        u8 g = source_ptr[1] & 0xFF;
+        u8 g = source_ptr[1] & 0xF;
         u8 b = source_ptr[0] >> 4;
-        u8 a = source_ptr[0] & 0xFF;
+        u8 a = source_ptr[0] & 0xF;
         r = (r << 4) | r;
         g = (g << 4) | g;
         b = (b << 4) | b;
