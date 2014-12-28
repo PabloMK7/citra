@@ -220,7 +220,7 @@ void DisassemblerWidget::OnPause()
     emu_thread.SetCpuRunning(false);
 
     // TODO: By now, the CPU might not have actually stopped...
-    if (model && Core::g_app_core) {
+    if (Core::g_app_core) {
         model->SetNextInstruction(Core::g_app_core->GetPC());
     }
 }
