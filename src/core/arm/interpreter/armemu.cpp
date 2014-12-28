@@ -6350,51 +6350,39 @@ L_stm_s_takeabort:
 
 			return 1;
 		}
-		case 0x6b:
+
+		case 0x6b: // REV, REV16, SXTH, and SXTAH
 		{
-			ARMword Rm;
-			int ror = -1;
+			const u8 op2 = BITS(5, 7);
 
-			switch (BITS(4, 11)) {
-				case 0x07:
-					ror = 0;
-					break;
-				case 0x47:
-					ror = 8;
-					break;
-				case 0x87:
-					ror = 16;
-					break;
-				case 0xc7:
-					ror = 24;
-					break;
-
-				case 0xf3: // REV
-					DEST = ((RHS & 0xFF) << 24) | ((RHS & 0xFF00)) << 8 | ((RHS & 0xFF0000) >> 8) | ((RHS & 0xFF000000) >> 24);
-					return 1;
-				case 0xfb: // REV16
-					DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00)) >> 8 | ((RHS & 0xFF0000) << 8) | ((RHS & 0xFF000000) >> 8);
-					return 1;
-				default:
-					break;
+			// REV
+			if (op2 == 0x01) {
+				DEST = ((RHS & 0xFF) << 24) | ((RHS & 0xFF00)) << 8 | ((RHS & 0xFF0000) >> 8) | ((RHS & 0xFF000000) >> 24);
+				return 1;
 			}
+			// REV16
+			else if (op2 == 0x05) {
+				DEST = ((RHS & 0xFF) << 8) | ((RHS & 0xFF00)) >> 8 | ((RHS & 0xFF0000) << 8) | ((RHS & 0xFF000000) >> 8);
+				return 1;
+			}
+			else if (op2 == 0x03) {
+				const u8 rotate = BITS(10, 11) * 8;
 
-			if (ror == -1)
-				break;
+				u32 rm = ((state->Reg[BITS(0, 3)] >> rotate) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - rotate)) & 0xFFFF) & 0xFFFF);
+				if (rm & 0x8000)
+					rm |= 0xffff0000;
 
-			Rm = ((state->Reg[BITS(0, 3)] >> ror) & 0xFFFF) | (((state->Reg[BITS(0, 3)] << (32 - ror)) & 0xFFFF) & 0xFFFF);
-			if (Rm & 0x8000)
-				Rm |= 0xffff0000;
+				// SXTH, otherwise SXTAH
+				if (BITS(16, 19) == 15)
+					state->Reg[BITS(12, 15)] = rm;
+				else
+					state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + rm;
 
-			if (BITS(16, 19) == 0xf)
-				/* SXTH */
-				state->Reg[BITS(12, 15)] = Rm;
-			else
-				/* SXTAH */
-				state->Reg[BITS(12, 15)] = state->Reg[BITS(16, 19)] + Rm;
-
-			return 1;
+				return 1;
+			}
 		}
+		break;
+
 		case 0x6c: // UXTB16 and UXTAB16
 			{
 				const u8 rm_idx = BITS(0, 3);
