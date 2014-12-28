@@ -3287,8 +3287,28 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(uqsubaddx)(unsigned int inst, int index)
 {
 	return INTERPRETER_TRANSLATE(uqadd8)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USAD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USADA8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->op1 = BITS(inst, 20, 24);
+	inst_cream->op2 = BITS(inst, 5, 7);
+	inst_cream->Rm  = BITS(inst, 8, 11);
+	inst_cream->Rn  = BITS(inst, 0, 3);
+	inst_cream->Ra  = BITS(inst, 12, 15);
+
+	return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(usada8)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("USAT"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USAT16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
@@ -6973,6 +6993,36 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 
 	USAD8_INST:
 	USADA8_INST:
+	{
+		INC_ICOUNTER;
+
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+
+			const u8 ra_idx = inst_cream->Ra;
+			const u32 rm_val = RM;
+			const u32 rn_val = RN;
+			
+			const u8 diff1 = ARMul_UnsignedAbsoluteDifference(rn_val & 0xFF, rm_val & 0xFF);
+			const u8 diff2 = ARMul_UnsignedAbsoluteDifference((rn_val >> 8) & 0xFF, (rm_val >> 8) & 0xFF);
+			const u8 diff3 = ARMul_UnsignedAbsoluteDifference((rn_val >> 16) & 0xFF, (rm_val >> 16) & 0xFF);
+			const u8 diff4 = ARMul_UnsignedAbsoluteDifference((rn_val >> 24) & 0xFF, (rm_val >> 24) & 0xFF);
+			
+			u32 finalDif = (diff1 + diff2 + diff3 + diff4);
+			
+			// Op is USADA8 if true.
+			if (ra_idx != 15)
+				finalDif += cpu->Reg[ra_idx];
+			
+			RD = finalDif;
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(generic_arm_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	USAT_INST:
 	USAT16_INST:
 	USUB16_INST:

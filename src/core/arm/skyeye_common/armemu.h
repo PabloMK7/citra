@@ -600,7 +600,6 @@ extern ARMword ARMul_SwitchMode (ARMul_State *, ARMword, ARMword);
 extern ARMword ARMul_Align (ARMul_State *, ARMword, ARMword);
 extern ARMword ARMul_SwitchMode (ARMul_State *, ARMword, ARMword);
 extern void ARMul_MSRCpsr (ARMul_State *, ARMword, ARMword);
-extern u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
 extern void ARMul_SubOverflow (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddOverflow (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddOverflowQ(ARMul_State*, ARMword, ARMword);
