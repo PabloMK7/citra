@@ -392,6 +392,15 @@ ARMul_NthReg (ARMword instr, unsigned number)
     return (bit - 1);
 }
 
+/* Unsigned sum of absolute difference */
+u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right)
+{
+	if (left > right)
+		return left - right;
+
+	return right - left;
+}
+
 /* Assigns the N and Z flags depending on the value of result.  */
 
 void

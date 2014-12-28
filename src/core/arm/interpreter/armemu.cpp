@@ -6672,10 +6672,10 @@ L_stm_s_takeabort:
                 const u32 rm_val = state->Reg[rm_idx];
                 const u32 rn_val = state->Reg[rn_idx];
 
-                const u8 diff1 = (u8)std::labs((rn_val & 0xFF) - (rm_val & 0xFF));
-                const u8 diff2 = (u8)std::labs(((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF));
-                const u8 diff3 = (u8)std::labs(((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF));
-                const u8 diff4 = (u8)std::labs(((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF));
+                const u8 diff1 = ARMul_UnsignedAbsoluteDifference(rn_val & 0xFF, rm_val & 0xFF);
+                const u8 diff2 = ARMul_UnsignedAbsoluteDifference((rn_val >> 8) & 0xFF, (rm_val >> 8) & 0xFF);
+                const u8 diff3 = ARMul_UnsignedAbsoluteDifference((rn_val >> 16) & 0xFF, (rm_val >> 16) & 0xFF);
+                const u8 diff4 = ARMul_UnsignedAbsoluteDifference((rn_val >> 24) & 0xFF, (rm_val >> 24) & 0xFF);
 
                 u32 finalDif = (diff1 + diff2 + diff3 + diff4);
 
