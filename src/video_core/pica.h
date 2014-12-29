@@ -757,6 +757,26 @@ struct float24 {
         return float24::FromFloat32(ToFloat32() - flt.ToFloat32());
     }
 
+    float24& operator *= (const float24& flt) {
+        value *= flt.ToFloat32();
+        return *this;
+    }
+
+    float24& operator /= (const float24& flt) {
+        value /= flt.ToFloat32();
+        return *this;
+    }
+
+    float24& operator += (const float24& flt) {
+        value += flt.ToFloat32();
+        return *this;
+    }
+
+    float24& operator -= (const float24& flt) {
+        value -= flt.ToFloat32();
+        return *this;
+    }
+
     float24 operator - () const {
         return float24::FromFloat32(-ToFloat32());
     }

@@ -304,7 +304,6 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
-
     // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
     // of which is composed of four 2x2 subtiles each of which is composed of four texels.
     // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
@@ -323,41 +322,39 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     // 02 03 06 07 18 19 22 23
     // 00 01 04 05 16 17 20 21
 
-    // TODO(neobrain): Not sure if this swizzling pattern is used for all textures.
-    // To be flexible in case different but similar patterns are used, we keep this
-    // somewhat inefficient code around for now.
-    int texel_index_within_tile = 0;
-    for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
-        int sub_tile_width = 1 << block_size_index;
-        int sub_tile_height = 1 << block_size_index;
+    const unsigned int block_width = 8;
+    const unsigned int block_height = 8;
 
-        int sub_tile_index = (x & sub_tile_width) << block_size_index;
-        sub_tile_index += 2 * ((y & sub_tile_height) << block_size_index);
-        texel_index_within_tile += sub_tile_index;
-    }
+    const unsigned int coarse_x = x & ~7;
+    const unsigned int coarse_y = y & ~7;
 
-    const int block_width = 8;
-    const int block_height = 8;
+    // Interleave the lower 3 bits of each coordinate to get the intra-block offsets, which are
+    // arranged in a Z-order curve. More details on the bit manipulation at:
+    // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
+    unsigned int i = (x | (y << 8)) & 0x0707; // ---- -210
+    i = (i ^ (i << 2)) & 0x1313;              // ---2 --10
+    i = (i ^ (i << 1)) & 0x1515;              // ---2 -1-0
+    i = (i | (i >> 7)) & 0x3F;
 
-    int coarse_x = (x / block_width) * block_width;
-    int coarse_y = (y / block_height) * block_height;
+    source += coarse_y * info.stride;
+    const unsigned int offset = coarse_x * block_height + i;
 
     switch (info.format) {
     case Regs::TextureFormat::RGBA8:
     {
-        const u8* source_ptr = source + coarse_x * block_height * 4 + coarse_y * info.stride + texel_index_within_tile * 4;
+        const u8* source_ptr = source + offset * 4;
         return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
     }
 
     case Regs::TextureFormat::RGB8:
     {
-        const u8* source_ptr = source + coarse_x * block_height * 3 + coarse_y * info.stride + texel_index_within_tile * 3;
+        const u8* source_ptr = source + offset * 3;
         return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
     }
 
     case Regs::TextureFormat::RGBA5551:
     {
-        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        const u16 source_ptr = *(const u16*)(source + offset * 2);
         u8 r = (source_ptr >> 11) & 0x1F;
         u8 g = ((source_ptr) >> 6) & 0x1F;
         u8 b = (source_ptr >> 1) & 0x1F;
@@ -367,7 +364,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGB565:
     {
-        const u16 source_ptr = *(const u16*)(source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2);
+        const u16 source_ptr = *(const u16*)(source + offset * 2);
         u8 r = (source_ptr >> 11) & 0x1F;
         u8 g = ((source_ptr) >> 5) & 0x3F;
         u8 b = (source_ptr) & 0x1F;
@@ -376,7 +373,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGBA4:
     {
-        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+        const u8* source_ptr = source + offset * 2;
         u8 r = source_ptr[1] >> 4;
         u8 g = source_ptr[1] & 0xFF;
         u8 b = source_ptr[0] >> 4;
@@ -390,7 +387,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA8:
     {
-        const u8* source_ptr = source + coarse_x * block_height * 2 + coarse_y * info.stride + texel_index_within_tile * 2;
+        const u8* source_ptr = source + offset * 2;
 
         // TODO: component order not verified
 
@@ -404,13 +401,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::I8:
     {
-        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+        const u8* source_ptr = source + offset;
         return { *source_ptr, *source_ptr, *source_ptr, 255 };
     }
 
     case Regs::TextureFormat::A8:
     {
-        const u8* source_ptr = source + coarse_x * block_height + coarse_y * info.stride + texel_index_within_tile;
+        const u8* source_ptr = source + offset;
 
         if (disable_alpha) {
             return { *source_ptr, *source_ptr, *source_ptr, 255 };
@@ -421,7 +418,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA4:
     {
-        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+        const u8* source_ptr = source + offset / 2;
 
         // TODO: component order not verified
 
@@ -440,7 +437,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::A4:
     {
-        const u8* source_ptr = source + coarse_x * block_height / 2 + coarse_y * info.stride + texel_index_within_tile / 2;
+        const u8* source_ptr = source + offset / 2;
 
         // TODO: component order not verified
 
