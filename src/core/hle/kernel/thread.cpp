@@ -420,7 +420,8 @@ void Reschedule() {
 
         for (Thread* thread : thread_list) {
             LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X wait_handle=0x%08X",
-                thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_object->GetHandle());
+                thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type,
+                (thread->wait_object ? thread->wait_object->GetHandle() : INVALID_HANDLE));
         }
     }
 }
