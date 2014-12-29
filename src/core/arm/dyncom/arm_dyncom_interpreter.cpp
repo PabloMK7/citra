@@ -2419,8 +2419,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 	return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QADD"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)
 {
 	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
 	generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
@@ -2438,21 +2437,28 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)
 
 	return inst_base;
 }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(qadd8)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index)
 {
-	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+	return INTERPRETER_TRANSLATE(qadd8)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDADD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDSUB"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QSUB"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QSUB8"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(qadd8)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsub16)(unsigned int inst, int index)
 {
-	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+	return INTERPRETER_TRANSLATE(qadd8)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index)
 {
-	return INTERPRETER_TRANSLATE(qadd16)(inst, index);
+	return INTERPRETER_TRANSLATE(qadd8)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
 {
@@ -5777,55 +5783,60 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 		GOTO_NEXT_INST;
 	}
 	QADD_INST:
-	QADD8_INST:
 
+	QADD8_INST:
 	QADD16_INST:
 	QADDSUBX_INST:
+	QSUB8_INST:
 	QSUB16_INST:
 	QSUBADDX_INST:
 	{
 		INC_ICOUNTER;
 		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
 			generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
-			const s16 rm_lo = (RM & 0xFFFF);
-			const s16 rm_hi = ((RM >> 16) & 0xFFFF);
-			const s16 rn_lo = (RN & 0xFFFF);
-			const s16 rn_hi = ((RN >> 16) & 0xFFFF);
+			const u16 rm_lo = (RM & 0xFFFF);
+			const u16 rm_hi = ((RM >> 16) & 0xFFFF);
+			const u16 rn_lo = (RN & 0xFFFF);
+			const u16 rn_hi = ((RN >> 16) & 0xFFFF);
 			const u8 op2    = inst_cream->op2;
 
-			s32 lo_result = 0;
-			s32 hi_result = 0;
+			u16 lo_result = 0;
+			u16 hi_result = 0;
 
 			// QADD16
 			if (op2 == 0x00) {
-				lo_result = (rn_lo + rm_lo);
-				hi_result = (rn_hi + rm_hi);
+				lo_result = ARMul_SignedSaturatedAdd16(rn_lo, rm_lo);
+				hi_result = ARMul_SignedSaturatedAdd16(rn_hi, rm_hi);
 			}
 			// QASX
 			else if (op2 == 0x01) {
-				lo_result = (rn_lo - rm_hi);
-				hi_result = (rn_hi + rm_lo);
+				lo_result = ARMul_SignedSaturatedSub16(rn_lo, rm_hi);
+				hi_result = ARMul_SignedSaturatedAdd16(rn_hi, rm_lo);
 			}
 			// QSAX
 			else if (op2 == 0x02) {
-				lo_result = (rn_lo + rm_hi);
-				hi_result = (rn_hi - rm_lo);
+				lo_result = ARMul_SignedSaturatedAdd16(rn_lo, rm_hi);
+				hi_result = ARMul_SignedSaturatedSub16(rn_hi, rm_lo);
 			}
 			// QSUB16
 			else if (op2 == 0x03) {
-				lo_result = (rn_lo - rm_lo);
-				hi_result = (rn_hi - rm_hi);
+				lo_result = ARMul_SignedSaturatedSub16(rn_lo, rm_lo);
+				hi_result = ARMul_SignedSaturatedSub16(rn_hi, rm_hi);
 			}
-
-			if (lo_result > 0x7FFF)
-				lo_result = 0x7FFF;
-			else if (lo_result < -0x8000)
-				lo_result = -0x8000;
-
-			if (hi_result > 0x7FFF)
-				hi_result = 0x7FFF;
-			else if (hi_result < -0x8000)
-				hi_result = -0x8000;
+			// QADD8
+			else if (op2 == 0x04) {
+				lo_result = ARMul_SignedSaturatedAdd8(rn_lo & 0xFF, rm_lo & 0xFF) |
+				            ARMul_SignedSaturatedAdd8(rn_lo >> 8, rm_lo >> 8) << 8;
+				hi_result = ARMul_SignedSaturatedAdd8(rn_hi & 0xFF, rm_hi & 0xFF) |
+				            ARMul_SignedSaturatedAdd8(rn_hi >> 8, rm_hi >> 8) << 8;
+			}
+			// QSUB8
+			else if (op2 == 0x07) {
+				lo_result = ARMul_SignedSaturatedSub8(rn_lo & 0xFF, rm_lo & 0xFF) |
+				            ARMul_SignedSaturatedSub8(rn_lo >> 8, rm_lo >> 8) << 8;
+				hi_result = ARMul_SignedSaturatedSub8(rn_hi & 0xFF, rm_hi & 0xFF) |
+				            ARMul_SignedSaturatedSub8(rn_hi >> 8, rm_hi >> 8) << 8;
+			}
 
 			RD = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
 		}
@@ -5839,7 +5850,6 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 	QDADD_INST:
 	QDSUB_INST:
 	QSUB_INST:
-	QSUB8_INST:
 	REV_INST:
 	{
 		INC_ICOUNTER;
