@@ -17,8 +17,8 @@ public:
     std::string GetTypeName() const override { return "Semaphore"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Semaphore; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Semaphore; }
+    static const HandleType HANDLE_TYPE = HandleType::Semaphore;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     s32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
     s32 available_count;                        ///< Number of free slots left in the semaphore
@@ -57,7 +57,8 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
     Semaphore* semaphore = new Semaphore;
-    *handle = g_object_pool.Create(semaphore);
+    // TOOD(yuriks): Fix error reporting
+    *handle = g_handle_table.Create(semaphore).ValueOr(INVALID_HANDLE);
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread
@@ -69,7 +70,7 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
 }
 
 ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
-    Semaphore* semaphore = g_object_pool.Get<Semaphore>(handle);
+    Semaphore* semaphore = g_handle_table.Get<Semaphore>(handle);
     if (semaphore == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 

@@ -18,8 +18,8 @@ public:
     std::string GetTypeName() const override { return "Mutex"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Mutex; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Mutex; }
+    static const HandleType HANDLE_TYPE = HandleType::Mutex;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     bool initial_locked;                        ///< Initial lock state when mutex was created
     bool locked;                                ///< Current locked state
@@ -87,7 +87,7 @@ void ReleaseThreadMutexes(Handle thread) {
     
     // Release every mutex that the thread holds, and resume execution on the waiting threads
     for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
-        Mutex* mutex = g_object_pool.GetFast<Mutex>(iter->second);
+        Mutex* mutex = g_handle_table.Get<Mutex>(iter->second);
         ResumeWaitingThread(mutex);
     }
 
@@ -115,7 +115,7 @@ bool ReleaseMutex(Mutex* mutex) {
  * @param handle Handle to mutex to release
  */
 ResultCode ReleaseMutex(Handle handle) {
-    Mutex* mutex = Kernel::g_object_pool.Get<Mutex>(handle);
+    Mutex* mutex = Kernel::g_handle_table.Get<Mutex>(handle);
     if (mutex == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!ReleaseMutex(mutex)) {
@@ -136,7 +136,8 @@ ResultCode ReleaseMutex(Handle handle) {
  */
 Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
     Mutex* mutex = new Mutex;
-    handle = Kernel::g_object_pool.Create(mutex);
+    // TODO(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(mutex).ValueOr(INVALID_HANDLE);
 
     mutex->locked = mutex->initial_locked = initial_locked;
     mutex->name = name;

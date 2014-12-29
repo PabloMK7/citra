@@ -45,8 +45,8 @@ class Session : public Object {
 public:
     std::string GetTypeName() const override { return "Session"; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Session; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Session; }
+    static const HandleType HANDLE_TYPE = HandleType::Session;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     /**
      * Handles a synchronous call to this session using HLE emulation. Emulated <-> emulated calls

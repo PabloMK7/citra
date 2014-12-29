@@ -13,8 +13,8 @@ class SharedMemory : public Object {
 public:
     std::string GetTypeName() const override { return "SharedMemory"; }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
+    static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     u32 base_address;                   ///< Address of shared memory block in RAM
     MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
@@ -32,7 +32,8 @@ public:
  */
 SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
     SharedMemory* shared_memory = new SharedMemory;
-    handle = Kernel::g_object_pool.Create(shared_memory);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(shared_memory).ValueOr(INVALID_HANDLE);
     shared_memory->name = name;
     return shared_memory;
 }
@@ -60,7 +61,7 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
-    SharedMemory* shared_memory = Kernel::g_object_pool.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     shared_memory->base_address = address;
@@ -71,7 +72,7 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
 }
 
 ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset) {
-    SharedMemory* shared_memory = Kernel::g_object_pool.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (0 != shared_memory->base_address)

@@ -20,8 +20,8 @@ public:
     std::string GetTypeName() const override { return "Arbiter"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::AddressArbiter; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::AddressArbiter; }
+    static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     std::string name;   ///< Name of address arbiter object (optional)
 };
@@ -62,7 +62,8 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
 /// Create an address arbiter
 AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
     AddressArbiter* address_arbiter = new AddressArbiter;
-    handle = Kernel::g_object_pool.Create(address_arbiter);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(address_arbiter).ValueOr(INVALID_HANDLE);
     address_arbiter->name = name;
     return address_arbiter;
 }

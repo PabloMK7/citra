@@ -19,8 +19,8 @@ public:
     std::string GetTypeName() const override { return "Event"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Event; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Event; }
+    static const HandleType HANDLE_TYPE = HandleType::Event;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
     ResetType reset_type;                   ///< Current ResetType
@@ -53,7 +53,7 @@ public:
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
-    Event* evt = g_object_pool.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     evt->permanent_locked = permanent_locked;
@@ -67,7 +67,7 @@ ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SetEventLocked(const Handle handle, const bool locked) {
-    Event* evt = g_object_pool.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {
@@ -82,7 +82,7 @@ ResultCode SetEventLocked(const Handle handle, const bool locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SignalEvent(const Handle handle) {
-    Event* evt = g_object_pool.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     // Resume threads waiting for event to signal
@@ -110,7 +110,7 @@ ResultCode SignalEvent(const Handle handle) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode ClearEvent(Handle handle) {
-    Event* evt = g_object_pool.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {
@@ -129,7 +129,8 @@ ResultCode ClearEvent(Handle handle) {
 Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
     Event* evt = new Event;
 
-    handle = Kernel::g_object_pool.Create(evt);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(evt).ValueOr(INVALID_HANDLE);
 
     evt->locked = true;
     evt->permanent_locked = false;
