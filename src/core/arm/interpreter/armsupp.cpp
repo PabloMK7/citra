@@ -478,6 +478,66 @@ ARMul_SubOverflow (ARMul_State * state, ARMword a, ARMword b, ARMword result)
     ASSIGNV (SubOverflow (a, b, result));
 }
 
+/* 8-bit signed saturated addition */
+u8 ARMul_SignedSaturatedAdd8(u8 left, u8 right)
+{
+    u8 result = left + right;
+
+    if (((result ^ left) & 0x80) && ((left ^ right) & 0x80) == 0) {
+        if (left & 0x80)
+            result = 0x80;
+        else
+            result = 0x7F;
+    }
+
+    return result;
+}
+
+/* 8-bit signed saturated subtraction */
+u8 ARMul_SignedSaturatedSub8(u8 left, u8 right)
+{
+    u8 result = left - right;
+
+    if (((result ^ left) & 0x80) && ((left ^ right) & 0x80) != 0) {
+        if (left & 0x80)
+            result = 0x80;
+        else
+            result = 0x7F;
+    }
+
+    return result;
+}
+
+/* 16-bit signed saturated addition */
+u16 ARMul_SignedSaturatedAdd16(u16 left, u16 right)
+{
+    u16 result = left + right;
+
+    if (((result ^ left) & 0x8000) && ((left ^ right) & 0x8000) == 0) {
+        if (left & 0x8000)
+            result = 0x8000;
+        else
+            result = 0x7FFF;
+    }
+
+    return result;
+}
+
+/* 16-bit signed saturated subtraction */
+u16 ARMul_SignedSaturatedSub16(u16 left, u16 right)
+{
+    u16 result = left - right;
+
+    if (((result ^ left) & 0x8000) && ((left ^ right) & 0x8000) != 0) {
+        if (left & 0x8000)
+            result = 0x8000;
+        else
+            result = 0x7FFF;
+    }
+
+    return result;
+}
+
 /* 8-bit unsigned saturated addition */
 u8 ARMul_UnsignedSaturatedAdd8(u8 left, u8 right)
 {

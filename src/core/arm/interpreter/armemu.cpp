@@ -5948,56 +5948,58 @@ L_stm_s_takeabort:
                 printf("Unhandled v6 insn: %08x", instr);
             }
             break;
-        case 0x62: // QADD16, QASX, QSAX, and QSUB16
-            if ((instr & 0xFF0) == 0xf10 || (instr & 0xFF0) == 0xf30 ||
-                (instr & 0xFF0) == 0xf50 || (instr & 0xFF0) == 0xf70)
+        case 0x62: // QADD16, QASX, QSAX, QSUB16, QADD8, and QSUB8
             {
+                const u8 op2 = BITS(5, 7);
+
                 const u8 rd_idx = BITS(12, 15);
                 const u8 rn_idx = BITS(16, 19);
                 const u8 rm_idx = BITS(0, 3);
-                const s16 rm_lo = (state->Reg[rm_idx] & 0xFFFF);
-                const s16 rm_hi = ((state->Reg[rm_idx] >> 0x10) & 0xFFFF);
-                const s16 rn_lo = (state->Reg[rn_idx] & 0xFFFF);
-                const s16 rn_hi = ((state->Reg[rn_idx] >> 0x10) & 0xFFFF);
+                const u16 rm_lo = (state->Reg[rm_idx] & 0xFFFF);
+                const u16 rm_hi = ((state->Reg[rm_idx] >> 0x10) & 0xFFFF);
+                const u16 rn_lo = (state->Reg[rn_idx] & 0xFFFF);
+                const u16 rn_hi = ((state->Reg[rn_idx] >> 0x10) & 0xFFFF);
 
-                s32 lo_result;
-                s32 hi_result;
+                u16 lo_result = 0;
+                u16 hi_result = 0;
 
                 // QADD16
-                if ((instr & 0xFF0) == 0xf10) {
-                    lo_result = (rn_lo + rm_lo);
-                    hi_result = (rn_hi + rm_hi);
+                if (op2 == 0x00) {
+                    lo_result = ARMul_SignedSaturatedAdd16(rn_lo, rm_lo);
+                    hi_result = ARMul_SignedSaturatedAdd16(rn_hi, rm_hi);
                 }
                 // QASX
-                else if ((instr & 0xFF0) == 0xf30) {
-                    lo_result = (rn_lo - rm_hi);
-                    hi_result = (rn_hi + rm_lo);
+                else if (op2 == 0x01) {
+                    lo_result = ARMul_SignedSaturatedSub16(rn_lo, rm_hi);
+                    hi_result = ARMul_SignedSaturatedAdd16(rn_hi, rm_lo);
                 }
                 // QSAX
-                else if ((instr & 0xFF0) == 0xf50) {
-                    lo_result = (rn_lo + rm_hi);
-                    hi_result = (rn_hi - rm_lo);
+                else if (op2 == 0x02) {
+                    lo_result = ARMul_SignedSaturatedAdd16(rn_lo, rm_hi);
+                    hi_result = ARMul_SignedSaturatedSub16(rn_hi, rm_lo);
                 }
                 // QSUB16
-                else {
-                    lo_result = (rn_lo - rm_lo);
-                    hi_result = (rn_hi - rm_hi);
+                else if (op2 == 0x03) {
+                    lo_result = ARMul_SignedSaturatedSub16(rn_lo, rm_lo);
+                    hi_result = ARMul_SignedSaturatedSub16(rn_hi, rm_hi);
                 }
-
-                if (lo_result > 0x7FFF)
-                    lo_result = 0x7FFF;
-                else if (lo_result < -0x8000)
-                    lo_result = -0x8000;
-
-                if (hi_result > 0x7FFF)
-                    hi_result = 0x7FFF;
-                else if (hi_result < -0x8000)
-                    hi_result = -0x8000;
+                // QADD8
+                else if (op2 == 0x04) {
+                    lo_result = ARMul_SignedSaturatedAdd8(rn_lo & 0xFF, rm_lo & 0xFF) |
+                                ARMul_SignedSaturatedAdd8(rn_lo >> 8, rm_lo >> 8) << 8;
+                    hi_result = ARMul_SignedSaturatedAdd8(rn_hi & 0xFF, rm_hi & 0xFF) |
+                                ARMul_SignedSaturatedAdd8(rn_hi >> 8, rm_hi >> 8) << 8;
+                }
+                // QSUB8
+                else if (op2 == 0x07) {
+                    lo_result = ARMul_SignedSaturatedSub8(rn_lo & 0xFF, rm_lo & 0xFF) |
+                                ARMul_SignedSaturatedSub8(rn_lo >> 8, rm_lo >> 8) << 8;
+                    hi_result = ARMul_SignedSaturatedSub8(rn_hi & 0xFF, rm_hi & 0xFF) |
+                                ARMul_SignedSaturatedSub8(rn_hi >> 8, rm_hi >> 8) << 8;
+                }
 
                 state->Reg[rd_idx] = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
                 return 1;
-            } else {
-                printf("Unhandled v6 insn: %08x", BITS(20, 27));
             }
             break;
         case 0x63:
