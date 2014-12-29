@@ -36,7 +36,7 @@ ResultVal<bool> Thread::WaitSynchronization() {
 }
 
 // Lists all thread ids that aren't deleted/etc.
-static std::vector<Thread*> thread_queue; // TODO(yuriks): Owned
+static std::vector<Thread*> thread_list; // TODO(yuriks): Owned
 
 // Lists only ready thread ids.
 static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST+1> thread_ready_queue;
@@ -143,7 +143,7 @@ Thread* ArbitrateHighestPriorityThread(Object* arbiter, u32 address) {
     s32 priority = THREADPRIO_LOWEST;
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (Thread* thread : thread_queue) {
+    for (Thread* thread : thread_list) {
         if (!CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             continue;
 
@@ -168,7 +168,7 @@ Thread* ArbitrateHighestPriorityThread(Object* arbiter, u32 address) {
 void ArbitrateAllThreads(Object* arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
-    for (Thread* thread : thread_queue) {
+    for (Thread* thread : thread_list) {
         if (CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             thread->ResumeFromWait();
     }
@@ -278,7 +278,7 @@ static void DebugThreadQueue() {
         return;
     }
     LOG_DEBUG(Kernel, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThread()->GetHandle());
-    for (Thread* t : thread_queue) {
+    for (Thread* t : thread_list) {
         s32 priority = thread_ready_queue.contains(t);
         if (priority != -1) {
             LOG_DEBUG(Kernel, "0x%02X 0x%08X", priority, t->GetHandle());
@@ -324,7 +324,7 @@ ResultVal<Thread*> Thread::Create(const char* name, u32 entry_point, s32 priorit
     if (handle.Failed())
         return handle.Code();
 
-    thread_queue.push_back(thread);
+    thread_list.push_back(thread);
     thread_ready_queue.prepare(priority);
 
     thread->thread_id = next_thread_id++;
@@ -418,7 +418,7 @@ void Reschedule() {
     } else {
         LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
 
-        for (Thread* thread : thread_queue) {
+        for (Thread* thread : thread_list) {
             LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X wait_handle=0x%08X",
                 thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_object->GetHandle());
         }
