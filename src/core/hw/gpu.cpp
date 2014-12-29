@@ -21,10 +21,14 @@ namespace GPU {
 
 Regs g_regs;
 
-static u64 frame_ticks      = 0;    ///< 268MHz / 60 frames per second
-static u32 cur_line         = 0;    ///< Current vertical screen line
-static u64 last_frame_ticks = 0;    ///< CPU tick count from last frame
-static u64 last_update_tick = 0;    ///< CPU ticl count from last GPU update
+bool g_skip_frame = false;              ///< True if the current frame was skipped
+
+static u64 frame_ticks      = 0;        ///< 268MHz / gpu_refresh_rate frames per second
+static u64 line_ticks       = 0;        ///< Number of ticks for a screen line
+static u32 cur_line         = 0;        ///< Current screen line
+static u64 last_update_tick = 0;        ///< CPU ticl count from last GPU update
+static u64 frame_count      = 0;        ///< Number of frames drawn
+static bool last_skip_frame = false;    ///< True if the last frame was skipped
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -178,38 +182,40 @@ template void Write<u8>(u32 addr, const u8 data);
 void Update() {
     auto& framebuffer_top = g_regs.framebuffer_config[0];
 
-    // Update the frame after a certain number of CPU ticks have elapsed. This assumes that the
-    // active frame in memory is always complete to render. There also may be issues with this
-    // becoming out-of-synch with GSP synchrinization code (as follows). At this time, this seems to
-    // be the most effective solution for both homebrew and retail applications. With retail, this
-    // could be moved below (and probably would guarantee more accurate synchronization). However,
-    // primitive homebrew relies on a vertical blank interrupt to happen inevitably (regardless of a
-    // threading reschedule).
-
-    if ((Core::g_app_core->GetTicks() - last_frame_ticks) > (GPU::frame_ticks)) {
-        VideoCore::g_renderer->SwapBuffers();
-        last_frame_ticks = Core::g_app_core->GetTicks();
-    }
-
     // Synchronize GPU on a thread reschedule: Because we cannot accurately predict a vertical
     // blank, we need to simulate it. Based on testing, it seems that retail applications work more
     // accurately when this is signalled between thread switches.
 
     if (HLE::g_reschedule) {
         u64 current_ticks = Core::g_app_core->GetTicks();
-        u64 line_ticks = (GPU::frame_ticks / framebuffer_top.height) * 16;
+        u32 num_lines = static_cast<u32>((current_ticks - last_update_tick) / line_ticks);
 
-        //// Synchronize line...
-        if ((current_ticks - last_update_tick) >= line_ticks) {
+        // Synchronize line...
+        if (num_lines > 0) {
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-            cur_line++;
-            last_update_tick += line_ticks;
+            cur_line += num_lines;
+            last_update_tick += (num_lines * line_ticks);
         }
 
         // Synchronize frame...
         if (cur_line >= framebuffer_top.height) {
             cur_line = 0;
-            VideoCore::g_renderer->SwapBuffers();
+            frame_count++;
+            last_skip_frame = g_skip_frame;
+            g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
+
+            // Swap buffers based on the frameskip mode, which is a little bit tricky. When
+            // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
+            // So, we should only swap frames if the last frame was rendered. The rules are:
+            //  - If frameskip == 0 (disabled), always swap buffers
+            //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
+            //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
+
+            if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
+                   Settings::values.frame_skip == 0) {
+                VideoCore::g_renderer->SwapBuffers();
+            }
+
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
         }
     }
@@ -217,10 +223,6 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
-    frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
-    cur_line = 0;
-    last_update_tick = last_frame_ticks = Core::g_app_core->GetTicks();
-
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];
 
@@ -248,6 +250,13 @@ void Init() {
     framebuffer_sub.stride = 3 * 240;
     framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
     framebuffer_sub.active_fb = 0;
+
+    frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
+    line_ticks = (GPU::frame_ticks / framebuffer_top.height);
+    cur_line = 0;
+    last_update_tick = Core::g_app_core->GetTicks();
+    last_skip_frame = false;
+    g_skip_frame = false;
 
     LOG_DEBUG(HW_GPU, "initialized OK");
 }

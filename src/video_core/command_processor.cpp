@@ -9,6 +9,7 @@
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
 #include "core/hle/service/gsp_gpu.h"
+#include "core/hw/gpu.h"
 
 #include "debug_utils/debug_utils.h"
 
@@ -29,6 +30,10 @@ static u32 vs_swizzle_write_offset = 0;
 static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     if (id >= registers.NumIds())
+        return;
+
+    // If we're skipping this frame, only allow trigger IRQ
+    if (GPU::g_skip_frame && id != PICA_REG_INDEX(trigger_irq))
         return;
 
     // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
