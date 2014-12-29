@@ -790,6 +790,11 @@ extern void ARMul_FixSPSR(ARMul_State*, ARMword, ARMword);
 extern void ARMul_ConsolePrint(ARMul_State*, const char*, ...);
 extern void ARMul_SelectProcessor(ARMul_State*, unsigned);
 
+extern u8 ARMul_SignedSaturatedAdd8(u8, u8);
+extern u8 ARMul_SignedSaturatedSub8(u8, u8);
+extern u16 ARMul_SignedSaturatedAdd16(u16, u16);
+extern u16 ARMul_SignedSaturatedSub16(u16, u16);
+
 extern u8 ARMul_UnsignedSaturatedAdd8(u8, u8);
 extern u16 ARMul_UnsignedSaturatedAdd16(u16, u16);
 extern u8 ARMul_UnsignedSaturatedSub8(u8, u8);
