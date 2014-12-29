@@ -46,6 +46,9 @@ public:
     Path(const char* path) : type(Char), string(path) {
     }
 
+    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {
+    }
+
     Path(LowPathType type, u32 size, u32 pointer) : type(type) {
         switch (type) {
         case Binary:
@@ -173,6 +176,20 @@ class ArchiveBackend : NonCopyable {
 public:
     virtual ~ArchiveBackend() {
     }
+
+    /**
+     * Tries to open the archive of this type with the specified path
+     * @param path Path to the archive
+     * @return ResultCode of the operation
+     */
+    virtual ResultCode Open(const Path& path) = 0;
+
+    /**
+     * Deletes the archive contents and then re-creates the base folder
+     * @param path Path to the archive
+     * @return ResultCode of the operation, 0 on success
+     */
+    virtual ResultCode Format(const Path& path) const = 0;
 
     /**
      * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)

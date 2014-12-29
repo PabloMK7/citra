@@ -25,6 +25,7 @@ public:
     DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
 
     virtual std::string GetName() const = 0;
+    virtual ResultCode Format(const Path& path) const { return RESULT_SUCCESS; }
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
     bool DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
@@ -34,11 +35,15 @@ public:
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
+    virtual ResultCode Open(const Path& path) override {
+        return RESULT_SUCCESS;
+    }
+
     /**
      * Getter for the path used for this Archive
      * @return Mount point of that passthrough archive
      */
-    const std::string& GetMountPoint() const {
+    virtual const std::string& GetMountPoint() const {
         return mount_point;
     }
 

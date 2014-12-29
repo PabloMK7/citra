@@ -62,4 +62,9 @@ std::unique_ptr<DirectoryBackend> Archive_RomFS::OpenDirectory(const Path& path)
     return Common::make_unique<Directory_RomFS>();
 }
 
+ResultCode Archive_RomFS::Format(const Path& path) const {
+    LOG_WARNING(Service_FS, "Attempted to format ROMFS.");
+    return UnimplementedFunction(ErrorModule::FS);
+}
+
 } // namespace FileSys
