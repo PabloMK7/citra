@@ -3343,10 +3343,28 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)    { UN
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USUB8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("USUBADDX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("UXTAB16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UXTB16"); }
 
+ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index)
+{
+	arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(uxtab_inst));
+	uxtab_inst* const inst_cream = (uxtab_inst*)inst_base->component;
 
+	inst_base->cond     = BITS(inst, 28, 31);
+	inst_base->idx      = index;
+	inst_base->br       = NON_BRANCH;
+	inst_base->load_r15 = 0;
+
+	inst_cream->Rm     = BITS(inst, 0, 3);
+	inst_cream->Rn     = BITS(inst, 16, 19);
+	inst_cream->Rd     = BITS(inst, 12, 15);
+	inst_cream->rotate = BITS(inst, 10, 11);
+
+	return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index)
+{
+	return INTERPRETER_TRANSLATE(uxtab16)(inst, index);
+}
 
 /* Floating point VFPv3 structures and instructions */
 
@@ -7116,8 +7134,43 @@ unsigned InterpreterMainLoop(ARMul_State* state)
 	USUB16_INST:
 	USUB8_INST:
 	USUBADDX_INST:
+
 	UXTAB16_INST:
 	UXTB16_INST:
+	{
+		INC_ICOUNTER;
+
+		if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+			uxtab_inst* const inst_cream = (uxtab_inst*)inst_base->component;
+
+			const u8 rn_idx = inst_cream->Rn;
+			const u32 rm_val = RM;
+			const u32 rotation = inst_cream->rotate * 8;
+			const u32 rotated_rm = ((rm_val << (32 - rotation)) | (rm_val >> rotation));
+
+			// UXTB16, otherwise UXTAB16
+			if (rn_idx == 15) {
+				RD = rotated_rm & 0x00FF00FF;
+			}
+			else {
+				const u32 rn_val = RN;
+
+				const u8 lo_rotated = (rotated_rm & 0xFF);
+				const u16 lo_result = (rn_val & 0xFFFF) + (u16)lo_rotated;
+				
+				const u8 hi_rotated = (rotated_rm >> 16) & 0xFF;
+				const u16 hi_result = (rn_val >> 16) + (u16)hi_rotated;
+				
+				RD = ((hi_result << 16) | (lo_result & 0xFFFF));
+			}
+		}
+
+		cpu->Reg[15] += GET_INST_SIZE(cpu);
+		INC_PC(sizeof(uxtab_inst));
+		FETCH_INST;
+		GOTO_NEXT_INST;
+	}
+
 	#define VFP_INTERPRETER_IMPL
 	#include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 	#undef VFP_INTERPRETER_IMPL
