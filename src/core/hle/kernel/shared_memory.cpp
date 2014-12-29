@@ -61,7 +61,7 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
-    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle).get();
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     shared_memory->base_address = address;
@@ -72,7 +72,7 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
 }
 
 ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset) {
-    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle).get();
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (0 != shared_memory->base_address)

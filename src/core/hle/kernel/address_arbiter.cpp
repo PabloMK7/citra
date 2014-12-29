@@ -30,7 +30,7 @@ public:
 
 /// Arbitrate an address
 ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value) {
-    Object* object = Kernel::g_handle_table.GetGeneric(handle);
+    Object* object = Kernel::g_handle_table.GetGeneric(handle).get();
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 

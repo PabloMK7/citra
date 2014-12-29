@@ -48,7 +48,7 @@ void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandl
 bool ReleaseMutexForThread(Mutex* mutex, Handle thread_handle) {
     MutexAcquireLock(mutex, thread_handle);
 
-    Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle);
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle).get();
     if (thread == nullptr) {
         LOG_ERROR(Kernel, "Called with invalid handle: %08X", thread_handle);
         return false;
@@ -94,7 +94,7 @@ void ReleaseThreadMutexes(Handle thread) {
     
     // Release every mutex that the thread holds, and resume execution on the waiting threads
     for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
-        Mutex* mutex = g_handle_table.Get<Mutex>(iter->second);
+        Mutex* mutex = g_handle_table.Get<Mutex>(iter->second).get();
         ResumeWaitingThread(mutex);
     }
 
@@ -122,7 +122,7 @@ bool ReleaseMutex(Mutex* mutex) {
  * @param handle Handle to mutex to release
  */
 ResultCode ReleaseMutex(Handle handle) {
-    Mutex* mutex = Kernel::g_handle_table.Get<Mutex>(handle);
+    Mutex* mutex = Kernel::g_handle_table.Get<Mutex>(handle).get();
     if (mutex == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!ReleaseMutex(mutex)) {

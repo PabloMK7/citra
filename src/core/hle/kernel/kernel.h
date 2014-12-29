@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <boost/intrusive_ptr.hpp>
+
 #include <array>
 #include <string>
 #include "common/common.h"
@@ -76,7 +78,7 @@ private:
     unsigned int ref_count = 0;
 };
 
-// Special functions that will later be used by boost::instrusive_ptr to do automatic ref-counting
+// Special functions used by boost::instrusive_ptr to do automatic ref-counting
 inline void intrusive_ptr_add_ref(Object* object) {
     ++object->ref_count;
 }
@@ -86,6 +88,9 @@ inline void intrusive_ptr_release(Object* object) {
         delete object;
     }
 }
+
+template <typename T>
+using SharedPtr = boost::intrusive_ptr<T>;
 
 /**
  * This class allows the creation of Handles, which are references to objects that can be tested
@@ -119,7 +124,7 @@ public:
      * @return The created Handle or one of the following errors:
      *           - `ERR_OUT_OF_HANDLES`: the maximum number of handles has been exceeded.
      */
-    ResultVal<Handle> Create(Object* obj);
+    ResultVal<Handle> Create(SharedPtr<Object> obj);
 
     /**
      * Returns a new handle that points to the same object as the passed in handle.
@@ -143,7 +148,7 @@ public:
      * Looks up a handle.
      * @returns Pointer to the looked-up object, or `nullptr` if the handle is not valid.
      */
-    Object* GetGeneric(Handle handle) const;
+    SharedPtr<Object> GetGeneric(Handle handle) const;
 
     /**
      * Looks up a handle while verifying its type.
@@ -151,10 +156,10 @@ public:
      *          type differs from the handle type `T::HANDLE_TYPE`.
      */
     template <class T>
-    T* Get(Handle handle) const {
-        Object* object = GetGeneric(handle);
+    SharedPtr<T> Get(Handle handle) const {
+        SharedPtr<Object> object = GetGeneric(handle);
         if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
-            return static_cast<T*>(object);
+            return boost::static_pointer_cast<T>(std::move(object));
         }
         return nullptr;
     }
@@ -173,7 +178,7 @@ private:
     static u16 GetGeneration(Handle handle) { return handle & 0x7FFF; }
 
     /// Stores the Object referenced by the handle or null if the slot is empty.
-    std::array<Object*, MAX_COUNT> objects;
+    std::array<SharedPtr<Object>, MAX_COUNT> objects;
 
     /**
      * The value of `next_generation` when the handle was created, used to check for validity. For
@@ -192,7 +197,7 @@ private:
 };
 
 extern HandleTable g_handle_table;
-extern Thread* g_main_thread;
+extern SharedPtr<Thread> g_main_thread;
 
 /// The ID code of the currently running game
 /// TODO(Subv): This variable should not be here, 

@@ -25,6 +25,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SVC
 
+using Kernel::SharedPtr;
+
 namespace SVC {
 
 enum ControlMemoryOperation {
@@ -94,7 +96,7 @@ static Result ConnectToPort(Handle* out, const char* port_name) {
 
 /// Synchronize to an OS service
 static Result SendSyncRequest(Handle handle) {
-    Kernel::Session* session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
+    SharedPtr<Kernel::Session> session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
     if (session == nullptr) {
         return InvalidHandle(ErrorModule::Kernel).raw;
     }
@@ -121,12 +123,12 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // TODO(bunnei): Do something with nano_seconds, currently ignoring this
     bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
 
-    Kernel::Object* object = Kernel::g_handle_table.GetGeneric(handle);
+    SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handle);
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle, object->GetTypeName().c_str(),
-            object->GetName().c_str(), nano_seconds);
+    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
+            object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
     ResultVal<bool> wait = object->WaitSynchronization();
 
@@ -151,12 +153,12 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
     // Iterate through each handle, synchronize kernel object
     for (s32 i = 0; i < handle_count; i++) {
-        Kernel::Object* object = Kernel::g_handle_table.GetGeneric(handles[i]);
+        SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[i]);
         if (object == nullptr)
             return InvalidHandle(ErrorModule::Kernel).raw;
 
-        LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i], object->GetTypeName().c_str(),
-            object->GetName().c_str());
+        LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i],
+                object->GetTypeName().c_str(), object->GetName().c_str());
 
         // TODO(yuriks): Verify how the real function behaves when an error happens here
         ResultVal<bool> wait_result = object->WaitSynchronization();
@@ -223,6 +225,8 @@ static Result GetResourceLimitCurrentValues(s64* values, Handle resource_limit, 
 
 /// Creates a new thread
 static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
+    using Kernel::Thread;
+
     std::string name;
     if (Symbols::HasSymbol(entry_point)) {
         TSymbol symbol = Symbols::GetSymbol(entry_point);
@@ -231,12 +235,13 @@ static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top
         name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
-    ResultVal<Kernel::Thread*> thread_res = Kernel::Thread::Create(name.c_str(), entry_point, priority, arg,
-            processor_id, stack_top);
+    ResultVal<SharedPtr<Thread>> thread_res = Kernel::Thread::Create(
+            name, entry_point, priority, arg, processor_id, stack_top, Kernel::DEFAULT_STACK_SIZE);
     if (thread_res.Failed())
         return thread_res.Code().raw;
-    Kernel::Thread* thread = *thread_res;
+    SharedPtr<Thread> thread = std::move(*thread_res);
 
+    // TODO(yuriks): Create new handle instead of using built-in
     Core::g_app_core->SetReg(1, thread->GetHandle());
 
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
@@ -261,7 +266,7 @@ static void ExitThread() {
 
 /// Gets the priority for the specified thread
 static Result GetThreadPriority(s32* priority, Handle handle) {
-    const Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
@@ -271,7 +276,7 @@ static Result GetThreadPriority(s32* priority, Handle handle) {
 
 /// Sets the priority for the specified thread
 static Result SetThreadPriority(Handle handle, s32 priority) {
-    Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
@@ -298,7 +303,7 @@ static Result ReleaseMutex(Handle handle) {
 static Result GetThreadId(u32* thread_id, Handle handle) {
     LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
 
-    const Kernel::Thread* thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 

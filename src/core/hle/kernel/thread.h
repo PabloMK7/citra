@@ -54,8 +54,8 @@ namespace Kernel {
 
 class Thread : public Kernel::Object {
 public:
-    static ResultVal<Thread*> Create(const char* name, u32 entry_point, s32 priority, u32 arg,
-        s32 processor_id, u32 stack_top, int stack_size = Kernel::DEFAULT_STACK_SIZE);
+    static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, s32 priority,
+        u32 arg, s32 processor_id, VAddr stack_top, u32 stack_size);
 
     std::string GetName() const override { return name; }
     std::string GetTypeName() const override { return "Thread"; }
@@ -99,7 +99,7 @@ public:
     Object* wait_object;
     VAddr wait_address;
 
-    std::vector<Thread*> waiting_threads; // TODO(yuriks): Owned
+    std::vector<SharedPtr<Thread>> waiting_threads;
 
     std::string name;
 
@@ -111,7 +111,7 @@ private:
 };
 
 /// Sets up the primary application thread
-Thread* SetupMainThread(s32 priority, int stack_size = Kernel::DEFAULT_STACK_SIZE);
+SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule();

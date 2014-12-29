@@ -53,7 +53,7 @@ public:
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
-    Event* evt = g_handle_table.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     evt->permanent_locked = permanent_locked;
@@ -67,7 +67,7 @@ ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SetEventLocked(const Handle handle, const bool locked) {
-    Event* evt = g_handle_table.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {
@@ -82,13 +82,13 @@ ResultCode SetEventLocked(const Handle handle, const bool locked) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode SignalEvent(const Handle handle) {
-    Event* evt = g_handle_table.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     // Resume threads waiting for event to signal
     bool event_caught = false;
     for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
-        Thread* thread = Kernel::g_handle_table.Get<Thread>(evt->waiting_threads[i]);
+        Thread* thread = Kernel::g_handle_table.Get<Thread>(evt->waiting_threads[i]).get();
         if (thread != nullptr)
             thread->ResumeFromWait();
 
@@ -112,7 +112,7 @@ ResultCode SignalEvent(const Handle handle) {
  * @return Result of operation, 0 on success, otherwise error code
  */
 ResultCode ClearEvent(Handle handle) {
-    Event* evt = g_handle_table.Get<Event>(handle);
+    Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (!evt->permanent_locked) {

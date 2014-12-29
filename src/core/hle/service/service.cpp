@@ -59,7 +59,8 @@ void Manager::DeleteService(const std::string& port_name) {
 }
 
 Interface* Manager::FetchFromHandle(Handle handle) {
-    return Kernel::g_handle_table.Get<Interface>(handle);
+    // TODO(yuriks): This function is very suspicious and should probably be exterminated.
+    return Kernel::g_handle_table.Get<Interface>(handle).get();
 }
 
 Interface* Manager::FetchFromPortName(const std::string& port_name) {

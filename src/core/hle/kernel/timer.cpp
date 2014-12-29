@@ -66,7 +66,7 @@ ResultCode CreateTimer(Handle* handle, const ResetType reset_type, const std::st
 }
 
 ResultCode ClearTimer(Handle handle) {
-    Timer* timer = Kernel::g_handle_table.Get<Timer>(handle);
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
     
     if (timer == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
@@ -80,7 +80,7 @@ static int TimerCallbackEventType = -1;
 
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
-    Timer* timer = Kernel::g_handle_table.Get<Timer>(timer_handle);
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(timer_handle);
 
     if (timer == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer %u", timer_handle);
@@ -93,7 +93,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
 
     // Resume all waiting threads
     for (Handle thread_handle : timer->waiting_threads) {
-        if (Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle))
+        if (SharedPtr<Thread> thread = Kernel::g_handle_table.Get<Thread>(thread_handle))
             thread->ResumeFromWait();
     }
 
@@ -111,7 +111,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
 }
 
 ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
-    Timer* timer = Kernel::g_handle_table.Get<Timer>(handle);
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
 
     if (timer == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
@@ -125,7 +125,7 @@ ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 }
 
 ResultCode CancelTimer(Handle handle) {
-    Timer* timer = Kernel::g_handle_table.Get<Timer>(handle);
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
 
     if (timer == nullptr)
         return InvalidHandle(ErrorModule::Kernel);

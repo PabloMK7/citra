@@ -70,7 +70,7 @@ ResultCode CreateSemaphore(Handle* handle, s32 initial_count,
 }
 
 ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
-    Semaphore* semaphore = g_handle_table.Get<Semaphore>(handle);
+    Semaphore* semaphore = g_handle_table.Get<Semaphore>(handle).get();
     if (semaphore == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 
@@ -84,7 +84,7 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
     while (!semaphore->waiting_threads.empty() && semaphore->IsAvailable()) {
-        Thread* thread = Kernel::g_handle_table.Get<Thread>(semaphore->waiting_threads.front());
+        Thread* thread = Kernel::g_handle_table.Get<Thread>(semaphore->waiting_threads.front()).get();
         if (thread != nullptr)
             thread->ResumeFromWait();
         semaphore->waiting_threads.pop();
