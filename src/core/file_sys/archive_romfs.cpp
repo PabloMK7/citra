@@ -23,37 +23,21 @@ Archive_RomFS::Archive_RomFS(const Loader::AppLoader& app_loader) {
     }
 }
 
-/**
- * Open a file specified by its path, using the specified mode
- * @param path Path relative to the archive
- * @param mode Mode to open the file with
- * @return Opened file, or nullptr
- */
 std::unique_ptr<FileBackend> Archive_RomFS::OpenFile(const Path& path, const Mode mode) const {
     return Common::make_unique<File_RomFS>(this);
 }
 
-/**
- * Delete a file specified by its path
- * @param path Path relative to the archive
- * @return Whether the file could be deleted
- */
-bool Archive_RomFS::DeleteFile(const FileSys::Path& path) const {
+bool Archive_RomFS::DeleteFile(const Path& path) const {
     LOG_WARNING(Service_FS, "Attempted to delete a file from ROMFS.");
     return false;
 }
 
-bool Archive_RomFS::RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+bool Archive_RomFS::RenameFile(const Path& src_path, const Path& dest_path) const {
     LOG_WARNING(Service_FS, "Attempted to rename a file within ROMFS.");
     return false;
 }
 
-/**
- * Delete a directory specified by its path
- * @param path Path relative to the archive
- * @return Whether the directory could be deleted
- */
-bool Archive_RomFS::DeleteDirectory(const FileSys::Path& path) const {
+bool Archive_RomFS::DeleteDirectory(const Path& path) const {
     LOG_WARNING(Service_FS, "Attempted to delete a directory from ROMFS.");
     return false;
 }
@@ -64,26 +48,16 @@ ResultCode Archive_RomFS::CreateFile(const Path& path, u32 size) const {
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported, ErrorLevel::Permanent);
 }
 
-/**
- * Create a directory specified by its path
- * @param path Path relative to the archive
- * @return Whether the directory could be created
- */
 bool Archive_RomFS::CreateDirectory(const Path& path) const {
     LOG_WARNING(Service_FS, "Attempted to create a directory in ROMFS.");
     return false;
 }
 
-bool Archive_RomFS::RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const {
+bool Archive_RomFS::RenameDirectory(const Path& src_path, const Path& dest_path) const {
     LOG_WARNING(Service_FS, "Attempted to rename a file within ROMFS.");
     return false;
 }
 
-/**
- * Open a directory specified by its path
- * @param path Path relative to the archive
- * @return Opened directory, or nullptr
- */
 std::unique_ptr<DirectoryBackend> Archive_RomFS::OpenDirectory(const Path& path) const {
     return Common::make_unique<Directory_RomFS>();
 }

@@ -16,8 +16,8 @@
 namespace FileSys {
 
 /**
- * Helper which implements a backend accessing the host machine's filesystem. 
- * This should be subclassed by concrete archive types, which will provide the 
+ * Helper which implements a backend accessing the host machine's filesystem.
+ * This should be subclassed by concrete archive types, which will provide the
  * base directory on the host filesystem and override any required functionality.
  */
 class DiskArchive : public ArchiveBackend {
@@ -26,12 +26,12 @@ public:
 
     virtual std::string GetName() const = 0;
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
-    bool DeleteFile(const FileSys::Path& path) const override;
-    bool RenameFile(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
-    bool DeleteDirectory(const FileSys::Path& path) const override;
+    bool DeleteFile(const Path& path) const override;
+    bool RenameFile(const Path& src_path, const Path& dest_path) const override;
+    bool DeleteDirectory(const Path& path) const override;
     ResultCode CreateFile(const Path& path, u32 size) const override;
     bool CreateDirectory(const Path& path) const override;
-    bool RenameDirectory(const FileSys::Path& src_path, const FileSys::Path& dest_path) const override;
+    bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
     /**
@@ -50,7 +50,7 @@ class DiskFile : public FileBackend {
 public:
     DiskFile();
     DiskFile(const DiskArchive* archive, const Path& path, const Mode mode);
-    
+
     ~DiskFile() override {
         Close();
     }
@@ -61,7 +61,7 @@ public:
     size_t GetSize() const override;
     bool SetSize(const u64 size) const override;
     bool Close() const override;
-    
+
     void Flush() const override {
         file->Flush();
     }
