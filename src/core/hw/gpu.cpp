@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
@@ -21,12 +21,14 @@ namespace GPU {
 
 Regs g_regs;
 
-u32 g_cur_line = 0;         ///< Current vertical screen line
-u64 g_last_line_ticks = 0;  ///< CPU tick count from last vertical screen line
-u64 g_last_frame_ticks = 0; ///< CPU tick count from last frame
+bool g_skip_frame = false;              ///< True if the current frame was skipped
 
-static u32 kFrameCycles = 0; ///< 268MHz / 60 frames per second
-static u32 kFrameTicks  = 0; ///< Approximate number of instructions/frame
+static u64 frame_ticks      = 0;        ///< 268MHz / gpu_refresh_rate frames per second
+static u64 line_ticks       = 0;        ///< Number of ticks for a screen line
+static u32 cur_line         = 0;        ///< Current screen line
+static u64 last_update_tick = 0;        ///< CPU ticl count from last GPU update
+static u64 frame_count      = 0;        ///< Number of frames drawn
+static bool last_skip_frame = false;    ///< True if the last frame was skipped
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -34,8 +36,8 @@ inline void Read(T &var, const u32 raw_addr) {
     u32 index = addr / 4;
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
-    if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
+    if (index >= Regs::NumIds() || !std::is_same<T, u32>::value) {
+        LOG_ERROR(HW_GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
         return;
     }
 
@@ -48,8 +50,8 @@ inline void Write(u32 addr, const T data) {
     u32 index = addr / 4;
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
-    if (index >= Regs::NumIds() || !std::is_same<T,u32>::value) {
-        ERROR_LOG(GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+    if (index >= Regs::NumIds() || !std::is_same<T, u32>::value) {
+        LOG_ERROR(HW_GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
         return;
     }
 
@@ -73,7 +75,7 @@ inline void Write(u32 addr, const T data) {
             for (u32* ptr = start; ptr < end; ++ptr)
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
-            DEBUG_LOG(GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+            LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
         }
         break;
     }
@@ -105,7 +107,7 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown source framebuffer format %x", config.input_format.Value());
+                        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", config.input_format.Value());
                         break;
                     }
 
@@ -132,16 +134,16 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     default:
-                        ERROR_LOG(GPU, "Unknown destination framebuffer format %x", config.output_format.Value());
+                        LOG_ERROR(HW_GPU, "Unknown destination framebuffer format %x", config.output_format.Value());
                         break;
                     }
                 }
             }
 
-            DEBUG_LOG(GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
+            LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
                       config.output_height * config.output_width * 4,
-                      config.GetPhysicalInputAddress(), config.input_width, config.input_height,
-                      config.GetPhysicalOutputAddress(), config.output_width, config.output_height,
+                      config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
+                      config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
                       config.output_format.Value());
         }
         break;
@@ -154,8 +156,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger & 1)
         {
             u32* buffer = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalAddress()));
-            u32 size = config.size << 3;
-            Pica::CommandProcessor::ProcessCommandList(buffer, size);
+            Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
         }
         break;
     }
@@ -180,37 +181,41 @@ template void Write<u8>(u32 addr, const u8 data);
 /// Update hardware
 void Update() {
     auto& framebuffer_top = g_regs.framebuffer_config[0];
-    u64 current_ticks = Core::g_app_core->GetTicks();
-
-    // Update the frame after a certain number of CPU ticks have elapsed. This assumes that the
-    // active frame in memory is always complete to render. There also may be issues with this
-    // becoming out-of-synch with GSP synchrinization code (as follows). At this time, this seems to
-    // be the most effective solution for both homebrew and retail applications. With retail, this
-    // could be moved below (and probably would guarantee more accurate synchronization). However,
-    // primitive homebrew relies on a vertical blank interrupt to happen inevitably (regardless of a
-    // threading reschedule).
-
-    if ((current_ticks - g_last_frame_ticks) > GPU::kFrameTicks) {
-        VideoCore::g_renderer->SwapBuffers();
-        g_last_frame_ticks = current_ticks;
-    }
 
     // Synchronize GPU on a thread reschedule: Because we cannot accurately predict a vertical
     // blank, we need to simulate it. Based on testing, it seems that retail applications work more
     // accurately when this is signalled between thread switches.
 
     if (HLE::g_reschedule) {
+        u64 current_ticks = Core::g_app_core->GetTicks();
+        u32 num_lines = static_cast<u32>((current_ticks - last_update_tick) / line_ticks);
 
         // Synchronize line...
-        if ((current_ticks - g_last_line_ticks) >= GPU::kFrameTicks / framebuffer_top.height) {
+        if (num_lines > 0) {
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-            g_cur_line++;
-            g_last_line_ticks = current_ticks;
+            cur_line += num_lines;
+            last_update_tick += (num_lines * line_ticks);
         }
 
         // Synchronize frame...
-        if (g_cur_line >= framebuffer_top.height) {
-            g_cur_line = 0;
+        if (cur_line >= framebuffer_top.height) {
+            cur_line = 0;
+            frame_count++;
+            last_skip_frame = g_skip_frame;
+            g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
+
+            // Swap buffers based on the frameskip mode, which is a little bit tricky. When
+            // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
+            // So, we should only swap frames if the last frame was rendered. The rules are:
+            //  - If frameskip == 0 (disabled), always swap buffers
+            //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
+            //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
+
+            if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
+                   Settings::values.frame_skip == 0) {
+                VideoCore::g_renderer->SwapBuffers();
+            }
+
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
         }
     }
@@ -218,12 +223,6 @@ void Update() {
 
 /// Initialize hardware
 void Init() {
-    kFrameCycles = 268123480 / Settings::values.gpu_refresh_rate;
-    kFrameTicks  = kFrameCycles / 3;
-
-    g_cur_line = 0;
-    g_last_frame_ticks = g_last_line_ticks = Core::g_app_core->GetTicks();
-
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];
 
@@ -252,12 +251,19 @@ void Init() {
     framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
     framebuffer_sub.active_fb = 0;
 
-    NOTICE_LOG(GPU, "initialized OK");
+    frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
+    line_ticks = (GPU::frame_ticks / framebuffer_top.height);
+    cur_line = 0;
+    last_update_tick = Core::g_app_core->GetTicks();
+    last_skip_frame = false;
+    g_skip_frame = false;
+
+    LOG_DEBUG(HW_GPU, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(GPU, "shutdown OK");
+    LOG_DEBUG(HW_GPU, "shutdown OK");
 }
 
 } // namespace

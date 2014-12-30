@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -39,7 +39,7 @@ public:
         virtual void GXCommandProcessed(int total_command_count)
         {
             const GSP_GPU::Command& cmd = observed->ReadGXCommandHistory(total_command_count-1);
-            ERROR_LOG(GSP, "Received command: id=%x", (int)cmd.id.Value());
+            LOG_TRACE(Debug_GPU, "Received command: id=%x", (int)cmd.id.Value());
         }
 
     protected:
@@ -85,7 +85,7 @@ public:
 
     void UnregisterObserver(DebuggerObserver* observer)
     {
-        std::remove(observers.begin(), observers.end(), observer);
+        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
         observer->observed = nullptr;
     }
 

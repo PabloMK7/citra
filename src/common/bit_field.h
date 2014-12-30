@@ -1,4 +1,4 @@
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 
@@ -142,13 +142,17 @@ public:
 
     __forceinline BitField& operator=(T val)
     {
-        storage = (storage & ~GetMask()) | (((StorageType)val << position) & GetMask());
+        Assign(val);
         return *this;
     }
 
     __forceinline operator T() const
     {
         return Value();
+    }
+
+    __forceinline void Assign(const T& value) {
+        storage = (storage & ~GetMask()) | (((StorageType)value << position) & GetMask());
     }
 
     __forceinline T Value() const
@@ -162,6 +166,12 @@ public:
         {
             return (T)((storage & GetMask()) >> position);
         }
+    }
+
+    // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
+    __forceinline bool ToBool() const
+    {
+        return Value() != 0;
     }
 
 private:

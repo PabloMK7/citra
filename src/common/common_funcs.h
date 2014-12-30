@@ -1,8 +1,11 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
+
+#include "common_types.h"
+#include <cstdlib>
 
 #ifdef _WIN32
 #define SLEEP(x) Sleep(x)
@@ -73,6 +76,8 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // _MSC_VER
+#include <locale.h>
+
 // Function Cross-Compatibility
     #define strcasecmp _stricmp
     #define strncasecmp _strnicmp
@@ -106,7 +111,7 @@ inline u64 _rotr64(u64 x, unsigned int shift){
             // Restore the global locale
             _configthreadlocale(_DISABLE_PER_THREAD_LOCALE);
         }
-        else if(new_locale != NULL)
+        else if(new_locale != nullptr)
         {
             // Configure the thread to set the locale only for this thread
             _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);

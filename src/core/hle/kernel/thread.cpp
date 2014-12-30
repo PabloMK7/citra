@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <algorithm>
@@ -14,6 +14,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/mem_map.h"
 
@@ -25,8 +26,8 @@ public:
     std::string GetName() const override { return name; }
     std::string GetTypeName() const override { return "Thread"; }
 
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Thread; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Thread; }
+    static const HandleType HANDLE_TYPE = HandleType::Thread;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
     inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
@@ -49,6 +50,8 @@ public:
 
     ThreadContext context;
 
+    u32 thread_id;
+
     u32 status;
     u32 entry_point;
     u32 stack_top;
@@ -61,6 +64,7 @@ public:
 
     WaitType wait_type;
     Handle wait_handle;
+    VAddr wait_address;
 
     std::vector<Handle> waiting_threads;
 
@@ -76,8 +80,10 @@ static Common::ThreadQueueList<Handle> thread_ready_queue;
 static Handle current_thread_handle;
 static Thread* current_thread;
 
-/// Gets the current thread
-inline Thread* GetCurrentThread() {
+static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
+static u32 next_thread_id; ///< The next available thread id
+
+Thread* GetCurrentThread() {
     return current_thread;
 }
 
@@ -121,6 +127,7 @@ void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     }
     t->wait_type = WAITTYPE_NONE;
     t->wait_handle = 0;
+    t->wait_address = 0;
 }
 
 /// Change a thread to "ready" state
@@ -140,30 +147,43 @@ void ChangeReadyState(Thread* t, bool ready) {
     }
 }
 
-/// Verify that a thread has not been released from waiting
-inline bool VerifyWait(const Thread* thread, WaitType type, Handle wait_handle) {
-    _dbg_assert_(KERNEL, thread != nullptr);
-    return type == thread->wait_type && wait_handle == thread->wait_handle;
+/// Check if a thread is blocking on a specified wait type
+static bool CheckWaitType(const Thread* thread, WaitType type) {
+    return (type == thread->wait_type) && (thread->IsWaiting());
+}
+
+/// Check if a thread is blocking on a specified wait type with a specified handle
+static bool CheckWaitType(const Thread* thread, WaitType type, Handle wait_handle) {
+    return CheckWaitType(thread, type) && (wait_handle == thread->wait_handle);
+}
+
+/// Check if a thread is blocking on a specified wait type with a specified handle and address
+static bool CheckWaitType(const Thread* thread, WaitType type, Handle wait_handle, VAddr wait_address) {
+    return CheckWaitType(thread, type, wait_handle) && (wait_address == thread->wait_address);
 }
 
 /// Stops the current thread
 ResultCode StopThread(Handle handle, const char* reason) {
-    Thread* thread = g_object_pool.Get<Thread>(handle);
+    Thread* thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
+
+    // Release all the mutexes that this thread holds
+    ReleaseThreadMutexes(handle);
 
     ChangeReadyState(thread, false);
     thread->status = THREADSTATUS_DORMANT;
     for (Handle waiting_handle : thread->waiting_threads) {
-        Thread* waiting_thread = g_object_pool.Get<Thread>(waiting_handle);
-        if (VerifyWait(waiting_thread, WAITTYPE_THREADEND, handle)) {
+        Thread* waiting_thread = g_handle_table.Get<Thread>(waiting_handle);
+
+        if (CheckWaitType(waiting_thread, WAITTYPE_THREADEND, handle))
             ResumeThreadFromWait(waiting_handle);
-        }
     }
     thread->waiting_threads.clear();
 
     // Stopped threads are never waiting.
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
+    thread->wait_address = 0;
 
     return RESULT_SUCCESS;
 }
@@ -178,7 +198,7 @@ void ChangeThreadState(Thread* t, ThreadStatus new_status) {
 
     if (new_status == THREADSTATUS_WAIT) {
         if (t->wait_type == WAITTYPE_NONE) {
-            ERROR_LOG(KERNEL, "Waittype none not allowed");
+            LOG_ERROR(Kernel, "Waittype none not allowed");
         }
     }
 }
@@ -190,14 +210,14 @@ Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (Handle handle : thread_queue) {
-        Thread* thread = g_object_pool.Get<Thread>(handle);
+        Thread* thread = g_handle_table.Get<Thread>(handle);
 
-        // TODO(bunnei): Verify arbiter address...
-        if (!VerifyWait(thread, WAITTYPE_ARB, arbiter))
+        if (!CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             continue;
 
         if (thread == nullptr)
             continue; // TODO(yuriks): Thread handle will hang around forever. Should clean up.
+
         if(thread->current_priority <= priority) {
             highest_priority_thread = handle;
             priority = thread->current_priority;
@@ -215,10 +235,9 @@ void ArbitrateAllThreads(u32 arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (Handle handle : thread_queue) {
-        Thread* thread = g_object_pool.Get<Thread>(handle);
+        Thread* thread = g_handle_table.Get<Thread>(handle);
 
-        // TODO(bunnei): Verify arbiter address...
-        if (VerifyWait(thread, WAITTYPE_ARB, arbiter))
+        if (CheckWaitType(thread, WAITTYPE_ARB, arbiter, address))
             ResumeThreadFromWait(handle);
     }
 }
@@ -269,14 +288,9 @@ Thread* NextThread() {
     if (next == 0) {
         return nullptr;
     }
-    return Kernel::g_object_pool.Get<Thread>(next);
+    return Kernel::g_handle_table.Get<Thread>(next);
 }
 
-/**
- * Puts the current thread in the wait state for the given type
- * @param wait_type Type of wait
- * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
- */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
     Thread* thread = GetCurrentThread();
     thread->wait_type = wait_type;
@@ -284,11 +298,18 @@ void WaitCurrentThread(WaitType wait_type, Handle wait_handle) {
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_address) {
+    WaitCurrentThread(wait_type, wait_handle);
+    GetCurrentThread()->wait_address = wait_address;
+}
+
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle) {
-    Thread* thread = Kernel::g_object_pool.Get<Thread>(handle);
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(handle);
     if (thread) {
         thread->status &= ~THREADSTATUS_WAIT;
+        thread->wait_handle = 0;
+        thread->wait_type = WAITTYPE_NONE;
         if (!(thread->status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
             ChangeReadyState(thread, true);
         }
@@ -301,12 +322,12 @@ void DebugThreadQueue() {
     if (!thread) {
         return;
     }
-    INFO_LOG(KERNEL, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
+    LOG_DEBUG(Kernel, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThreadHandle());
     for (u32 i = 0; i < thread_queue.size(); i++) {
         Handle handle = thread_queue[i];
         s32 priority = thread_ready_queue.contains(handle);
         if (priority != -1) {
-            INFO_LOG(KERNEL, "0x%02X 0x%08X", priority, handle);
+            LOG_DEBUG(Kernel, "0x%02X 0x%08X", priority, handle);
         }
     }
 }
@@ -316,15 +337,17 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     s32 processor_id, u32 stack_top, int stack_size) {
 
     _assert_msg_(KERNEL, (priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST),
-        "CreateThread priority=%d, outside of allowable range!", priority)
+        "priority=%d, outside of allowable range!", priority)
 
     Thread* thread = new Thread;
 
-    handle = Kernel::g_object_pool.Create(thread);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(thread).ValueOr(INVALID_HANDLE);
 
     thread_queue.push_back(handle);
     thread_ready_queue.prepare(priority);
 
+    thread->thread_id = next_thread_id++;
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
@@ -333,6 +356,7 @@ Thread* CreateThread(Handle& handle, const char* name, u32 entry_point, s32 prio
     thread->processor_id = processor_id;
     thread->wait_type = WAITTYPE_NONE;
     thread->wait_handle = 0;
+    thread->wait_address = 0;
     thread->name = name;
 
     return thread;
@@ -343,24 +367,24 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
     u32 stack_top, int stack_size) {
 
     if (name == nullptr) {
-        ERROR_LOG(KERNEL, "CreateThread(): nullptr name");
+        LOG_ERROR(Kernel_SVC, "nullptr name");
         return -1;
     }
     if ((u32)stack_size < 0x200) {
-        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid stack_size=0x%08X", name,
+        LOG_ERROR(Kernel_SVC, "(name=%s): invalid stack_size=0x%08X", name,
             stack_size);
         return -1;
     }
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
         s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        WARN_LOG(KERNEL, "CreateThread(name=%s): invalid priority=0x%08X, clamping to %08X",
+        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
             name, priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
         // validity of this
         priority = new_priority;
     }
     if (!Memory::GetPointer(entry_point)) {
-        ERROR_LOG(KERNEL, "CreateThread(name=%s): invalid entry %08x", name, entry_point);
+        LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name, entry_point);
         return -1;
     }
     Handle handle;
@@ -375,7 +399,7 @@ Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s3
 
 /// Get the priority of the thread specified by handle
 ResultVal<u32> GetThreadPriority(const Handle handle) {
-    Thread* thread = g_object_pool.Get<Thread>(handle);
+    Thread* thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     return MakeResult<u32>(thread->current_priority);
@@ -387,7 +411,7 @@ ResultCode SetThreadPriority(Handle handle, s32 priority) {
     if (!handle) {
         thread = GetCurrentThread(); // TODO(bunnei): Is this correct behavior?
     } else {
-        thread = g_object_pool.Get<Thread>(handle);
+        thread = g_handle_table.Get<Thread>(handle);
         if (thread == nullptr) {
             return InvalidHandle(ErrorModule::Kernel);
         }
@@ -397,7 +421,7 @@ ResultCode SetThreadPriority(Handle handle, s32 priority) {
     // If priority is invalid, clamp to valid range
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
         s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        WARN_LOG(KERNEL, "invalid priority=0x%08X, clamping to %08X", priority, new_priority);
+        LOG_WARNING(Kernel_SVC, "invalid priority=%d, clamping to %d", priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
         // validity of this
         priority = new_priority;
@@ -450,24 +474,44 @@ void Reschedule() {
     Thread* prev = GetCurrentThread();
     Thread* next = NextThread();
     HLE::g_reschedule = false;
-    if (next > 0) {
-        INFO_LOG(KERNEL, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
 
+    if (next != nullptr) {
+        LOG_TRACE(Kernel, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
         SwitchContext(next);
+    } else {
+        LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
 
-        // Hack - There is no mechanism yet to waken the primary thread if it has been put to sleep
-        // by a simulated VBLANK thread switch. So, we'll just immediately set it to "ready" again.
-        // This results in the current thread yielding on a VBLANK once, and then it will be
-        // immediately placed back in the queue for execution.
-        if (prev->wait_type == WAITTYPE_VBLANK) {
-            ResumeThreadFromWait(prev->GetHandle());
+        for (Handle handle : thread_queue) {
+            Thread* thread = g_handle_table.Get<Thread>(handle);
+            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X wait_handle=0x%08X",
+                thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_handle);
         }
     }
+
+    // TODO(bunnei): Hack - There is no timing mechanism yet to wake up a thread if it has been put
+    // to sleep. So, we'll just immediately set it to "ready" again after an attempted context
+    // switch has occurred. This results in the current thread yielding on a sleep once, and then it
+    // will immediately be placed back in the queue for execution.
+
+    if (CheckWaitType(prev, WAITTYPE_SLEEP))
+        ResumeThreadFromWait(prev->GetHandle());
+}
+
+ResultCode GetThreadId(u32* thread_id, Handle handle) {
+    Thread* thread = g_handle_table.Get<Thread>(handle);
+    if (thread == nullptr)
+        return ResultCode(ErrorDescription::InvalidHandle, ErrorModule::OS, 
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+
+    *thread_id = thread->thread_id;
+
+    return RESULT_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ThreadingInit() {
+    next_thread_id = INITIAL_THREAD_ID;
 }
 
 void ThreadingShutdown() {

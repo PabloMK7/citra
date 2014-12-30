@@ -1,9 +1,14 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <thread>
+
 #include "common/common.h"
-#include "common/log_manager.h"
+#include "common/logging/text_formatter.h"
+#include "common/logging/backend.h"
+#include "common/logging/filter.h"
+#include "common/scope_exit.h"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -15,17 +20,21 @@
 
 /// Application entry point
 int __cdecl main(int argc, char **argv) {
-    LogManager::Init();
+    std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
+    Log::Filter log_filter(Log::Level::Debug);
+    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
+    SCOPE_EXIT({
+        logger->Close();
+        logging_thread.join();
+    });
 
     if (argc < 2) {
-        ERROR_LOG(BOOT, "Failed to load ROM: No ROM specified");
+        LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
     }
 
     Config config;
-
-    if (!Settings::values.enable_log)
-        LogManager::Shutdown();
+    log_filter.ParseFilterString(Settings::values.log_filter);
 
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
@@ -34,7 +43,7 @@ int __cdecl main(int argc, char **argv) {
 
     Loader::ResultStatus load_result = Loader::LoadFile(boot_filename);
     if (Loader::ResultStatus::Success != load_result) {
-        ERROR_LOG(BOOT, "Failed to load ROM (Error %i)!", load_result);
+        LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
         return -1;
     }
 

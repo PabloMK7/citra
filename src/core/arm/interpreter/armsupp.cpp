@@ -227,8 +227,9 @@ ARMul_CPSRAltered (ARMul_State * state)
     //state->Cpsr &= ~CBIT;
     ASSIGNV ((state->Cpsr & VBIT) != 0);
     //state->Cpsr &= ~VBIT;
-    ASSIGNS ((state->Cpsr & SBIT) != 0);
-    //state->Cpsr &= ~SBIT;
+    ASSIGNQ ((state->Cpsr & QBIT) != 0);
+    //state->Cpsr &= ~QBIT;
+    state->GEFlag = (state->Cpsr & 0x000F0000);
 #ifdef MODET
     ASSIGNT ((state->Cpsr & TBIT) != 0);
     //state->Cpsr &= ~TBIT;
@@ -391,6 +392,15 @@ ARMul_NthReg (ARMword instr, unsigned number)
     return (bit - 1);
 }
 
+/* Unsigned sum of absolute difference */
+u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right)
+{
+	if (left > right)
+		return left - right;
+
+	return right - left;
+}
+
 /* Assigns the N and Z flags depending on the value of result.  */
 
 void
@@ -443,6 +453,14 @@ ARMul_AddOverflow (ARMul_State * state, ARMword a, ARMword b, ARMword result)
     ASSIGNV (AddOverflow (a, b, result));
 }
 
+/* Assigns the Q flag if the given result is considered an overflow from the addition of a and b  */
+void ARMul_AddOverflowQ(ARMul_State* state, ARMword a, ARMword b)
+{
+    u32 result = a + b;
+    if (((result ^ a) & (u32)0x80000000) && ((a ^ b) & (u32)0x80000000) == 0)
+        SETQ;
+}
+
 /* Assigns the C flag after an subtraction of a and b to give result.  */
 
 void
@@ -458,6 +476,142 @@ void
 ARMul_SubOverflow (ARMul_State * state, ARMword a, ARMword b, ARMword result)
 {
     ASSIGNV (SubOverflow (a, b, result));
+}
+
+/* 8-bit signed saturated addition */
+u8 ARMul_SignedSaturatedAdd8(u8 left, u8 right)
+{
+    u8 result = left + right;
+
+    if (((result ^ left) & 0x80) && ((left ^ right) & 0x80) == 0) {
+        if (left & 0x80)
+            result = 0x80;
+        else
+            result = 0x7F;
+    }
+
+    return result;
+}
+
+/* 8-bit signed saturated subtraction */
+u8 ARMul_SignedSaturatedSub8(u8 left, u8 right)
+{
+    u8 result = left - right;
+
+    if (((result ^ left) & 0x80) && ((left ^ right) & 0x80) != 0) {
+        if (left & 0x80)
+            result = 0x80;
+        else
+            result = 0x7F;
+    }
+
+    return result;
+}
+
+/* 16-bit signed saturated addition */
+u16 ARMul_SignedSaturatedAdd16(u16 left, u16 right)
+{
+    u16 result = left + right;
+
+    if (((result ^ left) & 0x8000) && ((left ^ right) & 0x8000) == 0) {
+        if (left & 0x8000)
+            result = 0x8000;
+        else
+            result = 0x7FFF;
+    }
+
+    return result;
+}
+
+/* 16-bit signed saturated subtraction */
+u16 ARMul_SignedSaturatedSub16(u16 left, u16 right)
+{
+    u16 result = left - right;
+
+    if (((result ^ left) & 0x8000) && ((left ^ right) & 0x8000) != 0) {
+        if (left & 0x8000)
+            result = 0x8000;
+        else
+            result = 0x7FFF;
+    }
+
+    return result;
+}
+
+/* 8-bit unsigned saturated addition */
+u8 ARMul_UnsignedSaturatedAdd8(u8 left, u8 right)
+{
+    u8 result = left + right;
+
+    if (result < left)
+        result = 0xFF;
+
+    return result;
+}
+
+/* 16-bit unsigned saturated addition */
+u16 ARMul_UnsignedSaturatedAdd16(u16 left, u16 right)
+{
+    u16 result = left + right;
+
+    if (result < left)
+        result = 0xFFFF;
+
+    return result;
+}
+
+/* 8-bit unsigned saturated subtraction */
+u8 ARMul_UnsignedSaturatedSub8(u8 left, u8 right)
+{
+    if (left <= right)
+        return 0;
+
+    return left - right;
+}
+
+/* 16-bit unsigned saturated subtraction */
+u16 ARMul_UnsignedSaturatedSub16(u16 left, u16 right)
+{
+    if (left <= right)
+        return 0;
+
+    return left - right;
+}
+
+// Signed saturation.
+u32 ARMul_SignedSatQ(s32 value, u8 shift, bool* saturation_occurred)
+{
+    const u32 max = (1 << shift) - 1;
+    const s32 top = (value >> shift);
+
+    if (top > 0) {
+        *saturation_occurred = true;
+        return max;
+    }
+    else if (top < -1) {
+        *saturation_occurred = true;
+        return ~max;
+    }
+
+    *saturation_occurred = false;
+    return (u32)value;
+}
+
+// Unsigned saturation
+u32 ARMul_UnsignedSatQ(s32 value, u8 shift, bool* saturation_occurred)
+{
+    const u32 max = (1 << shift) - 1;
+
+    if (value < 0) {
+        *saturation_occurred = true;
+        return 0;
+    } else if ((u32)value > max) {
+        *saturation_occurred = true;
+        return max;
+    }
+
+    *saturation_occurred = false;
+    return (u32)value;
 }
 
 /* This function does the work of generating the addresses used in an
@@ -665,7 +819,7 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
     //if (!CP_ACCESS_ALLOWED (state, CPNum)) {
     if (!state->MCR[CPNum]) {
         //chy 2004-07-19 should fix in the future ????!!!!
-        DEBUG("SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x\n",CPNum, source);
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MCR, ACCESS_not ALLOWed, UndefinedInstr  CPnum is %x, source %x",CPNum, source);
         ARMul_UndefInstr (state, instr);
         return;
     }
@@ -690,7 +844,7 @@ ARMul_MCR (ARMul_State * state, ARMword instr, ARMword source)
     }
 
     if (cpab == ARMul_CANT) {
-        DEBUG("SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x\n", instr, CPNum, source); //ichfly todo
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MCR, CANT, UndefinedInstr %x CPnum is %x, source %x", instr, CPNum, source); //ichfly todo
         //ARMul_Abort (state, ARMul_UndefinedInstrV);
     } else {
         BUSUSEDINCPCN;
@@ -762,7 +916,7 @@ ARMword ARMul_MRC (ARMul_State * state, ARMword instr)
     //if (!CP_ACCESS_ALLOWED (state, CPNum)) {
     if (!state->MRC[CPNum]) {
         //chy 2004-07-19 should fix in the future????!!!!
-        DEBUG("SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x\n", CPNum, instr);
+        LOG_ERROR(Core_ARM11, "SKYEYE ARMul_MRC,NOT ALLOWed UndefInstr  CPnum is %x, instr %x", CPNum, instr);
         ARMul_UndefInstr (state, instr);
         return -1;
     }
@@ -865,7 +1019,7 @@ void
 ARMul_UndefInstr (ARMul_State * state, ARMword instr)
 {
     std::string disasm = ARM_Disasm::Disassemble(state->pc, instr);
-    ERROR_LOG(ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", disasm.c_str(), instr);
+    LOG_ERROR(Core_ARM11, "Undefined instruction!! Disasm: %s Opcode: 0x%x", disasm.c_str(), instr);
     ARMul_Abort (state, ARMul_UndefinedInstrV);
 }
 

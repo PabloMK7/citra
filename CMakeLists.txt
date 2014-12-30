@@ -6,16 +6,48 @@ project(citra)
 
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes")
+    add_definitions(-pthread)
 else()
     # Silence deprecation warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
+    # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+    # Tweak optimization settings
+    # As far as I can tell, there's no way to override the CMake defaults while leaving user
+    # changes intact, so we'll just clobber everything and say sorry.
+    message(STATUS "Cache compiler flags ignored, please edit CMakeFiles.txt to change the flags.")
+    # /MD - Multi-threaded runtime
+    # /Ox - Full optimization
+    # /Oi - Use intrinsic functions
+    # /Oy- - Don't omit frame pointer
+    # /GR- - Disable RTTI
+    # /GS- - No stack buffer overflow checks
+    # /EHsc - C++-only exception handling semantics
+    set(optimization_flags "/MD /Ox /Oi /Oy- /DNDEBUG /GR- /GS- /EHsc")
+    # /Zi - Output debugging information
+    # /Zo - enahnced debug info for optimized builds
+    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
 endif()
 add_definitions(-DSINGLETHREADED)
 
-find_package(PNG)
+find_package(PNG QUIET)
 if (PNG_FOUND)
     add_definitions(-DHAVE_PNG)
-endif ()
+else()
+    message(STATUS "libpng not found. Some debugging features have been disabled.")
+endif()
+
+find_package(Boost 1.57.0)
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(STATUS "Boost 1.57.0 or newer not found, falling back to externals")
+    include_directories(externals/boost)
+endif()
 
 # Include bundled CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
@@ -65,10 +97,6 @@ if (ENABLE_GLFW)
 
         set(GLFW_LIBRARIES glfw3)
     else()
-        if (NOT APPLE)
-            find_package(X11 REQUIRED)
-        endif()
-
         find_package(PkgConfig REQUIRED)
         pkg_search_module(GLFW REQUIRED glfw3)
     endif()
@@ -130,6 +158,8 @@ git_branch_name(GIT_BRANCH)
 set(INI_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/inih")
 include_directories(${INI_PREFIX})
 add_subdirectory(${INI_PREFIX})
+
+include_directories(externals/nihstro/include)
 
 # process subdirectories
 if(ENABLE_QT)

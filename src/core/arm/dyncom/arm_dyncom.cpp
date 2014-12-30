@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "core/arm/skyeye_common/armcpu.h"
@@ -47,68 +47,38 @@ ARM_DynCom::ARM_DynCom() : ticks(0) {
 ARM_DynCom::~ARM_DynCom() {
 }
 
-/**
- * Set the Program Counter to an address
- * @param addr Address to set PC to
- */
 void ARM_DynCom::SetPC(u32 pc) {
     state->pc = state->Reg[15] = pc;
 }
 
-/*
- * Get the current Program Counter
- * @return Returns current PC
- */
 u32 ARM_DynCom::GetPC() const {
     return state->Reg[15];
 }
 
-/**
- * Get an ARM register
- * @param index Register index (0-15)
- * @return Returns the value in the register
- */
 u32 ARM_DynCom::GetReg(int index) const {
     return state->Reg[index];
 }
 
-/**
- * Set an ARM register
- * @param index Register index (0-15)
- * @param value Value to set register to
- */
 void ARM_DynCom::SetReg(int index, u32 value) {
     state->Reg[index] = value;
 }
 
-/**
- * Get the current CPSR register
- * @return Returns the value of the CPSR register
- */
 u32 ARM_DynCom::GetCPSR() const {
     return state->Cpsr;
 }
 
-/**
- * Set the current CPSR register
- * @param cpsr Value to set CPSR to
- */
 void ARM_DynCom::SetCPSR(u32 cpsr) {
     state->Cpsr = cpsr;
 }
 
-/**
- * Returns the number of clock ticks since the last reset
- * @return Returns number of clock ticks
- */
 u64 ARM_DynCom::GetTicks() const {
     return ticks;
 }
 
-/**
- * Executes the given number of instructions
- * @param num_instructions Number of instructions to executes
- */
+void ARM_DynCom::AddTicks(u64 ticks) {
+    this->ticks += ticks;
+}
+
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     state->NumInstrsToExecute = num_instructions;
 
@@ -118,11 +88,6 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     ticks += InterpreterMainLoop(state.get());
 }
 
-/**
- * Saves the current CPU context
- * @param ctx Thread context to save
- * @todo Do we need to save Reg[15] and NextInstr?
- */
 void ARM_DynCom::SaveContext(ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
@@ -139,11 +104,6 @@ void ARM_DynCom::SaveContext(ThreadContext& ctx) {
     ctx.mode = state->NextInstr;
 }
 
-/**
- * Loads a CPU context
- * @param ctx Thread context to load
- * @param Do we need to load Reg[15] and NextInstr?
- */
 void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
     memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
     memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
@@ -160,7 +120,6 @@ void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
     state->NextInstr = ctx.mode;
 }
 
-/// Prepare core for thread reschedule (if needed to correctly handle state)
 void ARM_DynCom::PrepareReschedule() {
     state->NumInstrsToExecute = 0;
 }

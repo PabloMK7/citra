@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
@@ -20,16 +20,10 @@ public:
     std::string GetTypeName() const override { return "Arbiter"; }
     std::string GetName() const override { return name; }
 
-    static Kernel::HandleType GetStaticHandleType() { return HandleType::AddressArbiter; }
-    Kernel::HandleType GetHandleType() const override { return HandleType::AddressArbiter; }
+    static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     std::string name;   ///< Name of address arbiter object (optional)
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::OS);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,13 +47,13 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)Memory::Read32(address) <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle);
+            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle, address);
             HLE::Reschedule(__func__);
         }
         break;
 
     default:
-        ERROR_LOG(KERNEL, "unknown type=%d", type);
+        LOG_ERROR(Kernel, "unknown type=%d", type);
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel, ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
     return RESULT_SUCCESS;
@@ -68,7 +62,8 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
 /// Create an address arbiter
 AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
     AddressArbiter* address_arbiter = new AddressArbiter;
-    handle = Kernel::g_object_pool.Create(address_arbiter);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(address_arbiter).ValueOr(INVALID_HANDLE);
     address_arbiter->name = name;
     return address_arbiter;
 }

@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -22,6 +22,7 @@ enum class FileType {
     CIA,
     ELF,
     BIN,
+    THREEDSX, //3DSX
 };
 
 /// Return type for functions in Loader namespace

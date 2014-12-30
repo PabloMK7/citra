@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <GLFW/glfw3.h>
@@ -22,21 +22,22 @@ Config::Config() {
 bool Config::LoadINI(INIReader* config, const char* location, const std::string& default_contents, bool retry) {
     if (config->ParseError() < 0) {
         if (retry) {
-            ERROR_LOG(CONFIG, "Failed to load %s. Creating file from defaults...", location);
+            LOG_WARNING(Config, "Failed to load %s. Creating file from defaults...", location);
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, default_contents, location);
             *config = INIReader(location); // Reopen file
 
             return LoadINI(config, location, default_contents, false);
         }
-        ERROR_LOG(CONFIG, "Failed.");
+        LOG_ERROR(Config, "Failed.");
         return false;
     }
-    INFO_LOG(CONFIG, "Successfully loaded %s", location);
+    LOG_INFO(Config, "Successfully loaded %s", location);
     return true;
 }
 
-void Config::ReadControls() {
+void Config::ReadValues() {
+    // Controls
     Settings::values.pad_a_key = glfw_config->GetInteger("Controls", "pad_a", GLFW_KEY_A);
     Settings::values.pad_b_key = glfw_config->GetInteger("Controls", "pad_b", GLFW_KEY_S);
     Settings::values.pad_x_key = glfw_config->GetInteger("Controls", "pad_x", GLFW_KEY_Z);
@@ -54,27 +55,22 @@ void Config::ReadControls() {
     Settings::values.pad_sdown_key  = glfw_config->GetInteger("Controls", "pad_sdown",  GLFW_KEY_DOWN);
     Settings::values.pad_sleft_key  = glfw_config->GetInteger("Controls", "pad_sleft",  GLFW_KEY_LEFT);
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
-}
 
-void Config::ReadCore() {
+    // Core
     Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
-    Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 60);
-}
+    Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 30);
+    Settings::values.frame_skip = glfw_config->GetInteger("Core", "frame_skip", 0);
 
-void Config::ReadData() {
+    // Data Storage
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
-}
 
-void Config::ReadMiscellaneous() {
-    Settings::values.enable_log = glfw_config->GetBoolean("Miscellaneous", "enable_log", true);
+    // Miscellaneous
+    Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
 }
 
 void Config::Reload() {
     LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
-    ReadControls();
-    ReadCore();
-    ReadData();
-    ReadMiscellaneous();
+    ReadValues();
 }
 
 Config::~Config() {

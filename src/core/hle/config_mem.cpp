@@ -1,8 +1,9 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
+#include "common/log.h"
 
 #include "core/hle/config_mem.h"
 
@@ -54,7 +55,7 @@ inline void Read(T &var, const u32 addr) {
         break;
 
     default:
-        ERROR_LOG(HLE, "unknown addr=0x%08X", addr);
+        LOG_ERROR(Kernel, "unknown addr=0x%08X", addr);
     }
 }
 

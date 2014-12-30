@@ -1,5 +1,5 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common.h"
@@ -180,7 +180,7 @@ void TMemCheck::Action(DebugInterface *debug_interface, u32 iValue, u32 addr,
     {
         if (Log)
         {
-            INFO_LOG(MEMMAP, "CHK %08x (%s) %s%i %0*x at %08x (%s)",
+            LOG_DEBUG(Debug_Breakpoint, "CHK %08x (%s) %s%i %0*x at %08x (%s)",
                 pc, debug_interface->getDescription(pc).c_str(),
                 write ? "Write" : "Read", size*8, size*2, iValue, addr,
                 debug_interface->getDescription(addr).c_str()

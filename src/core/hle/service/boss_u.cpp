@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/log.h"
@@ -11,18 +11,15 @@
 
 namespace BOSS_U {
 
-    const Interface::FunctionInfo FunctionTable[] = {
-        {0x00020100, nullptr,               "GetStorageInfo"},
-    };
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x00020100, nullptr,               "GetStorageInfo"},
+};
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Interface class
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Interface class
 
-    Interface::Interface() {
-        Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-    }
-
-    Interface::~Interface() {
-    }
+Interface::Interface() {
+    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+}
 
 } // namespace

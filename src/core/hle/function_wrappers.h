@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -110,6 +110,20 @@ template<s32 func(s64*, u32, void*, s32)> void Wrap(){
 template<s32 func(u32*, const char*)> void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, Memory::GetCharPointer(PARAM(1)));
+    Core::g_app_core->SetReg(1, param_1);
+    FuncReturn(retval);
+}
+
+template<s32 func(u32*, s32, s32)> void Wrap() {
+    u32 param_1 = 0;
+    u32 retval = func(&param_1, PARAM(1), PARAM(2));
+    Core::g_app_core->SetReg(1, param_1);
+    FuncReturn(retval);
+}
+
+template<s32 func(s32*, u32, s32)> void Wrap() {
+    s32 param_1 = 0;
+    u32 retval = func(&param_1, PARAM(1), PARAM(2));
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }

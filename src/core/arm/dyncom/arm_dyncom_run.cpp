@@ -1,42 +1,15 @@
-/* Copyright (C)
-* 2011 - Michael.Kang blackfin.kang@gmail.com
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*
-*/
-/**
-* @file arm_dyncom_run.cpp
-* @brief The dyncom run implementation for arm
-* @author Michael.Kang blackfin.kang@gmail.com
-* @version 78.77
-* @date 2011-11-20
-*/
+// Copyright 2012 Michael Kang, 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 
 #include <assert.h>
 
 #include "core/arm/skyeye_common/armdefs.h"
 
-void switch_mode(arm_core_t *core, uint32_t mode)
-{
-    uint32_t tmp1, tmp2;
-    if (core->Mode == mode) {
-        //Mode not changed.
-        //printf("mode not changed\n");
+void switch_mode(arm_core_t *core, uint32_t mode) {
+    if (core->Mode == mode)
         return;
-    }
-    //printf("%d --->>> %d\n", core->Mode, mode);
-    //printf("In %s, Cpsr=0x%x, R15=0x%x, last_pc=0x%x, cpsr=0x%x, spsr_copy=0x%x, icounter=%lld\n", __FUNCTION__, core->Cpsr, core->Reg[15], core->last_pc, core->Cpsr, core->Spsr_copy, core->icounter);
+
     if (mode != USERBANK) {
         switch (core->Mode) {
         case USER32MODE:
@@ -110,11 +83,8 @@ void switch_mode(arm_core_t *core, uint32_t mode)
 
         }
         core->Mode = mode;
-        //printf("In %si end, Cpsr=0x%x, R15=0x%x, last_pc=0x%x, cpsr=0x%x, spsr_copy=0x%x, icounter=%lld\n", __FUNCTION__, core->Cpsr, core->Reg[15], core->last_pc, core->Cpsr, core->Spsr_copy, core->icounter);
-        //printf("\n--------------------------------------\n");
-    }
-    else {
-        printf("user mode\n");
+    } else {
+        LOG_CRITICAL(Core_ARM11, "user mode");
         exit(-2);
     }
 }

@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -12,15 +12,8 @@ class Config {
     QSettings* qt_config;
     std::string qt_config_loc;
 
-    void ReadControls();
-    void SaveControls();
-    void ReadCore();
-    void SaveCore();
-    void ReadData();
-    void SaveData();
-
-    void ReadMiscellaneous();
-    void SaveMiscellaneous();
+    void ReadValues();
+    void SaveValues();
 public:
     Config();
     ~Config();

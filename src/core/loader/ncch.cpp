@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <memory>
@@ -140,13 +140,13 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
     // Iterate through the ExeFs archive until we find the .code file...
     FileUtil::IOFile file(filename, "rb");
     if (file.IsOpen()) {
+        LOG_DEBUG(Loader, "%d sections:", kMaxSections);
         for (int i = 0; i < kMaxSections; i++) {
             // Load the specified section...
             if (strcmp((const char*)exefs_header.section[i].name, name) == 0) {
-                INFO_LOG(LOADER, "ExeFS section %d:", i);
-                INFO_LOG(LOADER, "    name:   %s", exefs_header.section[i].name);
-                INFO_LOG(LOADER, "    offset: 0x%08X", exefs_header.section[i].offset);
-                INFO_LOG(LOADER, "    size:   0x%08X", exefs_header.section[i].size);
+                LOG_DEBUG(Loader, "%d - offset: 0x%08X, size: 0x%08X, name: %s", i,
+                        exefs_header.section[i].offset, exefs_header.section[i].size,
+                        exefs_header.section[i].name);
 
                 s64 section_offset = (exefs_header.section[i].offset + exefs_offset +
                     sizeof(ExeFs_Header)+ncch_offset);
@@ -181,7 +181,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
             }
         }
     } else {
-        ERROR_LOG(LOADER, "Unable to read file %s!", filename.c_str());
+        LOG_ERROR(Loader, "Unable to read file %s!", filename.c_str());
         return ResultStatus::Error;
     }
     return ResultStatus::ErrorNotUsed;
@@ -194,7 +194,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
  * @return True on success, otherwise false
  */
 ResultStatus AppLoader_NCCH::Load() {
-    INFO_LOG(LOADER, "Loading NCCH file %s...", filename.c_str());
+    LOG_INFO(Loader, "Loading NCCH file %s...", filename.c_str());
 
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
@@ -205,7 +205,7 @@ ResultStatus AppLoader_NCCH::Load() {
 
         // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
         if (0 == memcmp(&ncch_header.magic, "NCSD", 4)) {
-            WARN_LOG(LOADER, "Only loading the first (bootable) NCCH within the NCSD file!");
+            LOG_WARNING(Loader, "Only loading the first (bootable) NCCH within the NCSD file!");
             ncch_offset = 0x4000;
             file.Seek(ncch_offset, 0);
             file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
@@ -222,17 +222,17 @@ ResultStatus AppLoader_NCCH::Load() {
         is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
         entry_point = exheader_header.codeset_info.text.address;
 
-        INFO_LOG(LOADER, "Name:            %s", exheader_header.codeset_info.name);
-        INFO_LOG(LOADER, "Code compressed: %s", is_compressed ? "yes" : "no");
-        INFO_LOG(LOADER, "Entry point:     0x%08X", entry_point);
+        LOG_INFO(Loader, "Name:            %s", exheader_header.codeset_info.name);
+        LOG_DEBUG(Loader, "Code compressed: %s", is_compressed ? "yes" : "no");
+        LOG_DEBUG(Loader, "Entry point:     0x%08X", entry_point);
 
         // Read ExeFS...
 
         exefs_offset = ncch_header.exefs_offset * kBlockSize;
         u32 exefs_size = ncch_header.exefs_size * kBlockSize;
 
-        INFO_LOG(LOADER, "ExeFS offset:    0x%08X", exefs_offset);
-        INFO_LOG(LOADER, "ExeFS size:      0x%08X", exefs_size);
+        LOG_DEBUG(Loader, "ExeFS offset:    0x%08X", exefs_offset);
+        LOG_DEBUG(Loader, "ExeFS size:      0x%08X", exefs_size);
 
         file.Seek(exefs_offset + ncch_offset, 0);
         file.ReadBytes(&exefs_header, sizeof(ExeFs_Header));
@@ -243,7 +243,7 @@ ResultStatus AppLoader_NCCH::Load() {
 
         return ResultStatus::Success;
     } else {
-        ERROR_LOG(LOADER, "Unable to read file %s!", filename.c_str());
+        LOG_ERROR(Loader, "Unable to read file %s!", filename.c_str());
     }
     return ResultStatus::Error;
 }
@@ -297,8 +297,8 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
             u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
             u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
 
-            INFO_LOG(LOADER, "RomFS offset:    0x%08X", romfs_offset);
-            INFO_LOG(LOADER, "RomFS size:      0x%08X", romfs_size);
+            LOG_DEBUG(Loader, "RomFS offset:    0x%08X", romfs_offset);
+            LOG_DEBUG(Loader, "RomFS size:      0x%08X", romfs_size);
 
             buffer.resize(romfs_size);
 
@@ -307,12 +307,16 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
 
             return ResultStatus::Success;
         }
-        NOTICE_LOG(LOADER, "RomFS unused");
+        LOG_DEBUG(Loader, "NCCH has no RomFS");
         return ResultStatus::ErrorNotUsed;
     } else {
-        ERROR_LOG(LOADER, "Unable to read file %s!", filename.c_str());
+        LOG_ERROR(Loader, "Unable to read file %s!", filename.c_str());
     }
     return ResultStatus::Error;
+}
+
+u64 AppLoader_NCCH::GetProgramId() const {
+    return *reinterpret_cast<u64 const*>(&ncch_header.program_id[0]);
 }
 
 } // namespace Loader

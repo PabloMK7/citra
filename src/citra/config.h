@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -15,10 +15,7 @@ class Config {
     std::string glfw_config_loc;
 
     bool LoadINI(INIReader* config, const char* location, const std::string& default_contents="", bool retry=true);
-    void ReadControls();
-    void ReadCore();
-    void ReadData();
-    void ReadMiscellaneous();
+    void ReadValues();
 public:
     Config();
     ~Config();

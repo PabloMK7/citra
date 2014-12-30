@@ -5,7 +5,7 @@
 
 struct Hotkey
 {
-    Hotkey() : shortcut(NULL), context(Qt::WindowShortcut) {}
+    Hotkey() : shortcut(nullptr), context(Qt::WindowShortcut) {}
 
     QKeySequence keyseq;
     QShortcut* shortcut;
@@ -81,7 +81,7 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
     Hotkey& hk = hotkey_groups[group][action];
 
     if (!hk.shortcut)
-        hk.shortcut = new QShortcut(hk.keyseq, widget, NULL, NULL, hk.context);
+        hk.shortcut = new QShortcut(hk.keyseq, widget, nullptr, nullptr, hk.context);
 
     return hk.shortcut;
 }

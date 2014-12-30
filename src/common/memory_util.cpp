@@ -1,5 +1,5 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 
@@ -93,7 +93,7 @@ void* AllocateMemoryPages(size_t size)
     // printf("Mapped memory at %p (size %ld)\n", ptr,
     //    (unsigned long)size);
 
-    if (ptr == NULL)
+    if (ptr == nullptr)
         PanicAlert("Failed to allocate raw memory");
 
     return ptr;
@@ -104,19 +104,19 @@ void* AllocateAlignedMemory(size_t size,size_t alignment)
 #ifdef _WIN32
     void* ptr =  _aligned_malloc(size,alignment);
 #else
-    void* ptr = NULL;
+    void* ptr = nullptr;
 #ifdef ANDROID
     ptr = memalign(alignment, size);
 #else
     if (posix_memalign(&ptr, alignment, size) != 0)
-        ERROR_LOG(MEMMAP, "Failed to allocate aligned memory");
+        LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 #endif
 #endif
 
     // printf("Mapped memory at %p (size %ld)\n", ptr,
     //    (unsigned long)size);
 
-    if (ptr == NULL)
+    if (ptr == nullptr)
         PanicAlert("Failed to allocate aligned memory");
 
     return ptr;
@@ -130,7 +130,7 @@ void FreeMemoryPages(void* ptr, size_t size)
 
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
             PanicAlert("FreeMemoryPages failed!\n%s", GetLastErrorMsg());
-        ptr = NULL; // Is this our responsibility?
+        ptr = nullptr; // Is this our responsibility?
 
 #else
         munmap(ptr, size);
@@ -184,7 +184,7 @@ std::string MemUsage()
     // Print information about the memory usage of the process.
 
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
-    if (NULL == hProcess) return "MemUsage Error";
+    if (nullptr == hProcess) return "MemUsage Error";
 
     if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
         Ret = Common::StringFromFormat("%s K", Common::ThousandSeparate(pmc.WorkingSetSize / 1024, 7).c_str());

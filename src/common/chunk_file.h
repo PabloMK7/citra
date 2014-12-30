@@ -154,7 +154,7 @@ public:
             Do(foundVersion);
 
         if (error == ERROR_FAILURE || foundVersion < minVer || foundVersion > ver) {
-            WARN_LOG(COMMON, "Savestate failure: wrong version %d found for %s", foundVersion, title);
+            LOG_ERROR(Common, "Savestate failure: wrong version %d found for %s", foundVersion, title);
             SetError(ERROR_FAILURE);
             return PointerWrapSection(*this, -1, title);
         }
@@ -178,7 +178,14 @@ public:
         case MODE_READ:    if (memcmp(data, *ptr, size) != 0) return false; break;
         case MODE_WRITE: memcpy(*ptr, data, size); break;
         case MODE_MEASURE: break;  // MODE_MEASURE - don't need to do anything
-        case MODE_VERIFY: for(int i = 0; i < size; i++) _dbg_assert_msg_(COMMON, ((u8*)data)[i] == (*ptr)[i], "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n", ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i], &(*ptr)[i]); break;
+        case MODE_VERIFY:
+            for (int i = 0; i < size; i++) {
+                _dbg_assert_msg_(Common, ((u8*)data)[i] == (*ptr)[i],
+                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i],
+                    (*ptr)[i], (*ptr)[i], &(*ptr)[i]);
+            }
+            break;
         default: break;  // throw an error?
         }
         (*ptr) += size;
@@ -191,7 +198,14 @@ public:
         case MODE_READ:    memcpy(data, *ptr, size); break;
         case MODE_WRITE: memcpy(*ptr, data, size); break;
         case MODE_MEASURE: break;  // MODE_MEASURE - don't need to do anything
-        case MODE_VERIFY: for(int i = 0; i < size; i++) _dbg_assert_msg_(COMMON, ((u8*)data)[i] == (*ptr)[i], "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n", ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i], &(*ptr)[i]); break;
+        case MODE_VERIFY:
+            for (int i = 0; i < size; i++) {
+                _dbg_assert_msg_(Common, ((u8*)data)[i] == (*ptr)[i],
+                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i],
+                    (*ptr)[i], (*ptr)[i], &(*ptr)[i]);
+            }
+            break;
         default: break;  // throw an error?
         }
         (*ptr) += size;
@@ -204,11 +218,11 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (it->second != NULL)
+                if (it->second != nullptr)
                     delete it->second;
             }
         }
-        T *dv = NULL;
+        T *dv = nullptr;
         DoMap(x, dv);
     }
 
@@ -264,11 +278,11 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (it->second != NULL)
+                if (it->second != nullptr)
                     delete it->second;
             }
         }
-        T *dv = NULL;
+        T *dv = nullptr;
         DoMultimap(x, dv);
     }
 
@@ -320,7 +334,7 @@ public:
     template<class T>
     void Do(std::vector<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         DoVector(x, dv);
     }
 
@@ -369,7 +383,7 @@ public:
     template<class T>
     void Do(std::deque<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         DoDeque(x, dv);
     }
 
@@ -395,7 +409,7 @@ public:
     template<class T>
     void Do(std::list<T *> &x)
     {
-        T *dv = NULL;
+        T *dv = nullptr;
         Do(x, dv);
     }
 
@@ -433,7 +447,7 @@ public:
         {
             for (auto it = x.begin(), end = x.end(); it != end; ++it)
             {
-                if (*it != NULL)
+                if (*it != nullptr)
                     delete *it;
             }
         }
@@ -476,7 +490,7 @@ public:
             break;
 
         default:
-            ERROR_LOG(COMMON, "Savestate error: invalid mode %d.", mode);
+            LOG_ERROR(Common, "Savestate error: invalid mode %d.", mode);
         }
     }
 
@@ -490,7 +504,12 @@ public:
         case MODE_READ:        x = (char*)*ptr; break;
         case MODE_WRITE:    memcpy(*ptr, x.c_str(), stringLen); break;
         case MODE_MEASURE: break;
-        case MODE_VERIFY: _dbg_assert_msg_(COMMON, !strcmp(x.c_str(), (char*)*ptr), "Savestate verification failure: \"%s\" != \"%s\" (at %p).\n", x.c_str(), (char*)*ptr, ptr); break;
+        case MODE_VERIFY:
+            _dbg_assert_msg_(Common,
+                !strcmp(x.c_str(), (char*)*ptr),
+                "Savestate verification failure: \"%s\" != \"%s\" (at %p).\n",
+                x.c_str(), (char*)*ptr, ptr);
+            break;
         }
         (*ptr) += stringLen;
     }
@@ -504,7 +523,11 @@ public:
         case MODE_READ:        x = (wchar_t*)*ptr; break;
         case MODE_WRITE:    memcpy(*ptr, x.c_str(), stringLen); break;
         case MODE_MEASURE: break;
-        case MODE_VERIFY: _dbg_assert_msg_(COMMON, x == (wchar_t*)*ptr, "Savestate verification failure: \"%ls\" != \"%ls\" (at %p).\n", x.c_str(), (wchar_t*)*ptr, ptr); break;
+        case MODE_VERIFY:
+            _dbg_assert_msg_(Common, x == (wchar_t*)*ptr,
+                "Savestate verification failure: \"%ls\" != \"%ls\" (at %p).\n",
+                x.c_str(), (wchar_t*)*ptr, ptr);
+            break;
         }
         (*ptr) += stringLen;
     }
@@ -518,7 +541,7 @@ public:
     void DoClass(T *&x) {
         if (mode == MODE_READ)
         {
-            if (x != NULL)
+            if (x != nullptr)
                 delete x;
             x = new T();
         }
@@ -567,7 +590,7 @@ public:
                 {
                     if (mode == MODE_READ)
                     {
-                        cur->next = 0;
+                        cur->next = nullptr;
                         list_cur = cur;
                         if (prev)
                             prev->next = cur;
@@ -586,13 +609,13 @@ public:
                 if (mode == MODE_READ)
                 {
                     if (prev)
-                        prev->next = 0;
+                        prev->next = nullptr;
                     if (list_end)
                         *list_end = prev;
                     if (list_cur)
                     {
                         if (list_start == list_cur)
-                            list_start = 0;
+                            list_start = nullptr;
                         do
                         {
                             LinkedListItem<T>* next = list_cur->next;

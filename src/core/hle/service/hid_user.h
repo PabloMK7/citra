@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -93,8 +93,8 @@ const PadState PAD_CIRCLE_UP    = {{1u << 30}};
 const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
 
 // Methods for updating the HID module's state
-void PadButtonPress(PadState pad_state);
-void PadButtonRelease(PadState pad_state);
+void PadButtonPress(const PadState& pad_state);
+void PadButtonRelease(const PadState& pad_state);
 void PadUpdateComplete();
 
 /**
@@ -102,19 +102,11 @@ void PadUpdateComplete();
  */
 class Interface : public Service::Interface {
 public:
-
     Interface();
 
-    ~Interface();
-
-    /**
-     * Gets the string port name used by CTROS for the service
-     * @return Port name of service
-     */
     std::string GetPortName() const override {
         return "hid:USER";
     }
-
 };
 
 } // namespace

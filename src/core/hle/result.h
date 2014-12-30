@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -17,6 +17,8 @@
 /// Detailed description of the error. This listing is likely incomplete.
 enum class ErrorDescription : u32 {
     Success = 0,
+    FS_NotFound = 100,
+    FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,

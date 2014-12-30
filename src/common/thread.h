@@ -1,5 +1,5 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -21,6 +21,7 @@
 //for gettimeofday and struct time(spec|val)
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 namespace Common

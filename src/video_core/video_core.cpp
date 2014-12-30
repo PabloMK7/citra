@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common.h"
@@ -17,8 +17,8 @@
 
 namespace VideoCore {
 
-EmuWindow*      g_emu_window    = NULL;     ///< Frontend emulator window
-RendererBase*   g_renderer      = NULL;     ///< Renderer plugin
+EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
+RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
 int             g_current_frame = 0;
 
 /// Initialize the video core
@@ -30,13 +30,13 @@ void Init(EmuWindow* emu_window) {
 
     g_current_frame = 0;
 
-    NOTICE_LOG(VIDEO, "initialized OK");
+    LOG_DEBUG(Render, "initialized OK");
 }
 
 /// Shutdown the video core
 void Shutdown() {
     delete g_renderer;
-    NOTICE_LOG(VIDEO, "shutdown OK");
+    LOG_DEBUG(Render, "shutdown OK");
 }
 
 } // namespace

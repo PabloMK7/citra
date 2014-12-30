@@ -1,5 +1,5 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -27,6 +27,9 @@ enum {
     D_STATESAVES_IDX,
     D_SCREENSHOTS_IDX,
     D_SDMC_IDX,
+    D_SAVEDATA_IDX,
+    D_SYSDATA_IDX,
+    D_SYSSAVEDATA_IDX,
     D_HIRESTEXTURES_IDX,
     D_DUMP_IDX,
     D_DUMPFRAMES_IDX,
@@ -202,11 +205,11 @@ public:
         return WriteArray(reinterpret_cast<const char*>(data), length);
     }
 
-    bool IsOpen() { return NULL != m_file; }
+    bool IsOpen() { return nullptr != m_file; }
 
     // m_good is set to false when a read, write or other function fails
     bool IsGood() {    return m_good; }
-    operator void*() { return m_good ? m_file : NULL; }
+    operator void*() { return m_good ? m_file : nullptr; }
 
     std::FILE* ReleaseHandle();
 

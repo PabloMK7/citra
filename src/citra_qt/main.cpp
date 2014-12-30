@@ -1,3 +1,5 @@
+#include <thread>
+
 #include <QtGui>
 #include <QDesktopWidget>
 #include <QFileDialog>
@@ -5,8 +7,13 @@
 #include "main.hxx"
 
 #include "common/common.h"
+#include "common/logging/text_formatter.h"
+#include "common/logging/log.h"
+#include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/platform.h"
-#include "common/log_manager.h"
+#include "common/scope_exit.h"
+
 #if EMU_PLATFORM == PLATFORM_LINUX
 #include <unistd.h>
 #endif
@@ -20,7 +27,9 @@
 #include "debugger/callstack.hxx"
 #include "debugger/ramview.hxx"
 #include "debugger/graphics.hxx"
+#include "debugger/graphics_breakpoints.hxx"
 #include "debugger/graphics_cmdlists.hxx"
+#include "debugger/graphics_framebuffer.hxx"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -31,15 +40,11 @@
 
 #include "version.h"
 
-
 GMainWindow::GMainWindow()
 {
-    LogManager::Init();
+    Pica::g_debug_context = Pica::DebugContext::Construct();
 
     Config config;
-
-    if (!Settings::values.enable_log)
-        LogManager::Shutdown();
 
     ui.setupUi(this);
     statusBar()->hide();
@@ -67,12 +72,22 @@ GMainWindow::GMainWindow()
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
 
+    auto graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
+    graphicsBreakpointsWidget->hide();
+
+    auto graphicsFramebufferWidget = new GraphicsFramebufferWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsFramebufferWidget);
+    graphicsFramebufferWidget->hide();
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());
     debug_menu->addAction(graphicsWidget->toggleViewAction());
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
+    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
+    debug_menu->addAction(graphicsFramebufferWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
@@ -131,24 +146,20 @@ GMainWindow::GMainWindow()
 GMainWindow::~GMainWindow()
 {
     // will get automatically deleted otherwise
-    if (render_window->parent() == NULL)
+    if (render_window->parent() == nullptr)
         delete render_window;
+
+    Pica::g_debug_context.reset();
 }
 
 void GMainWindow::BootGame(std::string filename)
 {
-    NOTICE_LOG(MASTER_LOG, "Citra starting...\n");
+    LOG_INFO(Frontend, "Citra starting...\n");
     System::Init(render_window);
-
-    if (Core::Init()) {
-        ERROR_LOG(MASTER_LOG, "Core initialization failed, exiting...");
-        Core::Stop();
-        exit(1);
-    }
 
     // Load a game or die...
     if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
-        ERROR_LOG(BOOT, "Failed to load ROM!");
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
     }
 
     disasmWidget->Init();
@@ -164,7 +175,7 @@ void GMainWindow::BootGame(std::string filename)
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.elf *.axf *.bin *.cci *.cxi)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
     if (filename.size())
        BootGame(filename.toLatin1().data());
 }
@@ -213,18 +224,21 @@ void GMainWindow::OnOpenHotkeysDialog()
 void GMainWindow::ToggleWindowMode()
 {
     bool enable = ui.action_Popout_Window_Mode->isChecked();
-    if (enable && render_window->parent() != NULL)
+    if (enable && render_window->parent() != nullptr)
     {
         ui.horizontalLayout->removeWidget(render_window);
-        render_window->setParent(NULL);
+        render_window->setParent(nullptr);
         render_window->setVisible(true);
         render_window->RestoreGeometry();
+        render_window->setFocusPolicy(Qt::NoFocus);
     }
-    else if (!enable && render_window->parent() == NULL)
+    else if (!enable && render_window->parent() == nullptr)
     {
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
+        render_window->setFocusPolicy(Qt::ClickFocus);
+        render_window->setFocus();
     }
 }
 
@@ -255,9 +269,21 @@ void GMainWindow::closeEvent(QCloseEvent* event)
 
 int __cdecl main(int argc, char* argv[])
 {
+    std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
+    Log::Filter log_filter(Log::Level::Info);
+    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
+    SCOPE_EXIT({
+        logger->Close();
+        logging_thread.join();
+    });
+
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
+
     GMainWindow main_window;
+    // After settings have been loaded by GMainWindow, apply the filter
+    log_filter.ParseFilterString(Settings::values.log_filter);
+
     main_window.show();
     return app.exec();
 }

@@ -4,6 +4,11 @@ os:
 
 language: cpp
 
+cache:
+  apt: true
+  directories:
+    - .homebrew-cache
+
 before_install:
  - sh .travis-deps.sh
 

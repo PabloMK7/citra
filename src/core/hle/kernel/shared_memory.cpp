@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common.h"
@@ -13,14 +13,8 @@ class SharedMemory : public Object {
 public:
     std::string GetTypeName() const override { return "SharedMemory"; }
 
-    static Kernel::HandleType GetStaticHandleType() {  return Kernel::HandleType::SharedMemory; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::SharedMemory; }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::OS);
-    }
+    static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     u32 base_address;                   ///< Address of shared memory block in RAM
     MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
@@ -38,7 +32,8 @@ public:
  */
 SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
     SharedMemory* shared_memory = new SharedMemory;
-    handle = Kernel::g_object_pool.Create(shared_memory);
+    // TOOD(yuriks): Fix error reporting
+    handle = Kernel::g_handle_table.Create(shared_memory).ValueOr(INVALID_HANDLE);
     shared_memory->name = name;
     return shared_memory;
 }
@@ -61,12 +56,12 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
     MemoryPermission other_permissions) {
 
     if (address < Memory::SHARED_MEMORY_VADDR || address >= Memory::SHARED_MEMORY_VADDR_END) {
-        ERROR_LOG(KERNEL, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
+        LOG_ERROR(Kernel_SVC, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
             handle, address);
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
-    SharedMemory* shared_memory = Kernel::g_object_pool.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     shared_memory->base_address = address;
@@ -77,13 +72,13 @@ ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions
 }
 
 ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset) {
-    SharedMemory* shared_memory = Kernel::g_object_pool.Get<SharedMemory>(handle);
+    SharedMemory* shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     if (0 != shared_memory->base_address)
         return MakeResult<u8*>(Memory::GetPointer(shared_memory->base_address + offset));
 
-    ERROR_LOG(KERNEL, "memory block handle=0x%08X not mapped!", handle);
+    LOG_ERROR(Kernel_SVC, "memory block handle=0x%08X not mapped!", handle);
     // TODO(yuriks): Verify error code.
     return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
             ErrorSummary::InvalidState, ErrorLevel::Permanent);

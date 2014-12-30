@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/log.h"
@@ -11,17 +11,15 @@
 
 namespace ERR_F {
 
-    const Interface::FunctionInfo FunctionTable[] = {
-        {0x00010800, nullptr,               "ThrowFatalError"}
-    };
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Interface class
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x00010800, nullptr,               "ThrowFatalError"}
+};
 
-    Interface::Interface() {
-        Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-    }
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Interface class
 
-    Interface::~Interface() {
-    }
+Interface::Interface() {
+    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+}
 
 } // namespace

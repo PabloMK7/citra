@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 
@@ -33,7 +33,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
 }
 
 static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    _dbg_assert_msg_(GSP, screen_index < 2, "Invalid screen index");
+    _dbg_assert_msg_(Service_GSP, screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
@@ -50,14 +50,14 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
 static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
     // TODO: Return proper error codes
     if (base_address + size_in_bytes >= 0x420000) {
-        ERROR_LOG(GPU, "Write address out of range! (address=0x%08x, size=0x%08x)",
+        LOG_ERROR(Service_GSP, "Write address out of range! (address=0x%08x, size=0x%08x)",
                   base_address, size_in_bytes);
         return;
     }
 
     // size should be word-aligned
     if ((size_in_bytes % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size_in_bytes);
+        LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size_in_bytes);
         return;
     }
 
@@ -72,7 +72,7 @@ static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
 
 /// Write a GSP GPU hardware register
 static void WriteHWRegs(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
@@ -83,19 +83,19 @@ static void WriteHWRegs(Service::Interface* self) {
 
 /// Read a GSP GPU hardware register
 static void ReadHWRegs(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
     // TODO: Return proper error codes
     if (reg_addr + size >= 0x420000) {
-        ERROR_LOG(GPU, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
+        LOG_ERROR(Service_GSP, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr, size);
         return;
     }
 
     // size should be word-aligned
     if ((size % 4) != 0) {
-        ERROR_LOG(GPU, "Invalid size 0x%08x", size);
+        LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size);
         return;
     }
 
@@ -136,12 +136,36 @@ static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
  *      1: Result code
  */
 static void SetBufferSwap(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 screen_id = cmd_buff[1];
     FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
     SetBufferSwap(screen_id, *fb_info);
 
     cmd_buff[1] = 0; // No error
+}
+
+/**
+ * GSP_GPU::FlushDataCache service function
+ *
+ * This Function is a no-op, We aren't emulating the CPU cache any time soon.
+ *
+ *  Inputs:
+ *      1 : Address
+ *      2 : Size
+ *      3 : Value 0, some descriptor for the KProcess Handle
+ *      4 : KProcess handle
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void FlushDataCache(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 address = cmd_buff[1];
+    u32 size    = cmd_buff[2];
+    u32 process = cmd_buff[4];
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 }
 
 /**
@@ -155,14 +179,15 @@ static void SetBufferSwap(Service::Interface* self) {
  *      4 : Handle to GSP shared memory
  */
 static void RegisterInterruptRelayQueue(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1];
     g_interrupt_event = cmd_buff[3];
     g_shared_memory = Kernel::CreateSharedMemory("GSPSharedMem");
 
     _assert_msg_(GSP, (g_interrupt_event != 0), "handle is not valid!");
 
-    cmd_buff[2] = g_thread_id++; // ThreadID
+    cmd_buff[1] = 0x2A07; // Value verified by 3dmoo team, purpose unknown, but needed for GSP init
+    cmd_buff[2] = g_thread_id++; // Thread ID
     cmd_buff[4] = g_shared_memory; // GSP shared memory
 
     Kernel::SignalEvent(g_interrupt_event); // TODO(bunnei): Is this correct?
@@ -172,14 +197,15 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
  * @todo This should probably take a thread_id parameter and only signal this thread?
+ * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void SignalInterrupt(InterruptId interrupt_id) {
     if (0 == g_interrupt_event) {
-        WARN_LOG(GSP, "cannot synchronize until GSP event has been created!");
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
     if (0 == g_shared_memory) {
-        WARN_LOG(GSP, "cannot synchronize until GSP shared memory has been created!");
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
@@ -210,6 +236,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         memcpy(Memory::GetPointer(command.dma_request.dest_address),
                Memory::GetPointer(command.dma_request.source_address),
                command.dma_request.size);
+        SignalInterrupt(InterruptId::DMA);
         break;
 
     // ctrulib homebrew sends all relevant command list data with this command,
@@ -218,13 +245,13 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_COMMAND_LIST_LAST:
     {
         auto& params = command.set_command_list_last;
+
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), Memory::VirtualToPhysicalAddress(params.address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size >> 3);
+        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
 
-        SignalInterrupt(InterruptId::P3D);
         break;
     }
 
@@ -242,6 +269,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
+
+        SignalInterrupt(InterruptId::PSC0);
         break;
     }
 
@@ -255,14 +284,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
 
-        // TODO(bunnei): Signalling all of these interrupts here is totally wrong, but it seems to
-        // work well enough for running demos. Need to figure out how these all work and trigger
-        // them correctly.
-        SignalInterrupt(InterruptId::PSC0);
+        // TODO(bunnei): Determine if these interrupts should be signalled here.
         SignalInterrupt(InterruptId::PSC1);
         SignalInterrupt(InterruptId::PPF);
-        SignalInterrupt(InterruptId::P3D);
-        SignalInterrupt(InterruptId::DMA);
 
         // Update framebuffer information if requested
         for (int screen_id = 0; screen_id < 2; ++screen_id) {
@@ -298,12 +322,14 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     }
 
     default:
-        ERROR_LOG(GSP, "unknown command 0x%08X", (int)command.id.Value());
+        LOG_ERROR(Service_GSP, "unknown command 0x%08X", (int)command.id.Value());
     }
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
+
+    LOG_TRACE(Service_GSP, "called");
 
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
@@ -320,6 +346,9 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
             command_buffer->number_commands = command_buffer->number_commands - 1;
         }
     }
+
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    cmd_buff[1] = 0; // No error
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -330,7 +359,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00050200, SetBufferSwap,                 "SetBufferSwap"},
     {0x00060082, nullptr,                       "SetCommandList"},
     {0x000700C2, nullptr,                       "RequestDma"},
-    {0x00080082, nullptr,                       "FlushDataCache"},
+    {0x00080082, FlushDataCache,                "FlushDataCache"},
     {0x00090082, nullptr,                       "InvalidateDataCache"},
     {0x000A0044, nullptr,                       "RegisterInterruptEvents"},
     {0x000B0040, nullptr,                       "SetLcdForceBlack"},
@@ -365,9 +394,6 @@ Interface::Interface() {
     g_interrupt_event = 0;
     g_shared_memory = 0;
     g_thread_id = 1;
-}
-
-Interface::~Interface() {
 }
 
 } // namespace

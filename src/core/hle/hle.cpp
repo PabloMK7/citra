@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <vector>
@@ -8,6 +8,8 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/fs/archive.h"
+#include "core/hle/service/cfg/cfg.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +22,7 @@ bool g_reschedule = false;  ///< If true, immediately reschedules the CPU to a n
 const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
-        ERROR_LOG(HLE,"unknown svc=0x%02X", func_num);
+        LOG_ERROR(Kernel_SVC,"unknown svc=0x%02X", func_num);
         return nullptr;
     }
     return &g_module_db[0].func_table[func_num];
@@ -35,15 +37,21 @@ void CallSVC(u32 opcode) {
     if (info->func) {
         info->func();
     } else {
-        ERROR_LOG(HLE, "unimplemented SVC function %s(..)", info->name.c_str());
+        LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name.c_str());
     }
 }
 
 void Reschedule(const char *reason) {
-#ifdef _DEBUG
-    _dbg_assert_msg_(HLE, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
-#endif
+    _dbg_assert_msg_(Kernel, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
+
+    // TODO(bunnei): It seems that games depend on some CPU execution time elapsing during HLE
+    // routines. This simulates that time by artificially advancing the number of CPU "ticks".
+    // The value was chosen empirically, it seems to work well enough for everything tested, but
+    // is likely not ideal. We should find a more accurate way to simulate timing with HLE.
+    Core::g_app_core->AddTicks(4000);
+
     Core::g_app_core->PrepareReschedule();
+
     g_reschedule = true;
 }
 
@@ -58,18 +66,22 @@ void RegisterAllModules() {
 
 void Init() {
     Service::Init();
+    Service::FS::ArchiveInit();
+    Service::CFG::CFGInit();
 
     RegisterAllModules();
 
-    NOTICE_LOG(HLE, "initialized OK");
+    LOG_DEBUG(Kernel, "initialized OK");
 }
 
 void Shutdown() {
+    Service::CFG::CFGShutdown();
+    Service::FS::ArchiveShutdown();
     Service::Shutdown();
 
     g_module_db.clear();
 
-    NOTICE_LOG(HLE, "shutdown OK");
+    LOG_DEBUG(Kernel, "shutdown OK");
 }
 
 } // namespace

@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -190,6 +190,12 @@ public:
      * @return ResultStatus result of function
      */
     ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
+
+    /*
+     * Gets the program id from the NCCH header
+     * @return u64 Program id
+     */
+    u64 GetProgramId() const;
 
 private:
 

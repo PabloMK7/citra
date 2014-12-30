@@ -1,10 +1,13 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include "common/common_types.h"
+
+#include "core/mem_map.h"
+
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
@@ -37,7 +40,6 @@ enum WaitType {
     WAITTYPE_SEMA,
     WAITTYPE_EVENT,
     WAITTYPE_THREADEND,
-    WAITTYPE_VBLANK,
     WAITTYPE_MUTEX,
     WAITTYPE_SYNCH,
     WAITTYPE_ARB,
@@ -58,6 +60,14 @@ void Reschedule();
 /// Stops the current thread
 ResultCode StopThread(Handle thread, const char* reason);
 
+/**
+ * Retrieves the ID of the specified thread handle
+ * @param thread_id Will contain the output thread id
+ * @param handle Handle to the thread we want
+ * @return Whether the function was successful or not
+ */
+ResultCode GetThreadId(u32* thread_id, Handle handle);
+
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle);
 
@@ -76,6 +86,14 @@ Handle GetCurrentThreadHandle();
  * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
  */
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
+
+/**
+ * Puts the current thread in the wait state for the given type
+ * @param wait_type Type of wait
+ * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ * @param wait_address Arbitration address used to resume from wait
+ */
+void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_address);
 
 /// Put current thread in a wait state - on WaitSynchronization
 void WaitThread_Synchronization();

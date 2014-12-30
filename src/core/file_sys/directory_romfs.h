@@ -1,12 +1,12 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
 #include "common/common_types.h"
 
-#include "core/file_sys/directory.h"
+#include "core/file_sys/directory_backend.h"
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,10 +14,16 @@
 
 namespace FileSys {
 
-class Directory_RomFS final : public Directory {
+class Directory_RomFS final : public DirectoryBackend {
 public:
     Directory_RomFS();
     ~Directory_RomFS() override;
+
+    /**
+    * Open the directory
+    * @return true if the directory opened correctly
+    */
+    bool Open() override;
 
     /**
      * List files contained in the directory

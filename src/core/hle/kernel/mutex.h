@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -23,5 +23,11 @@ ResultCode ReleaseMutex(Handle handle);
  * @return Handle to newly created object
  */
 Handle CreateMutex(bool initial_locked, const std::string& name="Unknown");
+
+/**
+ * Releases all the mutexes held by the specified thread
+ * @param thread Thread that is holding the mutexes
+ */
+void ReleaseThreadMutexes(Handle thread);
 
 } // namespace

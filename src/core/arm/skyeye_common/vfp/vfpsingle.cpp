@@ -522,8 +522,7 @@ static s64 vfp_single_to_doubleintern(ARMul_State* state, s32 m, u32 fpscr) //ic
         if (tm == VFP_QNAN)
             vdd.significand |= VFP_DOUBLE_SIGNIFICAND_QNAN;
         goto pack_nan;
-    }
-    else if (tm & VFP_ZERO)
+    } else if (tm & VFP_ZERO)
         vdd.exponent = 0;
     else
         vdd.exponent = vsm.exponent + (1023 - 127);
@@ -615,12 +614,12 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
         exceptions |= FPSCR_IDC;
 
     if (tm & VFP_NAN)
-        vsm.sign = 0;
+        vsm.sign = 1;
 
     if (vsm.exponent >= 127 + 32) {
         d = vsm.sign ? 0 : 0xffffffff;
         exceptions = FPSCR_IOC;
-    } else if (vsm.exponent >= 127 - 1) {
+    } else if (vsm.exponent >= 127) {
         int shift = 127 + 31 - vsm.exponent;
         u32 rem, incr = 0;
 
@@ -705,7 +704,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
         if (vsm.sign)
             d = ~d;
         exceptions |= FPSCR_IOC;
-    } else if (vsm.exponent >= 127 - 1) {
+    } else if (vsm.exponent >= 127) {
         int shift = 127 + 31 - vsm.exponent;
         u32 rem, incr = 0;
 
@@ -1149,7 +1148,10 @@ static u32 vfp_single_fsub(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
     /*
      * Subtraction is addition with one sign inverted.
      */
-    return vfp_single_fadd(state, sd, sn, vfp_single_packed_negate(m), fpscr);
+    if (m != 0x7FC00000) // Only negate if m isn't NaN.
+        m = vfp_single_packed_negate(m);
+
+    return vfp_single_fadd(state, sd, sn, m, fpscr);
 }
 
 /*

@@ -1,12 +1,11 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
 
 #include "core/hw/hw.h"
 #include "core/hw/gpu.h"
-#include "core/hw/ndma.h"
 
 namespace HW {
 
@@ -40,17 +39,12 @@ template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
 
-    // TODO(bunnei): What is the virtual address of NDMA?
-    // case VADDR_NDMA:
-    //     NDMA::Read(var, addr);
-    //     break;
-
     case VADDR_GPU:
         GPU::Read(var, addr);
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
+        LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
     }
 }
 
@@ -58,17 +52,12 @@ template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
 
-    // TODO(bunnei): What is the virtual address of NDMA?
-    // case VADDR_NDMA
-    //     NDMA::Write(addr, data);
-    //     break;
-
     case VADDR_GPU:
         GPU::Write(addr, data);
         break;
 
     default:
-        ERROR_LOG(HW, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, data, addr);
+        LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
     }
 }
 
@@ -87,19 +76,17 @@ template void Write<u8>(u32 addr, const u8 data);
 /// Update hardware
 void Update() {
     GPU::Update();
-    NDMA::Update();
 }
 
 /// Initialize hardware
 void Init() {
     GPU::Init();
-    NDMA::Init();
-    NOTICE_LOG(HW, "initialized OK");
+    LOG_DEBUG(HW, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NOTICE_LOG(HW, "shutdown OK");
+    LOG_DEBUG(HW, "shutdown OK");
 }
 
 }

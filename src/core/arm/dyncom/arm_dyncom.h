@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -27,14 +27,14 @@ public:
      * Get the current Program Counter
      * @return Returns current PC
      */
-    u32 GetPC() const;
+    u32 GetPC() const override;
 
     /**
      * Get an ARM register
      * @param index Register index (0-15)
      * @return Returns the value in the register
      */
-    u32 GetReg(int index) const;
+    u32 GetReg(int index) const override;
 
     /**
      * Set an ARM register
@@ -47,7 +47,7 @@ public:
      * Get the current CPSR register
      * @return Returns the value of the CPSR register
      */
-    u32 GetCPSR() const;
+    u32 GetCPSR() const override;
 
     /**
      * Set the current CPSR register
@@ -59,7 +59,13 @@ public:
      * Returns the number of clock ticks since the last reset
      * @return Returns number of clock ticks
      */
-    u64 GetTicks() const;
+    u64 GetTicks() const override;
+
+    /**
+    * Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
+    * @param ticks Number of ticks to advance the CPU core
+    */
+    void AddTicks(u64 ticks) override;
 
     /**
      * Saves the current CPU context

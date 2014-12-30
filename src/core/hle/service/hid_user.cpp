@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/log.h"
@@ -55,7 +55,7 @@ static void UpdateNextCirclePadState() {
 /**
  * Sets a Pad state (button or button combo) as pressed
  */
-void PadButtonPress(PadState pad_state) {
+void PadButtonPress(const PadState& pad_state) {
     next_state.hex |= pad_state.hex;
     UpdateNextCirclePadState();
 }
@@ -63,7 +63,7 @@ void PadButtonPress(PadState pad_state) {
 /**
  * Sets a Pad state (button or button combo) as released
  */
-void PadButtonRelease(PadState pad_state) {
+void PadButtonRelease(const PadState& pad_state) {
     next_state.hex &= ~pad_state.hex;
     UpdateNextCirclePadState();
 }
@@ -153,7 +153,7 @@ void PadUpdateComplete() {
  *      8 : Event signaled by HID_User
  */
 static void GetIPCHandles(Service::Interface* self) {
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = shared_mem;
@@ -163,7 +163,7 @@ static void GetIPCHandles(Service::Interface* self) {
     cmd_buff[7] = event_gyroscope;
     cmd_buff[8] = event_debug_pad;
 
-    DEBUG_LOG(KERNEL, "called");
+    LOG_TRACE(Service_HID, "called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -179,7 +179,6 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00170000, nullptr,       "GetSoundVolume"},
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
@@ -194,9 +193,6 @@ Interface::Interface() {
     event_debug_pad = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID_User:EventDebugPad");
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-}
-
-Interface::~Interface() {
 }
 
 } // namespace

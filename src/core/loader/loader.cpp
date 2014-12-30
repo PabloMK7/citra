@@ -1,13 +1,16 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <memory>
+#include <string>
+
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_romfs.h"
+#include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/hle/kernel/archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/mem_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,7 +25,7 @@ namespace Loader {
  */
 FileType IdentifyFile(const std::string &filename) {
     if (filename.size() == 0) {
-        ERROR_LOG(LOADER, "invalid filename %s", filename.c_str());
+        LOG_ERROR(Loader, "invalid filename %s", filename.c_str());
         return FileType::Error;
     }
 
@@ -42,6 +45,8 @@ FileType IdentifyFile(const std::string &filename) {
         return FileType::CCI;
     } else if (extension == ".bin") {
         return FileType::BIN;
+    } else if (extension == ".3dsx") {
+        return FileType::THREEDSX;
     }
     return FileType::Unknown;
 }
@@ -52,9 +57,13 @@ FileType IdentifyFile(const std::string &filename) {
  * @return ResultStatus result of function
  */
 ResultStatus LoadFile(const std::string& filename) {
-    INFO_LOG(LOADER, "Loading file %s...", filename.c_str());
+    LOG_INFO(Loader, "Loading file %s...", filename.c_str());
 
     switch (IdentifyFile(filename)) {
+
+    //3DSX file format...
+    case FileType::THREEDSX:
+        return AppLoader_THREEDSX(filename).Load();
 
     // Standard ELF file format...
     case FileType::ELF:
@@ -67,7 +76,8 @@ ResultStatus LoadFile(const std::string& filename) {
 
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
-            Kernel::CreateArchive(new FileSys::Archive_RomFS(app_loader), "RomFS");
+            Kernel::g_program_id = app_loader.GetProgramId();
+            Service::FS::CreateArchive(Common::make_unique<FileSys::Archive_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;
@@ -76,7 +86,7 @@ ResultStatus LoadFile(const std::string& filename) {
     // Raw BIN file format...
     case FileType::BIN:
     {
-        INFO_LOG(LOADER, "Loading BIN file %s...", filename.c_str());
+        LOG_INFO(Loader, "Loading BIN file %s...", filename.c_str());
 
         FileUtil::IOFile file(filename, "rb");
 

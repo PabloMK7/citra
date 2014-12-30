@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -10,9 +10,11 @@
 #include <string>
 
 #include "common/common.h"
+#include "common/string_util.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/svc.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,30 +22,19 @@
 
 namespace Service {
 
-static const int kMaxPortSize           = 0x08; ///< Maximum size of a port name (8 characters)
-static const int kCommandHeaderOffset   = 0x80; ///< Offset into command buffer of header
-
-/**
- * Returns a pointer to the command buffer in kernel memory
- * @param offset Optional offset into command buffer
- * @return Pointer to command buffer
- */
-inline static u32* GetCommandBuffer(const int offset=0) {
-    return (u32*)Memory::GetPointer(Memory::KERNEL_MEMORY_VADDR + kCommandHeaderOffset + offset);
-}
+static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
 
 class Manager;
 
 /// Interface to a CTROS service
-class Interface  : public Kernel::Object {
+class Interface  : public Kernel::Session {
+    // TODO(yuriks): An "Interface" being a Kernel::Object is mostly non-sense. Interface should be
+    // just something that encapsulates a session and acts as a helper to implement service
+    // processes.
+
     friend class Manager;
 public:
-
     std::string GetName() const override { return GetPortName(); }
-    std::string GetTypeName() const override { return GetPortName(); }
-
-    static Kernel::HandleType GetStaticHandleType() { return Kernel::HandleType::Service; }
-    Kernel::HandleType GetHandleType() const override { return Kernel::HandleType::Service; }
 
     typedef void (*Function)(Interface*);
 
@@ -63,7 +54,8 @@ public:
 
     /// Allocates a new handle for the service
     Handle CreateHandle(Kernel::Object *obj) {
-        Handle handle = Kernel::g_object_pool.Create(obj);
+        // TODO(yuriks): Fix error reporting
+        Handle handle = Kernel::g_handle_table.Create(obj).ValueOr(INVALID_HANDLE);
         m_handles.push_back(handle);
         return handle;
     }
@@ -71,29 +63,28 @@ public:
     /// Frees a handle from the service
     template <class T>
     void DeleteHandle(const Handle handle) {
-        Kernel::g_object_pool.Destroy<T>(handle);
+        Kernel::g_handle_table.Close(handle);
         m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
     }
 
     ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = GetCommandBuffer();
+        u32* cmd_buff = Kernel::GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
-        if (itr == m_functions.end()) {
-            ERROR_LOG(OSHLE, "unknown/unimplemented function: port=%s, command=0x%08X",
-                GetPortName().c_str(), cmd_buff[0]);
+        if (itr == m_functions.end() || itr->second.func == nullptr) {
+            // Number of params == bits 0-5 + bits 6-11
+            int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
+
+            std::string error = "unknown/unimplemented function '%s': port=%s";
+            for (int i = 1; i <= num_params; ++i) {
+                error += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
+            }
+
+            std::string name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
+
+            LOG_ERROR(Service, error.c_str(), name.c_str(), GetPortName().c_str());
 
             // TODO(bunnei): Hack - ignore error
-            u32* cmd_buff = Service::GetCommandBuffer();
-            cmd_buff[1] = 0;
-            return MakeResult<bool>(false);
-        }
-        if (itr->second.func == nullptr) {
-            ERROR_LOG(OSHLE, "unimplemented function: port=%s, name=%s",
-                GetPortName().c_str(), itr->second.name.c_str());
-
-            // TODO(bunnei): Hack - ignore error
-            u32* cmd_buff = Service::GetCommandBuffer();
             cmd_buff[1] = 0;
             return MakeResult<bool>(false);
         }
@@ -101,12 +92,6 @@ public:
         itr->second.func(this);
 
         return MakeResult<bool>(false); // TODO: Implement return from actual function
-    }
-
-    ResultVal<bool> WaitSynchronization() override {
-        // TODO(bunnei): ImplementMe
-        ERROR_LOG(OSHLE, "unimplemented function");
-        return UnimplementedFunction(ErrorModule::OS);
     }
 
 protected:

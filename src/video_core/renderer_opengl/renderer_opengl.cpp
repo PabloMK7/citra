@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "core/hw/gpu.h"
@@ -61,7 +61,7 @@ void RendererOpenGL::SwapBuffers() {
     for(int i : {0, 1}) {
         const auto& framebuffer = GPU::g_regs.framebuffer_config[i];
 
-        if (textures[i].width != framebuffer.width || textures[i].height != framebuffer.height) {
+        if (textures[i].width != (GLsizei)framebuffer.width || textures[i].height != (GLsizei)framebuffer.height) {
             // Reallocate texture if the framebuffer size has changed.
             // This is expected to not happen very often and hence should not be a
             // performance problem.
@@ -90,7 +90,7 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     const VAddr framebuffer_vaddr = Memory::PhysicalToVirtualAddress(
         framebuffer.active_fb == 1 ? framebuffer.address_left2 : framebuffer.address_left1);
 
-    DEBUG_LOG(GPU, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
+    LOG_TRACE(Render_OpenGL, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
         framebuffer.stride * framebuffer.height,
         framebuffer_vaddr, (int)framebuffer.width,
         (int)framebuffer.height, (int)framebuffer.format);
@@ -98,15 +98,15 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
 
     // TODO: Handle other pixel formats
-    _dbg_assert_msg_(RENDER, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
+    _dbg_assert_msg_(Render_OpenGL, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
                      "Unsupported 3DS pixel format.");
 
     size_t pixel_stride = framebuffer.stride / 3;
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
-    _dbg_assert_(RENDER, pixel_stride * 3 == framebuffer.stride);
+    _dbg_assert_(Render_OpenGL, pixel_stride * 3 == framebuffer.stride);
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
     // only allows rows to have a memory alignement of 4.
-    _dbg_assert_(RENDER, pixel_stride % 4 == 0);
+    _dbg_assert_(Render_OpenGL, pixel_stride % 4 == 0);
 
     glBindTexture(GL_TEXTURE_2D, texture.handle);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);
@@ -240,14 +240,14 @@ MathUtil::Rectangle<unsigned> RendererOpenGL::GetViewportExtent() {
     MathUtil::Rectangle<unsigned> viewport_extent;
     if (window_aspect_ratio > emulation_aspect_ratio) {
         // Window is narrower than the emulation content => apply borders to the top and bottom
-        unsigned viewport_height = emulation_aspect_ratio * framebuffer_width;
+        unsigned viewport_height = static_cast<unsigned>(std::round(emulation_aspect_ratio * framebuffer_width));
         viewport_extent.left = 0;
         viewport_extent.top = (framebuffer_height - viewport_height) / 2;
         viewport_extent.right = viewport_extent.left + framebuffer_width;
         viewport_extent.bottom = viewport_extent.top + viewport_height;
     } else {
         // Otherwise, apply borders to the left and right sides of the window.
-        unsigned viewport_width = framebuffer_height / emulation_aspect_ratio;
+        unsigned viewport_width = static_cast<unsigned>(std::round(framebuffer_height / emulation_aspect_ratio));
         viewport_extent.left = (framebuffer_width - viewport_width) / 2;
         viewport_extent.top = 0;
         viewport_extent.right = viewport_extent.left + viewport_width;
@@ -263,11 +263,11 @@ void RendererOpenGL::Init() {
 
     int err = ogl_LoadFunctions();
     if (ogl_LOAD_SUCCEEDED != err) {
-        ERROR_LOG(RENDER, "Failed to initialize GL functions! Exiting...");
+        LOG_CRITICAL(Render_OpenGL, "Failed to initialize GL functions! Exiting...");
         exit(-1);
     }
 
-    NOTICE_LOG(RENDER, "GL_VERSION: %s\n", glGetString(GL_VERSION));
+    LOG_INFO(Render_OpenGL, "GL_VERSION: %s", glGetString(GL_VERSION));
     InitOpenGLObjects();
 }
 

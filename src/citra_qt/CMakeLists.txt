@@ -8,9 +8,12 @@ set(SRCS
             debugger/callstack.cpp
             debugger/disassembler.cpp
             debugger/graphics.cpp
+            debugger/graphics_breakpoints.cpp
             debugger/graphics_cmdlists.cpp
+            debugger/graphics_framebuffer.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
+            util/spinbox.cpp
             bootmanager.cpp
             hotkeys.cpp
             main.cpp
@@ -23,9 +26,13 @@ set(HEADERS
             debugger/callstack.hxx
             debugger/disassembler.hxx
             debugger/graphics.hxx
+            debugger/graphics_breakpoints.hxx
+            debugger/graphics_breakpoints_p.hxx
             debugger/graphics_cmdlists.hxx
+            debugger/graphics_framebuffer.hxx
             debugger/ramview.hxx
             debugger/registers.hxx
+            util/spinbox.hxx
             bootmanager.hxx
             hotkeys.hxx
             main.hxx
@@ -52,6 +59,10 @@ endif()
 add_executable(citra-qt ${SRCS} ${HEADERS} ${UI_HDRS})
 target_link_libraries(citra-qt core common video_core qhexedit)
 target_link_libraries(citra-qt ${OPENGL_gl_LIBRARY} ${CITRA_QT_LIBS})
+
+if (UNIX)
+    target_link_libraries(citra-qt -pthread)
+endif()
 
 if (APPLE)
     target_link_libraries(citra-qt iconv ${COREFOUNDATION_LIBRARY})

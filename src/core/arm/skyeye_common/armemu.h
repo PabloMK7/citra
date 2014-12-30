@@ -23,8 +23,6 @@
 
 //extern ARMword isize;
 
-#define DEBUG(...) DEBUG_LOG(ARM11, __VA_ARGS__)
-
 /* Shift Opcodes.  */
 #define LSL 0
 #define LSR 1
@@ -36,7 +34,7 @@
 #define ZBIT (1L << 30)
 #define CBIT (1L << 29)
 #define VBIT (1L << 28)
-#define SBIT (1L << 27)
+#define QBIT (1L << 27)
 #define IBIT (1L << 7)
 #define FBIT (1L << 6)
 #define IFBITS (3L << 6)
@@ -158,13 +156,14 @@
 #define R15PCMODE (state->Reg[15] & (R15PCBITS | R15MODEBITS))
 #define R15MODE (state->Reg[15] & R15MODEBITS)
 
-#define ECC ((NFLAG << 31) | (ZFLAG << 30) | (CFLAG << 29) | (VFLAG << 28) | (SFLAG << 27))
+#define ECC ((NFLAG << 31) | (ZFLAG << 30) | (CFLAG << 29) | (VFLAG << 28) | (QFLAG << 27))
 #define EINT (IFFLAGS << 6)
 #define ER15INT (IFFLAGS << 26)
 #define EMODE (state->Mode)
+#define EGEBITS (state->GEFlag & 0x000F0000)
 
 #ifdef MODET
-#define CPSR (ECC | EINT | EMODE | (TFLAG << 5))
+#define CPSR (ECC | EGEBITS | (EFLAG << 9) | (AFLAG << 8) | EINT | (TFLAG << 5) | EMODE)
 #else
 #define CPSR (ECC | EINT | EMODE)
 #endif
@@ -485,7 +484,7 @@ tdstate;
  * out-of-updated with the newer ISA.
  * -- Michael.Kang
  ********************************************************************************/
-#define UNDEF_WARNING WARN_LOG(ARM11, "undefined or unpredicted behavior for arm instruction.\n");
+#define UNDEF_WARNING LOG_WARNING(Core_ARM11, "undefined or unpredicted behavior for arm instruction.");
 
 /* Macros to scrutinize instructions.  */
 #define UNDEF_Test UNDEF_WARNING
@@ -603,6 +602,7 @@ extern ARMword ARMul_SwitchMode (ARMul_State *, ARMword, ARMword);
 extern void ARMul_MSRCpsr (ARMul_State *, ARMword, ARMword);
 extern void ARMul_SubOverflow (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddOverflow (ARMul_State *, ARMword, ARMword, ARMword);
+extern void ARMul_AddOverflowQ(ARMul_State*, ARMword, ARMword);
 extern void ARMul_SubCarry (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddCarry (ARMul_State *, ARMword, ARMword, ARMword);
 extern tdstate ARMul_ThumbDecode (ARMul_State *, ARMword, ARMword, ARMword *);

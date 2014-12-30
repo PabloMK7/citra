@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -76,6 +76,12 @@ public:
      * @return Returns number of clock ticks
      */
     virtual u64 GetTicks() const = 0;
+
+    /**
+     * Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
+     * @param ticks Number of ticks to advance the CPU core
+     */
+    virtual void AddTicks(u64 ticks) = 0;
 
     /**
      * Saves the current CPU context

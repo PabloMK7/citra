@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -169,7 +169,7 @@ struct Regs {
     INSERT_PADDING_WORDS(0x331);
 
     struct {
-        // command list size
+        // command list size (in bytes)
         u32 size;
 
         INSERT_PADDING_WORDS(0x1);
@@ -241,6 +241,7 @@ ASSERT_REG_POSITION(command_processor_config, 0x00638);
 static_assert(sizeof(Regs) == 0x1000 * sizeof(u32), "Invalid total size of register set");
 
 extern Regs g_regs;
+extern bool g_skip_frame;
 
 template <typename T>
 void Read(T &var, const u32 addr);

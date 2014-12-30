@@ -1,5 +1,5 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <vector>
@@ -67,7 +67,7 @@ s64 idledCycles;
 static std::recursive_mutex externalEventSection;
 
 // Warning: not included in save state.
-void(*advanceCallback)(int cyclesExecuted) = NULL;
+void(*advanceCallback)(int cyclesExecuted) = nullptr;
 
 void SetClockFrequencyMHz(int cpuMhz)
 {
@@ -124,7 +124,7 @@ int RegisterEvent(const char *name, TimedCallback callback)
 
 void AntiCrashCallback(u64 userdata, int cyclesLate)
 {
-    ERROR_LOG(TIME, "Savestate broken: an unregistered event was called.");
+    LOG_CRITICAL(Core, "Savestate broken: an unregistered event was called.");
     Core::Halt("invalid timing events");
 }
 
@@ -176,7 +176,7 @@ void Shutdown()
 
 u64 GetTicks()
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     return 0;
     //return (u64)globalTimer + slicelength - currentMIPS->downcount;
 }
@@ -231,7 +231,7 @@ void ClearPendingEvents()
 
 void AddEventToQueue(Event* ne)
 {
-    Event* prev = NULL;
+    Event* prev = nullptr;
     Event** pNext = &first;
     for (;;)
     {
@@ -327,7 +327,7 @@ s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata)
     }
     if (!tsFirst)
     {
-        tsLast = NULL;
+        tsLast = nullptr;
         return result;
     }
 
@@ -433,7 +433,7 @@ void RemoveThreadsafeEvent(int event_type)
     }
     if (!tsFirst)
     {
-        tsLast = NULL;
+        tsLast = nullptr;
         return;
     }
     Event *prev = tsFirst;
@@ -495,7 +495,7 @@ void MoveEvents()
         AddEventToQueue(tsFirst);
         tsFirst = next;
     }
-    tsLast = NULL;
+    tsLast = nullptr;
 
     // Move free events to threadsafe pool
     while (allocatedTsEvents > 0 && eventPool)
@@ -510,7 +510,7 @@ void MoveEvents()
 
 void Advance()
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     //int cyclesExecuted = slicelength - currentMIPS->downcount;
     //globalTimer += cyclesExecuted;
     //currentMIPS->downcount = slicelength;
@@ -547,7 +547,7 @@ void LogPendingEvents()
 
 void Idle(int maxIdle)
 {
-    ERROR_LOG(TIME, "Unimplemented function!");
+    LOG_ERROR(Core, "Unimplemented function!");
     //int cyclesDown = currentMIPS->downcount;
     //if (maxIdle != 0 && cyclesDown > maxIdle)
     //    cyclesDown = maxIdle;
@@ -614,7 +614,7 @@ void DoState(PointerWrap &p)
     // These (should) be filled in later by the modules.
     event_types.resize(n, EventType(AntiCrashCallback, "INVALID EVENT"));
 
-    p.DoLinkedList<BaseEvent, GetNewEvent, FreeEvent, Event_DoState>(first, (Event **)NULL);
+    p.DoLinkedList<BaseEvent, GetNewEvent, FreeEvent, Event_DoState>(first, (Event **)nullptr);
     p.DoLinkedList<BaseEvent, GetNewTsEvent, FreeTsEvent, Event_DoState>(tsFirst, &tsLast);
 
     p.Do(g_clock_rate_arm11);

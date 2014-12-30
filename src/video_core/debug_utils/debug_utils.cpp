@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <condition_variable>
+#include <list>
 #include <map>
 #include <fstream>
 #include <mutex>
@@ -12,13 +14,61 @@
 #include <png.h>
 #endif
 
+#include <nihstro/shader_binary.h>
+
+#include "common/log.h"
 #include "common/file_util.h"
 
+#include "video_core/math.h"
 #include "video_core/pica.h"
 
 #include "debug_utils.h"
 
+using nihstro::DVLBHeader;
+using nihstro::DVLEHeader;
+using nihstro::DVLPHeader;
+
 namespace Pica {
+
+void DebugContext::OnEvent(Event event, void* data) {
+    if (!breakpoints[event].enabled)
+        return;
+
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // TODO: Should stop the CPU thread here once we multithread emulation.
+
+        active_breakpoint = event;
+        at_breakpoint = true;
+
+        // Tell all observers that we hit a breakpoint
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaBreakPointHit(event, data);
+        }
+
+        // Wait until another thread tells us to Resume()
+        resume_from_breakpoint.wait(lock, [&]{ return !at_breakpoint; });
+    }
+}
+
+void DebugContext::Resume() {
+    {
+        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // Tell all observers that we are about to resume
+        for (auto& breakpoint_observer : breakpoint_observers) {
+            breakpoint_observer->OnPicaResume();
+        }
+
+        // Resume the waiting thread (i.e. OnEvent())
+        at_breakpoint = false;
+    }
+
+    resume_from_breakpoint.notify_one();
+}
+
+std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
@@ -54,65 +104,6 @@ void GeometryDumper::Dump() {
     }
 }
 
-#pragma pack(1)
-struct DVLBHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x424C5644, // "DVLB"
-    };
-
-    u32 magic_word;
-    u32 num_programs;
-//    u32 dvle_offset_table[];
-};
-static_assert(sizeof(DVLBHeader) == 0x8, "Incorrect structure size");
-
-struct DVLPHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x504C5644, // "DVLP"
-    };
-
-    u32 magic_word;
-    u32 version;
-    u32 binary_offset;  // relative to DVLP start
-    u32 binary_size_words;
-    u32 swizzle_patterns_offset;
-    u32 swizzle_patterns_num_entries;
-    u32 unk2;
-};
-static_assert(sizeof(DVLPHeader) == 0x1C, "Incorrect structure size");
-
-struct DVLEHeader {
-    enum : u32 {
-        MAGIC_WORD = 0x454c5644, // "DVLE"
-    };
-
-    enum class ShaderType : u8 {
-        VERTEX = 0,
-        GEOMETRY = 1,
-    };
-
-    u32 magic_word;
-    u16 pad1;
-    ShaderType type;
-    u8 pad2;
-    u32 main_offset_words; // offset within binary blob
-    u32 endmain_offset_words;
-    u32 pad3;
-    u32 pad4;
-    u32 constant_table_offset;
-    u32 constant_table_size; // number of entries
-    u32 label_table_offset;
-    u32 label_table_size;
-    u32 output_register_table_offset;
-    u32 output_register_table_size;
-    u32 uniform_table_offset;
-    u32 uniform_table_size;
-    u32 symbol_table_offset;
-    u32 symbol_table_size;
-
-};
-static_assert(sizeof(DVLEHeader) == 0x40, "Incorrect structure size");
-#pragma pack()
 
 void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
                 u32 main_offset, const Regs::VSOutputAttributes* output_attributes)
@@ -155,7 +146,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 
     // This is put into a try-catch block to make sure we notice unknown configurations.
     std::vector<OutputRegisterInfo> output_info_table;
-        for (int i = 0; i < 7; ++i) {
+        for (unsigned i = 0; i < 7; ++i) {
             using OutputAttributes = Pica::Regs::VSOutputAttributes;
 
             // TODO: It's still unclear how the attribute components map to the register!
@@ -204,8 +195,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                         it->component_mask = it->component_mask | component_mask;
                     }
                 } catch (const std::out_of_range& ) {
-                    _dbg_assert_msg_(GPU, 0, "Unknown output attribute mapping");
-                    ERROR_LOG(GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
+                    _dbg_assert_msg_(HW_GPU, 0, "Unknown output attribute mapping");
+                    LOG_ERROR(HW_GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
                               (int)output_attributes[i].map_x.Value(),
                               (int)output_attributes[i].map_y.Value(),
                               (int)output_attributes[i].map_z.Value(),
@@ -232,8 +223,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     dvlp.binary_size_words = binary_size;
     QueueForWriting((u8*)binary_data, binary_size * sizeof(u32));
 
-    dvlp.swizzle_patterns_offset = write_offset - dvlp_offset;
-    dvlp.swizzle_patterns_num_entries = swizzle_size;
+    dvlp.swizzle_info_offset = write_offset - dvlp_offset;
+    dvlp.swizzle_info_num_entries = swizzle_size;
     u32 dummy = 0;
     for (unsigned int i = 0; i < swizzle_size; ++i) {
         QueueForWriting((u8*)&swizzle_data[i], sizeof(swizzle_data[i]));
@@ -265,7 +256,7 @@ static int is_pica_tracing = false;
 void StartPicaTracing()
 {
     if (is_pica_tracing) {
-        ERROR_LOG(GPU, "StartPicaTracing called even though tracing already running!");
+        LOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
         return;
     }
 
@@ -298,7 +289,7 @@ void OnPicaRegWrite(u32 id, u32 value)
 std::unique_ptr<PicaTrace> FinishPicaTracing()
 {
     if (!is_pica_tracing) {
-        ERROR_LOG(GPU, "FinishPicaTracing called even though tracing already running!");
+        LOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
         return {};
     }
 
@@ -310,6 +301,173 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
     pica_trace_mutex.unlock();
     return std::move(ret);
+}
+
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
+    // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
+    // of which is composed of four 2x2 subtiles each of which is composed of four texels.
+    // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
+    // texels are laid out in a 2x2 subtile like this:
+    // 2 3
+    // 0 1
+    //
+    // The full 8x8 tile has the texels arranged like this:
+    //
+    // 42 43 46 47 58 59 62 63
+    // 40 41 44 45 56 57 60 61
+    // 34 35 38 39 50 51 54 55
+    // 32 33 36 37 48 49 52 53
+    // 10 11 14 15 26 27 30 31
+    // 08 09 12 13 24 25 28 29
+    // 02 03 06 07 18 19 22 23
+    // 00 01 04 05 16 17 20 21
+
+    const unsigned int block_width = 8;
+    const unsigned int block_height = 8;
+
+    const unsigned int coarse_x = x & ~7;
+    const unsigned int coarse_y = y & ~7;
+
+    // Interleave the lower 3 bits of each coordinate to get the intra-block offsets, which are
+    // arranged in a Z-order curve. More details on the bit manipulation at:
+    // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
+    unsigned int i = (x | (y << 8)) & 0x0707; // ---- -210
+    i = (i ^ (i << 2)) & 0x1313;              // ---2 --10
+    i = (i ^ (i << 1)) & 0x1515;              // ---2 -1-0
+    i = (i | (i >> 7)) & 0x3F;
+
+    source += coarse_y * info.stride;
+    const unsigned int offset = coarse_x * block_height + i;
+
+    switch (info.format) {
+    case Regs::TextureFormat::RGBA8:
+    {
+        const u8* source_ptr = source + offset * 4;
+        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
+    }
+
+    case Regs::TextureFormat::RGB8:
+    {
+        const u8* source_ptr = source + offset * 3;
+        return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+    }
+
+    case Regs::TextureFormat::RGBA5551:
+    {
+        const u16 source_ptr = *(const u16*)(source + offset * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 6) & 0x1F;
+        u8 b = (source_ptr >> 1) & 0x1F;
+        u8 a = source_ptr & 1;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), disable_alpha ? 255 : (a * 255));
+    }
+
+    case Regs::TextureFormat::RGB565:
+    {
+        const u16 source_ptr = *(const u16*)(source + offset * 2);
+        u8 r = (source_ptr >> 11) & 0x1F;
+        u8 g = ((source_ptr) >> 5) & 0x3F;
+        u8 b = (source_ptr) & 0x1F;
+        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2), 255);
+    }
+
+    case Regs::TextureFormat::RGBA4:
+    {
+        const u8* source_ptr = source + offset * 2;
+        u8 r = source_ptr[1] >> 4;
+        u8 g = source_ptr[1] & 0xFF;
+        u8 b = source_ptr[0] >> 4;
+        u8 a = source_ptr[0] & 0xFF;
+        r = (r << 4) | r;
+        g = (g << 4) | g;
+        b = (b << 4) | b;
+        a = (a << 4) | a;
+        return { r, g, b, disable_alpha ? (u8)255 : a };
+    }
+
+    case Regs::TextureFormat::IA8:
+    {
+        const u8* source_ptr = source + offset * 2;
+
+        // TODO: component order not verified
+
+        if (disable_alpha) {
+            // Show intensity as red, alpha as green
+            return { source_ptr[0], source_ptr[1], 0, 255 };
+        } else {
+            return { source_ptr[0], source_ptr[0], source_ptr[0], source_ptr[1]};
+        }
+    }
+
+    case Regs::TextureFormat::I8:
+    {
+        const u8* source_ptr = source + offset;
+        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+    }
+
+    case Regs::TextureFormat::A8:
+    {
+        const u8* source_ptr = source + offset;
+
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
+    }
+
+    case Regs::TextureFormat::IA4:
+    {
+        const u8* source_ptr = source + offset / 2;
+
+        // TODO: component order not verified
+
+        u8 i = (*source_ptr) & 0xF;
+        u8 a = ((*source_ptr) & 0xF0) >> 4;
+        a |= a << 4;
+        i |= i << 4;
+
+        if (disable_alpha) {
+            // Show intensity as red, alpha as green
+            return { i, a, 0, 255 };
+        } else {
+            return { i, i, i, a };
+        }
+    }
+
+    case Regs::TextureFormat::A4:
+    {
+        const u8* source_ptr = source + offset / 2;
+
+        // TODO: component order not verified
+
+        u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
+        a |= a << 4;
+
+        if (disable_alpha) {
+            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        } else {
+            return { 0, 0, 0, *source_ptr };
+        }
+    }
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown texture format: %x", (u32)info.format);
+        _dbg_assert_(HW_GPU, 0);
+        return {};
+    }
+}
+
+TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
+                                          const Regs::TextureFormat& format)
+{
+    TextureInfo info;
+    info.physical_address = config.GetPhysicalAddress();
+    info.width = config.width;
+    info.height = config.height;
+    info.format = format;
+    info.stride = Pica::Regs::NibblesPerPixel(info.format) * info.width / 2;
+    return info;
 }
 
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
@@ -341,7 +499,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize write structure
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (png_ptr == nullptr) {
-        ERROR_LOG(GPU, "Could not allocate write struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate write struct\n");
         goto finalise;
 
     }
@@ -349,13 +507,13 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize info structure
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == nullptr) {
-        ERROR_LOG(GPU, "Could not allocate info struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate info struct\n");
         goto finalise;
     }
 
     // Setup Exception handling
     if (setjmp(png_jmpbuf(png_ptr))) {
-        ERROR_LOG(GPU, "Error during png creation\n");
+        LOG_ERROR(Debug_GPU, "Error during png creation\n");
         goto finalise;
     }
 
@@ -375,34 +533,22 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     png_write_info(png_ptr, info_ptr);
 
     buf = new u8[row_stride * texture_config.height];
-    for (int y = 0; y < texture_config.height; ++y) {
-        for (int x = 0; x < texture_config.width; ++x) {
-            // Cf. rasterizer code for an explanation of this algorithm.
-            int texel_index_within_tile = 0;
-            for (int block_size_index = 0; block_size_index < 3; ++block_size_index) {
-                int sub_tile_width = 1 << block_size_index;
-                int sub_tile_height = 1 << block_size_index;
-
-                int sub_tile_index = (x & sub_tile_width) << block_size_index;
-                sub_tile_index += 2 * ((y & sub_tile_height) << block_size_index);
-                texel_index_within_tile += sub_tile_index;
-            }
-
-            const int block_width = 8;
-            const int block_height = 8;
-
-            int coarse_x = (x / block_width) * block_width;
-            int coarse_y = (y / block_height) * block_height;
-
-            u8* source_ptr = (u8*)data + coarse_x * block_height * 3 + coarse_y * row_stride + texel_index_within_tile * 3;
-            buf[3 * x + y * row_stride    ] = source_ptr[2];
-            buf[3 * x + y * row_stride + 1] = source_ptr[1];
-            buf[3 * x + y * row_stride + 2] = source_ptr[0];
+    for (unsigned y = 0; y < texture_config.height; ++y) {
+        for (unsigned x = 0; x < texture_config.width; ++x) {
+            TextureInfo info;
+            info.width = texture_config.width;
+            info.height = texture_config.height;
+            info.stride = row_stride;
+            info.format = registers.texture0_format;
+            Math::Vec4<u8> texture_color = LookupTexture(data, x, y, info);
+            buf[3 * x + y * row_stride    ] = texture_color.r();
+            buf[3 * x + y * row_stride + 1] = texture_color.g();
+            buf[3 * x + y * row_stride + 2] = texture_color.b();
         }
     }
 
     // Write image data
-    for (auto y = 0; y < texture_config.height; ++y)
+    for (unsigned y = 0; y < texture_config.height; ++y)
     {
         u8* row_ptr = (u8*)buf + y * row_stride;
         u8* ptr = row_ptr;
@@ -431,26 +577,32 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
     for (size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];
 
-        const std::map<Source, std::string> source_map = {
+        static const std::map<Source, std::string> source_map = {
             { Source::PrimaryColor, "PrimaryColor" },
             { Source::Texture0, "Texture0" },
+            { Source::Texture1, "Texture1" },
+            { Source::Texture2, "Texture2" },
             { Source::Constant, "Constant" },
             { Source::Previous, "Previous" },
         };
 
-        const std::map<ColorModifier, std::string> color_modifier_map = {
-            { ColorModifier::SourceColor, { "%source.rgb" } }
+        static const std::map<ColorModifier, std::string> color_modifier_map = {
+            { ColorModifier::SourceColor, { "%source.rgb" } },
+            { ColorModifier::SourceAlpha, { "%source.aaa" } },
         };
-        const std::map<AlphaModifier, std::string> alpha_modifier_map = {
-            { AlphaModifier::SourceAlpha, "%source.a" }
+        static const std::map<AlphaModifier, std::string> alpha_modifier_map = {
+            { AlphaModifier::SourceAlpha, "%source.a" },
+            { AlphaModifier::OneMinusSourceAlpha, "(255 - %source.a)" },
         };
 
-        std::map<Operation, std::string> combiner_map = {
+        static const std::map<Operation, std::string> combiner_map = {
             { Operation::Replace, "%source1" },
             { Operation::Modulate, "(%source1 * %source2) / 255" },
+            { Operation::Add, "(%source1 + %source2)" },
+            { Operation::Lerp, "lerp(%source1, %source2, %source3)" },
         };
 
-        auto ReplacePattern =
+        static auto ReplacePattern =
                 [](const std::string& input, const std::string& pattern, const std::string& replacement) -> std::string {
                     size_t start = input.find(pattern);
                     if (start == std::string::npos)
@@ -460,8 +612,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
                     ret.replace(start, pattern.length(), replacement);
                     return ret;
                 };
-        auto GetColorSourceStr =
-                [&source_map,&color_modifier_map,&ReplacePattern](const Source& src, const ColorModifier& modifier) {
+        static auto GetColorSourceStr =
+                [](const Source& src, const ColorModifier& modifier) {
                     auto src_it = source_map.find(src);
                     std::string src_str = "Unknown";
                     if (src_it != source_map.end())
@@ -474,8 +626,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
 
                     return ReplacePattern(modifier_str, "%source", src_str);
                 };
-        auto GetColorCombinerStr =
-                [&](const Regs::TevStageConfig& tev_stage) {
+        static auto GetColorCombinerStr =
+                [](const Regs::TevStageConfig& tev_stage) {
                     auto op_it = combiner_map.find(tev_stage.color_op);
                     std::string op_str = "Unknown op (%source1, %source2, %source3)";
                     if (op_it != combiner_map.end())
@@ -485,8 +637,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
                     op_str = ReplacePattern(op_str, "%source2", GetColorSourceStr(tev_stage.color_source2, tev_stage.color_modifier2));
                     return   ReplacePattern(op_str, "%source3", GetColorSourceStr(tev_stage.color_source3, tev_stage.color_modifier3));
                 };
-        auto GetAlphaSourceStr =
-                [&source_map,&alpha_modifier_map,&ReplacePattern](const Source& src, const AlphaModifier& modifier) {
+        static auto GetAlphaSourceStr =
+                [](const Source& src, const AlphaModifier& modifier) {
                     auto src_it = source_map.find(src);
                     std::string src_str = "Unknown";
                     if (src_it != source_map.end())
@@ -499,8 +651,8 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
 
                     return ReplacePattern(modifier_str, "%source", src_str);
                 };
-        auto GetAlphaCombinerStr =
-                [&](const Regs::TevStageConfig& tev_stage) {
+        static auto GetAlphaCombinerStr =
+                [](const Regs::TevStageConfig& tev_stage) {
                     auto op_it = combiner_map.find(tev_stage.alpha_op);
                     std::string op_str = "Unknown op (%source1, %source2, %source3)";
                     if (op_it != combiner_map.end())
@@ -514,7 +666,7 @@ void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages)
         stage_info += "Stage " + std::to_string(index) + ": " + GetColorCombinerStr(tev_stage) + "   " + GetAlphaCombinerStr(tev_stage) + "\n";
     }
 
-    DEBUG_LOG(GPU, "%s", stage_info.c_str());
+    LOG_TRACE(HW_GPU, "%s", stage_info.c_str());
 }
 
 } // namespace

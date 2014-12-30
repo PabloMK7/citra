@@ -467,7 +467,7 @@ ARMul_ThumbDecode (
 				(state->Reg[14] + ((tinstr & 0x07FF) << 1)) & 0xFFFFFFFC;
 			state->Reg[14] = (tmp | 1);
 			CLEART;
-			DEBUG_LOG(ARM11, "In %s, After  BLX(1),LR=0x%x,PC=0x%x, offset=0x%x\n", __FUNCTION__, state->Reg[14], state->Reg[15], (tinstr &0x7FF) << 1);
+			LOG_DEBUG(Core_ARM11, "After  BLX(1),LR=0x%x,PC=0x%x, offset=0x%x", state->Reg[14], state->Reg[15], (tinstr &0x7FF) << 1);
 			valid = t_branch;
 			FLUSHPIPE;
 		}

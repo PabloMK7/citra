@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include <map>
@@ -13,7 +13,7 @@
 namespace Memory {
 
 static std::map<u32, MemoryBlock> heap_map;
-static std::map<u32, MemoryBlock> heap_gsp_map;
+static std::map<u32, MemoryBlock> heap_linear_map;
 static std::map<u32, MemoryBlock> shared_map;
 
 /// Convert a physical address to virtual address
@@ -28,7 +28,7 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
         return addr - FCRAM_PADDR + FCRAM_VADDR;
     }
 
-    ERROR_LOG(MEMMAP, "Unknown physical address @ 0x%08x", addr);
+    LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08x", addr);
     return addr;
 }
 
@@ -44,7 +44,7 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
         return addr - FCRAM_VADDR + FCRAM_PADDR;
     }
 
-    ERROR_LOG(MEMMAP, "Unknown virtual address @ 0x%08x", addr);
+    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08x", addr);
     return addr;
 }
 
@@ -56,32 +56,27 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        var = *((const T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK]);
-
-    // Hardware I/O register reads
-    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
-        HW::Read<T>(var, vaddr);
+        var = *((const T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR]);
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        var = *((const T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK]);
+        var = *((const T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR]);
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR) && (vaddr < HEAP_GSP_VADDR_END)) {
-        var = *((const T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK]);
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR) && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        var = *((const T*)&g_heap_linear[vaddr - HEAP_LINEAR_VADDR]);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        var = *((const T*)&g_heap[vaddr & HEAP_MASK]);
+        var = *((const T*)&g_heap[vaddr - HEAP_VADDR]);
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        var = *((const T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK]);
+        var = *((const T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR]);
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-        var = *((const T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK]);
+        var = *((const T*)&g_system_mem[vaddr - SYSTEM_MEMORY_VADDR]);
 
     // Config memory
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
@@ -89,10 +84,10 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        var = *((const T*)&g_vram[vaddr & VRAM_MASK]);
+        var = *((const T*)&g_vram[vaddr - VRAM_VADDR]);
 
     } else {
-        ERROR_LOG(MEMMAP, "unknown Read%d @ 0x%08X", sizeof(var) * 8, vaddr);
+        LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
     }
 }
 
@@ -101,36 +96,31 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        *(T*)&g_kernel_mem[vaddr & KERNEL_MEMORY_MASK] = data;
-
-    // Hardware I/O register writes
-    // 0x10XXXXXX- is physical address space, 0x1EXXXXXX is virtual address space
-    } else if ((vaddr >= HARDWARE_IO_VADDR) && (vaddr < HARDWARE_IO_VADDR_END)) {
-        HW::Write<T>(vaddr, data);
+        *(T*)&g_kernel_mem[vaddr - KERNEL_MEMORY_VADDR] = data;
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        *(T*)&g_exefs_code[vaddr & EXEFS_CODE_MASK] = data;
+        *(T*)&g_exefs_code[vaddr - EXEFS_CODE_VADDR] = data;
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        *(T*)&g_heap_gsp[vaddr & HEAP_GSP_MASK] = data;
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR)  && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        *(T*)&g_heap_linear[vaddr - HEAP_LINEAR_VADDR] = data;
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        *(T*)&g_heap[vaddr & HEAP_MASK] = data;
+        *(T*)&g_heap[vaddr - HEAP_VADDR] = data;
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        *(T*)&g_shared_mem[vaddr & SHARED_MEMORY_MASK] = data;
+        *(T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR] = data;
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-         *(T*)&g_system_mem[vaddr & SYSTEM_MEMORY_MASK] = data;
+        *(T*)&g_system_mem[vaddr - SYSTEM_MEMORY_VADDR] = data;
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        *(T*)&g_vram[vaddr & VRAM_MASK] = data;
+        *(T*)&g_vram[vaddr - VRAM_VADDR] = data;
 
     //} else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
     //    _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
@@ -141,41 +131,41 @@ inline void Write(const VAddr vaddr, const T data) {
 
     // Error out...
     } else {
-        ERROR_LOG(MEMMAP, "unknown Write%d 0x%08X @ 0x%08X", sizeof(data) * 8, data, vaddr);
+        LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, vaddr);
     }
 }
 
 u8 *GetPointer(const VAddr vaddr) {
     // Kernel memory command buffer
     if (vaddr >= KERNEL_MEMORY_VADDR && vaddr < KERNEL_MEMORY_VADDR_END) {
-        return g_kernel_mem + (vaddr & KERNEL_MEMORY_MASK);
+        return g_kernel_mem + (vaddr - KERNEL_MEMORY_VADDR);
 
     // ExeFS:/.code is loaded here
     } else if ((vaddr >= EXEFS_CODE_VADDR)  && (vaddr < EXEFS_CODE_VADDR_END)) {
-        return g_exefs_code + (vaddr & EXEFS_CODE_MASK);
+        return g_exefs_code + (vaddr - EXEFS_CODE_VADDR);
 
-    // FCRAM - GSP heap
-    } else if ((vaddr >= HEAP_GSP_VADDR)  && (vaddr < HEAP_GSP_VADDR_END)) {
-        return g_heap_gsp + (vaddr & HEAP_GSP_MASK);
+    // FCRAM - linear heap
+    } else if ((vaddr >= HEAP_LINEAR_VADDR)  && (vaddr < HEAP_LINEAR_VADDR_END)) {
+        return g_heap_linear + (vaddr - HEAP_LINEAR_VADDR);
 
     // FCRAM - application heap
     } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        return g_heap + (vaddr & HEAP_MASK);
+        return g_heap + (vaddr - HEAP_VADDR);
 
     // Shared memory
     } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        return g_shared_mem + (vaddr & SHARED_MEMORY_MASK);
+        return g_shared_mem + (vaddr - SHARED_MEMORY_VADDR);
 
     // System memory
     } else if ((vaddr >= SYSTEM_MEMORY_VADDR)  && (vaddr < SYSTEM_MEMORY_VADDR_END)) {
-         return g_system_mem + (vaddr & SYSTEM_MEMORY_MASK);
+        return g_system_mem + (vaddr - SYSTEM_MEMORY_VADDR);
 
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        return g_vram + (vaddr & VRAM_MASK);
+        return g_vram + (vaddr - VRAM_VADDR);
 
     } else {
-        ERROR_LOG(MEMMAP, "unknown GetPointer @ 0x%08x", vaddr);
+        LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x%08x", vaddr);
         return 0;
     }
 }
@@ -204,24 +194,24 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
 }
 
 /**
- * Maps a block of memory on the GSP heap
+ * Maps a block of memory on the linear heap
  * @param size Size of block in bytes
  * @param operation Memory map operation type
  * @param flags Memory allocation flags
  */
-u32 MapBlock_HeapGSP(u32 size, u32 operation, u32 permissions) {
+u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
 
-    block.base_address  = HEAP_GSP_VADDR;
+    block.base_address  = HEAP_LINEAR_VADDR;
     block.size          = size;
     block.operation     = operation;
     block.permissions   = permissions;
 
-    if (heap_gsp_map.size() > 0) {
-        const MemoryBlock last_block = heap_gsp_map.rbegin()->second;
+    if (heap_linear_map.size() > 0) {
+        const MemoryBlock last_block = heap_linear_map.rbegin()->second;
         block.address = last_block.address + last_block.size;
     }
-    heap_gsp_map[block.GetVirtualAddress()] = block;
+    heap_linear_map[block.GetVirtualAddress()] = block;
 
     return block.GetVirtualAddress();
 }
@@ -239,7 +229,7 @@ u16 Read16(const VAddr addr) {
     // Check for 16-bit unaligned memory reads...
     if (addr & 1) {
         // TODO(bunnei): Implement 16-bit unaligned memory reads
-        ERROR_LOG(MEMMAP, "16-bit unaligned memory reads are not implemented!");
+        LOG_ERROR(HW_Memory, "16-bit unaligned memory reads are not implemented!");
     }
 
     return (u16)data;

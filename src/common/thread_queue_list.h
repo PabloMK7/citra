@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project / PPSSPP Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -37,7 +37,7 @@ struct ThreadQueueList {
     ~ThreadQueueList() {
         for (int i = 0; i < NUM_QUEUES; ++i)
         {
-            if (queues[i].data != NULL)
+            if (queues[i].data != nullptr)
                 free(queues[i].data);
         }
     }
@@ -46,7 +46,7 @@ struct ThreadQueueList {
     int contains(const IdType uid) {
         for (int i = 0; i < NUM_QUEUES; ++i)
         {
-            if (queues[i].data == NULL)
+            if (queues[i].data == nullptr)
                 continue;
 
             Queue *cur = &queues[i];
@@ -133,7 +133,7 @@ struct ThreadQueueList {
     inline void clear() {
         for (int i = 0; i < NUM_QUEUES; ++i)
         {
-            if (queues[i].data != NULL)
+            if (queues[i].data != nullptr)
                 free(queues[i].data);
         }
         memset(queues, 0, sizeof(queues));
@@ -147,7 +147,7 @@ struct ThreadQueueList {
 
     inline void prepare(u32 priority) {
         Queue *cur = &queues[priority];
-        if (cur->next == NULL)
+        if (cur->next == nullptr)
             link(priority, INITIAL_CAPACITY);
     }
 
@@ -176,7 +176,7 @@ private:
 
         for (int i = (int) priority - 1; i >= 0; --i)
         {
-            if (queues[i].next != NULL)
+            if (queues[i].next != nullptr)
             {
                 cur->next = queues[i].next;
                 queues[i].next = cur;
@@ -193,7 +193,7 @@ private:
         int size = cur->end - cur->first;
         if (size >= cur->capacity - 2)  {
             IdType *new_data = (IdType *)realloc(cur->data, cur->capacity * 2 * sizeof(IdType));
-            if (new_data != NULL)  {
+            if (new_data != nullptr)  {
                 cur->capacity *= 2;
                 cur->data = new_data;
             }

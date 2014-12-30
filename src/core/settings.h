@@ -1,8 +1,10 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
+
+#include <string>
 
 namespace Settings {
 
@@ -29,11 +31,12 @@ struct Values {
     // Core
     int cpu_core;
     int gpu_refresh_rate;
+    int frame_skip;
 
     // Data Storage
     bool use_virtual_sd;
 
-    bool enable_log;
+    std::string log_filter;
 } extern values;
 
 }

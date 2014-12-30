@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -28,13 +28,14 @@ pad_sright =
 
 [Core]
 cpu_core = ## 0: Interpreter (default), 1: FastInterpreter (experimental)
-gpu_refresh_rate = ## 60 (default)
+gpu_refresh_rate = ## 30 (default)
+frame_skip = ## 0: No frameskip (default), 1 : 2x frameskip, 2 : 4x frameskip, etc.
 
 [Data Storage]
 use_virtual_sd =
 
 [Miscellaneous]
-enable_log =
+log_filter = *:Info  ## Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
 )";
 
 }

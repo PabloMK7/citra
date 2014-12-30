@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
@@ -47,7 +47,7 @@ void Stop() {
 
 /// Initialize the core
 int Init() {
-    NOTICE_LOG(MASTER_LOG, "initialized OK");
+    LOG_DEBUG(Core, "initialized OK");
 
     disasm = new ARM_Disasm();
     g_sys_core = new ARM_Interpreter();
@@ -72,7 +72,7 @@ void Shutdown() {
     delete g_app_core;
     delete g_sys_core;
 
-    NOTICE_LOG(MASTER_LOG, "shutdown OK");
+    LOG_DEBUG(Core, "shutdown OK");
 }
 
 } // namespace

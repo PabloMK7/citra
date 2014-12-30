@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
@@ -37,6 +37,7 @@ private:
 
     int buffer_index;
     VertexType buffer[2];
+    bool strip_ready = false;
 };
 
 

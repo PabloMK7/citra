@@ -30,7 +30,7 @@
 #endif
 
 #ifdef IOS
-void* globalbase = NULL;
+void* globalbase = nullptr;
 #endif
 
 #ifdef ANDROID
@@ -71,7 +71,7 @@ int ashmem_create_region(const char *name, size_t size)
     return fd;
 
 error:
-    ERROR_LOG(MEMMAP, "NASTY ASHMEM ERROR: ret = %08x", ret);
+    LOG_ERROR(Common_Memory, "NASTY ASHMEM ERROR: ret = %08x", ret);
     close(fd);
     return ret;
 }
@@ -121,7 +121,7 @@ void MemArena::GrabLowMemSpace(size_t size)
 {
 #ifdef _WIN32
 #ifndef _XBOX
-    hMemoryMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(size), NULL);
+    hMemoryMapping = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, (DWORD)(size), nullptr);
     GetSystemInfo(&sysInfo);
 #endif
 #elif defined(ANDROID)
@@ -130,7 +130,7 @@ void MemArena::GrabLowMemSpace(size_t size)
     // Note that it appears that ashmem is pinned by default, so no need to pin.
     if (fd < 0)
     {
-        ERROR_LOG(MEMMAP, "Failed to grab ashmem space of size: %08x  errno: %d", (int)size, (int)(errno));
+        LOG_ERROR(Common_Memory, "Failed to grab ashmem space of size: %08x  errno: %d", (int)size, (int)(errno));
         return;
     }
 #else
@@ -148,12 +148,12 @@ void MemArena::GrabLowMemSpace(size_t size)
         }
         else if (errno != EEXIST)
         {
-            ERROR_LOG(MEMMAP, "shm_open failed: %s", strerror(errno));
+            LOG_ERROR(Common_Memory, "shm_open failed: %s", strerror(errno));
             return;
         }
     }
     if (ftruncate(fd, size) < 0)
-        ERROR_LOG(MEMMAP, "Failed to allocate low memory space");
+        LOG_ERROR(Common_Memory, "Failed to allocate low memory space");
 #endif
 }
 
@@ -178,7 +178,7 @@ void *MemArena::CreateView(s64 offset, size_t size, void *base)
 #ifdef _XBOX
     size = roundup(size);
     // use 64kb pages
-    void * ptr = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
+    void * ptr = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
     return ptr;
 #else
     size = roundup(size);
@@ -197,7 +197,7 @@ void *MemArena::CreateView(s64 offset, size_t size, void *base)
 
     if (retval == MAP_FAILED)
     {
-        NOTICE_LOG(MEMMAP, "mmap failed");
+        LOG_ERROR(Common_Memory, "mmap failed");
         return nullptr;
     }
     return retval;
@@ -243,8 +243,8 @@ u8* MemArena::Find4GBBase()
     return base;
 #else
 #ifdef IOS
-    void* base = NULL;
-    if (globalbase == NULL){
+    void* base = nullptr;
+    if (globalbase == nullptr){
         base = mmap(0, 0x08000000, PROT_READ | PROT_WRITE,
             MAP_ANON | MAP_SHARED, -1, 0);
         if (base == MAP_FAILED) {
@@ -357,7 +357,7 @@ bail:
         if (views[j].out_ptr_low && *views[j].out_ptr_low)
         {
             arena->ReleaseView(*views[j].out_ptr_low, views[j].size);
-            *views[j].out_ptr_low = NULL;
+            *views[j].out_ptr_low = nullptr;
         }
         if (*views[j].out_ptr)
         {
@@ -369,7 +369,7 @@ bail:
                 arena->ReleaseView(*views[j].out_ptr, views[j].size);
             }
 #endif
-            *views[j].out_ptr = NULL;
+            *views[j].out_ptr = nullptr;
         }
     }
     return false;
@@ -415,7 +415,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
 #elif defined(_WIN32)
     // Try a whole range of possible bases. Return once we got a valid one.
     u32 max_base_addr = 0x7FFF0000 - 0x10000000;
-    u8 *base = NULL;
+    u8 *base = nullptr;
 
     for (u32 base_addr = 0x01000000; base_addr < max_base_addr; base_addr += 0x400000)
     {
@@ -423,7 +423,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
         base = (u8 *)base_addr;
         if (Memory_TryBase(base, views, num_views, flags, arena))
         {
-            INFO_LOG(MEMMAP, "Found valid memory base at %p after %i tries.", base, base_attempts);
+            LOG_DEBUG(Common_Memory, "Found valid memory base at %p after %i tries.", base, base_attempts);
             base_attempts = 0;
             break;
         }
@@ -442,7 +442,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
     u8 *base = MemArena::Find4GBBase();
     if (!Memory_TryBase(base, views, num_views, flags, arena))
     {
-        ERROR_LOG(MEMMAP, "MemoryMap_Setup: Failed finding a memory base.");
+        LOG_ERROR(Common_Memory, "MemoryMap_Setup: Failed finding a memory base.");
         PanicAlert("MemoryMap_Setup: Failed finding a memory base.");
         return 0;
     }
@@ -463,8 +463,8 @@ void MemoryMap_Shutdown(const MemoryView *views, int num_views, u32 flags, MemAr
             arena->ReleaseView(*views[i].out_ptr_low, views[i].size);
         if (*views[i].out_ptr && (views[i].out_ptr_low && *views[i].out_ptr != *views[i].out_ptr_low))
             arena->ReleaseView(*views[i].out_ptr, views[i].size);
-        *views[i].out_ptr = NULL;
+        *views[i].out_ptr = nullptr;
         if (views[i].out_ptr_low)
-            *views[i].out_ptr_low = NULL;
+            *views[i].out_ptr_low = nullptr;
     }
 }

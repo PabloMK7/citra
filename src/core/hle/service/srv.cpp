@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "core/hle/hle.h"
@@ -14,17 +14,17 @@ namespace SRV {
 static Handle g_event_handle = 0;
 
 static void Initialize(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "called");
+    LOG_DEBUG(Service_SRV, "called");
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
 }
 
 static void GetProcSemaphore(Service::Interface* self) {
-    DEBUG_LOG(OSHLE, "called");
+    LOG_TRACE(Service_SRV, "called");
 
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
     g_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "SRV:Event");
@@ -36,16 +36,16 @@ static void GetProcSemaphore(Service::Interface* self) {
 
 static void GetServiceHandle(Service::Interface* self) {
     ResultCode res = RESULT_SUCCESS;
-    u32* cmd_buff = Service::GetCommandBuffer();
+    u32* cmd_buff = Kernel::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
     Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
 
     if (nullptr != service) {
         cmd_buff[3] = service->GetHandle();
-        DEBUG_LOG(OSHLE, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
+        LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
-        ERROR_LOG(OSHLE, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
+        LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
         res = UnimplementedFunction(ErrorModule::SRV);
     }
     cmd_buff[1] = res.raw;
@@ -66,9 +66,6 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
-}
-
-Interface::~Interface() {
 }
 
 } // namespace

@@ -18,35 +18,46 @@ set(SRCS
             arm/skyeye_common/vfp/vfpinstr.cpp
             arm/skyeye_common/vfp/vfpsingle.cpp
             file_sys/archive_romfs.cpp
+            file_sys/archive_savedata.cpp
             file_sys/archive_sdmc.cpp
+            file_sys/archive_systemsavedata.cpp
+            file_sys/disk_archive.cpp
             file_sys/file_romfs.cpp
-            file_sys/file_sdmc.cpp
             file_sys/directory_romfs.cpp
-            file_sys/directory_sdmc.cpp
             hle/kernel/address_arbiter.cpp
-            hle/kernel/archive.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
+            hle/kernel/semaphore.cpp
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
+            hle/service/act_u.cpp
+            hle/service/am_app.cpp
             hle/service/am_net.cpp
+            hle/service/apt_a.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
-            hle/service/cfg_i.cpp
-            hle/service/cfg_u.cpp
+            hle/service/cecd_u.cpp
+            hle/service/cfg/cfg.cpp
+            hle/service/cfg/cfg_i.cpp
+            hle/service/cfg/cfg_u.cpp
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
-            hle/service/fs_user.cpp
             hle/service/frd_u.cpp
+            hle/service/fs/archive.cpp
+            hle/service/fs/fs_user.cpp
             hle/service/gsp_gpu.cpp
             hle/service/hid_user.cpp
+            hle/service/http_c.cpp
             hle/service/ir_rst.cpp
             hle/service/ir_u.cpp
+            hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
             hle/service/ndm_u.cpp
+            hle/service/news_u.cpp
+            hle/service/nim_aoc.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
             hle/service/ptm_u.cpp
@@ -59,10 +70,10 @@ set(SRCS
             hle/svc.cpp
             hw/gpu.cpp
             hw/hw.cpp
-            hw/ndma.cpp
             loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
+            loader/3dsx.cpp
             core.cpp
             core_timing.cpp
             mem_map.cpp
@@ -92,39 +103,51 @@ set(HEADERS
             arm/skyeye_common/vfp/vfp.h
             arm/skyeye_common/vfp/vfp_helper.h
             arm/arm_interface.h
-            file_sys/archive.h
+            file_sys/archive_backend.h
             file_sys/archive_romfs.h
+            file_sys/archive_savedata.h
             file_sys/archive_sdmc.h
-            file_sys/file.h
+            file_sys/archive_systemsavedata.h
+            file_sys/disk_archive.h
+            file_sys/file_backend.h
             file_sys/file_romfs.h
-            file_sys/file_sdmc.h
-            file_sys/directory.h
+            file_sys/directory_backend.h
             file_sys/directory_romfs.h
-            file_sys/directory_sdmc.h
             hle/kernel/address_arbiter.h
-            hle/kernel/archive.h
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
+            hle/kernel/semaphore.h
+            hle/kernel/session.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/service/ac_u.h
+            hle/service/act_u.h
+            hle/service/am_app.h
             hle/service/am_net.h
+            hle/service/apt_a.h
             hle/service/apt_u.h
             hle/service/boss_u.h
-            hle/service/cfg_i.h
-            hle/service/cfg_u.h
+            hle/service/cecd_u.h
+            hle/service/cfg/cfg.h
+            hle/service/cfg/cfg_i.h
+            hle/service/cfg/cfg_u.h
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
-            hle/service/fs_user.h
             hle/service/frd_u.h
+            hle/service/fs/archive.h
+            hle/service/fs/fs_user.h
             hle/service/gsp_gpu.h
             hle/service/hid_user.h
+            hle/service/http_c.h
             hle/service/ir_rst.h
             hle/service/ir_u.h
+            hle/service/ldr_ro.h
             hle/service/mic_u.h
             hle/service/ndm_u.h
+            hle/service/news_u.h
+            hle/service/nim_aoc.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h
             hle/service/ptm_u.h
@@ -139,10 +162,10 @@ set(HEADERS
             hle/svc.h
             hw/gpu.h
             hw/hw.h
-            hw/ndma.h
             loader/elf.h
             loader/loader.h
             loader/ncch.h
+            loader/3dsx.h
             core.h
             core_timing.h
             mem_map.h

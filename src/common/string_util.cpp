@@ -1,8 +1,8 @@
-// Copyright 2013 Dolphin Emulator Project
-// Licensed under GPLv2
+// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
+#include <boost/range/algorithm.hpp>
 
 #include "common/common.h"
 #include "common/string_util.h"
@@ -18,20 +18,20 @@ namespace Common {
 
 /// Make a string lowercase
 std::string ToLower(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    boost::transform(str, str.begin(), ::tolower);
     return str;
 }
 
 /// Make a string uppercase
 std::string ToUpper(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+    boost::transform(str, str.begin(), ::toupper);
     return str;
 }
 
 // faster than sscanf
 bool AsciiToHex(const char* _szValue, u32& result)
 {
-    char *endptr = NULL;
+    char *endptr = nullptr;
     const u32 value = strtoul(_szValue, &endptr, 16);
 
     if (!endptr || *endptr)
@@ -69,7 +69,7 @@ bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list ar
     // will be present in the middle of a multibyte sequence.
     //
     // This is why we lookup an ANSI (cp1252) locale here and use _vsnprintf_l.
-    static locale_t c_locale = NULL;
+    static locale_t c_locale = nullptr;
     if (!c_locale)
         c_locale = _create_locale(LC_ALL, ".1252");
     writtenCount = _vsnprintf_l(out, outsize, format, c_locale, args);
@@ -92,7 +92,7 @@ bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list ar
 std::string StringFromFormat(const char* format, ...)
 {
     va_list args;
-    char *buf = NULL;
+    char *buf = nullptr;
 #ifdef _WIN32
     int required = 0;
 
@@ -107,7 +107,7 @@ std::string StringFromFormat(const char* format, ...)
 #else
     va_start(args, format);
     if (vasprintf(&buf, format, args) < 0)
-        ERROR_LOG(COMMON, "Unable to allocate memory for string");
+        LOG_ERROR(Common, "Unable to allocate memory for string");
     va_end(args);
 
     std::string temp = buf;
@@ -162,7 +162,7 @@ std::string StripQuotes(const std::string& s)
 
 bool TryParse(const std::string &str, u32 *const output)
 {
-    char *endptr = NULL;
+    char *endptr = nullptr;
 
     // Reset errno to a value other than ERANGE
     errno = 0;
@@ -475,7 +475,7 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
     iconv_t const conv_desc = iconv_open("UTF-8", fromcode);
     if ((iconv_t)(-1) == conv_desc)
     {
-        ERROR_LOG(COMMON, "Iconv initialization failure [%s]: %s", fromcode, strerror(errno));
+        LOG_ERROR(Common, "Iconv initialization failure [%s]: %s", fromcode, strerror(errno));
         iconv_close(conv_desc);
         return {};
     }
@@ -510,7 +510,7 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
             }
             else
             {
-                ERROR_LOG(COMMON, "iconv failure [%s]: %s", fromcode, strerror(errno));
+                LOG_ERROR(Common, "iconv failure [%s]: %s", fromcode, strerror(errno));
                 break;
             }
         }
@@ -528,10 +528,10 @@ std::u16string UTF8ToUTF16(const std::string& input)
 {
     std::u16string result;
 
-    iconv_t const conv_desc = iconv_open("UTF-16", "UTF-8");
+    iconv_t const conv_desc = iconv_open("UTF-16LE", "UTF-8");
     if ((iconv_t)(-1) == conv_desc)
     {
-        ERROR_LOG(COMMON, "Iconv initialization failure [UTF-8]: %s", strerror(errno));
+        LOG_ERROR(Common, "Iconv initialization failure [UTF-8]: %s", strerror(errno));
         iconv_close(conv_desc);
         return {};
     }
@@ -566,7 +566,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
             }
             else
             {
-                ERROR_LOG(COMMON, "iconv failure [UTF-8]: %s", strerror(errno));
+                LOG_ERROR(Common, "iconv failure [UTF-8]: %s", strerror(errno));
                 break;
             }
         }
@@ -582,7 +582,7 @@ std::u16string UTF8ToUTF16(const std::string& input)
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {
-    return CodeToUTF8("UTF-16", input);
+    return CodeToUTF8("UTF-16LE", input);
 }
 
 std::string CP1252ToUTF8(const std::string& input)

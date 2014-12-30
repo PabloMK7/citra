@@ -1,5 +1,5 @@
 // Copyright 2014 Citra Emulator Project
-// Licensed under GPLv2
+// Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "clipper.h"
@@ -8,6 +8,8 @@
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
+#include "core/hle/service/gsp_gpu.h"
+#include "core/hw/gpu.h"
 
 #include "debug_utils/debug_utils.h"
 
@@ -30,24 +32,40 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     if (id >= registers.NumIds())
         return;
 
+    // If we're skipping this frame, only allow trigger IRQ
+    if (GPU::g_skip_frame && id != PICA_REG_INDEX(trigger_irq))
+        return;
+
     // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
     u32 old_value = registers[id];
     registers[id] = (old_value & ~mask) | (value & mask);
 
+    if (g_debug_context)
+        g_debug_context->OnEvent(DebugContext::Event::CommandLoaded, reinterpret_cast<void*>(&id));
+
     DebugUtils::OnPicaRegWrite(id, registers[id]);
 
     switch(id) {
+        // Trigger IRQ
+        case PICA_REG_INDEX(trigger_irq):
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
+            return;
+
         // It seems like these trigger vertex rendering
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
             DebugUtils::DumpTevStageConfig(registers.GetTevStages());
 
+            if (g_debug_context)
+                g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
+
             const auto& attribute_config = registers.vertex_attributes;
-            const u8* const base_address = Memory::GetPointer(attribute_config.GetBaseAddress());
+            const u32 base_address = attribute_config.GetPhysicalBaseAddress();
 
             // Information about internal vertex attributes
-            const u8* vertex_attribute_sources[16];
+            u32 vertex_attribute_sources[16];
+            std::fill(vertex_attribute_sources, &vertex_attribute_sources[16], 0xdeadbeef);
             u32 vertex_attribute_strides[16];
             u32 vertex_attribute_formats[16];
             u32 vertex_attribute_elements[16];
@@ -57,10 +75,10 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             for (int loader = 0; loader < 12; ++loader) {
                 const auto& loader_config = attribute_config.attribute_loaders[loader];
 
-                const u8* load_address = base_address + loader_config.data_offset;
+                u32 load_address = base_address + loader_config.data_offset;
 
                 // TODO: What happens if a loader overwrites a previous one's data?
-                for (int component = 0; component < loader_config.component_count; ++component) {
+                for (unsigned component = 0; component < loader_config.component_count; ++component) {
                     u32 attribute_index = loader_config.GetComponent(component);
                     vertex_attribute_sources[attribute_index] = load_address;
                     vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
@@ -75,9 +93,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
             const auto& index_info = registers.index_array;
-            const u8* index_address_8 = (u8*)base_address + index_info.offset;
+            const u8* index_address_8 = Memory::GetPointer(PAddrToVAddr(base_address + index_info.offset));
             const u16* index_address_16 = (u16*)index_address_8;
-            bool index_u16 = (bool)index_info.format;
+            bool index_u16 = index_info.format != 0;
 
             DebugUtils::GeometryDumper geometry_dumper;
             PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
@@ -96,20 +114,30 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                        const u8* srcdata = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
+                        const u8* srcdata = Memory::GetPointer(PAddrToVAddr(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]));
+
+                        // TODO(neobrain): Ocarina of Time 3D has GetNumTotalAttributes return 8,
+                        // yet only provides 2 valid source data addresses. Need to figure out
+                        // what's wrong there, until then we just continue when address lookup fails
+                        if (srcdata == nullptr)
+                            continue;
+
                         const float srcval = (vertex_attribute_formats[i] == 0) ? *(s8*)srcdata :
                                              (vertex_attribute_formats[i] == 1) ? *(u8*)srcdata :
                                              (vertex_attribute_formats[i] == 2) ? *(s16*)srcdata :
                                                                                   *(float*)srcdata;
                         input.attr[i][comp] = float24::FromFloat32(srcval);
-                        DEBUG_LOG(GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
+                        LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
                                   comp, i, vertex, index,
-                                  attribute_config.GetBaseAddress(),
+                                  attribute_config.GetPhysicalBaseAddress(),
                                   vertex_attribute_sources[i] - base_address,
-                                  srcdata - vertex_attribute_sources[i],
+                                  vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
+
+                if (g_debug_context)
+                    g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
                 // NOTE: When dumping geometry, we simply assume that the first input attribute
                 //       corresponds to the position for now.
@@ -132,8 +160,18 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 clipper_primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
             }
             geometry_dumper.Dump();
+
+            if (g_debug_context)
+                g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+
             break;
         }
+
+        case PICA_REG_INDEX(vs_bool_uniforms):
+            for (unsigned i = 0; i < 16; ++i)
+                VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i)) != 0;
+
+            break;
 
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
@@ -160,7 +198,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 auto& uniform = VertexShader::GetFloatUniform(uniform_setup.index);
 
                 if (uniform_setup.index > 95) {
-                    ERROR_LOG(GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
+                    LOG_ERROR(HW_GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
                     break;
                 }
 
@@ -176,7 +214,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     uniform.x = float24::FromRawFloat24(uniform_write_buffer[2] & 0xFFFFFF);
                 }
 
-                DEBUG_LOG(GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
+                LOG_TRACE(HW_GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
                           uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
                           uniform.w.ToFloat32());
 
@@ -229,6 +267,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         default:
             break;
     }
+
+    if (g_debug_context)
+        g_debug_context->OnEvent(DebugContext::Event::CommandProcessed, reinterpret_cast<void*>(&id));
 }
 
 static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
@@ -259,8 +300,9 @@ static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
 
 void ProcessCommandList(const u32* list, u32 size) {
     u32* read_pointer = (u32*)list;
+    u32 list_length = size / sizeof(u32);
 
-    while (read_pointer < list + size) {
+    while (read_pointer < list + list_length) {
         read_pointer += ExecuteCommandBlock(read_pointer);
     }
 }

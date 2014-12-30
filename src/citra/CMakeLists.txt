@@ -12,25 +12,23 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 
-# NOTE: This is a workaround for CMake bug 0006976 (missing X11_xf86vmode_LIB variable)
-if (NOT X11_xf86vmode_LIB)
-    set(X11_xv86vmode_LIB Xxf86vm)
-endif()
-
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra core common video_core)
 target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih)
 
+if (UNIX)
+    target_link_libraries(citra -pthread)
+endif()
+
 if (APPLE)
-    target_link_libraries(citra iconv pthread ${COREFOUNDATION_LIBRARY})
+    target_link_libraries(citra iconv ${COREFOUNDATION_LIBRARY})
 elseif (WIN32)
     target_link_libraries(citra winmm)
     if (MINGW)
         target_link_libraries(citra iconv)
     endif()    
 else() # Unix
-    target_link_libraries(citra pthread rt)
-    target_link_libraries(citra ${X11_X11_LIB} ${X11_Xi_LIB} ${X11_Xcursor_LIB} ${X11_Xrandr_LIB} ${X11_xv86vmode_LIB})
+    target_link_libraries(citra rt)
 endif()
 
 #install(TARGETS citra RUNTIME DESTINATION ${bindir})

@@ -14,6 +14,8 @@
 #include "core/core.h"
 #include "core/settings.h"
 
+#include "video_core/debug_utils/debug_utils.h"
+
 #include "video_core/video_core.h"
 
 #include "citra_qt/version.h"
@@ -60,26 +62,33 @@ void EmuThread::Stop()
 {
     if (!isRunning())
     {
-        INFO_LOG(MASTER_LOG, "EmuThread::Stop called while emu thread wasn't running, returning...");
+        LOG_WARNING(Frontend, "EmuThread::Stop called while emu thread wasn't running, returning...");
         return;
     }
     stop_run = true;
 
+    // Release emu threads from any breakpoints, so that this doesn't hang forever.
+    Pica::g_debug_context->ClearBreakpoints();
+
     //core::g_state = core::SYS_DIE;
 
-    wait(500);
+    // TODO: Waiting here is just a bad workaround for retarded shutdown logic.
+    wait(1000);
     if (isRunning())
     {
-        WARN_LOG(MASTER_LOG, "EmuThread still running, terminating...");
+        LOG_WARNING(Frontend, "EmuThread still running, terminating...");
         quit();
-        wait(1000);
+
+        // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
+        // queued... This should be fixed.
+        wait(50000);
         if (isRunning())
         {
-            WARN_LOG(MASTER_LOG, "EmuThread STILL running, something is wrong here...");
+            LOG_CRITICAL(Frontend, "EmuThread STILL running, something is wrong here...");
             terminate();
         }
     }
-    INFO_LOG(MASTER_LOG, "EmuThread stopped");
+    LOG_INFO(Frontend, "EmuThread stopped");
 }
 
 
@@ -230,7 +239,7 @@ QByteArray GRenderWindow::saveGeometry()
 {
     // If we are a top-level widget, store the current geometry
     // otherwise, store the last backup
-    if (parent() == NULL)
+    if (parent() == nullptr)
         return ((QGLWidget*)this)->saveGeometry();
     else
         return geometry;
