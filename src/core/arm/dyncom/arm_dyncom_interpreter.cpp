@@ -1100,6 +1100,14 @@ typedef struct _smla_inst {
     unsigned int Rn;
 } smla_inst;
 
+typedef struct ssat_inst {
+    unsigned int Rn;
+    unsigned int Rd;
+    unsigned int imm5;
+    unsigned int sat_imm;
+    unsigned int shift_type;
+} ssat_inst;
+
 typedef struct umaal_inst {
     unsigned int Rn;
     unsigned int Rm;
@@ -2525,7 +2533,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SMUSD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("SRS"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("SSAT"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ssat_inst));
+    ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx = index;
+    inst_base->br = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->Rn = BITS(inst, 0, 3);
+    inst_cream->Rd = BITS(inst, 12, 15);
+    inst_cream->imm5 = BITS(inst, 7, 11);
+    inst_cream->sat_imm = BITS(inst, 16, 20);
+    inst_cream->shift_type = BIT(inst, 6);
+
+    return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SSAT16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SSUB8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index)
@@ -3128,7 +3153,10 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(usad8)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(usada8)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("USAT"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(ssat)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USAT16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USUB8"); }
@@ -5514,6 +5542,38 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     SMUSD_INST:
     SRS_INST:
     SSAT_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+
+            u8 shift_type = inst_cream->shift_type;
+            u8 shift_amount = inst_cream->imm5;
+            u32 rn_val = RN;
+
+            // 32-bit ASR is encoded as an amount of 0.
+            if (shift_type == 1 && shift_amount == 0)
+                shift_amount = 31;
+
+            if (shift_type == 0)
+                rn_val <<= shift_amount;
+            else if (shift_type == 1)
+                rn_val = ((s32)rn_val >> shift_amount);
+
+            bool saturated = false;
+            rn_val = ARMul_SignedSatQ(rn_val, inst_cream->sat_imm, &saturated);
+
+            if (saturated)
+                cpu->Cpsr |= (1 << 27);
+
+            RD = rn_val;
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(ssat_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     SSAT16_INST:
     SSUB8_INST:
     STC_INST:
@@ -6262,6 +6322,38 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     USAT_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+
+            u8 shift_type = inst_cream->shift_type;
+            u8 shift_amount = inst_cream->imm5;
+            u32 rn_val = RN;
+
+            // 32-bit ASR is encoded as an amount of 0.
+            if (shift_type == 1 && shift_amount == 0)
+                shift_amount = 31;
+
+            if (shift_type == 0)
+                rn_val <<= shift_amount;
+            else if (shift_type == 1)
+                rn_val = ((s32)rn_val >> shift_amount);
+
+            bool saturated = false;
+            rn_val = ARMul_UnsignedSatQ(rn_val, inst_cream->sat_imm, &saturated);
+
+            if (saturated)
+                cpu->Cpsr |= (1 << 27);
+
+            RD = rn_val;
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(ssat_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     USAT16_INST:
     USUB16_INST:
     USUB8_INST:

@@ -578,6 +578,41 @@ u16 ARMul_UnsignedSaturatedSub16(u16 left, u16 right)
     return left - right;
 }
 
+// Signed saturation.
+u32 ARMul_SignedSatQ(s32 value, u8 shift, bool* saturation_occurred)
+{
+    const u32 max = (1 << shift) - 1;
+    const s32 top = (value >> shift);
+
+    if (top > 0) {
+        *saturation_occurred = true;
+        return max;
+    }
+    else if (top < -1) {
+        *saturation_occurred = true;
+        return ~max;
+    }
+
+    *saturation_occurred = false;
+    return (u32)value;
+}
+
+// Unsigned saturation
+u32 ARMul_UnsignedSatQ(s32 value, u8 shift, bool* saturation_occurred)
+{
+    const u32 max = (1 << shift) - 1;
+
+    if (value < 0) {
+        *saturation_occurred = true;
+        return 0;
+    } else if ((u32)value > max) {
+        *saturation_occurred = true;
+        return max;
+    }
+
+    *saturation_occurred = false;
+    return (u32)value;
+}
 
 /* This function does the work of generating the addresses used in an
    LDC instruction.  The code here is always post-indexed, it's up to the

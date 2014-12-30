@@ -800,6 +800,8 @@ extern u16 ARMul_UnsignedSaturatedAdd16(u16, u16);
 extern u8 ARMul_UnsignedSaturatedSub8(u8, u8);
 extern u16 ARMul_UnsignedSaturatedSub16(u16, u16);
 extern u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
+extern u32 ARMul_SignedSatQ(s32, u8, bool*);
+extern u32 ARMul_UnsignedSatQ(s32, u8, bool*);
 
 #define DIFF_LOG 0
 #define SAVE_LOG 0
