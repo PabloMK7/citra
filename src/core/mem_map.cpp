@@ -21,6 +21,7 @@ u8* g_heap                      = nullptr;   ///< Application heap (main memory)
 u8* g_heap_linear               = nullptr;   ///< Linear heap
 u8* g_vram                      = nullptr;   ///< Video memory (VRAM) pointer
 u8* g_shared_mem                = nullptr;   ///< Shared memory
+u8* g_dsp_mem                   = nullptr;   ///< DSP memory
 u8* g_kernel_mem;                              ///< Kernel memory
 
 static u8* physical_bootrom     = nullptr;   ///< Bootrom physical memory
@@ -32,6 +33,7 @@ static u8* physical_fcram       = nullptr;   ///< Main physical memory (FCRAM)
 static u8* physical_heap_gsp    = nullptr;   ///< GSP heap physical memory
 static u8* physical_vram        = nullptr;   ///< Video physical memory (VRAM)
 static u8* physical_shared_mem  = nullptr;   ///< Physical shared memory
+static u8* physical_dsp_mem     = nullptr;   ///< Physical DSP memory
 static u8* physical_kernel_mem;              ///< Kernel memory
 
 // We don't declare the IO region in here since its handled by other means.
@@ -41,6 +43,7 @@ static MemoryView g_views[] = {
     {&g_heap,           &physical_fcram,        HEAP_VADDR,             HEAP_SIZE,          MV_IS_PRIMARY_RAM},
     {&g_shared_mem,     &physical_shared_mem,   SHARED_MEMORY_VADDR,    SHARED_MEMORY_SIZE, 0},
     {&g_system_mem,     &physical_system_mem,   SYSTEM_MEMORY_VADDR,    SYSTEM_MEMORY_SIZE, 0},
+    {&g_dsp_mem,        &physical_dsp_mem,      DSP_MEMORY_VADDR,       DSP_MEMORY_SIZE,    0},
     {&g_kernel_mem,     &physical_kernel_mem,   KERNEL_MEMORY_VADDR,    KERNEL_MEMORY_SIZE, 0},
     {&g_heap_linear,    &physical_heap_gsp,     HEAP_LINEAR_VADDR,      HEAP_LINEAR_SIZE,   0},
 };

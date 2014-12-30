@@ -134,6 +134,7 @@ extern u8* g_heap;          ///< Application heap (main memory)
 extern u8* g_vram;          ///< Video memory (VRAM)
 extern u8* g_shared_mem;    ///< Shared memory
 extern u8* g_kernel_mem;    ///< Kernel memory
+extern u8* g_dsp_mem;       ///< DSP memory
 extern u8* g_system_mem;    ///< System memory
 extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
 
