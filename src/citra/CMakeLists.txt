@@ -24,7 +24,7 @@ if (APPLE)
     target_link_libraries(citra iconv ${COREFOUNDATION_LIBRARY})
 elseif (WIN32)
     target_link_libraries(citra winmm)
-    if (MINGW)
+    if (MINGW) # GCC does not support codecvt, so use iconv instead
         target_link_libraries(citra iconv)
     endif()    
 else() # Unix

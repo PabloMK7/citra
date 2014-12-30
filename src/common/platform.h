@@ -76,7 +76,7 @@
 #endif
 #define EMU_FASTCALL __fastcall
 
-#ifdef _MSVC_VER
+#ifdef _MSC_VER
 inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
     if (localtime_s(result, clock) == 0)
         return result;

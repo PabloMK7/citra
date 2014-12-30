@@ -8,7 +8,7 @@
 #include "common/msg_handler.h"
 #include "common/logging/log.h"
 
-#ifdef MSVC_VER
+#ifdef _MSC_VER
 #ifndef __func__
 #define __func__ __FUNCTION__
 #endif
@@ -40,7 +40,7 @@
 #define _assert_(_a_) _dbg_assert_(MASTER_LOG, _a_)
 
 #ifndef GEKKO
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define _assert_msg_(_t_, _a_, _fmt_, ...)        \
     if (!(_a_)) {\
         if (!PanicYesNo(_fmt_, __VA_ARGS__)) {Crash();} \
