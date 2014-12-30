@@ -2551,7 +2551,22 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SSAT16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ssat_inst));
+    ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->Rn      = BITS(inst, 0, 3);
+    inst_cream->Rd      = BITS(inst, 12, 15);
+    inst_cream->sat_imm = BITS(inst, 16, 19);
+
+    return inst_base;
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SSUB8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index)
 {
@@ -3157,7 +3172,10 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(usat)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(ssat)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USAT16"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(ssat16)(inst, index);
+}
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USUB8"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("USUBADDX"); }
@@ -5575,6 +5593,26 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SSAT16_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+            const u8 saturate_to = inst_cream->sat_imm;
+
+            bool sat1 = false;
+            bool sat2 = false;
+
+            RD = (ARMul_SignedSatQ((s16)RN, saturate_to, &sat1) & 0xFFFF) |
+                 ARMul_SignedSatQ((s32)RN >> 16, saturate_to, &sat2) << 16;
+
+            if (sat1 || sat2)
+                cpu->Cpsr |= (1 << 27);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(ssat_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
     SSUB8_INST:
     STC_INST:
     {
@@ -6355,6 +6393,27 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     USAT16_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
+            const u8 saturate_to = inst_cream->sat_imm;
+
+            bool sat1 = false;
+            bool sat2 = false;
+
+            RD = (ARMul_UnsignedSatQ((s16)RN, saturate_to, &sat1) & 0xFFFF) |
+                 ARMul_UnsignedSatQ((s32)RN >> 16, saturate_to, &sat2) << 16;
+
+            if (sat1 || sat2)
+                cpu->Cpsr |= (1 << 27);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(ssat_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     USUB16_INST:
     USUB8_INST:
     USUBADDX_INST:
