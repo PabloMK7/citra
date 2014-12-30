@@ -107,14 +107,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "archive_path=%s file_path=%s, mode=%u attributes=%d",
               archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
 
-    if (archive_path.GetType() != FileSys::Empty) {
-        LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
-        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
-        cmd_buff[3] = 0;
-        return;
-    }
-
-    ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id);
+    ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS, "failed to get a handle for archive");
         cmd_buff[1] = archive_handle.Code().raw;
@@ -376,13 +369,7 @@ static void OpenArchive(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
 
-    if (archive_path.GetType() != FileSys::Empty) {
-        LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
-        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
-        return;
-    }
-
-    ResultVal<ArchiveHandle> handle = OpenArchive(archive_id);
+    ResultVal<ArchiveHandle> handle = OpenArchive(archive_id, archive_path);
     cmd_buff[1] = handle.Code().raw;
     if (handle.Succeeded()) {
         cmd_buff[2] = *handle & 0xFFFFFFFF;

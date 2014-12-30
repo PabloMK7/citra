@@ -11,6 +11,7 @@
 #include "common/math_util.h"
 
 #include "core/file_sys/archive_savedata.h"
+#include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_backend.h"
@@ -224,24 +225,19 @@ static Archive* GetArchive(ArchiveHandle handle) {
     return (itr == handle_map.end()) ? nullptr : itr->second;
 }
 
-ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code) {
+ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path) {
     LOG_TRACE(Service_FS, "Opening archive with id code 0x%08X", id_code);
 
     auto itr = id_code_map.find(id_code);
     if (itr == id_code_map.end()) {
-        if (id_code == ArchiveIdCode::SaveData) {
-            // When a SaveData archive is created for the first time, it is not yet formatted
-            // and the save file/directory structure expected by the game has not yet been initialized. 
-            // Returning the NotFormatted error code will signal the game to provision the SaveData archive 
-            // with the files and folders that it expects. 
-            // The FormatSaveData service call will create the SaveData archive when it is called.
-            return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-                              ErrorSummary::InvalidState, ErrorLevel::Status);
-        }
         // TODO: Verify error against hardware
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
+
+    ResultCode res = itr->second->backend->Open(archive_path);
+    if (!res.IsSuccess())
+        return res;
 
     // This should never even happen in the first place with 64-bit handles, 
     while (handle_map.count(next_handle) != 0) {
@@ -395,25 +391,14 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
 }
 
 ResultCode FormatSaveData() {
-    // TODO(Subv): Actually wipe the savedata folder after creating or opening it
-
     // Do not create the archive again if it already exists
-    if (id_code_map.find(ArchiveIdCode::SaveData) != id_code_map.end())
-        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the correct error code
-
-    // Create the SaveData archive
-    std::string savedata_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX);
-    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(savedata_directory,
-        Kernel::g_program_id);
-
-    if (savedata_archive->Initialize()) {
-        CreateArchive(std::move(savedata_archive), ArchiveIdCode::SaveData);
-        return RESULT_SUCCESS;
-    } else {
-        LOG_ERROR(Service_FS, "Can't instantiate SaveData archive with path %s",
-            savedata_archive->GetMountPoint().c_str());
-        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the proper error code
+    auto archive_itr = id_code_map.find(ArchiveIdCode::SaveData);
+    if (archive_itr == id_code_map.end()) {
+        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
+
+    // Use an empty path, we do not use it when formatting the savedata
+    return archive_itr->second->backend->Format(FileSys::Path());
 }
 
 /// Initialize archives
@@ -430,6 +415,26 @@ void ArchiveInit() {
         CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
+    
+    // Create the SaveData archive
+    std::string savedata_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX);
+    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(savedata_directory);
+    CreateArchive(std::move(savedata_archive), ArchiveIdCode::SaveData);
+
+    std::string extsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
+    auto extsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(extsavedata_directory);
+    if (extsavedata_archive->Initialize())
+        CreateArchive(std::move(extsavedata_archive), ArchiveIdCode::ExtSaveData);
+    else
+        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_directory.c_str());
+
+    std::string sharedextsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
+    auto sharedextsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(sharedextsavedata_directory);
+    if (sharedextsavedata_archive->Initialize())
+        CreateArchive(std::move(sharedextsavedata_archive), ArchiveIdCode::SharedExtSaveData);
+    else
+        LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s", 
+                  sharedextsavedata_directory.c_str());
 }
 
 /// Shutdown archives

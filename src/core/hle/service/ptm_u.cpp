@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "common/log.h"
+#include "common/make_unique.h"
+#include "core/file_sys/archive_extsavedata.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/ptm_u.h"
 
@@ -10,6 +12,24 @@
 // Namespace PTM_U
 
 namespace PTM_U {
+
+/** 
+ * Represents the gamecoin file structure in the SharedExtData archive
+ * More information in 3dbrew (http://www.3dbrew.org/wiki/Extdata#Shared_Extdata_0xf000000b_gamecoin.dat)
+ */
+struct GameCoin {
+    u32 magic; ///< Magic number: 0x4F00
+    u16 total_coins; ///< Total Play Coins 
+    u16 total_coins_on_date; ///< Total Play Coins obtained on the date stored below.
+    u32 step_count; ///< Total step count at the time a new Play Coin was obtained. 
+    u32 last_step_count; ///< Step count for the day the last Play Coin was obtained
+    u16 year;
+    u8 month;
+    u8 day;
+};
+static const GameCoin default_game_coin = { 0x4F00, 42, 0, 0, 0, 2014, 12, 29 };
+static std::unique_ptr<FileSys::Archive_ExtSaveData> ptm_shared_extsavedata;
+static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
 
 /// Charge levels used by PTM functions
 enum class ChargeLevels : u32 {
@@ -120,6 +140,33 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    // Create the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
+    // TODO(Subv): In the future we should use the FS service to query this archive
+    std::string extsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
+    ptm_shared_extsavedata = Common::make_unique<FileSys::Archive_ExtSaveData>(extsavedata_directory);
+    if (!ptm_shared_extsavedata->Initialize()) {
+        LOG_CRITICAL(Service_PTM, "Could not initialize ExtSaveData archive for the PTM:U service");
+        return;
+    }
+    FileSys::Path archive_path(ptm_shared_extdata_id);
+    ResultCode result = ptm_shared_extsavedata->Open(archive_path);
+    // If the archive didn't exist, create the files inside
+    if (result.description == ErrorDescription::FS_NotFormatted) {
+        // Format the archive to clear the directories
+        ptm_shared_extsavedata->Format(archive_path);
+        // Open it again to get a valid archive now that the folder exists
+        ptm_shared_extsavedata->Open(archive_path);
+        FileSys::Path gamecoin_path("gamecoin.dat");
+        FileSys::Mode open_mode = {};
+        open_mode.write_flag = 1;
+        open_mode.create_flag = 1;
+        // Open the file and write the default gamecoin information
+        auto gamecoin = ptm_shared_extsavedata->OpenFile(gamecoin_path, open_mode);
+        if (gamecoin != nullptr) {
+            gamecoin->Write(0, sizeof(GameCoin), 1, reinterpret_cast<const u8*>(&default_game_coin));
+            gamecoin->Close();
+        }
+    }
 }
 
 } // namespace

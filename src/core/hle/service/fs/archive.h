@@ -29,9 +29,10 @@ typedef u64 ArchiveHandle;
 /**
  * Opens an archive
  * @param id_code IdCode of the archive to open
+ * @param archive_path Path to the archive, used with Binary paths
  * @return Handle to the opened archive
  */
-ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code);
+ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path);
 
 /**
  * Closes an archive

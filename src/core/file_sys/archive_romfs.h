@@ -83,6 +83,12 @@ public:
      */
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
+    ResultCode Open(const Path& path) override {
+        return RESULT_SUCCESS;
+    }
+
+    ResultCode Format(const Path& path) const override;
+
 private:
     friend class File_RomFS;
 

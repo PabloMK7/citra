@@ -40,6 +40,7 @@
 #define MAPS_DIR          "maps"
 #define CACHE_DIR         "cache"
 #define SDMC_DIR          "sdmc"
+#define EXTSAVEDATA_DIR   "extsavedata"
 #define SAVEDATA_DIR      "savedata"
 #define SYSDATA_DIR       "sysdata"
 #define SYSSAVEDATA_DIR   "syssavedata"
