@@ -141,7 +141,7 @@ unsigned VFPMRRC(ARMul_State* state, unsigned type, u32 instr, u32* value1, u32*
     {
         if (CoProc == 10 && (OPC_1 & 0xD) == 1)
         {
-            VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+            VMOVBRRSS(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, value1, value2);
             return ARMul_DONE;
         }
 
@@ -175,7 +175,7 @@ unsigned VFPMCRR(ARMul_State* state, unsigned type, u32 instr, u32 value1, u32 v
     {
         if (CoProc == 10 && (OPC_1 & 0xD) == 1)
         {
-            VFP_DEBUG_UNIMPLEMENTED(VMOVBRRSS);
+            VMOVBRRSS(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, &value1, &value2);
             return ARMul_DONE;
         }
 
@@ -502,6 +502,22 @@ void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword
         DBG("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n*2+1, n*2, t2, t, *value2, *value1);
         state->ExtReg[n*2+1] = *value2;
         state->ExtReg[n*2] = *value1;
+    }
+}
+void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2)
+{
+    DBG("VMOV(BRRSS) :\n");
+    if (to_arm)
+    {
+        DBG("\tr[%d-%d] <= s[%d-%d]=[%x-%x]\n", t2, t, n+1, n, state->ExtReg[n+1], state->ExtReg[n]);
+        *value1 = state->ExtReg[n+0];
+        *value2 = state->ExtReg[n+1];
+    }
+    else
+    {
+        DBG("\ts[%d-%d] <= r[%d-%d]=[%x-%x]\n", n+1, n, t2, t, *value2, *value1);
+        state->ExtReg[n+0] = *value1;
+        state->ExtReg[n+1] = *value2;
     }
 }
 
