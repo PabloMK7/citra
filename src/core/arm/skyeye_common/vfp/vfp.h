@@ -97,6 +97,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);
 void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value);
 void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2);
+void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
 void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
 void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
 /* MCR */
