@@ -82,6 +82,10 @@ inline void Read(T &var, const VAddr vaddr) {
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
         ConfigMem::Read<T>(var, vaddr);
 
+    // DSP memory
+    } else if ((vaddr >= DSP_MEMORY_VADDR)  && (vaddr < DSP_MEMORY_VADDR_END)) {
+        var = *((const T*)&g_dsp_mem[vaddr - DSP_MEMORY_VADDR]);
+
     // VRAM
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         var = *((const T*)&g_vram[vaddr - VRAM_VADDR]);
@@ -122,8 +126,10 @@ inline void Write(const VAddr vaddr, const T data) {
     } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
         *(T*)&g_vram[vaddr - VRAM_VADDR] = data;
 
-    //} else if ((vaddr & 0xFFF00000) == 0x1FF00000) {
-    //    _assert_msg_(MEMMAP, false, "umimplemented write to DSP memory");
+    // DSP memory
+    } else if ((vaddr >= DSP_MEMORY_VADDR)  && (vaddr < DSP_MEMORY_VADDR_END)) {
+        *(T*)&g_dsp_mem[vaddr - DSP_MEMORY_VADDR] = data;
+
     //} else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
     //    _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
     //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
