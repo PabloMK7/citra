@@ -957,7 +957,7 @@ vfp_single_multiply(struct vfp_single *vsd, struct vfp_single *vsn, struct vfp_s
 #define NEG_SUBTRACT	(1 << 1)
 
 static u32
-vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr, u32 negate, char *func)
+vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr, u32 negate, const char *func)
 {
     
     {
