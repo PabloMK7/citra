@@ -56,7 +56,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMLA_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -180,7 +179,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMLS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -304,7 +302,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMLA_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -430,7 +427,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMLS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -554,7 +550,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMUL_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -669,7 +664,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMUL_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -797,7 +791,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VADD_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -919,7 +912,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSUB_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1039,7 +1031,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VDIV_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1167,7 +1158,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVI_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1256,7 +1246,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVR_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1338,7 +1327,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VABS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1447,7 +1435,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNEG_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 
@@ -1555,7 +1542,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSQRT_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1651,7 +1637,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCMP_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 
@@ -1774,7 +1759,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCMP2_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1897,7 +1881,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBDS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -1994,7 +1977,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBFF_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2070,7 +2052,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBFI_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2243,7 +2224,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 
@@ -2323,7 +2303,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMSR_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		/* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled ,
 		   and in privilegied mode */
@@ -2426,7 +2405,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRC_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2493,7 +2471,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMRS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		/* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled,
 		   and in privilegied mode */
@@ -2657,7 +2634,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBCR_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2733,7 +2709,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRRSS_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2803,7 +2778,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRRD_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -2895,7 +2869,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSTR_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -3037,7 +3010,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VPUSH_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 				
@@ -3204,7 +3176,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSTM_INST: /* encoding 1 */
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -3392,7 +3363,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VPOP_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -3573,7 +3543,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VLDR_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
@@ -3737,7 +3706,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VLDM_INST:
 {
-	INC_ICOUNTER;
 	if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
 		CHECK_VFP_ENABLED;
 		
