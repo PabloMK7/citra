@@ -230,12 +230,15 @@ void GMainWindow::ToggleWindowMode()
         render_window->setParent(nullptr);
         render_window->setVisible(true);
         render_window->RestoreGeometry();
+        render_window->setFocusPolicy(Qt::NoFocus);
     }
     else if (!enable && render_window->parent() == nullptr)
     {
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
+        render_window->setFocusPolicy(Qt::ClickFocus);
+        render_window->setFocus();
     }
 }
 
