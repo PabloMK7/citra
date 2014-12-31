@@ -175,13 +175,13 @@ void GMainWindow::BootGame(std::string filename)
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load file"), QString(), tr("3DS executable (*.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
     if (filename.size())
        BootGame(filename.toLatin1().data());
 }
 
 void GMainWindow::OnMenuLoadSymbolMap() {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load symbol map"), QString(), tr("Symbol map (*)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load Symbol Map"), QString(), tr("Symbol map (*)"));
     if (filename.size())
         LoadSymbolMap(filename.toLatin1().data());
 }

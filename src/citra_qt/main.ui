@@ -75,12 +75,12 @@
   <widget class="QStatusBar" name="statusbar"/>
    <action name="action_Load_File">
      <property name="text">
-       <string>Load file...</string>
+       <string>Load File...</string>
      </property>
    </action>
    <action name="action_Load_Symbol_Map">
      <property name="text">
-       <string>Load symbol map...</string>
+       <string>Load Symbol Map...</string>
      </property>
    </action>
    <action name="action_Exit">
