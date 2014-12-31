@@ -13,19 +13,12 @@
 
 using namespace std;
 
-// __WIN32__ was never defined on MSVC, but it is on MinGW,
-// so we need to remove it.
-// #ifdefs to __WIN32__ are dead code and will not even compile
-// anymore, due to bank_defs.h missing.
-#ifdef _WIN32
-#undef __WIN32__
-#endif
-
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armmmu.h"
 #include "arm_dyncom_thumb.h"
 #include "arm_dyncom_run.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
+#include "core/arm/disassembler/arm_disasm.h"
 
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
@@ -283,50 +276,7 @@ typedef struct _MiscRegPstIdx {
 typedef struct _LSWordorUnsignedByte {
 } LDnST;
 
-#if USER_MODE_OPT
-static inline fault_t interpreter_read_memory(addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size){
-    switch(size) {
-    case 8:
-        value = Memory::Read8(virt_addr);
-        break;
-    case 16:
-        value = Memory::Read16(virt_addr);
-        break;
-    case 32:
-        value = Memory::Read32(virt_addr);
-        break;
-    }
-    return NO_FAULT;
-}
-
-static inline fault_t interpreter_write_memory(addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size) {
-    switch(size) {
-    case 8:
-        Memory::Write8(virt_addr, value & 0xff);
-        break;
-    case 16:
-        Memory::Write16(virt_addr, value & 0xffff);
-        break;
-    case 32:
-        Memory::Write32(virt_addr, value);
-        break;
-    }
-    return NO_FAULT;
-}
-
-static inline fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw) {
-    *phys_addr = virt_addr;
-    return NO_FAULT;
-}
-
-#else
-fault_t interpreter_read_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t &value, uint32_t size);
-fault_t interpreter_write_memory(cpu_t *cpu, addr_t virt_addr, addr_t phys_addr, uint32_t value, uint32_t size);
-fault_t interpreter_fetch(cpu_t *cpu, addr_t virt_addr, uint32_t &value, uint32_t size);
-fault_t check_address_validity(arm_core_t *core, addr_t virt_addr, addr_t *phys_addr, uint32_t rw, tlb_type_t access_type = DATA_TLB);
-#endif
-
-typedef fault_t (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw);
+typedef void (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw);
 
 typedef struct _ldst_inst {
     unsigned int inst;
@@ -344,133 +294,105 @@ int CondPassed(arm_processor *cpu, unsigned int cond);
 #define I_BIT        BIT(inst, 25)
 #define P_BIT        BIT(inst, 24)
 #define OFFSET_12    BITS(inst, 0, 11)
-fault_t LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
+
+void LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr;
-    fault_t fault;
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = CHECK_READ_REG15_WA(cpu, Rn) + OFFSET_12;
-    } else {
+    else
         addr = CHECK_READ_REG15_WA(cpu, Rn) - OFFSET_12;
-    }
+
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    return fault;
 }
 
-fault_t LnSWoUB(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int addr;
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = rn + rm;
-    } else {
+    else
         addr = rn - rm;
-    }
+
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    return fault;
 }
 
-fault_t LnSWoUB(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr = CHECK_READ_REG15_WA(cpu, Rn);
-    
-    virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
 
-    if (U_BIT) {
+    if (U_BIT)
         cpu->Reg[Rn] += OFFSET_12;
-    } else {
+    else
         cpu->Reg[Rn] -= OFFSET_12;
-    }
-    return fault;
+
+    virt_addr = addr;
 }
 
-fault_t LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr;
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = CHECK_READ_REG15_WA(cpu, Rn) + OFFSET_12;
-    } else {
+    else
         addr = CHECK_READ_REG15_WA(cpu, Rn) - OFFSET_12;
-    }
 
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
 
-    if (CondPassed(cpu, BITS(inst, 28, 31))) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)))
         cpu->Reg[Rn] = addr;
-    }
-    return fault;
 }
 
-fault_t MLnS(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void MLnS(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int addr;
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
 
-    if (U_BIT) {
+    if (U_BIT)
         addr = rn + rm;
-    } else
+    else
         addr = rn - rm;
-    if(BIT(inst, 20)){ // L BIT
-    }
-    if(BIT(inst, 6)){ // Sign Bit
-    }
-    if(BIT(inst, 5)){ // Half Bit
-    }
 
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
 
-    if (CondPassed(cpu, BITS(inst, 28, 31))) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)))
         cpu->Reg[Rn] = addr;
-    }
-    return fault;
 }
 
-fault_t LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int addr;
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = rn + rm;
-    } else {
+    else
         addr = rn - rm;
-    }
+
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if(fault)
-        return fault;
+
     if (CondPassed(cpu, BITS(inst, 28, 31))) {
         cpu->Reg[Rn] = addr;
     }
-    return fault;
 }
-fault_t LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+
+void LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int index;
     unsigned int addr;
-
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 
@@ -492,33 +414,27 @@ fault_t LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst,
         DEBUG_MSG;
         break;
     }
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = rn + index;
-    } else
+    else
         addr = rn - index;
-    virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if(fault)
-        return fault;
-    if (CondPassed(cpu, BITS(inst, 28, 31))) {
-        cpu->Reg[Rn] = addr;
-    }
 
-    return fault;
+    virt_addr = addr;
+
+    if (CondPassed(cpu, BITS(inst, 28, 31)))
+        cpu->Reg[Rn] = addr;
 }
 
-fault_t LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int index;
-    unsigned int addr;
-
+    unsigned int addr = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
-    addr = rn;
+
     switch (shift) {
     case 0:
         index = rm << shift_imm;
@@ -537,31 +453,23 @@ fault_t LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst
         DEBUG_MSG;
         break;
     }
+
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if(fault)
-        return fault;
+
     if (CondPassed(cpu, BITS(inst, 28, 31))) {
         if (U_BIT)
             cpu->Reg[Rn] += index;
         else
             cpu->Reg[Rn] -= index;
     }
-
-    return fault;
 }
 
-fault_t LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
 
-    unsigned int addr = rn;
-    virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
+    virt_addr = CHECK_READ_REG15_WA(cpu, Rn);
 
     if (CondPassed(cpu, BITS(inst, 28, 31))) {
         if (U_BIT) {
@@ -570,52 +478,40 @@ fault_t LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsi
             cpu->Reg[Rn] -= rm;
         }
     }
-    return fault;
 }
 
-fault_t MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int immedL = BITS(inst, 0, 3);
     unsigned int immedH = BITS(inst, 8, 11);
-
     unsigned int Rn     = BITS(inst, 16, 19);
     unsigned int addr;
 
     unsigned int offset_8 = (immedH << 4) | immedL;
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = CHECK_READ_REG15_WA(cpu, Rn) + offset_8;
-    } else
+    else
         addr = CHECK_READ_REG15_WA(cpu, Rn) - offset_8;
     
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    return fault;
 }
 
-fault_t MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int addr;
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
-    if (U_BIT) {
+
+    if (U_BIT)
         addr = rn + rm;
-    } else
+    else
         addr = rn - rm;
-    if(BIT(inst, 20)){ // L BIT
-    }
-    if(BIT(inst, 6)){ // Sign Bit
-    }
-    if(BIT(inst, 5)){ // Half Bit
-    }
+
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    return fault;
 }
 
-fault_t MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn     = BITS(inst, 16, 19);
     unsigned int immedH = BITS(inst,  8, 11);
     unsigned int immedL = BITS(inst,  0,  3);
@@ -623,189 +519,129 @@ fault_t MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigne
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int offset_8 = (immedH << 4) | immedL;
 
-    if (U_BIT) {
+    if (U_BIT)
         addr = rn + offset_8;
-    } else 
+    else 
         addr = rn - offset_8;
 
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
 
-    if (CondPassed(cpu, BITS(inst, 28, 31))) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)))
         cpu->Reg[Rn] = addr;
-    }
-    return fault;
 }
 
-fault_t MLnS(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void MLnS(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn     = BITS(inst, 16, 19);
     unsigned int immedH = BITS(inst,  8, 11);
     unsigned int immedL = BITS(inst,  0,  3);
-    unsigned int addr;
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
-    addr = rn;
 
-    virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
+    virt_addr = rn;
 
     if (CondPassed(cpu, BITS(inst, 28, 31))) {
         unsigned int offset_8 = (immedH << 4) | immedL;
-        if (U_BIT) {
+        if (U_BIT)
             rn += offset_8;
-        } else {
+        else
             rn -= offset_8;
-        }
+
         cpu->Reg[Rn] = rn;
     }
-
-    return fault;
 }
-fault_t MLnS(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+
+void MLnS(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
-    unsigned int addr = rn;
 
-    virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-    if (fault) return fault;
+    virt_addr = CHECK_READ_REG15_WA(cpu, Rn);
 
     if (CondPassed(cpu, BITS(inst, 28, 31))) {
-        if (U_BIT) {
+        if (U_BIT)
             cpu->Reg[Rn] += rm;
-        } else {
+        else
             cpu->Reg[Rn] -= rm;
-        }
     }
-    return fault;
 }
 
-fault_t LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
-    while(i) {
-        if(i & 1) count ++;
+
+    while (i) {
+        if (i & 1) count++;
         i = i >> 1;
     }
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
-    unsigned int start_addr = rn - count * 4;
-    unsigned int end_addr   = rn - 4;
 
-    fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
-    virt_addr = end_addr;
-    if (fault) return fault;
+    virt_addr = CHECK_READ_REG15_WA(cpu, Rn) - count * 4;
 
-    fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
-    virt_addr = start_addr;
-    if (fault) return fault;
-
-    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21))
         cpu->Reg[Rn] -= count * 4;
-    }
-
-    return fault;
 }
 
-fault_t LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     int count = 0;
-    while(i) {
-        if(i & 1) count ++;
+
+    while (i) {
+        if (i & 1) count++;
         i = i >> 1;
     }
 
-    unsigned int start_addr = rn + 4;
-    unsigned int end_addr   = rn + count * 4;
+    virt_addr = CHECK_READ_REG15_WA(cpu, Rn) + 4;
 
-    fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
-    virt_addr = end_addr;
-    if (fault) return fault;
-
-    fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
-    virt_addr = start_addr;
-    if (fault) return fault;
-
-    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21))
         cpu->Reg[Rn] += count * 4;
-    }
-    return fault;
 }
 
-fault_t LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
-    unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     int count = 0;
+
     while(i) {
-        if(i & 1) count ++;
+        if (i & 1) count++;
         i = i >> 1;
     }
-    unsigned int start_addr = rn;
-    unsigned int end_addr = rn + count * 4 - 4;
 
-    fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
-    virt_addr = end_addr;
-    if (fault) return fault;
+    virt_addr = CHECK_READ_REG15_WA(cpu, Rn);
 
-    fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
-    virt_addr = start_addr;
-    if (fault) return fault;
-
-    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
+    if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21))
         cpu->Reg[Rn] += count * 4;
-    }
-    return fault;
 }
 
-fault_t LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
     while(i) {
-        if(i & 1) count ++;
+        if(i & 1) count++;
         i = i >> 1;
     }
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int start_addr = rn - count * 4 + 4;
     unsigned int end_addr   = rn;
 
-    fault = check_address_validity(cpu, end_addr,   &phys_addr, rw);
     virt_addr = end_addr;
-    if (fault) return fault;
-
-    fault = check_address_validity(cpu, start_addr, &phys_addr, rw);
-    if (fault) return fault;
     virt_addr = start_addr;
 
     if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
         cpu->Reg[Rn] -= count * 4;
     }
-    return fault;
 }
 
-fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int &phys_addr, unsigned int rw) {
-    fault_t fault;
+void LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int index;
     unsigned int addr;
-
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
+
     switch (shift) {
     case 0:
         index = rm << shift_imm;
@@ -823,8 +659,7 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
                 index = 0xFFFFFFFF;
             else
                 index = 0;
-        }
-        else {
+        } else {
             index = static_cast<int>(rm) >> shift_imm;
         }
         break;
@@ -832,15 +667,13 @@ fault_t LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, uns
         DEBUG_MSG;
         break;
     }
+
     if (U_BIT) {
         addr = rn + index;
     } else
         addr = rn - index;
 
     virt_addr = addr;
-    fault = check_address_validity(cpu, addr, &phys_addr, rw);
-
-    return fault;
 }
 
 #define ISNEG(n)    (n < 0)
@@ -3541,30 +3374,19 @@ int InterpreterTranslate(arm_processor *cpu, int &bb_start, addr_t addr) {
     if (cpu->TFlag)
         thumb = THUMB;
 
-    addr_t phys_addr;
-    addr_t pc_start;
-    fault_t fault = NO_FAULT;
-    fault = check_address_validity(cpu, addr, &phys_addr, 1);
-    if(fault != NO_FAULT){
-        cpu->abortSig = true;
-        cpu->Aborted = ARMul_PrefetchAbortV;
-        cpu->AbortAddr = addr;
-        cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = fault & 0xff;
-        cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-        return FETCH_EXCEPTION;
-    }
-
-    pc_start = phys_addr;
+    addr_t phys_addr = addr;
+    addr_t pc_start = cpu->Reg[15];
 
     while(ret == NON_BRANCH) {
-        inst = Memory::Read32(phys_addr & 0xFFFFFFFC);//*(uint32_t *)(phys_addr & 0xFFFFFFFC);
+        inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
 
-        size ++;
+        size++;
         // If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction
         if (cpu->TFlag) {
             uint32_t arm_inst;
             tdstate state;
             state = decode_thumb_instr(cpu, inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+
             // We have translated the branch instruction of thumb in thumb decoder
             if(state == t_branch){
                 goto translated;
@@ -3574,7 +3396,8 @@ int InterpreterTranslate(arm_processor *cpu, int &bb_start, addr_t addr) {
 
         ret = decode_arm_instr(inst, &idx);
         if (ret == DECODE_FAILURE) {
-            LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : [%x]", phys_addr, inst);
+            std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
+            LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, disasm.c_str(), inst);
             LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
             CITRA_IGNORE_EXIT(-1);
         }
@@ -3603,15 +3426,15 @@ void InterpreterInitInstLength(unsigned long long int *ptr, size_t size) {
     memcpy(InstLabel, ptr, size);
     qsort(InstLabel, array_size, sizeof(void *), cmp);
     InstLength = new unsigned int[array_size - 4];
-    for (int i = 0; i < array_size - 4; i ++) {
-        for (int j = 0; j < array_size; j ++) {
+    for (int i = 0; i < array_size - 4; i++) {
+        for (int j = 0; j < array_size; j++) {
             if (ptr[i] == InstLabel[j]) {
                 InstLength[i] = InstLabel[j + 1] - InstLabel[j];
                 break;
             }
         }
     }
-    for (int i = 0; i < array_size - 4; i ++)
+    for (int i = 0; i < array_size - 4; i++)
         LOG_DEBUG(Core_ARM11, "[%d]:%d", i, InstLength[i]);
 }
 
@@ -3928,7 +3751,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     unsigned int phys_addr;
     unsigned int last_pc = 0;
     unsigned int num_instrs = 0;
-    fault_t fault;
+
     static unsigned int last_physical_base = 0, last_logical_base = 0;
     int ptr;
     bool single_step = (cpu->NumInstrsToExecute == 1);
@@ -3949,7 +3772,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
         phys_addr = cpu->Reg[15];
 
-        if (find_bb(phys_addr, ptr) == -1)
+        if (find_bb(cpu->Reg[15], ptr) == -1)
             if (InterpreterTranslate(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
                 goto END;
 
@@ -4299,53 +4122,34 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            int i;
-            unsigned int ret;
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) {
-                goto MMU_EXCEPTION;
-            }
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+
             unsigned int inst = inst_cream->inst;
             if (BIT(inst, 22) && !BIT(inst, 15)) {
-                for (i = 0; i < 13; i++) {
-                    if(BIT(inst, i)){
-                        fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-                        cpu->Reg[i] = ret;
+                for (int i = 0; i < 13; i++) {
+                    if(BIT(inst, i)) {
+                        cpu->Reg[i] = Memory::Read32(addr);
                         addr += 4;
-                        if ((addr & 0xfff) == 0) {
-                            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-                        } else {
-                            phys_addr += 4;
-                        }
                     }
                 }
                 if (BIT(inst, 13)) {
-                    fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-
                     if (cpu->Mode == USER32MODE) 
-                        cpu->Reg[13] = ret;
+                        cpu->Reg[13] = Memory::Read32(addr);
                     else
-                        cpu->Reg_usr[0] = ret;
+                        cpu->Reg_usr[0] = Memory::Read32(addr);
+
                     addr += 4;
-                    if ((addr & 0xfff) == 0) {
-                        fault = check_address_validity(cpu, addr, &phys_addr, 1);
-                    } else {
-                        phys_addr += 4;
-                    }
                 }
                 if (BIT(inst, 14)) {
-                    fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-
                     if (cpu->Mode == USER32MODE) 
-                        cpu->Reg[14] = ret;
+                        cpu->Reg[14] = Memory::Read32(addr);
                     else
-                        cpu->Reg_usr[1] = ret;
+                        cpu->Reg_usr[1] = Memory::Read32(addr);
                 }
             } else if (!BIT(inst, 22)) {
-                for( i = 0; i < 16; i ++ ){
+                for(int i = 0; i < 16; i++ ){
                     if(BIT(inst, i)){
-                        fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-                        if (fault) goto MMU_EXCEPTION;
+                        unsigned int ret = Memory::Read32(addr);
 
                         // For armv5t, should enter thumb when bits[0] is non-zero.
                         if(i == 15){
@@ -4355,39 +4159,25 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
                         cpu->Reg[i] = ret;
                         addr += 4;
-                        if ((addr & 0xfff) == 0) {
-                            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-                        } else {
-                            phys_addr += 4;
-                        }
                     }
                 }
             } else if (BIT(inst, 22) && BIT(inst, 15)) {
-                for( i = 0; i < 15; i ++ ){
+                for(int i = 0; i < 15; i++ ){
                     if(BIT(inst, i)){
-                        fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-                        cpu->Reg[i] = ret;
+                        cpu->Reg[i] = Memory::Read32(addr);
                         addr += 4;
-                        if ((addr & 0xfff) == 0) {
-                            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-                        } else {
-                            phys_addr += 4;
-                        }
                      }
                  }
-                
+
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
                     switch_mode(cpu, cpu->Cpsr & 0x1f);
                     LOAD_NZCVT;
                 }
 
-                fault = interpreter_read_memory(addr, phys_addr, ret, 32);
-                if (fault) {
-                    goto MMU_EXCEPTION;
-                }
-                cpu->Reg[15] = ret;
-             }
+                cpu->Reg[15] = Memory::Read32(addr);
+            }
+
             if (BIT(inst, 15)) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
@@ -4419,16 +4209,16 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         //if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+
+            unsigned int value = Memory::Read32(addr);
             if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
                 cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
             else {
                 value = ROTATE_RIGHT_32(value,(8*(addr&0x3)));
                 cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
             }
+
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 // For armv5t, should enter thumb when bits[0] is non-zero.
                 cpu->TFlag = value & 0x1;
@@ -4437,6 +4227,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 goto DISPATCH;
             }
         //}
+
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
         FETCH_INST;
@@ -4446,10 +4237,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if (CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            unsigned int value = Memory::Read32(addr);
             if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
                 cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
             else {
@@ -4504,12 +4293,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read8(addr);
+
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
@@ -4524,12 +4310,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read8(addr);
+
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
@@ -4545,22 +4328,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             // Should check if RD is even-numbered, Rd != 14, addr[0:1] == 0, (CP15_reg1_U == 1 || addr[2] == 0)
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            uint32_t rear_phys_addr;
-             fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 1);
-            if(fault){
-                LOG_ERROR(Core_ARM11, "MMU fault , should rollback the above get_addr\n");
-                CITRA_IGNORE_EXIT(-1);
-                goto MMU_EXCEPTION;
-            }
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            fault = interpreter_read_memory(addr + 4, rear_phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
-            cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1] = value;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read32(addr);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1] = Memory::Read32(addr + 4);
 
             // No dispatch since this operation should not modify R15
         }
@@ -4575,13 +4346,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
-            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
 
-            add_exclusive_addr(cpu, phys_addr);
+            unsigned int value = Memory::Read32(addr);
+
+            add_exclusive_addr(cpu, addr);
             cpu->exclusive_state = 1;
 
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -4600,13 +4368,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
-            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
 
-            add_exclusive_addr(cpu, phys_addr);
+            unsigned int value = Memory::Read8(addr);
+
+            add_exclusive_addr(cpu, addr);
             cpu->exclusive_state = 1;
 
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
@@ -4624,12 +4389,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value = 0;
-            fault = interpreter_read_memory(addr, phys_addr, value, 16);
-            if (fault) goto MMU_EXCEPTION;
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read16(addr);
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
@@ -4644,11 +4405,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            unsigned int value = Memory::Read8(addr);
             if (BIT(value, 7)) {
                 value |= 0xffffff00;
             }
@@ -4667,11 +4425,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 16);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            unsigned int value = Memory::Read16(addr);
             if (BIT(value, 15)) {
                 value |= 0xffff0000;
             }
@@ -4690,11 +4445,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
+            unsigned int value = Memory::Read32(addr);
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 
             if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
@@ -5640,78 +5392,49 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             unsigned int Rn = BITS(inst, 16, 19);
             unsigned int old_RN = cpu->Reg[Rn];
 
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             if (BIT(inst_cream->inst, 22) == 1) {
                 for (i = 0; i < 13; i++) {
-                    if(BIT(inst_cream->inst, i)){
-                        fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                        if (fault) goto MMU_EXCEPTION;
-                        fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                    if(BIT(inst_cream->inst, i)) {
+                        Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
-                        phys_addr += 4;
                     }
                 }
                 if (BIT(inst_cream->inst, 13)) {
                     if (cpu->Mode == USER32MODE) {
-                        fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                        if (fault) goto MMU_EXCEPTION;
-                        fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                        Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
-                        phys_addr += 4;
                     } else {
-                        fault = interpreter_write_memory(addr, phys_addr, cpu->Reg_usr[0], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                        Memory::Write32(addr, cpu->Reg_usr[0]);
                         addr += 4;
-                        phys_addr += 4;
                     }
                 }
                 if (BIT(inst_cream->inst, 14)) {
                     if (cpu->Mode == USER32MODE) {
-                        fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                        if (fault) goto MMU_EXCEPTION;
-                        fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                        Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
-                        phys_addr += 4;
                     } else {
-                        fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                        if (fault) goto MMU_EXCEPTION;
-                        fault = interpreter_write_memory(addr, phys_addr, cpu->Reg_usr[1], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                        Memory::Write32(addr, cpu->Reg_usr[1]);
                         addr += 4;
-                        phys_addr += 4;
                     }
                 }
                 if (BIT(inst_cream->inst, 15)) {
-                    fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                    if (fault) goto MMU_EXCEPTION;
-                    fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i] + 8, 32);
-                    if (fault) goto MMU_EXCEPTION;
+                    Memory::Write32(addr, cpu->Reg_usr[1] + 8);
                 }
             } else {
-                for( i = 0; i < 15; i ++ ) {
+                for( i = 0; i < 15; i++ ) {
                     if(BIT(inst_cream->inst, i)) {
-                        fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                        if (fault) goto MMU_EXCEPTION;
                         if(i == Rn)
-                            fault = interpreter_write_memory(addr, phys_addr, old_RN, 32);
+                            Memory::Write32(addr, old_RN);
                         else
-                            fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i], 32);
-                        if (fault) goto MMU_EXCEPTION;
+                            Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
-                        phys_addr += 4;
                     }
                 }
 
                 // Check PC reg
                 if(BIT(inst_cream->inst, i)) {
-                    fault = check_address_validity(cpu, addr, &phys_addr, 0);
-                    if (fault) goto MMU_EXCEPTION;
-                    fault = interpreter_write_memory(addr, phys_addr, cpu->Reg[i] + 8, 32);
-                    if (fault) goto MMU_EXCEPTION;
+                    Memory::Write32(addr, cpu->Reg_usr[1] + 8);
                 }
             }
         }
@@ -5744,11 +5467,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
-            fault = interpreter_write_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write32(addr, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5785,11 +5506,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
-            fault = interpreter_write_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write8(addr, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5800,11 +5519,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
-            fault = interpreter_write_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write8(addr, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5815,22 +5532,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
-            uint32_t rear_phys_addr;
-            fault = check_address_validity(cpu, addr + 4, &rear_phys_addr, 0);
-                        if (fault){
-                LOG_ERROR(Core_ARM11, "MMU fault , should rollback the above get_addr");
-                CITRA_IGNORE_EXIT(-1);
-                goto MMU_EXCEPTION;
-            }
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
 
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
-            fault = interpreter_write_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write32(addr, value);
             value = cpu->Reg[BITS(inst_cream->inst, 12, 15) + 1];
-            fault = interpreter_write_memory(addr + 4, rear_phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write32(addr + 4, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5843,17 +5550,14 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)];
-            fault = check_address_validity(cpu, addr, &phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
 
             int dest_reg = BITS(inst_cream->inst, 12, 15);
-            if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_state == 1)){
-                remove_exclusive(cpu, phys_addr);
+            if((exclusive_detect(cpu, addr) == 0) && (cpu->exclusive_state == 1)){
+                remove_exclusive(cpu, addr);
                 cpu->Reg[dest_reg] = 0;
                 cpu->exclusive_state = 0;
 
-                fault = interpreter_write_memory(addr, phys_addr, value, 32);
-                if (fault) goto MMU_EXCEPTION;
+                Memory::Write32(addr, value);
             } else {
                 // Failed to write due to mutex access
                 cpu->Reg[dest_reg] = 1;
@@ -5870,15 +5574,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)] & 0xff;
-            fault = check_address_validity(cpu, addr, &phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
             int dest_reg = BITS(inst_cream->inst, 12, 15);
-            if((exclusive_detect(cpu, phys_addr) == 0) && (cpu->exclusive_state == 1)){
-                remove_exclusive(cpu, phys_addr);
+            if((exclusive_detect(cpu, addr) == 0) && (cpu->exclusive_state == 1)){
+                remove_exclusive(cpu, addr);
                 cpu->Reg[dest_reg] = 0;
                 cpu->exclusive_state = 0;
-                fault = interpreter_write_memory(addr, phys_addr, value, 8);
-                if (fault) goto MMU_EXCEPTION;
+                Memory::Write8(addr, value);
             } else {
                 cpu->Reg[dest_reg] = 1;
             }
@@ -5892,11 +5593,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xffff;
-            fault = interpreter_write_memory(addr, phys_addr, value, 16);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write16(addr, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5907,11 +5606,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            fault = inst_cream->get_addr(cpu, inst_cream->inst, addr, phys_addr, 0);
-            if (fault) goto MMU_EXCEPTION;
+            inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
-            fault = interpreter_write_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
+            Memory::Write32(addr, value);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(ldst_inst));
@@ -5967,15 +5664,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         swp_inst *inst_cream = (swp_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = RN;
-            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
             unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 32);
-            if (fault) goto MMU_EXCEPTION;
-            fault = interpreter_write_memory(addr, phys_addr, RM, 32);
-            if (fault) goto MMU_EXCEPTION;
+            value = Memory::Read32(addr);
+            Memory::Write32(addr, RM);
 
-            assert((phys_addr & 0x3) == 0);
             RD = value;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -5988,13 +5680,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         swp_inst *inst_cream = (swp_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             addr = RN;
-            fault = check_address_validity(cpu, addr, &phys_addr, 1);
-            if (fault) goto MMU_EXCEPTION;
-            unsigned int value;
-            fault = interpreter_read_memory(addr, phys_addr, value, 8);
-            if (fault) goto MMU_EXCEPTION;
-            fault = interpreter_write_memory(addr, phys_addr, (RM & 0xFF), 8);
-            if (fault) goto MMU_EXCEPTION;
+            unsigned int value = Memory::Read8(addr);
+            Memory::Write8(addr, (RM & 0xFF));
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(swp_inst));
@@ -6459,17 +6146,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #define VFP_INTERPRETER_IMPL
     #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
     #undef VFP_INTERPRETER_IMPL
-    MMU_EXCEPTION:
-    {
-        SAVE_NZCVT;
-        cpu->abortSig = true;
-        cpu->Aborted = ARMul_DataAbortV;
-        cpu->AbortAddr = addr;
-        cpu->CP15[CP15(CP15_FAULT_STATUS)] = fault & 0xff;
-        cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = addr;
-        cpu->NumInstrsToExecute = 0;
-        return num_instrs;
-    }
+
     END:
     {
         SAVE_NZCVT;
