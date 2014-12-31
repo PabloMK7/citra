@@ -44,7 +44,8 @@ ResultVal<Handle> HandleTable::Create(Object* obj) {
     objects[slot] = obj;
 
     Handle handle = generation | (slot << 15);
-    obj->handle = handle;
+    if (obj->handle == INVALID_HANDLE)
+        obj->handle = handle;
     return MakeResult<Handle>(handle);
 }
 

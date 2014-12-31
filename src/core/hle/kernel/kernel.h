@@ -52,7 +52,7 @@ class HandleTable;
 
 class Object : NonCopyable {
     friend class HandleTable;
-    u32 handle;
+    u32 handle = INVALID_HANDLE;
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
