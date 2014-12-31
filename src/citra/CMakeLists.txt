@@ -2,6 +2,7 @@ set(SRCS
             emu_window/emu_window_glfw.cpp
             citra.cpp
             config.cpp
+            citra.rc
             )
 set(HEADERS
             emu_window/emu_window_glfw.h
