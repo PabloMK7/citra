@@ -7,7 +7,7 @@
 #include "common/common.h"
 #include "common/string_util.h"
 
-#ifdef _WIN32
+#ifdef _MSC_VER
     #include <Windows.h>
     #include <codecvt>
 #else
@@ -45,7 +45,7 @@ bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list ar
 {
     int writtenCount;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
     // You would think *printf are simple, right? Iterate on each character,
     // if it's a format specifier handle it properly, etc.
     //
@@ -410,7 +410,7 @@ std::string UriEncode(const std::string & sSrc)
     return sResult;
 }
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 std::string UTF16ToUTF8(const std::u16string& input)
 {

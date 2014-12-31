@@ -31,7 +31,7 @@ template<> struct CompileTimeAssert<true> {};
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
-#ifndef _WIN32
+#ifndef _MSC_VER
 
 #include <errno.h>
 #ifdef __linux__
@@ -75,7 +75,7 @@ inline u64 _rotr64(u64 x, unsigned int shift){
     return (x >> n) | (x << (64 - n));
 }
 
-#else // WIN32
+#else // _MSC_VER
 #include <locale.h>
 
 // Function Cross-Compatibility
@@ -140,7 +140,7 @@ extern "C" {
 }
         #define Crash() {DebugBreak();}
     #endif // M_IX86
-#endif // WIN32 ndef
+#endif // _MSC_VER ndef
 
 // Dolphin's min and max functions
 #undef min
@@ -168,7 +168,7 @@ inline u32 swap24(const u8* _data) {return (_data[0] << 16) | (_data[1] << 8) | 
 #undef swap64
 #endif
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 inline u16 swap16(u16 _data) {return _byteswap_ushort(_data);}
 inline u32 swap32(u32 _data) {return _byteswap_ulong (_data);}
 inline u64 swap64(u64 _data) {return _byteswap_uint64(_data);}

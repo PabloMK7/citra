@@ -13,6 +13,14 @@
 
 using namespace std;
 
+// __WIN32__ was never defined on MSVC, but it is on MinGW,
+// so we need to remove it.
+// #ifdefs to __WIN32__ are dead code and will not even compile
+// anymore, due to bank_defs.h missing.
+#ifdef _WIN32
+#undef __WIN32__
+#endif
+
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armmmu.h"
 #include "arm_dyncom_thumb.h"

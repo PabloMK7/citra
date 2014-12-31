@@ -17,7 +17,7 @@ namespace Common
 
 int CurrentThreadId()
 {
-#ifdef _WIN32
+#ifdef _MSC_VER
     return GetCurrentThreadId();
 #elif defined __APPLE__
     return mach_thread_self();
@@ -27,6 +27,14 @@ int CurrentThreadId()
 }
 
 #ifdef _WIN32
+// Supporting functions
+void SleepCurrentThread(int ms)
+{
+    Sleep(ms);
+}
+#endif
+
+#ifdef _MSC_VER
 
 void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask)
 {
@@ -36,12 +44,6 @@ void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask)
 void SetCurrentThreadAffinity(u32 mask)
 {
     SetThreadAffinityMask(GetCurrentThread(), mask);
-}
-
-// Supporting functions
-void SleepCurrentThread(int ms)
-{
-    Sleep(ms);
 }
 
 void SwitchCurrentThread()
@@ -82,7 +84,7 @@ void SetCurrentThreadName(const char* szThreadName)
     {}
 }
 
-#else // !WIN32, so must be POSIX threads
+#else // !MSVC_VER, so must be POSIX threads
 
 void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask)
 {
@@ -106,6 +108,7 @@ void SetCurrentThreadAffinity(u32 mask)
     SetThreadAffinity(pthread_self(), mask);
 }
 
+#ifndef _WIN32
 void SleepCurrentThread(int ms)
 {
     usleep(1000 * ms);
@@ -115,7 +118,10 @@ void SwitchCurrentThread()
 {
     usleep(1000 * 1);
 }
+#endif
 
+// MinGW with the POSIX threading model does not support pthread_setname_np
+#if !defined(_WIN32) || defined(_MSC_VER)
 void SetCurrentThreadName(const char* szThreadName)
 {
 #ifdef __APPLE__
@@ -126,6 +132,7 @@ void SetCurrentThreadName(const char* szThreadName)
     pthread_setname_np(pthread_self(), szThreadName);
 #endif
 }
+#endif
 
 #endif
 
