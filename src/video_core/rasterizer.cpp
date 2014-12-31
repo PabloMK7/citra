@@ -55,30 +55,45 @@ static void SetDepth(int x, int y, u16 value) {
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
 }
 
+// NOTE: Assuming that rasterizer coordinates are 12.4 fixed-point values
+struct Fix12P4 {
+    Fix12P4() {}
+    Fix12P4(u16 val) : val(val) {}
+
+    static u16 FracMask() { return 0xF; }
+    static u16 IntMask() { return (u16)~0xF; }
+
+    operator u16() const {
+        return val;
+    }
+
+    bool operator < (const Fix12P4& oth) const {
+        return (u16)*this < (u16)oth;
+    }
+
+private:
+    u16 val;
+};
+
+/**
+ * Calculate signed area of the triangle spanned by the three argument vertices.
+ * The sign denotes an orientation.
+ *
+ * @todo define orientation concretely.
+ */
+static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
+                       const Math::Vec2<Fix12P4>& vtx2,
+                       const Math::Vec2<Fix12P4>& vtx3) {
+    const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
+    const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
+    // TODO: There is a very small chance this will overflow for sizeof(int) == 4
+    return Math::Cross(vec1, vec2).z;
+};
+
 void ProcessTriangle(const VertexShader::OutputVertex& v0,
                      const VertexShader::OutputVertex& v1,
                      const VertexShader::OutputVertex& v2)
 {
-    // NOTE: Assuming that rasterizer coordinates are 12.4 fixed-point values
-    struct Fix12P4 {
-        Fix12P4() {}
-        Fix12P4(u16 val) : val(val) {}
-
-        static u16 FracMask() { return 0xF; }
-        static u16 IntMask() { return (u16)~0xF; }
-
-        operator u16() const {
-            return val;
-        }
-
-        bool operator < (const Fix12P4& oth) const {
-            return (u16)*this < (u16)oth;
-        }
-
-    private:
-        u16 val;
-    };
-
     // vertex positions in rasterizer coordinates
     auto FloatToFix = [](float24 flt) {
                           return Fix12P4(static_cast<unsigned short>(flt.ToFloat32() * 16.0f));
@@ -86,14 +101,6 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     auto ScreenToRasterizerCoordinates = [FloatToFix](const Math::Vec3<float24> vec) {
                                              return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
                                          };
-    static auto orient2d = [](const Math::Vec2<Fix12P4>& vtx1,
-                              const Math::Vec2<Fix12P4>& vtx2,
-                              const Math::Vec2<Fix12P4>& vtx3) {
-        const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
-        const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
-        // TODO: There is a very small chance this will overflow for sizeof(int) == 4
-        return Math::Cross(vec1, vec2).z;
-    };
 
     Math::Vec3<Fix12P4> vtxpos[3]{ ScreenToRasterizerCoordinates(v0.screenpos),
                                    ScreenToRasterizerCoordinates(v1.screenpos),
@@ -107,7 +114,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     if (registers.cull_mode != Regs::CullMode::KeepAll) {
         // Cull away triangles which are wound clockwise.
         // TODO: A check for degenerate triangles ("== 0") should be considered for CullMode::KeepAll
-        if (orient2d(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
+        if (SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
             return;
     }
 
@@ -153,9 +160,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
         for (u16 x = min_x; x < max_x; x += 0x10) {
 
             // Calculate the barycentric coordinates w0, w1 and w2
-            int w0 = bias0 + orient2d(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
-            int w1 = bias1 + orient2d(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
-            int w2 = bias2 + orient2d(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
+            int w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
+            int w1 = bias1 + SignedArea(vtxpos[2].xy(), vtxpos[0].xy(), {x, y});
+            int w2 = bias2 + SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), {x, y});
             int wsum = w0 + w1 + w2;
 
             // If current pixel is not covered by the current primitive
