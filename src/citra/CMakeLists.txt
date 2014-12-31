@@ -24,10 +24,10 @@ endif()
 if (APPLE)
     target_link_libraries(citra iconv ${COREFOUNDATION_LIBRARY})
 elseif (WIN32)
-    target_link_libraries(citra winmm)
+    target_link_libraries(citra winmm wsock32 ws2_32)
     if (MINGW) # GCC does not support codecvt, so use iconv instead
         target_link_libraries(citra iconv)
-    endif()    
+    endif()
 else() # Unix
     target_link_libraries(citra rt)
 endif()
