@@ -18,7 +18,8 @@ namespace Pica {
 namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
-    u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress())));
+    const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
+    u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
     u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
     // Assuming RGBA8 format until actual framebuffer format handling is implemented
@@ -26,7 +27,8 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 }
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
-    u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetColorBufferPhysicalAddress())));
+    const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
+    u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
     u32 value = *(color_buffer_u32 + x + y * registers.framebuffer.GetWidth());
     Math::Vec4<u8> ret;
@@ -38,14 +40,16 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
  }
 
 static u32 GetDepth(int x, int y) {
-    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
+    const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
 
 static void SetDepth(int x, int y, u16 value) {
-    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(registers.framebuffer.GetDepthBufferPhysicalAddress())));
+    const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
+    u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
