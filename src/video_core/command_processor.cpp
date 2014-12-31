@@ -114,7 +114,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 // Load a debugging token to check whether this gets loaded by the running
                 // application or not.
-                input.attr[0].w = float24::FromRawFloat24(0x00abcdef);
+                static const float24 debug_token = float24::FromRawFloat24(0x00abcdef);
+                input.attr[0].w = debug_token;
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
@@ -147,7 +148,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 //       To do this, we additionally have to assume that the first input attribute
                 //       is the vertex position, since there's no information about this other than
                 //       the empiric observation that this is usually the case.
-                if (input.attr[0].w == float24::FromRawFloat24(0x00abcdef))
+                if (input.attr[0].w == debug_token)
                     input.attr[0].w = float24::FromFloat32(1.0);
 
                 if (g_debug_context)
@@ -195,7 +196,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             int index = (id - PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1));
             auto values = registers.vs_int_uniforms[index];
             VertexShader::GetIntUniform(index) = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
-            LOG_ERROR(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
+            LOG_TRACE(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
                       index, values.x.Value(), values.y.Value(), values.z.Value(), values.w.Value());
             break;
         }
