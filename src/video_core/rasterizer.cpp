@@ -433,9 +433,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
-                u16 z = (u16)(-((float)v0.screenpos[2].ToFloat32() * w0 +
-                            (float)v1.screenpos[2].ToFloat32() * w1 +
-                            (float)v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
+                u16 z = (u16)(-(v0.screenpos[2].ToFloat32() * w0 +
+                            v1.screenpos[2].ToFloat32() * w1 +
+                            v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
                 u16 ref_z = GetDepth(x >> 4, y >> 4);
 
                 bool pass = false;
