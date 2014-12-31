@@ -161,8 +161,8 @@ struct Regs {
         IA4          =  9,
 
         A4           = 11,
-        // TODO: Support for the other formats is not implemented, yet.
-        // Seems like they are luminance formats and compressed textures.
+        ETC1         = 12,  // compressed
+        ETC1A4       = 13,  // compressed
     };
 
     static unsigned NibblesPerPixel(TextureFormat format) {
