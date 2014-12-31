@@ -2785,9 +2785,46 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
         inst_base->load_r15 = 1;
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("UADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("UADD16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(uaddsubx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("UADDSUBX"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+    generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->op1 = BITS(inst, 20, 21);
+    inst_cream->op2 = BITS(inst, 5, 7);
+    inst_cream->Rm  = BITS(inst, 0, 3);
+    inst_cream->Rn  = BITS(inst, 16, 19);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uadd16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(uadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(uaddsubx)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(uadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(uadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(uadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(uadd8)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
@@ -3017,9 +3054,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(usat16)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(ssat16)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usub16)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("USUB16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usub8)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("USUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(usubaddx)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("USUBADDX"); }
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index)
 {
@@ -5769,9 +5803,177 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     UADD8_INST:
     UADD16_INST:
     UADDSUBX_INST:
+    USUB8_INST:
+    USUB16_INST:
+    USUBADDX_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+            const u8 op2 = inst_cream->op2;
+            const u32 rm_val = RM;
+            const u32 rn_val = RN;
+
+            s32 lo_result = 0;
+            s32 hi_result = 0;
+
+            // UADD16
+            if (op2 == 0x00) {
+                lo_result = (rn_val & 0xFFFF) + (rm_val & 0xFFFF);
+                hi_result = ((rn_val >> 16) & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+
+                if (lo_result & 0xFFFF0000) {
+                    cpu->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 17);
+                } else {
+                    cpu->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 17);
+                }
+
+                if (hi_result & 0xFFFF0000) {
+                    cpu->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 19);
+                } else {
+                    cpu->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 19);
+                }
+            }
+            // UASX
+            else if (op2 == 0x01) {
+                lo_result = (rn_val & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+                hi_result = ((rn_val >> 16) & 0xFFFF) + (rm_val & 0xFFFF);
+
+                if (lo_result >= 0) {
+                    cpu->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 17);
+                } else {
+                    cpu->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 17);
+                }
+
+                if (hi_result >= 0x10000) {
+                    cpu->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 19);
+                } else {
+                    cpu->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 19);
+                }
+            }
+            // USAX
+            else if (op2 == 0x02) {
+                lo_result = (rn_val & 0xFFFF) + ((rm_val >> 16) & 0xFFFF);
+                hi_result = ((rn_val >> 16) & 0xFFFF) - (rm_val & 0xFFFF);
+
+                if (lo_result >= 0x10000) {
+                    cpu->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 17);
+                } else {
+                    cpu->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 17);
+                }
+
+                if (hi_result >= 0) {
+                    cpu->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 19);
+                } else {
+                    cpu->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 19);
+                }
+            }
+            // USUB16
+            else if (op2 == 0x03) {
+                lo_result = (rn_val & 0xFFFF) - (rm_val & 0xFFFF);
+                hi_result = ((rn_val >> 16) & 0xFFFF) - ((rm_val >> 16) & 0xFFFF);
+
+                if ((lo_result & 0xFFFF0000) == 0) {
+                    cpu->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 17);
+                } else {
+                    cpu->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 17);
+                }
+
+                if ((hi_result & 0xFFFF0000) == 0) {
+                    cpu->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 19);
+                } else {
+                    cpu->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 19);
+                }
+            }
+            // UADD8
+            else if (op2 == 0x04) {
+                s16 sum1 = (rn_val & 0xFF) + (rm_val & 0xFF);
+                s16 sum2 = ((rn_val >> 8) & 0xFF) + ((rm_val >> 8) & 0xFF);
+                s16 sum3 = ((rn_val >> 16) & 0xFF) + ((rm_val >> 16) & 0xFF);
+                s16 sum4 = ((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF);
+
+                if (sum1 >= 0x100)
+                    state->Cpsr |= (1 << 16);
+                else
+                    state->Cpsr &= ~(1 << 16);
+
+                if (sum2 >= 0x100)
+                    state->Cpsr |= (1 << 17);
+                else
+                    state->Cpsr &= ~(1 << 17);
+
+                if (sum3 >= 0x100)
+                    state->Cpsr |= (1 << 18);
+                else
+                    state->Cpsr &= ~(1 << 18);
+
+                if (sum4 >= 0x100)
+                    state->Cpsr |= (1 << 19);
+                else
+                    state->Cpsr &= ~(1 << 19);
+
+                lo_result = ((sum1 & 0xFF) | (sum2 & 0xFF) << 8);
+                hi_result = ((sum3 & 0xFF) | (sum4 & 0xFF) << 8);
+            }
+            // USUB8
+            else if (op2 == 0x07) {
+                s16 diff1 = (rn_val & 0xFF) - (rm_val & 0xFF);
+                s16 diff2 = ((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF);
+                s16 diff3 = ((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF);
+                s16 diff4 = ((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF);
+
+                if (diff1 >= 0)
+                    state->Cpsr |= (1 << 16);
+                else
+                    state->Cpsr &= ~(1 << 16);
+
+                if (diff2 >= 0)
+                    state->Cpsr |= (1 << 17);
+                else
+                    state->Cpsr &= ~(1 << 17);
+
+                if (diff3 >= 0)
+                    state->Cpsr |= (1 << 18);
+                else
+                    state->Cpsr &= ~(1 << 18);
+
+                if (diff4 >= 0)
+                    state->Cpsr |= (1 << 19);
+                else
+                    state->Cpsr &= ~(1 << 19);
+
+                lo_result = (diff1 & 0xFF) | ((diff2 & 0xFF) << 8);
+                hi_result = (diff3 & 0xFF) | ((diff4 & 0xFF) << 8);
+            }
+
+            RD = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     UHADD8_INST:
     UHADD16_INST:
@@ -6109,9 +6311,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         GOTO_NEXT_INST;
     }
 
-    USUB16_INST:
-    USUB8_INST:
-    USUBADDX_INST:
     UXTAB16_INST:
     UXTB16_INST:
     {
