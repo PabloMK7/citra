@@ -107,7 +107,7 @@ GMainWindow::GMainWindow()
     restoreState(settings.value("state").toByteArray());
     render_window->restoreGeometry(settings.value("geometryRenderWindow").toByteArray());
 
-    ui.action_Popout_Window_Mode->setChecked(settings.value("popoutWindowMode", true).toBool());
+    ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", true).toBool());
     ToggleWindowMode();
 
     // Setup connections
@@ -116,7 +116,7 @@ GMainWindow::GMainWindow()
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
-    connect(ui.action_Popout_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
+    connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
@@ -223,8 +223,8 @@ void GMainWindow::OnOpenHotkeysDialog()
 
 void GMainWindow::ToggleWindowMode()
 {
-    bool enable = ui.action_Popout_Window_Mode->isChecked();
-    if (enable && render_window->parent() != nullptr)
+    bool enable = ui.action_Single_Window_Mode->isChecked();
+    if (!enable && render_window->parent() != nullptr)
     {
         ui.horizontalLayout->removeWidget(render_window);
         render_window->setParent(nullptr);
@@ -232,7 +232,7 @@ void GMainWindow::ToggleWindowMode()
         render_window->RestoreGeometry();
         render_window->setFocusPolicy(Qt::NoFocus);
     }
-    else if (!enable && render_window->parent() == nullptr)
+    else if (enable && render_window->parent() == nullptr)
     {
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
@@ -254,7 +254,7 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("geometry", saveGeometry());
     settings.setValue("state", saveState());
     settings.setValue("geometryRenderWindow", render_window->saveGeometry());
-    settings.setValue("popoutWindowMode", ui.action_Popout_Window_Mode->isChecked());
+    settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
 
