@@ -243,7 +243,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                 int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
                 int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
-                auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
+                static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
                     switch (mode) {
                         case Regs::TextureConfig::ClampToEdge:
                             val = std::max(val, 0);

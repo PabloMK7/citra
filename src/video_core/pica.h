@@ -131,7 +131,7 @@ struct Regs {
 
         union {
             BitField< 8, 2, WrapMode> wrap_s;
-            BitField<11, 2, WrapMode> wrap_t;
+            BitField<12, 2, WrapMode> wrap_t;
         };
 
         INSERT_PADDING_WORDS(0x1);
