@@ -84,9 +84,35 @@ struct Regs {
 
     struct {
         u32 address_start;
-        u32 address_end; // ?
-        u32 size;
-        u32 value; // ?
+        u32 address_end;
+
+        union {
+            u32 value_32bit;
+
+            BitField<0, 16, u32> value_16bit;
+
+            // TODO: Verify component order
+            BitField< 0, 8, u32> value_24bit_r;
+            BitField< 8, 8, u32> value_24bit_g;
+            BitField<16, 8, u32> value_24bit_b;
+        };
+
+        union {
+            u32 control;
+
+            // Setting this field to 1 triggers the memory fill.
+            // This field also acts as a status flag, and gets reset to 0 upon completion.
+            BitField<0, 1, u32> trigger;
+
+            // Set to 1 upon completion.
+            BitField<0, 1, u32> finished;
+
+            // 0: fill with 16- or 32-bit wide values; 1: fill with 24-bit wide values
+            BitField<8, 1, u32> fill_24bit;
+
+            // 0: fill with 16-bit wide values; 1: fill with 32-bit wide values
+            BitField<9, 1, u32> fill_32bit;
+        };
 
         inline u32 GetStartAddress() const {
             return DecodeAddressRegister(address_start);

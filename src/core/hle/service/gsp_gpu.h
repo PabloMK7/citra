@@ -109,9 +109,13 @@ struct Command {
             u32 start1;
             u32 value1;
             u32 end1;
+
             u32 start2;
             u32 value2;
             u32 end2;
+
+            u16 control1;
+            u16 control2;
         } memory_fill;
 
         struct {

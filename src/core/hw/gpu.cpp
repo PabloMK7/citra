@@ -67,22 +67,37 @@ inline void Write(u32 addr, const T data) {
     switch (index) {
 
     // Memory fills are triggered once the fill value is written.
-    // NOTE: This is not verified.
-    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[0].value, 0x00004 + 0x3):
-    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[1].value, 0x00008 + 0x3):
+    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[0].trigger, 0x00004 + 0x3):
+    case GPU_REG_INDEX_WORKAROUND(memory_fill_config[1].trigger, 0x00008 + 0x3):
     {
-        const bool is_second_filler = (index != GPU_REG_INDEX(memory_fill_config[0].value));
-        const auto& config = g_regs.memory_fill_config[is_second_filler];
+        const bool is_second_filler = (index != GPU_REG_INDEX(memory_fill_config[0].trigger));
+        auto& config = g_regs.memory_fill_config[is_second_filler];
 
-        // TODO: Not sure if this check should be done at GSP level instead
-        if (config.address_start) {
-            // TODO: Not sure if this algorithm is correct, particularly because it doesn't use the size member at all
-            u32* start = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetStartAddress()));
-            u32* end = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetEndAddress()));
-            for (u32* ptr = start; ptr < end; ++ptr)
-                *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
+        if (config.address_start && config.trigger) {
+            u8* start = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetStartAddress()));
+            u8* end = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetEndAddress()));
+
+            if (config.fill_24bit) {
+                // fill with 24-bit values
+                for (u8* ptr = start; ptr < end; ptr += 3) {
+                    ptr[0] = config.value_24bit_b;
+                    ptr[1] = config.value_24bit_g;
+                    ptr[2] = config.value_24bit_r;
+                }
+            } else if (config.fill_32bit) {
+                // fill with 32-bit values
+                for (u32* ptr = (u32*)start; ptr < (u32*)end; ++ptr)
+                    *ptr = config.value_32bit;
+            } else {
+                // fill with 16-bit values
+                for (u16* ptr = (u16*)start; ptr < (u16*)end; ++ptr)
+                    *ptr = config.value_16bit;
+            }
 
             LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+
+            config.trigger = 0;
+            config.finished = 1;
 
             if (!is_second_filler) {
                 GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
