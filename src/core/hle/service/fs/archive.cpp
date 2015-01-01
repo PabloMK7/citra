@@ -14,6 +14,7 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_romfs.h"
 #include "core/file_sys/archive_savedata.h"
+#include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/hle/service/fs/archive.h"
@@ -353,7 +354,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode CreateFileInArchive(Handle archive_handle, const FileSys::Path& path, u32 file_size) {
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
@@ -463,8 +464,8 @@ void ArchiveInit() {
                   sharedextsavedata_directory.c_str());
 
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
-    std::string savedatacheck_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX) + "../savedatacheck/";
-    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_RomFS>(savedatacheck_directory);
+    std::string savedatacheck_directory = FileUtil::GetUserPath(D_SAVEDATACHECK_IDX);
+    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_SaveDataCheck>(savedatacheck_directory);
     CreateArchive(std::move(savedatacheck_archive), ArchiveIdCode::SaveDataCheck);
 }
 

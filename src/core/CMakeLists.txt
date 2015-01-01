@@ -20,11 +20,11 @@ set(SRCS
             file_sys/archive_extsavedata.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_savedata.cpp
+            file_sys/archive_savedatacheck.cpp
             file_sys/archive_sdmc.cpp
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
-            file_sys/file_romfs.cpp
-            file_sys/directory_romfs.cpp
+            file_sys/ivfc_archive.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
@@ -108,13 +108,13 @@ set(HEADERS
             file_sys/archive_extsavedata.h
             file_sys/archive_romfs.h
             file_sys/archive_savedata.h
+            file_sys/archive_savedatacheck.h
             file_sys/archive_sdmc.h
             file_sys/archive_systemsavedata.h
             file_sys/disk_archive.h
             file_sys/file_backend.h
-            file_sys/file_romfs.h
+            file_sys/ivfc_archive.h
             file_sys/directory_backend.h
-            file_sys/directory_romfs.h
             hle/kernel/address_arbiter.h
             hle/kernel/event.h
             hle/kernel/kernel.h

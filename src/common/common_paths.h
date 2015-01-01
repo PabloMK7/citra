@@ -42,6 +42,7 @@
 #define SDMC_DIR          "sdmc"
 #define EXTSAVEDATA_DIR   "extsavedata"
 #define SAVEDATA_DIR      "savedata"
+#define SAVEDATACHECK_DIR "savedatacheck"
 #define SYSDATA_DIR       "sysdata"
 #define SYSSAVEDATA_DIR   "syssavedata"
 #define SHADERCACHE_DIR   "shader_cache"
