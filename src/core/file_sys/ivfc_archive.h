@@ -16,6 +16,11 @@
 
 namespace FileSys {
 
+/**
+ * Helper which implements an interface to deal with IVFC images used in some archives
+ * This should be subclassed by concrete archive types, which will provide the
+ * input data (load the raw IVFC archive) and override any required methods
+ */
 class IVFCArchive : public ArchiveBackend {
 public:
     IVFCArchive();
