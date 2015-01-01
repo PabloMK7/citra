@@ -20,6 +20,7 @@ namespace FileSys {
 class Archive_RomFS final : public ArchiveBackend {
 public:
     Archive_RomFS(const Loader::AppLoader& app_loader);
+    Archive_RomFS(std::string mount_point);
 
     std::string GetName() const override { return "RomFS"; }
 
@@ -83,15 +84,13 @@ public:
      */
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
-    ResultCode Open(const Path& path) override {
-        return RESULT_SUCCESS;
-    }
+    ResultCode Open(const Path& path) override;
 
     ResultCode Format(const Path& path) const override;
 
 private:
     friend class File_RomFS;
-
+    std::string mount_point;
     std::vector<u8> raw_data;
 };
 
