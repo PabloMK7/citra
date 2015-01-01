@@ -455,7 +455,7 @@ void ArchiveInit() {
     else
         LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_directory.c_str());
 
-    std::string sharedextsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
+    std::string sharedextsavedata_directory = FileUtil::GetUserPath(D_SHAREDEXTSAVEDATA);
     auto sharedextsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(sharedextsavedata_directory);
     if (sharedextsavedata_archive->Initialize())
         CreateArchive(std::move(sharedextsavedata_archive), ArchiveIdCode::SharedExtSaveData);
