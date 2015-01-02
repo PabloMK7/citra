@@ -13,10 +13,14 @@ namespace LDR_RO {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C2, nullptr,               "Initialize"},
-    {0x00020082, nullptr,               "CRR_Load"},
-    {0x00030042, nullptr,               "CRR_Unload"},
-    {0x000402C2, nullptr,               "CRO_LoadAndFix"},
-    {0x000500C2, nullptr,               "CRO_ApplyRelocationPatchesAndLink"}
+    {0x00020082, nullptr,               "LoadCRR"},
+    {0x00030042, nullptr,               "UnloadCCR"},
+    {0x000402C2, nullptr,               "LoadExeCRO"},
+    {0x000500C2, nullptr,               "LoadCROSymbols"},
+    {0x00060042, nullptr,               "CRO_Load?"},
+    {0x00070042, nullptr,               "LoadCROSymbols"},
+    {0x00080042, nullptr,               "Shutdown"},
+    {0x000902C2, nullptr,               "LoadExeCRO_New?"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

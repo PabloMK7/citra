@@ -15,12 +15,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00010000, nullptr,                 "GetHandles"},
     {0x00020080, nullptr,                 "Initialize"},
     {0x00030000, nullptr,                 "Shutdown"},
-    {0x00040000, nullptr,                 "Unknown"},
-    {0x00050000, nullptr,                 "Unknown"},
-    {0x00060000, nullptr,                 "Unknown"},
-    {0x00070080, nullptr,                 "Unknown"},
-    {0x00080000, nullptr,                 "Unknown"},
-    {0x00090000, nullptr,                 "Unknown"},
+    {0x00090000, nullptr,                 "WriteToTwoFields"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
