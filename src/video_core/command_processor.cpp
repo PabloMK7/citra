@@ -25,10 +25,6 @@ static int float_regs_counter = 0;
 
 static u32 uniform_write_buffer[4];
 
-// Used for VSLoadProgramData and VSLoadSwizzleData
-static u32 vs_binary_write_offset = 0;
-static u32 vs_swizzle_write_offset = 0;
-
 static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     if (id >= registers.NumIds())
@@ -258,11 +254,6 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
         }
 
-        // Seems to be used to reset the write pointer for VSLoadProgramData
-        case PICA_REG_INDEX(vs_program.begin_load):
-            vs_binary_write_offset = 0;
-            break;
-
         // Load shader program code
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[0], 0x2cc):
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[1], 0x2cd):
@@ -273,15 +264,10 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[6], 0x2d2):
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[7], 0x2d3):
         {
-            VertexShader::SubmitShaderMemoryChange(vs_binary_write_offset, value);
-            vs_binary_write_offset++;
+            VertexShader::SubmitShaderMemoryChange(registers.vs_program.offset, value);
+            registers.vs_program.offset++;
             break;
         }
-
-        // Seems to be used to reset the write pointer for VSLoadSwizzleData
-        case PICA_REG_INDEX(vs_swizzle_patterns.begin_load):
-            vs_swizzle_write_offset = 0;
-            break;
 
         // Load swizzle pattern data
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[0], 0x2d6):
@@ -293,8 +279,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[6], 0x2dc):
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[7], 0x2dd):
         {
-            VertexShader::SubmitSwizzleDataChange(vs_swizzle_write_offset, value);
-            vs_swizzle_write_offset++;
+            VertexShader::SubmitSwizzleDataChange(registers.vs_swizzle_patterns.offset, value);
+            registers.vs_swizzle_patterns.offset++;
             break;
         }
 

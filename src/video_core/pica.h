@@ -678,7 +678,9 @@ struct Regs {
     INSERT_PADDING_WORDS(0x2);
 
     struct {
-        u32 begin_load;
+        // Offset of the next instruction to write code to.
+        // Incremented with each instruction write.
+        u32 offset;
 
         // Writing to these registers sets the "current" word in the shader program.
         // TODO: It's not clear how the hardware stores what the "current" word is.
@@ -690,7 +692,9 @@ struct Regs {
     // This register group is used to load an internal table of swizzling patterns,
     // which are indexed by each shader instruction to specify vector component swizzling.
     struct {
-        u32 begin_load;
+        // Offset of the next swizzle pattern to write code to.
+        // Incremented with each instruction write.
+        u32 offset;
 
         // Writing to these registers sets the "current" swizzle pattern in the table.
         // TODO: It's not clear how the hardware stores what the "current" swizzle pattern is.
