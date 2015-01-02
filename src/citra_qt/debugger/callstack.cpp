@@ -14,9 +14,9 @@ CallstackWidget::CallstackWidget(QWidget* parent): QDockWidget(parent)
 
     callstack_model = new QStandardItemModel(this);
     callstack_model->setColumnCount(4);
-    callstack_model->setHeaderData(0, Qt::Horizontal, "Stack pointer");
-    callstack_model->setHeaderData(2, Qt::Horizontal, "Return address");
-    callstack_model->setHeaderData(1, Qt::Horizontal, "Call address");
+    callstack_model->setHeaderData(0, Qt::Horizontal, "Stack Pointer");
+    callstack_model->setHeaderData(2, Qt::Horizontal, "Return Address");
+    callstack_model->setHeaderData(1, Qt::Horizontal, "Call Address");
     callstack_model->setHeaderData(3, Qt::Horizontal, "Function");
     ui.treeView->setModel(callstack_model);
 }

@@ -58,7 +58,7 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="action_Popout_Window_Mode"/>
+    <addaction name="action_Single_Window_Mode"/>
     <addaction name="action_Hotkeys"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -75,12 +75,12 @@
   <widget class="QStatusBar" name="statusbar"/>
    <action name="action_Load_File">
      <property name="text">
-       <string>Load file...</string>
+       <string>Load File...</string>
      </property>
    </action>
    <action name="action_Load_Symbol_Map">
      <property name="text">
-       <string>Load symbol map...</string>
+       <string>Load Symbol Map...</string>
      </property>
    </action>
    <action name="action_Exit">
@@ -114,12 +114,12 @@
        <string>About Citra</string>
      </property>
    </action>
-   <action name="action_Popout_Window_Mode">
+   <action name="action_Single_Window_Mode">
      <property name="checkable">
        <bool>true</bool>
      </property>
      <property name="text">
-       <string>Popout window</string>
+       <string>Single Window Mode</string>
      </property>
    </action>
    <action name="action_Hotkeys">
