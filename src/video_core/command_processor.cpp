@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/range/algorithm/fill.hpp>
+
 #include "clipper.h"
 #include "command_processor.h"
 #include "math.h"
@@ -65,10 +67,14 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             // Information about internal vertex attributes
             u32 vertex_attribute_sources[16];
-            std::fill(vertex_attribute_sources, &vertex_attribute_sources[16], 0xdeadbeef);
+            boost::fill(vertex_attribute_sources, 0xdeadbeef);
             u32 vertex_attribute_strides[16];
             u32 vertex_attribute_formats[16];
-            u32 vertex_attribute_elements[16];
+
+            // HACK: Initialize vertex_attribute_elements to zero to prevent infinite loops below.
+            // This is one of the hacks required to deal with uninitalized vertex attributes.
+            // TODO: Fix this properly.
+            u32 vertex_attribute_elements[16] = {};
             u32 vertex_attribute_element_size[16];
 
             // Setup attribute data from loaders
