@@ -349,10 +349,42 @@ static void ProcessShaderCode(VertexShaderState& state) {
             break;
         }
         default:
+        {
+            static auto evaluate_condition = [](const VertexShaderState& state, bool refx, bool refy, Instruction::FlowControlType flow_control) {
+                bool results[2] = { refx == state.conditional_code[0],
+                                    refy == state.conditional_code[1] };
+
+                switch (flow_control.op) {
+                case flow_control.Or:
+                    return results[0] || results[1];
+
+                case flow_control.And:
+                    return results[0] && results[1];
+
+                case flow_control.JustX:
+                    return results[0];
+
+                case flow_control.JustY:
+                    return results[1];
+                }
+            };
+
             // Handle each instruction on its own
             switch (instr.opcode) {
             case Instruction::OpCode::END:
                 exit_loop = true;
+                break;
+
+            case Instruction::OpCode::JMPC:
+                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
+                    state.program_counter = &shader_memory[instr.flow_control.dest_offset] - 1;
+                }
+                break;
+
+            case Instruction::OpCode::JMPU:
+                if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
+                    state.program_counter = &shader_memory[instr.flow_control.dest_offset] - 1;
+                }
                 break;
 
             case Instruction::OpCode::CALL:
@@ -360,6 +392,24 @@ static void ProcessShaderCode(VertexShaderState& state) {
                      instr.flow_control.dest_offset,
                      instr.flow_control.num_instructions,
                      binary_offset + 1);
+                break;
+
+            case Instruction::OpCode::CALLU:
+                if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
+                    call(state,
+                        instr.flow_control.dest_offset,
+                        instr.flow_control.num_instructions,
+                        binary_offset + 1);
+                }
+                break;
+
+            case Instruction::OpCode::CALLC:
+                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
+                    call(state,
+                        instr.flow_control.dest_offset,
+                        instr.flow_control.num_instructions,
+                        binary_offset + 1);
+                }
                 break;
 
             case Instruction::OpCode::NOP:
@@ -384,29 +434,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             {
                 // TODO: Do we need to consider swizzlers here?
 
-                auto flow_control = instr.flow_control;
-                bool results[3] = { (bool)flow_control.refx == state.conditional_code[0],
-                                    (bool)flow_control.refy == state.conditional_code[1] };
-
-                switch (flow_control.op) {
-                case flow_control.Or:
-                    results[2] = results[0] || results[1];
-                    break;
-
-                case flow_control.And:
-                    results[2] = results[0] && results[1];
-                    break;
-
-                case flow_control.JustX:
-                    results[2] = results[0];
-                    break;
-
-                case flow_control.JustY:
-                    results[2] = results[1];
-                    break;
-                }
-
-                if (results[2]) {
+                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
                     call(state,
                          binary_offset + 1,
                          instr.flow_control.dest_offset - binary_offset - 1,
@@ -428,6 +456,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             }
 
             break;
+        }
         }
 
         ++state.program_counter;
