@@ -2171,29 +2171,45 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
     }
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sadd16)(unsigned int inst, int index)
+ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
-    
+
     inst_base->cond     = BITS(inst, 28, 31);
     inst_base->idx      = index;
     inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
-    
+
     inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->Rn  = BITS(inst, 16, 19);
     inst_cream->Rd  = BITS(inst, 12, 15);
     inst_cream->op1 = BITS(inst, 20, 21);
     inst_cream->op2 = BITS(inst, 5, 7);
-    
+
     return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sadd16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(sadd8)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(saddsubx)(unsigned int inst, int index)
 {
-    return INTERPRETER_TRANSLATE(sadd16)(inst, index);
+    return INTERPRETER_TRANSLATE(sadd8)(inst, index);
 }
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(sadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(sadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(ssubaddx)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(sadd8)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sbc_inst));
@@ -2408,15 +2424,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SSUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssub16)(unsigned int inst, int index)
-{
-    return INTERPRETER_TRANSLATE(sadd16)(inst, index);
-}
-ARM_INST_PTR INTERPRETER_TRANSLATE(ssubaddx)(unsigned int inst, int index)
-{
-    return INTERPRETER_TRANSLATE(sadd16)(inst, index);
-}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(stc)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(stc_inst));
@@ -5039,6 +5047,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SADD8_INST:
+    SSUB8_INST:
     SADD16_INST:
     SADDSUBX_INST:
     SSUBADDX_INST:
@@ -5046,52 +5055,96 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+            const u8 op2 = inst_cream->op2;
 
-            const s16 rn_lo = (RN & 0xFFFF);
-            const s16 rn_hi = ((RN >> 16) & 0xFFFF);
-            const s16 rm_lo = (RM & 0xFFFF);
-            const s16 rm_hi = ((RM >> 16) & 0xFFFF);
+            if (op2 == 0x00 || op2 == 0x01 || op2 == 0x02 || op2 == 0x03) {
+                const s16 rn_lo = (RN & 0xFFFF);
+                const s16 rn_hi = ((RN >> 16) & 0xFFFF);
+                const s16 rm_lo = (RM & 0xFFFF);
+                const s16 rm_hi = ((RM >> 16) & 0xFFFF);
 
-            s32 lo_result = 0;
-            s32 hi_result = 0;
+                s32 lo_result = 0;
+                s32 hi_result = 0;
 
-            // SADD16
-            if (inst_cream->op2 == 0x00) {
-                lo_result = (rn_lo + rm_lo);
-                hi_result = (rn_hi + rm_hi);
+                // SADD16
+                if (inst_cream->op2 == 0x00) {
+                    lo_result = (rn_lo + rm_lo);
+                    hi_result = (rn_hi + rm_hi);
+                }
+                // SASX
+                else if (op2 == 0x01) {
+                    lo_result = (rn_lo - rm_hi);
+                    hi_result = (rn_hi + rm_lo);
+                }
+                // SSAX
+                else if (op2 == 0x02) {
+                    lo_result = (rn_lo + rm_hi);
+                    hi_result = (rn_hi - rm_lo);
+                }
+                // SSUB16
+                else if (op2 == 0x03) {
+                    lo_result = (rn_lo - rm_lo);
+                    hi_result = (rn_hi - rm_hi);
+                }
+
+                RD = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
+
+                if (lo_result >= 0) {
+                    cpu->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 17);
+                } else {
+                    cpu->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 17);
+                }
+
+                if (hi_result >= 0) {
+                    cpu->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 19);
+                } else {
+                    cpu->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 19);
+                }
             }
-            // SASX
-            else if (inst_cream->op2 == 0x01) {
-                lo_result = (rn_lo - rm_hi);
-                hi_result = (rn_hi + rm_lo);
-            }
-            // SSAX
-            else if (inst_cream->op2 == 0x02) {
-                lo_result = (rn_lo + rm_hi);
-                hi_result = (rn_hi - rm_lo);
-            }
-            // SSUB16
-            else if (inst_cream->op2 == 0x03) {
-                lo_result = (rn_lo - rm_lo);
-                hi_result = (rn_hi - rm_hi);
-            }
+            else if (op2 == 0x04 || op2 == 0x07) {
+                s32 lo_val1, lo_val2;
+                s32 hi_val1, hi_val2;
 
-            RD = (lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16);
+                // SADD8
+                if (op2 == 0x04) {
+                    lo_val1 = (s32)(s8)(RN & 0xFF) + (s32)(s8)(RM & 0xFF);
+                    lo_val2 = (s32)(s8)((RN >> 8) & 0xFF)  + (s32)(s8)((RM >> 8) & 0xFF);
+                    hi_val1 = (s32)(s8)((RN >> 16) & 0xFF) + (s32)(s8)((RM >> 16) & 0xFF);
+                    hi_val2 = (s32)(s8)((RN >> 24) & 0xFF) + (s32)(s8)((RM >> 24) & 0xFF);
+                }
+                // SSUB8
+                else {
+                    lo_val1 = (s32)(s8)(RN & 0xFF) - (s32)(s8)(RM & 0xFF);
+                    lo_val2 = (s32)(s8)((RN >> 8) & 0xFF) - (s32)(s8)((RM >> 8) & 0xFF);
+                    hi_val1 = (s32)(s8)((RN >> 16) & 0xFF) - (s32)(s8)((RM >> 16) & 0xFF);
+                    hi_val2 = (s32)(s8)((RN >> 24) & 0xFF) - (s32)(s8)((RM >> 24) & 0xFF);
+                }
 
-            if (lo_result >= 0) {
-                cpu->Cpsr |= (1 << 16);
-                cpu->Cpsr |= (1 << 17);
-            } else {
-                cpu->Cpsr &= ~(1 << 16);
-                cpu->Cpsr &= ~(1 << 17);
-            }
+                RD =  ((lo_val1 & 0xFF) | ((lo_val2 & 0xFF) << 8) | ((hi_val1 & 0xFF) << 16) | ((hi_val2 & 0xFF) << 24));
 
-            if (hi_result >= 0) {
-                cpu->Cpsr |= (1 << 18);
-                cpu->Cpsr |= (1 << 19);
-            } else {
-                cpu->Cpsr &= ~(1 << 18);
-                cpu->Cpsr &= ~(1 << 19);
+                if (lo_val1 >= 0)
+                    cpu->Cpsr |= (1 << 16);
+                else
+                    cpu->Cpsr &= ~(1 << 16);
+
+                if (lo_val2 >= 0)
+                    cpu->Cpsr |= (1 << 17);
+                else
+                    cpu->Cpsr &= ~(1 << 17);
+
+                if (hi_val1 >= 0)
+                    cpu->Cpsr |= (1 << 18);
+                else
+                    cpu->Cpsr &= ~(1 << 18);
+
+                if (hi_val2 >= 0)
+                    cpu->Cpsr |= (1 << 19);
+                else
+                    cpu->Cpsr &= ~(1 << 19);
             }
         }
 
@@ -5407,7 +5460,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
-    SSUB8_INST:
+
     STC_INST:
     {
         // Instruction not implemented

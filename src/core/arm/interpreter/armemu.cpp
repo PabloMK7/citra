@@ -5881,67 +5881,45 @@ L_stm_s_takeabort:
                 const u32 rm_val = state->Reg[rm_idx];
                 const u32 rn_val = state->Reg[rn_idx];
 
-                u8 lo_val1;
-                u8 lo_val2;
-                u8 hi_val1;
-                u8 hi_val2;
+                s32 lo_val1, lo_val2;
+                s32 hi_val1, hi_val2;
 
                 // SADD8
                 if ((instr & 0xFF0) == 0xf90) {
-                    lo_val1 = (u8)((rn_val & 0xFF) + (rm_val & 0xFF));
-                    lo_val2 = (u8)(((rn_val >> 8) & 0xFF) + ((rm_val >> 8) & 0xFF));
-                    hi_val1 = (u8)(((rn_val >> 16) & 0xFF) + ((rm_val >> 16) & 0xFF));
-                    hi_val2 = (u8)(((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF));
-
-                    if (lo_val1 & 0x80)
-                        state->GEFlag |= (1 << 16);
-                    else
-                        state->GEFlag &= ~(1 << 16);
-
-                    if (lo_val2 & 0x80)
-                        state->GEFlag |= (1 << 17);
-                    else
-                        state->GEFlag &= ~(1 << 17);
-
-                    if (hi_val1 & 0x80)
-                        state->GEFlag |= (1 << 18);
-                    else
-                        state->GEFlag &= ~(1 << 18);
-
-                    if (hi_val2 & 0x80)
-                        state->GEFlag |= (1 << 19);
-                    else
-                        state->GEFlag &= ~(1 << 19);
+                    lo_val1 = (s32)(s8)(rn_val & 0xFF) + (s32)(s8)(rm_val & 0xFF);
+                    lo_val2 = (s32)(s8)((rn_val >> 8) & 0xFF)  + (s32)(s8)((rm_val >> 8) & 0xFF);
+                    hi_val1 = (s32)(s8)((rn_val >> 16) & 0xFF) + (s32)(s8)((rm_val >> 16) & 0xFF);
+                    hi_val2 = (s32)(s8)((rn_val >> 24) & 0xFF) + (s32)(s8)((rm_val >> 24) & 0xFF);
                 }
                 // SSUB8
                 else {
-                    lo_val1 = (u8)((rn_val & 0xFF) - (rm_val & 0xFF));
-                    lo_val2 = (u8)(((rn_val >> 8) & 0xFF) - ((rm_val >> 8) & 0xFF));
-                    hi_val1 = (u8)(((rn_val >> 16) & 0xFF) - ((rm_val >> 16) & 0xFF));
-                    hi_val2 = (u8)(((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF));
-
-                    if (!(lo_val1 & 0x80))
-                        state->GEFlag |= (1 << 16);
-                    else
-                        state->GEFlag &= ~(1 << 16);
-
-                    if (!(lo_val2 & 0x80))
-                        state->GEFlag |= (1 << 17);
-                    else
-                        state->GEFlag &= ~(1 << 17);
-
-                    if (!(hi_val1 & 0x80))
-                        state->GEFlag |= (1 << 18);
-                    else
-                        state->GEFlag &= ~(1 << 18);
-
-                    if (!(hi_val2 & 0x80))
-                        state->GEFlag |= (1 << 19);
-                    else
-                        state->GEFlag &= ~(1 << 19);
+                    lo_val1 = (s32)(s8)(rn_val & 0xFF) - (s32)(s8)(rm_val & 0xFF);
+                    lo_val2 = (s32)(s8)((rn_val >> 8) & 0xFF)  - (s32)(s8)((rm_val >> 8) & 0xFF);
+                    hi_val1 = (s32)(s8)((rn_val >> 16) & 0xFF) - (s32)(s8)((rm_val >> 16) & 0xFF);
+                    hi_val2 = (s32)(s8)((rn_val >> 24) & 0xFF) - (s32)(s8)((rm_val >> 24) & 0xFF);
                 }
 
-                state->Reg[rd_idx] = (lo_val1 | lo_val2 << 8 | hi_val1 << 16 | hi_val2 << 24);
+                if (lo_val1 >= 0)
+                    state->GEFlag |= (1 << 16);
+                else
+                    state->GEFlag &= ~(1 << 16);
+
+                if (lo_val2 >= 0)
+                    state->GEFlag |= (1 << 17);
+                else
+                    state->GEFlag &= ~(1 << 17);
+
+                if (hi_val1 >= 0)
+                    state->GEFlag |= (1 << 18);
+                else
+                    state->GEFlag &= ~(1 << 18);
+
+                if (hi_val2 >= 0)
+                    state->GEFlag |= (1 << 19);
+                else
+                    state->GEFlag &= ~(1 << 19);
+
+                state->Reg[rd_idx] = ((lo_val1 & 0xFF) | ((lo_val2 & 0xFF) << 8) | ((hi_val1 & 0xFF) << 16) | ((hi_val2 & 0xFF) << 24));
                 return 1;
             }
             else {
