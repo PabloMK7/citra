@@ -2252,13 +2252,48 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)
 
     return inst_base;
 }
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SETEND"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shadd16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SHADD16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SHADD8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shaddsubx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SHADDSUBX"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SHSUB16"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SHSUB8"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SHSUBADDX"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+    generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->op1 = BITS(inst, 20, 21);
+    inst_cream->op2 = BITS(inst, 5, 7);
+    inst_cream->Rm  = BITS(inst, 0, 3);
+    inst_cream->Rn  = BITS(inst, 16, 19);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(shadd16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(shadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(shaddsubx)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(shadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsub8)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(shadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsub16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(shadd8)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(shsubaddx)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(shadd8)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smla_inst));
@@ -5229,12 +5264,79 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SETEND_INST:
-    SHADD16_INST:
+
     SHADD8_INST:
+    SHADD16_INST:
     SHADDSUBX_INST:
-    SHSUB16_INST:
     SHSUB8_INST:
+    SHSUB16_INST:
     SHSUBADDX_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+            const u8 op2 = inst_cream->op2;
+            const u32 rm_val = RM;
+            const u32 rn_val = RN;
+
+            if (op2 == 0x00 || op2 == 0x01 || op2 == 0x02 || op2 == 0x03) {
+                s32 lo_result = 0;
+                s32 hi_result = 0;
+
+                // SHADD16
+                if (op2 == 0x00) {
+                    lo_result = ((s16)(rn_val & 0xFFFF) + (s16)(rm_val & 0xFFFF)) >> 1;
+                    hi_result = ((s16)((rn_val >> 16) & 0xFFFF) + (s16)((rm_val >> 16) & 0xFFFF)) >> 1;
+                }
+                // SHASX
+                else if (op2 == 0x01) {
+                    lo_result = ((s16)(rn_val & 0xFFFF) - (s16)((rm_val >> 16) & 0xFFFF)) >> 1;
+                    hi_result = ((s16)((rn_val >> 16) & 0xFFFF) + (s16)(rm_val & 0xFFFF)) >> 1;
+                }
+                // SHSAX
+                else if (op2 == 0x02) {
+                    lo_result = ((s16)(rn_val & 0xFFFF) + (s16)((rm_val >> 16) & 0xFFFF)) >> 1;
+                    hi_result = ((s16)((rn_val >> 16) & 0xFFFF) - (s16)(rm_val & 0xFFFF)) >> 1;
+                }
+                // SHSUB16
+                else if (op2 == 0x03) {
+                    lo_result = ((s16)(rn_val & 0xFFFF) - (s16)(rm_val & 0xFFFF)) >> 1;
+                    hi_result = ((s16)((rn_val >> 16) & 0xFFFF) - (s16)((rm_val >> 16) & 0xFFFF)) >> 1;
+                }
+
+                RD = ((lo_result & 0xFFFF) | ((hi_result & 0xFFFF) << 16));
+            }
+            else if (op2 == 0x04 || op2 == 0x07) {
+                s16 lo_val1, lo_val2;
+                s16 hi_val1, hi_val2;
+
+                // SHADD8
+                if (op2 == 0x04) {
+                    lo_val1 = ((s8)(rn_val & 0xFF) + (s8)(rm_val & 0xFF)) >> 1;
+                    lo_val2 = ((s8)((rn_val >> 8) & 0xFF) + (s8)((rm_val >> 8) & 0xFF)) >> 1;
+
+                    hi_val1 = ((s8)((rn_val >> 16) & 0xFF) + (s8)((rm_val >> 16) & 0xFF)) >> 1;
+                    hi_val2 = ((s8)((rn_val >> 24) & 0xFF) + (s8)((rm_val >> 24) & 0xFF)) >> 1;
+                }
+                // SHSUB8
+                else {
+                    lo_val1 = ((s8)(rn_val & 0xFF) - (s8)(rm_val & 0xFF)) >> 1;
+                    lo_val2 = ((s8)((rn_val >> 8) & 0xFF) - (s8)((rm_val >> 8) & 0xFF)) >> 1;
+
+                    hi_val1 = ((s8)((rn_val >> 16) & 0xFF) - (s8)((rm_val >> 16) & 0xFF)) >> 1;
+                    hi_val2 = ((s8)((rn_val >> 24) & 0xFF) - (s8)((rm_val >> 24) & 0xFF)) >> 1;
+                }
+
+                RD = (lo_val1 & 0xFF) | ((lo_val2 & 0xFF) << 8) | ((hi_val1 & 0xFF) << 16) | ((hi_val2 & 0xFF) << 24);
+            }
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     SMLA_INST:
     {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
