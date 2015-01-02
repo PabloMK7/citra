@@ -106,16 +106,17 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                                    ScreenToRasterizerCoordinates(v1.screenpos),
                                    ScreenToRasterizerCoordinates(v2.screenpos) };
 
-    if (registers.cull_mode == Regs::CullMode::KeepClockWise) {
-        // Reverse vertex order and use the CCW code path.
+    if (registers.cull_mode == Regs::CullMode::KeepCounterClockWise) {
+        // Reverse vertex order and use the CW code path.
         std::swap(vtxpos[1], vtxpos[2]);
     }
 
     if (registers.cull_mode != Regs::CullMode::KeepAll) {
-        // Cull away triangles which are wound clockwise.
-        // TODO: A check for degenerate triangles ("== 0") should be considered for CullMode::KeepAll
+        // Cull away triangles which are wound counter-clockwise.
         if (SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
             return;
+    } else {
+        // TODO: Consider A check for degenerate triangles ("SignedArea == 0")
     }
 
     // TODO: Proper scissor rect test!
@@ -475,7 +476,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
-                u16 z = (u16)(-(v0.screenpos[2].ToFloat32() * w0 +
+                u16 z = (u16)((v0.screenpos[2].ToFloat32() * w0 +
                             v1.screenpos[2].ToFloat32() * w1 +
                             v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
                 u16 ref_z = GetDepth(x >> 4, y >> 4);
