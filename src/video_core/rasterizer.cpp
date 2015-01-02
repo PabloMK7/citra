@@ -168,9 +168,10 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
     auto textures = registers.GetTextures();
     auto tev_stages = registers.GetTevStages();
 
+    // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
-    for (u16 y = min_y; y < max_y; y += 0x10) {
-        for (u16 x = min_x; x < max_x; x += 0x10) {
+    for (u16 y = min_y + 8; y < max_y; y += 0x10) {
+        for (u16 x = min_x + 8; x < max_x; x += 0x10) {
 
             // Calculate the barycentric coordinates w0, w1 and w2
             int w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
