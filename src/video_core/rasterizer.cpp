@@ -20,10 +20,19 @@ namespace Rasterizer {
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
     u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
-    u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
-    // Assuming RGBA8 format until actual framebuffer format handling is implemented
-    *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
+    switch (registers.framebuffer.color_format) {
+    case registers.framebuffer.RGBA8:
+    {
+        u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
+        *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
+        break;
+    }
+
+    default:
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
+        exit(1);
+    }
 }
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {

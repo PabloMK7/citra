@@ -421,7 +421,7 @@ struct Regs {
         INSERT_PADDING_WORDS(0x6);
 
         u32 depth_format;
-        u32 color_format;
+        BitField<16, 3, u32> color_format;
 
         INSERT_PADDING_WORDS(0x4);
 
