@@ -50,7 +50,19 @@ struct Regs {
 
     u32 trigger_irq;
 
-    INSERT_PADDING_WORDS(0x30);
+    INSERT_PADDING_WORDS(0x2f);
+
+    enum class CullMode : u32 {
+        // Select which polygons are considered to be "frontfacing".
+        KeepAll              = 0,
+        KeepClockWise        = 1,
+        KeepCounterClockWise = 2,
+        // TODO: What does the third value imply?
+    };
+
+    union {
+        BitField<0, 2, CullMode> cull_mode;
+    };
 
     BitField<0, 24, u32> viewport_size_x;
 
@@ -289,13 +301,67 @@ struct Regs {
     TevStageConfig tev_stage4;
     INSERT_PADDING_WORDS(0x3);
     TevStageConfig tev_stage5;
-    INSERT_PADDING_WORDS(0x13);
+    INSERT_PADDING_WORDS(0x3);
 
     const std::array<Regs::TevStageConfig,6> GetTevStages() const {
         return { tev_stage0, tev_stage1,
                  tev_stage2, tev_stage3,
                  tev_stage4, tev_stage5 };
     };
+
+    struct {
+        enum DepthFunc : u32 {
+            Always      = 1,
+            LessThan    = 4,
+            GreaterThan = 6,
+        };
+
+        union {
+            // If false, logic blending is used
+            BitField<8, 1, u32> alphablend_enable;
+        };
+
+        union {
+            enum BlendEquation : u32 {
+                Add = 0,
+            };
+
+            enum BlendFactor : u32 {
+                Zero = 0,
+                One = 1,
+
+                SourceAlpha = 6,
+                OneMinusSourceAlpha = 7,
+            };
+
+            BitField< 0, 8, BlendEquation> blend_equation_rgb;
+            BitField< 8, 8, BlendEquation> blend_equation_a;
+
+            BitField<16, 4, BlendFactor> factor_source_rgb;
+            BitField<20, 4, BlendFactor> factor_dest_rgb;
+
+            BitField<24, 4, BlendFactor> factor_source_a;
+            BitField<28, 4, BlendFactor> factor_dest_a;
+        } alpha_blending;
+
+        union {
+            enum Op {
+                Set = 4,
+            };
+
+            BitField<0, 4, Op> op;
+        } logic_op;
+
+        INSERT_PADDING_WORDS(0x4);
+
+        union {
+            BitField< 0, 1, u32> depth_test_enable;
+            BitField< 4, 3, DepthFunc> depth_test_func;
+            BitField<12, 1, u32> depth_write_enable;
+        };
+
+        INSERT_PADDING_WORDS(0x8);
+    } output_merger;
 
     struct {
         enum ColorFormat : u32 {
@@ -495,8 +561,14 @@ struct Regs {
     INSERT_PADDING_WORDS(0x51);
 
     BitField<0, 16, u32> vs_bool_uniforms;
+    union {
+        BitField< 0, 8, u32> x;
+        BitField< 8, 8, u32> y;
+        BitField<16, 8, u32> z;
+        BitField<24, 8, u32> w;
+    } vs_int_uniforms[4];
 
-    INSERT_PADDING_WORDS(0x9);
+    INSERT_PADDING_WORDS(0x5);
 
     // Offset to shader program entry point (in words)
     BitField<0, 16, u32> vs_main_offset;
@@ -599,6 +671,7 @@ struct Regs {
             } while(false)
 
         ADD_FIELD(trigger_irq);
+        ADD_FIELD(cull_mode);
         ADD_FIELD(viewport_size_x);
         ADD_FIELD(viewport_size_y);
         ADD_FIELD(viewport_depth_range);
@@ -617,6 +690,7 @@ struct Regs {
         ADD_FIELD(tev_stage3);
         ADD_FIELD(tev_stage4);
         ADD_FIELD(tev_stage5);
+        ADD_FIELD(output_merger);
         ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
@@ -625,6 +699,7 @@ struct Regs {
         ADD_FIELD(trigger_draw_indexed);
         ADD_FIELD(triangle_topology);
         ADD_FIELD(vs_bool_uniforms);
+        ADD_FIELD(vs_int_uniforms);
         ADD_FIELD(vs_main_offset);
         ADD_FIELD(vs_input_register_map);
         ADD_FIELD(vs_uniform_setup);
@@ -668,6 +743,7 @@ private:
 #define ASSERT_REG_POSITION(field_name, position) static_assert(offsetof(Regs, field_name) == position * 4, "Field "#field_name" has invalid position")
 
 ASSERT_REG_POSITION(trigger_irq, 0x10);
+ASSERT_REG_POSITION(cull_mode, 0x40);
 ASSERT_REG_POSITION(viewport_size_x, 0x41);
 ASSERT_REG_POSITION(viewport_size_y, 0x43);
 ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
@@ -688,6 +764,7 @@ ASSERT_REG_POSITION(tev_stage2, 0xd0);
 ASSERT_REG_POSITION(tev_stage3, 0xd8);
 ASSERT_REG_POSITION(tev_stage4, 0xf0);
 ASSERT_REG_POSITION(tev_stage5, 0xf8);
+ASSERT_REG_POSITION(output_merger, 0x100);
 ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
@@ -696,6 +773,7 @@ ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
 ASSERT_REG_POSITION(vs_bool_uniforms, 0x2b0);
+ASSERT_REG_POSITION(vs_int_uniforms, 0x2b1);
 ASSERT_REG_POSITION(vs_main_offset, 0x2ba);
 ASSERT_REG_POSITION(vs_input_register_map, 0x2bb);
 ASSERT_REG_POSITION(vs_uniform_setup, 0x2c0);

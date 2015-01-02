@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 
+#include "video_core/color.h"
 #include "video_core/pica.h"
 
 #include "graphics_framebuffer.hxx"
@@ -202,7 +203,8 @@ void GraphicsFramebufferWidget::OnUpdate()
         framebuffer_address = framebuffer.GetColorBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();
         framebuffer_height = framebuffer.GetHeight();
-        framebuffer_format = static_cast<Format>(framebuffer.color_format);
+        // TODO: It's unknown how this format is actually specified
+        framebuffer_format = Format::RGBA8;
 
         break;
     }
@@ -258,10 +260,10 @@ void GraphicsFramebufferWidget::OnUpdate()
         for (unsigned y = 0; y < framebuffer_height; ++y) {
             for (unsigned x = 0; x < framebuffer_width; ++x) {
                 u16 value = *(u16*)(((u8*)color_buffer) + x * 2 + y * framebuffer_width * 2);
-                u8 r = (value >> 11) & 0x1F;
-                u8 g = (value >> 6) & 0x1F;
-                u8 b = (value >> 1) & 0x1F;
-                u8 a = value & 1;
+                u8 r = Color::Convert5To8((value >> 11) & 0x1F);
+                u8 g = Color::Convert5To8((value >> 6) & 0x1F);
+                u8 b = Color::Convert5To8((value >> 1) & 0x1F);
+                u8 a = Color::Convert1To8(value & 1);
 
                 decoded_image.setPixel(x, y, qRgba(r, g, b, 255/*a*/));
             }

@@ -30,6 +30,8 @@ static struct {
     Math::Vec4<float24> f[96];
 
     std::array<bool,16> b;
+
+    std::array<Math::Vec4<u8>,4> i;
 } shader_uniforms;
 
 // TODO: Not sure where the shader binary and swizzle patterns are supposed to be loaded to!
@@ -37,33 +39,31 @@ static struct {
 static std::array<u32, 1024> shader_memory;
 static std::array<u32, 1024> swizzle_data;
 
-void SubmitShaderMemoryChange(u32 addr, u32 value)
-{
+void SubmitShaderMemoryChange(u32 addr, u32 value) {
     shader_memory[addr] = value;
 }
 
-void SubmitSwizzleDataChange(u32 addr, u32 value)
-{
+void SubmitSwizzleDataChange(u32 addr, u32 value) {
     swizzle_data[addr] = value;
 }
 
-Math::Vec4<float24>& GetFloatUniform(u32 index)
-{
+Math::Vec4<float24>& GetFloatUniform(u32 index) {
     return shader_uniforms.f[index];
 }
 
-bool& GetBoolUniform(u32 index)
-{
+bool& GetBoolUniform(u32 index) {
     return shader_uniforms.b[index];
 }
 
-const std::array<u32, 1024>& GetShaderBinary()
-{
+Math::Vec4<u8>& GetIntUniform(u32 index) {
+    return shader_uniforms.i[index];
+}
+
+const std::array<u32, 1024>& GetShaderBinary() {
     return shader_memory;
 }
 
-const std::array<u32, 1024>& GetSwizzlePatterns()
-{
+const std::array<u32, 1024>& GetSwizzlePatterns() {
     return swizzle_data;
 }
 
@@ -437,8 +437,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
     }
 }
 
-OutputVertex RunShader(const InputVertex& input, int num_attributes)
-{
+OutputVertex RunShader(const InputVertex& input, int num_attributes) {
     VertexShaderState state;
 
     const u32* main = &shader_memory[registers.vs_main_offset];

@@ -94,11 +94,15 @@ inline void Write(u32 addr, const T data) {
                         int r, g, b, a;
                     } source_color = { 0, 0, 0, 0 };
 
+                    // Cheap emulation of horizontal scaling: Just skip each second pixel of the
+                    // input framebuffer. We keep track of this in the pixel_skip variable.
+                    unsigned pixel_skip = (config.scale_horizontally != 0) ? 2 : 1;
+
                     switch (config.input_format) {
                     case Regs::PixelFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* srcptr = source_pointer + x * 4 + y * config.input_width * 4;
+                        u8* srcptr = source_pointer + x * 4 * pixel_skip + y * config.input_width * 4 * pixel_skip;
                         source_color.r = srcptr[0]; // blue
                         source_color.g = srcptr[1]; // green
                         source_color.b = srcptr[2]; // red

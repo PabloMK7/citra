@@ -19,6 +19,7 @@
 #include "common/log.h"
 #include "common/file_util.h"
 
+#include "video_core/color.h"
 #include "video_core/math.h"
 #include "video_core/pica.h"
 
@@ -359,29 +360,26 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         u8 g = ((source_ptr) >> 6) & 0x1F;
         u8 b = (source_ptr >> 1) & 0x1F;
         u8 a = source_ptr & 1;
-        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 3) | (g >> 2), (b << 3) | (b >> 2), disable_alpha ? 255 : (a * 255));
+        return Math::MakeVec<u8>(Color::Convert5To8(r), Color::Convert5To8(g),
+                                 Color::Convert5To8(b), disable_alpha ? 255 : Color::Convert1To8(a));
     }
 
     case Regs::TextureFormat::RGB565:
     {
         const u16 source_ptr = *(const u16*)(source + offset * 2);
-        u8 r = (source_ptr >> 11) & 0x1F;
-        u8 g = ((source_ptr) >> 5) & 0x3F;
-        u8 b = (source_ptr) & 0x1F;
-        return Math::MakeVec<u8>((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2), 255);
+        u8 r = Color::Convert5To8((source_ptr >> 11) & 0x1F);
+        u8 g = Color::Convert6To8(((source_ptr) >> 5) & 0x3F);
+        u8 b = Color::Convert5To8((source_ptr) & 0x1F);
+        return Math::MakeVec<u8>(r, g, b, 255);
     }
 
     case Regs::TextureFormat::RGBA4:
     {
         const u8* source_ptr = source + offset * 2;
-        u8 r = source_ptr[1] >> 4;
-        u8 g = source_ptr[1] & 0xFF;
-        u8 b = source_ptr[0] >> 4;
-        u8 a = source_ptr[0] & 0xFF;
-        r = (r << 4) | r;
-        g = (g << 4) | g;
-        b = (b << 4) | b;
-        a = (a << 4) | a;
+        u8 r = Color::Convert4To8(source_ptr[1] >> 4);
+        u8 g = Color::Convert4To8(source_ptr[1] & 0xF);
+        u8 b = Color::Convert4To8(source_ptr[0] >> 4);
+        u8 a = Color::Convert4To8(source_ptr[0] & 0xF);
         return { r, g, b, disable_alpha ? (u8)255 : a };
     }
 
@@ -389,13 +387,11 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + offset * 2;
 
-        // TODO: component order not verified
-
         if (disable_alpha) {
             // Show intensity as red, alpha as green
-            return { source_ptr[0], source_ptr[1], 0, 255 };
+            return { source_ptr[1], source_ptr[0], 0, 255 };
         } else {
-            return { source_ptr[0], source_ptr[0], source_ptr[0], source_ptr[1]};
+            return { source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0]};
         }
     }
 
@@ -418,14 +414,10 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA4:
     {
-        const u8* source_ptr = source + offset / 2;
+        const u8* source_ptr = source + offset;
 
-        // TODO: component order not verified
-
-        u8 i = (*source_ptr) & 0xF;
-        u8 a = ((*source_ptr) & 0xF0) >> 4;
-        a |= a << 4;
-        i |= i << 4;
+        u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
+        u8 a = Color::Convert4To8((*source_ptr) & 0xF);
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
@@ -439,15 +431,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     {
         const u8* source_ptr = source + offset / 2;
 
-        // TODO: component order not verified
-
         u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
-        a |= a << 4;
+        a = Color::Convert4To8(a);
 
         if (disable_alpha) {
-            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+            return { a, a, a, 255 };
         } else {
-            return { 0, 0, 0, *source_ptr };
+            return { 0, 0, 0, a };
         }
     }
 

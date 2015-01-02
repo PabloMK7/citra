@@ -112,6 +112,11 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 // Initialize data for the current vertex
                 VertexShader::InputVertex input;
 
+                // Load a debugging token to check whether this gets loaded by the running
+                // application or not.
+                static const float24 debug_token = float24::FromRawFloat24(0x00abcdef);
+                input.attr[0].w = debug_token;
+
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
                         const u8* srcdata = Memory::GetPointer(PAddrToVAddr(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]));
@@ -135,6 +140,16 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                   input.attr[i][comp].ToFloat32());
                     }
                 }
+
+                // HACK: Some games do not initialize the vertex position's w component. This leads
+                //       to critical issues since it messes up perspective division. As a
+                //       workaround, we force the fourth component to 1.0 if we find this to be the
+                //       case.
+                //       To do this, we additionally have to assume that the first input attribute
+                //       is the vertex position, since there's no information about this other than
+                //       the empiric observation that this is usually the case.
+                if (input.attr[0].w == debug_token)
+                    input.attr[0].w = float24::FromFloat32(1.0);
 
                 if (g_debug_context)
                     g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
@@ -172,6 +187,19 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i)) != 0;
 
             break;
+
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[1], 0x2b2):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[2], 0x2b3):
+        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[3], 0x2b4):
+        {
+            int index = (id - PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1));
+            auto values = registers.vs_int_uniforms[index];
+            VertexShader::GetIntUniform(index) = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
+            LOG_TRACE(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
+                      index, values.x.Value(), values.y.Value(), values.z.Value(), values.w.Value());
+            break;
+        }
 
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
