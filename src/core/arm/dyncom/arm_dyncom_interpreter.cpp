@@ -2766,7 +2766,29 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SXTAB16"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(sxtab_inst));
+    sxtab_inst* const inst_cream = (sxtab_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->Rm = BITS(inst, 0, 3);
+    inst_cream->Rn = BITS(inst, 16, 19);
+    inst_cream->Rd = BITS(inst, 12, 15);
+    inst_cream->rotate = BITS(inst, 10, 11);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(sxtab16)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
     LOG_WARNING(Core_ARM11, "SXTAH untested");
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtah_inst));
@@ -2784,7 +2806,7 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SXTB16"); }
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(teq)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(teq_inst));
@@ -5896,7 +5918,40 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     SXTAB16_INST:
+    SXTB16_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            sxtab_inst* const inst_cream = (sxtab_inst*)inst_base->component;
+
+            const u8 rotation = inst_cream->rotate * 8;
+            u32 rm_val = RM;
+            u32 rn_val = RN;
+
+            if (rotation)
+                rm_val = ((rm_val << (32 - rotation)) | (rm_val >> rotation));
+
+            // SXTB16
+            if (inst_cream->Rn == 15) {
+                u32 lo = (u32)(s8)rm_val;
+                u32 hi = (u32)(s8)(rm_val >> 16);
+                RD = (lo | (hi << 16));
+            }
+            // SXTAB16
+            else {
+                u32 lo = (rn_val & 0xFFFF) + (u32)(s8)(rm_val & 0xFF);
+                u32 hi = ((rn_val >> 16) & 0xFFFF) + (u32)(s8)((rm_val >> 16) & 0xFF);
+                RD = (lo | (hi << 16));
+            }
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(sxtab_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     SXTAH_INST:
     {
         sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
@@ -5915,7 +5970,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
-    SXTB16_INST:
+
     TEQ_INST:
     {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
