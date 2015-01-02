@@ -602,7 +602,6 @@ extern ARMword ARMul_SwitchMode (ARMul_State *, ARMword, ARMword);
 extern void ARMul_MSRCpsr (ARMul_State *, ARMword, ARMword);
 extern void ARMul_SubOverflow (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddOverflow (ARMul_State *, ARMword, ARMword, ARMword);
-extern void ARMul_AddOverflowQ(ARMul_State*, ARMword, ARMword);
 extern void ARMul_SubCarry (ARMul_State *, ARMword, ARMword, ARMword);
 extern void ARMul_AddCarry (ARMul_State *, ARMword, ARMword, ARMword);
 extern tdstate ARMul_ThumbDecode (ARMul_State *, ARMword, ARMword, ARMword *);
