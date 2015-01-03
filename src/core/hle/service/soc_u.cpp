@@ -404,7 +404,7 @@ static void Fcntl(Service::Interface* self) {
         }
 #endif
     } else {
-        LOG_ERROR(Service_SOC, "Unsupported command (%d) in fcntl call");
+        LOG_ERROR(Service_SOC, "Unsupported command (%d) in fcntl call", ctr_cmd);
         result = TranslateError(EINVAL); // TODO: Find the correct error
         posix_ret = -1;
         return;
