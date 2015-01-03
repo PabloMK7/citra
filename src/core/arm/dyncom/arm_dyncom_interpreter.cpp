@@ -972,6 +972,16 @@ typedef struct _smlal_inst {
     unsigned int RdLo;
 } smlal_inst;
 
+typedef struct smlald_inst {
+    unsigned int RdLo;
+    unsigned int RdHi;
+    unsigned int Rm;
+    unsigned int Rn;
+    unsigned int swap;
+    unsigned int op1;
+    unsigned int op2;
+} smlald_inst;
+
 typedef struct _mla_inst {
     unsigned int S;
     unsigned int Rn;
@@ -2360,9 +2370,32 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 }
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLALD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLAW"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLSLD"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlald_inst));
+    smlald_inst* const inst_cream = (smlald_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->Rm   = BITS(inst, 8, 11);
+    inst_cream->Rn   = BITS(inst, 0, 3);
+    inst_cream->RdLo = BITS(inst, 12, 15);
+    inst_cream->RdHi = BITS(inst, 16, 19);
+    inst_cream->swap = BIT(inst, 5);
+    inst_cream->op1  = BITS(inst, 20, 22);
+    inst_cream->op2  = BITS(inst, 5, 7);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smlald)(inst, index);
+}
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)
 {
@@ -5519,9 +5552,45 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SMLALXY_INST:
-    SMLALD_INST:
     SMLAW_INST:
+
+    SMLALD_INST:
     SMLSLD_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlald_inst* const inst_cream = (smlald_inst*)inst_base->component;
+
+            const bool do_swap = (inst_cream->swap == 1);
+            const u32 rdlo_val = RDLO;
+            const u32 rdhi_val = RDHI;
+            const u32 rn_val   = RN;
+            u32 rm_val         = RM;
+
+            if (do_swap)
+                rm_val = (((rm_val & 0xFFFF) << 16) | (rm_val >> 16));
+            
+            const s32 product1 = (s16)(rn_val & 0xFFFF) * (s16)(rm_val & 0xFFFF);
+            const s32 product2 = (s16)((rn_val >> 16) & 0xFFFF) * (s16)((rm_val >> 16) & 0xFFFF);
+            s64 result;
+
+            // SMLALD
+            if (BIT(inst_cream->op2, 1) == 0) {
+                result = (product1 + product2) + (s64)(rdlo_val | ((s64)rdhi_val << 32));
+            }
+            // SMLSLD
+            else {
+                result = (product1 - product2) + (s64)(rdlo_val | ((s64)rdhi_val << 32));
+            }
+
+            RDLO = (result & 0xFFFFFFFF);
+            RDHI = ((result >> 32) & 0xFFFFFFFF);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(smlald_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     SMMLA_INST:
     SMMLS_INST:
