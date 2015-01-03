@@ -453,12 +453,14 @@ ARMul_AddOverflow (ARMul_State * state, ARMword a, ARMword b, ARMword result)
     ASSIGNV (AddOverflow (a, b, result));
 }
 
-/* Assigns the Q flag if the given result is considered an overflow from the addition of a and b  */
-void ARMul_AddOverflowQ(ARMul_State* state, ARMword a, ARMword b)
+// Returns true if the Q flag should be set as a result of overflow.
+bool ARMul_AddOverflowQ(ARMword a, ARMword b)
 {
     u32 result = a + b;
     if (((result ^ a) & (u32)0x80000000) && ((a ^ b) & (u32)0x80000000) == 0)
-        SETQ;
+        return true;
+
+    return false;
 }
 
 /* Assigns the C flag after an subtraction of a and b to give result.  */

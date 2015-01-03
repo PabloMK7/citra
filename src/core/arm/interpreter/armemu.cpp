@@ -6470,17 +6470,23 @@ L_stm_s_takeabort:
 
                     if (BITS(12, 15) != 15) {
                         state->Reg[rd_idx] += state->Reg[ra_idx];
-                        ARMul_AddOverflowQ(state, product1 + product2, state->Reg[ra_idx]);
+                        if (ARMul_AddOverflowQ(product1 + product2, state->Reg[ra_idx]))
+                            SETQ;
                     }
 
-                    ARMul_AddOverflowQ(state, product1, product2);
+                    if (ARMul_AddOverflowQ(product1, product2))
+                        SETQ;
                 }
                 // SMUSD and SMLSD
                 else {
                     state->Reg[rd_idx] = product1 - product2;
-                    
-                    if (BITS(12, 15) != 15)
+
+                    if (BITS(12, 15) != 15) {
                         state->Reg[rd_idx] += state->Reg[ra_idx];
+
+                        if (ARMul_AddOverflowQ(product1 - product2, state->Reg[ra_idx]))
+                            SETQ;
+                    }
                 }
 
                 return 1;

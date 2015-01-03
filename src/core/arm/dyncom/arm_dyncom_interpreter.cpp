@@ -930,6 +930,8 @@ typedef struct _smlad_inst {
     unsigned int Rd;
     unsigned int Ra;
     unsigned int Rn;
+    unsigned int op1;
+    unsigned int op2;
 } smlad_inst;
 
 typedef struct _smla_inst {
@@ -2313,25 +2315,40 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index)
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index){
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
-    smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
+    smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->m     = BIT(inst, 4);
-    inst_cream->Rn     = BITS(inst, 0, 3);
-    inst_cream->Rm     = BITS(inst, 8, 11);
-    inst_cream->Rd = BITS(inst, 16, 19);
-    inst_cream->Ra = BITS(inst, 12, 15);
+    inst_cream->m   = BIT(inst, 5);
+    inst_cream->Rn  = BITS(inst, 0, 3);
+    inst_cream->Rm  = BITS(inst, 8, 11);
+    inst_cream->Rd  = BITS(inst, 16, 19);
+    inst_cream->Ra  = BITS(inst, 12, 15);
+    inst_cream->op1 = BITS(inst, 20, 22);
+    inst_cream->op2 = BITS(inst, 5, 7);
 
-    if (CHECK_RM ) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smuad)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smlad)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smlad)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlsd)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smlad)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
@@ -2355,12 +2372,10 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLALD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLAW"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlsd)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLSD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLSLD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLA"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLS"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMUL"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smuad)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMUAD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smul_inst));
@@ -2423,7 +2438,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index)
         inst_base->load_r15 = 1;
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smusd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SMUSD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index)      { UNIMPLEMENTED_INSTRUCTION("SRS"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)
 {
@@ -5382,44 +5396,59 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     SMLAD_INST:
+    SMLSD_INST:
+    SMUAD_INST:
+    SMUSD_INST:
     {
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
-            long long int rm = cpu->Reg[inst_cream->Rm];
-            long long int rn = cpu->Reg[inst_cream->Rn];
-            long long int ra = cpu->Reg[inst_cream->Ra];
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+            const u8 op2 = inst_cream->op2;
 
-            // See SMUAD
-            if(inst_cream->Ra == 15)
-                CITRA_IGNORE_EXIT(-1);
-            int operand2 = (inst_cream->m)? ROTATE_RIGHT_32(rm, 16):rm;
-            int half_rn, half_operand2;
+            u32 rm_val = cpu->Reg[inst_cream->Rm];
+            const u32 rn_val = cpu->Reg[inst_cream->Rn];
 
-            half_rn = rn & 0xFFFF;
-            half_rn = (half_rn & 0x8000)? (0xFFFF0000|half_rn) : half_rn;
+            if (inst_cream->m)
+                rm_val = (((rm_val & 0xFFFF) << 16) | (rm_val >> 16));
 
-            half_operand2 = operand2 & 0xFFFF;
-            half_operand2 = (half_operand2 & 0x8000)? (0xFFFF0000|half_operand2) : half_operand2;
+            const s16 rm_lo = (rm_val & 0xFFFF);
+            const s16 rm_hi = ((rm_val >> 16) & 0xFFFF);
+            const s16 rn_lo = (rn_val & 0xFFFF);
+            const s16 rn_hi = ((rn_val >> 16) & 0xFFFF);
 
-            long long int product1 = half_rn * half_operand2;
+            const u32 product1 = (rn_lo * rm_lo);
+            const u32 product2 = (rn_hi * rm_hi);
 
-            half_rn = (rn & 0xFFFF0000) >> 16;
-            half_rn = (half_rn & 0x8000)? (0xFFFF0000|half_rn) : half_rn;
+            // SMUAD and SMLAD
+            if (BIT(op2, 1) == 0) {
+                RD = (product1 + product2);
 
-            half_operand2 = (operand2 & 0xFFFF0000) >> 16;
-            half_operand2 = (half_operand2 & 0x8000)? (0xFFFF0000|half_operand2) : half_operand2;
+                if (inst_cream->Ra != 15) {
+                    RD += cpu->Reg[inst_cream->Ra];
 
-            long long int product2 = half_rn * half_operand2;
+                    if (ARMul_AddOverflowQ(product1 + product2, cpu->Reg[inst_cream->Ra]))
+                        cpu->Cpsr |= (1 << 27);
+                }
 
-            long long int signed_ra = (ra & 0x80000000)? (0xFFFFFFFF00000000LL) | ra : ra;
-            long long int result = product1 + product2 + signed_ra;
-            cpu->Reg[inst_cream->Rd] = result & 0xFFFFFFFF;
+                if (ARMul_AddOverflowQ(product1, product2))
+                    cpu->Cpsr |= (1 << 27);
+            }
+            // SMUSD and SMLSD
+            else {
+                RD = (product1 - product2);
 
-            // TODO: FIXME should check Signed overflow
+                if (inst_cream->Ra != 15) {
+                    RD += cpu->Reg[inst_cream->Ra];
+
+                    if (ARMul_AddOverflowQ(product1 - product2, cpu->Reg[inst_cream->Ra]))
+                        cpu->Cpsr |= (1 << 27);
+                }
+            }
         }
+
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(umlal_inst));
+        INC_PC(sizeof(smlad_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
@@ -5452,15 +5481,15 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     SMLALXY_INST:
     SMLALD_INST:
     SMLAW_INST:
-    SMLSD_INST:
     SMLSLD_INST:
     SMMLA_INST:
     SMMLS_INST:
     SMMUL_INST:
-    SMUAD_INST:
+
     SMUL_INST:
     {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
@@ -5528,8 +5557,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         GOTO_NEXT_INST;
     }
 
-    SMUSD_INST:
     SRS_INST:
+
     SSAT_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
