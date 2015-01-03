@@ -348,6 +348,75 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             break;
         }
+
+        case Instruction::OpCodeType::MultiplyAdd:
+        {
+            if (instr.opcode.EffectiveOpCode() == Instruction::OpCode::MAD) {
+                const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.mad.operand_desc_id];
+
+                const float24* src1_ = LookupSourceRegister(instr.mad.src1);
+                const float24* src2_ = LookupSourceRegister(instr.mad.src2);
+                const float24* src3_ = LookupSourceRegister(instr.mad.src3);
+
+                const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
+                const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
+                const bool negate_src3 = ((bool)swizzle.negate_src3 != false);
+
+                float24 src1[4] = {
+                    src1_[(int)swizzle.GetSelectorSrc1(0)],
+                    src1_[(int)swizzle.GetSelectorSrc1(1)],
+                    src1_[(int)swizzle.GetSelectorSrc1(2)],
+                    src1_[(int)swizzle.GetSelectorSrc1(3)],
+                };
+                if (negate_src1) {
+                    src1[0] = src1[0] * float24::FromFloat32(-1);
+                    src1[1] = src1[1] * float24::FromFloat32(-1);
+                    src1[2] = src1[2] * float24::FromFloat32(-1);
+                    src1[3] = src1[3] * float24::FromFloat32(-1);
+                }
+                float24 src2[4] = {
+                    src2_[(int)swizzle.GetSelectorSrc2(0)],
+                    src2_[(int)swizzle.GetSelectorSrc2(1)],
+                    src2_[(int)swizzle.GetSelectorSrc2(2)],
+                    src2_[(int)swizzle.GetSelectorSrc2(3)],
+                };
+                if (negate_src2) {
+                    src2[0] = src2[0] * float24::FromFloat32(-1);
+                    src2[1] = src2[1] * float24::FromFloat32(-1);
+                    src2[2] = src2[2] * float24::FromFloat32(-1);
+                    src2[3] = src2[3] * float24::FromFloat32(-1);
+                }
+                float24 src3[4] = {
+                    src3_[(int)swizzle.GetSelectorSrc3(0)],
+                    src3_[(int)swizzle.GetSelectorSrc3(1)],
+                    src3_[(int)swizzle.GetSelectorSrc3(2)],
+                    src3_[(int)swizzle.GetSelectorSrc3(3)],
+                };
+                if (negate_src3) {
+                    src3[0] = src3[0] * float24::FromFloat32(-1);
+                    src3[1] = src3[1] * float24::FromFloat32(-1);
+                    src3[2] = src3[2] * float24::FromFloat32(-1);
+                    src3[3] = src3[3] * float24::FromFloat32(-1);
+                }
+
+                float24* dest = (instr.mad.dest < 0x08) ? state.output_register_table[4*instr.mad.dest.GetIndex()]
+                            : (instr.mad.dest < 0x10) ? dummy_vec4_float24
+                            : (instr.mad.dest < 0x20) ? &state.temporary_registers[instr.mad.dest.GetIndex()][0]
+                            : dummy_vec4_float24;
+
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = src1[i] * src2[i] + src3[i];
+                }
+            } else {
+                LOG_ERROR(HW_GPU, "Unhandled multiply-add instruction: 0x%02x (%s): 0x%08x",
+                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
+            }
+            break;
+        }
+
         default:
             // Handle each instruction on its own
             switch (instr.opcode) {
