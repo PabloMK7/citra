@@ -53,10 +53,10 @@ int Init() {
     g_sys_core = new ARM_Interpreter();
 
     switch (Settings::values.cpu_core) {
-        case CPU_FastInterpreter:
+        case CPU_Interpreter:
             g_app_core = new ARM_DynCom();
             break;
-        case CPU_Interpreter:
+        case CPU_OldInterpreter:
         default:
             g_app_core = new ARM_Interpreter();
             break;
