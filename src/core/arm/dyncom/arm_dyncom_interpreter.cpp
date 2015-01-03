@@ -3443,8 +3443,6 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr
     return ret;
 }
 
-unsigned int *InstLength;
-
 enum {
     KEEP_GOING,
     FETCH_EXCEPTION
@@ -3528,28 +3526,6 @@ translated:
 }
 
 #define LOG_IN_CLR    skyeye_printf_in_color
-
-int cmp(const void *x, const void *y) {
-    return *(unsigned long long int*)x - *(unsigned long long int *)y;
-}
-
-void InterpreterInitInstLength(unsigned long long int *ptr, size_t size) {
-    int array_size = size / sizeof(void *);
-    unsigned long long int *InstLabel = new unsigned long long int[array_size];
-    memcpy(InstLabel, ptr, size);
-    qsort(InstLabel, array_size, sizeof(void *), cmp);
-    InstLength = new unsigned int[array_size - 4];
-    for (int i = 0; i < array_size - 4; i++) {
-        for (int j = 0; j < array_size; j++) {
-            if (ptr[i] == InstLabel[j]) {
-                InstLength[i] = InstLabel[j + 1] - InstLabel[j];
-                break;
-            }
-        }
-    }
-    for (int i = 0; i < array_size - 4; i++)
-        LOG_DEBUG(Core_ARM11, "[%d]:%d", i, InstLength[i]);
-}
 
 int clz(unsigned int x) {
     int n;
@@ -6593,9 +6569,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     INIT_INST_LENGTH:
     {
-#if defined __GNUC__ || defined __clang__
-        InterpreterInitInstLength((unsigned long long int *)InstLabel, sizeof(InstLabel));
-#endif
         cpu->NumInstrsToExecute = 0;
         return num_instrs;
     }
