@@ -22,6 +22,7 @@ enum class ArchiveIdCode : u32 {
     SystemSaveData      = 0x00000008,
     SDMC                = 0x00000009,
     SDMCWriteOnly       = 0x0000000A,
+    SaveDataCheck       = 0x2345678A,
 };
 
 typedef u64 ArchiveHandle;
@@ -90,7 +91,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
  * @param file_size The size of the new file, filled with zeroes
  * @return File creation result code
  */
-ResultCode CreateFileInArchive(Handle archive_handle, const FileSys::Path& path, u32 file_size);
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size);
 
 /**
  * Create a Directory from an Archive

@@ -16,13 +16,16 @@
 
 namespace FileSys {
 
-/// File system interface to the RomFS archive
-class Archive_RomFS final : public IVFCArchive {
+/// File system interface to the SaveDataCheck archive
+class Archive_SaveDataCheck final : public IVFCArchive {
 public:
-    Archive_RomFS(const Loader::AppLoader& app_loader);
+    Archive_SaveDataCheck(const std::string& mount_point);
 
-    std::string GetName() const override { return "RomFS"; }
-    ResultCode Open(const Path& path) override { return RESULT_SUCCESS; }
+    std::string GetName() const override { return "SaveDataCheck"; }
+    ResultCode Open(const Path& path) override;
+
+private:
+    std::string mount_point;
 };
 
 } // namespace FileSys

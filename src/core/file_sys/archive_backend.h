@@ -88,6 +88,7 @@ public:
     const std::string DebugStr() const {
         switch (GetType()) {
         case Invalid:
+        default:
             return "[Invalid]";
         case Empty:
             return "[Empty]";
@@ -117,6 +118,7 @@ public:
             return {};
         case Invalid:
         case Binary:
+        default:
             // TODO(yuriks): Add assert
             LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
             return {};
@@ -159,6 +161,7 @@ public:
         case Empty:
             return {};
         case Invalid:
+        default:
             // TODO(yuriks): Add assert
             LOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
             return {};

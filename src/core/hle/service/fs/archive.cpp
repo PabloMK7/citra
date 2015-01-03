@@ -10,9 +10,11 @@
 #include "common/make_unique.h"
 #include "common/math_util.h"
 
-#include "core/file_sys/archive_savedata.h"
-#include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_backend.h"
+#include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_romfs.h"
+#include "core/file_sys/archive_savedata.h"
+#include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/hle/service/fs/archive.h"
@@ -50,6 +52,9 @@ enum class FileCommand : u32 {
     SetAttributes   = 0x08070040,
     Close           = 0x08080000,
     Flush           = 0x08090000,
+    SetPriority     = 0x080A0040,
+    GetPriority     = 0x080B0000,
+    OpenLinkFile    = 0x080C0000,
 };
 
 // Command to access directory
@@ -75,12 +80,13 @@ public:
 class File : public Kernel::Session {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-            : path(path), backend(std::move(backend)) {
+            : path(path), backend(std::move(backend)), priority(0) {
     }
 
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
 
     FileSys::Path path; ///< Path of the file
+    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
     ResultVal<bool> SyncRequest() override {
@@ -142,6 +148,27 @@ public:
         {
             LOG_TRACE(Service_FS, "Flush");
             backend->Flush();
+            break;
+        }
+
+        case FileCommand::OpenLinkFile:
+        {
+            LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
+            cmd_buff[3] = GetHandle();
+            break;
+        }
+
+        case FileCommand::SetPriority:
+        {
+            priority = cmd_buff[1];
+            LOG_TRACE(Service_FS, "SetPriority %u", priority);
+            break;
+        }
+
+        case FileCommand::GetPriority:
+        {
+            cmd_buff[2] = priority;
+            LOG_TRACE(Service_FS, "GetPriority");
             break;
         }
 
@@ -327,7 +354,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode CreateFileInArchive(Handle archive_handle, const FileSys::Path& path, u32 file_size) {
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return InvalidHandle(ErrorModule::FS);
@@ -435,6 +462,11 @@ void ArchiveInit() {
     else
         LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s", 
                   sharedextsavedata_directory.c_str());
+
+    // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
+    std::string savedatacheck_directory = FileUtil::GetUserPath(D_SAVEDATACHECK_IDX);
+    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_SaveDataCheck>(savedatacheck_directory);
+    CreateArchive(std::move(savedatacheck_archive), ArchiveIdCode::SaveDataCheck);
 }
 
 /// Shutdown archives
