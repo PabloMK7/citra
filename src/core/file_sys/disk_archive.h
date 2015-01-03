@@ -75,7 +75,7 @@ protected:
     const DiskArchive* archive;
     std::string path;
     Mode mode;
-    FileUtil::IOFile* file;
+    std::unique_ptr<FileUtil::IOFile> file;
 };
 
 class DiskDirectory : public DirectoryBackend {
