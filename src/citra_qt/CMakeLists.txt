@@ -21,22 +21,22 @@ set(SRCS
             )
 
 set(HEADERS
-            config/controller_config.hxx
-            config/controller_config_util.hxx
+            config/controller_config.h
+            config/controller_config_util.h
             config.h
-            debugger/callstack.hxx
-            debugger/disassembler.hxx
-            debugger/graphics.hxx
-            debugger/graphics_breakpoints.hxx
-            debugger/graphics_breakpoints_p.hxx
-            debugger/graphics_cmdlists.hxx
-            debugger/graphics_framebuffer.hxx
-            debugger/ramview.hxx
-            debugger/registers.hxx
-            util/spinbox.hxx
-            bootmanager.hxx
-            hotkeys.hxx
-            main.hxx
+            debugger/callstack.h
+            debugger/disassembler.h
+            debugger/graphics.h
+            debugger/graphics_breakpoints.h
+            debugger/graphics_breakpoints_p.h
+            debugger/graphics_cmdlists.h
+            debugger/graphics_framebuffer.h
+            debugger/ramview.h
+            debugger/registers.h
+            util/spinbox.h
+            bootmanager.h
+            hotkeys.h
+            main.h
             version.h
             )
 

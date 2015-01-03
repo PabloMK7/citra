@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "ramview.hxx"
+#include "ramview.h"
 
 #include "common/common.h"
 #include "core/mem_map.h"

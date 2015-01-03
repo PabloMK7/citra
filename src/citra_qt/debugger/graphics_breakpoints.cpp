@@ -8,8 +8,8 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
-#include "graphics_breakpoints.hxx"
-#include "graphics_breakpoints_p.hxx"
+#include "graphics_breakpoints.h"
+#include "graphics_breakpoints_p.h"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
     : QAbstractListModel(parent), context_weak(debug_context),

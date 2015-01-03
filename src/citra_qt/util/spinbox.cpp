@@ -34,7 +34,7 @@
 
 #include "common/log.h"
 
-#include "spinbox.hxx"
+#include "spinbox.h"
 
 CSpinBox::CSpinBox(QWidget* parent) : QAbstractSpinBox(parent), base(10), min_value(-100), max_value(100), value(0), num_digits(0)
 {

@@ -4,7 +4,7 @@
 
 #include <QKeySequence>
 #include <QSettings>
-#include "hotkeys.hxx"
+#include "hotkeys.h"
 #include <map>
 
 struct Hotkey
