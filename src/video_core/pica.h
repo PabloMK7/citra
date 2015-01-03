@@ -118,8 +118,9 @@ struct Regs {
 
     struct TextureConfig {
         enum WrapMode : u32 {
-            ClampToEdge = 0,
-            Repeat      = 2,
+            ClampToEdge    = 0,
+            Repeat         = 2,
+            MirroredRepeat = 3,
         };
 
         INSERT_PADDING_WORDS(0x1);
