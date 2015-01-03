@@ -303,7 +303,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
+                    // TODO: What's the difference between these two?
                     case Source::PrimaryColor:
+                    case Source::PrimaryFragmentColor:
                         return primary_color;
 
                     case Source::Texture0:
