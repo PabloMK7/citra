@@ -21,6 +21,10 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
     u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
+    // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
+    // NOTE: The framebuffer height register contains the actual FB height minus one.
+    y = (registers.framebuffer.height - y);
+
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
     {
@@ -39,6 +43,8 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
     u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
+    y = (registers.framebuffer.height - y);
+
     u32 value = *(color_buffer_u32 + x + y * registers.framebuffer.GetWidth());
     Math::Vec4<u8> ret;
     ret.a() = value >> 24;
@@ -52,6 +58,8 @@ static u32 GetDepth(int x, int y) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
     u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
+    y = (registers.framebuffer.height - y);
+
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
@@ -59,6 +67,8 @@ static u32 GetDepth(int x, int y) {
 static void SetDepth(int x, int y, u16 value) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
     u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
+
+    y = (registers.framebuffer.height - y);
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
