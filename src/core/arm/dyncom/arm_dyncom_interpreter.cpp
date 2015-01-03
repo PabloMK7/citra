@@ -871,6 +871,8 @@ typedef struct _mvn_inst {
 typedef struct _rev_inst {
     unsigned int Rd;
     unsigned int Rm;
+    unsigned int op1;
+    unsigned int op2;
 } rev_inst;
 
 typedef struct _rsb_inst {
@@ -2093,36 +2095,33 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(qsubaddx)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(qadd8)(inst, index);
 }
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
-    rev_inst *inst_cream = (rev_inst *)inst_base->component;
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
+    rev_inst* const inst_cream = (rev_inst*)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->Rm   = BITS(inst,  0,  3);
-    inst_cream->Rd   = BITS(inst, 12, 15);
+    inst_cream->Rm  = BITS(inst,  0,  3);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+    inst_cream->op1 = BITS(inst, 20, 22);
+    inst_cream->op2 = BITS(inst, 5, 7);
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(rev16)(unsigned int inst, int index){
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
-    rev_inst *inst_cream = (rev_inst *)inst_base->component;
-
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
-    inst_base->load_r15 = 0;
-
-    inst_cream->Rm   = BITS(inst,  0,  3);
-    inst_cream->Rd   = BITS(inst, 12, 15);
-
-    return inst_base;
+ARM_INST_PTR INTERPRETER_TRANSLATE(rev16)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(rev)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("REVSH"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index)
+{
+     return INTERPRETER_TRANSLATE(rev)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("RFE"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
 {
@@ -5090,39 +5089,40 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     QDADD_INST:
     QDSUB_INST:
     QSUB_INST:
+
     REV_INST:
+    REV16_INST:
+    REVSH_INST:
     {
-        rev_inst *inst_cream = (rev_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            RD = ((RM & 0xff) << 24) |
-                (((RM >> 8) & 0xff) << 16) |
-                (((RM >> 16) & 0xff) << 8) |
-                ((RM >> 24) & 0xff);
-            if (inst_cream->Rm == 15) {
-                LOG_ERROR(Core_ARM11, "invalid operand for REV");
-                CITRA_IGNORE_EXIT(-1);
+        
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            rev_inst* const inst_cream = (rev_inst*)inst_base->component;
+
+            const u8 op1 = inst_cream->op1;
+            const u8 op2 = inst_cream->op2;
+
+            // REV
+            if (op1 == 0x03 && op2 == 0x01) {
+                RD = ((RM & 0xFF) << 24) | (((RM >> 8) & 0xFF) << 16) | (((RM >> 16) & 0xFF) << 8) | ((RM >> 24) & 0xFF);
+            }
+            // REV16
+            else if (op1 == 0x03 && op2 == 0x05) {
+                RD = ((RM & 0xFF) << 8) | ((RM & 0xFF00) >> 8) | ((RM & 0xFF0000) << 8) | ((RM & 0xFF000000) >> 8);
+            }
+            // REVSH
+            else if (op1 == 0x07 && op2 == 0x05) {
+                RD = ((RM & 0xFF) << 8) | ((RM & 0xFF00) >> 8);
+                if (RD & 0x8000)
+                    RD |= 0xffff0000;
             }
         }
+
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(rev_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
-    REV16_INST:
-    {
-        rev_inst *inst_cream = (rev_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            RD = (BITS(RM, 0, 7) << 8) | 
-                BITS(RM, 8, 15) |
-                (BITS(RM, 16, 23) << 24) |
-                (BITS(RM, 24, 31) << 16);
-        }
-        cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(rev_inst));
-        FETCH_INST;
-        GOTO_NEXT_INST;
-    }
-    REVSH_INST:
+
     RFE_INST:
     RSB_INST:
     {
