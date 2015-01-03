@@ -63,7 +63,7 @@ enum class DirectoryCommand : u32 {
 class Archive {
 public:
     Archive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code)
-            : backend(std::move(backend)), id_code(id_code) {
+            : id_code(id_code), backend(std::move(backend)) {
     }
 
     std::string GetName() const { return "Archive: " + backend->GetName(); }
@@ -75,7 +75,7 @@ public:
 class File : public Kernel::Session {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-            : backend(std::move(backend)), path(path) {
+            : path(path), backend(std::move(backend)) {
     }
 
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
@@ -160,7 +160,7 @@ public:
 class Directory : public Kernel::Session {
 public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
-            : backend(std::move(backend)), path(path) {
+            : path(path), backend(std::move(backend)) {
     }
 
     std::string GetName() const override { return "Directory: " + path.DebugStr(); }
