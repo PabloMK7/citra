@@ -419,6 +419,25 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
+                    case Operation::MultiplyThenAdd:
+                    {
+                        auto result = (input[0] * input[1] + 255 * input[2].Cast<int>()) / 255;
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        return result.Cast<u8>();
+                    }
+
+                    case Operation::AddThenMultiply:
+                    {
+                        auto result = input[0] + input[1];
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        result = (result * input[2].Cast<int>()) / 255;
+                        return result.Cast<u8>();
+                    }
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         UNIMPLEMENTED();
@@ -442,6 +461,12 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     case Operation::Subtract:
                         return std::max(0, (int)input[0] - (int)input[1]);
+
+                    case Operation::MultiplyThenAdd:
+                        return std::min(255, (input[0] * input[1] + 255 * input[2]) / 255);
+
+                    case Operation::AddThenMultiply:
+                        return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
