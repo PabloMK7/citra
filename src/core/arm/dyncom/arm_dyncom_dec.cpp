@@ -136,7 +136,6 @@ const ISEITEM arm_instruction[] = {
     { "pkhbt", 2, 6, 20, 27, 0x00000068, 4, 6, 0x00000001 },
     { "smul", 3, 4, 20, 27, 0x00000016, 7, 7, 0x00000001, 4, 4, 0x00000000 },
     { "smlalxy", 3, 4, 20, 27, 0x00000014, 7, 7, 0x00000001, 4, 4, 0x00000000 },
-    //	{"smlal"	,  2	,  4	, 21, 27, 0x00000007,  4,  7, 0x00000009},
     { "smla", 3, 4, 20, 27, 0x00000010, 7, 7, 0x00000001, 4, 4, 0x00000000 },
     { "mcrr", 1, 6, 20, 27, 0x000000c4 },
     { "mrrc", 1, 6, 20, 27, 0x000000c5 },
@@ -194,6 +193,10 @@ const ISEITEM arm_instruction[] = {
     { "ldc", 2, 0, 25, 27, 0x00000006, 20, 20, 0x00000001 },
     { "swi", 1, 0, 24, 27, 0x0000000f },
     { "bbl", 1, 0, 25, 27, 0x00000005 },
+    { "ldrexd", 2, ARMV6K, 20, 27, 0x0000001B, 4, 7, 0x00000009 },
+    { "strexd", 2, ARMV6K, 20, 27, 0x0000001A, 4, 7, 0x00000009 },
+    { "ldrexh", 2, ARMV6K, 20, 27, 0x0000001F, 4, 7, 0x00000009 },
+    { "strexh", 2, ARMV6K, 20, 27, 0x0000001E, 4, 7, 0x00000009 },
 };
 
 const ISEITEM arm_exclusion_code[] = {
@@ -383,6 +386,11 @@ const ISEITEM arm_exclusion_code[] = {
     { "ldc", 0, 0, 0 },
     { "swi", 0, 0, 0 },
     { "bbl", 0, 0, 0 },
+    { "ldrexd", 0, ARMV6K, 0 },
+    { "strexd", 0, ARMV6K, 0 },
+    { "ldrexh", 0, ARMV6K, 0 },
+    { "strexh", 0, ARMV6K, 0 },
+
     { "bl_1_thumb", 0, INVALID, 0 },    // Should be table[-4]
     { "bl_2_thumb", 0, INVALID, 0 },    // Should be located at the end of the table[-3]
     { "blx_1_thumb", 0, INVALID, 0 },   // Should be located at table[-2]
@@ -395,6 +403,7 @@ int decode_arm_instr(uint32_t instr, int32_t *idx) {
     int ret = DECODE_FAILURE;
     int i = 0;
     int instr_slots = sizeof(arm_instruction) / sizeof(ISEITEM);
+
     for (i = 0; i < instr_slots; i++) {
         n = arm_instruction[i].attribute_value;
         base = 0;

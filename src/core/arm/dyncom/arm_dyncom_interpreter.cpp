@@ -622,9 +622,7 @@ void LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int 
     }
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int start_addr = rn - count * 4 + 4;
-    unsigned int end_addr   = rn;
 
-    virt_addr = end_addr;
     virt_addr = start_addr;
 
     if (CondPassed(cpu, BITS(inst, 28, 31)) && BIT(inst, 21)) {
@@ -1104,10 +1102,10 @@ typedef struct _blx_1_thumb {
 }blx_1_thumb;
 
 typedef struct _pkh_inst {
-    u32 Rm;
-    u32 Rn;
-    u32 Rd;
-    u8 imm;
+    unsigned int Rm;
+    unsigned int Rn;
+    unsigned int Rd;
+    unsigned char imm;
 } pkh_inst;
 
 typedef arm_inst * ARM_INST_PTR;
@@ -1740,40 +1738,31 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index)
 
     return inst_base;
 }
-
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrex)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+    generic_arm_inst *inst_cream = (generic_arm_inst *)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = (BITS(inst, 12, 15) == 15) ? INDIRECT_BRANCH : NON_BRANCH; // Branch if dest is R15
 
-    inst_cream->inst = inst;
-    //inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->Rn = BITS(inst, 16, 19);
+    inst_cream->Rd = BITS(inst, 12, 15);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrexb)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-
-    inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
-
-    inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
-
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
-    return inst_base;
+    return INTERPRETER_TRANSLATE(ldrex)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(ldrexh)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(ldrex)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(ldrexd)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(ldrex)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrh)(unsigned int inst, int index)
 {
@@ -2623,37 +2612,30 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(strex)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+    generic_arm_inst *inst_cream = (generic_arm_inst *)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
-    inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->Rn  = BITS(inst, 16, 19);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+    inst_cream->Rm  = BITS(inst, 0,   3);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(strexb)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-
-    inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
-
-    inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
-
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
-    return inst_base;
+    return INTERPRETER_TRANSLATE(strex)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(strexh)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(strex)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(strexd)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(strex)(inst, index);
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(strh)(unsigned int inst, int index)
 {
@@ -3355,6 +3337,11 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(ldc),
     INTERPRETER_TRANSLATE(swi),
     INTERPRETER_TRANSLATE(bbl),
+    INTERPRETER_TRANSLATE(ldrexd),
+    INTERPRETER_TRANSLATE(strexd),
+    INTERPRETER_TRANSLATE(ldrexh),
+    INTERPRETER_TRANSLATE(strexh),
+
     // All the thumb instructions should be placed the end of table
     INTERPRETER_TRANSLATE(b_2_thumb), 
     INTERPRETER_TRANSLATE(b_cond_thumb), 
@@ -3551,6 +3538,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #define CRm             inst_cream->crm
     #define CP15_REG(n)     cpu->CP15[CP15(n)]
     #define RD              cpu->Reg[inst_cream->Rd]
+    #define RD2             cpu->Reg[inst_cream->Rd + 1]
     #define RN              cpu->Reg[inst_cream->Rn]
     #define RM              cpu->Reg[inst_cream->Rm]
     #define RS              cpu->Reg[inst_cream->Rs]
@@ -3762,14 +3750,18 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     case 182: goto LDC_INST; \
     case 183: goto SWI_INST; \
     case 184: goto BBL_INST; \
-    case 185: goto B_2_THUMB ; \
-    case 186: goto B_COND_THUMB ; \
-    case 187: goto BL_1_THUMB ; \
-    case 188: goto BL_2_THUMB ; \
-    case 189: goto BLX_1_THUMB ; \
-    case 190: goto DISPATCH; \
-    case 191: goto INIT_INST_LENGTH; \
-    case 192: goto END; \
+    case 185: goto LDREXD_INST; \
+    case 186: goto STREXD_INST; \
+    case 187: goto LDREXH_INST; \
+    case 188: goto STREXH_INST; \
+    case 189: goto B_2_THUMB ; \
+    case 190: goto B_COND_THUMB ; \
+    case 191: goto BL_1_THUMB ; \
+    case 192: goto BL_2_THUMB ; \
+    case 193: goto BLX_1_THUMB ; \
+    case 194: goto DISPATCH; \
+    case 195: goto INIT_INST_LENGTH; \
+    case 196: goto END; \
     }
 #endif
 
@@ -3830,8 +3822,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         &&MLA_INST,&&SSAT_INST,&&USAT_INST,&&MRS_INST,&&MSR_INST,&&AND_INST,&&BIC_INST,&&LDM_INST,&&EOR_INST,&&ADD_INST,&&RSB_INST,&&RSC_INST,
         &&SBC_INST,&&ADC_INST,&&SUB_INST,&&ORR_INST,&&MVN_INST,&&MOV_INST,&&STM_INST,&&LDM_INST,&&LDRSH_INST,&&STM_INST,&&LDM_INST,&&LDRSB_INST,
         &&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,&&MSR_INST,
-        &&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST,&&SWI_INST,&&BBL_INST,&&B_2_THUMB, &&B_COND_THUMB, 
-        &&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,&&INIT_INST_LENGTH,&&END
+        &&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST,&&SWI_INST,&&BBL_INST,&&LDREXD_INST,
+        &&STREXD_INST,&&LDREXH_INST,&&STREXH_INST,&&B_2_THUMB, &&B_COND_THUMB,&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,
+        &&INIT_INST_LENGTH,&&END
         };
 #endif
     arm_inst * inst_base;
@@ -4432,45 +4425,84 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
     LDREX_INST:
     {
-        ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
+            unsigned int read_addr = RN;
 
-            unsigned int value = Memory::Read32(addr);
-
-            add_exclusive_addr(cpu, addr);
+            add_exclusive_addr(cpu, read_addr);
             cpu->exclusive_state = 1;
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
+            RD = Memory::Read32(read_addr);
+            if (inst_cream->Rd == 15) {
+                INC_PC(sizeof(generic_arm_inst));
                 goto DISPATCH;
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(ldst_inst));
+        INC_PC(sizeof(generic_arm_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
     LDREXB_INST:
     {
-        ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
+            unsigned int read_addr = RN;
 
-            unsigned int value = Memory::Read8(addr);
-
-            add_exclusive_addr(cpu, addr);
+            add_exclusive_addr(cpu, read_addr);
             cpu->exclusive_state = 1;
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
+            RD = Memory::Read8(read_addr);
+            if (inst_cream->Rd == 15) {
+                INC_PC(sizeof(generic_arm_inst));
                 goto DISPATCH;
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(ldst_inst));
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+    LDREXH_INST:
+    {
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+            unsigned int read_addr = RN;
+
+            add_exclusive_addr(cpu, read_addr);
+            cpu->exclusive_state = 1;
+
+            RD = Memory::Read16(read_addr);
+            if (inst_cream->Rd == 15) {
+                INC_PC(sizeof(generic_arm_inst));
+                goto DISPATCH;
+            }
+        }
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+    LDREXD_INST:
+    {
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+            unsigned int read_addr = RN;
+
+            add_exclusive_addr(cpu, read_addr);
+            cpu->exclusive_state = 1;
+            // TODO(bunnei): Do we need to also make [read_addr + 4] exclusive?
+
+            RD = Memory::Read32(read_addr);
+            RD2 = Memory::Read32(read_addr + 4);
+
+            if (inst_cream->Rd == 15) {
+                INC_PC(sizeof(generic_arm_inst));
+                goto DISPATCH;
+            }
+        }
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
@@ -5762,46 +5794,96 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     STREX_INST:
     {
-        ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)];
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
 
-            int dest_reg = BITS(inst_cream->inst, 12, 15);
-            if((exclusive_detect(cpu, addr) == 0) && (cpu->exclusive_state == 1)){
-                remove_exclusive(cpu, addr);
-                cpu->Reg[dest_reg] = 0;
+        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+            unsigned int write_addr = cpu->Reg[inst_cream->Rn];
+
+            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
+                remove_exclusive(cpu, write_addr);
                 cpu->exclusive_state = 0;
 
-                Memory::Write32(addr, value);
+                Memory::Write32(write_addr, cpu->Reg[inst_cream->Rm]);
+                RD = 0;
             } else {
                 // Failed to write due to mutex access
-                cpu->Reg[dest_reg] = 1;
+                RD = 1;
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(ldst_inst));
+        INC_PC(sizeof(generic_arm_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
     STREXB_INST:
     {
-        ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            addr = cpu->Reg[BITS(inst_cream->inst, 16, 19)];
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 0, 3)] & 0xff;
-            int dest_reg = BITS(inst_cream->inst, 12, 15);
-            if((exclusive_detect(cpu, addr) == 0) && (cpu->exclusive_state == 1)){
-                remove_exclusive(cpu, addr);
-                cpu->Reg[dest_reg] = 0;
+            unsigned int write_addr = cpu->Reg[inst_cream->Rn];
+
+            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
+                remove_exclusive(cpu, write_addr);
                 cpu->exclusive_state = 0;
-                Memory::Write8(addr, value);
+
+                Memory::Write8(write_addr, cpu->Reg[inst_cream->Rm]);
+                RD = 0;
             } else {
-                cpu->Reg[dest_reg] = 1;
+                // Failed to write due to mutex access
+                RD = 1;
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(ldst_inst));
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+    STREXD_INST:
+    {
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+
+        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+            unsigned int write_addr = cpu->Reg[inst_cream->Rn];
+
+            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
+                remove_exclusive(cpu, write_addr);
+                cpu->exclusive_state = 0;
+                // TODO(bunnei): Remove exclusive from [write_addr + 4] if we implement this in LDREXD
+
+                Memory::Write32(write_addr, cpu->Reg[inst_cream->Rm]);
+                Memory::Write32(write_addr + 4, cpu->Reg[inst_cream->Rm + 1]);
+                RD = 0;
+            }
+            else {
+                // Failed to write due to mutex access
+                RD = 1;
+            }
+        }
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+    STREXH_INST:
+    {
+        generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
+
+        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+            unsigned int write_addr = cpu->Reg[inst_cream->Rn];
+
+            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
+                remove_exclusive(cpu, write_addr);
+                cpu->exclusive_state = 0;
+
+                Memory::Write16(write_addr, cpu->Reg[inst_cream->Rm]);
+                RD = 0;
+            } else {
+                // Failed to write due to mutex access
+                RD = 1;
+            }
+        }
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
