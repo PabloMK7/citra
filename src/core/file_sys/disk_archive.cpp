@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/make_unique.h"
 
 #include "core/file_sys/disk_archive.h"
 #include "core/settings.h"
@@ -17,10 +18,10 @@ namespace FileSys {
 
 std::unique_ptr<FileBackend> DiskArchive::OpenFile(const Path& path, const Mode mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
-    DiskFile* file = new DiskFile(this, path, mode);
+    auto file = Common::make_unique<DiskFile>(this, path, mode);
     if (!file->Open())
         return nullptr;
-    return std::unique_ptr<FileBackend>(file);
+    return std::move(file);
 }
 
 bool DiskArchive::DeleteFile(const Path& path) const {
@@ -66,10 +67,10 @@ bool DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) c
 
 std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
-    DiskDirectory* directory = new DiskDirectory(this, path);
+    auto directory = Common::make_unique<DiskDirectory>(this, path);
     if (!directory->Open())
         return nullptr;
-    return std::unique_ptr<DirectoryBackend>(directory);
+    return std::move(directory);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ bool DiskFile::Open() {
     // Open the file in binary mode, to avoid problems with CR/LF on Windows systems
     mode_string += "b";
 
-    file = new FileUtil::IOFile(path, mode_string.c_str());
+    file = Common::make_unique<FileUtil::IOFile>(path, mode_string.c_str());
     return true;
 }
 
