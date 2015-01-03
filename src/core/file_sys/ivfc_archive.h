@@ -58,8 +58,6 @@ private:
 
 class IVFCDirectory : public DirectoryBackend {
 public:
-    IVFCDirectory() { }
-
     bool Open() override { return false; }
     u32 Read(const u32 count, Entry* entries) override { return 0; }
     bool Close() const override { return false; }
