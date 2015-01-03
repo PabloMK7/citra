@@ -51,6 +51,17 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
             HLE::Reschedule(__func__);
         }
         break;
+    
+    case ArbitrationType::DecrementAndWaitIfLessThan:
+    {
+        s32 memory_value = Memory::Read32(address) - 1;
+        Memory::Write32(address, memory_value);
+        if (memory_value <= value) {
+            Kernel::WaitCurrentThread(WAITTYPE_ARB, handle, address);
+            HLE::Reschedule(__func__);
+        }
+        break;
+    }
 
     default:
         LOG_ERROR(Kernel, "unknown type=%d", type);
