@@ -56,10 +56,6 @@ public:
     DiskFile();
     DiskFile(const DiskArchive* archive, const Path& path, const Mode mode);
 
-    ~DiskFile() override {
-        Close();
-    }
-
     bool Open() override;
     size_t Read(const u64 offset, const u32 length, u8* buffer) const override;
     size_t Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const override;
