@@ -2358,13 +2358,41 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
         inst_base->load_r15 = 1;
     return inst_base;
 }
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLALD"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLAW"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlsld)(unsigned int inst, int index)  { UNIMPLEMENTED_INSTRUCTION("SMLSLD"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLA"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMLS"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMMUL"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
+    smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->m   = BIT(inst, 5);
+    inst_cream->Ra  = BITS(inst, 12, 15);
+    inst_cream->Rm  = BITS(inst, 8, 11);
+    inst_cream->Rn  = BITS(inst, 0, 3);
+    inst_cream->Rd  = BITS(inst, 16, 19);
+    inst_cream->op1 = BITS(inst, 20, 22);
+    inst_cream->op2 = BITS(inst, 5, 7);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmls)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smmla)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(smmul)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(smmla)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smul_inst));
@@ -5494,9 +5522,42 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     SMLALD_INST:
     SMLAW_INST:
     SMLSLD_INST:
+
     SMMLA_INST:
     SMMLS_INST:
     SMMUL_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+            const u32 rm_val = RM;
+            const u32 rn_val = RN;
+            const bool do_round = (inst_cream->m == 1);
+
+            // Assume SMMUL by default.
+            s64 result = (s64)(s32)rn_val * (s64)(s32)rm_val;
+
+            if (inst_cream->Ra != 15) {
+                const u32 ra_val = cpu->Reg[inst_cream->Ra];
+
+                // SMMLA, otherwise SMMLS
+                if (BIT(inst_cream->op2, 1) == 0)
+                    result += ((s64)ra_val << 32);
+                else
+                    result = ((s64)ra_val << 32) - result;
+            }
+
+            if (do_round)
+                result += 0x80000000;
+
+            RD = ((result >> 32) & 0xFFFFFFFF);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(smlad_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     SMUL_INST:
     {
