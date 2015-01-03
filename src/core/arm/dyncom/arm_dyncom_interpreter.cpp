@@ -2369,7 +2369,25 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
 }
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("SMLAW"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
+    smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->Ra = BITS(inst, 12, 15);
+    inst_cream->Rm = BITS(inst, 8, 11);
+    inst_cream->Rn = BITS(inst, 0, 3);
+    inst_cream->Rd = BITS(inst, 16, 19);
+    inst_cream->m  = BIT(inst, 6);
+
+    return inst_base;
+}
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)
 {
@@ -5552,7 +5570,31 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SMLALXY_INST:
+
     SMLAW_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+            const u32 rm_val = RM;
+            const u32 rn_val = RN;
+            const u32 ra_val = cpu->Reg[inst_cream->Ra];
+            const bool high = (inst_cream->m == 1);
+
+            const s16 operand2 = (high) ? ((rm_val >> 16) & 0xFFFF) : (rm_val & 0xFFFF);
+            const s64 result = (s64)(s32)rn_val * (s64)(s32)operand2 + ((s64)(s32)ra_val << 16);
+
+            RD = (result & (0xFFFFFFFFFFFFFFFFLL >> 15)) >> 16;
+
+            if ((result >> 16) != (s32)RD)
+                cpu->Cpsr |= (1 << 27);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(smlad_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     SMLALD_INST:
     SMLSLD_INST:
