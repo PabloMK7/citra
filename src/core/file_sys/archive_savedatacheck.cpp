@@ -13,7 +13,7 @@
 namespace FileSys {
 
 static std::string GetSaveDataCheckContainerPath(const std::string& mount_point) {
-    return Common::StringFromFormat("%stitle/", mount_point.c_str(), ID0);
+    return Common::StringFromFormat("%s%s/title", mount_point.c_str(), SYSTEM_ID.c_str());
 }
 
 static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high, u32 low) {

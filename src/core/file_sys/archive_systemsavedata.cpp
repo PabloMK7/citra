@@ -24,7 +24,7 @@ static std::string GetSystemSaveDataPath(const std::string& mount_point, u64 sav
 }
 
 static std::string GetSystemSaveDataContainerPath(const std::string& mount_point) {
-    return Common::StringFromFormat("%sdata/%32x/sysdata/", mount_point.c_str(), ID0);
+    return Common::StringFromFormat("%sdata/%s/sysdata/", mount_point.c_str(), SYSTEM_ID.c_str());
 }
 
 Archive_SystemSaveData::Archive_SystemSaveData(const std::string& mount_point, u64 save_id)

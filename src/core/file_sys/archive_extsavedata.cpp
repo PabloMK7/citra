@@ -27,9 +27,10 @@ static std::string GetExtSaveDataPath(const std::string& mount_point, const Path
 
 static std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
-        return Common::StringFromFormat("%sdata/%32x/extdata/", mount_point.c_str(), ID0);
+        return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(), SYSTEM_ID.c_str());
     
-    return Common::StringFromFormat("%sNintendo 3DS/%32x/%32x/extdata/", mount_point.c_str(), ID0, ID1);
+    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/extdata/", mount_point.c_str(), 
+            SYSTEM_ID.c_str(), SDCARD_ID.c_str());
 }
 
 Archive_ExtSaveData::Archive_ExtSaveData(const std::string& mount_location, bool shared)

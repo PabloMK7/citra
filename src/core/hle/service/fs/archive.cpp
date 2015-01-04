@@ -36,8 +36,8 @@ namespace std {
     };
 }
 
-const u32 SYSTEM_ID = 0;
-const u32 SDCARD_ID = 0;
+const std::string SYSTEM_ID = "00000000000000000000000000000000";
+const std::string SDCARD_ID = "00000000000000000000000000000000";
 
 namespace Service {
 namespace FS {
