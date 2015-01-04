@@ -13,6 +13,7 @@
 
 #include "core/core.h"
 #include "core/settings.h"
+#include "core/system.h"
 
 #include "video_core/debug_utils/debug_utils.h"
 
@@ -89,6 +90,8 @@ void EmuThread::Stop()
         }
     }
     LOG_INFO(Frontend, "EmuThread stopped");
+
+    System::Shutdown();
 }
 
 
