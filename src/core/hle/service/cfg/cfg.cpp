@@ -161,9 +161,9 @@ ResultCode FormatConfig() {
 void CFGInit() {
     // TODO(Subv): In the future we should use the FS service to query this archive, 
     // currently it is not possible because you can only have one open archive of the same type at any time
-    std::string syssavedata_directory = FileUtil::GetUserPath(D_SYSSAVEDATA_IDX);
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
     cfg_system_save_data = Common::make_unique<FileSys::Archive_SystemSaveData>(
-                           syssavedata_directory, CFG_SAVE_ID);
+                           nand_directory, CFG_SAVE_ID);
     if (!cfg_system_save_data->Initialize()) {
         LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
         return;

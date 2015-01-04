@@ -5,13 +5,24 @@
 #include "common/file_util.h"
 
 #include "core/file_sys/archive_savedatacheck.h"
+#include "core/hle/service/fs/archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
 
 namespace FileSys {
 
-Archive_SaveDataCheck::Archive_SaveDataCheck(const std::string& mount_loc) : mount_point(mount_loc) {
+static std::string GetSaveDataCheckContainerPath(const std::string& mount_point) {
+    return Common::StringFromFormat("%stitle/", mount_point.c_str(), ID0);
+}
+
+static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high, u32 low) {
+    return Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs",
+            mount_point.c_str(), high, low);
+}
+
+Archive_SaveDataCheck::Archive_SaveDataCheck(const std::string& mount_loc) :
+mount_point(GetSaveDataCheckContainerPath(mount_loc)) {
 }
 
 ResultCode Archive_SaveDataCheck::Open(const Path& path) {
@@ -23,8 +34,7 @@ ResultCode Archive_SaveDataCheck::Open(const Path& path) {
     // this archive again with a different path, will corrupt the previously open file.
     auto vec = path.AsBinary();
     const u32* data = reinterpret_cast<u32*>(vec.data());
-    std::string file_path = Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs", 
-            mount_point.c_str(), data[1], data[0]);
+    std::string file_path = GetSaveDataCheckPath(mount_point, data[1], data[0]);
     FileUtil::IOFile file(file_path, "rb");
 
     std::fill(raw_data.begin(), raw_data.end(), 0);

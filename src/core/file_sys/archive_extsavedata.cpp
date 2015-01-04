@@ -9,6 +9,7 @@
 
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/disk_archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,9 +25,16 @@ static std::string GetExtSaveDataPath(const std::string& mount_point, const Path
     return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_high, save_low);
 }
 
-Archive_ExtSaveData::Archive_ExtSaveData(const std::string& mount_point)
-        : DiskArchive(mount_point), concrete_mount_point(mount_point) {
-    LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", this->mount_point.c_str());
+static std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
+    if (shared)
+        return Common::StringFromFormat("%sdata/%32x/extdata/", mount_point.c_str(), ID0);
+    
+    return Common::StringFromFormat("%sNintendo 3DS/%32x/%32x/extdata/", mount_point.c_str(), ID0, ID1);
+}
+
+Archive_ExtSaveData::Archive_ExtSaveData(const std::string& mount_location, bool shared)
+    : DiskArchive(GetExtDataContainerPath(mount_location, shared)), concrete_mount_point(mount_point) {
+    LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
 }
 
 bool Archive_ExtSaveData::Initialize() {

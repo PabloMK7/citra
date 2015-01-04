@@ -9,6 +9,7 @@
 
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/disk_archive.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,8 +23,12 @@ static std::string GetSystemSaveDataPath(const std::string& mount_point, u64 sav
     return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_low, save_high);
 }
 
+static std::string GetSystemSaveDataContainerPath(const std::string& mount_point) {
+    return Common::StringFromFormat("%sdata/%32x/sysdata/", mount_point.c_str(), ID0);
+}
+
 Archive_SystemSaveData::Archive_SystemSaveData(const std::string& mount_point, u64 save_id)
-        : DiskArchive(GetSystemSaveDataPath(mount_point, save_id)) {
+        : DiskArchive(GetSystemSaveDataPath(GetSystemSaveDataContainerPath(mount_point), save_id)) {
     LOG_INFO(Service_FS, "Directory %s set as SystemSaveData.", this->mount_point.c_str());
 }
 

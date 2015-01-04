@@ -36,6 +36,9 @@ namespace std {
     };
 }
 
+const u32 SYSTEM_ID = 0;
+const u32 SDCARD_ID = 0;
+
 namespace Service {
 namespace FS {
 
@@ -437,6 +440,7 @@ void ArchiveInit() {
     // archive type is SDMC, so it is the only one getting exposed.
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
     auto sdmc_archive = Common::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
     if (sdmc_archive->Initialize())
         CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
@@ -444,28 +448,24 @@ void ArchiveInit() {
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
     
     // Create the SaveData archive
-    std::string savedata_directory = FileUtil::GetUserPath(D_SAVEDATA_IDX);
-    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(savedata_directory);
+    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(sdmc_directory);
     CreateArchive(std::move(savedata_archive), ArchiveIdCode::SaveData);
 
-    std::string extsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
-    auto extsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(extsavedata_directory);
+    auto extsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(sdmc_directory, false);
     if (extsavedata_archive->Initialize())
         CreateArchive(std::move(extsavedata_archive), ArchiveIdCode::ExtSaveData);
     else
-        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_directory.c_str());
+        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_archive->GetMountPoint().c_str());
 
-    std::string sharedextsavedata_directory = FileUtil::GetUserPath(D_SHAREDEXTSAVEDATA);
-    auto sharedextsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(sharedextsavedata_directory);
+    auto sharedextsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(nand_directory, true);
     if (sharedextsavedata_archive->Initialize())
         CreateArchive(std::move(sharedextsavedata_archive), ArchiveIdCode::SharedExtSaveData);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s", 
-                  sharedextsavedata_directory.c_str());
+            sharedextsavedata_archive->GetMountPoint().c_str());
 
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
-    std::string savedatacheck_directory = FileUtil::GetUserPath(D_SAVEDATACHECK_IDX);
-    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_SaveDataCheck>(savedatacheck_directory);
+    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_SaveDataCheck>(nand_directory);
     CreateArchive(std::move(savedatacheck_archive), ArchiveIdCode::SaveDataCheck);
 }
 

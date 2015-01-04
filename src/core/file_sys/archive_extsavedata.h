@@ -17,7 +17,7 @@ namespace FileSys {
 /// File system interface to the ExtSaveData archive
 class Archive_ExtSaveData final : public DiskArchive {
 public:
-    Archive_ExtSaveData(const std::string& mount_point);
+    Archive_ExtSaveData(const std::string& mount_point, bool shared);
 
     /**
      * Initialize the archive.

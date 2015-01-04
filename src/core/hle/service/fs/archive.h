@@ -10,6 +10,11 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
+/// The unique system identifier hash, also known as ID0
+extern const u32 SYSTEM_ID;
+/// The scrambled SD card CID, also known as ID1
+extern const u32 SDCARD_ID;
+
 namespace Service {
 namespace FS {
 
