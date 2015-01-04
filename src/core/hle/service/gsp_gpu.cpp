@@ -291,8 +291,11 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         // Update framebuffer information if requested
         for (int screen_id = 0; screen_id < 2; ++screen_id) {
             FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
-            if (info->is_dirty)
+
+            if (info->is_dirty) {
                 SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+                info->framebuffer_info->active_fb = info->framebuffer_info->active_fb ^ 1;
+            }
 
             info->is_dirty = false;
         }
