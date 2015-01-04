@@ -51,6 +51,8 @@ int __cdecl main(int argc, char **argv) {
         Core::RunLoop();
     }
 
+    System::Shutdown();
+
     delete emu_window;
 
     return 0;
