@@ -340,7 +340,6 @@ ARMword ARMul_Debug(ARMul_State * state, ARMword pc, ARMword instr)
         mem_Dbugdump();
     }*/
 
-
     /*if (pc == 0x0022D168)
     {
     int j = 0;
@@ -1117,7 +1116,6 @@ ARMul_Emulate26 (ARMul_State * state)
 
 //chy 2003-08-24 now #if 0 .... #endif  process cp14, cp15.reg14, I disable it...
 
-
         /* Actual execution of instructions begins here.  */
         /* If the condition codes don't match, stop here.  */
         if (temp) {
@@ -1178,8 +1176,6 @@ mainswitch:
                         tmp_rd = ((ARMword)(data << (31 - lsb)) >> (31 - lsb));
                         dst = ((data >> msb) << (msb - lsb));
                         dst = (dst << lsb) | tmp_rd;
-                        /*SKYEYE_DBG("BFC instr: msb = %d, lsb = %d, Rd[%d] : 0x%x, dst = 0x%x\n",
-                        	msb, lsb, Rd, state->Reg[Rd], dst);*/
                         goto donext;
                     } // bfc instr
                     else if (((msb >= lsb) && (msb < 32))) {
@@ -1189,8 +1185,6 @@ mainswitch:
                         tmp_rd = ((ARMword)(data << (31 - lsb)) >> (31 - lsb));
                         dst = ((data >> msb) << (msb - lsb)) | tmp_rn;
                         dst = (dst << lsb) | tmp_rd;
-                        /*SKYEYE_DBG("BFI instr:msb = %d, lsb = %d, Rd[%d] : 0x%x, Rn[%d]: 0x%x, dst = 0x%x\n",
-                        	msb, lsb, Rd, state->Reg[Rd], Rn, state->Reg[Rn], dst);*/
                         goto donext;
                     } // bfi instr
                 }
@@ -2215,9 +2209,7 @@ mainswitch:
                                 state->currentexvald == (u32)ARMul_ReadWord(state, state->currentexaddr + 4))
                             enter = true;
 
-
                         //todo bug this and STREXD and LDREXD http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0360e/CHDGJGGC.html
-
 
                         if (enter) {
                             ARMul_StoreWordN(state, LHS, state->Reg[RHSReg]);
@@ -2253,9 +2245,6 @@ mainswitch:
                         /* LDR register offset, write-back, up, pre indexed.  */
                         LHPREUPWB ();
                     /* Continue with remaining instruction decoding.  */
-
-
-
 
 #endif
                     dest = DPSRegRHS;
@@ -2296,7 +2285,6 @@ mainswitch:
                         temp = LHS + GetLS7RHS (state, instr);
                         LoadHalfWord (state, instr, temp, LSIGNED);
                         break;
-
                     }
                     if (BITS (4, 7) == 0xb) {
                         /* LDRH immediate offset, no write-back, up, pre indexed.  */
@@ -2321,7 +2309,6 @@ mainswitch:
                         }
                         /* LDR immediate offset, no write-back, up, pre indexed.  */
                         LHPREUP ();
-
                     }
 
 #endif
@@ -2341,7 +2328,6 @@ mainswitch:
                         bool enter = false;
 
                         if (state->currentexval == (u32)ARMul_LoadHalfWord(state, state->currentexaddr))enter = true;
-
 
                         //StoreWord(state, lhs, RHS)
                         if (state->Aborted) {
@@ -2395,7 +2381,6 @@ mainswitch:
                     dest = ~DPSRegRHS;
                     WRITESDEST (dest);
                     break;
-
 
                 /* Data Processing Immediate RHS Instructions.  */
 
@@ -2553,8 +2538,6 @@ mainswitch:
                         dest = BITS(16, 19);
                         dest = ((dest<<12) | BITS(0, 11));
                         WRITEDEST(dest);
-                        //SKYEYE_DBG("In %s, line = %d, pc = 0x%x, instr = 0x%x, R[0:11]: 0x%x, R[16:19]: 0x%x, R[%d]:0x%x\n",
-                        //		__func__, __LINE__, pc, instr, BITS(0, 11), BITS(16, 19), DESTReg, state->Reg[DESTReg]);
                         break;
                     } else {
                         UNDEF_Test;
@@ -2717,7 +2700,6 @@ mainswitch:
                     WRITESDEST (~rhs);
                     break;
 
-
                 /* Single Data Transfer Immediate RHS Instructions.  */
 
                 case 0x40:	/* Store Word, No WriteBack, Post Dec, Immed.  */
@@ -2849,7 +2831,6 @@ mainswitch:
                     state->NtransSig = (state->Mode & 3) ? HIGH : LOW;
                     break;
 
-
                 case 0x50:	/* Store Word, No WriteBack, Pre Dec, Immed.  */
                     (void) StoreWord (state, instr, LHS - LSImmRHS);
                     break;
@@ -2945,7 +2926,6 @@ mainswitch:
                     if (LoadByte (state, instr, temp, LUNSIGNED))
                         LSBase = temp;
                     break;
-
 
                 /* Single Data Transfer Register RHS Instructions.  */
 
@@ -3234,11 +3214,9 @@ mainswitch:
                         int Rm = 0;
                         /* utxb */
                         if (BITS(15, 19) == 0xf && BITS(4, 7) == 0x7) {
-
                             Rm = (RHS >> (8 * BITS(10, 11))) & 0xff;
                             DEST = Rm;
                         }
-
                     }
 #endif
                     if (BIT (4)) {
@@ -3284,7 +3262,6 @@ mainswitch:
                         LSBase = temp;
                     state->NtransSig = (state->Mode & 3) ? HIGH : LOW;
                     break;
-
 
                 case 0x70:	/* Store Word, No WriteBack, Pre Dec, Reg.  */
                     if (BIT (4)) {
@@ -3489,7 +3466,6 @@ mainswitch:
                         LSBase = temp;
                     break;
 
-
                 /* Multiple Data Transfer Instructions.  */
 
                 case 0x80:	/* Store, No WriteBack, Post Dec.  */
@@ -3636,7 +3612,6 @@ mainswitch:
                     LOADSMULT (instr, temp + 4L, temp + LSMNumRegs);
                     break;
 
-
                 /* Branch forward.  */
                 case 0xa0:
                 case 0xa1:
@@ -3650,7 +3625,6 @@ mainswitch:
                     FLUSHPIPE;
                     break;
 
-
                 /* Branch backward.  */
                 case 0xa8:
                 case 0xa9:
@@ -3663,7 +3637,6 @@ mainswitch:
                     state->Reg[15] = pc + 8 + NEGBRANCH;
                     FLUSHPIPE;
                     break;
-
 
                 /* Branch and Link forward.  */
                 case 0xb0:
@@ -3690,9 +3663,7 @@ mainswitch:
                     printf("call %08X %08X %s(%08X %08X %08X %08X %08X %08X %08X)\n", state->Reg[14], state->Reg[15], a, state->Reg[0], state->Reg[1], state->Reg[2], state->Reg[3], mem_Read32(state->Reg[13]), mem_Read32(state->Reg[13] - 4),mem_Read32(state->Reg[13] - 8));
 #endif
 
-
                     break;
-
 
                 /* Branch and Link backward.  */
                 case 0xb8:
@@ -3712,17 +3683,13 @@ mainswitch:
                     state->Reg[15] = pc + 8 + NEGBRANCH;
                     FLUSHPIPE;
 
-
 #ifdef callstacker
                     memset(a, 0, 256);
                     aufloeser(a, state->Reg[15]);
                     printf("call %08X %08X %s(%08X %08X %08X %08X %08X %08X %08X)\n", state->Reg[14], state->Reg[15], a, state->Reg[0], state->Reg[1], state->Reg[2], state->Reg[3], mem_Read32(state->Reg[13]), mem_Read32(state->Reg[13] - 4),mem_Read32(state->Reg[13] - 8));
 #endif
 
-
-
                     break;
-
 
                 /* Co-Processor Data Transfers.  */
                 case 0xc4:
@@ -3859,7 +3826,6 @@ mainswitch:
                     ARMul_LDC (state, instr, lhs);
                     break;
 
-
                 /* Co-Processor Register Transfers (MCR) and Data Ops.  */
 
                 case 0xe2:
@@ -3891,7 +3857,6 @@ mainswitch:
                         ARMul_CDP (state, instr);
                     break;
 
-
                 /* Co-Processor Register Transfers (MRC) and Data Ops.  */
                 case 0xe1:
                 case 0xe3:
@@ -3916,7 +3881,6 @@ mainswitch:
                         ARMul_CDP (state, instr);
                     break;
 
-
                 /* SWI instruction.  */
                 case 0xf0:
                 case 0xf1:
@@ -3936,7 +3900,7 @@ mainswitch:
                 case 0xff:
                     //svc_Execute(state, BITS(0, 23));
                     HLE::CallSVC(instr);
-                    
+
                     break;
                 }
             }
@@ -4118,7 +4082,6 @@ TEST_EMULATE:
             //        continue;
             else if (state->Emulate != RUN)
                 break;
-      
     }
 
         while (state->NumInstrsToExecute);
@@ -4156,7 +4119,6 @@ exit:
         static FILE *fd;
 
         /*if (!init) {
-
            fd = fopen("./pc.txt", "w");
            if (!fd) {
            exit(-1);
@@ -4725,8 +4687,6 @@ out:
 			address, DEST); \
 	}
 
-
-
     static unsigned
     LoadWord (ARMul_State * state, ARMword instr, ARMword address) {
         ARMword dest;
@@ -5158,7 +5118,6 @@ out:
                 /*chy 2004-05-23 chy goto end */
                 if (state->Aborted)
                     goto L_ldm_makeabort;
-
             }
 
         if (BIT (15) && !state->Aborted)
@@ -5202,7 +5161,6 @@ L_ldm_makeabort:
             LSBase = WBBase;
         }
         /* chy 2005-11-24, over */
-
     }
 
     /* This function does the work of loading the registers listed in an LDM
@@ -5405,7 +5363,6 @@ L_ldm_s_makeabort:
                 //chy 2004-05-23, needn't store other when aborted
                 if (state->Aborted)
                     goto L_stm_takeabort;
-
             }
 
 //chy 2004-05-23,should compare the Abort Models
@@ -5507,7 +5464,6 @@ L_stm_takeabort:
         if (state->Mode != USER26MODE && state->Mode != USER32MODE )
             /* Restore the correct bank.  */
             (void) ARMul_SwitchMode (state, USER26MODE, state->Mode);
-
 
 //chy 2004-05-23,should compare the Abort Models
 L_stm_s_takeabort:
@@ -5762,7 +5718,6 @@ L_stm_s_takeabort:
 				if (state->Aborted) {
 					TAKEABORT;
 				}
-
 
 				if (enter) {
 					ARMul_StoreByte(state, lhs, RHS);
@@ -6285,7 +6240,7 @@ L_stm_s_takeabort:
 				u32 rm = ((state->Reg[BITS(0, 3)] >> rotation) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - rotation)) & 0xFF) & 0xFF);
 				if (rm & 0x80)
 					rm |= 0xffffff00;
-	
+
 				// SXTB, otherwise SXTAB
 				if (BITS(16, 19) == 0xf)
 					state->Reg[BITS(12, 15)] = rm;
@@ -6371,7 +6326,7 @@ L_stm_s_takeabort:
 				const s16 max = 0xFFFF >> (16 - num_bits);
 				s16 rn_lo = (state->Reg[rn_idx]);
 				s16 rn_hi = (state->Reg[rn_idx] >> 16);
-				
+
 				if (max < rn_lo) {
 					rn_lo = max;
 					SETQ;
@@ -6379,7 +6334,7 @@ L_stm_s_takeabort:
 					rn_lo = 0;
 					SETQ;
 				}
-				
+
 				if (max < rn_hi) {
 					rn_hi = max;
 					SETQ;
@@ -6387,14 +6342,14 @@ L_stm_s_takeabort:
 					rn_hi = 0;
 					SETQ;
 				}
-				
+
 				state->Reg[rd_idx] = (rn_lo & 0xFFFF) | ((rn_hi << 16) & 0xFFFF);
 				return 1;
 			}
 			else if (op2 == 0x03) {
 				const u8 rotate = BITS(10, 11) * 8;
 				const u32 rm = ((state->Reg[BITS(0, 3)] >> rotate) & 0xFF) | (((state->Reg[BITS(0, 3)] << (32 - rotate)) & 0xFF) & 0xFF);
-				
+
 				if (BITS(16, 19) == 0xf)
 				/* UXTB */
 					state->Reg[BITS(12, 15)] = rm;
