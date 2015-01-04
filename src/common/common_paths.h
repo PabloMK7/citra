@@ -43,7 +43,7 @@
 #define EXTSAVEDATA_DIR          "sdmc/Nintendo 3DS/extdata"
 #define SHAREDEXTSAVEDATA_DIR    "nand/data/extdata"
 #define SAVEDATA_DIR             "savedata"
-#define SAVEDATACHECK_DIR        "savedatacheck"
+#define SAVEDATACHECK_DIR        "nand/title"
 #define SYSDATA_DIR              "sysdata"
 #define SYSSAVEDATA_DIR          "nand/data/sysdata"
 #define SHADERCACHE_DIR          "shader_cache"

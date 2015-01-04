@@ -23,7 +23,8 @@ ResultCode Archive_SaveDataCheck::Open(const Path& path) {
     // this archive again with a different path, will corrupt the previously open file.
     auto vec = path.AsBinary();
     const u32* data = reinterpret_cast<u32*>(vec.data());
-    std::string file_path = Common::StringFromFormat("%s%08x%08x.bin", mount_point.c_str(), data[1], data[0]);
+    std::string file_path = Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs", 
+            mount_point.c_str(), data[1], data[0]);
     FileUtil::IOFile file(file_path, "rb");
 
     std::fill(raw_data.begin(), raw_data.end(), 0);
