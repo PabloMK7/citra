@@ -22,34 +22,10 @@
  * 12/16/2006   Michael.Kang  <blackfin.kang@gmail.com>
  */
 
-#ifndef __SKYEYE_TYPES_H
-#define __SKYEYE_TYPES_H
+#pragma once
 
-#include <stdint.h>
-
-/*default machine word length */
-
-#ifndef __BEOS__
-/* To avoid the type conflict with the qemu */
-#ifndef QEMU
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef int8_t sint8;
-typedef int16_t sint16;
-typedef int32_t sint32;
-typedef int64_t sint64;
-#endif
+#include <cstdint>
 
 typedef uint32_t address_t;
-typedef uint32_t uinteger_t;
-typedef int32_t integer_t;
-
 typedef uint32_t physical_address_t;
-typedef uint32_t generic_address_t; 
-
-#endif
-
-#endif
+typedef uint32_t generic_address_t;
