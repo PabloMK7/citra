@@ -5571,7 +5571,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 operand2 = (BIT(RS, 31)) ? (BITS(RS, 16, 31) | 0xffff0000) : BITS(RS, 16, 31);
             RD = operand1 * operand2 + RN;
 
-            // TODO: FIXME: UPDATE Q FLAGS
+            if (AddOverflow(operand1 * operand2, RN, RD))
+                cpu->Cpsr |= (1 << 27);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(smla_inst));
