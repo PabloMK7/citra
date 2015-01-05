@@ -37,6 +37,7 @@
 #include "core/hle/service/soc_u.h"
 #include "core/hle/service/srv.h"
 #include "core/hle/service/ssl_c.h"
+#include "core/hle/service/y2r_u.h"
 
 namespace Service {
 
@@ -122,6 +123,7 @@ void Init() {
     g_manager->AddService(new PTM_U::Interface);
     g_manager->AddService(new SOC_U::Interface);
     g_manager->AddService(new SSL_C::Interface);
+    g_manager->AddService(new Y2R_U::Interface);
 
     LOG_DEBUG(Service, "initialized OK");
 }

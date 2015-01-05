@@ -66,6 +66,7 @@ set(SRCS
             hle/service/soc_u.cpp
             hle/service/srv.cpp
             hle/service/ssl_c.cpp
+            hle/service/y2r_u.cpp
             hle/config_mem.cpp
             hle/hle.cpp
             hle/svc.cpp
@@ -157,6 +158,7 @@ set(HEADERS
             hle/service/soc_u.h
             hle/service/srv.h
             hle/service/ssl_c.h
+            hle/service/y2r_u.h
             hle/config_mem.h
             hle/result.h
             hle/function_wrappers.h
