@@ -48,11 +48,7 @@
 // MSVC
 #elif defined(_MSC_VER) && !defined(COMMON_BIG_ENDIAN) && !defined(COMMON_LITTLE_ENDIAN)
 
-#ifdef _XBOX
-#define COMMON_BIG_ENDIAN 1
-#else
 #define COMMON_LITTLE_ENDIAN 1
-#endif
 
 #endif
 
