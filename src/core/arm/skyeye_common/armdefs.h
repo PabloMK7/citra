@@ -162,20 +162,20 @@ struct ARMul_State
     unsigned ErrorCode;    /* type of illegal instruction */
 
     /* Order of the following register should not be modified */
-    ARMword Reg[16];      /* the current register file */
-    ARMword Cpsr;         /* the current psr */
+    ARMword Reg[16];            /* the current register file */
+    ARMword Cpsr;               /* the current psr */
     ARMword Spsr_copy;
     ARMword phys_pc;
     ARMword Reg_usr[2];
-    ARMword Reg_svc[2];   /* R13_SVC R14_SVC */
-    ARMword Reg_abort[2]; /* R13_ABORT R14_ABORT */
-    ARMword Reg_undef[2]; /* R13 UNDEF R14 UNDEF */
-    ARMword Reg_irq[2];   /* R13_IRQ R14_IRQ */
-    ARMword Reg_firq[7];  /* R8---R14 FIRQ */
-    ARMword Spsr[7];      /* the exception psr's */
-    ARMword Mode;         /* the current mode */
-    ARMword Bank;         /* the current register bank */
-    ARMword exclusive_tag;
+    ARMword Reg_svc[2];         /* R13_SVC R14_SVC */
+    ARMword Reg_abort[2];       /* R13_ABORT R14_ABORT */
+    ARMword Reg_undef[2];       /* R13 UNDEF R14 UNDEF */
+    ARMword Reg_irq[2];         /* R13_IRQ R14_IRQ */
+    ARMword Reg_firq[7];        /* R8---R14 FIRQ */
+    ARMword Spsr[7];            /* the exception psr's */
+    ARMword Mode;               /* the current mode */
+    ARMword Bank;               /* the current register bank */
+    ARMword exclusive_tag;      /* the address for which the local monitor is in exclusive access mode */
     ARMword exclusive_state;
     ARMword exclusive_result;
     ARMword CP15[VFP_BASE - CP15_BASE];

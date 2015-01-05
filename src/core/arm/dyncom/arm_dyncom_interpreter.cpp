@@ -63,23 +63,27 @@ extern void switch_mode(arm_core_t *core, uint32_t mode);
 typedef arm_core_t arm_processor;
 typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
 
+// Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
+// This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
+// support LDR/STREXD.
+static const ARMword RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
+
 // Exclusive memory access
 static int exclusive_detect(ARMul_State* state, ARMword addr){
-    if(state->exclusive_tag == addr)
+    if(state->exclusive_tag == (addr & RESERVATION_GRANULE_MASK))
         return 0;
     else
         return -1;
 }
 
 static void add_exclusive_addr(ARMul_State* state, ARMword addr){
-    state->exclusive_tag = addr;
+    state->exclusive_tag = addr & RESERVATION_GRANULE_MASK;
     return;
 }
 
 static void remove_exclusive(ARMul_State* state, ARMword addr){
     state->exclusive_tag = 0xFFFFFFFF;
 }
-
 
 unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper) {
     unsigned int immed_8 = BITS(sht_oper, 0, 7);
@@ -4551,7 +4555,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
             add_exclusive_addr(cpu, read_addr);
             cpu->exclusive_state = 1;
-            // TODO(bunnei): Do we need to also make [read_addr + 4] exclusive?
 
             RD = Memory::Read32(read_addr);
             RD2 = Memory::Read32(read_addr + 4);
@@ -5978,7 +5981,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
                 remove_exclusive(cpu, write_addr);
                 cpu->exclusive_state = 0;
-                // TODO(bunnei): Remove exclusive from [write_addr + 4] if we implement this in LDREXD
 
                 Memory::Write32(write_addr, cpu->Reg[inst_cream->Rm]);
                 Memory::Write32(write_addr + 4, cpu->Reg[inst_cream->Rm + 1]);
