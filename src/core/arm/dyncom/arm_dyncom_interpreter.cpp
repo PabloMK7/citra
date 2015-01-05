@@ -1419,15 +1419,19 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(bx)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(bx_inst));
     bx_inst *inst_cream = (bx_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = INDIRECT_BRANCH;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = INDIRECT_BRANCH;
 
-    inst_cream->Rm     = BITS(inst, 0, 3);
+    inst_cream->Rm  = BITS(inst, 0, 3);
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("BXJ"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(bxj)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(bx)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index){
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cdp_inst));
     cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
@@ -4129,22 +4133,35 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         INC_PC(sizeof(blx_inst));
         goto DISPATCH;
     }
+
     BX_INST:
+    BXJ_INST:
     {
-        bx_inst *inst_cream = (bx_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+        // Note that only the 'fail' case of BXJ is emulated. This is because
+        // the facilities for Jazelle emulation are not implemented.
+        //
+        // According to the ARM documentation on BXJ, if setting the J bit in the APSR
+        // fails, then BXJ functions identically like a regular BX instruction.
+		//
+		// This is sufficient for citra, as the CPU for the 3DS does not implement Jazelle.
+
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            bx_inst* const inst_cream = (bx_inst*)inst_base->component;
+
             if (inst_cream->Rm == 15)
                 LOG_WARNING(Core_ARM11, "BX at pc %x: use of Rm = R15 is discouraged", cpu->Reg[15]);
+
             cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
             cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
             INC_PC(sizeof(bx_inst));
             goto DISPATCH;
         }
+
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(bx_inst));
         goto DISPATCH;
     }
-    BXJ_INST:
+
     CDP_INST:
     {
         cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
