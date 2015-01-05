@@ -20,4 +20,7 @@ public:
     }
 };
 
+/// Signals that a DSP interrupt has occurred to userland code
+void SignalInterrupt();
+
 } // namespace
