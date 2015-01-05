@@ -1079,7 +1079,7 @@ typedef struct _cdp_inst {
     unsigned int cp_num;
     unsigned int opcode_2;
     unsigned int CRm;
-    uint32 inst;
+    unsigned int inst;
 }cdp_inst;
 
 typedef struct _uxtb_inst {
@@ -3458,7 +3458,7 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr
     tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
     if(ret == t_branch){
         // TODO: FIXME, endian should be judged
-        uint32 tinstr;
+        u32 tinstr;
         if((addr & 0x3) != 0)
             tinstr = inst >> 16;
         else
@@ -3471,7 +3471,7 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr
         case 26:
         case 27:
             if (((tinstr & 0x0F00) != 0x0E00) && ((tinstr & 0x0F00) != 0x0F00)){
-                uint32 cond = (tinstr & 0x0F00) >> 8;
+                u32 cond = (tinstr & 0x0F00) >> 8;
                 inst_index = table_length - 4;
                 *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             } else {
@@ -6625,7 +6625,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     BLX_1_THUMB:
     {
         // BLX 1 for armv5t and above
-        uint32 tmp = cpu->Reg[15];
+        u32 tmp = cpu->Reg[15];
         blx_1_thumb *inst_cream = (blx_1_thumb *)inst_base->component;
         cpu->Reg[15] = (cpu->Reg[14] + inst_cream->imm) & 0xFFFFFFFC;
         cpu->Reg[14] = ((tmp + 2) | 1);
