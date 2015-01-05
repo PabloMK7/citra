@@ -418,22 +418,18 @@ ARMul_NegZero (ARMul_State * state, ARMword result)
     }
 }
 
-/* Compute whether an addition of A and B, giving RESULT, overflowed.  */
-
-int
-AddOverflow (ARMword a, ARMword b, ARMword result)
+// Compute whether an addition of A and B, giving RESULT, overflowed.
+bool AddOverflow(ARMword a, ARMword b, ARMword result)
 {
-    return ((NEG (a) && NEG (b) && POS (result))
-            || (POS (a) && POS (b) && NEG (result)));
+    return ((NEG(a) && NEG(b) && POS(result)) ||
+            (POS(a) && POS(b) && NEG(result)));
 }
 
-/* Compute whether a subtraction of A and B, giving RESULT, overflowed.  */
-
-int
-SubOverflow (ARMword a, ARMword b, ARMword result)
+// Compute whether a subtraction of A and B, giving RESULT, overflowed.
+bool SubOverflow(ARMword a, ARMword b, ARMword result)
 {
-    return ((NEG (a) && POS (b) && POS (result))
-            || (POS (a) && NEG (b) && NEG (result)));
+    return ((NEG(a) && POS(b) && POS(result)) ||
+            (POS(a) && NEG(b) && NEG(result)));
 }
 
 /* Assigns the C flag after an addition of a and b to give result.  */

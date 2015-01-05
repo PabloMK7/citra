@@ -70,6 +70,9 @@
 #define DATACACHE  1
 #define INSTCACHE  2
 
+#define POS(i) ( (~(i)) >> 31 )
+#define NEG(i) ( (i) >> 31 )
+
 #ifndef __STDC__
 typedef char *VoidStar;
 #endif
@@ -783,6 +786,8 @@ RUn %x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n",\
 //#define PXA250      0x69052903
 // 0x69052903;  //PXA250 B1 from intel 278522-001.pdf
 
+extern bool AddOverflow(ARMword, ARMword, ARMword);
+extern bool SubOverflow(ARMword, ARMword, ARMword);
 
 extern void ARMul_UndefInstr(ARMul_State*, ARMword);
 extern void ARMul_FixCPSR(ARMul_State*, ARMword, ARMword);

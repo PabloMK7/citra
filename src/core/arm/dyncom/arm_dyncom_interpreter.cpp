@@ -2053,7 +2053,37 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 
     return inst_base;
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QADD"); }
+
+ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
+    generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->op1 = BITS(inst, 21, 22);
+    inst_cream->Rm  = BITS(inst, 0, 3);
+    inst_cream->Rn  = BITS(inst, 16, 19);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+
+    return inst_base;
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(qadd)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(qadd)(inst, index);
+}
+ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(qadd)(inst, index);
+}
+
 ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
@@ -2080,9 +2110,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(qaddsubx)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(qadd8)(inst, index);
 }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qdadd)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDADD"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qdsub)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("QDSUB"); }
-ARM_INST_PTR INTERPRETER_TRANSLATE(qsub)(unsigned int inst, int index)     { UNIMPLEMENTED_INSTRUCTION("QSUB"); }
 ARM_INST_PTR INTERPRETER_TRANSLATE(qsub8)(unsigned int inst, int index)
 {
     return INTERPRETER_TRANSLATE(qadd8)(inst, index);
@@ -5042,6 +5069,78 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     QADD_INST:
+    QDADD_INST:
+    QDSUB_INST:
+    QSUB_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
+            const u8 op1 = inst_cream->op1;
+            const u32 rm_val = RM;
+            const u32 rn_val = RN;
+
+            u32 result = 0;
+
+            // QADD
+            if (op1 == 0x00) {
+                result = rm_val + rn_val;
+
+                if (AddOverflow(rm_val, rn_val, result)) {
+                    result = POS(result) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+            }
+            // QSUB
+            else if (op1 == 0x01) {
+                result = rm_val - rn_val;
+
+                if (SubOverflow(rm_val, rn_val, result)) {
+                    result = POS(result) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+            }
+            // QDADD
+            else if (op1 == 0x02) {
+                u32 mul = (rn_val * 2);
+
+                if (AddOverflow(rn_val, rn_val, rn_val * 2)) {
+                    mul = POS(mul) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+
+                result = mul + rm_val;
+
+                if (AddOverflow(rm_val, mul, result)) {
+                    result = POS(result) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+            }
+            // QDSUB
+            else if (op1 == 0x03) {
+                u32 mul = (rn_val * 2);
+
+                if (AddOverflow(rn_val, rn_val, mul)) {
+                    mul = POS(mul) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+
+                result = rm_val - mul;
+
+                if (SubOverflow(rm_val, mul, result)) {
+                    result = POS(result) ? 0x80000000 : 0x7FFFFFFF;
+                    cpu->Cpsr |= (1 << 27);
+                }
+            }
+
+            RD = result;
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(generic_arm_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     QADD8_INST:
     QADD16_INST:
     QADDSUBX_INST:
@@ -5103,10 +5202,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
-
-    QDADD_INST:
-    QDSUB_INST:
-    QSUB_INST:
 
     REV_INST:
     REV16_INST:
