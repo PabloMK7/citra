@@ -1,3 +1,7 @@
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #ifndef _CITRA_QT_MAIN_HXX_
 #define _CITRA_QT_MAIN_HXX_
 

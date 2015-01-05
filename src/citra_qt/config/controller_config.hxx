@@ -1,3 +1,7 @@
+// Copyright 2014 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
 #ifndef _CONTROLLER_CONFIG_HXX_
 #define _CONTROLLER_CONFIG_HXX_
 
