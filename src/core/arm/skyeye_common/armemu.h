@@ -42,9 +42,6 @@
 #define R15FBIT (1L << 26)
 #define R15IFBITS (3L << 26)
 
-#define POS(i) ( (~(i)) >> 31 )
-#define NEG(i) ( (i) >> 31 )
-
 #ifdef MODET			/* Thumb support.  */
 /* ??? This bit is actually in the low order bit of the PC in the hardware.
    It isn't clear if the simulator needs to model that or not.  */
@@ -561,8 +558,7 @@ tdstate;
 
 /* Prototypes for exported functions.  */
 extern unsigned ARMul_NthReg (ARMword, unsigned);
-extern int AddOverflow (ARMword, ARMword, ARMword);
-extern int SubOverflow (ARMword, ARMword, ARMword);
+
 /* Prototypes for exported functions.  */
 #ifdef __cplusplus
  extern "C" {
