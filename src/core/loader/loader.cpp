@@ -45,6 +45,8 @@ FileType IdentifyFile(const std::string &filename) {
         return FileType::CCI;
     } else if (extension == ".bin") {
         return FileType::BIN;
+	} else if (extension == ".3ds") {
+		return FileType::CCI;
     } else if (extension == ".3dsx") {
         return FileType::THREEDSX;
     }
