@@ -26,6 +26,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 
 typedef std::uint8_t  u8;  ///< 8-bit unsigned byte
 typedef std::uint16_t u16; ///< 16-bit unsigned short
@@ -83,8 +84,8 @@ public:
     int x1_;    ///< Rect bottom left X-coordinate
     int y1_;    ///< Rect bottom right Y-coordinate
 
-    inline u32 width() const { return abs(x1_ - x0_); }
-    inline u32 height() const { return abs(y1_ - y0_); }
+    inline u32 width() const { return std::abs(x1_ - x0_); }
+    inline u32 height() const { return std::abs(y1_ - y0_); }
 
     inline bool operator == (const Rect& val) const {
         return (x0_ == val.x0_ && y0_ == val.y0_ && x1_ == val.x1_ && y1_ == val.y1_);
