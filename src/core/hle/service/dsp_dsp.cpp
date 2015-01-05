@@ -12,9 +12,23 @@
 
 namespace DSP_DSP {
 
-static u32 read_pipe_count;
-static Handle semaphore_event;
-static Handle interrupt_event;
+static u32 read_pipe_count    = 0;
+static Handle semaphore_event = 0;
+static Handle interrupt_event = 0;
+
+void SignalInterrupt() {
+    // TODO(bunnei): This is just a stub, it does not do anything other than signal to the emulated
+    // application that a DSP interrupt occurred, without specifying which one. Since we do not
+    // emulate the DSP yet (and how it works is largely unknown), this is a work around to get games
+    // that check the DSP interrupt signal event to run. We should figure out the different types of
+    // DSP interrupts, and trigger them at the appropriate times.
+
+    if (interrupt_event == 0) {
+        LOG_WARNING(Service_DSP, "cannot signal interrupt until DSP event has been created!");
+        return;
+    }
+    Kernel::SignalEvent(interrupt_event);
+}
 
 /**
  * DSP_DSP::ConvertProcessAddressFromDspDram service function
@@ -102,7 +116,7 @@ void RegisterInterruptEvents(Service::Interface* self) {
 void WriteReg0x10(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    Kernel::SignalEvent(interrupt_event);
+    SignalInterrupt();
 
     cmd_buff[1] = 0; // No error
 

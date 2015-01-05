@@ -10,6 +10,7 @@
 
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/dsp_dsp.h"
 
 #include "core/hw/gpu.h"
 
@@ -214,13 +215,18 @@ void Update() {
             //  - If frameskip == 0 (disabled), always swap buffers
             //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
             //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
-
             if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
                    Settings::values.frame_skip == 0) {
                 VideoCore::g_renderer->SwapBuffers();
             }
 
+            // Signal to GSP that GPU interrupt has occurred
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
+
+            // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
+            // until we can emulate DSP interrupts, this is probably the only reasonable place to do
+            // this. Certain games expect this to be periodically signaled.
+            DSP_DSP::SignalInterrupt();
         }
     }
 }
