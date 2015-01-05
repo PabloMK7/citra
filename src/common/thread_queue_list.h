@@ -4,213 +4,143 @@
 
 #pragma once
 
+#include <array>
+#include <deque>
+
+#include <boost/range/algorithm_ext/erase.hpp>
+
 #include "common/common.h"
 
 namespace Common {
 
-template<class IdType>
+template<class T, unsigned int N>
 struct ThreadQueueList {
-    // Number of queues (number of priority levels starting at 0.)
-    static const int NUM_QUEUES = 128;
+    // TODO(yuriks): If performance proves to be a problem, the std::deques can be replaced with
+    //               (dynamically resizable) circular buffers to remove their overhead when
+    //               inserting and popping.
 
-    // Initial number of threads a single queue can handle.
-    static const int INITIAL_CAPACITY = 32;
+    typedef unsigned int Priority;
 
-    struct Queue {
-        // Next ever-been-used queue (worse priority.)
-        Queue *next;
-        // First valid item in data.
-        int first;
-        // One after last valid item in data.
-        int end;
-        // A too-large array with room on the front and end.
-        IdType *data;
-        // Size of data array.
-        int capacity;
-    };
+    // Number of priority levels. (Valid levels are [0..NUM_QUEUES).)
+    static const Priority NUM_QUEUES = N;
 
     ThreadQueueList() {
-        memset(queues, 0, sizeof(queues));
-        first = invalid();
-    }
-
-    ~ThreadQueueList() {
-        for (int i = 0; i < NUM_QUEUES; ++i)
-        {
-            if (queues[i].data != nullptr)
-                free(queues[i].data);
-        }
+        first = nullptr;
     }
 
     // Only for debugging, returns priority level.
-    int contains(const IdType uid) {
-        for (int i = 0; i < NUM_QUEUES; ++i)
-        {
-            if (queues[i].data == nullptr)
-                continue;
-
-            Queue *cur = &queues[i];
-            for (int j = cur->first; j < cur->end; ++j)
-            {
-                if (cur->data[j] == uid)
-                    return i;
+    Priority contains(const T& uid) {
+        for (Priority i = 0; i < NUM_QUEUES; ++i) {
+            Queue& cur = queues[i];
+            if (std::find(cur.data.cbegin(), cur.data.cend(), uid) != cur.data.cend()) {
+                return i;
             }
         }
 
         return -1;
     }
 
-    inline IdType pop_first() {
+    T pop_first() {
         Queue *cur = first;
-        while (cur != invalid())
-        {
-            if (cur->end - cur->first > 0)
-                return cur->data[cur->first++];
-            cur = cur->next;
+        while (cur != nullptr) {
+            if (!cur->data.empty()) {
+                auto tmp = std::move(cur->data.front());
+                cur->data.pop_front();
+                return tmp;
+            }
+            cur = cur->next_nonempty;
         }
 
-        //_dbg_assert_msg_(SCEKERNEL, false, "ThreadQueueList should not be empty.");
-        return 0;
+        return T();
     }
 
-    inline IdType pop_first_better(u32 priority) {
+    T pop_first_better(Priority priority) {
         Queue *cur = first;
         Queue *stop = &queues[priority];
-        while (cur < stop)
-        {
-            if (cur->end - cur->first > 0)
-                return cur->data[cur->first++];
-            cur = cur->next;
-        }
-
-        return 0;
-    }
-
-    inline void push_front(u32 priority, const IdType threadID) {
-        Queue *cur = &queues[priority];
-        cur->data[--cur->first] = threadID;
-        if (cur->first == 0)
-            rebalance(priority);
-    }
-
-    inline void push_back(u32 priority, const IdType threadID) {
-        Queue *cur = &queues[priority];
-        cur->data[cur->end++] = threadID;
-        if (cur->end == cur->capacity)
-            rebalance(priority);
-    }
-
-    inline void remove(u32 priority, const IdType threadID) {
-        Queue *cur = &queues[priority];
-        //_dbg_assert_msg_(SCEKERNEL, cur->next != NULL, "ThreadQueueList::Queue should already be linked up.");
-
-        for (int i = cur->first; i < cur->end; ++i)
-        {
-            if (cur->data[i] == threadID)
-            {
-                int remaining = --cur->end - i;
-                if (remaining > 0)
-                    memmove(&cur->data[i], &cur->data[i + 1], remaining * sizeof(IdType));
-                return;
+        while (cur < stop) {
+            if (!cur->data.empty()) {
+                auto tmp = std::move(cur->data.front());
+                cur->data.pop_front();
+                return tmp;
             }
+            cur = cur->next_nonempty;
         }
 
-        // Wasn't there.
+        return T();
     }
 
-    inline void rotate(u32 priority) {
+    void push_front(Priority priority, const T& thread_id) {
         Queue *cur = &queues[priority];
-        //_dbg_assert_msg_(SCEKERNEL, cur->next != NULL, "ThreadQueueList::Queue should already be linked up.");
+        cur->data.push_front(thread_id);
+    }
 
-        if (cur->end - cur->first > 1)
-        {
-            cur->data[cur->end++] = cur->data[cur->first++];
-            if (cur->end == cur->capacity)
-                rebalance(priority);
+    void push_back(Priority priority, const T& thread_id) {
+        Queue *cur = &queues[priority];
+        cur->data.push_back(thread_id);
+    }
+
+    void remove(Priority priority, const T& thread_id) {
+        Queue *cur = &queues[priority];
+        boost::remove_erase(cur->data, thread_id);
+    }
+
+    void rotate(Priority priority) {
+        Queue *cur = &queues[priority];
+
+        if (cur->data.size() > 1) {
+            cur->data.push_back(std::move(cur->data.front()));
+            cur->data.pop_front();
         }
     }
 
-    inline void clear() {
-        for (int i = 0; i < NUM_QUEUES; ++i)
-        {
-            if (queues[i].data != nullptr)
-                free(queues[i].data);
-        }
-        memset(queues, 0, sizeof(queues));
-        first = invalid();
+    void clear() {
+        queues.fill(Queue());
+        first = nullptr;
     }
 
-    inline bool empty(u32 priority) const {
+    bool empty(Priority priority) const {
         const Queue *cur = &queues[priority];
-        return cur->first == cur->end;
+        return cur->data.empty();
     }
 
-    inline void prepare(u32 priority) {
-        Queue *cur = &queues[priority];
-        if (cur->next == nullptr)
-            link(priority, INITIAL_CAPACITY);
+    void prepare(Priority priority) {
+        Queue* cur = &queues[priority];
+        if (cur->next_nonempty == UnlinkedTag())
+            link(priority);
     }
 
 private:
-    Queue *invalid() const {
-        return (Queue *) -1;
+    struct Queue {
+        // Points to the next active priority, skipping over ones that have never been used.
+        Queue* next_nonempty = UnlinkedTag();
+        // Double-ended queue of threads in this priority level
+        std::deque<T> data;
+    };
+
+    /// Special tag used to mark priority levels that have never been used.
+    static Queue* UnlinkedTag() {
+        return reinterpret_cast<Queue*>(1);
     }
 
-    void link(u32 priority, int size) {
-        //_dbg_assert_msg_(SCEKERNEL, queues[priority].data == NULL, "ThreadQueueList::Queue should only be initialized once.");
-
-        if (size <= INITIAL_CAPACITY)
-            size = INITIAL_CAPACITY;
-        else
-        {
-            int goal = size;
-            size = INITIAL_CAPACITY;
-            while (size < goal)
-                size *= 2;
-        }
+    void link(Priority priority) {
         Queue *cur = &queues[priority];
-        cur->data = (IdType *) malloc(sizeof(IdType) * size);
-        cur->capacity = size;
-        cur->first = size / 2;
-        cur->end = size / 2;
 
-        for (int i = (int) priority - 1; i >= 0; --i)
-        {
-            if (queues[i].next != nullptr)
-            {
-                cur->next = queues[i].next;
-                queues[i].next = cur;
+        for (int i = priority - 1; i >= 0; --i) {
+            if (queues[i].next_nonempty != UnlinkedTag()) {
+                cur->next_nonempty = queues[i].next_nonempty;
+                queues[i].next_nonempty = cur;
                 return;
             }
         }
 
-        cur->next = first;
+        cur->next_nonempty = first;
         first = cur;
     }
 
-    void rebalance(u32 priority) {
-        Queue *cur = &queues[priority];
-        int size = cur->end - cur->first;
-        if (size >= cur->capacity - 2)  {
-            IdType *new_data = (IdType *)realloc(cur->data, cur->capacity * 2 * sizeof(IdType));
-            if (new_data != nullptr)  {
-                cur->capacity *= 2;
-                cur->data = new_data;
-            }
-        }
-
-        int newFirst = (cur->capacity - size) / 2;
-        if (newFirst != cur->first) {
-            memmove(&cur->data[newFirst], &cur->data[cur->first], size * sizeof(IdType));
-            cur->first = newFirst;
-            cur->end = newFirst + size;
-        }
-    }
-
     // The first queue that's ever been used.
-    Queue *first;
+    Queue* first;
     // The priority level queues of thread ids.
-    Queue queues[NUM_QUEUES];
+    std::array<Queue, NUM_QUEUES> queues;
 };
 
 } // namespace
