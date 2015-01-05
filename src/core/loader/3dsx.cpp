@@ -13,11 +13,9 @@
 
 #include "3dsx.h"
 
-
 namespace Loader {
 
-
-/** 
+/**
  * File layout:
  * - File header
  * - Code, rodata and data relocation table headers
@@ -64,9 +62,9 @@ struct THREEDSX_Header
 struct THREEDSX_RelocHdr
 {
     // # of absolute relocations (that is, fix address to post-relocation memory layout)
-    u32 cross_segment_absolute; 
+    u32 cross_segment_absolute;
     // # of cross-segment relative relocations (that is, 32bit signed offsets that need to be patched)
-    u32 cross_segment_relative; 
+    u32 cross_segment_relative;
     // more?
 
     // Relocations are written in this order:
@@ -207,28 +205,28 @@ int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
     return ERROR_NONE;
 }
 
-    /// AppLoader_DSX constructor
-    AppLoader_THREEDSX::AppLoader_THREEDSX(const std::string& filename) : filename(filename) {
-    }
+/// AppLoader_DSX constructor
+AppLoader_THREEDSX::AppLoader_THREEDSX(const std::string& filename) : filename(filename) {
+}
 
-    /// AppLoader_DSX destructor
-    AppLoader_THREEDSX::~AppLoader_THREEDSX() {
-    }
+/// AppLoader_DSX destructor
+AppLoader_THREEDSX::~AppLoader_THREEDSX() {
+}
 
-    /**
-    * Loads a 3DSX file
-    * @return Success on success, otherwise Error
-    */
-    ResultStatus AppLoader_THREEDSX::Load() {
-        LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
-        FileUtil::IOFile file(filename, "rb");
-        if (file.IsOpen()) {
-            THREEDSXReader::Load3DSXFile(filename, 0x00100000);
-            Kernel::LoadExec(0x00100000);
-        } else {
-            return ResultStatus::Error;
-        }
-        return ResultStatus::Success;
+/**
+* Loads a 3DSX file
+* @return Success on success, otherwise Error
+*/
+ResultStatus AppLoader_THREEDSX::Load() {
+    LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
+    FileUtil::IOFile file(filename, "rb");
+    if (file.IsOpen()) {
+        THREEDSXReader::Load3DSXFile(filename, 0x00100000);
+        Kernel::LoadExec(0x00100000);
+    } else {
+        return ResultStatus::Error;
     }
+    return ResultStatus::Success;
+}
 
 } // namespace Loader

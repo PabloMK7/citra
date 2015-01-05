@@ -149,7 +149,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
                         exefs_header.section[i].name);
 
                 s64 section_offset = (exefs_header.section[i].offset + exefs_offset +
-                    sizeof(ExeFs_Header)+ncch_offset);
+                                     sizeof(ExeFs_Header)+ncch_offset);
                 file.Seek(section_offset, 0);
 
                 // Section is compressed...
