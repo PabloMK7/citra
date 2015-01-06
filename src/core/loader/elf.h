@@ -15,18 +15,13 @@ namespace Loader {
 /// Loads an ELF/AXF file
 class AppLoader_ELF final : public AppLoader {
 public:
-    AppLoader_ELF(const std::string& filename);
-    ~AppLoader_ELF() override;
+    AppLoader_ELF(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
 
     /**
      * Load the bootable file
      * @return ResultStatus result of function
      */
     ResultStatus Load() override;
-
-private:
-    std::string filename;
-    bool        is_loaded = false;
 };
 
 } // namespace Loader

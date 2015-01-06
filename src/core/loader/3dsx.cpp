@@ -199,28 +199,15 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     return ERROR_NONE;
 }
 
-/// AppLoader_DSX constructor
-AppLoader_THREEDSX::AppLoader_THREEDSX(const std::string& filename) : filename(filename) {
-}
-
-/// AppLoader_DSX destructor
-AppLoader_THREEDSX::~AppLoader_THREEDSX() {
-}
-
 ResultStatus AppLoader_THREEDSX::Load() {
-    LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
-
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    FileUtil::IOFile file(filename, "rb");
-
-    if (file.IsOpen()) {
-        Load3DSXFile(file, 0x00100000);
-        Kernel::LoadExec(0x00100000);
-    } else {
+    if (!file->IsOpen())
         return ResultStatus::Error;
-    }
+
+    Load3DSXFile(*file, 0x00100000);
+    Kernel::LoadExec(0x00100000);
 
     is_loaded = true;
     return ResultStatus::Success;

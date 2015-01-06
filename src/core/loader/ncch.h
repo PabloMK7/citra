@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common.h"
-#include "common/file_util.h"
 
 #include "core/loader/loader.h"
 
@@ -147,8 +146,7 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class AppLoader_NCCH final : public AppLoader {
 public:
-    AppLoader_NCCH(const std::string& filename);
-    ~AppLoader_NCCH() override;
+    AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
 
     /**
      * Load the application
@@ -213,9 +211,6 @@ private:
      */
     ResultStatus LoadExec() const;
 
-    std::string     filename;
-
-    bool            is_loaded = false;
     bool            is_compressed = false;
 
     u32             entry_point = 0;

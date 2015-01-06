@@ -15,18 +15,13 @@ namespace Loader {
 /// Loads an 3DSX file
 class AppLoader_THREEDSX final : public AppLoader {
 public:
-    AppLoader_THREEDSX(const std::string& filename);
-    ~AppLoader_THREEDSX() override;
+    AppLoader_THREEDSX(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
 
     /**
      * Load the bootable file
      * @return ResultStatus result of function
      */
     ResultStatus Load() override;
-
-private:
-    std::string filename;
-    bool        is_loaded = false;
 };
 
 } // namespace Loader

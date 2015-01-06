@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "common/common.h"
+#include "common/file_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Loader namespace
@@ -40,7 +41,7 @@ enum class ResultStatus {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    AppLoader() { }
+    AppLoader(std::unique_ptr<FileUtil::IOFile>&& file) : file(std::move(file)) { }
     virtual ~AppLoader() { }
 
     /**
@@ -93,6 +94,10 @@ public:
     virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
+
+protected:
+    std::unique_ptr<FileUtil::IOFile> file;
+    bool                              is_loaded = false;
 };
 
 /**

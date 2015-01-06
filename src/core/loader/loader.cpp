@@ -56,20 +56,24 @@ FileType IdentifyFile(const std::string &filename) {
 ResultStatus LoadFile(const std::string& filename) {
     LOG_INFO(Loader, "Loading file %s...", filename.c_str());
 
+    std::unique_ptr<FileUtil::IOFile> file(new FileUtil::IOFile(filename, "rb"));
+    if (!file->IsOpen())
+        return ResultStatus::Error;
+
     switch (IdentifyFile(filename)) {
 
     //3DSX file format...
     case FileType::THREEDSX:
-        return AppLoader_THREEDSX(filename).Load();
+        return AppLoader_THREEDSX(std::move(file)).Load();
 
     // Standard ELF file format...
     case FileType::ELF:
-        return AppLoader_ELF(filename).Load();
+        return AppLoader_ELF(std::move(file)).Load();
 
     // NCCH/NCSD container formats...
     case FileType::CXI:
     case FileType::CCI: {
-        AppLoader_NCCH app_loader(filename);
+        AppLoader_NCCH app_loader(std::move(file));
 
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
@@ -83,16 +87,11 @@ ResultStatus LoadFile(const std::string& filename) {
     // Raw BIN file format...
     case FileType::BIN:
     {
-        LOG_INFO(Loader, "Loading BIN file %s...", filename.c_str());
-
-        FileUtil::IOFile file(filename, "rb");
-
-        if (file.IsOpen()) {
-            file.ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), (size_t)file.GetSize());
-            Kernel::LoadExec(Memory::EXEFS_CODE_VADDR);
-        } else {
+        size_t size = (size_t)file->GetSize();
+        if (file->ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), size) != size)
             return ResultStatus::Error;
-        }
+
+        Kernel::LoadExec(Memory::EXEFS_CODE_VADDR);
         return ResultStatus::Success;
     }
 

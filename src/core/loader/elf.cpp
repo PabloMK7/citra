@@ -330,34 +330,20 @@ bool ElfReader::LoadSymbols() {
 
 namespace Loader {
 
-/// AppLoader_ELF constructor
-AppLoader_ELF::AppLoader_ELF(const std::string& filename) {
-    this->filename = filename;
-}
-
-/// AppLoader_NCCH destructor
-AppLoader_ELF::~AppLoader_ELF() {
-}
-
 ResultStatus AppLoader_ELF::Load() {
-    LOG_INFO(Loader, "Loading ELF file %s...", filename.c_str());
-
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    FileUtil::IOFile file(filename, "rb");
-
-    if (file.IsOpen()) {
-        u32 size = (u32)file.GetSize();
-        std::unique_ptr<u8[]> buffer(new u8[size]);
-        file.ReadBytes(&buffer[0], size);
-
-        ElfReader elf_reader(&buffer[0]);
-        elf_reader.LoadInto(0x00100000);
-        Kernel::LoadExec(elf_reader.GetEntryPoint());
-    } else {
+    if (!file->IsOpen())
         return ResultStatus::Error;
-    }
+
+    u32 size = static_cast<u32>(file->GetSize());
+    std::unique_ptr<u8[]> buffer(new u8[size]);
+    file->ReadBytes(&buffer[0], size);
+
+    ElfReader elf_reader(&buffer[0]);
+    elf_reader.LoadInto(0x00100000);
+    Kernel::LoadExec(elf_reader.GetEntryPoint());
 
     is_loaded = true;
     return ResultStatus::Success;
