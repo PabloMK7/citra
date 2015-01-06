@@ -100,6 +100,9 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     if (!file.IsOpen())
         return ERROR_FILE;
 
+    // Reset read pointer in case this file has been read before.
+    file.Seek(0, SEEK_SET);
+
     THREEDSX_Header hdr;
     if (file.ReadBytes(&hdr, sizeof(hdr)) != sizeof(hdr))
         return ERROR_READ;

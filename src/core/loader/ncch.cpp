@@ -125,7 +125,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
 
             s64 section_offset = (exefs_header.section[i].offset + exefs_offset +
                                  sizeof(ExeFs_Header)+ncch_offset);
-            file->Seek(section_offset, 0);
+            file->Seek(section_offset, SEEK_SET);
 
             // Section is compressed...
             if (i == 0 && is_compressed) {
@@ -165,13 +165,16 @@ ResultStatus AppLoader_NCCH::Load() {
     if (!file->IsOpen())
         return ResultStatus::Error;
 
+    // Reset read pointer in case this file has been read before.
+    file->Seek(0, SEEK_SET);
+
     file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
 
     // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
     if (0 == memcmp(&ncch_header.magic, "NCSD", 4)) {
         LOG_WARNING(Loader, "Only loading the first (bootable) NCCH within the NCSD file!");
         ncch_offset = 0x4000;
-        file->Seek(ncch_offset, 0);
+        file->Seek(ncch_offset, SEEK_SET);
         file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
     }
 
@@ -198,7 +201,7 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "ExeFS offset:    0x%08X", exefs_offset);
     LOG_DEBUG(Loader, "ExeFS size:      0x%08X", exefs_size);
 
-    file->Seek(exefs_offset + ncch_offset, 0);
+    file->Seek(exefs_offset + ncch_offset, SEEK_SET);
     file->ReadBytes(&exefs_header, sizeof(ExeFs_Header));
 
     LoadExec(); // Load the executable into memory for booting
@@ -238,7 +241,7 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
 
         buffer.resize(romfs_size);
 
-        file->Seek(romfs_offset, 0);
+        file->Seek(romfs_offset, SEEK_SET);
         file->ReadBytes(&buffer[0], romfs_size);
 
         return ResultStatus::Success;
