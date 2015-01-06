@@ -172,12 +172,12 @@ static void GetModelNintendo2DS(Service::Interface* self) {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, GetConfigInfoBlk2,     "GetConfigInfoBlk2"},
     {0x00020000, nullptr,               "SecureInfoGetRegion"},
-    {0x00030000, nullptr,               "GenHashConsoleUnique"},
+    {0x00030040, nullptr,               "GenHashConsoleUnique"},
     {0x00040000, nullptr,               "GetRegionCanadaUSA"},
     {0x00050000, GetSystemModel,        "GetSystemModel"},
     {0x00060000, GetModelNintendo2DS,   "GetModelNintendo2DS"},
-    {0x00070040, nullptr,               "unknown"},
-    {0x00080080, nullptr,               "unknown"},
+    {0x00070040, nullptr,               "WriteToFirstByteCfgSavegame"},
+    {0x00080080, nullptr,               "GoThroughTable"},
     {0x00090040, GetCountryCodeString,  "GetCountryCodeString"},
     {0x000A0040, GetCountryCodeID,      "GetCountryCodeID"},
 };
