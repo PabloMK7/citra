@@ -33,17 +33,28 @@ pad_cleft =
 pad_cright =
 
 [Core]
-gpu_refresh_rate = ## 30 (default)
-frame_skip = ## 0: No frameskip (default), 1 : 2x frameskip, 2 : 4x frameskip, etc.
+# The refresh rate for the GPU
+# Defaults to 30
+gpu_refresh_rate =
+
+# The applied frameskip amount. Must be a power of two.
+# 0 (default): No frameskip, 1: x2 frameskip, 2: x4 frameskip, 3: x8 frameskip, etc.
+frame_skip =
 
 [Data Storage]
+# Whether to create a virtual SD card.
+# 1 (default): Yes, 0: No
 use_virtual_sd =
 
 [System Region]
-region_value = ## 0 : Japan, 1 : Usa (default), 2 : Europe, 3 : Australia, 4 : China, 5 : Korea, 6 : Taiwan.
+# The system region that Citra will use during emulation
+# 0: Japan, 1: USA (default), 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
+region_value =
 
 [Miscellaneous]
-log_filter = *:Info  ## Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
+# A filter which removes logs below a certain logging level.
+# Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
+log_filter = *:Info
 )";
 
 }
