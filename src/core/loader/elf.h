@@ -18,6 +18,13 @@ public:
     AppLoader_ELF(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
 
     /**
+     * Returns the type of the file
+     * @param file FileUtil::IOFile open file
+     * @return FileType found, or FileType::Error if this loader doesn't know it
+     */
+    static FileType IdentifyType(FileUtil::IOFile& file);
+
+    /**
      * Load the bootable file
      * @return ResultStatus result of function
      */

@@ -19,11 +19,32 @@ namespace Loader {
 
 /**
  * Identifies the type of a bootable file
- * @param filename String filename of bootable file
- * @todo (ShizZy) this function sucks... make it actually check file contents etc.
+ * @param file open file
  * @return FileType of file
  */
-FileType IdentifyFile(const std::string &filename) {
+static FileType IdentifyFile(FileUtil::IOFile& file) {
+    FileType type;
+
+#define CHECK_TYPE(loader) \
+    type = AppLoader_##loader::IdentifyType(file); \
+    if (FileType::Error != type) \
+        return type;
+
+    CHECK_TYPE(THREEDSX)
+    CHECK_TYPE(ELF)
+    CHECK_TYPE(NCCH)
+
+#undef CHECK_TYPE
+
+    return FileType::Unknown;
+}
+
+/**
+ * Guess the type of a bootable file from its extension
+ * @param filename String filename of bootable file
+ * @return FileType of file
+ */
+static FileType GuessFromFilename(const std::string& filename) {
     if (filename.size() == 0) {
         LOG_ERROR(Loader, "invalid filename %s", filename.c_str());
         return FileType::Error;
@@ -34,22 +55,20 @@ FileType IdentifyFile(const std::string &filename) {
         return FileType::Unknown;
     std::string extension = Common::ToLower(filename.substr(extension_loc));
 
-    // TODO(bunnei): Do actual filetype checking instead of naively checking the extension
-    if (extension == ".elf") {
+    if (extension == ".elf")
         return FileType::ELF;
-    } else if (extension == ".axf") {
+    else if (extension == ".axf")
         return FileType::ELF;
-    } else if (extension == ".cxi") {
+    else if (extension == ".cxi")
         return FileType::CXI;
-    } else if (extension == ".cci") {
+    else if (extension == ".cci")
         return FileType::CCI;
-    } else if (extension == ".bin") {
+    else if (extension == ".bin")
         return FileType::BIN;
-    } else if (extension == ".3ds") {
+    else if (extension == ".3ds")
         return FileType::CCI;
-    } else if (extension == ".3dsx") {
+    else if (extension == ".3dsx")
         return FileType::THREEDSX;
-    }
     return FileType::Unknown;
 }
 
@@ -60,7 +79,16 @@ ResultStatus LoadFile(const std::string& filename) {
     if (!file->IsOpen())
         return ResultStatus::Error;
 
-    switch (IdentifyFile(filename)) {
+    FileType type = IdentifyFile(*file);
+    FileType filename_type = GuessFromFilename(filename);
+
+    if (type != filename_type) {
+        LOG_WARNING(Loader, "File %s has a different type than its extension.", filename.c_str());
+        if (FileType::Unknown == type)
+            type = filename_type;
+    }
+
+    switch (type) {
 
     //3DSX file format...
     case FileType::THREEDSX:
@@ -72,7 +100,8 @@ ResultStatus LoadFile(const std::string& filename) {
 
     // NCCH/NCSD container formats...
     case FileType::CXI:
-    case FileType::CCI: {
+    case FileType::CCI:
+    {
         AppLoader_NCCH app_loader(std::move(file));
 
         // Load application and RomFS
@@ -100,9 +129,10 @@ ResultStatus LoadFile(const std::string& filename) {
 
     // IdentifyFile could know identify file type...
     case FileType::Unknown:
-
-    default:
+    {
+        LOG_CRITICAL(Loader, "File %s is of unknown type.");
         return ResultStatus::ErrorInvalidFormat;
+    }
     }
     return ResultStatus::Error;
 }

@@ -38,6 +38,10 @@ enum class ResultStatus {
     ErrorMemoryAllocationFailed,
 };
 
+static u32 MakeMagic(char a, char b, char c, char d) {
+    return a | b << 8 | c << 16 | d << 24;
+}
+
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
@@ -99,13 +103,6 @@ protected:
     std::unique_ptr<FileUtil::IOFile> file;
     bool                              is_loaded = false;
 };
-
-/**
- * Identifies the type of a bootable file
- * @param filename String filename of bootable file
- * @return FileType of file
- */
-FileType IdentifyFile(const std::string &filename);
 
 /**
  * Identifies and loads a bootable file

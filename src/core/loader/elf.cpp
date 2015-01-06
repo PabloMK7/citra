@@ -330,6 +330,18 @@ bool ElfReader::LoadSymbols() {
 
 namespace Loader {
 
+FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
+    u32 magic;
+    file.Seek(0, SEEK_SET);
+    if (1 != file.ReadArray<u32>(&magic, 1))
+        return FileType::Error;
+
+    if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
+        return FileType::ELF;
+
+    return FileType::Error;
+}
+
 ResultStatus AppLoader_ELF::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;

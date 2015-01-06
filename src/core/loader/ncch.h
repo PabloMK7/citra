@@ -13,7 +13,7 @@
 
 struct NCCH_Header {
     u8 signature[0x100];
-    char magic[4];
+    u32 magic;
     u32 content_size;
     u8 partition_id[8];
     u16 maker_code;
@@ -147,6 +147,13 @@ namespace Loader {
 class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
+
+    /**
+     * Returns the type of the file
+     * @param file FileUtil::IOFile open file
+     * @return FileType found, or FileType::Error if this loader doesn't know it
+     */
+    static FileType IdentifyType(FileUtil::IOFile& file);
 
     /**
      * Load the application

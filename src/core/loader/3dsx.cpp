@@ -44,7 +44,6 @@ enum THREEDSX_Error {
 static const u32 RELOCBUFSIZE = 512;
 
 // File header
-static const u32 THREEDSX_MAGIC = 0x58534433; // '3DSX'
 #pragma pack(1)
 struct THREEDSX_Header
 {
@@ -200,6 +199,18 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     LOG_DEBUG(Loader, "BSS:    %u pages\n", bss_load_size / 0x1000);
 
     return ERROR_NONE;
+}
+
+FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
+    u32 magic;
+    file.Seek(0, SEEK_SET);
+    if (1 != file.ReadArray<u32>(&magic, 1))
+        return FileType::Error;
+
+    if (MakeMagic('3', 'D', 'S', 'X') == magic)
+        return FileType::THREEDSX;
+
+    return FileType::Error;
 }
 
 ResultStatus AppLoader_THREEDSX::Load() {
