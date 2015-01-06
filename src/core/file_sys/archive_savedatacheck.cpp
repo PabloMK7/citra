@@ -12,8 +12,8 @@
 
 namespace FileSys {
 
-static std::string GetSaveDataCheckContainerPath(const std::string& mount_point) {
-    return Common::StringFromFormat("%s%s/title/", mount_point.c_str(), SYSTEM_ID.c_str());
+static std::string GetSaveDataCheckContainerPath(const std::string& nand_directory) {
+    return Common::StringFromFormat("%s%s/title/", nand_directory.c_str(), SYSTEM_ID.c_str());
 }
 
 static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high, u32 low) {
@@ -21,8 +21,8 @@ static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high
             mount_point.c_str(), high, low);
 }
 
-Archive_SaveDataCheck::Archive_SaveDataCheck(const std::string& mount_loc) :
-mount_point(GetSaveDataCheckContainerPath(mount_loc)) {
+Archive_SaveDataCheck::Archive_SaveDataCheck(const std::string& nand_directory) :
+        mount_point(GetSaveDataCheckContainerPath(nand_directory)) {
 }
 
 ResultCode Archive_SaveDataCheck::Open(const Path& path) {

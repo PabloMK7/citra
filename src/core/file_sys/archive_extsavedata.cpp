@@ -34,7 +34,7 @@ static std::string GetExtDataContainerPath(const std::string& mount_point, bool 
 }
 
 Archive_ExtSaveData::Archive_ExtSaveData(const std::string& mount_location, bool shared)
-    : DiskArchive(GetExtDataContainerPath(mount_location, shared)), concrete_mount_point(mount_point) {
+        : DiskArchive(GetExtDataContainerPath(mount_location, shared)), concrete_mount_point(mount_point) {
     LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
 }
 

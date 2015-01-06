@@ -36,6 +36,7 @@ namespace std {
     };
 }
 
+/// TODO(Subv): Confirm length of these strings
 const std::string SYSTEM_ID = "00000000000000000000000000000000";
 const std::string SDCARD_ID = "00000000000000000000000000000000";
 
@@ -436,8 +437,7 @@ void ArchiveInit() {
     next_handle = 1;
 
     // TODO(Link Mauve): Add the other archive types (see here for the known types:
-    // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).  Currently the only half-finished
-    // archive type is SDMC, so it is the only one getting exposed.
+    // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
