@@ -331,7 +331,7 @@ bool ElfReader::LoadSymbols() {
 namespace Loader {
 
 /// AppLoader_ELF constructor
-AppLoader_ELF::AppLoader_ELF(const std::string& filename) : is_loaded(false) {
+AppLoader_ELF::AppLoader_ELF(const std::string& filename) {
     this->filename = filename;
 }
 
@@ -358,6 +358,8 @@ ResultStatus AppLoader_ELF::Load() {
     } else {
         return ResultStatus::Error;
     }
+
+    is_loaded = true;
     return ResultStatus::Success;
 }
 

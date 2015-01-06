@@ -102,7 +102,6 @@ static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompresse
 /// AppLoader_NCCH constructor
 AppLoader_NCCH::AppLoader_NCCH(const std::string& filename) {
     this->filename = filename;
-    is_loaded = false;
     is_compressed = false;
     entry_point = 0;
     ncch_offset = 0;
@@ -221,9 +220,9 @@ ResultStatus AppLoader_NCCH::Load() {
         file.Seek(exefs_offset + ncch_offset, 0);
         file.ReadBytes(&exefs_header, sizeof(ExeFs_Header));
 
-        is_loaded = true; // Set state to loaded
-
         LoadExec(); // Load the executable into memory for booting
+
+        is_loaded = true; // Set state to loaded
 
         return ResultStatus::Success;
     } else {

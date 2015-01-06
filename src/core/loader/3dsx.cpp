@@ -215,13 +215,20 @@ AppLoader_THREEDSX::~AppLoader_THREEDSX() {
 
 ResultStatus AppLoader_THREEDSX::Load() {
     LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
+
+    if (is_loaded)
+        return ResultStatus::ErrorAlreadyLoaded;
+
     FileUtil::IOFile file(filename, "rb");
+
     if (file.IsOpen()) {
         THREEDSXReader::Load3DSXFile(filename, 0x00100000);
         Kernel::LoadExec(0x00100000);
     } else {
         return ResultStatus::Error;
     }
+
+    is_loaded = true;
     return ResultStatus::Success;
 }
 

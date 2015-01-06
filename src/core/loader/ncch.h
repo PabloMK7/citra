@@ -215,7 +215,7 @@ private:
 
     std::string     filename;
 
-    bool            is_loaded;
+    bool            is_loaded = false;
     bool            is_compressed;
 
     u32             entry_point;

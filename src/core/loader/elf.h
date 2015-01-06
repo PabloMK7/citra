@@ -26,7 +26,7 @@ public:
 
 private:
     std::string filename;
-    bool        is_loaded;
+    bool        is_loaded = false;
 };
 
 } // namespace Loader
