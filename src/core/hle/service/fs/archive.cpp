@@ -436,7 +436,7 @@ ResultCode FormatSaveData() {
 void ArchiveInit() {
     next_handle = 1;
 
-    // TODO(Link Mauve): Add the other archive types (see here for the known types:
+    // TODO(Subv): Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
