@@ -216,11 +216,11 @@ private:
     std::string     filename;
 
     bool            is_loaded = false;
-    bool            is_compressed;
+    bool            is_compressed = false;
 
-    u32             entry_point;
-    u32             ncch_offset; // Offset to NCCH header, can be 0 or after NCSD header
-    u32             exefs_offset;
+    u32             entry_point = 0;
+    u32             ncch_offset = 0; // Offset to NCCH header, can be 0 or after NCSD header
+    u32             exefs_offset = 0;
 
     NCCH_Header     ncch_header;
     ExeFs_Header    exefs_header;

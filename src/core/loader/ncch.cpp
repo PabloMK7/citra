@@ -102,10 +102,6 @@ static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompresse
 /// AppLoader_NCCH constructor
 AppLoader_NCCH::AppLoader_NCCH(const std::string& filename) {
     this->filename = filename;
-    is_compressed = false;
-    entry_point = 0;
-    ncch_offset = 0;
-    exefs_offset = 0;
 }
 
 /// AppLoader_NCCH destructor
