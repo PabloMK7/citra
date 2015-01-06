@@ -103,6 +103,8 @@ public:
         return num_instructions;
     }
 
+    s64 down_count; ///< A decreasing counter of remaining cycles before the next event, decreased by the cpu run loop
+
 protected:
 
     /**
