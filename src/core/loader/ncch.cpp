@@ -113,10 +113,6 @@ AppLoader_NCCH::AppLoader_NCCH(const std::string& filename) {
 AppLoader_NCCH::~AppLoader_NCCH() {
 }
 
-/**
- * Loads .code section into memory for booting
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::LoadExec() const {
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
@@ -130,12 +126,6 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
     return ResultStatus::Error;
 }
 
-/**
- * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
- * @param name Name of section to read out of NCCH file
- * @param buffer Vector to read data into
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const {
     // Iterate through the ExeFs archive until we find the .code file...
     FileUtil::IOFile file(filename, "rb");
@@ -187,12 +177,6 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
     return ResultStatus::ErrorNotUsed;
 }
 
-/**
- * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
- * @param error_string Pointer to string to put error message if an error has occurred
- * @todo Move NCSD parsing out of here and create a separate function for loading these
- * @return True on success, otherwise false
- */
 ResultStatus AppLoader_NCCH::Load() {
     LOG_INFO(Loader, "Loading NCCH file %s...", filename.c_str());
 
@@ -248,47 +232,22 @@ ResultStatus AppLoader_NCCH::Load() {
     return ResultStatus::Error;
 }
 
-/**
- * Get the code (typically .code section) of the application
- * @param buffer Reference to buffer to store data
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) const {
     return LoadSectionExeFS(".code", buffer);
 }
 
-/**
- * Get the icon (typically icon section) of the application
- * @param buffer Reference to buffer to store data
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer) const {
     return LoadSectionExeFS("icon", buffer);
 }
 
-/**
- * Get the banner (typically banner section) of the application
- * @param buffer Reference to buffer to store data
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) const {
     return LoadSectionExeFS("banner", buffer);
 }
 
-/**
- * Get the logo (typically logo section) of the application
- * @param buffer Reference to buffer to store data
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) const {
     return LoadSectionExeFS("logo", buffer);
 }
 
-/**
- * Get the RomFS of the application
- * @param buffer Reference to buffer to store data
- * @return ResultStatus result of function
- */
 ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
     FileUtil::IOFile file(filename, "rb");
     if (file.IsOpen()) {

@@ -53,11 +53,6 @@ FileType IdentifyFile(const std::string &filename) {
     return FileType::Unknown;
 }
 
-/**
- * Identifies and loads a bootable file
- * @param filename String filename of bootable file
- * @return ResultStatus result of function
- */
 ResultStatus LoadFile(const std::string& filename) {
     LOG_INFO(Loader, "Loading file %s...", filename.c_str());
 

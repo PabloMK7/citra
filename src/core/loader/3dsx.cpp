@@ -213,10 +213,6 @@ AppLoader_THREEDSX::AppLoader_THREEDSX(const std::string& filename) : filename(f
 AppLoader_THREEDSX::~AppLoader_THREEDSX() {
 }
 
-/**
-* Loads a 3DSX file
-* @return Success on success, otherwise Error
-*/
 ResultStatus AppLoader_THREEDSX::Load() {
     LOG_INFO(Loader, "Loading 3DSX file %s...", filename.c_str());
     FileUtil::IOFile file(filename, "rb");

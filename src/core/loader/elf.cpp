@@ -339,12 +339,6 @@ AppLoader_ELF::AppLoader_ELF(const std::string& filename) : is_loaded(false) {
 AppLoader_ELF::~AppLoader_ELF() {
 }
 
-/**
- * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
- * @param error_string Pointer to string to put error message if an error has occurred
- * @todo Move NCSD parsing out of here and create a separate function for loading these
- * @return True on success, otherwise false
- */
 ResultStatus AppLoader_ELF::Load() {
     LOG_INFO(Loader, "Loading ELF file %s...", filename.c_str());
 
