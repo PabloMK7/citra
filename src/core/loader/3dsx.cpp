@@ -86,11 +86,6 @@ struct THREEloadinfo
     u32 seg_sizes[3];
 };
 
-class THREEDSXReader {
-public:
-     static int Load3DSXFile(const std::string& filename, u32 base_addr);
-};
-
 static u32 TranslateAddr(u32 addr, THREEloadinfo *loadinfo, u32* offsets)
 {
     if (addr < offsets[0])
@@ -100,12 +95,11 @@ static u32 TranslateAddr(u32 addr, THREEloadinfo *loadinfo, u32* offsets)
     return loadinfo->seg_addrs[2] + addr - offsets[1];
 }
 
-int THREEDSXReader::Load3DSXFile(const std::string& filename, u32 base_addr)
+static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
 {
-    FileUtil::IOFile file(filename, "rb");
-    if (!file.IsOpen()) {
+    if (!file.IsOpen())
         return ERROR_FILE;
-    }
+
     THREEDSX_Header hdr;
     if (file.ReadBytes(&hdr, sizeof(hdr)) != sizeof(hdr))
         return ERROR_READ;
@@ -222,7 +216,7 @@ ResultStatus AppLoader_THREEDSX::Load() {
     FileUtil::IOFile file(filename, "rb");
 
     if (file.IsOpen()) {
-        THREEDSXReader::Load3DSXFile(filename, 0x00100000);
+        Load3DSXFile(file, 0x00100000);
         Kernel::LoadExec(0x00100000);
     } else {
         return ResultStatus::Error;
