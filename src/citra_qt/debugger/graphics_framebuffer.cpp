@@ -158,7 +158,7 @@ void GraphicsFramebufferWidget::OnFramebufferAddressChanged(qint64 new_value)
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
+void GraphicsFramebufferWidget::OnFramebufferWidthChanged(unsigned int new_value)
 {
     if (framebuffer_width != new_value) {
         framebuffer_width = new_value;
@@ -168,7 +168,7 @@ void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferHeightChanged(int new_value)
+void GraphicsFramebufferWidget::OnFramebufferHeightChanged(unsigned int new_value)
 {
     if (framebuffer_height != new_value) {
         framebuffer_height = new_value;
@@ -227,8 +227,8 @@ void GraphicsFramebufferWidget::OnUpdate()
     {
         QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
         u32* color_buffer = (u32*)Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned y = 0; y < framebuffer_height; ++y) {
-            for (unsigned x = 0; x < framebuffer_width; ++x) {
+        for (unsigned int y = 0; y < framebuffer_height; ++y) {
+            for (unsigned int x = 0; x < framebuffer_width; ++x) {
                 u32 value = *(color_buffer + x + y * framebuffer_width);
 
                 decoded_image.setPixel(x, y, qRgba((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF, 255/*value >> 24*/));
@@ -242,8 +242,8 @@ void GraphicsFramebufferWidget::OnUpdate()
     {
         QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
         u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned y = 0; y < framebuffer_height; ++y) {
-            for (unsigned x = 0; x < framebuffer_width; ++x) {
+        for (unsigned int y = 0; y < framebuffer_height; ++y) {
+            for (unsigned int x = 0; x < framebuffer_width; ++x) {
                 u8* pixel_pointer = color_buffer + x * 3 + y * 3 * framebuffer_width;
 
                 decoded_image.setPixel(x, y, qRgba(pixel_pointer[0], pixel_pointer[1], pixel_pointer[2], 255/*value >> 24*/));
@@ -257,8 +257,8 @@ void GraphicsFramebufferWidget::OnUpdate()
     {
         QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
         u32* color_buffer = (u32*)Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned y = 0; y < framebuffer_height; ++y) {
-            for (unsigned x = 0; x < framebuffer_width; ++x) {
+        for (unsigned int y = 0; y < framebuffer_height; ++y) {
+            for (unsigned int x = 0; x < framebuffer_width; ++x) {
                 u16 value = *(u16*)(((u8*)color_buffer) + x * 2 + y * framebuffer_width * 2);
                 u8 r = Color::Convert5To8((value >> 11) & 0x1F);
                 u8 g = Color::Convert5To8((value >> 6) & 0x1F);

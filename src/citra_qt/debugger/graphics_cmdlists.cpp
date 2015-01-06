@@ -229,7 +229,7 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
      cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::registers.reg_name)) / 4)
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
-    const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
+    const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
     if (COMMAND_IN_RANGE(command_id, texture0) ||
         COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {
@@ -255,7 +255,7 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
 void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget;
 
-    const int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toInt();
+    const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
     if (COMMAND_IN_RANGE(command_id, texture0) ||
         COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {

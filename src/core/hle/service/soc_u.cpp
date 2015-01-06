@@ -308,11 +308,11 @@ static void Socket(Service::Interface* self) {
 
     u32 socket_handle = static_cast<u32>(::socket(domain, type, protocol));
 
-    if (socket_handle != SOCKET_ERROR_VALUE)
+    if ((s32)socket_handle != SOCKET_ERROR_VALUE)
         open_sockets[socket_handle] = { socket_handle, true };
 
     int result = 0;
-    if (socket_handle == SOCKET_ERROR_VALUE)
+    if ((s32)socket_handle == SOCKET_ERROR_VALUE)
         result = TranslateError(GET_ERRNO);
 
     cmd_buffer[1] = result;
@@ -436,11 +436,11 @@ static void Accept(Service::Interface* self) {
     socklen_t addr_len = sizeof(addr);
     u32 ret = static_cast<u32>(::accept(socket_handle, &addr, &addr_len));
     
-    if (ret != SOCKET_ERROR_VALUE)
+    if ((s32)ret != SOCKET_ERROR_VALUE)
         open_sockets[ret] = { ret, true };
 
     int result = 0;
-    if (ret == SOCKET_ERROR_VALUE) {
+    if ((s32)ret == SOCKET_ERROR_VALUE) {
         result = TranslateError(GET_ERRNO);
     } else {
         CTRSockAddr ctr_addr = CTRSockAddr::FromPlatform(addr);
