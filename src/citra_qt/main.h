@@ -46,6 +46,7 @@ private slots:
     void OnMenuLoadSymbolMap();
     void OnOpenHotkeysDialog();
     void OnConfigure();
+    void OnDisplayTitleBars(bool);
     void ToggleWindowMode();
 
 private:

@@ -114,6 +114,9 @@ GMainWindow::GMainWindow()
     ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", true).toBool());
     ToggleWindowMode();
 
+    ui.actionDisplay_widget_title_bars->setChecked(settings.value("displayTitleBars", true).toBool());
+    OnDisplayTitleBars(ui.actionDisplay_widget_title_bars->isChecked());
+
     // Setup connections
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
     connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
@@ -154,6 +157,27 @@ GMainWindow::~GMainWindow()
         delete render_window;
 
     Pica::g_debug_context.reset();
+}
+
+void GMainWindow::OnDisplayTitleBars(bool show)
+{
+    QList<QDockWidget*> widgets = findChildren<QDockWidget*>();
+
+    if (show) {
+        for (QDockWidget* widget: widgets) {
+            QWidget* old = widget->titleBarWidget();
+            widget->setTitleBarWidget(nullptr);
+            if (old != nullptr)
+                delete old;
+        }
+    } else {
+        for (QDockWidget* widget: widgets) {
+            QWidget* old = widget->titleBarWidget();
+            widget->setTitleBarWidget(new QWidget());
+            if (old != nullptr)
+                delete old;
+        }
+    }
 }
 
 void GMainWindow::BootGame(std::string filename)
@@ -259,6 +283,7 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("state", saveState());
     settings.setValue("geometryRenderWindow", render_window->saveGeometry());
     settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
+    settings.setValue("displayTitleBars", ui.actionDisplay_widget_title_bars->isChecked());
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
 
