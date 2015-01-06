@@ -13,9 +13,9 @@
 #include "video_core/color.h"
 #include "video_core/pica.h"
 
-#include "graphics_framebuffer.hxx"
+#include "graphics_framebuffer.h"
 
-#include "util/spinbox.hxx"
+#include "util/spinbox.h"
 
 BreakPointObserverDock::BreakPointObserverDock(std::shared_ptr<Pica::DebugContext> debug_context,
                                                const QString& title, QWidget* parent)

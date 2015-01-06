@@ -4,7 +4,7 @@
 
 #include <QStandardItemModel>
 
-#include "callstack.hxx"
+#include "callstack.h"
 
 #include "core/core.h"
 #include "core/arm/arm_interface.h"

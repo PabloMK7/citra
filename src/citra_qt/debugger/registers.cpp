@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "registers.hxx"
+#include "registers.h"
 
 #include "core/core.h"
 #include "core/arm/arm_interface.h"

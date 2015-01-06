@@ -16,9 +16,9 @@
 
 #include "video_core/debug_utils/debug_utils.h"
 
-#include "graphics_cmdlists.hxx"
+#include "graphics_cmdlists.h"
 
-#include "util/spinbox.hxx"
+#include "util/spinbox.h"
 
 QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);

@@ -8,7 +8,7 @@
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include "qhexedit.h"
-#include "main.hxx"
+#include "main.h"
 
 #include "common/common.h"
 #include "common/logging/text_formatter.h"
@@ -22,18 +22,18 @@
 #include <unistd.h>
 #endif
 
-#include "bootmanager.hxx"
-#include "hotkeys.hxx"
+#include "bootmanager.h"
+#include "hotkeys.h"
 
 //debugger
-#include "debugger/disassembler.hxx"
-#include "debugger/registers.hxx"
-#include "debugger/callstack.hxx"
-#include "debugger/ramview.hxx"
-#include "debugger/graphics.hxx"
-#include "debugger/graphics_breakpoints.hxx"
-#include "debugger/graphics_cmdlists.hxx"
-#include "debugger/graphics_framebuffer.hxx"
+#include "debugger/disassembler.h"
+#include "debugger/registers.h"
+#include "debugger/callstack.h"
+#include "debugger/ramview.h"
+#include "debugger/graphics.h"
+#include "debugger/graphics_breakpoints.h"
+#include "debugger/graphics_cmdlists.h"
+#include "debugger/graphics_framebuffer.h"
 
 #include "core/settings.h"
 #include "core/system.h"

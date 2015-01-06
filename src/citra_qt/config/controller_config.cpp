@@ -4,8 +4,8 @@
 
 #include <QDialogButtonBox>
 
-#include "controller_config.hxx"
-#include "controller_config_util.hxx"
+#include "controller_config.h"
+#include "controller_config_util.h"
 
 /* TODO(bunnei): ImplementMe
 

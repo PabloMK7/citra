@@ -9,7 +9,7 @@
 #endif
 
 #include "common/common.h"
-#include "bootmanager.hxx"
+#include "bootmanager.h"
 
 #include "core/core.h"
 #include "core/settings.h"

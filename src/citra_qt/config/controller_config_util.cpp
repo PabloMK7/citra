@@ -9,7 +9,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 
-#include "controller_config_util.hxx"
+#include "controller_config_util.h"
 
 /* TODO(bunnei): ImplementMe
 GStickConfig::GStickConfig(common::Config::Control leftid, common::Config::Control rightid, common::Config::Control upid, common::Config::Control downid, QObject* change_receiver, QWidget* parent) : QWidget(parent)

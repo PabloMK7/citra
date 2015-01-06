@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "disassembler.hxx"
+#include "disassembler.h"
 
-#include "../bootmanager.hxx"
-#include "../hotkeys.hxx"
+#include "../bootmanager.h"
+#include "../hotkeys.h"
 
 #include "common/common.h"
 #include "core/mem_map.h"
