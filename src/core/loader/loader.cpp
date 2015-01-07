@@ -72,12 +72,30 @@ static FileType GuessFromFilename(const std::string& filename) {
     return FileType::Unknown;
 }
 
-ResultStatus LoadFile(const std::string& filename) {
-    LOG_INFO(Loader, "Loading file %s...", filename.c_str());
+static const char* GetFileTypeString(FileType type) {
+    switch (type) {
+    case FileType::CCI:
+        return "NCSD";
+    case FileType::CXI:
+        return "NCCH";
+    case FileType::ELF:
+        return "ELF";
+    case FileType::THREEDSX:
+        return "3DSX";
+    case FileType::BIN:
+        return "raw";
+    case FileType::Error:
+    case FileType::Unknown:
+        return "unknown";
+    }
+}
 
+ResultStatus LoadFile(const std::string& filename) {
     std::unique_ptr<FileUtil::IOFile> file(new FileUtil::IOFile(filename, "rb"));
-    if (!file->IsOpen())
+    if (!file->IsOpen()) {
+        LOG_ERROR(Loader, "Failed to load file %s", filename.c_str());
         return ResultStatus::Error;
+    }
 
     FileType type = IdentifyFile(*file);
     FileType filename_type = GuessFromFilename(filename);
@@ -87,6 +105,8 @@ ResultStatus LoadFile(const std::string& filename) {
         if (FileType::Unknown == type)
             type = filename_type;
     }
+
+    LOG_INFO(Loader, "Loading file %s as %s...", filename.c_str(), GetFileTypeString(type));
 
     switch (type) {
 
