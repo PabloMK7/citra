@@ -85,7 +85,7 @@ struct THREEloadinfo
     u32 seg_sizes[3];
 };
 
-static u32 TranslateAddr(u32 addr, THREEloadinfo *loadinfo, u32* offsets)
+static u32 TranslateAddr(u32 addr, const THREEloadinfo *loadinfo, u32* offsets)
 {
     if (addr < offsets[0])
         return loadinfo->seg_addrs[0] + addr;
@@ -130,8 +130,9 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     // Read the relocation headers
     u32* relocs = (u32*)(loadinfo.seg_ptrs[2] + hdr.data_seg_size);
 
-    for (u32 current_segment = 0; current_segment < 3; current_segment++) {
-        if (file.ReadBytes(&relocs[current_segment*n_reloc_tables], n_reloc_tables * 4) != n_reloc_tables * 4)
+    for (unsigned current_segment = 0; current_segment < 3; current_segment++) {
+        size_t size = n_reloc_tables * 4;
+        if (file.ReadBytes(&relocs[current_segment * n_reloc_tables], size) != size)
             return ERROR_READ;
     }
 
@@ -147,9 +148,9 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     memset((char*)loadinfo.seg_ptrs[2] + hdr.data_seg_size - hdr.bss_size, 0, hdr.bss_size);
 
     // Relocate the segments
-    for (u32 current_segment = 0; current_segment < 3; current_segment++) {
-        for (u32 current_segment_reloc_table = 0; current_segment_reloc_table < n_reloc_tables; current_segment_reloc_table++) {
-            u32 n_relocs = relocs[current_segment*n_reloc_tables + current_segment_reloc_table];
+    for (unsigned current_segment = 0; current_segment < 3; current_segment++) {
+        for (unsigned current_segment_reloc_table = 0; current_segment_reloc_table < n_reloc_tables; current_segment_reloc_table++) {
+            u32 n_relocs = relocs[current_segment * n_reloc_tables + current_segment_reloc_table];
             if (current_segment_reloc_table >= 2) {
                 // We are not using this table - ignore it because we don't know what it dose
                 file.Seek(n_relocs*sizeof(THREEDSX_Reloc), SEEK_CUR);
@@ -158,29 +159,35 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
             static THREEDSX_Reloc reloc_table[RELOCBUFSIZE];
 
             u32* pos = (u32*)loadinfo.seg_ptrs[current_segment];
-            u32* end_pos = pos + (loadinfo.seg_sizes[current_segment] / 4);
+            const u32* end_pos = pos + (loadinfo.seg_sizes[current_segment] / 4);
 
             while (n_relocs) {
                 u32 remaining = std::min(RELOCBUFSIZE, n_relocs);
                 n_relocs -= remaining;
 
-                if (file.ReadBytes(reloc_table, remaining*sizeof(THREEDSX_Reloc)) != remaining*sizeof(THREEDSX_Reloc))
+                if (file.ReadBytes(reloc_table, remaining * sizeof(THREEDSX_Reloc)) != remaining * sizeof(THREEDSX_Reloc))
                     return ERROR_READ;
 
-                for (u32 current_inprogress = 0; current_inprogress < remaining && pos < end_pos; current_inprogress++) {
-                    LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)\n",
-                        current_segment_reloc_table, (u32)reloc_table[current_inprogress].skip, (u32)reloc_table[current_inprogress].patch);
-                    pos += reloc_table[current_inprogress].skip;
-                    s32 num_patches = reloc_table[current_inprogress].patch;
+                for (unsigned current_inprogress = 0; current_inprogress < remaining && pos < end_pos; current_inprogress++) {
+                    const auto& table = reloc_table[current_inprogress];
+                    LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)\n", current_segment_reloc_table,
+                              (u32)table.skip, (u32)table.patch);
+                    pos += table.skip;
+                    s32 num_patches = table.patch;
                     while (0 < num_patches && pos < end_pos) {
                         u32 in_addr = (char*)pos - (char*)&all_mem[0];
                         u32 addr = TranslateAddr(*pos, &loadinfo, offsets);
                         LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)\n",
-                            base_addr + in_addr, addr, current_segment_reloc_table, *pos);
+                                  base_addr + in_addr, addr, current_segment_reloc_table, *pos);
                         switch (current_segment_reloc_table) {
-                        case 0: *pos = (addr); break;
-                        case 1: *pos = (addr - in_addr); break;
-                        default: break; //this should never happen
+                        case 0:
+                            *pos = (addr);
+                            break;
+                        case 1:
+                            *pos = (addr - in_addr);
+                            break;
+                        default:
+                            break; //this should never happen
                         }
                         pos++;
                         num_patches--;
