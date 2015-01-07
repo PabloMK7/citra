@@ -344,6 +344,10 @@ static void SleepThread(s64 nanoseconds) {
 
     // Sleep current thread and check for next thread to schedule
     Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
+
+    // Create an event to wake the thread up after the specified nanosecond delay has passed
+    Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThreadHandle(), nanoseconds);
+
     HLE::Reschedule(__func__);
 }
 

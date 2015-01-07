@@ -308,6 +308,37 @@ void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_addres
     GetCurrentThread()->wait_address = wait_address;
 }
 
+/// Event type for the thread wake up event
+static int ThreadWakeupEventType = -1;
+
+/// Callback that will wake up the thread it was scheduled for
+static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
+    Handle handle = static_cast<Handle>(parameter);
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(handle);
+    if (thread == nullptr) {
+        LOG_ERROR(Kernel, "Thread doesn't exist %u", handle);
+        return;
+    }
+
+    Kernel::ResumeThreadFromWait(handle);
+}
+
+
+void WakeThreadAfterDelay(Handle handle, s64 nanoseconds) {
+    // Don't schedule a wakeup if the thread wants to wait forever
+    if (nanoseconds == -1)
+        return;
+
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(handle);
+    if (thread == nullptr) {
+        LOG_ERROR(Kernel, "Thread doesn't exist %u", handle);
+        return;
+    }
+
+    u64 microseconds = nanoseconds / 1000;
+    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, handle);
+}
+
 /// Resumes a thread from waiting by marking it as "ready"
 void ResumeThreadFromWait(Handle handle) {
     Thread* thread = Kernel::g_handle_table.Get<Thread>(handle);
@@ -499,14 +530,6 @@ void Reschedule() {
                 thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type, thread->wait_handle);
         }
     }
-
-    // TODO(bunnei): Hack - There is no timing mechanism yet to wake up a thread if it has been put
-    // to sleep. So, we'll just immediately set it to "ready" again after an attempted context
-    // switch has occurred. This results in the current thread yielding on a sleep once, and then it
-    // will immediately be placed back in the queue for execution.
-
-    if (CheckWaitType(prev, WAITTYPE_SLEEP))
-        ResumeThreadFromWait(prev->GetHandle());
 }
 
 bool IsIdleThread(Handle handle) {
@@ -533,6 +556,7 @@ ResultCode GetThreadId(u32* thread_id, Handle handle) {
 
 void ThreadingInit() {
     next_thread_id = INITIAL_THREAD_ID;
+    ThreadWakeupEventType = CoreTiming::RegisterEvent("ThreadWakeupCallback", ThreadWakeupCallback);
 }
 
 void ThreadingShutdown() {
