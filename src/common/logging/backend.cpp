@@ -22,6 +22,7 @@ static std::shared_ptr<Logger> global_logger;
         SUB(Common, Memory) \
         CLS(Core) \
         SUB(Core, ARM11) \
+        SUB(Core, Timing) \
         CLS(Config) \
         CLS(Debug) \
         SUB(Debug, Emulated) \

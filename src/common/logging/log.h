@@ -41,6 +41,7 @@ enum class Class : ClassType {
     Common_Memory,              ///< Memory mapping and management functions
     Core,                       ///< LLE emulation core
     Core_ARM11,                 ///< ARM11 CPU core
+    Core_Timing,                ///< CoreTiming functions
     Config,                     ///< Emulator configuration (including commandline)
     Debug,                      ///< Debugging tools
     Debug_Emulated,             ///< Debug messages from the emulated programs

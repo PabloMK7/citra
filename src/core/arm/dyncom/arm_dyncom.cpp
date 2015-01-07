@@ -9,6 +9,8 @@
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 
+#include "core/core_timing.h"
+
 const static cpu_config_t s_arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
@@ -77,6 +79,9 @@ u64 ARM_DynCom::GetTicks() const {
 
 void ARM_DynCom::AddTicks(u64 ticks) {
     this->ticks += ticks;
+    down_count -= ticks;
+    if (down_count < 0)
+        CoreTiming::Advance();
 }
 
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
@@ -85,7 +90,8 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     // Dyncom only breaks on instruction dispatch. This only happens on every instruction when
     // executing one instruction at a time. Otherwise, if a block is being executed, more
     // instructions may actually be executed than specified.
-    ticks += InterpreterMainLoop(state.get());
+    unsigned ticks_executed = InterpreterMainLoop(state.get());
+    AddTicks(ticks_executed);
 }
 
 void ARM_DynCom::SaveContext(ThreadContext& ctx) {
