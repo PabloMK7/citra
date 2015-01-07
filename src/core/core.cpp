@@ -5,6 +5,7 @@
 #include "common/common_types.h"
 
 #include "core/core.h"
+#include "core/core_timing.h"
 
 #include "core/settings.h"
 #include "core/arm/disassembler/arm_disasm.h"
@@ -23,7 +24,17 @@ ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
-    g_app_core->Run(tight_loop);
+    // If the current thread is an idle thread, then don't execute instructions,
+    // instead advance to the next event and try to yield to the next thread
+    if (Kernel::IsIdleThread(Kernel::GetCurrentThreadHandle())) {
+        LOG_TRACE(Core_ARM11, "Idling");
+        CoreTiming::Idle();
+        CoreTiming::Advance();
+        HLE::Reschedule(__func__);
+    } else {
+        g_app_core->Run(tight_loop);
+    }
+
     HW::Update();
     if (HLE::g_reschedule) {
         Kernel::Reschedule();
