@@ -46,36 +46,22 @@ Manager* g_manager = nullptr;  ///< Service manager
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Service Manager class
 
-Manager::Manager() {
-}
-
-Manager::~Manager() {
-    for(Interface* service : m_services) {
-        DeleteService(service->GetPortName());
-    }
-}
-
-/// Add a service to the manager (does not create it though)
 void Manager::AddService(Interface* service) {
     // TOOD(yuriks): Fix error reporting
     m_port_map[service->GetPortName()] = Kernel::g_handle_table.Create(service).ValueOr(INVALID_HANDLE);
     m_services.push_back(service);
 }
 
-/// Removes a service from the manager, also frees memory
 void Manager::DeleteService(const std::string& port_name) {
     Interface* service = FetchFromPortName(port_name);
     m_services.erase(std::remove(m_services.begin(), m_services.end(), service), m_services.end());
     m_port_map.erase(port_name);
-    delete service;
 }
 
-/// Get a Service Interface from its Handle
 Interface* Manager::FetchFromHandle(Handle handle) {
     return Kernel::g_handle_table.Get<Interface>(handle);
 }
 
-/// Get a Service Interface from its port
 Interface* Manager::FetchFromPortName(const std::string& port_name) {
     auto itr = m_port_map.find(port_name);
     if (itr == m_port_map.end()) {

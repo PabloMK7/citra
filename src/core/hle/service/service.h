@@ -114,29 +114,22 @@ private:
 
 /// Simple class to manage accessing services from ports and UID handles
 class Manager {
-
 public:
-    Manager();
-
-    ~Manager();
-
-    /// Add a service to the manager (does not create it though)
+    /// Add a service to the manager
     void AddService(Interface* service);
 
-    /// Removes a service from the manager (does not delete it though)
+    /// Removes a service from the manager
     void DeleteService(const std::string& port_name);
 
-    /// Get a Service Interface from its UID
-    Interface* FetchFromHandle(u32 uid);
+    /// Get a Service Interface from its Handle
+    Interface* FetchFromHandle(Handle handle);
 
     /// Get a Service Interface from its port
     Interface* FetchFromPortName(const std::string& port_name);
 
 private:
-
     std::vector<Interface*>     m_services;
     std::map<std::string, u32>  m_port_map;
-
 };
 
 /// Initialize ServiceManager
