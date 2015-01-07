@@ -947,6 +947,15 @@ typedef struct _smla_inst {
     unsigned int Rn;
 } smla_inst;
 
+typedef struct smlalxy_inst {
+    unsigned int x;
+    unsigned int y;
+    unsigned int RdLo;
+    unsigned int RdHi;
+    unsigned int Rm;
+    unsigned int Rn;
+} smlalxy_inst;
+
 typedef struct ssat_inst {
     unsigned int Rn;
     unsigned int Rd;
@@ -2403,7 +2412,25 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
     return inst_base;
 }
 
-ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("SMLALXY"); }
+ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlalxy_inst));
+    smlalxy_inst* const inst_cream = (smlalxy_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->x    = BIT(inst, 5);
+    inst_cream->y    = BIT(inst, 6);
+    inst_cream->RdLo = BITS(inst, 12, 15);
+    inst_cream->RdHi = BITS(inst, 16, 19);
+    inst_cream->Rn   = BITS(inst, 0, 4);
+    inst_cream->Rm   = BITS(inst, 8, 11);
+
+    return inst_base;
+}
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)
 {
@@ -5686,6 +5713,34 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SMLALXY_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlalxy_inst* const inst_cream = (smlalxy_inst*)inst_base->component;
+
+            u64 operand1 = RN;
+            u64 operand2 = RM;
+
+            if (inst_cream->x != 0)
+                operand1 >>= 16;
+            if (inst_cream->y != 0)
+                operand2 >>= 16;
+            operand1 &= 0xFFFF;
+            if (operand1 & 0x8000)
+                operand1 -= 65536;
+            operand2 &= 0xFFFF;
+            if (operand2 & 0x8000)
+                operand2 -= 65536;
+
+            u64 dest = ((u64)RDHI << 32 | RDLO) + (operand1 * operand2);
+            RDLO = (dest & 0xFFFFFFFF);
+            RDHI = ((dest >> 32) & 0xFFFFFFFF);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(smlalxy_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     SMLAW_INST:
     {
