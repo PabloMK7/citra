@@ -61,7 +61,8 @@ public slots:
     void OnPause();
     void OnToggleStartStop();
 
-    void OnCPUStepped();
+    void OnDebugModeEntered();
+    void OnDebugModeLeft();
 
 private:
     // returns -1 if no row is selected

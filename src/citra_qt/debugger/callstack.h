@@ -15,7 +15,8 @@ public:
     CallstackWidget(QWidget* parent = 0);
 
 public slots:
-    void OnCPUStepped();
+    void OnDebugModeEntered();
+    void OnDebugModeLeft();
 
 private:
     Ui::CallStack ui;

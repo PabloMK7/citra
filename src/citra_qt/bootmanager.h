@@ -81,12 +81,18 @@ private:
 
 signals:
     /**
-     * Emitted when CPU when we've finished processing a single Gekko instruction
+     * Emitted when the CPU has halted execution
      *
-     * @warning This will only be emitted when the CPU is not running (SetCpuRunning(false))
      * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
-    void CPUStepped();
+    void DebugModeEntered();
+    
+    /**
+     * Emitted right before the CPU continues execution
+     *
+     * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
+     */
+    void DebugModeLeft();
 };
 
 class GRenderWindow : public QWidget, public EmuWindow

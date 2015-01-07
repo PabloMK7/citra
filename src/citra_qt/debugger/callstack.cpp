@@ -25,7 +25,7 @@ CallstackWidget::CallstackWidget(QWidget* parent): QDockWidget(parent)
     ui.treeView->setModel(callstack_model);
 }
 
-void CallstackWidget::OnCPUStepped()
+void CallstackWidget::OnDebugModeEntered()
 {
     ARM_Disasm* disasm = new ARM_Disasm();
     ARM_Interface* app_core = Core::g_app_core;
@@ -67,4 +67,9 @@ void CallstackWidget::OnCPUStepped()
             counter++;
         }
     }
+}
+
+void CallstackWidget::OnDebugModeLeft()
+{
+
 }

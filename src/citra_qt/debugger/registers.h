@@ -17,7 +17,8 @@ public:
     RegistersWidget(QWidget* parent = NULL);
 
 public slots:
-    void OnCPUStepped();
+    void OnDebugModeEntered();
+    void OnDebugModeLeft();
 
 private:
     Ui::ARMRegisters cpu_regs_ui;

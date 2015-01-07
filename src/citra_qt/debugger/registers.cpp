@@ -41,7 +41,7 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent)
     CSPR->addChild(new QTreeWidgetItem(QStringList("N")));
 }
 
-void RegistersWidget::OnCPUStepped()
+void RegistersWidget::OnDebugModeEntered()
 {
     ARM_Interface* app_core = Core::g_app_core;
 
@@ -64,4 +64,9 @@ void RegistersWidget::OnCPUStepped()
     CSPR->child(12)->setText(1, QString("%1").arg((app_core->GetCPSR() >> 29) & 0x1));  // C - Carry/Borrow/Extend
     CSPR->child(13)->setText(1, QString("%1").arg((app_core->GetCPSR() >> 30) & 0x1));  // Z - Zero
     CSPR->child(14)->setText(1, QString("%1").arg((app_core->GetCPSR() >> 31) & 0x1));  // N - Negative/Less than
+}
+
+void RegistersWidget::OnDebugModeLeft()
+{
+
 }

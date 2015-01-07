@@ -124,9 +124,13 @@ GMainWindow::GMainWindow()
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), disasmWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), registersWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(CPUStepped()), callstackWidget, SLOT(OnCPUStepped()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
@@ -167,8 +171,8 @@ void GMainWindow::BootGame(std::string filename)
     }
 
     disasmWidget->Init();
-    registersWidget->OnCPUStepped();
-    callstackWidget->OnCPUStepped();
+    registersWidget->OnDebugModeEntered();
+    callstackWidget->OnDebugModeEntered();
 
     render_window->GetEmuThread().SetFilename(filename);
     render_window->GetEmuThread().start();

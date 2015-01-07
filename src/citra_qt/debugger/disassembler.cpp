@@ -234,7 +234,7 @@ void DisassemblerWidget::OnToggleStartStop()
     emu_thread.SetCpuRunning(!emu_thread.IsCpuRunning());
 }
 
-void DisassemblerWidget::OnCPUStepped()
+void DisassemblerWidget::OnDebugModeEntered()
 {
     ARMword next_instr = Core::g_app_core->GetPC();
 
@@ -249,6 +249,11 @@ void DisassemblerWidget::OnCPUStepped()
     QModelIndex model_index = model->IndexFromAbsoluteAddress(next_instr);
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+}
+
+void DisassemblerWidget::OnDebugModeLeft()
+{
+
 }
 
 int DisassemblerWidget::SelectedRow()
