@@ -130,7 +130,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     // Read the relocation headers
     u32* relocs = (u32*)(loadinfo.seg_ptrs[2] + hdr.data_seg_size);
 
-    for (unsigned current_segment = 0; current_segment < 3; current_segment++) {
+    for (unsigned current_segment : {0, 1, 2}) {
         size_t size = n_reloc_tables * 4;
         if (file.ReadBytes(&relocs[current_segment * n_reloc_tables], size) != size)
             return ERROR_READ;
@@ -148,7 +148,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     memset((char*)loadinfo.seg_ptrs[2] + hdr.data_seg_size - hdr.bss_size, 0, hdr.bss_size);
 
     // Relocate the segments
-    for (unsigned current_segment = 0; current_segment < 3; current_segment++) {
+    for (unsigned current_segment : {0, 1, 2}) {
         for (unsigned current_segment_reloc_table = 0; current_segment_reloc_table < n_reloc_tables; current_segment_reloc_table++) {
             u32 n_relocs = relocs[current_segment * n_reloc_tables + current_segment_reloc_table];
             if (current_segment_reloc_table >= 2) {
