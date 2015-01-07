@@ -6267,6 +6267,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             addr = RN;
             unsigned int value = Memory::Read8(addr);
             Memory::Write8(addr, (RM & 0xFF));
+            RD = value;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(swp_inst));
