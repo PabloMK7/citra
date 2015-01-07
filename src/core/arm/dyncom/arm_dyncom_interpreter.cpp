@@ -5891,16 +5891,13 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
     SMULW_INST:
     {
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
-            int64_t rm = RM;
-            int64_t rn = RN;
-            if (inst_cream->m)
-                rm = BITS(rm, 16, 31);
-            else
-                rm = BITS(rm, 0, 15);
-            int64_t rst = rm * rn;
-            RD = BITS(rst, 16, 47);
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
+
+            s16 rm = (inst_cream->m == 1) ? ((RM >> 16) & 0xFFFF) : (RM & 0xFFFF);
+
+            s64 result = (s64)rm * (s64)(s32)RN;
+            RD = BITS(result, 16, 47);
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(smlad_inst));
