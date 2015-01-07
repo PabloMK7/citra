@@ -75,7 +75,7 @@ public:
 static std::vector<Handle> thread_queue;
 
 // Lists only ready thread ids.
-static Common::ThreadQueueList<Handle> thread_ready_queue;
+static Common::ThreadQueueList<Handle, THREADPRIO_LOWEST+1> thread_ready_queue;
 
 static Handle current_thread_handle;
 static Thread* current_thread;
