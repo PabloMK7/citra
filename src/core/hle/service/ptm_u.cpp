@@ -142,10 +142,10 @@ Interface::Interface() {
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
     // Create the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
     // TODO(Subv): In the future we should use the FS service to query this archive
-    std::string extsavedata_directory = FileUtil::GetUserPath(D_EXTSAVEDATA);
-    ptm_shared_extsavedata = Common::make_unique<FileSys::Archive_ExtSaveData>(extsavedata_directory);
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    ptm_shared_extsavedata = Common::make_unique<FileSys::Archive_ExtSaveData>(nand_directory, true);
     if (!ptm_shared_extsavedata->Initialize()) {
-        LOG_CRITICAL(Service_PTM, "Could not initialize ExtSaveData archive for the PTM:U service");
+        LOG_CRITICAL(Service_PTM, "Could not initialize SharedExtSaveData archive for the PTM:U service");
         return;
     }
     FileSys::Path archive_path(ptm_shared_extdata_id);

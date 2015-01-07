@@ -676,11 +676,8 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
         paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
         paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
         paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
-        paths[D_EXTSAVEDATA]        = paths[D_USER_IDX] + EXTSAVEDATA_DIR DIR_SEP;
-        paths[D_SAVEDATA_IDX]       = paths[D_USER_IDX] + SAVEDATA_DIR DIR_SEP;
-        paths[D_SAVEDATACHECK_IDX]  = paths[D_USER_IDX] + SAVEDATACHECK_DIR DIR_SEP;
+        paths[D_NAND_IDX]           = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
         paths[D_SYSDATA_IDX]        = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
-        paths[D_SYSSAVEDATA_IDX]    = paths[D_USER_IDX] + SYSSAVEDATA_DIR DIR_SEP;
         paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
         paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
         paths[D_STATESAVES_IDX]     = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;
@@ -722,10 +719,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
             paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
             paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
             paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
-            paths[D_EXTSAVEDATA]        = paths[D_USER_IDX] + EXTSAVEDATA_DIR DIR_SEP;
-            paths[D_SAVEDATA_IDX]       = paths[D_USER_IDX] + SAVEDATA_DIR DIR_SEP;
-            paths[D_SAVEDATACHECK_IDX]  = paths[D_USER_IDX] + SAVEDATACHECK_DIR DIR_SEP;
-            paths[D_SYSSAVEDATA_IDX]    = paths[D_USER_IDX] + SYSSAVEDATA_DIR DIR_SEP;
+            paths[D_NAND_IDX]           = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
             paths[D_SHADERCACHE_IDX]    = paths[D_USER_IDX] + SHADERCACHE_DIR DIR_SEP;
             paths[D_SHADERS_IDX]        = paths[D_USER_IDX] + SHADERS_DIR DIR_SEP;
             paths[D_STATESAVES_IDX]     = paths[D_USER_IDX] + STATESAVES_DIR DIR_SEP;

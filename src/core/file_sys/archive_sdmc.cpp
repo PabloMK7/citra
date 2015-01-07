@@ -16,8 +16,8 @@
 
 namespace FileSys {
 
-Archive_SDMC::Archive_SDMC(const std::string& mount_point) : DiskArchive(mount_point) {
-    LOG_INFO(Service_FS, "Directory %s set as SDMC.", mount_point.c_str());
+Archive_SDMC::Archive_SDMC(const std::string& sdmc_directory) : DiskArchive(sdmc_directory) {
+    LOG_INFO(Service_FS, "Directory %s set as SDMC.", sdmc_directory.c_str());
 }
 
 bool Archive_SDMC::Initialize() {

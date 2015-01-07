@@ -15,8 +15,6 @@
 namespace FileSys {
 
 /// File system interface to the SystemSaveData archive
-/// TODO(Subv): This archive should point to a location in the NAND,
-/// specifically nand:/data/<ID0>/sysdata/<SaveID-Low>/<SaveID-High>
 class Archive_SystemSaveData final : public DiskArchive {
 public:
     Archive_SystemSaveData(const std::string& mount_point, u64 save_id);
