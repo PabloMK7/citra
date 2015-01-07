@@ -13,8 +13,8 @@
 
 namespace Loader {
 
-static const int kMaxSections   = 8;        ///< Maximum number of sections (files) in an ExeFs
-static const int kBlockSize     = 0x200;    ///< Size of ExeFS blocks (in bytes)
+static const int kMaxSections = 8;        ///< Maximum number of sections (files) in an ExeFs
+static const int kBlockSize   = 0x200;    ///< Size of ExeFS blocks (in bytes)
 
 /**
  * Get the decompressed size of an LZSS compressed ExeFS file
@@ -22,7 +22,7 @@ static const int kBlockSize     = 0x200;    ///< Size of ExeFS blocks (in bytes)
  * @param size Size of compressed buffer
  * @return Size of decompressed buffer
  */
-static u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
+static u32 LZSS_GetDecompressedSize(const u8* buffer, u32 size) {
     u32 offset_size = *(u32*)(buffer + size - 4);
     return offset_size + size;
 }
@@ -35,9 +35,9 @@ static u32 LZSS_GetDecompressedSize(u8* buffer, u32 size) {
  * @param decompressed_size Size of decompressed buffer
  * @return True on success, otherwise false
  */
-static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
-    u8* footer = compressed + compressed_size - 8;
-    u32 buffer_top_and_bottom = *(u32*)footer;
+static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
+    const u8* footer = compressed + compressed_size - 8;
+    u32 buffer_top_and_bottom = *reinterpret_cast<const u32*>(footer);
     u32 out = decompressed_size;
     u32 index = compressed_size - ((buffer_top_and_bottom >> 24) & 0xFF);
     u32 stop_index = compressed_size - (buffer_top_and_bottom & 0xFFFFFF);
@@ -45,22 +45,21 @@ static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompresse
     memset(decompressed, 0, decompressed_size);
     memcpy(decompressed, compressed, compressed_size);
 
-    while(index > stop_index) {
+    while (index > stop_index) {
        u8 control = compressed[--index];
 
-        for(u32 i = 0; i < 8; i++) {
-            if(index <= stop_index)
+        for (unsigned i = 0; i < 8; i++) {
+            if (index <= stop_index)
                 break;
-            if(index <= 0)
+            if (index <= 0)
                 break;
-            if(out <= 0)
+            if (out <= 0)
                 break;
 
-            if(control & 0x80) {
+            if (control & 0x80) {
                 // Check if compression is out of bounds
-                if(index < 2) {
+                if (index < 2)
                     return false;
-                }
                 index -= 2;
 
                 u32 segment_offset = compressed[index] | (compressed[index + 1] << 8);
@@ -69,23 +68,21 @@ static bool LZSS_Decompress(u8* compressed, u32 compressed_size, u8* decompresse
                 segment_offset += 2;
 
                 // Check if compression is out of bounds
-                if(out < segment_size) {
+                if (out < segment_size)
                     return false;
-                }
-                for(u32 j = 0; j < segment_size; j++) {
-                    // Check if compression is out of bounds
-                    if(out + segment_offset >= decompressed_size) {
-                        return false;
-                    }
 
-                    u8 data  = decompressed[out + segment_offset];
+                for (unsigned j = 0; j < segment_size; j++) {
+                    // Check if compression is out of bounds
+                    if (out + segment_offset >= decompressed_size)
+                        return false;
+
+                    u8 data = decompressed[out + segment_offset];
                     decompressed[--out] = data;
                 }
             } else {
                 // Check if compression is out of bounds
-                if(out < 1) {
+                if (out < 1)
                     return false;
-                }
                 decompressed[--out] = compressed[--index];
             }
             control <<= 1;
@@ -126,46 +123,44 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
 }
 
 ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const {
-    // Iterate through the ExeFs archive until we find the .code file...
     if (!file->IsOpen())
         return ResultStatus::Error;
 
     LOG_DEBUG(Loader, "%d sections:", kMaxSections);
-    for (int i = 0; i < kMaxSections; i++) {
-        // Load the specified section...
-        if (strcmp((const char*)exefs_header.section[i].name, name) == 0) {
-            LOG_DEBUG(Loader, "%d - offset: 0x%08X, size: 0x%08X, name: %s", i,
-                    exefs_header.section[i].offset, exefs_header.section[i].size,
-                    exefs_header.section[i].name);
+    // Iterate through the ExeFs archive until we find the .code file...
+    for (unsigned section_number = 0; section_number < kMaxSections; section_number++) {
+        const auto& section = exefs_header.section[section_number];
 
-            s64 section_offset = (exefs_header.section[i].offset + exefs_offset +
-                                 sizeof(ExeFs_Header)+ncch_offset);
+        // Load the specified section...
+        if (strcmp(section.name, name) == 0) {
+            LOG_DEBUG(Loader, "%d - offset: 0x%08X, size: 0x%08X, name: %s", section_number,
+                      section.offset, section.size, section.name);
+
+            s64 section_offset = (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
             file->Seek(section_offset, SEEK_SET);
 
-            // Section is compressed...
-            if (i == 0 && is_compressed) {
-                // Read compressed .code section...
+            if (is_compressed) {
+                // Section is compressed, read compressed .code section...
                 std::unique_ptr<u8[]> temp_buffer;
                 try {
-                    temp_buffer.reset(new u8[exefs_header.section[i].size]);
+                    temp_buffer.reset(new u8[section.size]);
                 } catch (std::bad_alloc&) {
                     return ResultStatus::ErrorMemoryAllocationFailed;
                 }
-                file->ReadBytes(&temp_buffer[0], exefs_header.section[i].size);
+
+                if (file->ReadBytes(&temp_buffer[0], section.size) != section.size)
+                    return ResultStatus::Error;
 
                 // Decompress .code section...
-                u32 decompressed_size = LZSS_GetDecompressedSize(&temp_buffer[0],
-                    exefs_header.section[i].size);
+                u32 decompressed_size = LZSS_GetDecompressedSize(&temp_buffer[0], section.size);
                 buffer.resize(decompressed_size);
-                if (!LZSS_Decompress(&temp_buffer[0], exefs_header.section[i].size, &buffer[0],
-                    decompressed_size)) {
+                if (!LZSS_Decompress(&temp_buffer[0], section.size, &buffer[0], decompressed_size))
                     return ResultStatus::ErrorInvalidFormat;
-                }
+            } else {
                 // Section is uncompressed...
-            }
-            else {
-                buffer.resize(exefs_header.section[i].size);
-                file->ReadBytes(&buffer[0], exefs_header.section[i].size);
+                buffer.resize(section.size);
+                if (file->ReadBytes(&buffer[0], section.size) != section.size)
+                    return ResultStatus::Error;
             }
             return ResultStatus::Success;
         }
@@ -183,7 +178,8 @@ ResultStatus AppLoader_NCCH::Load() {
     // Reset read pointer in case this file has been read before.
     file->Seek(0, SEEK_SET);
 
-    file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
+    if (file->ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
+        return ResultStatus::Error;
 
     // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
     if (MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
@@ -199,7 +195,8 @@ ResultStatus AppLoader_NCCH::Load() {
 
     // Read ExHeader...
 
-    file->ReadBytes(&exheader_header, sizeof(ExHeader_Header));
+    if (file->ReadBytes(&exheader_header, sizeof(ExHeader_Header)) != sizeof(ExHeader_Header))
+        return ResultStatus::Error;
 
     is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
     entry_point = exheader_header.codeset_info.text.address;
@@ -217,13 +214,12 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "ExeFS size:      0x%08X", exefs_size);
 
     file->Seek(exefs_offset + ncch_offset, SEEK_SET);
-    file->ReadBytes(&exefs_header, sizeof(ExeFs_Header));
-
-    LoadExec(); // Load the executable into memory for booting
+    if (file->ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
+        return ResultStatus::Error;
 
     is_loaded = true; // Set state to loaded
 
-    return ResultStatus::Success;
+    return LoadExec(); // Load the executable into memory for booting
 }
 
 ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) const {
@@ -257,7 +253,8 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::vector<u8>& buffer) const {
         buffer.resize(romfs_size);
 
         file->Seek(romfs_offset, SEEK_SET);
-        file->ReadBytes(&buffer[0], romfs_size);
+        if (file->ReadBytes(&buffer[0], romfs_size) != romfs_size)
+            return ResultStatus::Error;
 
         return ResultStatus::Success;
     }
