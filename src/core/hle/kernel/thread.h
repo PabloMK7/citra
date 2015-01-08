@@ -104,6 +104,17 @@ ResultVal<u32> GetThreadPriority(const Handle handle);
 /// Set the priority of the thread specified by handle
 ResultCode SetThreadPriority(Handle handle, s32 priority);
 
+/**
+ * Sets up the idle thread, this is a thread that is intended to never execute instructions,
+ * only to advance the timing. It is scheduled when there are no other ready threads in the thread queue
+ * and will try to yield on every call.
+ * @returns The handle of the idle thread
+ */
+Handle SetupIdleThread();
+
+/// Whether the current thread is an idle thread
+bool IsIdleThread(Handle thread);
+
 /// Initialize threading
 void ThreadingInit();
 

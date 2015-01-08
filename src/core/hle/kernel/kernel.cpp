@@ -124,6 +124,8 @@ bool LoadExec(u32 entry_point) {
 
     // 0x30 is the typical main thread priority I've seen used so far
     g_main_thread = Kernel::SetupMainThread(0x30);
+    // Setup the idle thread
+    Kernel::SetupIdleThread();
 
     return true;
 }

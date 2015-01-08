@@ -11,6 +11,7 @@
 #include "common/thread_queue_list.h"
 
 #include "core/core.h"
+#include "core/core_timing.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
@@ -34,6 +35,7 @@ public:
     inline bool IsReady() const { return (status & THREADSTATUS_READY) != 0; }
     inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
+    inline bool IsIdle() const { return idle; }
 
     ResultVal<bool> WaitSynchronization() override {
         const bool wait = status != THREADSTATUS_DORMANT;
@@ -69,6 +71,9 @@ public:
     std::vector<Handle> waiting_threads;
 
     std::string name;
+
+    /// Whether this thread is intended to never actually be executed, i.e. always idle
+    bool idle = false;
 };
 
 // Lists all thread ids that aren't deleted/etc.
@@ -444,7 +449,14 @@ ResultCode SetThreadPriority(Handle handle, s32 priority) {
     return RESULT_SUCCESS;
 }
 
-/// Sets up the primary application thread
+Handle SetupIdleThread() {
+    Handle handle;
+    Thread* thread = CreateThread(handle, "idle", 0, THREADPRIO_LOWEST, THREADPROCESSORID_0, 0, 0);
+    thread->idle = true;
+    CallThread(thread);
+    return handle;
+}
+
 Handle SetupMainThread(s32 priority, int stack_size) {
     Handle handle;
 
@@ -495,6 +507,15 @@ void Reschedule() {
 
     if (CheckWaitType(prev, WAITTYPE_SLEEP))
         ResumeThreadFromWait(prev->GetHandle());
+}
+
+bool IsIdleThread(Handle handle) {
+    Thread* thread = g_handle_table.Get<Thread>(handle);
+    if (!thread) {
+        LOG_ERROR(Kernel, "Thread not found %u", handle);
+        return false;
+    }
+    return thread->IsIdle();
 }
 
 ResultCode GetThreadId(u32* thread_id, Handle handle) {
