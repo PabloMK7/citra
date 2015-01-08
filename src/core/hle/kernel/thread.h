@@ -88,6 +88,13 @@ Handle GetCurrentThreadHandle();
 void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
 
 /**
+ * Schedules an event to wake up the specified thread after the specified delay.
+ * @param handle The thread handle.
+ * @param nanoseconds The time this thread will be allowed to sleep for.
+ */
+void WakeThreadAfterDelay(Handle handle, s64 nanoseconds);
+
+/**
  * Puts the current thread in the wait state for the given type
  * @param wait_type Type of wait
  * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
