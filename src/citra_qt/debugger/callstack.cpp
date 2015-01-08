@@ -38,6 +38,9 @@ void CallstackWidget::OnCPUStepped()
     {
         ret_addr = Memory::Read32(addr);
         call_addr = ret_addr - 4; //get call address???
+        
+        if (Memory::GetPointer(call_addr) == nullptr)
+            break;
 
         /* TODO (mattvail) clean me, move to debugger interface */
         u32 insn = Memory::Read32(call_addr);
