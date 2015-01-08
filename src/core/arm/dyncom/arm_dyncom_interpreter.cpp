@@ -6696,10 +6696,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             umaal_inst* const inst_cream = (umaal_inst*)inst_base->component;
-            const u32 rm = RM;
-            const u32 rn = RN;
-            const u32 rd_lo = RDLO;
-            const u32 rd_hi = RDHI;
+            const u64 rm = RM;
+            const u64 rn = RN;
+            const u64 rd_lo = RDLO;
+            const u64 rd_hi = RDHI;
             const u64 result = (rm * rn) + rd_lo + rd_hi;
 
             RDLO = (result & 0xFFFFFFFF);
