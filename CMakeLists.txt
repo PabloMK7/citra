@@ -20,12 +20,11 @@ else()
     # /MP - Multi-threaded compilation
     # /MD - Multi-threaded runtime
     # /Ox - Full optimization
-    # /Oi - Use intrinsic functions
     # /Oy- - Don't omit frame pointer
     # /GR- - Disable RTTI
     # /GS- - No stack buffer overflow checks
     # /EHsc - C++-only exception handling semantics
-    set(optimization_flags "/MP /MD /Ox /Oi /Oy- /DNDEBUG /GR- /GS- /EHsc")
+    set(optimization_flags "/MP /MD /Ox /Oy- /DNDEBUG /GR- /GS- /EHsc")
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /Zi" CACHE STRING "" FORCE)
