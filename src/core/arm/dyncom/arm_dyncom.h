@@ -89,8 +89,5 @@ public:
     void ExecuteInstructions(int num_instructions) override;
 
 private:
-
     std::unique_ptr<ARMul_State> state;
-    u64 ticks;
-
 };

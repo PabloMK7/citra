@@ -15,7 +15,7 @@ const static cpu_config_t s_arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
 
-ARM_DynCom::ARM_DynCom() : ticks(0) {
+ARM_DynCom::ARM_DynCom() {
     state = std::unique_ptr<ARMul_State>(new ARMul_State);
 
     ARMul_EmulateInit();
@@ -74,11 +74,10 @@ void ARM_DynCom::SetCPSR(u32 cpsr) {
 }
 
 u64 ARM_DynCom::GetTicks() const {
-    return ticks;
+    return CoreTiming::GetTicks();
 }
 
 void ARM_DynCom::AddTicks(u64 ticks) {
-    this->ticks += ticks;
     down_count -= ticks;
     if (down_count < 0)
         CoreTiming::Advance();
