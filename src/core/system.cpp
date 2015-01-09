@@ -21,11 +21,11 @@ void UpdateState(State state) {
 
 void Init(EmuWindow* emu_window) {
     Core::Init();
+    CoreTiming::Init();
     Memory::Init();
     HW::Init();
     Kernel::Init();
     HLE::Init();
-    CoreTiming::Init();
     VideoCore::Init(emu_window);
 }
 
@@ -38,11 +38,11 @@ void RunLoopUntil(u64 global_cycles) {
 
 void Shutdown() {
     VideoCore::Shutdown();
-    CoreTiming::Shutdown();
     HLE::Shutdown();
     Kernel::Shutdown();
     HW::Shutdown();
     Memory::Shutdown();
+    CoreTiming::Shutdown();
     Core::Shutdown();
 }
 

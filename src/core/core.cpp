@@ -17,8 +17,6 @@
 
 namespace Core {
 
-static u64         last_ticks = 0;        ///< Last CPU ticks
-static ARM_Disasm* disasm     = nullptr;  ///< ARM disassembler
 ARM_Interface*     g_app_core = nullptr;  ///< ARM11 application core
 ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
 
@@ -60,7 +58,6 @@ void Stop() {
 int Init() {
     LOG_DEBUG(Core, "initialized OK");
 
-    disasm = new ARM_Disasm();
     g_sys_core = new ARM_Interpreter();
 
     switch (Settings::values.cpu_core) {
@@ -73,13 +70,10 @@ int Init() {
             break;
     }
 
-    last_ticks = Core::g_app_core->GetTicks();
-
     return 0;
 }
 
 void Shutdown() {
-    delete disasm;
     delete g_app_core;
     delete g_sys_core;
 
