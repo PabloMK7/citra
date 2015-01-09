@@ -239,6 +239,11 @@ static Result CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
         name.c_str(), arg, stack_top, priority, processor_id, thread);
 
+    if (THREADPROCESSORID_1 == processor_id) {
+        LOG_WARNING(Kernel_SVC,
+            "thread designated for system CPU core (UNIMPLEMENTED) will be run with app core scheduling");
+    }
+
     return 0;
 }
 
