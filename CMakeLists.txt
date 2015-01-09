@@ -117,6 +117,12 @@ IF (APPLE)
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+ELSEIF(MINGW)
+    # GCC does not support codecvt, so use iconv instead
+    set(PLATFORM_LIBRARIES winmm ws2_32 iconv)
+
+    # WSAPoll functionality doesn't exist before WinNT 6.x (Vista and up)
+    add_definitions(-D_WIN32_WINNT=0x0600)
 ELSEIF(WIN32)
     set(PLATFORM_LIBRARIES winmm ws2_32)
 ELSE()
