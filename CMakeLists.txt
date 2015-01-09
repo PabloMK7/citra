@@ -17,6 +17,7 @@ else()
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
     message(STATUS "Cache compiler flags ignored, please edit CMakeFiles.txt to change the flags.")
+    # /MP - Multi-threaded compilation
     # /MD - Multi-threaded runtime
     # /Ox - Full optimization
     # /Oi - Use intrinsic functions
@@ -24,7 +25,7 @@ else()
     # /GR- - Disable RTTI
     # /GS- - No stack buffer overflow checks
     # /EHsc - C++-only exception handling semantics
-    set(optimization_flags "/MD /Ox /Oi /Oy- /DNDEBUG /GR- /GS- /EHsc")
+    set(optimization_flags "/MP /MD /Ox /Oi /Oy- /DNDEBUG /GR- /GS- /EHsc")
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /Zi" CACHE STRING "" FORCE)
