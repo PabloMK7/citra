@@ -9,6 +9,7 @@
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/timer.h"
 
 namespace Kernel {
 
@@ -105,12 +106,13 @@ void HandleTable::Clear() {
 /// Initialize the kernel
 void Init() {
     Kernel::ThreadingInit();
+    Kernel::TimersInit();
 }
 
 /// Shutdown the kernel
 void Shutdown() {
     Kernel::ThreadingShutdown();
-
+    Kernel::TimersShutdown();
     g_handle_table.Clear(); // Free all kernel objects
 }
 

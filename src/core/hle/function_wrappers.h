@@ -135,6 +135,12 @@ template<s32 func(u32*, u32, u32, u32, u32)> void Wrap() {
     FuncReturn(retval);
 }
 
+template<s32 func(u32, s64, s64)> void Wrap() {
+    s64 param1 = ((u64)PARAM(3) << 32) | PARAM(2);
+    s64 param2 = ((u64)PARAM(4) << 32) | PARAM(1);
+    FuncReturn(func(PARAM(0), param1, param2));
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 

@@ -39,6 +39,7 @@ enum class HandleType : u32 {
     Process         = 8,
     AddressArbiter  = 9,
     Semaphore       = 10,
+    Timer           = 11
 };
 
 enum {

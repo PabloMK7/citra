@@ -31,6 +31,7 @@ set(SRCS
             hle/kernel/mutex.cpp
             hle/kernel/semaphore.cpp
             hle/kernel/shared_memory.cpp
+            hle/kernel/timer.cpp
             hle/kernel/thread.cpp
             hle/service/ac_u.cpp
             hle/service/act_u.cpp
@@ -123,6 +124,7 @@ set(HEADERS
             hle/kernel/semaphore.h
             hle/kernel/session.h
             hle/kernel/shared_memory.h
+            hle/kernel/timer.h
             hle/kernel/thread.h
             hle/service/ac_u.h
             hle/service/act_u.h
