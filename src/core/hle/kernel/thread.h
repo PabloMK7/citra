@@ -4,8 +4,12 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "common/common_types.h"
 
+#include "core/core.h"
 #include "core/mem_map.h"
 
 #include "core/hle/kernel/kernel.h"
@@ -48,69 +52,102 @@ enum WaitType {
 
 namespace Kernel {
 
-/// Creates a new thread - wrapper for external user
-Handle CreateThread(const char* name, u32 entry_point, s32 priority, u32 arg, s32 processor_id,
-    u32 stack_top, int stack_size=Kernel::DEFAULT_STACK_SIZE);
+class Thread : public Kernel::Object {
+public:
+    static ResultVal<Thread*> Create(const char* name, u32 entry_point, s32 priority, u32 arg,
+        s32 processor_id, u32 stack_top, int stack_size = Kernel::DEFAULT_STACK_SIZE);
+
+    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override { return "Thread"; }
+
+    static const HandleType HANDLE_TYPE = HandleType::Thread;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    inline bool IsRunning() const { return (status & THREADSTATUS_RUNNING) != 0; }
+    inline bool IsStopped() const { return (status & THREADSTATUS_DORMANT) != 0; }
+    inline bool IsReady() const { return (status & THREADSTATUS_READY) != 0; }
+    inline bool IsWaiting() const { return (status & THREADSTATUS_WAIT) != 0; }
+    inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
+    inline bool IsIdle() const { return idle; }
+
+    ResultVal<bool> WaitSynchronization() override;
+
+    s32 GetPriority() const { return current_priority; }
+    void SetPriority(s32 priority);
+
+    u32 GetThreadId() const { return thread_id; }
+
+    void Stop(const char* reason);
+    /// Resumes a thread from waiting by marking it as "ready".
+    void ResumeFromWait();
+
+    Core::ThreadContext context;
+
+    u32 thread_id;
+
+    u32 status;
+    u32 entry_point;
+    u32 stack_top;
+    u32 stack_size;
+
+    s32 initial_priority;
+    s32 current_priority;
+
+    s32 processor_id;
+
+    WaitType wait_type;
+    Object* wait_object;
+    VAddr wait_address;
+
+    std::vector<Thread*> waiting_threads; // TODO(yuriks): Owned
+
+    std::string name;
+
+    /// Whether this thread is intended to never actually be executed, i.e. always idle
+    bool idle = false;
+
+private:
+    Thread() = default;
+};
 
 /// Sets up the primary application thread
-Handle SetupMainThread(s32 priority, int stack_size=Kernel::DEFAULT_STACK_SIZE);
+Thread* SetupMainThread(s32 priority, int stack_size = Kernel::DEFAULT_STACK_SIZE);
 
 /// Reschedules to the next available thread (call after current thread is suspended)
 void Reschedule();
 
-/// Stops the current thread
-ResultCode StopThread(Handle thread, const char* reason);
-
-/**
- * Retrieves the ID of the specified thread handle
- * @param thread_id Will contain the output thread id
- * @param handle Handle to the thread we want
- * @return Whether the function was successful or not
- */
-ResultCode GetThreadId(u32* thread_id, Handle handle);
-
-/// Resumes a thread from waiting by marking it as "ready"
-void ResumeThreadFromWait(Handle handle);
-
 /// Arbitrate the highest priority thread that is waiting
-Handle ArbitrateHighestPriorityThread(u32 arbiter, u32 address);
+Thread* ArbitrateHighestPriorityThread(Object* arbiter, u32 address);
 
 /// Arbitrate all threads currently waiting...
-void ArbitrateAllThreads(u32 arbiter, u32 address);
+void ArbitrateAllThreads(Object* arbiter, u32 address);
 
-/// Gets the current thread handle
-Handle GetCurrentThreadHandle();
+/// Gets the current thread
+Thread* GetCurrentThread();
 
 /**
  * Puts the current thread in the wait state for the given type
  * @param wait_type Type of wait
- * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ * @param wait_object Kernel object that we are waiting on, defaults to current thread
  */
-void WaitCurrentThread(WaitType wait_type, Handle wait_handle=GetCurrentThreadHandle());
+void WaitCurrentThread(WaitType wait_type, Object* wait_object = GetCurrentThread());
 
 /**
  * Schedules an event to wake up the specified thread after the specified delay.
  * @param handle The thread handle.
  * @param nanoseconds The time this thread will be allowed to sleep for.
  */
-void WakeThreadAfterDelay(Handle handle, s64 nanoseconds);
+void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
 
 /**
  * Puts the current thread in the wait state for the given type
  * @param wait_type Type of wait
- * @param wait_handle Handle of Kernel object that we are waiting on, defaults to current thread
+ * @param wait_object Kernel object that we are waiting on
  * @param wait_address Arbitration address used to resume from wait
  */
-void WaitCurrentThread(WaitType wait_type, Handle wait_handle, VAddr wait_address);
+void WaitCurrentThread(WaitType wait_type, Object* wait_object, VAddr wait_address);
 
-/// Put current thread in a wait state - on WaitSynchronization
-void WaitThread_Synchronization();
 
-/// Get the priority of the thread specified by handle
-ResultVal<u32> GetThreadPriority(const Handle handle);
-
-/// Set the priority of the thread specified by handle
-ResultCode SetThreadPriority(Handle handle, s32 priority);
 
 /**
  * Sets up the idle thread, this is a thread that is intended to never execute instructions,
@@ -119,10 +156,6 @@ ResultCode SetThreadPriority(Handle handle, s32 priority);
  * @returns The handle of the idle thread
  */
 Handle SetupIdleThread();
-
-/// Whether the current thread is an idle thread
-bool IsIdleThread(Handle thread);
-
 /// Initialize threading
 void ThreadingInit();
 

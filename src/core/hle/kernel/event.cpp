@@ -33,11 +33,11 @@ public:
     ResultVal<bool> WaitSynchronization() override {
         bool wait = locked;
         if (locked) {
-            Handle thread = GetCurrentThreadHandle();
+            Handle thread = GetCurrentThread()->GetHandle();
             if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
                 waiting_threads.push_back(thread);
             }
-            Kernel::WaitCurrentThread(WAITTYPE_EVENT, GetHandle());
+            Kernel::WaitCurrentThread(WAITTYPE_EVENT, this);
         }
         if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
             locked = true;
@@ -88,7 +88,9 @@ ResultCode SignalEvent(const Handle handle) {
     // Resume threads waiting for event to signal
     bool event_caught = false;
     for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
-        ResumeThreadFromWait( evt->waiting_threads[i]);
+        Thread* thread = Kernel::g_handle_table.Get<Thread>(evt->waiting_threads[i]);
+        if (thread != nullptr)
+            thread->ResumeFromWait();
 
         // If any thread is signalled awake by this event, assume the event was "caught" and reset
         // the event. This will result in the next thread waiting on the event to block. Otherwise,

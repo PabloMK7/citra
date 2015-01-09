@@ -4,6 +4,8 @@
 
 #include "core/arm/interpreter/arm_interpreter.h"
 
+#include "core/core.h"
+
 const static cpu_config_t arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
@@ -75,7 +77,7 @@ void ARM_Interpreter::ExecuteInstructions(int num_instructions) {
     ARMul_Emulate32(state);
 }
 
-void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
+void ARM_Interpreter::SaveContext(Core::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
 
@@ -91,7 +93,7 @@ void ARM_Interpreter::SaveContext(ThreadContext& ctx) {
     ctx.mode = state->NextInstr;
 }
 
-void ARM_Interpreter::LoadContext(const ThreadContext& ctx) {
+void ARM_Interpreter::LoadContext(const Core::ThreadContext& ctx) {
     memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
     memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
 

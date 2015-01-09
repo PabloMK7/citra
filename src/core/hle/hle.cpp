@@ -4,6 +4,7 @@
 
 #include <vector>
 
+#include "core/arm/arm_interface.h"
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"

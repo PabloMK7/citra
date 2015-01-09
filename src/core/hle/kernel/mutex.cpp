@@ -40,14 +40,21 @@ static MutexMap g_mutex_held_locks;
  * @param mutex Mutex that is to be acquired
  * @param thread Thread that will acquired
  */
-void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThreadHandle()) {
+void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandle()) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex->GetHandle()));
     mutex->lock_thread = thread;
 }
 
-bool ReleaseMutexForThread(Mutex* mutex, Handle thread) {
-    MutexAcquireLock(mutex, thread);
-    Kernel::ResumeThreadFromWait(thread);
+bool ReleaseMutexForThread(Mutex* mutex, Handle thread_handle) {
+    MutexAcquireLock(mutex, thread_handle);
+
+    Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle);
+    if (thread == nullptr) {
+        LOG_ERROR(Kernel, "Called with invalid handle: %08X", thread_handle);
+        return false;
+    }
+
+    thread->ResumeFromWait();
     return true;
 }
 
@@ -168,8 +175,8 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
 ResultVal<bool> Mutex::WaitSynchronization() {
     bool wait = locked;
     if (locked) {
-        waiting_threads.push_back(GetCurrentThreadHandle());
-        Kernel::WaitCurrentThread(WAITTYPE_MUTEX, GetHandle());
+        waiting_threads.push_back(GetCurrentThread()->GetHandle());
+        Kernel::WaitCurrentThread(WAITTYPE_MUTEX, this);
     } else {
         // Lock the mutex when the first thread accesses it
         locked = true;

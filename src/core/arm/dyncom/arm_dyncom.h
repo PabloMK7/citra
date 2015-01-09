@@ -71,13 +71,13 @@ public:
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    void SaveContext(ThreadContext& ctx) override;
+    void SaveContext(Core::ThreadContext& ctx) override;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    void LoadContext(const ThreadContext& ctx) override;
+    void LoadContext(const Core::ThreadContext& ctx) override;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     void PrepareReschedule() override;

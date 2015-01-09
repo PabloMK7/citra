@@ -9,6 +9,7 @@
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 
+#include "core/core.h"
 #include "core/core_timing.h"
 
 const static cpu_config_t s_arm11_cpu_info = {
@@ -94,7 +95,7 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     AddTicks(ticks_executed);
 }
 
-void ARM_DynCom::SaveContext(ThreadContext& ctx) {
+void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
 
@@ -110,7 +111,7 @@ void ARM_DynCom::SaveContext(ThreadContext& ctx) {
     ctx.mode = state->NextInstr;
 }
 
-void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
+void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
     memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
     memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
 

@@ -6,6 +6,7 @@
 
 #include "common/common.h"
 
+#include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
@@ -13,7 +14,7 @@
 
 namespace Kernel {
 
-Handle g_main_thread = 0;
+Thread* g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
@@ -80,8 +81,7 @@ bool HandleTable::IsValid(Handle handle) const {
 
 Object* HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
-        // TODO(yuriks) Directly return the pointer once this is possible.
-        handle = GetCurrentThreadHandle();
+        return GetCurrentThread();
     } else if (handle == CurrentProcess) {
         LOG_ERROR(Kernel, "Current process (%08X) pseudo-handle not supported", CurrentProcess);
         return nullptr;

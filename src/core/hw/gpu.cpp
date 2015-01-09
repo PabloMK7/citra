@@ -4,6 +4,8 @@
 
 #include "common/common_types.h"
 
+#include "core/arm/arm_interface.h"
+
 #include "core/settings.h"
 #include "core/core.h"
 #include "core/mem_map.h"

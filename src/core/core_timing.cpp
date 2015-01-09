@@ -9,6 +9,8 @@
 
 #include "common/chunk_file.h"
 #include "common/log.h"
+
+#include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 

@@ -20,21 +20,6 @@ struct PageInfo {
     u32 flags;
 };
 
-struct ThreadContext {
-    u32 cpu_registers[13];
-    u32 sp;
-    u32 lr;
-    u32 pc;
-    u32 cpsr;
-    u32 fpu_registers[32];
-    u32 fpscr;
-    u32 fpexc;
-
-    // These are not part of native ThreadContext, but needed by emu
-    u32 reg_15;
-    u32 mode;
-};
-
 enum ResetType {
     RESETTYPE_ONESHOT,
     RESETTYPE_STICKY,
