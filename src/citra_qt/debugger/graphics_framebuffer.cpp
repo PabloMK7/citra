@@ -158,7 +158,7 @@ void GraphicsFramebufferWidget::OnFramebufferAddressChanged(qint64 new_value)
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferWidthChanged(unsigned int new_value)
+void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
 {
     if (framebuffer_width != new_value) {
         framebuffer_width = new_value;
@@ -168,7 +168,7 @@ void GraphicsFramebufferWidget::OnFramebufferWidthChanged(unsigned int new_value
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferHeightChanged(unsigned int new_value)
+void GraphicsFramebufferWidget::OnFramebufferHeightChanged(int new_value)
 {
     if (framebuffer_height != new_value) {
         framebuffer_height = new_value;

@@ -62,8 +62,8 @@ public:
 public slots:
     void OnFramebufferSourceChanged(int new_value);
     void OnFramebufferAddressChanged(qint64 new_value);
-    void OnFramebufferWidthChanged(unsigned int new_value);
-    void OnFramebufferHeightChanged(unsigned int new_value);
+    void OnFramebufferWidthChanged(int new_value);
+    void OnFramebufferHeightChanged(int new_value);
     void OnFramebufferFormatChanged(int new_value);
     void OnUpdate();
 
