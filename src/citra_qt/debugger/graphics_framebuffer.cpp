@@ -160,8 +160,8 @@ void GraphicsFramebufferWidget::OnFramebufferAddressChanged(qint64 new_value)
 
 void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
 {
-    if (framebuffer_width != new_value) {
-        framebuffer_width = new_value;
+    if (framebuffer_width != static_cast<unsigned>(new_value)) {
+        framebuffer_width = static_cast<unsigned>(new_value);
 
         framebuffer_source_list->setCurrentIndex(static_cast<int>(Source::Custom));
         emit Update();
