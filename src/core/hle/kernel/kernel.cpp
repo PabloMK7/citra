@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-Thread* g_main_thread = nullptr;
+SharedPtr<Thread> g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
@@ -23,7 +23,7 @@ HandleTable::HandleTable() {
     Clear();
 }
 
-ResultVal<Handle> HandleTable::Create(Object* obj) {
+ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
     _dbg_assert_(Kernel, obj != nullptr);
 
     u16 slot = next_free_slot;
@@ -39,22 +39,23 @@ ResultVal<Handle> HandleTable::Create(Object* obj) {
     // CTR-OS doesn't use generation 0, so skip straight to 1.
     if (next_generation >= (1 << 15)) next_generation = 1;
 
-    generations[slot] = generation;
-    intrusive_ptr_add_ref(obj);
-    objects[slot] = obj;
-
     Handle handle = generation | (slot << 15);
-    obj->handle = handle;
+    if (obj->handle == INVALID_HANDLE)
+        obj->handle = handle;
+
+    generations[slot] = generation;
+    objects[slot] = std::move(obj);
+
     return MakeResult<Handle>(handle);
 }
 
 ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
-    Object* object = GetGeneric(handle);
+    SharedPtr<Object> object = GetGeneric(handle);
     if (object == nullptr) {
         LOG_ERROR(Kernel, "Tried to duplicate invalid handle: %08X", handle);
         return ERR_INVALID_HANDLE;
     }
-    return Create(object);
+    return Create(std::move(object));
 }
 
 ResultCode HandleTable::Close(Handle handle) {
@@ -64,7 +65,6 @@ ResultCode HandleTable::Close(Handle handle) {
     size_t slot = GetSlot(handle);
     u16 generation = GetGeneration(handle);
 
-    intrusive_ptr_release(objects[slot]);
     objects[slot] = nullptr;
 
     generations[generation] = next_free_slot;
@@ -79,7 +79,7 @@ bool HandleTable::IsValid(Handle handle) const {
     return slot < MAX_COUNT && objects[slot] != nullptr && generations[slot] == generation;
 }
 
-Object* HandleTable::GetGeneric(Handle handle) const {
+SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
         return GetCurrentThread();
     } else if (handle == CurrentProcess) {
@@ -96,8 +96,6 @@ Object* HandleTable::GetGeneric(Handle handle) const {
 void HandleTable::Clear() {
     for (size_t i = 0; i < MAX_COUNT; ++i) {
         generations[i] = i + 1;
-        if (objects[i] != nullptr)
-            intrusive_ptr_release(objects[i]);
         objects[i] = nullptr;
     }
     next_free_slot = 0;
@@ -125,7 +123,7 @@ bool LoadExec(u32 entry_point) {
     Core::g_app_core->SetPC(entry_point);
 
     // 0x30 is the typical main thread priority I've seen used so far
-    g_main_thread = Kernel::SetupMainThread(0x30);
+    g_main_thread = Kernel::SetupMainThread(0x30, Kernel::DEFAULT_STACK_SIZE);
     // Setup the idle thread
     Kernel::SetupIdleThread();
 
