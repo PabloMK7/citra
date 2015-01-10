@@ -102,8 +102,8 @@ static void OpenFileDirectly(Service::Interface* self) {
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    LOG_DEBUG(Service_FS, "archive_path=%s file_path=%s, mode=%u attributes=%d",
-              archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
+    LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s file_path=%s, mode=%u attributes=%d",
+              archive_id, archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
 
     ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
@@ -365,7 +365,7 @@ static void OpenArchive(Service::Interface* self) {
     u32 archivename_ptr   = cmd_buff[5];
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
 
-    LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s", archive_id, archive_path.DebugStr().c_str());
 
     ResultVal<ArchiveHandle> handle = OpenArchive(archive_id, archive_path);
     cmd_buff[1] = handle.Code().raw;
