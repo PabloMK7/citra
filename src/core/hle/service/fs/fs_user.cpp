@@ -27,8 +27,6 @@ static void Initialize(Service::Interface* self) {
     // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
     // http://3dbrew.org/wiki/FS:Initialize#Request
     cmd_buff[1] = RESULT_SUCCESS.raw;
-
-    LOG_DEBUG(Service_FS, "called");
 }
 
 /**
@@ -408,8 +406,6 @@ static void IsSdmcDetected(Service::Interface* self) {
 
     cmd_buff[1] = 0;
     cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
-
-    LOG_DEBUG(Service_FS, "called");
 }
 
 /**

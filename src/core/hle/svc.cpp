@@ -185,7 +185,6 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
 /// Create an address arbiter (to allocate access to shared resources)
 static Result CreateAddressArbiter(u32* arbiter) {
-    LOG_TRACE(Kernel_SVC, "called");
     Handle handle = Kernel::CreateAddressArbiter();
     *arbiter = handle;
     return 0;

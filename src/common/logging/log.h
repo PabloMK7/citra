@@ -74,17 +74,6 @@ enum class Class : ClassType {
 };
 
 /**
- * Level below which messages are simply discarded without buffering regardless of the display
- * settings.
- */
-const Level MINIMUM_LEVEL =
-#ifdef _DEBUG
-    Level::Trace;
-#else
-    Level::Debug;
-#endif
-
-/**
  * Logs a message to the global logger. This proxy exists to avoid exposing the details of the
  * Logger class, including the ConcurrentRingBuffer template, to all files that desire to log
  * messages, reducing unecessary recompilations.
@@ -103,13 +92,15 @@ void LogMessage(Class log_class, Level log_level,
 } // namespace Log
 
 #define LOG_GENERIC(log_class, log_level, ...) \
-    do { \
-        if (::Log::Level::log_level >= ::Log::MINIMUM_LEVEL) \
-            ::Log::LogMessage(::Log::Class::log_class, ::Log::Level::log_level, \
-                       __FILE__, __LINE__, __func__, __VA_ARGS__); \
-    } while (0)
+    ::Log::LogMessage(::Log::Class::log_class, ::Log::Level::log_level, \
+        __FILE__, __LINE__, __func__, __VA_ARGS__)
 
+#ifdef _DEBUG
 #define LOG_TRACE(   log_class, ...) LOG_GENERIC(log_class, Trace,    __VA_ARGS__)
+#else
+#define LOG_TRACE(   log_class, ...) (void(0))
+#endif
+
 #define LOG_DEBUG(   log_class, ...) LOG_GENERIC(log_class, Debug,    __VA_ARGS__)
 #define LOG_INFO(    log_class, ...) LOG_GENERIC(log_class, Info,     __VA_ARGS__)
 #define LOG_WARNING( log_class, ...) LOG_GENERIC(log_class, Warning,  __VA_ARGS__)

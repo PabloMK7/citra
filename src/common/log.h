@@ -14,7 +14,7 @@
 #endif
 #endif
 
-#if _DEBUG
+#ifdef _DEBUG
 #define _dbg_assert_(_t_, _a_) \
     if (!(_a_)) {\
         LOG_CRITICAL(_t_, "Error...\n\n  Line: %d\n  File: %s\n  Time: %s\n\nIgnore and continue?", \

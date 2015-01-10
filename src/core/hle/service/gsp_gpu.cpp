@@ -331,9 +331,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
-
-    LOG_TRACE(Service_GSP, "called");
-
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
         CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(thread_id);

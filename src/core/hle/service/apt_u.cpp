@@ -52,8 +52,6 @@ void Initialize(Service::Interface* self) {
     Kernel::ReleaseMutex(lock_handle);
 
     cmd_buff[1] = 0; // No error
-
-    LOG_DEBUG(Service_APT, "called");
 }
 
 void GetLockHandle(Service::Interface* self) {
@@ -194,8 +192,6 @@ void AppletUtility(Service::Interface* self) {
  *      4 : Handle to shared font memory
  */
 void GetSharedFont(Service::Interface* self) {
-    LOG_TRACE(Kernel_SVC, "called");
-
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     if (!shared_font.empty()) {

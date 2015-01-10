@@ -76,8 +76,6 @@ static void GetShellState(Service::Interface* self) {
 
     cmd_buff[1] = 0;
     cmd_buff[2] = shell_open ? 1 : 0;
-
-    LOG_TRACE(Service_PTM, "PTM_U::GetShellState called");
 }
 
 /**

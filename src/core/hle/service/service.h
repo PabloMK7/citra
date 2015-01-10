@@ -33,6 +33,22 @@ class Interface  : public Kernel::Session {
     // processes.
 
     friend class Manager;
+
+    /**
+     * Creates a function string for logging, complete with the name (or header code, depending 
+     * on what's passed in) the port name, and all the cmd_buff arguments.
+     */
+    std::string MakeFunctionString(const std::string& name, const std::string& port_name, const u32* cmd_buff) {
+        // Number of params == bits 0-5 + bits 6-11
+        int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
+
+        std::string function_string = Common::StringFromFormat("function '%s': port=%s", name.c_str(), port_name.c_str());
+        for (int i = 1; i <= num_params; ++i) {
+            function_string += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
+        }
+        return function_string;
+    }
+
 public:
     std::string GetName() const override { return GetPortName(); }
 
@@ -72,21 +88,14 @@ public:
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end() || itr->second.func == nullptr) {
-            // Number of params == bits 0-5 + bits 6-11
-            int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
-
-            std::string error = "unknown/unimplemented function '%s': port=%s";
-            for (int i = 1; i <= num_params; ++i) {
-                error += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
-            }
-
-            std::string name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
-
-            LOG_ERROR(Service, error.c_str(), name.c_str(), GetPortName().c_str());
+            std::string function_name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
+            LOG_ERROR(Service, "%s %s", "unknown/unimplemented", MakeFunctionString(function_name, GetPortName(), cmd_buff).c_str());
 
             // TODO(bunnei): Hack - ignore error
             cmd_buff[1] = 0;
             return MakeResult<bool>(false);
+        } else {
+            LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName(), cmd_buff).c_str());
         }
 
         itr->second.func(this);
