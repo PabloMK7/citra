@@ -24,7 +24,7 @@ else()
     # /GR- - Disable RTTI
     # /GS- - No stack buffer overflow checks
     # /EHsc - C++-only exception handling semantics
-    set(optimization_flags "/MP /MD /Ox /Oy- /DNDEBUG /GR- /GS- /EHsc")
+    set(optimization_flags "/MP /MD /Ox /Oy- /GR- /GS- /EHsc")
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /Zi" CACHE STRING "" FORCE)
@@ -32,7 +32,11 @@ else()
     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
 endif()
+
 add_definitions(-DSINGLETHREADED)
+# CMake seems to only define _DEBUG on Windows
+set_property(DIRECTORY APPEND PROPERTY
+    COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
 find_package(PNG QUIET)
 if (PNG_FOUND)
