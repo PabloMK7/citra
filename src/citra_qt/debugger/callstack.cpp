@@ -33,6 +33,8 @@ void CallstackWidget::OnDebugModeEntered()
     u32 sp = app_core->GetReg(13); //stack pointer
     u32 ret_addr, call_addr, func_addr;
 
+    Clear();
+
     int counter = 0;
     for (u32 addr = 0x10000000; addr >= sp; addr -= 4)
     {
@@ -75,4 +77,13 @@ void CallstackWidget::OnDebugModeEntered()
 void CallstackWidget::OnDebugModeLeft()
 {
 
+}
+
+void CallstackWidget::Clear()
+{
+    for (int row = 0; row < callstack_model->rowCount(); row++) {
+        for (int column = 0; column < callstack_model->columnCount(); column++) {
+            callstack_model->setItem(row, column, new QStandardItem());
+        }
+    }
 }
