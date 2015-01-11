@@ -247,16 +247,34 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
 /// Create an address arbiter (to allocate access to shared resources)
 static Result CreateAddressArbiter(u32* arbiter) {
-    Handle handle = Kernel::CreateAddressArbiter();
-    *arbiter = handle;
-    return 0;
+    using Kernel::AddressArbiter;
+
+    ResultVal<SharedPtr<AddressArbiter>> arbiter_res = AddressArbiter::Create();
+    if (arbiter_res.Failed())
+        return arbiter_res.Code().raw;
+
+    ResultVal<Handle> handle_res = Kernel::g_handle_table.Create(*arbiter_res);
+    if (handle_res.Failed())
+        return handle_res.Code().raw;
+
+    LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *handle_res);
+
+    *arbiter = *handle_res;
+    return RESULT_SUCCESS.raw;
 }
 
 /// Arbitrate address
-static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value, s64 nanoseconds) {
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", arbiter,
+static Result ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value, s64 nanoseconds) {
+    using Kernel::AddressArbiter;
+
+    LOG_TRACE(Kernel_SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", handle,
         address, type, value);
-    return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type),
+
+    SharedPtr<AddressArbiter> arbiter = Kernel::g_handle_table.Get<AddressArbiter>(handle);
+    if (arbiter == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    return arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type),
             address, value, nanoseconds).raw;
 }
 
