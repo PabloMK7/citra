@@ -69,7 +69,7 @@ ResultCode ClearEvent(Handle handle) {
  * @param name Optional name of event
  * @return Newly created Event object
  */
-Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
+static Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
     Event* evt = new Event;
 
     // TOOD(yuriks): Fix error reporting

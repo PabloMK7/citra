@@ -40,7 +40,7 @@ static MutexMap g_mutex_held_locks;
  * @param mutex Mutex that is to be acquired
  * @param thread Thread that will acquire the mutex
  */
-void MutexAcquireLock(Mutex* mutex, Thread* thread) {
+static void MutexAcquireLock(Mutex* mutex, Thread* thread) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex));
     mutex->holding_thread = thread;
 }
@@ -49,7 +49,7 @@ void MutexAcquireLock(Mutex* mutex, Thread* thread) {
  * Resumes a thread waiting for the specified mutex
  * @param mutex The mutex that some thread is waiting on
  */
-void ResumeWaitingThread(Mutex* mutex) {
+static void ResumeWaitingThread(Mutex* mutex) {
     // Find the next waiting thread for the mutex...
     auto next_thread = mutex->WakeupNextThread();
     if (next_thread != nullptr) {
@@ -73,7 +73,7 @@ void ReleaseThreadMutexes(Thread* thread) {
     g_mutex_held_locks.erase(thread);
 }
 
-bool ReleaseMutex(Mutex* mutex) {
+static bool ReleaseMutex(Mutex* mutex) {
     if (mutex->locked) {
         auto locked = g_mutex_held_locks.equal_range(mutex->holding_thread);
 
@@ -89,10 +89,6 @@ bool ReleaseMutex(Mutex* mutex) {
     return true;
 }
 
-/**
- * Releases a mutex
- * @param handle Handle to mutex to release
- */
 ResultCode ReleaseMutex(Handle handle) {
     Mutex* mutex = Kernel::g_handle_table.Get<Mutex>(handle).get();
     if (mutex == nullptr) return InvalidHandle(ErrorModule::Kernel);
@@ -113,7 +109,7 @@ ResultCode ReleaseMutex(Handle handle) {
  * @param name Optional name of mutex
  * @return Pointer to new Mutex object
  */
-Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
+static Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
     Mutex* mutex = new Mutex;
     // TODO(yuriks): Fix error reporting
     handle = Kernel::g_handle_table.Create(mutex).ValueOr(INVALID_HANDLE);
@@ -129,12 +125,6 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name)
     return mutex;
 }
 
-/**
- * Creates a mutex
- * @param initial_locked Specifies if the mutex should be locked initially
- * @param name Optional name of mutex
- * @return Handle to newly created object
- */
 Handle CreateMutex(bool initial_locked, const std::string& name) {
     Handle handle;
     Mutex* mutex = CreateMutex(handle, initial_locked, name);

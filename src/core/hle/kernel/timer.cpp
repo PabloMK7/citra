@@ -45,7 +45,7 @@ public:
  * @param name Optional name of timer
  * @return Newly created Timer object
  */
-Timer* CreateTimer(Handle& handle, const ResetType reset_type, const std::string& name) {
+static Timer* CreateTimer(Handle& handle, const ResetType reset_type, const std::string& name) {
     Timer* timer = new Timer;
 
     handle = Kernel::g_handle_table.Create(timer).ValueOr(INVALID_HANDLE);

@@ -30,7 +30,7 @@ public:
  * @param name Name of shared memory object
  * @return Pointer to newly created shared memory object
  */
-SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
+static SharedMemory* CreateSharedMemory(Handle& handle, const std::string& name) {
     SharedMemory* shared_memory = new SharedMemory;
     // TOOD(yuriks): Fix error reporting
     handle = Kernel::g_handle_table.Create(shared_memory).ValueOr(INVALID_HANDLE);
@@ -44,14 +44,6 @@ Handle CreateSharedMemory(const std::string& name) {
     return handle;
 }
 
-/**
- * Maps a shared memory block to an address in system memory
- * @param handle Shared memory block handle
- * @param address Address in system memory to map shared memory block to
- * @param permissions Memory block map permissions (specified by SVC field)
- * @param other_permissions Memory block map other permissions (specified by SVC field)
- * @return Result of operation, 0 on success, otherwise error code
- */
 ResultCode MapSharedMemory(u32 handle, u32 address, MemoryPermission permissions,
     MemoryPermission other_permissions) {
 

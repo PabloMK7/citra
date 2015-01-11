@@ -28,7 +28,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Arbitrate an address
 ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value, u64 nanoseconds) {
     AddressArbiter* object = Kernel::g_handle_table.Get<AddressArbiter>(handle).get();
 
@@ -92,8 +91,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
     return RESULT_SUCCESS;
 }
 
-/// Create an address arbiter
-AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
+static AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
     AddressArbiter* address_arbiter = new AddressArbiter;
     // TOOD(yuriks): Fix error reporting
     handle = Kernel::g_handle_table.Create(address_arbiter).ValueOr(INVALID_HANDLE);
@@ -101,7 +99,6 @@ AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
     return address_arbiter;
 }
 
-/// Create an address arbiter
 Handle CreateAddressArbiter(const std::string& name) {
     Handle handle;
     CreateAddressArbiter(handle, name);
