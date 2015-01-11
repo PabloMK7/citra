@@ -4964,39 +4964,41 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     MSR_INST:
     {
-        msr_inst *inst_cream = (msr_inst *)inst_base->component;
-        const uint32_t UnallocMask = 0x06f0fc00, UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
-        unsigned int inst = inst_cream->inst;
-        unsigned int operand;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            msr_inst *inst_cream = (msr_inst *)inst_base->component;
+            const uint32_t UnallocMask = 0x06f0fc00, UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
+            unsigned int inst = inst_cream->inst;
+            unsigned int operand;
 
-        if (BIT(inst, 25)) {
-            int rot_imm = BITS(inst, 8, 11) * 2;
-            operand = ROTATE_RIGHT_32(BITS(inst, 0, 7), rot_imm);
-        } else {
-            operand = cpu->Reg[BITS(inst, 0, 3)];
-        }
-        uint32_t byte_mask = (BIT(inst, 16) ? 0xff : 0) | (BIT(inst, 17) ? 0xff00 : 0)
-                    | (BIT(inst, 18) ? 0xff0000 : 0) | (BIT(inst, 19) ? 0xff000000 : 0);
-        uint32_t mask;
-        if (!inst_cream->R) {
-            if (InAPrivilegedMode(cpu)) {
-                if ((operand & StateMask) != 0) {
-                    /// UNPREDICTABLE
-                    DEBUG_MSG;
-                } else
-                    mask = byte_mask & (UserMask | PrivMask);
+            if (BIT(inst, 25)) {
+                int rot_imm = BITS(inst, 8, 11) * 2;
+                operand = ROTATE_RIGHT_32(BITS(inst, 0, 7), rot_imm);
             } else {
-                mask = byte_mask & UserMask;
+                operand = cpu->Reg[BITS(inst, 0, 3)];
             }
-            SAVE_NZCVT;
+            uint32_t byte_mask = (BIT(inst, 16) ? 0xff : 0) | (BIT(inst, 17) ? 0xff00 : 0)
+                        | (BIT(inst, 18) ? 0xff0000 : 0) | (BIT(inst, 19) ? 0xff000000 : 0);
+            uint32_t mask;
+            if (!inst_cream->R) {
+                if (InAPrivilegedMode(cpu)) {
+                    if ((operand & StateMask) != 0) {
+                        /// UNPREDICTABLE
+                        DEBUG_MSG;
+                    } else
+                        mask = byte_mask & (UserMask | PrivMask);
+                } else {
+                    mask = byte_mask & UserMask;
+                }
+                SAVE_NZCVT;
 
-            cpu->Cpsr = (cpu->Cpsr & ~mask) | (operand & mask);
-            switch_mode(cpu, cpu->Cpsr & 0x1f);
-            LOAD_NZCVT;
-        } else {
-            if (CurrentModeHasSPSR) {
-                mask = byte_mask & (UserMask | PrivMask | StateMask);
-                cpu->Spsr_copy = (cpu->Spsr_copy & ~mask) | (operand & mask);
+                cpu->Cpsr = (cpu->Cpsr & ~mask) | (operand & mask);
+                switch_mode(cpu, cpu->Cpsr & 0x1f);
+                LOAD_NZCVT;
+            } else {
+                if (CurrentModeHasSPSR) {
+                    mask = byte_mask & (UserMask | PrivMask | StateMask);
+                    cpu->Spsr_copy = (cpu->Spsr_copy & ~mask) | (operand & mask);
+                }
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
