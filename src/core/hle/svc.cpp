@@ -120,9 +120,6 @@ static Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    // TODO(bunnei): Do something with nano_seconds, currently ignoring this
-    bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
-
     SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handle);
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
@@ -134,6 +131,8 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     // Check for next thread to schedule
     if (wait.Succeeded() && *wait) {
+        // Create an event to wake the thread up after the specified nanosecond delay has passed
+        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
         HLE::Reschedule(__func__);
     }
 
