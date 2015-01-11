@@ -7,12 +7,9 @@
 #include "common/common.h"
 #include "common/common_types.h"
 
-namespace Memory {
+#include "core/hle/kernel/kernel.h"
 
-// TODO: It would be nice to eventually replace these with strong types that prevent accidental
-// conversion between each other.
-typedef u32 VAddr; ///< Represents a pointer in the ARM11 virtual address space.
-typedef u32 PAddr; ///< Represents a pointer in the physical address space.
+namespace Memory {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -190,7 +187,3 @@ VAddr PhysicalToVirtualAddress(PAddr addr);
 PAddr VirtualToPhysicalAddress(VAddr addr);
 
 } // namespace
-
-// These are used often, so re-export then on the root namespace
-using Memory::VAddr;
-using Memory::PAddr;
