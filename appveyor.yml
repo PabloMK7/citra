@@ -1,8 +1,8 @@
 # it seems that Qt is only installed by default on unstable os at the moment
 os: unstable
 
-# a depth of 50 should be enough (travis uses the same setting)
-clone_depth: 50
+# shallow clone
+clone_depth: 1
 
 environment:
   QTDIR: C:\Qt\5.4\msvc2013_opengl
