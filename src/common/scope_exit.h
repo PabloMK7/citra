@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "common/common_funcs.h"
+
 namespace detail {
     template <typename Func>
     struct ScopeExitHelper {
@@ -34,4 +36,4 @@ namespace detail {
  * }
  * \endcode
  */
-#define SCOPE_EXIT(body) auto scope_exit_helper_##__LINE__ = detail::ScopeExit([&]() body)
+#define SCOPE_EXIT(body) auto CONCAT2(scope_exit_helper_, __LINE__) = detail::ScopeExit([&]() body)

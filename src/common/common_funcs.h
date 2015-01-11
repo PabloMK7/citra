@@ -31,6 +31,10 @@ template<> struct CompileTimeAssert<true> {};
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+/// Textually concatenates two tokens. The double-expansion is required by the C preprocessor.
+#define CONCAT2(x, y) DO_CONCAT2(x, y)
+#define DO_CONCAT2(x, y) x ## y
+
 #ifndef _MSC_VER
 
 #include <errno.h>
