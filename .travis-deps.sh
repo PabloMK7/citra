@@ -24,8 +24,6 @@ if [ "$TRAVIS_OS_NAME" = linux -o -z "$TRAVIS_OS_NAME" ]; then
     curl http://www.cmake.org/files/v2.8/cmake-2.8.11-Linux-i386.tar.gz \
         | sudo tar -xz -C /usr/local --strip-components=1
 elif [ "$TRAVIS_OS_NAME" = osx ]; then
-    export HOMEBREW_CACHE="$PWD/.homebrew-cache"
-    mkdir -p "$HOMEBREW_CACHE"
     brew tap homebrew/versions
     brew install qt5 glfw3 pkgconfig
 fi
