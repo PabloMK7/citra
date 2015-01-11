@@ -263,6 +263,9 @@ void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds) {
 
 /// Resumes a thread from waiting by marking it as "ready"
 void Thread::ResumeFromWait() {
+    // Cancel any outstanding wakeup events
+    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, GetHandle());
+
     status &= ~THREADSTATUS_WAIT;
     wait_object = nullptr;
     wait_type = WAITTYPE_NONE;
