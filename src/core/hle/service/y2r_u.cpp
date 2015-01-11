@@ -12,6 +12,21 @@
 
 namespace Y2R_U {
 
+/**
+ * Y2R_U::IsBusyConversion service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Whether the current conversion is of type busy conversion (?)
+ */
+static void IsBusyConversion(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;;
+    cmd_buff[2] = 0;
+
+    LOG_WARNING(Service, "(STUBBED) called");
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, nullptr,                 "SetInputFormat"},
     {0x00030040, nullptr,                 "SetOutputFormat"},
@@ -29,7 +44,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00220040, nullptr,                 "SetAlpha"},
     {0x00260000, nullptr,                 "StartConversion"},
     {0x00270000, nullptr,                 "StopConversion"},
-    {0x00280000, nullptr,                 "IsBusyConversion"},
+    {0x00280000, IsBusyConversion,        "IsBusyConversion"},
     {0x002A0000, nullptr,                 "PingProcess"},
     {0x002B0000, nullptr,                 "DriverInitialize"},
     {0x002C0000, nullptr,                 "DriverFinalize"}
