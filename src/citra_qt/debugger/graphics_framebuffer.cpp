@@ -158,17 +158,17 @@ void GraphicsFramebufferWidget::OnFramebufferAddressChanged(qint64 new_value)
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferWidthChanged(unsigned int new_value)
+void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
 {
-    if (framebuffer_width != new_value) {
-        framebuffer_width = new_value;
+    if (framebuffer_width != static_cast<unsigned>(new_value)) {
+        framebuffer_width = static_cast<unsigned>(new_value);
 
         framebuffer_source_list->setCurrentIndex(static_cast<int>(Source::Custom));
         emit Update();
     }
 }
 
-void GraphicsFramebufferWidget::OnFramebufferHeightChanged(unsigned int new_value)
+void GraphicsFramebufferWidget::OnFramebufferHeightChanged(int new_value)
 {
     if (framebuffer_height != new_value) {
         framebuffer_height = new_value;
