@@ -5,6 +5,7 @@
 #include "common/log.h"
 
 #include "core/hle/hle.h"
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"
 #include "hid_user.h"
 
@@ -46,7 +47,8 @@ void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
-    cmd_buff[3] = Service::HID::g_shared_mem;
+    // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
+    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::g_shared_mem).MoveFrom();
     cmd_buff[4] = Service::HID::g_event_pad_or_touch_1;
     cmd_buff[5] = Service::HID::g_event_pad_or_touch_2;
     cmd_buff[6] = Service::HID::g_event_accelerometer;

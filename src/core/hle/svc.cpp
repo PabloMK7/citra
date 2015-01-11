@@ -63,21 +63,28 @@ static Result ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, 
 
 /// Maps a memory block to specified address
 static Result MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
+    using Kernel::SharedMemory;
+    using Kernel::MemoryPermission;
+
     LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d",
         handle, addr, permissions, other_permissions);
 
-    Kernel::MemoryPermission permissions_type = static_cast<Kernel::MemoryPermission>(permissions);
+    SharedPtr<SharedMemory> shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
+    if (shared_memory == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    MemoryPermission permissions_type = static_cast<MemoryPermission>(permissions);
     switch (permissions_type) {
-    case Kernel::MemoryPermission::Read:
-    case Kernel::MemoryPermission::Write:
-    case Kernel::MemoryPermission::ReadWrite:
-    case Kernel::MemoryPermission::Execute:
-    case Kernel::MemoryPermission::ReadExecute:
-    case Kernel::MemoryPermission::WriteExecute:
-    case Kernel::MemoryPermission::ReadWriteExecute:
-    case Kernel::MemoryPermission::DontCare:
-        Kernel::MapSharedMemory(handle, addr, permissions_type,
-            static_cast<Kernel::MemoryPermission>(other_permissions));
+    case MemoryPermission::Read:
+    case MemoryPermission::Write:
+    case MemoryPermission::ReadWrite:
+    case MemoryPermission::Execute:
+    case MemoryPermission::ReadExecute:
+    case MemoryPermission::WriteExecute:
+    case MemoryPermission::ReadWriteExecute:
+    case MemoryPermission::DontCare:
+        shared_memory->Map(addr, permissions_type,
+                static_cast<MemoryPermission>(other_permissions));
         break;
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x%08X", permissions);
@@ -463,12 +470,19 @@ static s64 GetSystemTick() {
 
 /// Creates a memory block at the specified address with the specified permissions and size
 static Result CreateMemoryBlock(Handle* memblock, u32 addr, u32 size, u32 my_permission,
-    u32 other_permission) {
-
+        u32 other_permission) {
+    using Kernel::SharedMemory;
     // TODO(Subv): Implement this function
 
-    Handle shared_memory = Kernel::CreateSharedMemory();
-    *memblock = shared_memory;
+    ResultVal<SharedPtr<SharedMemory>> shared_memory_res = SharedMemory::Create();
+    if (shared_memory_res.Failed())
+        return shared_memory_res.Code().raw;
+
+    ResultVal<Handle> handle_res = Kernel::g_handle_table.Create(*shared_memory_res);
+    if (handle_res.Failed())
+        return handle_res.Code().raw;
+
+    *memblock = *handle_res;
     LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);
     return 0;
 }

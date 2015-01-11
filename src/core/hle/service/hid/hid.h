@@ -9,11 +9,15 @@
 #include "core/hle/kernel/kernel.h"
 #include "common/bit_field.h"
 
+namespace Kernel {
+    class SharedMemory;
+}
+
 namespace Service {
 namespace HID {
 
 // Handle to shared memory region designated to HID_User service
-extern Handle g_shared_mem;
+extern Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem;
 
 // Event handles
 extern Handle g_event_pad_or_touch_1;

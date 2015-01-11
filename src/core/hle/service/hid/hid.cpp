@@ -12,7 +12,7 @@
 namespace Service {
 namespace HID {
 
-Handle g_shared_mem = 0;
+Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem = nullptr;
 
 Handle g_event_pad_or_touch_1 = 0;
 Handle g_event_pad_or_touch_2 = 0;
@@ -30,7 +30,7 @@ static s16 next_circle_y = 0;
  * Gets a pointer to the PadData structure inside HID shared memory
  */
 static inline PadData* GetPadData() {
-    return reinterpret_cast<PadData*>(Kernel::GetSharedMemoryPointer(g_shared_mem, 0).ValueOr(nullptr));
+    return reinterpret_cast<PadData*>(g_shared_mem->GetPointer().ValueOr(nullptr));
 }
 
 /**
@@ -120,7 +120,7 @@ void PadUpdateComplete() {
 }
 
 void HIDInit() {
-    g_shared_mem = Kernel::CreateSharedMemory("HID:SharedMem"); // Create shared memory object
+    g_shared_mem = Kernel::SharedMemory::Create("HID:SharedMem").MoveFrom();
 
     // Create event handles
     g_event_pad_or_touch_1 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1");

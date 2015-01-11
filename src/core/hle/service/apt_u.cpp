@@ -26,7 +26,7 @@ namespace APT_U {
 static const VAddr SHARED_FONT_VADDR = 0x18000000;
 
 /// Handle to shared memory region designated to for shared system font
-static Handle shared_font_mem = 0;
+static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
 
 static Handle lock_handle = 0;
 static Handle notification_event_handle = 0; ///< APT notification event handle
@@ -354,7 +354,7 @@ void GetSharedFont(Service::Interface* self) {
         cmd_buff[0] = 0x00440082;
         cmd_buff[1] = RESULT_SUCCESS.raw; // No error
         cmd_buff[2] = SHARED_FONT_VADDR;
-        cmd_buff[4] = shared_font_mem;
+        cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
     } else {
         cmd_buff[1] = -1; // Generic error (not really possible to verify this on hardware)
         LOG_ERROR(Kernel_SVC, "called, but %s has not been loaded!", SHARED_FONT);
@@ -514,10 +514,10 @@ Interface::Interface() {
         file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
 
         // Create shared font memory object
-        shared_font_mem = Kernel::CreateSharedMemory("APT_U:shared_font_mem");
+        shared_font_mem = Kernel::SharedMemory::Create("APT_U:shared_font_mem").MoveFrom();
     } else {
         LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
-        shared_font_mem = 0;
+        shared_font_mem = nullptr;
     }
 
     lock_handle = 0;
