@@ -40,18 +40,35 @@ void EmuThread::SetFilename(std::string filename)
 void EmuThread::run()
 {
     stop_run = false;
+
+    // holds whether the cpu was running during the last iteration,
+    // so that the DebugModeLeft signal can be emitted before the
+    // next execution step
+    bool was_active = false;
     while (!stop_run)
     {
         if (cpu_running)
         {
+            if (!was_active)
+                emit DebugModeLeft();
+
             Core::RunLoop();
+
+            was_active = cpu_running || exec_cpu_step;
+            if (!was_active)
+                emit DebugModeEntered();
         }
         else if (exec_cpu_step)
         {
+            if (!was_active)
+                emit DebugModeLeft();
+
             exec_cpu_step = false;
             Core::SingleStep();
-            emit CPUStepped();
+            emit DebugModeEntered();
             yieldCurrentThread();
+            
+            was_active = false;
         }
     }
     render_window->moveContext();
