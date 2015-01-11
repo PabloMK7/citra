@@ -11,13 +11,6 @@
 #include <cstdio>
 #include <cstring>
 
-// Force enable logging in the right modes. For some reason, something had changed
-// so that debugfast no longer logged.
-#if defined(_DEBUG) || defined(DEBUGFAST)
-#undef LOGGING
-#define LOGGING 1
-#endif
-
 #define STACKALIGN
 
 // An inheritable class to disallow the copy constructor and operator= functions

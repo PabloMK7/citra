@@ -14,16 +14,12 @@ namespace SRV {
 static Handle g_event_handle = 0;
 
 static void Initialize(Service::Interface* self) {
-    LOG_DEBUG(Service_SRV, "called");
-
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
 }
 
 static void GetProcSemaphore(Service::Interface* self) {
-    LOG_TRACE(Service_SRV, "called");
-
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented

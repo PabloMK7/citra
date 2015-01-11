@@ -27,8 +27,6 @@ static void Initialize(Service::Interface* self) {
     // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
     // http://3dbrew.org/wiki/FS:Initialize#Request
     cmd_buff[1] = RESULT_SUCCESS.raw;
-
-    LOG_DEBUG(Service_FS, "called");
 }
 
 /**
@@ -104,8 +102,8 @@ static void OpenFileDirectly(Service::Interface* self) {
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    LOG_DEBUG(Service_FS, "archive_path=%s file_path=%s, mode=%u attributes=%d",
-              archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
+    LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s file_path=%s, mode=%u attributes=%d",
+              archive_id, archive_path.DebugStr().c_str(), file_path.DebugStr().c_str(), mode.hex, attributes);
 
     ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
@@ -367,7 +365,7 @@ static void OpenArchive(Service::Interface* self) {
     u32 archivename_ptr   = cmd_buff[5];
     FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
 
-    LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s", archive_id, archive_path.DebugStr().c_str());
 
     ResultVal<ArchiveHandle> handle = OpenArchive(archive_id, archive_path);
     cmd_buff[1] = handle.Code().raw;
@@ -408,8 +406,6 @@ static void IsSdmcDetected(Service::Interface* self) {
 
     cmd_buff[1] = 0;
     cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
-
-    LOG_DEBUG(Service_FS, "called");
 }
 
 /**

@@ -369,14 +369,14 @@ private:
 
     StorageType storage;
     ResultCode result_code;
-#if _DEBUG
+#ifdef _DEBUG
     // The purpose of this pointer is to aid inspecting the type with a debugger, eliminating the
     // need to cast `storage` to a pointer or pay attention to `result_code`.
     const T* debug_ptr;
 #endif
 
     void UpdateDebugPtr() {
-#if _DEBUG
+#ifdef _DEBUG
         debug_ptr = empty() ? nullptr : static_cast<const T*>(static_cast<const void*>(&storage));
 #endif
     }
