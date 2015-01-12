@@ -176,13 +176,11 @@ unsigned int DPO(ArithmeticShiftRightByImmediate)(arm_processor *cpu, unsigned i
     unsigned int shifter_operand;
     int shift_imm = BITS(sht_oper, 7, 11);
     if (shift_imm == 0) {
-        if (BIT(rm, 31)) {
+        if (BIT(rm, 31) == 0)
             shifter_operand = 0;
-            cpu->shifter_carry_out = BIT(rm, 31);
-        } else {
+        else
             shifter_operand = 0xFFFFFFFF;
-            cpu->shifter_carry_out = BIT(rm, 31);
-        }
+        cpu->shifter_carry_out = BIT(rm, 31);
     } else {
         shifter_operand = static_cast<int>(rm) >> shift_imm;
         cpu->shifter_carry_out = BIT(rm, shift_imm - 1);
