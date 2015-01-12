@@ -7,6 +7,19 @@
 #if EMU_PLATFORM == PLATFORM_WINDOWS
 #include <winsock2.h>
 #include <ws2tcpip.h>
+
+// MinGW does not define several errno constants
+#ifndef _MSC_VER
+#define EBADMSG 104
+#define ENODATA 120
+#define ENOMSG  122
+#define ENOSR   124
+#define ENOSTR  125
+#define ETIME   137
+#define EIDRM   2001
+#define ENOLINK 2002
+#endif // _MSC_VER
+
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
