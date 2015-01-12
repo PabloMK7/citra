@@ -418,6 +418,22 @@ ARMul_NegZero (ARMul_State * state, ARMword result)
     }
 }
 
+// Add with carry, indicates if a carry-out or signed overflow occurred.
+u32 AddWithCarry(u32 left, u32 right, u32 carry_in, bool* carry_out_occurred, bool* overflow_occurred)
+{
+    u64 unsigned_sum = (u64)left + (u64)right + (u64)carry_in;
+    s64 signed_sum = (s64)(s32)left + (s64)(s32)right + (s64)carry_in;
+    u64 result = (unsigned_sum & 0xFFFFFFFF);
+
+    if (carry_out_occurred)
+        *carry_out_occurred = (result != unsigned_sum);
+
+    if (overflow_occurred)
+        *overflow_occurred = ((s64)(s32)result != signed_sum);
+
+    return (u32)result;
+}
+
 // Compute whether an addition of A and B, giving RESULT, overflowed.
 bool AddOverflow(ARMword a, ARMword b, ARMword result)
 {
