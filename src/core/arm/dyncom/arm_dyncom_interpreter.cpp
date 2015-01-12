@@ -4005,10 +4005,14 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         adc_inst *inst_cream = (adc_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            unsigned int sht_op = SHIFTER_OPERAND;
-            rop = SHIFTER_OPERAND + cpu->CFlag;
-            RD = dst = lop + rop;
+            u32 left = RN;
+            u32 right = SHIFTER_OPERAND;
+
+            u64 unsigned_sum = (left + right + cpu->CFlag);
+            s64 signed_sum = (s64)(s32)left + (s64)(s32)right + (s64)cpu->CFlag;
+            u32 result = (unsigned_sum & 0xFFFFFFFF);
+
+            RD = result;
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4016,10 +4020,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-                UPDATE_CFLAG_CARRY_FROM_ADD(lop, sht_op, cpu->CFlag);
-                UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
+                UPDATE_NFLAG(result);
+                UPDATE_ZFLAG(result);
+                UPDATE_CFLAG_CARRY_FROM_ADD(left, right, cpu->CFlag);
+                cpu->VFlag = ((s64)(s32)result != signed_sum);
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(adc_inst));
