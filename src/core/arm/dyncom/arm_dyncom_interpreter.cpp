@@ -3967,16 +3967,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         &&INIT_INST_LENGTH,&&END
         };
 #endif
-    arm_inst * inst_base;
-    unsigned int lop, rop, dst;
+    arm_inst* inst_base;
     unsigned int addr;
     unsigned int phys_addr;
-    unsigned int last_pc = 0;
     unsigned int num_instrs = 0;
 
-    static unsigned int last_physical_base = 0, last_logical_base = 0;
     int ptr;
-    bool single_step = (cpu->NumInstrsToExecute == 1);
 
     LOAD_NZCVT;
     DISPATCH:
@@ -4071,9 +4067,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         and_inst *inst_cream = (and_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop & rop;
+            u32 lop = RN;
+            u32 rop = SHIFTER_OPERAND;
+            RD = lop & rop;
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4081,8 +4077,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -4114,12 +4110,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         bic_inst *inst_cream = (bic_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
+            u32 lop = RN;
             if (inst_cream->Rn == 15) {
                 lop += 2 * GET_INST_SIZE(cpu);
             }
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop & (~rop);
+            u32 rop = SHIFTER_OPERAND;
+            RD = lop & (~rop);
             if ((inst_cream->S) && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4127,8 +4123,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -4234,15 +4230,17 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     CMN_INST:
     {
-        cmn_inst *inst_cream = (cmn_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            rop = SHIFTER_OPERAND;
-            dst = lop + rop;
-            UPDATE_NFLAG(dst);
-            UPDATE_ZFLAG(dst);
-            UPDATE_CFLAG(dst, lop, rop);
-            UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            cmn_inst* const inst_cream = (cmn_inst*)inst_base->component;
+
+            bool carry;
+            bool overflow;
+            u32 result = AddWithCarry(RN, SHIFTER_OPERAND, 0, &carry, &overflow);
+
+            UPDATE_NFLAG(result);
+            UPDATE_ZFLAG(result);
+            cpu->CFlag = carry;
+            cpu->VFlag = overflow;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(cmn_inst));
@@ -4251,19 +4249,21 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     CMP_INST:
     {
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            cmp_inst *inst_cream = (cmp_inst *)inst_base->component;
-            lop = RN;
-            if (inst_cream->Rn == 15) {
-                lop += 2 * GET_INST_SIZE(cpu);
-            }
-            rop = SHIFTER_OPERAND;
-            dst = lop - rop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            cmp_inst* const inst_cream = (cmp_inst*)inst_base->component;
 
-            UPDATE_NFLAG(dst);
-            UPDATE_ZFLAG(dst);
-            UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop);
-            UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * GET_INST_SIZE(cpu);
+
+            bool carry;
+            bool overflow;
+            u32 result = AddWithCarry(rn_val, ~SHIFTER_OPERAND, 1, &carry, &overflow);
+
+            UPDATE_NFLAG(result);
+            UPDATE_ZFLAG(result);
+            cpu->CFlag = carry;
+            cpu->VFlag = overflow;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(cmp_inst));
@@ -4321,12 +4321,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         eor_inst *inst_cream = (eor_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
+            u32 lop = RN;
             if (inst_cream->Rn == 15) {
                 lop += 2 * GET_INST_SIZE(cpu);
             }
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop ^ rop;
+            u32 rop = SHIFTER_OPERAND;
+            RD = lop ^ rop;
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4334,8 +4334,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -4852,10 +4852,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 LOG_ERROR(Core_ARM11, "invalid operands for MLA");
                 CITRA_IGNORE_EXIT(-1);
             }
-            RD = dst = static_cast<uint32_t>((rm * rs + rn) & 0xffffffff);
+            RD = static_cast<uint32_t>((rm * rs + rn) & 0xffffffff);
             if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(mla_inst));
@@ -4871,7 +4871,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     {
         mov_inst *inst_cream = (mov_inst *)inst_base->component;
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            RD = dst = SHIFTER_OPERAND;
+            RD = SHIFTER_OPERAND;
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4879,8 +4879,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -5016,10 +5016,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
             uint64_t rm = RM;
             uint64_t rs = RS;
-            RD = dst = static_cast<uint32_t>((rm * rs) & 0xffffffff);
+            RD = static_cast<uint32_t>((rm * rs) & 0xffffffff);
             if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(mul_inst));
@@ -5033,9 +5033,11 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     MVN_INST:
     {
-        mvn_inst *inst_cream = (mvn_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            RD = dst = ~SHIFTER_OPERAND;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            mvn_inst* const inst_cream = (mvn_inst*)inst_base->component;
+
+            RD = ~SHIFTER_OPERAND;
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -5043,8 +5045,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -5059,11 +5061,13 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     ORR_INST:
     {
-        orr_inst *inst_cream = (orr_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop | rop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            orr_inst* const inst_cream = (orr_inst*)inst_base->component;
+
+            u32 lop = RN;
+            u32 rop = SHIFTER_OPERAND;
+            RD = lop | rop;
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -5071,8 +5075,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
                 UPDATE_CFLAG_WITH_SC;
             }
             if (inst_cream->Rd == 15) {
@@ -5292,14 +5296,17 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     RFE_INST:
     RSB_INST:
     {
-        rsb_inst *inst_cream = (rsb_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            rop = RN;
-            lop = SHIFTER_OPERAND;
-            if (inst_cream->Rn == 15) {
-                rop += 2 * GET_INST_SIZE(cpu);;
-            }
-            RD = dst = lop - rop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            rsb_inst* const inst_cream = (rsb_inst*)inst_base->component;
+
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * GET_INST_SIZE(cpu);
+
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(~rn_val, SHIFTER_OPERAND, 1, &carry, &overflow);
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -5307,10 +5314,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-                UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop);
-                UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(rsb_inst));
@@ -5324,11 +5331,13 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     RSC_INST:
     {
-        rsc_inst *inst_cream = (rsc_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            rop = SHIFTER_OPERAND;
-            RD = dst = rop - lop - !cpu->CFlag;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            rsc_inst* const inst_cream = (rsc_inst*)inst_base->component;
+
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(~RN, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -5336,10 +5345,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-                UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(rop, lop, !cpu->CFlag);
-                UPDATE_VFLAG_OVERFLOW_FROM((int)dst, (int)rop, (int)lop);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(rsc_inst));
@@ -6406,18 +6415,19 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
     TEQ_INST:
     {
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            teq_inst *inst_cream = (teq_inst *)inst_base->component;
-            lop = RN;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            teq_inst* const inst_cream = (teq_inst*)inst_base->component;
+
+            u32 lop = RN;
+            u32 rop = SHIFTER_OPERAND;
 
             if (inst_cream->Rn == 15)
                 lop += GET_INST_SIZE(cpu) * 2;
 
-            rop = SHIFTER_OPERAND;
-            dst = lop ^ rop;
+            u32 result = lop ^ rop;
 
-            UPDATE_NFLAG(dst);
-            UPDATE_ZFLAG(dst);
+            UPDATE_NFLAG(result);
+            UPDATE_ZFLAG(result);
             UPDATE_CFLAG_WITH_SC;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -6427,18 +6437,19 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     TST_INST:
     {
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            tst_inst *inst_cream = (tst_inst *)inst_base->component;
-            lop = RN;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            tst_inst* const inst_cream = (tst_inst*)inst_base->component;
+
+            u32 lop = RN;
+            u32 rop = SHIFTER_OPERAND;
 
             if (inst_cream->Rn == 15)
                 lop += GET_INST_SIZE(cpu) * 2;
 
-            rop = SHIFTER_OPERAND;
-            dst = lop & rop;
+            u32 result = lop & rop;
 
-            UPDATE_NFLAG(dst);
-            UPDATE_ZFLAG(dst);
+            UPDATE_NFLAG(result);
+            UPDATE_ZFLAG(result);
             UPDATE_CFLAG_WITH_SC;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
