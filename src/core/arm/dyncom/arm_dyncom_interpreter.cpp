@@ -4034,14 +4034,17 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     ADD_INST:
     {
-        add_inst *inst_cream = (add_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            if (inst_cream->Rn == 15) {
-                lop += 2 * GET_INST_SIZE(cpu);
-            }
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop + rop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            add_inst* const inst_cream = (add_inst*)inst_base->component;
+
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * GET_INST_SIZE(cpu);
+
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(rn_val, SHIFTER_OPERAND, 0, &carry, &overflow);
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4049,10 +4052,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-                UPDATE_CFLAG(dst, lop, rop);
-                UPDATE_VFLAG((int)dst, (int)lop, (int)rop);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(add_inst));
@@ -5459,11 +5462,13 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
     SBC_INST:
     {
-        sbc_inst *inst_cream = (sbc_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = SHIFTER_OPERAND + !cpu->CFlag;
-            rop = RN;
-            RD = dst = rop - lop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            sbc_inst* const inst_cream = (sbc_inst*)inst_base->component;
+
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(RN, ~SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -5471,15 +5476,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-
-                if(rop >= !cpu->CFlag)
-                    UPDATE_CFLAG_NOT_BORROW_FROM(rop - !cpu->CFlag, SHIFTER_OPERAND);
-                else
-                    UPDATE_CFLAG_NOT_BORROW_FROM(rop, !cpu->CFlag);
-
-                UPDATE_VFLAG_OVERFLOW_FROM(dst, rop, lop);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(sbc_inst));
@@ -6257,14 +6257,17 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     SUB_INST:
     {
-        sub_inst *inst_cream = (sub_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            lop = RN;
-            if (inst_cream->Rn == 15) {
-                lop += 8;
-            }
-            rop = SHIFTER_OPERAND;
-            RD = dst = lop - rop;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            sub_inst* const inst_cream = (sub_inst*)inst_base->component;
+
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 8;
+
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(rn_val, ~SHIFTER_OPERAND, 1, &carry, &overflow);
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -6272,10 +6275,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(dst);
-                UPDATE_ZFLAG(dst);
-                UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop);
-                UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(sub_inst));
