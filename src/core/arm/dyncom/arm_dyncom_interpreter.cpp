@@ -3905,21 +3905,9 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 #endif
 
-    #define UPDATE_NFLAG(dst) (cpu->NFlag = BIT(dst, 31) ? 1 : 0)
-    #define UPDATE_ZFLAG(dst) (cpu->ZFlag = dst ? 0 : 1)
-
-    #define UPDATE_CFLAG(dst, lop, rop) (cpu->CFlag = ((dst < lop) || (dst < rop)))
-    #define UPDATE_CFLAG_CARRY_FROM_ADD(lop, rop, flag) (cpu->CFlag = (((uint64_t) lop + (uint64_t) rop + (uint64_t) flag) > 0xffffffff) )
-    #define UPDATE_CFLAG_NOT_BORROW_FROM_FLAG(lop, rop, flag) (cpu->CFlag = ((uint64_t) lop >= ((uint64_t) rop + (uint64_t) flag)))
-    #define UPDATE_CFLAG_NOT_BORROW_FROM(lop, rop)  (cpu->CFlag = (lop >= rop))
-    #define UPDATE_CFLAG_WITH_NOT(dst, lop, rop)    (cpu->CFlag = !(dst < lop))
-    #define UPDATE_CFLAG_WITH_SC                    (cpu->CFlag = cpu->shifter_carry_out)
-
-    #define UPDATE_VFLAG(dst, lop, rop) (cpu->VFlag = (((lop < 0) && (rop < 0) && (dst >= 0)) || \
-                                ((lop >= 0) && (rop) >= 0 && (dst < 0))))
-    #define UPDATE_VFLAG_WITH_NOT(dst, lop, rop)    (cpu->VFlag = !(((lop < 0) && (rop < 0) && (dst >= 0)) || \
-                                ((lop >= 0) && (rop) >= 0 && (dst < 0))))
-    #define UPDATE_VFLAG_OVERFLOW_FROM(dst, lop, rop) (cpu->VFlag = (((lop ^ rop) & (lop ^ dst)) >> 31))
+    #define UPDATE_NFLAG(dst)    (cpu->NFlag = BIT(dst, 31) ? 1 : 0)
+    #define UPDATE_ZFLAG(dst)    (cpu->ZFlag = dst ? 0 : 1)
+    #define UPDATE_CFLAG_WITH_SC (cpu->CFlag = cpu->shifter_carry_out)
 
     #define SAVE_NZCVT cpu->Cpsr = (cpu->Cpsr & 0x0fffffdf) | \
                       (cpu->NFlag << 31) | \
