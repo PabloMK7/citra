@@ -21,4 +21,7 @@ public slots:
 private:
     Ui::CallStack ui;
     QStandardItemModel* callstack_model;
+
+    /// Clears the callstack widget while keeping the column widths the same
+    void Clear();
 };
