@@ -4003,16 +4003,13 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
     ADC_INST:
     {
-        adc_inst *inst_cream = (adc_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
-            u32 left = RN;
-            u32 right = SHIFTER_OPERAND;
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            adc_inst* const inst_cream = (adc_inst*)inst_base->component;
 
-            u64 unsigned_sum = (left + right + cpu->CFlag);
-            s64 signed_sum = (s64)(s32)left + (s64)(s32)right + (s64)cpu->CFlag;
-            u32 result = (unsigned_sum & 0xFFFFFFFF);
+            bool carry;
+            bool overflow;
+            RD = AddWithCarry(RN, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
 
-            RD = result;
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4020,10 +4017,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     LOAD_NZCVT;
                 }
             } else if (inst_cream->S) {
-                UPDATE_NFLAG(result);
-                UPDATE_ZFLAG(result);
-                UPDATE_CFLAG_CARRY_FROM_ADD(left, right, cpu->CFlag);
-                cpu->VFlag = ((s64)(s32)result != signed_sum);
+                UPDATE_NFLAG(RD);
+                UPDATE_ZFLAG(RD);
+                cpu->CFlag = carry;
+                cpu->VFlag = overflow;
             }
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(adc_inst));
