@@ -76,6 +76,8 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     format_choice->addItem(tr("IA4"));
     format_choice->addItem(tr("UNK10"));
     format_choice->addItem(tr("A4"));
+    format_choice->addItem(tr("ETC1"));
+    format_choice->addItem(tr("ETC1A4"));
     format_choice->setCurrentIndex(static_cast<int>(info.format));
     connect(format_choice, SIGNAL(currentIndexChanged(int)), this, SLOT(OnFormatChanged(int)));
 

@@ -18,6 +18,7 @@
 
 #include "common/log.h"
 #include "common/file_util.h"
+#include "common/math_util.h"
 
 #include "video_core/color.h"
 #include "video_core/math.h"
@@ -337,25 +338,31 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     i = (i ^ (i << 1)) & 0x1515;              // ---2 -1-0
     i = (i | (i >> 7)) & 0x3F;
 
-    source += coarse_y * info.stride;
-    const unsigned int offset = coarse_x * block_height + i;
+    if (info.format != Regs::TextureFormat::ETC1 &&
+        info.format != Regs::TextureFormat::ETC1A4) {
+        // TODO(neobrain): Fix code design to unify vertical block offsets!
+        source += coarse_y * info.stride;
+    }
+    const unsigned int offset = coarse_x * block_height;
+
+    // TODO: Assert that width/height are multiples of block dimensions
 
     switch (info.format) {
     case Regs::TextureFormat::RGBA8:
     {
-        const u8* source_ptr = source + offset * 4;
+        const u8* source_ptr = source + offset * 4 + i * 4;
         return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
     }
 
     case Regs::TextureFormat::RGB8:
     {
-        const u8* source_ptr = source + offset * 3;
+        const u8* source_ptr = source + offset * 3 + i * 3;
         return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
     }
 
     case Regs::TextureFormat::RGBA5551:
     {
-        const u16 source_ptr = *(const u16*)(source + offset * 2);
+        const u16 source_ptr = *(const u16*)(source + offset * 2 + i * 2);
         u8 r = (source_ptr >> 11) & 0x1F;
         u8 g = ((source_ptr) >> 6) & 0x1F;
         u8 b = (source_ptr >> 1) & 0x1F;
@@ -366,7 +373,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGB565:
     {
-        const u16 source_ptr = *(const u16*)(source + offset * 2);
+        const u16 source_ptr = *(const u16*)(source + offset * 2 + i * 2);
         u8 r = Color::Convert5To8((source_ptr >> 11) & 0x1F);
         u8 g = Color::Convert6To8(((source_ptr) >> 5) & 0x3F);
         u8 b = Color::Convert5To8((source_ptr) & 0x1F);
@@ -375,7 +382,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGBA4:
     {
-        const u8* source_ptr = source + offset * 2;
+        const u8* source_ptr = source + offset * 2 + i * 2;
         u8 r = Color::Convert4To8(source_ptr[1] >> 4);
         u8 g = Color::Convert4To8(source_ptr[1] & 0xF);
         u8 b = Color::Convert4To8(source_ptr[0] >> 4);
@@ -385,7 +392,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA8:
     {
-        const u8* source_ptr = source + offset * 2;
+        const u8* source_ptr = source + offset * 2 + i * 2;
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
@@ -397,13 +404,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::I8:
     {
-        const u8* source_ptr = source + offset;
+        const u8* source_ptr = source + offset + i;
         return { *source_ptr, *source_ptr, *source_ptr, 255 };
     }
 
     case Regs::TextureFormat::A8:
     {
-        const u8* source_ptr = source + offset;
+        const u8* source_ptr = source + offset + i;
 
         if (disable_alpha) {
             return { *source_ptr, *source_ptr, *source_ptr, 255 };
@@ -414,7 +421,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA4:
     {
-        const u8* source_ptr = source + offset;
+        const u8* source_ptr = source + offset + i;
 
         u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
         u8 a = Color::Convert4To8((*source_ptr) & 0xF);
@@ -429,7 +436,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::A4:
     {
-        const u8* source_ptr = source + offset / 2;
+        const u8* source_ptr = source + offset / 2 + i / 2;
 
         u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
         a = Color::Convert4To8(a);
@@ -439,6 +446,127 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         } else {
             return { 0, 0, 0, a };
         }
+    }
+
+    case Regs::TextureFormat::ETC1:
+    case Regs::TextureFormat::ETC1A4:
+    {
+        bool has_alpha = (info.format == Regs::TextureFormat::ETC1A4);
+
+        // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
+        const int subtile_width = 4;
+        const int subtile_height = 4;
+
+        int subtile_index = ((x / subtile_width) & 1) + 2 * ((y / subtile_height) & 1);
+        unsigned subtile_bytes = has_alpha ? 2 : 1; // TODO: Name...
+
+        const u64* source_ptr = (const u64*)(source
+                                             + coarse_x * subtile_bytes * 4
+                                             + coarse_y * subtile_bytes * 4 * (info.width / 8)
+                                             + subtile_index * subtile_bytes * 8);
+        u64 alpha = 0xFFFFFFFFFFFFFFFF;
+        if (has_alpha) {
+            alpha = *source_ptr;
+            source_ptr++;
+        }
+
+        union ETC1Tile {
+            // Each of these two is a collection of 16 bits (one per lookup value)
+            BitField< 0, 16, u64> table_subindexes;
+            BitField<16, 16, u64> negation_flags;
+
+            unsigned GetTableSubIndex(unsigned index) const {
+                return (table_subindexes >> index) & 1;
+            }
+
+            bool GetNegationFlag(unsigned index) const {
+                return ((negation_flags >> index) & 1) == 1;
+            }
+
+            BitField<32, 1, u64> flip;
+            BitField<33, 1, u64> differential_mode;
+
+            BitField<34, 3, u64> table_index_2;
+            BitField<37, 3, u64> table_index_1;
+
+            union {
+                // delta value + base value
+                BitField<40, 3, s64> db;
+                BitField<43, 5, u64> b;
+
+                BitField<48, 3, s64> dg;
+                BitField<51, 5, u64> g;
+
+                BitField<56, 3, s64> dr;
+                BitField<59, 5, u64> r;
+            } differential;
+
+            union {
+                BitField<40, 4, u64> b2;
+                BitField<44, 4, u64> b1;
+
+                BitField<48, 4, u64> g2;
+                BitField<52, 4, u64> g1;
+
+                BitField<56, 4, u64> r2;
+                BitField<60, 4, u64> r1;
+            } separate;
+
+            const Math::Vec3<u8> GetRGB(int x, int y) const {
+                int texel = 4 * x + y;
+
+                if (flip)
+                    std::swap(x, y);
+
+                // Lookup base value
+                Math::Vec3<int> ret;
+                if (differential_mode) {
+                    ret.r() = differential.r;
+                    ret.g() = differential.g;
+                    ret.b() = differential.b;
+                    if (x >= 2) {
+                        ret.r() += differential.dr;
+                        ret.g() += differential.dg;
+                        ret.b() += differential.db;
+                    }
+                    ret.r() = Color::Convert5To8(ret.r());
+                    ret.g() = Color::Convert5To8(ret.g());
+                    ret.b() = Color::Convert5To8(ret.b());
+                } else {
+                    if (x < 2) {
+                        ret.r() = Color::Convert4To8(separate.r1);
+                        ret.g() = Color::Convert4To8(separate.g1);
+                        ret.b() = Color::Convert4To8(separate.b1);
+                    } else {
+                        ret.r() = Color::Convert4To8(separate.r2);
+                        ret.g() = Color::Convert4To8(separate.g2);
+                        ret.b() = Color::Convert4To8(separate.b2);
+                    }
+                }
+
+                // Add modifier
+                unsigned table_index = (x < 2) ? table_index_2.Value() : table_index_1.Value();
+
+                static const auto etc1_modifier_table = std::array<std::array<u8, 2>, 8>{{
+                    {  2,  8 }, {  5, 17 }, {  9,  29 }, { 13,  42 },
+                    { 18, 60 }, { 24, 80 }, { 33, 106 }, { 47, 183 }
+                }};
+
+                int modifier = etc1_modifier_table.at(table_index).at(GetTableSubIndex(texel));
+                if (GetNegationFlag(texel))
+                    modifier *= -1;
+
+                ret.r() = MathUtil::Clamp(ret.r() + modifier, 0, 255);
+                ret.g() = MathUtil::Clamp(ret.g() + modifier, 0, 255);
+                ret.b() = MathUtil::Clamp(ret.b() + modifier, 0, 255);
+
+                return ret.Cast<u8>();
+            }
+        } const *etc1_tile = reinterpret_cast<const ETC1Tile*>(source_ptr);
+
+        alpha >>= 4 * ((x & 3) * 4 + (y & 3));
+        return Math::MakeVec(etc1_tile->GetRGB(x & 3, y & 3),
+                             disable_alpha ? (u8)255 : Color::Convert4To8(alpha & 0xF));
     }
 
     default:
