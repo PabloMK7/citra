@@ -38,11 +38,13 @@ set(SRCS
             hle/service/am_app.cpp
             hle/service/am_net.cpp
             hle/service/apt_a.cpp
+            hle/service/apt_s.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
             hle/service/cecd_u.cpp
             hle/service/cfg/cfg.cpp
             hle/service/cfg/cfg_i.cpp
+            hle/service/cfg/cfg_s.cpp
             hle/service/cfg/cfg_u.cpp
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
@@ -63,6 +65,7 @@ set(SRCS
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
             hle/service/ptm_u.cpp
+            hle/service/ptm_sysm.cpp
             hle/service/service.cpp
             hle/service/soc_u.cpp
             hle/service/srv.cpp
@@ -131,11 +134,13 @@ set(HEADERS
             hle/service/am_app.h
             hle/service/am_net.h
             hle/service/apt_a.h
+            hle/service/apt_s.h
             hle/service/apt_u.h
             hle/service/boss_u.h
             hle/service/cecd_u.h
             hle/service/cfg/cfg.h
             hle/service/cfg/cfg_i.h
+            hle/service/cfg/cfg_s.h
             hle/service/cfg/cfg_u.h
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
@@ -156,6 +161,7 @@ set(HEADERS
             hle/service/nwm_uds.h
             hle/service/pm_app.h
             hle/service/ptm_u.h
+            hle/service/ptm_sysm.h
             hle/service/service.h
             hle/service/soc_u.h
             hle/service/srv.h

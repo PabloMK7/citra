@@ -11,10 +11,12 @@
 #include "core/hle/service/am_app.h"
 #include "core/hle/service/am_net.h"
 #include "core/hle/service/apt_a.h"
+#include "core/hle/service/apt_s.h"
 #include "core/hle/service/apt_u.h"
 #include "core/hle/service/boss_u.h"
 #include "core/hle/service/cecd_u.h"
 #include "core/hle/service/cfg/cfg_i.h"
+#include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/csnd_snd.h"
 #include "core/hle/service/dsp_dsp.h"
@@ -34,6 +36,7 @@
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
 #include "core/hle/service/ptm_u.h"
+#include "core/hle/service/ptm_sysm.h"
 #include "core/hle/service/soc_u.h"
 #include "core/hle/service/srv.h"
 #include "core/hle/service/ssl_c.h"
@@ -85,10 +88,12 @@ void Init() {
     g_manager->AddService(new AM_APP::Interface);
     g_manager->AddService(new AM_NET::Interface);
     g_manager->AddService(new APT_A::Interface);
+    g_manager->AddService(new APT_S::Interface);
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new BOSS_U::Interface);
     g_manager->AddService(new CECD_U::Interface);
     g_manager->AddService(new CFG_I::Interface);
+    g_manager->AddService(new CFG_S::Interface);
     g_manager->AddService(new CFG_U::Interface);
     g_manager->AddService(new CSND_SND::Interface);
     g_manager->AddService(new DSP_DSP::Interface);
@@ -108,6 +113,7 @@ void Init() {
     g_manager->AddService(new NWM_UDS::Interface);
     g_manager->AddService(new PM_APP::Interface);
     g_manager->AddService(new PTM_U::Interface);
+    g_manager->AddService(new PTM_SYSM::Interface);
     g_manager->AddService(new SOC_U::Interface);
     g_manager->AddService(new SSL_C::Interface);
     g_manager->AddService(new Y2R_U::Interface);
