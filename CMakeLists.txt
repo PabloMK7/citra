@@ -16,7 +16,7 @@ else()
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
-    message(STATUS "Cache compiler flags ignored, please edit CMakeFiles.txt to change the flags.")
+    message(STATUS "Cache compiler flags ignored, please edit CMakeLists.txt to change the flags.")
     # /MP - Multi-threaded compilation
     # /MD - Multi-threaded runtime
     # /Ox - Full optimization
