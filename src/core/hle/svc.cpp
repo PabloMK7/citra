@@ -194,7 +194,7 @@ static Result ArbitrateAddress(Handle arbiter, u32 address, u32 type, u32 value,
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", arbiter,
         address, type, value);
     return Kernel::ArbitrateAddress(arbiter, static_cast<Kernel::ArbitrationType>(type),
-            address, value).raw;
+            address, value, nanoseconds).raw;
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
