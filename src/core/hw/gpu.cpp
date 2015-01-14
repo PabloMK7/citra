@@ -100,22 +100,25 @@ inline void Write(u32 addr, const T data) {
             u8* source_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
             u8* dest_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
+            // Cheap emulation of horizontal scaling: Just skip each second pixel of the
+            // input framebuffer. We keep track of this in the pixel_skip variable.
+            unsigned pixel_skip = (config.scale_horizontally != 0) ? 2 : 1;
+
+            u32 output_width = config.output_width / pixel_skip;
+
             for (u32 y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
-                for (u32 x = 0; x < config.output_width; ++x) {
+
+                for (u32 x = 0; x < output_width; ++x) {
                     struct {
                         int r, g, b, a;
                     } source_color = { 0, 0, 0, 0 };
-
-                    // Cheap emulation of horizontal scaling: Just skip each second pixel of the
-                    // input framebuffer. We keep track of this in the pixel_skip variable.
-                    unsigned pixel_skip = (config.scale_horizontally != 0) ? 2 : 1;
 
                     switch (config.input_format) {
                     case Regs::PixelFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* srcptr = source_pointer + x * 4 * pixel_skip + y * config.input_width * 4 * pixel_skip;
+                        u8* srcptr = source_pointer + (x * pixel_skip + y * config.input_width) * 4;
                         source_color.r = srcptr[0]; // blue
                         source_color.g = srcptr[1]; // green
                         source_color.b = srcptr[2]; // red
@@ -143,7 +146,7 @@ inline void Write(u32 addr, const T data) {
                     case Regs::PixelFormat::RGB8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3;
+                        u8* dstptr = dest_pointer + (x + y * output_width) * 3;
                         dstptr[0] = source_color.r; // blue
                         dstptr[1] = source_color.g; // green
                         dstptr[2] = source_color.b; // red
@@ -158,9 +161,9 @@ inline void Write(u32 addr, const T data) {
             }
 
             LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
-                      config.output_height * config.output_width * 4,
+                      config.output_height * output_width * 4,
                       config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
-                      config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
+                      config.GetPhysicalOutputAddress(), (u32)output_width, (u32)config.output_height,
                       config.output_format.Value());
 
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
