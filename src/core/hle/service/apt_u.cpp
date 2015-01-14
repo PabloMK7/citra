@@ -29,8 +29,8 @@ static const VAddr SHARED_FONT_VADDR = 0x18000000;
 static Handle shared_font_mem = 0;
 
 static Handle lock_handle = 0;
-static Handle notification_event_handle = 0; /// APT notification event handle
-static Handle pause_event_handle = 0; /// APT pause event handle
+static Handle notification_event_handle = 0; ///< APT notification event handle
+static Handle pause_event_handle = 0; ///< APT pause event handle
 static std::vector<u8> shared_font;
 
 /// Signals used by APT functions
