@@ -9,6 +9,7 @@
 #include "core/settings.h"
 #include "core/core.h"
 #include "core/mem_map.h"
+#include "core/core_timing.h"
 
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -24,12 +25,17 @@ namespace GPU {
 
 Regs g_regs;
 
-bool g_skip_frame = false;              ///< True if the current frame was skipped
+/// True if the current frame was skipped
+bool g_skip_frame = false;
 
-static u64 frame_ticks      = 0;        ///< 268MHz / gpu_refresh_rate frames per second
-static u64 last_update_tick = 0;        ///< CPU ticl count from last GPU update
-static u64 frame_count      = 0;        ///< Number of frames drawn
-static bool last_skip_frame = false;    ///< True if the last frame was skipped
+/// 268MHz / gpu_refresh_rate frames per second
+static u64 frame_ticks;
+/// Event id for CoreTiming
+static int vblank_event;
+/// Total number of frames drawn
+static u64 frame_count;
+/// True if the last frame was skipped
+static bool last_skip_frame = false;
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -192,50 +198,39 @@ template void Write<u16>(u32 addr, const u16 data);
 template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
-void Update() {
+static void VBlankCallback(u64 userdata, int cycles_late) {
     auto& framebuffer_top = g_regs.framebuffer_config[0];
 
-    // Synchronize GPU on a thread reschedule: Because we cannot accurately predict a vertical
-    // blank, we need to simulate it. Based on testing, it seems that retail applications work more
-    // accurately when this is signalled between thread switches.
+    frame_count++;
+    last_skip_frame = g_skip_frame;
+    g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
 
-    u64 current_ticks = Core::g_app_core->GetTicks();
-
-
-    if (HLE::g_reschedule) {
-
-        // Synchronize frame...
-        if ((current_ticks - last_update_tick) >= frame_ticks) {
-            last_update_tick += frame_ticks;
-            frame_count++;
-            last_skip_frame = g_skip_frame;
-            g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
-
-            // Swap buffers based on the frameskip mode, which is a little bit tricky. When
-            // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
-            // So, we should only swap frames if the last frame was rendered. The rules are:
-            //  - If frameskip == 0 (disabled), always swap buffers
-            //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
-            //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
-            if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
-                   Settings::values.frame_skip == 0) {
-                VideoCore::g_renderer->SwapBuffers();
-            }
-
-            // Signal to GSP that GPU interrupt has occurred
-            // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
-            // screen, or if both use the same interrupts and these two instead determine the
-            // beginning and end of the VBlank period. If needed, split the interrupt firing into
-            // two different intervals.
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
-
-            // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
-            // until we can emulate DSP interrupts, this is probably the only reasonable place to do
-            // this. Certain games expect this to be periodically signaled.
-            DSP_DSP::SignalInterrupt();
-        }
+    // Swap buffers based on the frameskip mode, which is a little bit tricky. When
+    // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
+    // So, we should only swap frames if the last frame was rendered. The rules are:
+    //  - If frameskip == 0 (disabled), always swap buffers
+    //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
+    //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
+    if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
+            Settings::values.frame_skip == 0) {
+        VideoCore::g_renderer->SwapBuffers();
     }
+
+    // Signal to GSP that GPU interrupt has occurred
+    // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
+    // screen, or if both use the same interrupts and these two instead determine the
+    // beginning and end of the VBlank period. If needed, split the interrupt firing into
+    // two different intervals.
+    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
+    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
+
+    // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
+    // until we can emulate DSP interrupts, this is probably the only reasonable place to do
+    // this. Certain games expect this to be periodically signaled.
+    DSP_DSP::SignalInterrupt();
+
+    // Reschedule recurrent event
+    CoreTiming::ScheduleEvent(frame_ticks - cycles_late, vblank_event);
 }
 
 /// Initialize hardware
@@ -269,9 +264,11 @@ void Init() {
     framebuffer_sub.active_fb = 0;
 
     frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
-    last_update_tick = Core::g_app_core->GetTicks();
     last_skip_frame = false;
     g_skip_frame = false;
+
+    vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
+    CoreTiming::ScheduleEvent(frame_ticks, vblank_event);
 
     LOG_DEBUG(HW_GPU, "initialized OK");
 }
