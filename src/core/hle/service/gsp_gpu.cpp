@@ -210,11 +210,11 @@ void SignalInterrupt(InterruptId interrupt_id) {
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
         InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
-        interrupt_relay_queue->number_interrupts = interrupt_relay_queue->number_interrupts + 1;
-
         u8 next = interrupt_relay_queue->index;
         next += interrupt_relay_queue->number_interrupts;
         next = next % 0x34; // 0x34 is the number of interrupt slots
+
+        interrupt_relay_queue->number_interrupts += 1;
 
         interrupt_relay_queue->slot[next] = interrupt_id;
         interrupt_relay_queue->error_code = 0x0; // No error

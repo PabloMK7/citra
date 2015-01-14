@@ -45,21 +45,16 @@ enum class CommandId : u32 {
 
 /// GSP thread interrupt relay queue
 struct InterruptRelayQueue {
-    union {
-        u32 hex;
+    // Index of last interrupt in the queue
+    u8 index;
+    // Number of interrupts remaining to be processed by the userland code
+    u8 number_interrupts;
+    // Error code - zero on success, otherwise an error has occurred
+    u8 error_code;
+    u8 padding1;
 
-        // Index of last interrupt in the queue
-        BitField<0,8,u32>   index;
-
-        // Number of interrupts remaining to be processed by the userland code
-        BitField<8,8,u32>   number_interrupts;
-
-        // Error code - zero on success, otherwise an error has occurred
-        BitField<16,8,u32>  error_code;
-    };
-
-    u32 unk0;
-    u32 unk1;
+    u32 missed_PDC0;
+    u32 missed_PDC1;
 
     InterruptId slot[0x34];   ///< Interrupt ID slots
 };
