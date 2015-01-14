@@ -218,6 +218,19 @@ void SignalInterrupt(InterruptId interrupt_id) {
 
         interrupt_relay_queue->slot[next] = interrupt_id;
         interrupt_relay_queue->error_code = 0x0; // No error
+
+        // Update framebuffer information if requested
+        // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
+        //               executing any GSP commands, only waiting on the event.
+        for (int screen_id = 0; screen_id < 2; ++screen_id) {
+            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+
+            if (info->is_dirty) {
+                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+            }
+
+            info->is_dirty = false;
+        }
     }
     Kernel::SignalEvent(g_interrupt_event);
 }
@@ -281,18 +294,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
-
-        // Update framebuffer information if requested
-        for (int screen_id = 0; screen_id < 2; ++screen_id) {
-            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
-
-            if (info->is_dirty) {
-                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
-                info->framebuffer_info->active_fb = info->framebuffer_info->active_fb ^ 1;
-            }
-
-            info->is_dirty = false;
-        }
         break;
     }
 
