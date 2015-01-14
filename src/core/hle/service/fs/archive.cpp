@@ -432,6 +432,28 @@ ResultCode FormatSaveData() {
     return archive_itr->second->backend->Format(FileSys::Path());
 }
 
+ResultCode CreateExtSaveData(u32 high, u32 low) {
+    // Construct the binary path to the archive first
+    std::vector<u8> binary_path;
+    binary_path.reserve(12);
+    // The first word is all zero to specify a NAND archive
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back(0);
+    // Next is the low word
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back((low >> (8 * i)) & 0xFF);
+    // Next is the high word
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back((high >> i) & 0xFF);
+    FileSys::Path path(binary_path);
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    std::string base_path = FileSys::GetExtDataContainerPath(nand_directory, true);
+    std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
+    if (!FileUtil::CreateFullPath(extsavedata_path))
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    return RESULT_SUCCESS;
+}
+
 /// Initialize archives
 void ArchiveInit() {
     next_handle = 1;

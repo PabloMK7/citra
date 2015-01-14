@@ -42,4 +42,21 @@ protected:
     std::string concrete_mount_point;
 };
 
+/**
+ * Constructs a path to the concrete ExtData archive in the host filesystem based on the 
+ * input Path and base mount point.
+ * @param mount_point The base mount point of the ExtSaveData archives.
+ * @param path The path that identifies the requested concrete ExtSaveData archive.
+ * @returns The complete path to the specified extdata archive in the host filesystem
+ */
+std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path);
+
+/**
+ * Constructs a path to the base folder to hold concrete ExtSaveData archives in the host file system.
+ * @param mount_point The base folder where this folder resides, ie. SDMC or NAND.
+ * @param shared Whether this ExtSaveData container is for SharedExtSaveDatas or not.
+ * @returns The path to the base ExtSaveData archives' folder in the host file system
+ */
+std::string GetExtDataContainerPath(const std::string& mount_point, bool shared);
+
 } // namespace FileSys
