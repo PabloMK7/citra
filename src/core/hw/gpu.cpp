@@ -252,8 +252,8 @@ void Init() {
     framebuffer_top.address_right1 = 0x18273000;
     framebuffer_top.address_right2 = 0x182B9800;
     framebuffer_sub.address_left1  = 0x1848F000;
-    //framebuffer_sub.address_left2  = unknown;
-    framebuffer_sub.address_right1 = 0x184C7800;
+    framebuffer_sub.address_left2  = 0x184C7800;
+    //framebuffer_sub.address_right1 = unknown;
     //framebuffer_sub.address_right2 = unknown;
 
     framebuffer_top.width = 240;
