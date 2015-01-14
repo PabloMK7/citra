@@ -27,8 +27,6 @@ Regs g_regs;
 bool g_skip_frame = false;              ///< True if the current frame was skipped
 
 static u64 frame_ticks      = 0;        ///< 268MHz / gpu_refresh_rate frames per second
-static u64 line_ticks       = 0;        ///< Number of ticks for a screen line
-static u32 cur_line         = 0;        ///< Current screen line
 static u64 last_update_tick = 0;        ///< CPU ticl count from last GPU update
 static u64 frame_count      = 0;        ///< Number of frames drawn
 static bool last_skip_frame = false;    ///< True if the last frame was skipped
@@ -79,6 +77,12 @@ inline void Write(u32 addr, const T data) {
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
             LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+
+            if (!is_second_filler) {
+                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
+            } else {
+                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+            }
         }
         break;
     }
@@ -152,6 +156,8 @@ inline void Write(u32 addr, const T data) {
                       config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
                       config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
                       config.output_format.Value());
+
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
         }
         break;
     }
@@ -193,20 +199,14 @@ void Update() {
     // blank, we need to simulate it. Based on testing, it seems that retail applications work more
     // accurately when this is signalled between thread switches.
 
-    if (HLE::g_reschedule) {
-        u64 current_ticks = Core::g_app_core->GetTicks();
-        u32 num_lines = static_cast<u32>((current_ticks - last_update_tick) / line_ticks);
+    u64 current_ticks = Core::g_app_core->GetTicks();
 
-        // Synchronize line...
-        if (num_lines > 0) {
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-            cur_line += num_lines;
-            last_update_tick += (num_lines * line_ticks);
-        }
+
+    if (HLE::g_reschedule) {
 
         // Synchronize frame...
-        if (cur_line >= framebuffer_top.height) {
-            cur_line = 0;
+        if ((current_ticks - last_update_tick) >= frame_ticks) {
+            last_update_tick += frame_ticks;
             frame_count++;
             last_skip_frame = g_skip_frame;
             g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
@@ -223,6 +223,11 @@ void Update() {
             }
 
             // Signal to GSP that GPU interrupt has occurred
+            // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
+            // screen, or if both use the same interrupts and these two instead determine the
+            // beginning and end of the VBlank period. If needed, split the interrupt firing into
+            // two different intervals.
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
 
             // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
@@ -264,8 +269,6 @@ void Init() {
     framebuffer_sub.active_fb = 0;
 
     frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
-    line_ticks = (GPU::frame_ticks / framebuffer_top.height);
-    cur_line = 0;
     last_update_tick = Core::g_app_core->GetTicks();
     last_skip_frame = false;
     g_skip_frame = false;

@@ -269,8 +269,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
-
-        SignalInterrupt(InterruptId::PSC0);
         break;
     }
 
@@ -283,10 +281,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
-
-        // TODO(bunnei): Determine if these interrupts should be signalled here.
-        SignalInterrupt(InterruptId::PSC1);
-        SignalInterrupt(InterruptId::PPF);
 
         // Update framebuffer information if requested
         for (int screen_id = 0; screen_id < 2; ++screen_id) {
