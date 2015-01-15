@@ -23,11 +23,8 @@ void SignalInterrupt() {
     // that check the DSP interrupt signal event to run. We should figure out the different types of
     // DSP interrupts, and trigger them at the appropriate times.
 
-    if (interrupt_event == 0) {
-        LOG_WARNING(Service_DSP, "cannot signal interrupt until DSP event has been created!");
-        return;
-    }
-    Kernel::SignalEvent(interrupt_event);
+    if (interrupt_event != 0)
+        Kernel::SignalEvent(interrupt_event);
 }
 
 /**
