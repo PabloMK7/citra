@@ -210,14 +210,27 @@ void SignalInterrupt(InterruptId interrupt_id) {
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
         InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
-        interrupt_relay_queue->number_interrupts = interrupt_relay_queue->number_interrupts + 1;
-
         u8 next = interrupt_relay_queue->index;
         next += interrupt_relay_queue->number_interrupts;
         next = next % 0x34; // 0x34 is the number of interrupt slots
 
+        interrupt_relay_queue->number_interrupts += 1;
+
         interrupt_relay_queue->slot[next] = interrupt_id;
         interrupt_relay_queue->error_code = 0x0; // No error
+
+        // Update framebuffer information if requested
+        // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
+        //               executing any GSP commands, only waiting on the event.
+        for (int screen_id = 0; screen_id < 2; ++screen_id) {
+            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+
+            if (info->is_dirty) {
+                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+            }
+
+            info->is_dirty = false;
+        }
     }
     Kernel::SignalEvent(g_interrupt_event);
 }
@@ -269,8 +282,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
         WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
-
-        SignalInterrupt(InterruptId::PSC0);
         break;
     }
 
@@ -283,22 +294,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
         WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
-
-        // TODO(bunnei): Determine if these interrupts should be signalled here.
-        SignalInterrupt(InterruptId::PSC1);
-        SignalInterrupt(InterruptId::PPF);
-
-        // Update framebuffer information if requested
-        for (int screen_id = 0; screen_id < 2; ++screen_id) {
-            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
-
-            if (info->is_dirty) {
-                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
-                info->framebuffer_info->active_fb = info->framebuffer_info->active_fb ^ 1;
-            }
-
-            info->is_dirty = false;
-        }
         break;
     }
 

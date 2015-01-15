@@ -9,6 +9,7 @@
 #include "core/settings.h"
 #include "core/core.h"
 #include "core/mem_map.h"
+#include "core/core_timing.h"
 
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -24,14 +25,17 @@ namespace GPU {
 
 Regs g_regs;
 
-bool g_skip_frame = false;              ///< True if the current frame was skipped
+/// True if the current frame was skipped
+bool g_skip_frame = false;
 
-static u64 frame_ticks      = 0;        ///< 268MHz / gpu_refresh_rate frames per second
-static u64 line_ticks       = 0;        ///< Number of ticks for a screen line
-static u32 cur_line         = 0;        ///< Current screen line
-static u64 last_update_tick = 0;        ///< CPU ticl count from last GPU update
-static u64 frame_count      = 0;        ///< Number of frames drawn
-static bool last_skip_frame = false;    ///< True if the last frame was skipped
+/// 268MHz / gpu_refresh_rate frames per second
+static u64 frame_ticks;
+/// Event id for CoreTiming
+static int vblank_event;
+/// Total number of frames drawn
+static u64 frame_count;
+/// True if the last frame was skipped
+static bool last_skip_frame = false;
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -79,6 +83,12 @@ inline void Write(u32 addr, const T data) {
                 *ptr = bswap32(config.value); // TODO: This is just a workaround to missing framebuffer format emulation
 
             LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+
+            if (!is_second_filler) {
+                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
+            } else {
+                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+            }
         }
         break;
     }
@@ -90,22 +100,25 @@ inline void Write(u32 addr, const T data) {
             u8* source_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
             u8* dest_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
+            // Cheap emulation of horizontal scaling: Just skip each second pixel of the
+            // input framebuffer. We keep track of this in the pixel_skip variable.
+            unsigned pixel_skip = (config.scale_horizontally != 0) ? 2 : 1;
+
+            u32 output_width = config.output_width / pixel_skip;
+
             for (u32 y = 0; y < config.output_height; ++y) {
                 // TODO: Why does the register seem to hold twice the framebuffer width?
-                for (u32 x = 0; x < config.output_width; ++x) {
+
+                for (u32 x = 0; x < output_width; ++x) {
                     struct {
                         int r, g, b, a;
                     } source_color = { 0, 0, 0, 0 };
-
-                    // Cheap emulation of horizontal scaling: Just skip each second pixel of the
-                    // input framebuffer. We keep track of this in the pixel_skip variable.
-                    unsigned pixel_skip = (config.scale_horizontally != 0) ? 2 : 1;
 
                     switch (config.input_format) {
                     case Regs::PixelFormat::RGBA8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* srcptr = source_pointer + x * 4 * pixel_skip + y * config.input_width * 4 * pixel_skip;
+                        u8* srcptr = source_pointer + (x * pixel_skip + y * config.input_width) * 4;
                         source_color.r = srcptr[0]; // blue
                         source_color.g = srcptr[1]; // green
                         source_color.b = srcptr[2]; // red
@@ -133,7 +146,7 @@ inline void Write(u32 addr, const T data) {
                     case Regs::PixelFormat::RGB8:
                     {
                         // TODO: Most likely got the component order messed up.
-                        u8* dstptr = dest_pointer + x * 3 + y * config.output_width * 3;
+                        u8* dstptr = dest_pointer + (x + y * output_width) * 3;
                         dstptr[0] = source_color.r; // blue
                         dstptr[1] = source_color.g; // green
                         dstptr[2] = source_color.b; // red
@@ -148,10 +161,12 @@ inline void Write(u32 addr, const T data) {
             }
 
             LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), dst format %x",
-                      config.output_height * config.output_width * 4,
+                      config.output_height * output_width * 4,
                       config.GetPhysicalInputAddress(), (u32)config.input_width, (u32)config.input_height,
-                      config.GetPhysicalOutputAddress(), (u32)config.output_width, (u32)config.output_height,
+                      config.GetPhysicalOutputAddress(), (u32)output_width, (u32)config.output_height,
                       config.output_format.Value());
+
+            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
         }
         break;
     }
@@ -186,51 +201,39 @@ template void Write<u16>(u32 addr, const u16 data);
 template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
-void Update() {
+static void VBlankCallback(u64 userdata, int cycles_late) {
     auto& framebuffer_top = g_regs.framebuffer_config[0];
 
-    // Synchronize GPU on a thread reschedule: Because we cannot accurately predict a vertical
-    // blank, we need to simulate it. Based on testing, it seems that retail applications work more
-    // accurately when this is signalled between thread switches.
+    frame_count++;
+    last_skip_frame = g_skip_frame;
+    g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
 
-    if (HLE::g_reschedule) {
-        u64 current_ticks = Core::g_app_core->GetTicks();
-        u32 num_lines = static_cast<u32>((current_ticks - last_update_tick) / line_ticks);
-
-        // Synchronize line...
-        if (num_lines > 0) {
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-            cur_line += num_lines;
-            last_update_tick += (num_lines * line_ticks);
-        }
-
-        // Synchronize frame...
-        if (cur_line >= framebuffer_top.height) {
-            cur_line = 0;
-            frame_count++;
-            last_skip_frame = g_skip_frame;
-            g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
-
-            // Swap buffers based on the frameskip mode, which is a little bit tricky. When
-            // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
-            // So, we should only swap frames if the last frame was rendered. The rules are:
-            //  - If frameskip == 0 (disabled), always swap buffers
-            //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
-            //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
-            if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
-                   Settings::values.frame_skip == 0) {
-                VideoCore::g_renderer->SwapBuffers();
-            }
-
-            // Signal to GSP that GPU interrupt has occurred
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
-
-            // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
-            // until we can emulate DSP interrupts, this is probably the only reasonable place to do
-            // this. Certain games expect this to be periodically signaled.
-            DSP_DSP::SignalInterrupt();
-        }
+    // Swap buffers based on the frameskip mode, which is a little bit tricky. When
+    // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
+    // So, we should only swap frames if the last frame was rendered. The rules are:
+    //  - If frameskip == 0 (disabled), always swap buffers
+    //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
+    //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
+    if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
+            Settings::values.frame_skip == 0) {
+        VideoCore::g_renderer->SwapBuffers();
     }
+
+    // Signal to GSP that GPU interrupt has occurred
+    // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
+    // screen, or if both use the same interrupts and these two instead determine the
+    // beginning and end of the VBlank period. If needed, split the interrupt firing into
+    // two different intervals.
+    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
+    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
+
+    // TODO(bunnei): Fake a DSP interrupt on each frame. This does not belong here, but
+    // until we can emulate DSP interrupts, this is probably the only reasonable place to do
+    // this. Certain games expect this to be periodically signaled.
+    DSP_DSP::SignalInterrupt();
+
+    // Reschedule recurrent event
+    CoreTiming::ScheduleEvent(frame_ticks - cycles_late, vblank_event);
 }
 
 /// Initialize hardware
@@ -247,8 +250,8 @@ void Init() {
     framebuffer_top.address_right1 = 0x18273000;
     framebuffer_top.address_right2 = 0x182B9800;
     framebuffer_sub.address_left1  = 0x1848F000;
-    //framebuffer_sub.address_left2  = unknown;
-    framebuffer_sub.address_right1 = 0x184C7800;
+    framebuffer_sub.address_left2  = 0x184C7800;
+    //framebuffer_sub.address_right1 = unknown;
     //framebuffer_sub.address_right2 = unknown;
 
     framebuffer_top.width = 240;
@@ -264,11 +267,11 @@ void Init() {
     framebuffer_sub.active_fb = 0;
 
     frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
-    line_ticks = (GPU::frame_ticks / framebuffer_top.height);
-    cur_line = 0;
-    last_update_tick = Core::g_app_core->GetTicks();
     last_skip_frame = false;
     g_skip_frame = false;
+
+    vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
+    CoreTiming::ScheduleEvent(frame_ticks, vblank_event);
 
     LOG_DEBUG(HW_GPU, "initialized OK");
 }

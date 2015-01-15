@@ -75,7 +75,6 @@ template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
 void Update() {
-    GPU::Update();
 }
 
 /// Initialize hardware

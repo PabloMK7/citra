@@ -88,10 +88,8 @@ void RendererOpenGL::SwapBuffers() {
 void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
                                              const TextureInfo& texture) {
 
-    // TODO: Why are active_fb and the valid framebuffer flipped compared to 3dbrew documentation
-    // and GSP definitions?
     const VAddr framebuffer_vaddr = Memory::PhysicalToVirtualAddress(
-        framebuffer.active_fb == 0 ? framebuffer.address_left2 : framebuffer.address_left1);
+        framebuffer.active_fb == 0 ? framebuffer.address_left1 : framebuffer.address_left2);
 
     LOG_TRACE(Render_OpenGL, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
         framebuffer.stride * framebuffer.height,
