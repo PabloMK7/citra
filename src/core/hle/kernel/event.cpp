@@ -26,7 +26,6 @@ public:
     ResetType reset_type;                   ///< Current ResetType
 
     bool locked;                            ///< Event signal wait
-    bool permanent_locked;                  ///< Hack - to set event permanent state (for easy passthrough)
     std::string name;                       ///< Name of event (optional)
 
     ResultVal<bool> WaitSynchronization() override {
@@ -35,26 +34,12 @@ public:
             AddWaitingThread(GetCurrentThread());
             Kernel::WaitCurrentThread(WAITTYPE_EVENT, this);
         }
-        if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
+        if (reset_type != RESETTYPE_STICKY) {
             locked = true;
         }
         return MakeResult<bool>(wait);
     }
 };
-
-/**
- * Hackish function to set an events permanent lock state, used to pass through synch blocks
- * @param handle Handle to event to change
- * @param permanent_locked Boolean permanent locked value to set event
- * @return Result of operation, 0 on success, otherwise error code
- */
-ResultCode SetPermanentLock(Handle handle, const bool permanent_locked) {
-    Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
-
-    evt->permanent_locked = permanent_locked;
-    return RESULT_SUCCESS;
-}
 
 /**
  * Changes whether an event is locked or not
@@ -66,9 +51,8 @@ ResultCode SetEventLocked(const Handle handle, const bool locked) {
     Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
-    if (!evt->permanent_locked) {
-        evt->locked = locked;
-    }
+    evt->locked = locked;
+
     return RESULT_SUCCESS;
 }
 
@@ -81,16 +65,13 @@ ResultCode SignalEvent(const Handle handle) {
     Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
-    // Resume threads waiting for event to signal
-    bool event_caught = evt->ResumeAllWaitingThreads();
-
     // If any thread is signalled awake by this event, assume the event was "caught" and reset
     // the event. This will result in the next thread waiting on the event to block. Otherwise,
     // the event will not be reset, and the next thread to call WaitSynchronization on it will
     // not block. Not sure if this is correct behavior, but it seems to work.
-    if (!evt->permanent_locked) {
-        evt->locked = event_caught;
-    }
+    // TODO(bunnei): Test how this works on hardware
+    evt->locked = evt->ResumeAllWaitingThreads();
+
     return RESULT_SUCCESS;
 }
 
@@ -103,9 +84,8 @@ ResultCode ClearEvent(Handle handle) {
     Event* evt = g_handle_table.Get<Event>(handle).get();
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
-    if (!evt->permanent_locked) {
-        evt->locked = true;
-    }
+    evt->locked = true;
+
     return RESULT_SUCCESS;
 }
 
@@ -123,7 +103,6 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string
     handle = Kernel::g_handle_table.Create(evt).ValueOr(INVALID_HANDLE);
 
     evt->locked = true;
-    evt->permanent_locked = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
     evt->name = name;
 

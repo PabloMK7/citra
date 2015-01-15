@@ -19,13 +19,6 @@ namespace Kernel {
 ResultCode SetEventLocked(const Handle handle, const bool locked);
 
 /**
- * Hackish function to set an events permanent lock state, used to pass through synch blocks
- * @param handle Handle to event to change
- * @param permanent_locked Boolean permanent locked value to set event
- */
-ResultCode SetPermanentLock(Handle handle, const bool permanent_locked);
-
-/**
  * Signals an event
  * @param handle Handle to event to signal
  */
