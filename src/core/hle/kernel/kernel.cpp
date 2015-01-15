@@ -19,13 +19,20 @@ HandleTable g_handle_table;
 u64 g_program_id = 0;
 
 void WaitObject::AddWaitingThread(Thread* thread) {
-    if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
+    auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    if (itr == waiting_threads.end())
         waiting_threads.push_back(thread);
-    }
+}
+
+void WaitObject::RemoveWaitingThread(Thread* thread) {
+    auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    if (itr != waiting_threads.end())
+        waiting_threads.erase(itr);
 }
 
 Thread* WaitObject::ResumeNextThread() {
-    if (waiting_threads.empty()) return nullptr;
+    if (waiting_threads.empty())
+        return nullptr;
 
     auto next_thread = waiting_threads.front();
 

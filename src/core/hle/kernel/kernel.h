@@ -105,7 +105,13 @@ public:
     void AddWaitingThread(Thread* thread);
 
     /**
-     * Resumes the next thread waiting on this object
+     * Removes a thread from waiting on this object (e.g. if it was resumed already)
+     * @param thread Pointer to thread to remove
+     */
+    void RemoveWaitingThread(Thread* thead);
+
+    /**
+     * Resumes (and removes) the next thread waiting on this object
      * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
      */
     Thread* ResumeNextThread();
