@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-class Event : public Object {
+class Event : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Event"; }
     std::string GetName() const override { return name; }
@@ -27,16 +27,12 @@ public:
 
     bool locked;                            ///< Event signal wait
     bool permanent_locked;                  ///< Hack - to set event permanent state (for easy passthrough)
-    std::vector<Handle> waiting_threads;    ///< Threads that are waiting for the event
     std::string name;                       ///< Name of event (optional)
 
     ResultVal<bool> WaitSynchronization() override {
         bool wait = locked;
         if (locked) {
-            Handle thread = GetCurrentThread()->GetHandle();
-            if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
-                waiting_threads.push_back(thread);
-            }
+            AddWaitingThread(GetCurrentThread());
             Kernel::WaitCurrentThread(WAITTYPE_EVENT, this);
         }
         if (reset_type != RESETTYPE_STICKY && !permanent_locked) {
@@ -86,20 +82,12 @@ ResultCode SignalEvent(const Handle handle) {
     if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
 
     // Resume threads waiting for event to signal
-    bool event_caught = false;
-    for (size_t i = 0; i < evt->waiting_threads.size(); ++i) {
-        Thread* thread = Kernel::g_handle_table.Get<Thread>(evt->waiting_threads[i]).get();
-        if (thread != nullptr)
-            thread->ResumeFromWait();
+    bool event_caught = evt->ResumeAllWaitingThreads();
 
-        // If any thread is signalled awake by this event, assume the event was "caught" and reset
-        // the event. This will result in the next thread waiting on the event to block. Otherwise,
-        // the event will not be reset, and the next thread to call WaitSynchronization on it will
-        // not block. Not sure if this is correct behavior, but it seems to work.
-        event_caught = true;
-    }
-    evt->waiting_threads.clear();
-
+    // If any thread is signalled awake by this event, assume the event was "caught" and reset
+    // the event. This will result in the next thread waiting on the event to block. Otherwise,
+    // the event will not be reset, and the next thread to call WaitSynchronization on it will
+    // not block. Not sure if this is correct behavior, but it seems to work.
     if (!evt->permanent_locked) {
         evt->locked = event_caught;
     }

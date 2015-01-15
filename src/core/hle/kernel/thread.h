@@ -52,7 +52,7 @@ enum WaitType {
 
 namespace Kernel {
 
-class Thread : public Kernel::Object {
+class Thread : public WaitObject {
 public:
     static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, s32 priority,
         u32 arg, s32 processor_id, VAddr stack_top, u32 stack_size);
@@ -98,8 +98,6 @@ public:
     WaitType wait_type;
     Object* wait_object;
     VAddr wait_address;
-
-    std::vector<SharedPtr<Thread>> waiting_threads;
 
     std::string name;
 

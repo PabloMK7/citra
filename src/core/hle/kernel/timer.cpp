@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-class Timer : public Object {
+class Timer : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Timer"; }
     std::string GetName() const override { return name; }
@@ -24,7 +24,6 @@ public:
     ResetType reset_type;                   ///< The ResetType of this timer
 
     bool signaled;                          ///< Whether the timer has been signaled or not
-    std::set<Handle> waiting_threads;       ///< Threads that are waiting for the timer
     std::string name;                       ///< Name of timer (optional)
 
     u64 initial_delay;                      ///< The delay until the timer fires for the first time
@@ -33,7 +32,7 @@ public:
     ResultVal<bool> WaitSynchronization() override {
         bool wait = !signaled;
         if (wait) {
-            waiting_threads.insert(GetCurrentThread()->GetHandle());
+            AddWaitingThread(GetCurrentThread());
             Kernel::WaitCurrentThread(WAITTYPE_TIMER, this);
         }
         return MakeResult<bool>(wait);
@@ -92,12 +91,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
     timer->signaled = true;
 
     // Resume all waiting threads
-    for (Handle thread_handle : timer->waiting_threads) {
-        if (SharedPtr<Thread> thread = Kernel::g_handle_table.Get<Thread>(thread_handle))
-            thread->ResumeFromWait();
-    }
-
-    timer->waiting_threads.clear();
+    timer->ResumeAllWaitingThreads();
 
     if (timer->reset_type == RESETTYPE_ONESHOT)
         timer->signaled = false;

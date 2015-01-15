@@ -8,6 +8,8 @@
 
 #include <array>
 #include <string>
+#include <vector>
+
 #include "common/common.h"
 #include "core/hle/result.h"
 
@@ -91,6 +93,29 @@ inline void intrusive_ptr_release(Object* object) {
 
 template <typename T>
 using SharedPtr = boost::intrusive_ptr<T>;
+
+/// Class that represents a Kernel object that a thread can be waiting on
+class WaitObject : public Object {
+public:
+
+    /**
+     * Add a thread to wait on this object
+     * @param thread Pointer to thread to add
+     */
+    void AddWaitingThread(Thread* thread);
+
+    /**
+     * Resumes the next thread waiting on this object
+     * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
+     */
+    Thread* ResumeNextThread();
+
+    /// Releases all threads waiting on this object
+    void ReleaseAllWaitingThreads();
+
+private:
+    std::vector<Thread*> waiting_threads; ///< Threads waiting for this object to become available
+};
 
 /**
  * This class allows the creation of Handles, which are references to objects that can be tested

@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-class Mutex : public Object {
+class Mutex : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Mutex"; }
     std::string GetName() const override { return name; }
@@ -24,7 +24,6 @@ public:
     bool initial_locked;                        ///< Initial lock state when mutex was created
     bool locked;                                ///< Current locked state
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
-    std::vector<Handle> waiting_threads;        ///< Threads that are waiting for the mutex
     std::string name;                           ///< Name of mutex (optional)
 
     ResultVal<bool> WaitSynchronization() override;
@@ -45,35 +44,19 @@ void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandl
     mutex->lock_thread = thread;
 }
 
-bool ReleaseMutexForThread(Mutex* mutex, Handle thread_handle) {
-    MutexAcquireLock(mutex, thread_handle);
-
-    Thread* thread = Kernel::g_handle_table.Get<Thread>(thread_handle).get();
-    if (thread == nullptr) {
-        LOG_ERROR(Kernel, "Called with invalid handle: %08X", thread_handle);
-        return false;
-    }
-
-    thread->ResumeFromWait();
-    return true;
-}
-
 /**
  * Resumes a thread waiting for the specified mutex
  * @param mutex The mutex that some thread is waiting on
  */
 void ResumeWaitingThread(Mutex* mutex) {
     // Find the next waiting thread for the mutex...
-    if (mutex->waiting_threads.empty()) {
+    auto next_thread = mutex->ResumeNextThread();
+    if (next_thread != nullptr) {
+        MutexAcquireLock(mutex, next_thread->GetHandle());
+    } else {
         // Reset mutex lock thread handle, nothing is waiting
         mutex->locked = false;
         mutex->lock_thread = -1;
-    }
-    else {
-        // Resume the next waiting thread and re-lock the mutex
-        std::vector<Handle>::iterator iter = mutex->waiting_threads.begin();
-        ReleaseMutexForThread(mutex, *iter);
-        mutex->waiting_threads.erase(iter);
     }
 }
 
@@ -175,7 +158,7 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
 ResultVal<bool> Mutex::WaitSynchronization() {
     bool wait = locked;
     if (locked) {
-        waiting_threads.push_back(GetCurrentThread()->GetHandle());
+        AddWaitingThread(GetCurrentThread());
         Kernel::WaitCurrentThread(WAITTYPE_MUTEX, this);
     } else {
         // Lock the mutex when the first thread accesses it

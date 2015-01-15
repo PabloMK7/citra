@@ -25,10 +25,7 @@ namespace Kernel {
 ResultVal<bool> Thread::WaitSynchronization() {
     const bool wait = status != THREADSTATUS_DORMANT;
     if (wait) {
-        Thread* thread = GetCurrentThread();
-        if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
-            waiting_threads.push_back(thread);
-        }
+        AddWaitingThread(GetCurrentThread());
         WaitCurrentThread(WAITTYPE_THREADEND, this);
     }
 
@@ -110,11 +107,7 @@ void Thread::Stop(const char* reason) {
 
     ChangeReadyState(this, false);
     status = THREADSTATUS_DORMANT;
-    for (auto& waiting_thread : waiting_threads) {
-        if (CheckWaitType(waiting_thread.get(), WAITTYPE_THREADEND, this))
-            waiting_thread->ResumeFromWait();
-    }
-    waiting_threads.clear();
+    ResumeAllWaitingThreads();
 
     // Stopped threads are never waiting.
     wait_type = WAITTYPE_NONE;

@@ -18,6 +18,32 @@ SharedPtr<Thread> g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
+void WaitObject::AddWaitingThread(Thread* thread) {
+    if (std::find(waiting_threads.begin(), waiting_threads.end(), thread) == waiting_threads.end()) {
+        waiting_threads.push_back(thread);
+    }
+}
+
+Thread* WaitObject::ResumeNextThread() {
+    if (waiting_threads.empty()) return nullptr;
+
+    auto next_thread = waiting_threads.front();
+
+    next_thread->ResumeFromWait();
+    waiting_threads.erase(waiting_threads.begin());
+
+    return next_thread.get();
+}
+
+void WaitObject::ReleaseAllWaitingThreads() {
+    auto waiting_threads_copy = waiting_threads;
+
+    for (auto thread : waiting_threads_copy)
+        thread->ReleaseWaitObject(this);
+
+    waiting_threads.clear();
+}
+
 HandleTable::HandleTable() {
     next_generation = 1;
     Clear();
