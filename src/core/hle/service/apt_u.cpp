@@ -25,10 +25,12 @@ namespace APT_U {
 // correctly mapping it in Citra, however we still do not understand how the mapping is determined.
 static const VAddr SHARED_FONT_VADDR = 0x18000000;
 
-// Handle to shared memory region designated to for shared system font
+/// Handle to shared memory region designated to for shared system font
 static Handle shared_font_mem = 0;
 
 static Handle lock_handle = 0;
+static Handle notification_event_handle = 0; ///< APT notification event handle
+static Handle pause_event_handle = 0; ///< APT pause event handle
 static std::vector<u8> shared_font;
 
 /// Signals used by APT functions
@@ -42,16 +44,28 @@ enum class SignalType : u32 {
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[3] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Menu");  // APT menu event handle
-    cmd_buff[4] = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause"); // APT pause event handle
+    notification_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Notification");
+    pause_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause");
 
-    Kernel::SetEventLocked(cmd_buff[3], true);
-    Kernel::SetEventLocked(cmd_buff[4], false); // Fire start event
+    cmd_buff[3] = notification_event_handle;
+    cmd_buff[4] = pause_event_handle;
+
+    Kernel::SetEventLocked(notification_event_handle, true);
+    Kernel::SetEventLocked(pause_event_handle, false); // Fire start event
 
     _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
     Kernel::ReleaseMutex(lock_handle);
 
     cmd_buff[1] = 0; // No error
+}
+
+void NotifyToWait(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 app_id = cmd_buff[1];
+    // TODO(Subv): Verify this, it seems to get SWKBD and Home Menu further.
+    Kernel::SignalEvent(pause_event_handle);
+    LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
+    cmd_buff[0] = 0;
 }
 
 void GetLockHandle(Service::Interface* self) {
@@ -84,7 +98,7 @@ void Enable(Service::Interface* self) {
 
 void InquireNotification(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[2];
+    u32 app_id = cmd_buff[1];
     cmd_buff[1] = 0; // No error
     cmd_buff[2] = static_cast<u32>(SignalType::None); // Signal type
     LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
@@ -277,7 +291,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00400042, nullptr,               "SendCaptureBufferInfo"},
     {0x00410040, nullptr,               "ReceiveCaptureBufferInfo"},
     {0x00420080, nullptr,               "SleepSystem"},
-    {0x00430040, nullptr,               "NotifyToWait"},
+    {0x00430040, NotifyToWait,          "NotifyToWait"},
     {0x00440000, GetSharedFont,         "GetSharedFont"},
     {0x00450040, nullptr,               "GetWirelessRebootInfo"},
     {0x00460104, nullptr,               "Wrap"},
