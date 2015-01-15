@@ -6,6 +6,8 @@ clone_depth: 1
 
 environment:
   QTDIR: C:\Qt\5.4\msvc2013_opengl
+  MEGA_PASSWORD:
+    secure: ozgp54EZj98kcbD/O+Xl5Q==
 
 install:
   - git submodule update --init --recursive
@@ -15,3 +17,27 @@ before_build:
   - cd build
   - cmake ..
   - cd ..
+  
+after_build:
+  # upload the build to Mega
+  - cinst wget -x86
+  - wget -q http://megatools.megous.com/builds/megatools-1.9.94-win64.zip
+    # extract megatools silently. See http://stackoverflow.com/a/11629736/1748450
+  - 7z x megatools-1.9.94-win64.zip | FIND /V "ing  "
+    # copy the qt dlls 
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\icudt53.dll build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\icuin53.dll build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\icuuc53.dll build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Cored.dll build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Guid.dll  build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5OpenGLd.dll build\bin\debug
+  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Widgetsd.dll  build\bin\debug
+    # delete build craps
+  - del /F /S /Q /A "build\bin\debug\*.ilk"
+  - del /F /S /Q /A "build\bin\debug\*.pdb"
+    # zip up the build folder -> build.7z
+  - 7z a build .\build\bin\debug\*
+    # rename, upload to Mega
+  - cd megatools-1.9.94-win64
+  - node ..\upload_to_mega.js
+  
