@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-class AddressArbiter : public Object {
+class AddressArbiter : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Arbiter"; }
     std::string GetName() const override { return name; }
@@ -30,7 +30,8 @@ public:
 
 /// Arbitrate an address
 ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value, u64 nanoseconds) {
-    Object* object = Kernel::g_handle_table.GetGeneric(handle).get();
+    WaitObject* object = static_cast<WaitObject*>(Kernel::g_handle_table.GetGeneric(handle).get());
+
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 

@@ -96,7 +96,7 @@ public:
     s32 processor_id;
 
     WaitType wait_type;
-    Object* wait_object;
+    std::vector<SharedPtr<WaitObject>> wait_objects;
     VAddr wait_address;
 
     std::string name;
@@ -128,7 +128,7 @@ Thread* GetCurrentThread();
  * @param wait_type Type of wait
  * @param wait_object Kernel object that we are waiting on, defaults to current thread
  */
-void WaitCurrentThread(WaitType wait_type, Object* wait_object = GetCurrentThread());
+void WaitCurrentThread(WaitType wait_type, WaitObject* wait_object = GetCurrentThread());
 
 /**
  * Schedules an event to wake up the specified thread after the specified delay.
@@ -143,7 +143,7 @@ void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
  * @param wait_object Kernel object that we are waiting on
  * @param wait_address Arbitration address used to resume from wait
  */
-void WaitCurrentThread(WaitType wait_type, Object* wait_object, VAddr wait_address);
+void WaitCurrentThread(WaitType wait_type, WaitObject* wait_object, VAddr wait_address);
 
 
 
