@@ -65,7 +65,7 @@ void NotifyToWait(Service::Interface* self) {
     // TODO(Subv): Verify this, it seems to get SWKBD and Home Menu further.
     Kernel::SignalEvent(pause_event_handle);
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
-    cmd_buff[0] = 0;
+    cmd_buff[1] = 0;
 }
 
 void GetLockHandle(Service::Interface* self) {
