@@ -25,66 +25,36 @@ public:
     ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
     ResetType reset_type;                   ///< Current ResetType
 
-    bool locked;                            ///< Event signal wait
+    bool signaled;                          ///< Whether the event has already been signaled
     std::string name;                       ///< Name of event (optional)
 
     ResultVal<bool> WaitSynchronization() override {
-        bool wait = locked;
-        if (locked) {
+        bool wait = !signaled;
+        if (wait) {
             AddWaitingThread(GetCurrentThread());
             Kernel::WaitCurrentThread(WAITTYPE_EVENT, this);
-        }
-        if (reset_type != RESETTYPE_STICKY) {
-            locked = true;
         }
         return MakeResult<bool>(wait);
     }
 };
 
-/**
- * Changes whether an event is locked or not
- * @param handle Handle to event to change
- * @param locked Boolean locked value to set event
- * @return Result of operation, 0 on success, otherwise error code
- */
-ResultCode SetEventLocked(const Handle handle, const bool locked) {
-    Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
-
-    evt->locked = locked;
-
-    return RESULT_SUCCESS;
-}
-
-/**
- * Signals an event
- * @param handle Handle to event to signal
- * @return Result of operation, 0 on success, otherwise error code
- */
 ResultCode SignalEvent(const Handle handle) {
     Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
+    if (evt == nullptr)
+        return InvalidHandle(ErrorModule::Kernel);
 
-    // If any thread is signalled awake by this event, assume the event was "caught" and reset
-    // the event. This will result in the next thread waiting on the event to block. Otherwise,
-    // the event will not be reset, and the next thread to call WaitSynchronization on it will
-    // not block. Not sure if this is correct behavior, but it seems to work.
-    // TODO(bunnei): Test how this works on hardware
-    evt->locked = evt->ResumeAllWaitingThreads();
+    evt->signaled = true;
+    evt->ReleaseAllWaitingThreads();
 
     return RESULT_SUCCESS;
 }
 
-/**
- * Clears an event
- * @param handle Handle to event to clear
- * @return Result of operation, 0 on success, otherwise error code
- */
 ResultCode ClearEvent(Handle handle) {
     Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr) return InvalidHandle(ErrorModule::Kernel);
+    if (evt == nullptr)
+        return InvalidHandle(ErrorModule::Kernel);
 
-    evt->locked = true;
+    evt->signaled = false;
 
     return RESULT_SUCCESS;
 }
@@ -102,19 +72,13 @@ Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string
     // TOOD(yuriks): Fix error reporting
     handle = Kernel::g_handle_table.Create(evt).ValueOr(INVALID_HANDLE);
 
-    evt->locked = true;
+    evt->signaled = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
     evt->name = name;
 
     return evt;
 }
 
-/**
- * Creates an event
- * @param reset_type ResetType describing how to create event
- * @param name Optional name of event
- * @return Handle to newly created Event object
- */
 Handle CreateEvent(const ResetType reset_type, const std::string& name) {
     Handle handle;
     Event* evt = CreateEvent(handle, reset_type, name);

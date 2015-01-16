@@ -50,8 +50,8 @@ void Initialize(Service::Interface* self) {
     cmd_buff[3] = notification_event_handle;
     cmd_buff[4] = pause_event_handle;
 
-    Kernel::SetEventLocked(notification_event_handle, true);
-    Kernel::SetEventLocked(pause_event_handle, false); // Fire start event
+    Kernel::ClearEvent(notification_event_handle);
+    Kernel::SignalEvent(pause_event_handle); // Fire start event
 
     _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
     Kernel::ReleaseMutex(lock_handle);
