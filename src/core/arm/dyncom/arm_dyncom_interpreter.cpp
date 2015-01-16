@@ -1726,25 +1726,21 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrb)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst* inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+    ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (I_BIT == 0) {
+    if (BITS(inst, 25, 27) == 2) {
         inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
+    } else if (BITS(inst, 25, 27) == 3) {
+        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
     } else {
         DEBUG_MSG;
     }
-    #if 0
-    inst_cream->get_addr = get_calc_addr_op(inst);
-    if(inst == 0x54f13001) {
-        DEBUG_LOG(ARM11, "get_calc_addr_op:%llx\n", inst_cream->get_addr);
-    }
-    #endif
 
     if (BITS(inst, 12, 15) == 15) {
         inst_base->br = INDIRECT_BRANCH;
@@ -2712,17 +2708,19 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(strb)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(strbt)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst* inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+    ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
-//    inst_cream->get_addr = get_calc_addr_op(inst);
-    if (I_BIT == 0) {
+
+    if (BITS(inst, 25, 27) == 2) {
         inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
+    } else if (BITS(inst, 25, 27) == 3) {
+        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
     } else {
         DEBUG_MSG;
     }
