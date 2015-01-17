@@ -148,6 +148,10 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     bool wait_all_succeeded = false;
     int handle_index = 0;
 
+    // Handles pointer is invalid
+    if (handles == nullptr)
+        return ResultCode(ErrorDescription::InvalidPointer, ErrorModule::Kernel, ErrorSummary::InvalidArgument, ErrorLevel::Permanent).raw;
+
     // Negative handle_count is invalid
     if (handle_count < 0)
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
