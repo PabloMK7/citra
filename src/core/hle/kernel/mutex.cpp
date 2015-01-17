@@ -26,7 +26,7 @@ public:
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::string name;                           ///< Name of mutex (optional)
 
-    ResultVal<bool> WaitSynchronization() override;
+    ResultVal<bool> WaitSynchronization(unsigned index) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandl
  */
 void ResumeWaitingThread(Mutex* mutex) {
     // Find the next waiting thread for the mutex...
-    auto next_thread = mutex->ResumeNextThread();
+    auto next_thread = mutex->ReleaseNextThread();
     if (next_thread != nullptr) {
         MutexAcquireLock(mutex, next_thread->GetHandle());
     } else {
@@ -155,11 +155,11 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
     return handle;
 }
 
-ResultVal<bool> Mutex::WaitSynchronization() {
+ResultVal<bool> Mutex::WaitSynchronization(unsigned index) {
     bool wait = locked;
     if (locked) {
         AddWaitingThread(GetCurrentThread());
-        Kernel::WaitCurrentThread(WAITTYPE_MUTEX, this);
+        Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_MUTEX, this, index);
     } else {
         // Lock the mutex when the first thread accesses it
         locked = true;

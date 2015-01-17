@@ -29,11 +29,11 @@ public:
     u64 initial_delay;                      ///< The delay until the timer fires for the first time
     u64 interval_delay;                     ///< The delay until the timer fires after the first time
 
-    ResultVal<bool> WaitSynchronization() override {
+    ResultVal<bool> WaitSynchronization(unsigned index) override {
         bool wait = !signaled;
         if (wait) {
             AddWaitingThread(GetCurrentThread());
-            Kernel::WaitCurrentThread(WAITTYPE_TIMER, this);
+            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_TIMER, this, index);
         }
         return MakeResult<bool>(wait);
     }
@@ -91,7 +91,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
     timer->signaled = true;
 
     // Resume all waiting threads
-    timer->ResumeAllWaitingThreads();
+    timer->ReleaseAllWaitingThreads();
 
     if (timer->reset_type == RESETTYPE_ONESHOT)
         timer->signaled = false;

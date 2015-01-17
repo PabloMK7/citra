@@ -70,7 +70,7 @@ public:
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
     inline bool IsIdle() const { return idle; }
 
-    ResultVal<bool> WaitSynchronization() override;
+    ResultVal<bool> WaitSynchronization(unsigned index) override;
 
     s32 GetPriority() const { return current_priority; }
     void SetPriority(s32 priority);
@@ -78,8 +78,28 @@ public:
     u32 GetThreadId() const { return thread_id; }
 
     void Stop(const char* reason);
-    /// Resumes a thread from waiting by marking it as "ready".
+    
+    /**
+     * Release an object from the thread's wait list
+     * @param wait_object WaitObject to release from the thread's wait list
+     */
+    void ReleaseFromWait(WaitObject* wait_object);
+
+    /// Resumes a thread from waiting by marking it as "ready"
     void ResumeFromWait();
+
+    /**
+     * Sets the waiting mode of the thread
+     * @param wait_all If true, wait for all objects, otherwise just wait for the first one
+     */
+    void SetWaitAll(bool wait_all) { this->wait_all = wait_all; }
+
+    /**
+     * Sets the output values after the thread awakens from WaitSynchronization
+     * @param return_val Value returned
+     * @param out_val Value to set to the output parameter
+     */
+    void SetReturnValue(ResultCode return_val, s32 out_val);
 
     Core::ThreadContext context;
 
@@ -96,7 +116,7 @@ public:
     s32 processor_id;
 
     WaitType wait_type;
-    std::vector<SharedPtr<WaitObject>> wait_objects;
+    std::vector<std::pair<SharedPtr<WaitObject>, unsigned>> wait_objects;
     VAddr wait_address;
 
     std::string name;
@@ -105,6 +125,8 @@ public:
     bool idle = false;
 
 private:
+    bool wait_all = false;
+
     Thread() = default;
 };
 
@@ -115,37 +137,41 @@ SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size);
 void Reschedule();
 
 /// Arbitrate the highest priority thread that is waiting
-Thread* ArbitrateHighestPriorityThread(Object* arbiter, u32 address);
+Thread* ArbitrateHighestPriorityThread(WaitObject* arbiter, u32 address);
 
 /// Arbitrate all threads currently waiting...
-void ArbitrateAllThreads(Object* arbiter, u32 address);
+void ArbitrateAllThreads(WaitObject* arbiter, u32 address);
 
 /// Gets the current thread
 Thread* GetCurrentThread();
 
 /**
- * Puts the current thread in the wait state for the given type
+ * Waits the current thread for the given type
  * @param wait_type Type of wait
- * @param wait_object Kernel object that we are waiting on, defaults to current thread
  */
-void WaitCurrentThread(WaitType wait_type, WaitObject* wait_object = GetCurrentThread());
+void WaitCurrentThread(WaitType wait_type);
 
 /**
- * Schedules an event to wake up the specified thread after the specified delay.
- * @param thread The thread to wake after the delay.
- * @param nanoseconds The time this thread will be allowed to sleep for.
+ * Waits the current thread from a WaitSynchronization call
+ * @param wait_type Type of wait
+ * @param wait_object Kernel object that we are waiting on
+ * @param index Index of calling object (for WaitSynchronizationN only)
  */
-void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
+void WaitCurrentThread_WaitSynchronization(WaitType wait_type, WaitObject* wait_object, unsigned index=0);
 
 /**
- * Puts the current thread in the wait state for the given type
- * @param wait_type Type of wait
+ * Waits the current thread from an ArbitrateAddress call
  * @param wait_object Kernel object that we are waiting on
  * @param wait_address Arbitration address used to resume from wait
  */
-void WaitCurrentThread(WaitType wait_type, WaitObject* wait_object, VAddr wait_address);
+void WaitCurrentThread_ArbitrateAddress(WaitObject* wait_object, VAddr wait_address);
 
-
+/**
+ * Schedules an event to wake up the specified thread after the specified delay.
+ * @param handle The thread handle.
+ * @param nanoseconds The time this thread will be allowed to sleep for.
+ */
+void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
 
 /**
  * Sets up the idle thread, this is a thread that is intended to never execute instructions,

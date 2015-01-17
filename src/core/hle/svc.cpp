@@ -133,6 +133,9 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     if (wait.Succeeded() && *wait) {
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+
+        Kernel::GetCurrentThread()->SetWaitAll(false);
+
         HLE::Reschedule(__func__);
     }
 
@@ -140,44 +143,64 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
-    s64 nano_seconds) {
+static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all, s64 nano_seconds) {
+    bool wait_thread = false;
+    bool wait_all_succeeded = false;
+    int handle_index = 0;
 
-    // TODO(bunnei): Do something with nano_seconds, currently ignoring this
-    bool unlock_all = true;
-    bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
-
-    LOG_TRACE(Kernel_SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%lld",
-        handle_count, (wait_all ? "true" : "false"), nano_seconds);
-
-    // Iterate through each handle, synchronize kernel object
-    for (s32 i = 0; i < handle_count; i++) {
-        SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[i]);
+    while (handle_index < handle_count) {
+        SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[handle_index]);
         if (object == nullptr)
             return InvalidHandle(ErrorModule::Kernel).raw;
 
-        LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i],
-                object->GetTypeName().c_str(), object->GetName().c_str());
+        ResultVal<bool> wait = object->WaitSynchronization(handle_index);
 
-        // TODO(yuriks): Verify how the real function behaves when an error happens here
-        ResultVal<bool> wait_result = object->WaitSynchronization();
-        bool wait = wait_result.Succeeded() && *wait_result;
+        wait_thread = (wait.Succeeded() && *wait);
 
-        if (!wait && !wait_all) {
-            *out = i;
-            return RESULT_SUCCESS.raw;
-        } else {
-            unlock_all = false;
+        // If this object waited and we are waiting on all objects to synchronize
+        if (wait_thread && wait_all) {
+            // Enforce later on that this thread does not continue
+            wait_all_succeeded = true;
+        }
+
+        // If this object synchronized and we are not waiting on all objects to synchronize
+        if (!wait_thread && !wait_all)
+            // We're done, the thread will continue
+            break;
+
+        handle_index++;
+    }
+
+    // Change the thread state to waiting if blocking on all handles...
+    if (wait_thread || wait_all_succeeded) {
+        // Create an event to wake the thread up after the specified nanosecond delay has passed
+        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+        Kernel::GetCurrentThread()->SetWaitAll(wait_all);
+
+        HLE::Reschedule(__func__);
+
+        // NOTE: output of this SVC will be set later depending on how the thread resumes
+        return RESULT_DUMMY.raw;
+    }
+
+    // Acquire objects if we did not wait...
+    for (int i = 0; i < handle_count; ++i) {
+        auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+
+        // Acquire the object if it is not waiting...
+        if (!object->ShouldWait()) {
+            object->Acquire();
+
+            // If this was the first non-waiting object and 'wait_all' is false, don't acquire
+            // any other objects
+            if (!wait_all)
+                break;
         }
     }
 
-    if (wait_all && unlock_all) {
-        *out = handle_count;
-        return RESULT_SUCCESS.raw;
-    }
-
-    // Check for next thread to schedule
-    HLE::Reschedule(__func__);
+    // TODO(bunnei): If 'wait_all' is true, this is probably wrong. However, real hardware does
+    // not seem to set it to any meaningful value.
+    *out = wait_all ? 0 : handle_index;
 
     return RESULT_SUCCESS.raw;
 }
