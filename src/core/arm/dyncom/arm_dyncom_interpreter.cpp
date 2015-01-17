@@ -1840,17 +1840,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsh)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(ldrt)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst* inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+    ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (I_BIT == 0) {
+    if (BITS(inst, 25, 27) == 2) {
         inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
+    } else if (BITS(inst, 25, 27) == 3) {
+        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
     } else {
+        // Reaching this would indicate the thumb version
+        // of this instruction, however the 3DS CPU doesn't
+        // support this variant (the 3DS CPU is only ARMv6K,
+        // while this variant is added in ARMv6T2).
+        // So it's sufficient for citra to not implement this.
         DEBUG_MSG;
     }
 
@@ -2792,17 +2799,24 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(strh)(unsigned int inst, int index)
 }
 ARM_INST_PTR INTERPRETER_TRANSLATE(strt)(unsigned int inst, int index)
 {
-    arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
-    ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
+    arm_inst* inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+    ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (I_BIT == 0) {
+    if (BITS(inst, 25, 27) == 2) {
         inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
+    } else if (BITS(inst, 25, 27) == 3) {
+        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
     } else {
+        // Reaching this would indicate the thumb version
+        // of this instruction, however the 3DS CPU doesn't
+        // support this variant (the 3DS CPU is only ARMv6K,
+        // while this variant is added in ARMv6T2).
+        // So it's sufficient for citra to not implement this.
         DEBUG_MSG;
     }
 
