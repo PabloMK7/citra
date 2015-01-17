@@ -148,27 +148,37 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     bool wait_all_succeeded = false;
     int handle_index = 0;
 
-    while (handle_index < handle_count) {
-        SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[handle_index]);
-        if (object == nullptr)
-            return InvalidHandle(ErrorModule::Kernel).raw;
+    // If handles were passed in, iterate through them and wait/acquire the objects as needed
+    if (handle_count > 0) {
+        while (handle_index < handle_count) {
+            SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[handle_index]);
+            if (object == nullptr)
+                return InvalidHandle(ErrorModule::Kernel).raw;
 
-        ResultVal<bool> wait = object->WaitSynchronization(handle_index);
+            ResultVal<bool> wait = object->WaitSynchronization(handle_index);
 
-        wait_thread = (wait.Succeeded() && *wait);
+            wait_thread = (wait.Succeeded() && *wait);
 
-        // If this object waited and we are waiting on all objects to synchronize
-        if (wait_thread && wait_all) {
-            // Enforce later on that this thread does not continue
-            wait_all_succeeded = true;
+            // If this object waited and we are waiting on all objects to synchronize
+            if (wait_thread && wait_all) {
+                // Enforce later on that this thread does not continue
+                wait_all_succeeded = true;
+            }
+
+            // If this object synchronized and we are not waiting on all objects to synchronize
+            if (!wait_thread && !wait_all)
+                // We're done, the thread will continue
+                break;
+
+            handle_index++;
         }
-
-        // If this object synchronized and we are not waiting on all objects to synchronize
-        if (!wait_thread && !wait_all)
-            // We're done, the thread will continue
-            break;
-
-        handle_index++;
+    }else {
+        // If no handles were passed in, put the thread to sleep only when wait_all=false
+        // NOTE: This is supposed to deadlock if no timeout was specified
+        if (!wait_all) {
+            wait_thread = true;
+            Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
+        }
     }
 
     // Change the thread state to waiting if blocking on all handles...
