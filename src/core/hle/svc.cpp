@@ -148,8 +148,12 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     bool wait_all_succeeded = false;
     int handle_index = 0;
 
-    // If handles were passed in, iterate through them and wait/acquire the objects as needed
-    if (handle_count > 0) {
+    // Negative handle_count is invalid
+    if (handle_count < 0)
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
+
+    // If handle_count is non-zero, iterate through them and wait/acquire the objects as needed
+    if (handle_count != 0) {
         while (handle_index < handle_count) {
             SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[handle_index]);
             if (object == nullptr)
@@ -172,7 +176,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
             handle_index++;
         }
-    }else {
+    } else {
         // If no handles were passed in, put the thread to sleep only when wait_all=false
         // NOTE: This is supposed to deadlock if no timeout was specified
         if (!wait_all) {
