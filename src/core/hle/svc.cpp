@@ -127,7 +127,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    ResultVal<bool> wait = object->Wait();
+    ResultVal<bool> wait = object->Wait(true);
 
     // Check for next thread to schedule
     if (wait.Succeeded() && *wait) {
@@ -146,8 +146,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all, s64 nano_seconds) {
-    bool wait_thread = false;
-    bool wait_all_succeeded = false;
+    bool wait_thread = !wait_all;
     int handle_index = 0;
 
     // Handles pointer is invalid
@@ -158,40 +157,43 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     if (handle_count < 0)
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
 
-    // If handle_count is non-zero, iterate through them and wait/acquire the objects as needed
+    // If handle_count is non-zero, iterate through them and wait the current thread on the objects
     if (handle_count != 0) {
-        while (handle_index < handle_count) {
-            SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[handle_index]);
+        bool selected = false; // True once an object has been selected
+        for (int i = 0; i < handle_count; ++i) {
+            SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[i]);
             if (object == nullptr)
                 return InvalidHandle(ErrorModule::Kernel).raw;
 
-            ResultVal<bool> wait = object->Wait(handle_index);
+            ResultVal<bool> wait = object->Wait(true);
 
-            wait_thread = (wait.Succeeded() && *wait);
-
-            // If this object waited and we are waiting on all objects to synchronize
-            if (wait_thread && wait_all)
-                // Enforce later on that this thread does not continue
-                wait_all_succeeded = true;
-
-            // If this object synchronized and we are not waiting on all objects to synchronize
-            if (!wait_thread && !wait_all)
-                // We're done, the thread will continue
-                break;
-
-            handle_index++;
+            // Check if the current thread should wait on the object...
+            if (wait.Succeeded() && *wait) {
+                // Check we are waiting on all objects...
+                if (wait_all)
+                    // Wait the thread
+                    wait_thread = true;
+            } else {
+                // Do not wait on this object, check if this object should be selected...
+                if (!wait_all && !selected) {
+                    // Do not wait the thread
+                    wait_thread = false;
+                    handle_index = i;
+                    selected = true;
+                }
+            }
         }
     } else {
         // If no handles were passed in, put the thread to sleep only when wait_all=false
-        // NOTE: This is supposed to deadlock if no timeout was specified
+        // NOTE: This is supposed to deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
             Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
         }
     }
 
-    // Change the thread state to waiting if blocking on all handles...
-    if (wait_thread || wait_all_succeeded) {
+    // If thread should block, then set its state to waiting and then reschedule...
+    if (wait_thread) {
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
         Kernel::GetCurrentThread()->SetWaitAll(wait_all);
@@ -199,7 +201,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         HLE::Reschedule(__func__);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
-        return RESULT_DUMMY.raw;
+        return 0xDEADBEEF;
     }
 
     // Acquire objects if we did not wait...

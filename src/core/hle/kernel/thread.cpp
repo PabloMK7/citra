@@ -22,11 +22,11 @@
 
 namespace Kernel {
 
-ResultVal<bool> Thread::Wait(unsigned index) {
+ResultVal<bool> Thread::Wait(bool wait_thread) {
     const bool wait = status != THREADSTATUS_DORMANT;
-    if (wait) {
+    if (wait && wait_thread) {
         AddWaitingThread(GetCurrentThread());
-        WaitCurrentThread_WaitSynchronization(WAITTYPE_THREADEND, this, index);
+        WaitCurrentThread_WaitSynchronization(WAITTYPE_THREADEND, this);
     }
 
     return MakeResult<bool>(wait);
@@ -97,7 +97,7 @@ static bool CheckWaitType(const Thread* thread, WaitType type) {
 /// Check if a thread is blocking on a specified wait type with a specified handle
 static bool CheckWaitType(const Thread* thread, WaitType type, Object* wait_object) {
     for (auto itr = thread->wait_objects.begin(); itr != thread->wait_objects.end(); ++itr) {
-        if (itr->first == wait_object)
+        if (*itr == wait_object)
             return CheckWaitType(thread, type);
     }
     return false;
@@ -234,16 +234,7 @@ void WaitCurrentThread_WaitSynchronization(WaitType wait_type, WaitObject* wait_
     Thread* thread = GetCurrentThread();
     thread->wait_type = wait_type;
 
-    bool insert_wait_object = true;
-    for (auto itr = thread->wait_objects.begin(); itr < thread->wait_objects.end(); ++itr) {
-        if (itr->first == wait_object) {
-            insert_wait_object = false;
-            break;
-        }
-    }
-
-    if (insert_wait_object)
-        thread->wait_objects.push_back(std::pair<SharedPtr<WaitObject>, unsigned>(wait_object, index));
+    thread->wait_objects.push_back(wait_object);
 
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
@@ -288,31 +279,35 @@ void Thread::ReleaseFromWait(WaitObject* wait_object) {
         return;
     }
 
-    // Remove this thread from the wait_object
+    // Remove this thread from the waiting object's thread list
     wait_object->RemoveWaitingThread(this);
 
-    // Find the waiting object
-    auto itr = wait_objects.begin();
-    for (; itr != wait_objects.end(); ++itr) {
-        if (wait_object == itr->first)
-            break;
+    unsigned index = 0;
+    bool wait_all_failed = false; // Will be set to true if any object is unavailable
+
+    // Iterate through all waiting objects to check availability...
+    for (auto itr = wait_objects.begin(); itr != wait_objects.end(); ++itr) {
+        auto res = (*itr)->Wait(false);
+
+        if (*res && res.Succeeded())
+            wait_all_failed = true;
+
+        // The output should be the last index of wait_object
+        if (*itr == wait_object)
+            index = itr - wait_objects.begin();
     }
-    unsigned index = itr->second;
 
-    // Remove the wait_object from this thread
-    if (itr != wait_objects.end())
-        wait_objects.erase(itr);
-
-    // If wait_all=false, resume the thread on a release wait_object from wait
-    if (!wait_all) {
-        SetReturnValue(RESULT_SUCCESS, index);
-        ResumeFromWait();
-    } else {
-        // Otherwise, wait_all=true, only resume the thread if all wait_object's have been released
-        if (wait_objects.empty()) {
+    // If we are waiting on all objects...
+    if (wait_all) {
+        // Resume the thread only if all are available...
+        if (!wait_all_failed) {
             SetReturnValue(RESULT_SUCCESS, -1);
             ResumeFromWait();
         }
+    } else {
+        // Otherwise, resume
+        SetReturnValue(RESULT_SUCCESS, index);
+        ResumeFromWait();
     }
 }
 
@@ -324,7 +319,7 @@ void Thread::ResumeFromWait() {
 
     // Remove this thread from all other WaitObjects
     for (auto wait_object : wait_objects)
-        wait_object.first->RemoveWaitingThread(this);
+        wait_object->RemoveWaitingThread(this);
 
     wait_objects.clear();
 

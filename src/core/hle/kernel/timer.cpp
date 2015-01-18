@@ -29,11 +29,11 @@ public:
     u64 initial_delay;                      ///< The delay until the timer fires for the first time
     u64 interval_delay;                     ///< The delay until the timer fires after the first time
 
-    ResultVal<bool> Wait(unsigned index) override {
+    ResultVal<bool> Wait(bool wait_thread) override {
         bool wait = !signaled;
-        if (wait) {
+        if (wait && wait_thread) {
             AddWaitingThread(GetCurrentThread());
-            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_TIMER, this, index);
+            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_TIMER, this);
         }
         return MakeResult<bool>(wait);
     }

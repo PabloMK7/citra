@@ -28,11 +28,11 @@ public:
     bool signaled;                          ///< Whether the event has already been signaled
     std::string name;                       ///< Name of event (optional)
 
-    ResultVal<bool> Wait(unsigned index) override {
+    ResultVal<bool> Wait(bool wait_thread) override {
         bool wait = !signaled;
-        if (wait) {
+        if (wait && wait_thread) {
             AddWaitingThread(GetCurrentThread());
-            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_EVENT, this, index);
+            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_EVENT, this);
         }
         return MakeResult<bool>(wait);
     }

@@ -70,7 +70,7 @@ public:
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
     inline bool IsIdle() const { return idle; }
 
-    ResultVal<bool> Wait(unsigned index) override;
+    ResultVal<bool> Wait(bool wait_thread) override;
     ResultVal<bool> Acquire() override;
 
     s32 GetPriority() const { return current_priority; }
@@ -117,7 +117,7 @@ public:
     s32 processor_id;
 
     WaitType wait_type;
-    std::vector<std::pair<SharedPtr<WaitObject>, unsigned>> wait_objects;
+    std::vector<SharedPtr<WaitObject>> wait_objects;
     VAddr wait_address;
 
     std::string name;
