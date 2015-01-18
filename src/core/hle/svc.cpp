@@ -103,12 +103,7 @@ static Result SendSyncRequest(Handle handle) {
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    ResultVal<bool> wait = session->SyncRequest();
-    if (wait.Succeeded() && *wait) {
-        Kernel::WaitCurrentThread_Sleep(); // TODO(bunnei): Is this correct?
-    }
-
-    return wait.Code().raw;
+    return session->SyncRequest().Code().raw;
 }
 
 /// Close a handle
