@@ -25,6 +25,7 @@ public:
     bool locked;                                ///< Current locked state
     Handle lock_thread;                         ///< Handle to thread that currently has mutex
     std::string name;                           ///< Name of mutex (optional)
+    SharedPtr<Thread> current_thread;           ///< Thread that has acquired the mutex
 
     ResultVal<bool> Wait() override;
     ResultVal<bool> Acquire() override;
@@ -43,6 +44,7 @@ static MutexMap g_mutex_held_locks;
 void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandle()) {
     g_mutex_held_locks.insert(std::make_pair(thread, mutex->GetHandle()));
     mutex->lock_thread = thread;
+    mutex->current_thread = Kernel::g_handle_table.Get<Thread>(thread);
 }
 
 /**
@@ -132,6 +134,7 @@ Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name)
 
     mutex->locked = mutex->initial_locked = initial_locked;
     mutex->name = name;
+    mutex->current_thread = nullptr;
 
     // Acquire mutex with current thread if initialized as locked...
     if (mutex->locked) {
@@ -157,7 +160,7 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
 }
 
 ResultVal<bool> Mutex::Wait() {
-    return MakeResult<bool>(locked);
+    return MakeResult<bool>(locked && (current_thread != GetCurrentThread()));
 }
 
 ResultVal<bool> Mutex::Acquire() {
