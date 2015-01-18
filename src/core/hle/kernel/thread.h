@@ -38,18 +38,6 @@ enum ThreadStatus {
     THREADSTATUS_WAITSUSPEND    = THREADSTATUS_WAIT | THREADSTATUS_SUSPEND
 };
 
-enum WaitType {
-    WAITTYPE_NONE,
-    WAITTYPE_SLEEP,
-    WAITTYPE_SEMA,
-    WAITTYPE_EVENT,
-    WAITTYPE_THREADEND,
-    WAITTYPE_MUTEX,
-    WAITTYPE_SYNCH,
-    WAITTYPE_ARB,
-    WAITTYPE_TIMER,
-};
-
 namespace Kernel {
 
 class Thread : public WaitObject {
@@ -70,7 +58,7 @@ public:
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
     inline bool IsIdle() const { return idle; }
 
-    ResultVal<bool> Wait(bool wait_thread) override;
+    ResultVal<bool> Wait() override;
     ResultVal<bool> Acquire() override;
 
     s32 GetPriority() const { return current_priority; }
@@ -88,12 +76,6 @@ public:
 
     /// Resumes a thread from waiting by marking it as "ready"
     void ResumeFromWait();
-
-    /**
-     * Sets the waiting mode of the thread
-     * @param wait_all If true, wait for all objects, otherwise just wait for the first one
-     */
-    void SetWaitAll(bool wait_all) { this->wait_all = wait_all; }
 
     /**
      * Sets the output values after the thread awakens from WaitSynchronization
@@ -116,9 +98,10 @@ public:
 
     s32 processor_id;
 
-    WaitType wait_type;
-    std::vector<SharedPtr<WaitObject>> wait_objects;
-    VAddr wait_address;
+    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
+
+    VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address 
+    bool wait_all;      ///< True if the thread is waiting on all objects before resuming
 
     std::string name;
 
@@ -126,7 +109,6 @@ public:
     bool idle = false;
 
 private:
-    bool wait_all = false;
 
     Thread() = default;
 };
@@ -146,19 +128,15 @@ void ArbitrateAllThreads(WaitObject* arbiter, u32 address);
 /// Gets the current thread
 Thread* GetCurrentThread();
 
-/**
- * Waits the current thread for the given type
- * @param wait_type Type of wait
- */
-void WaitCurrentThread(WaitType wait_type);
+/// Waits the current thread
+void WaitCurrentThread();
 
 /**
  * Waits the current thread from a WaitSynchronization call
- * @param wait_type Type of wait
  * @param wait_object Kernel object that we are waiting on
- * @param index Index of calling object (for WaitSynchronizationN only)
+ * @param wait_all If true, wait on all objects before resuming (for WaitSynchronizationN only)
  */
-void WaitCurrentThread_WaitSynchronization(WaitType wait_type, WaitObject* wait_object, unsigned index=0);
+void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_all=false);
 
 /**
  * Waits the current thread from an ArbitrateAddress call
@@ -181,6 +159,7 @@ void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
  * @returns The handle of the idle thread
  */
 Handle SetupIdleThread();
+
 /// Initialize threading
 void ThreadingInit();
 

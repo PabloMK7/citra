@@ -32,15 +32,8 @@ public:
         return available_count > 0;
     }
 
-    ResultVal<bool> Wait(bool wait_thread) override {
-        bool wait = !IsAvailable();
-
-        if (wait && wait_thread) {
-            Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_SEMA, this);
-            AddWaitingThread(GetCurrentThread());
-        }
-
-        return MakeResult<bool>(wait);
+    ResultVal<bool> Wait() override {
+        return MakeResult<bool>(!IsAvailable());
     }
 
     ResultVal<bool> Acquire() override {

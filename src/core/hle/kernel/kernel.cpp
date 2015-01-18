@@ -42,13 +42,15 @@ Thread* WaitObject::ReleaseNextThread() {
     return next_thread.get();
 }
 
-void WaitObject::ReleaseAllWaitingThreads() {
+void WaitObject::WakeupAllWaitingThreads() {
     auto waiting_threads_copy = waiting_threads;
 
+    // We use a copy because ReleaseWaitObject will remove the thread from this object's
+    // waiting_threads list
     for (auto thread : waiting_threads_copy)
         thread->ReleaseWaitObject(this);
 
-    waiting_threads.clear();
+    _assert_msg_(Kernel, waiting_threads.empty(), "failed to awaken all waiting threads!");
 }
 
 HandleTable::HandleTable() {

@@ -105,7 +105,7 @@ static Result SendSyncRequest(Handle handle) {
 
     ResultVal<bool> wait = session->SyncRequest();
     if (wait.Succeeded() && *wait) {
-        Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
+        Kernel::WaitCurrentThread(); // TODO(bunnei): Is this correct?
     }
 
     return wait.Code().raw;
@@ -120,21 +120,23 @@ static Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handle);
+    Kernel::WaitObject* object = static_cast<Kernel::WaitObject*>(Kernel::g_handle_table.GetGeneric(handle).get());
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    ResultVal<bool> wait = object->Wait(true);
+    ResultVal<bool> wait = object->Wait();
 
     // Check for next thread to schedule
     if (wait.Succeeded() && *wait) {
+
+        object->AddWaitingThread(Kernel::GetCurrentThread());
+        Kernel::WaitCurrentThread_WaitSynchronization(object);
+
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
-
-        Kernel::GetCurrentThread()->SetWaitAll(false);
 
         HLE::Reschedule(__func__);
     } else {
@@ -166,14 +168,15 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     if (handle_count != 0) {
         bool selected = false; // True once an object has been selected
         for (int i = 0; i < handle_count; ++i) {
-            SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[i]);
+            Kernel::WaitObject* object = static_cast<Kernel::WaitObject*>(Kernel::g_handle_table.GetGeneric(handles[i]).get());
             if (object == nullptr)
                 return InvalidHandle(ErrorModule::Kernel).raw;
 
-            ResultVal<bool> wait = object->Wait(true);
+            ResultVal<bool> wait = object->Wait();
 
             // Check if the current thread should wait on this object...
             if (wait.Succeeded() && *wait) {
+
                 // Check we are waiting on all objects...
                 if (wait_all)
                     // Wait the thread
@@ -193,15 +196,22 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         // NOTE: This should deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
-            Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
+            Kernel::WaitCurrentThread();
         }
     }
 
     // If thread should wait, then set its state to waiting and then reschedule...
     if (wait_thread) {
+
+        // Actually wait the current thread on each object if we decided to wait...
+        for (int i = 0; i < handle_count; ++i) {
+            auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+            object->AddWaitingThread(Kernel::GetCurrentThread());
+            Kernel::WaitCurrentThread_WaitSynchronization(object, wait_all);
+        }
+
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
-        Kernel::GetCurrentThread()->SetWaitAll(wait_all);
 
         HLE::Reschedule(__func__);
 
@@ -440,7 +450,7 @@ static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
 
     // Sleep current thread and check for next thread to schedule
-    Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
+    Kernel::WaitCurrentThread();
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);

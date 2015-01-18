@@ -65,11 +65,10 @@ public:
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Check if this object is available, (optionally) wait the current thread if not
-     * @param wait_thread If true, wait the current thread if this object is unavailable
+     * Check if this object is available
      * @return True if the current thread should wait due to this object being unavailable
      */
-    virtual ResultVal<bool> Wait(bool wait_thread) {
+    virtual ResultVal<bool> Wait() {
         LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
         return UnimplementedFunction(ErrorModule::Kernel);
     }

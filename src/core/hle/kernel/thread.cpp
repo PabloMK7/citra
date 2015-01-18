@@ -22,14 +22,8 @@
 
 namespace Kernel {
 
-ResultVal<bool> Thread::Wait(bool wait_thread) {
-    const bool wait = status != THREADSTATUS_DORMANT;
-    if (wait && wait_thread) {
-        AddWaitingThread(GetCurrentThread());
-        WaitCurrentThread_WaitSynchronization(WAITTYPE_THREADEND, this);
-    }
-
-    return MakeResult<bool>(wait);
+ResultVal<bool> Thread::Wait() {
+    return MakeResult<bool>(status != THREADSTATUS_DORMANT);
 }
 
 ResultVal<bool> Thread::Acquire() {
@@ -68,7 +62,7 @@ static void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     if (t->current_priority < lowest_priority) {
         t->current_priority = t->initial_priority;
     }
-    t->wait_type = WAITTYPE_NONE;
+
     t->wait_objects.clear();
     t->wait_address = 0;
 }
@@ -89,23 +83,18 @@ static void ChangeReadyState(Thread* t, bool ready) {
     }
 }
 
-/// Check if a thread is blocking on a specified wait type
-static bool CheckWaitType(const Thread* thread, WaitType type) {
-    return (type == thread->wait_type) && (thread->IsWaiting());
-}
-
-/// Check if a thread is blocking on a specified wait type with a specified handle
-static bool CheckWaitType(const Thread* thread, WaitType type, Object* wait_object) {
+/// Check if a thread is blocking on a the specified object
+static bool CheckWaitType(const Thread* thread, Object* wait_object) {
     for (auto itr = thread->wait_objects.begin(); itr != thread->wait_objects.end(); ++itr) {
         if (*itr == wait_object)
-            return CheckWaitType(thread, type);
+            return (thread->IsWaiting());
     }
     return false;
 }
 
-/// Check if a thread is blocking on a specified wait type with a specified handle and address
-static bool CheckWaitType(const Thread* thread, WaitType type, Object* wait_object, VAddr wait_address) {
-    return CheckWaitType(thread, type, wait_object) && (wait_address == thread->wait_address);
+/// Check if a thread is blocking on a the specified object and an address
+static bool CheckWaitType(const Thread* thread, Object* wait_object, VAddr wait_address) {
+    return CheckWaitType(thread, wait_object) && (wait_address == thread->wait_address);
 }
 
 /// Stops the current thread
@@ -118,7 +107,6 @@ void Thread::Stop(const char* reason) {
     ReleaseAllWaitingThreads();
 
     // Stopped threads are never waiting.
-    wait_type = WAITTYPE_NONE;
     wait_objects.clear();
     wait_address = 0;
 }
@@ -130,12 +118,6 @@ static void ChangeThreadState(Thread* t, ThreadStatus new_status) {
     }
     ChangeReadyState(t, (new_status & THREADSTATUS_READY) != 0);
     t->status = new_status;
-
-    if (new_status == THREADSTATUS_WAIT) {
-        if (t->wait_type == WAITTYPE_NONE) {
-            LOG_ERROR(Kernel, "Waittype none not allowed");
-        }
-    }
 }
 
 /// Arbitrate the highest priority thread that is waiting
@@ -145,7 +127,7 @@ Thread* ArbitrateHighestPriorityThread(WaitObject* arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (auto& thread : thread_list) {
-        if (!CheckWaitType(thread.get(), WAITTYPE_ARB, arbiter, address))
+        if (!CheckWaitType(thread.get(), arbiter, address))
             continue;
 
         if (thread == nullptr)
@@ -170,7 +152,7 @@ void ArbitrateAllThreads(WaitObject* arbiter, u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (auto& thread : thread_list) {
-        if (CheckWaitType(thread.get(), WAITTYPE_ARB, arbiter, address))
+        if (CheckWaitType(thread.get(), arbiter, address))
             thread->ReleaseFromWait(arbiter);
     }
 }
@@ -178,9 +160,6 @@ void ArbitrateAllThreads(WaitObject* arbiter, u32 address) {
 /// Calls a thread by marking it as "ready" (note: will not actually execute until current thread yields)
 static void CallThread(Thread* t) {
     // Stop waiting
-    if (t->wait_type != WAITTYPE_NONE) {
-        t->wait_type = WAITTYPE_NONE;
-    }
     ChangeThreadState(t, THREADSTATUS_READY);
 }
 
@@ -201,7 +180,6 @@ static void SwitchContext(Thread* t) {
         current_thread = t;
         ChangeReadyState(t, false);
         t->status = (t->status | THREADSTATUS_RUNNING) & ~THREADSTATUS_READY;
-        t->wait_type = WAITTYPE_NONE;
         Core::g_app_core->LoadContext(t->context);
     } else {
         current_thread = nullptr;
@@ -224,23 +202,20 @@ static Thread* NextThread() {
     return next;
 }
 
-void WaitCurrentThread(WaitType wait_type) {
+void WaitCurrentThread() {
     Thread* thread = GetCurrentThread();
-    thread->wait_type = wait_type;
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
-void WaitCurrentThread_WaitSynchronization(WaitType wait_type, WaitObject* wait_object, unsigned index) {
+void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_all) {
     Thread* thread = GetCurrentThread();
-    thread->wait_type = wait_type;
-
+    thread->wait_all = wait_all;
     thread->wait_objects.push_back(wait_object);
-
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
 void WaitCurrentThread_ArbitrateAddress(WaitObject* wait_object, VAddr wait_address) {
-    WaitCurrentThread_WaitSynchronization(WaitType::WAITTYPE_ARB, wait_object, 0);
+    WaitCurrentThread_WaitSynchronization(wait_object);
     GetCurrentThread()->wait_address = wait_address;
 }
 
@@ -287,7 +262,7 @@ void Thread::ReleaseFromWait(WaitObject* wait_object) {
 
     // Iterate through all waiting objects to check availability...
     for (auto itr = wait_objects.begin(); itr != wait_objects.end(); ++itr) {
-        auto res = (*itr)->Wait(false);
+        auto res = (*itr)->Wait();
 
         if (*res && res.Succeeded())
             wait_all_failed = true;
@@ -322,9 +297,8 @@ void Thread::ResumeFromWait() {
         wait_object->RemoveWaitingThread(this);
 
     wait_objects.clear();
-
-    wait_type = WAITTYPE_NONE;
     wait_all = false;
+
     if (!(status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
         ChangeReadyState(this, true);
     }
@@ -390,7 +364,6 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->stack_size = stack_size;
     thread->initial_priority = thread->current_priority = priority;
     thread->processor_id = processor_id;
-    thread->wait_type = WAITTYPE_NONE;
     thread->wait_all = false;
     thread->wait_objects.clear();
     thread->wait_address = 0;
@@ -476,8 +449,8 @@ void Reschedule() {
         LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
 
         for (auto& thread : thread_list) {
-            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X wait_type=0x%08X",
-                thread->GetHandle(), thread->current_priority, thread->status, thread->wait_type);
+            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X", thread->GetHandle(), 
+                      thread->current_priority, thread->status);
         }
     }
 }
