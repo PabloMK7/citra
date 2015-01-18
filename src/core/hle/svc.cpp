@@ -149,15 +149,20 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     bool wait_thread = !wait_all;
     int handle_index = 0;
 
-    // Handles pointer is invalid
+    // Check if 'handles' is invalid
     if (handles == nullptr)
         return ResultCode(ErrorDescription::InvalidPointer, ErrorModule::Kernel, ErrorSummary::InvalidArgument, ErrorLevel::Permanent).raw;
 
-    // Negative handle_count is invalid
+    // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
+    // this happens, the running application will crash.
+    _assert_msg_(Kernel, out != nullptr, "invalid output pointer specified!");
+
+    // Check if 'handle_count' is invalid
     if (handle_count < 0)
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
 
-    // If handle_count is non-zero, iterate through them and wait the current thread on the objects
+    // If 'handle_count' is non-zero, iterate through each handle and wait the current thread if
+    // necessary
     if (handle_count != 0) {
         bool selected = false; // True once an object has been selected
         for (int i = 0; i < handle_count; ++i) {
@@ -167,7 +172,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
 
             ResultVal<bool> wait = object->Wait(true);
 
-            // Check if the current thread should wait on the object...
+            // Check if the current thread should wait on this object...
             if (wait.Succeeded() && *wait) {
                 // Check we are waiting on all objects...
                 if (wait_all)
@@ -184,15 +189,15 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
             }
         }
     } else {
-        // If no handles were passed in, put the thread to sleep only when wait_all=false
-        // NOTE: This is supposed to deadlock the current thread if no timeout was specified
+        // If no handles were passed in, put the thread to sleep only when 'wait_all' is false
+        // NOTE: This should deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
             Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
         }
     }
 
-    // If thread should block, then set its state to waiting and then reschedule...
+    // If thread should wait, then set its state to waiting and then reschedule...
     if (wait_thread) {
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
