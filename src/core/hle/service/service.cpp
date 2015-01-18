@@ -35,6 +35,7 @@
 #include "core/hle/service/nim_aoc.h"
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
+#include "core/hle/service/ptm_play.h"
 #include "core/hle/service/ptm_u.h"
 #include "core/hle/service/ptm_sysm.h"
 #include "core/hle/service/soc_u.h"
@@ -112,6 +113,7 @@ void Init() {
     g_manager->AddService(new NIM_AOC::Interface);
     g_manager->AddService(new NWM_UDS::Interface);
     g_manager->AddService(new PM_APP::Interface);
+    g_manager->AddService(new PTM_PLAY::Interface);
     g_manager->AddService(new PTM_U::Interface);
     g_manager->AddService(new PTM_SYSM::Interface);
     g_manager->AddService(new SOC_U::Interface);
