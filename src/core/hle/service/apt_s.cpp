@@ -20,6 +20,7 @@ namespace APT_U {
     extern void Initialize(Service::Interface* self);
     extern void Enable(Service::Interface* self);
     extern void InquireNotification(Service::Interface* self);
+    extern void NotifyToWait(Service::Interface* self);
     extern void GetSharedFont(Service::Interface* self);
     extern void AppletUtility(Service::Interface* self);
     extern void GlanceParameter(Service::Interface* self);
@@ -95,7 +96,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00400042, nullptr,                      "SendCaptureBufferInfo"},
     {0x00410040, nullptr,                      "ReceiveCaptureBufferInfo"},
     {0x00420080, nullptr,                      "SleepSystem"},
-    {0x00430040, nullptr,                      "NotifyToWait"},
+    {0x00430040, APT_U::NotifyToWait,          "NotifyToWait"},
     {0x00440000, APT_U::GetSharedFont,         "GetSharedFont"},
     {0x00450040, nullptr,                      "GetWirelessRebootInfo"},
     {0x00460104, nullptr,                      "Wrap"},
