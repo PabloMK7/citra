@@ -83,8 +83,8 @@ static void ChangeReadyState(Thread* t, bool ready) {
     }
 }
 
-/// Check if a thread is blocking on a the specified object
-static bool CheckWaitType(const Thread* thread, Object* wait_object) {
+/// Check if a thread is waiting on a the specified wait object
+static bool CheckWait_WaitObject(const Thread* thread, WaitObject* wait_object) {
     for (auto itr = thread->wait_objects.begin(); itr != thread->wait_objects.end(); ++itr) {
         if (*itr == wait_object)
             return (thread->IsWaiting());
@@ -92,9 +92,9 @@ static bool CheckWaitType(const Thread* thread, Object* wait_object) {
     return false;
 }
 
-/// Check if a thread is blocking on a the specified object and an address
-static bool CheckWaitType(const Thread* thread, Object* wait_object, VAddr wait_address) {
-    return CheckWaitType(thread, wait_object) && (wait_address == thread->wait_address);
+/// Check if the specified thread is waiting on the specified address to be arbitrated
+static bool CheckWait_AddressArbiter(const Thread* thread, VAddr wait_address) {
+    return thread->IsWaiting() && thread->wait_objects.empty() && wait_address == thread->wait_address;
 }
 
 /// Stops the current thread
@@ -121,17 +121,17 @@ static void ChangeThreadState(Thread* t, ThreadStatus new_status) {
 }
 
 /// Arbitrate the highest priority thread that is waiting
-Thread* ArbitrateHighestPriorityThread(WaitObject* arbiter, u32 address) {
+Thread* ArbitrateHighestPriorityThread(u32 address) {
     Thread* highest_priority_thread = nullptr;
     s32 priority = THREADPRIO_LOWEST;
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (auto& thread : thread_list) {
-        if (!CheckWaitType(thread.get(), arbiter, address))
+        if (!CheckWait_AddressArbiter(thread.get(), address))
             continue;
 
         if (thread == nullptr)
-            continue; // TODO(yuriks): Thread handle will hang around forever. Should clean up.
+            continue;
 
         if(thread->current_priority <= priority) {
             highest_priority_thread = thread.get();
@@ -141,19 +141,19 @@ Thread* ArbitrateHighestPriorityThread(WaitObject* arbiter, u32 address) {
 
     // If a thread was arbitrated, resume it
     if (nullptr != highest_priority_thread) {
-        highest_priority_thread->ReleaseFromWait(arbiter);
+        highest_priority_thread->ResumeFromWait();
     }
 
     return highest_priority_thread;
 }
 
 /// Arbitrate all threads currently waiting
-void ArbitrateAllThreads(WaitObject* arbiter, u32 address) {
+void ArbitrateAllThreads(u32 address) {
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (auto& thread : thread_list) {
-        if (CheckWaitType(thread.get(), arbiter, address))
-            thread->ReleaseFromWait(arbiter);
+        if (CheckWait_AddressArbiter(thread.get(), address))
+            thread->ResumeFromWait();
     }
 }
 
@@ -202,21 +202,28 @@ static Thread* NextThread() {
     return next;
 }
 
-void WaitCurrentThread() {
+void WaitCurrentThread_Sleep() {
     Thread* thread = GetCurrentThread();
+    thread->wait_all = false;
+    thread->wait_address = 0;
+    thread->wait_objects.clear();
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
 void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_all) {
     Thread* thread = GetCurrentThread();
     thread->wait_all = wait_all;
+    thread->wait_address = 0;
     thread->wait_objects.push_back(wait_object);
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
-void WaitCurrentThread_ArbitrateAddress(WaitObject* wait_object, VAddr wait_address) {
-    WaitCurrentThread_WaitSynchronization(wait_object);
-    GetCurrentThread()->wait_address = wait_address;
+void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
+    Thread* thread = GetCurrentThread();
+    thread->wait_all = false;
+    thread->wait_address = wait_address;
+    thread->wait_objects.clear();
+    ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
 /// Event type for the thread wake up event
@@ -248,7 +255,7 @@ void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds) {
     CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, thread->GetHandle());
 }
 
-void Thread::ReleaseFromWait(WaitObject* wait_object) {
+void Thread::ReleaseWaitObject(WaitObject* wait_object) {
     if (wait_objects.empty()) {
         LOG_CRITICAL(Kernel, "thread is not waiting on any objects!");
         return;
@@ -298,6 +305,7 @@ void Thread::ResumeFromWait() {
 
     wait_objects.clear();
     wait_all = false;
+    wait_address = 0;
 
     if (!(status & (THREADSTATUS_WAITSUSPEND | THREADSTATUS_DORMANT | THREADSTATUS_DEAD))) {
         ChangeReadyState(this, true);

@@ -36,7 +36,7 @@ Thread* WaitObject::ReleaseNextThread() {
 
     auto next_thread = waiting_threads.front();
 
-    next_thread->ReleaseFromWait(this);
+    next_thread->ReleaseWaitObject(this);
     waiting_threads.erase(waiting_threads.begin());
 
     return next_thread.get();

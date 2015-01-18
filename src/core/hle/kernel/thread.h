@@ -69,10 +69,10 @@ public:
     void Stop(const char* reason);
     
     /**
-     * Release an object from the thread's wait list
-     * @param wait_object WaitObject to release from the thread's wait list
+     * Release an acquired wait object
+     * @param wait_object WaitObject to release
      */
-    void ReleaseFromWait(WaitObject* wait_object);
+    void ReleaseWaitObject(WaitObject* wait_object);
 
     /// Resumes a thread from waiting by marking it as "ready"
     void ResumeFromWait();
@@ -120,16 +120,16 @@ SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size);
 void Reschedule();
 
 /// Arbitrate the highest priority thread that is waiting
-Thread* ArbitrateHighestPriorityThread(WaitObject* arbiter, u32 address);
+Thread* ArbitrateHighestPriorityThread(u32 address);
 
 /// Arbitrate all threads currently waiting...
-void ArbitrateAllThreads(WaitObject* arbiter, u32 address);
+void ArbitrateAllThreads(u32 address);
 
 /// Gets the current thread
 Thread* GetCurrentThread();
 
-/// Waits the current thread
-void WaitCurrentThread();
+/// Waits the current thread on a sleep
+void WaitCurrentThread_Sleep();
 
 /**
  * Waits the current thread from a WaitSynchronization call
@@ -140,10 +140,9 @@ void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_al
 
 /**
  * Waits the current thread from an ArbitrateAddress call
- * @param wait_object Kernel object that we are waiting on
  * @param wait_address Arbitration address used to resume from wait
  */
-void WaitCurrentThread_ArbitrateAddress(WaitObject* wait_object, VAddr wait_address);
+void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
 
 /**
  * Schedules an event to wake up the specified thread after the specified delay.

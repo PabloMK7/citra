@@ -105,7 +105,7 @@ static Result SendSyncRequest(Handle handle) {
 
     ResultVal<bool> wait = session->SyncRequest();
     if (wait.Succeeded() && *wait) {
-        Kernel::WaitCurrentThread(); // TODO(bunnei): Is this correct?
+        Kernel::WaitCurrentThread_Sleep(); // TODO(bunnei): Is this correct?
     }
 
     return wait.Code().raw;
@@ -196,7 +196,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         // NOTE: This should deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
-            Kernel::WaitCurrentThread();
+            Kernel::WaitCurrentThread_Sleep();
         }
     }
 
@@ -450,7 +450,7 @@ static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
 
     // Sleep current thread and check for next thread to schedule
-    Kernel::WaitCurrentThread();
+    Kernel::WaitCurrentThread_Sleep();
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);
