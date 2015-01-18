@@ -405,6 +405,7 @@ static Result DuplicateHandle(Handle* out, Handle handle) {
 /// Signals an event
 static Result SignalEvent(Handle evt) {
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", evt);
+    HLE::Reschedule(__func__);
     return Kernel::SignalEvent(evt).raw;
 }
 
