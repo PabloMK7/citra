@@ -7,6 +7,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
+#include "core/hle/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/fs/archive.h"
@@ -71,6 +72,8 @@ void Init() {
     Service::CFG::CFGInit();
 
     RegisterAllModules();
+
+    SharedPage::Init();
 
     LOG_DEBUG(Kernel, "initialized OK");
 }

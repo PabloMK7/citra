@@ -9,6 +9,7 @@
 #include "core/mem_map.h"
 #include "core/hw/hw.h"
 #include "hle/config_mem.h"
+#include "hle/shared_page.h"
 
 namespace Memory {
 
@@ -81,6 +82,10 @@ inline void Read(T &var, const VAddr vaddr) {
     // Config memory
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
         ConfigMem::Read<T>(var, vaddr);
+
+    // Shared page
+    } else if ((vaddr >= SHARED_PAGE_VADDR)  && (vaddr < SHARED_PAGE_VADDR_END)) {
+        SharedPage::Read<T>(var, vaddr);
 
     // DSP memory
     } else if ((vaddr >= DSP_MEMORY_VADDR)  && (vaddr < DSP_MEMORY_VADDR_END)) {
