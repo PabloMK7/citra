@@ -210,7 +210,7 @@ void WaitCurrentThread_Sleep() {
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
-void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_all) {
+void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_all) {
     Thread* thread = GetCurrentThread();
     thread->wait_all = wait_all;
     thread->wait_address = 0;

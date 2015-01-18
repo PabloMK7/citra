@@ -136,7 +136,7 @@ void WaitCurrentThread_Sleep();
  * @param wait_object Kernel object that we are waiting on
  * @param wait_all If true, wait on all objects before resuming (for WaitSynchronizationN only)
  */
-void WaitCurrentThread_WaitSynchronization(WaitObject* wait_object, bool wait_all=false);
+void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_all = false);
 
 /**
  * Waits the current thread from an ArbitrateAddress call

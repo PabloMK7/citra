@@ -115,7 +115,7 @@ static Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    Kernel::WaitObject* object = static_cast<Kernel::WaitObject*>(Kernel::g_handle_table.GetGeneric(handle).get());
+    auto object = Kernel::g_handle_table.GetWaitObject(handle);
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
@@ -163,7 +163,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
     if (handle_count != 0) {
         bool selected = false; // True once an object has been selected
         for (int i = 0; i < handle_count; ++i) {
-            Kernel::WaitObject* object = static_cast<Kernel::WaitObject*>(Kernel::g_handle_table.GetGeneric(handles[i]).get());
+            auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             if (object == nullptr)
                 return InvalidHandle(ErrorModule::Kernel).raw;
 

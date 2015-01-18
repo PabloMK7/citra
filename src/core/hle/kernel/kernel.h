@@ -60,26 +60,34 @@ class Object : NonCopyable {
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
+
     virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Check if this object is available
-     * @return True if the current thread should wait due to this object being unavailable
+     * Check if a thread can wait on the object
+     * @return True if a thread can wait on the object, otherwise false
      */
-    virtual ResultVal<bool> Wait() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
-    }
+    bool IsWaitable() const {
+        switch (GetHandleType()) {
+        case HandleType::Event:
+        case HandleType::Mutex:
+        case HandleType::Thread:
+        case HandleType::Semaphore:
+        case HandleType::Timer:
+            return true;
 
-    /**
-     * Acquire/lock the this object if it is available
-     * @return True if we were able to acquire this object, otherwise false
-     */
-    virtual ResultVal<bool> Acquire() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
+        case HandleType::Unknown:
+        case HandleType::Port:
+        case HandleType::SharedMemory:
+        case HandleType::Redirection:
+        case HandleType::Process:
+        case HandleType::AddressArbiter:
+            return false;
+        }
+
+        return false;
     }
 
 private:
@@ -106,6 +114,24 @@ using SharedPtr = boost::intrusive_ptr<T>;
 /// Class that represents a Kernel object that a thread can be waiting on
 class WaitObject : public Object {
 public:
+
+    /**
+     * Check if this object is available
+     * @return True if the current thread should wait due to this object being unavailable
+     */
+    virtual ResultVal<bool> Wait() {
+        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
+        return UnimplementedFunction(ErrorModule::Kernel);
+    }
+
+    /**
+     * Acquire/lock the this object if it is available
+     * @return True if we were able to acquire this object, otherwise false
+     */
+    virtual ResultVal<bool> Acquire() {
+        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
+        return UnimplementedFunction(ErrorModule::Kernel);
+    }
 
     /**
      * Add a thread to wait on this object
@@ -186,20 +212,33 @@ public:
 
     /**
      * Looks up a handle.
-     * @returns Pointer to the looked-up object, or `nullptr` if the handle is not valid.
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid.
      */
     SharedPtr<Object> GetGeneric(Handle handle) const;
 
     /**
      * Looks up a handle while verifying its type.
-     * @returns Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
-     *          type differs from the handle type `T::HANDLE_TYPE`.
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
+     *         type differs from the handle type `T::HANDLE_TYPE`.
      */
     template <class T>
     SharedPtr<T> Get(Handle handle) const {
         SharedPtr<Object> object = GetGeneric(handle);
         if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
             return boost::static_pointer_cast<T>(std::move(object));
+        }
+        return nullptr;
+    }
+
+    /**
+     * Looks up a handle while verifying that it is an object that a thread can wait on
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or it is
+     *         not a waitable object.
+     */
+    SharedPtr<WaitObject> GetWaitObject(Handle handle) const {
+        SharedPtr<Object> object = GetGeneric(handle);
+        if (object != nullptr && object->IsWaitable()) {
+            return boost::static_pointer_cast<WaitObject>(std::move(object));
         }
         return nullptr;
     }
