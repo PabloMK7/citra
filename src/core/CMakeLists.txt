@@ -53,7 +53,9 @@ set(SRCS
             hle/service/fs/archive.cpp
             hle/service/fs/fs_user.cpp
             hle/service/gsp_gpu.cpp
-            hle/service/hid_user.cpp
+            hle/service/hid/hid.cpp
+            hle/service/hid/hid_user.cpp
+            hle/service/hid/hid_spvr.cpp
             hle/service/http_c.cpp
             hle/service/ir_rst.cpp
             hle/service/ir_u.cpp
@@ -150,7 +152,9 @@ set(HEADERS
             hle/service/fs/archive.h
             hle/service/fs/fs_user.h
             hle/service/gsp_gpu.h
-            hle/service/hid_user.h
+            hle/service/hid/hid.h
+            hle/service/hid/hid_spvr.h
+            hle/service/hid/hid_user.h
             hle/service/http_c.h
             hle/service/ir_rst.h
             hle/service/ir_u.h

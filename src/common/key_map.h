@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core/hle/service/hid_user.h"
+#include "core/hle/service/hid/hid.h"
 
 namespace KeyMap {
 
@@ -35,11 +35,11 @@ int NewDeviceId();
 /**
  * Maps a device-specific key to a PadState.
  */
-void SetKeyMapping(HostDeviceKey key, HID_User::PadState padState);
+void SetKeyMapping(HostDeviceKey key, Service::HID::PadState padState);
 
 /**
  * Gets the PadState that's mapped to the provided device-specific key.
  */
-HID_User::PadState GetPadKey(HostDeviceKey key);
+Service::HID::PadState GetPadKey(HostDeviceKey key);
 
 }
