@@ -22,7 +22,7 @@
 
 namespace Kernel {
 
-ResultVal<bool> Thread::WaitSynchronization(unsigned index) {
+ResultVal<bool> Thread::Wait(unsigned index) {
     const bool wait = status != THREADSTATUS_DORMANT;
     if (wait) {
         AddWaitingThread(GetCurrentThread());
@@ -30,6 +30,10 @@ ResultVal<bool> Thread::WaitSynchronization(unsigned index) {
     }
 
     return MakeResult<bool>(wait);
+}
+
+ResultVal<bool> Thread::Acquire() {
+    return MakeResult<bool>(true);
 }
 
 // Lists all thread ids that aren't deleted/etc.

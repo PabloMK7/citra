@@ -127,7 +127,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    ResultVal<bool> wait = object->WaitSynchronization();
+    ResultVal<bool> wait = object->Wait();
 
     // Check for next thread to schedule
     if (wait.Succeeded() && *wait) {
@@ -137,6 +137,8 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
         Kernel::GetCurrentThread()->SetWaitAll(false);
 
         HLE::Reschedule(__func__);
+    } else {
+        object->Acquire();
     }
 
     return wait.Code().raw;
@@ -163,15 +165,14 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
             if (object == nullptr)
                 return InvalidHandle(ErrorModule::Kernel).raw;
 
-            ResultVal<bool> wait = object->WaitSynchronization(handle_index);
+            ResultVal<bool> wait = object->Wait(handle_index);
 
             wait_thread = (wait.Succeeded() && *wait);
 
             // If this object waited and we are waiting on all objects to synchronize
-            if (wait_thread && wait_all) {
+            if (wait_thread && wait_all)
                 // Enforce later on that this thread does not continue
                 wait_all_succeeded = true;
-            }
 
             // If this object synchronized and we are not waiting on all objects to synchronize
             if (!wait_thread && !wait_all)

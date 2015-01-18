@@ -70,7 +70,8 @@ public:
     inline bool IsSuspended() const { return (status & THREADSTATUS_SUSPEND) != 0; }
     inline bool IsIdle() const { return idle; }
 
-    ResultVal<bool> WaitSynchronization(unsigned index) override;
+    ResultVal<bool> Wait(unsigned index) override;
+    ResultVal<bool> Acquire() override;
 
     s32 GetPriority() const { return current_priority; }
     void SetPriority(s32 priority);

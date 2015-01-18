@@ -32,17 +32,26 @@ public:
         return available_count > 0;
     }
 
-    ResultVal<bool> WaitSynchronization(unsigned index) override {
+    ResultVal<bool> Wait(unsigned index) override {
         bool wait = !IsAvailable();
 
         if (wait) {
             Kernel::WaitCurrentThread_WaitSynchronization(WAITTYPE_SEMA, this, index);
             AddWaitingThread(GetCurrentThread());
-        } else {
-            --available_count;
         }
 
         return MakeResult<bool>(wait);
+    }
+
+    ResultVal<bool> Acquire() override {
+        bool res = false;
+
+        if (IsAvailable()) {
+            --available_count;
+            res = true;
+        }
+
+        return MakeResult<bool>(res);
     }
 };
 

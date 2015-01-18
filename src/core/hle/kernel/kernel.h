@@ -65,11 +65,20 @@ public:
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Wait for kernel object to synchronize.
+     * Wait the current thread for kernel object to synchronize.
      * @param index Index of wait object (only applies to WaitSynchronizationN)
      * @return True if the current thread should wait as a result of the wait
      */
-    virtual ResultVal<bool> WaitSynchronization(unsigned index=0) {
+    virtual ResultVal<bool> Wait(unsigned index = 0) {
+        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
+        return UnimplementedFunction(ErrorModule::Kernel);
+    }
+
+    /**
+     * Acquire/lock the kernel object if it is available
+     * @return True if we were able to acquire the kernel object, otherwise false
+     */
+    virtual ResultVal<bool> Acquire() {
         LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
         return UnimplementedFunction(ErrorModule::Kernel);
     }
