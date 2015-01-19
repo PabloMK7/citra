@@ -33,6 +33,10 @@ public:
     }
 
     ResultVal<bool> Acquire() override {
+        // Release the event if it's not sticky...
+        if (reset_type != RESETTYPE_STICKY)
+            signaled = false;
+
         return MakeResult<bool>(true);
     }
 };
