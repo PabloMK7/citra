@@ -410,10 +410,21 @@ void LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, un
         }
         break;
     case 2:
-        DEBUG_MSG;
+        if (shift_imm == 0) { // ASR #32
+            if (BIT(rm, 31) == 1)
+                index = 0xFFFFFFFF;
+            else
+                index = 0;
+        } else {
+            index = static_cast<int>(rm) >> shift_imm;
+        }
         break;
     case 3:
-        DEBUG_MSG;
+        if (shift_imm == 0) {
+            index = (cpu->CFlag << 31) | (rm >> 1);
+        } else {
+            index = ROTATE_RIGHT_32(rm, shift_imm);
+        }
         break;
     }
 
@@ -449,10 +460,21 @@ void LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst, u
         }
         break;
     case 2:
-        DEBUG_MSG;
+        if (shift_imm == 0) { // ASR #32
+            if (BIT(rm, 31) == 1)
+                index = 0xFFFFFFFF;
+            else
+                index = 0;
+        } else {
+            index = static_cast<int>(rm) >> shift_imm;
+        }
         break;
     case 3:
-        DEBUG_MSG;
+        if (shift_imm == 0) {
+            index = (cpu->CFlag << 31) | (rm >> 1);
+        } else {
+            index = ROTATE_RIGHT_32(rm, shift_imm);
+        }
         break;
     }
 
@@ -654,8 +676,8 @@ void LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsign
         }
         break;
     case 2:
-        if (shift_imm == 0){ // ASR #32
-            if (rm >> 31)
+        if (shift_imm == 0) { // ASR #32
+            if (BIT(rm, 31) == 1)
                 index = 0xFFFFFFFF;
             else
                 index = 0;
@@ -664,7 +686,11 @@ void LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsign
         }
         break;
     case 3:
-        DEBUG_MSG;
+        if (shift_imm == 0) {
+            index = (cpu->CFlag << 31) | (rm >> 1);
+        } else {
+            index = ROTATE_RIGHT_32(rm, shift_imm);
+        }
         break;
     }
 
