@@ -71,6 +71,7 @@ public:
      */
     bool IsWaitable() const {
         switch (GetHandleType()) {
+        case HandleType::Session:
         case HandleType::Event:
         case HandleType::Mutex:
         case HandleType::Thread:

@@ -39,7 +39,7 @@ Thread* WaitObject::ReleaseNextThread() {
 
     next_thread->ReleaseWaitObject(this);
 
-    return next_thread.get();
+    return next_thread;
 }
 
 void WaitObject::WakeupAllWaitingThreads() {
