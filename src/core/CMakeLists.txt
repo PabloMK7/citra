@@ -41,6 +41,7 @@ set(SRCS
             hle/service/apt_s.cpp
             hle/service/apt_u.cpp
             hle/service/boss_u.cpp
+            hle/service/cam_u.cpp
             hle/service/cecd_u.cpp
             hle/service/cfg/cfg.cpp
             hle/service/cfg/cfg_i.cpp
@@ -139,6 +140,7 @@ set(HEADERS
             hle/service/apt_s.h
             hle/service/apt_u.h
             hle/service/boss_u.h
+            hle/service/cam_u.h
             hle/service/cecd_u.h
             hle/service/cfg/cfg.h
             hle/service/cfg/cfg_i.h

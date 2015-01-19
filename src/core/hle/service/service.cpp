@@ -14,6 +14,7 @@
 #include "core/hle/service/apt_s.h"
 #include "core/hle/service/apt_u.h"
 #include "core/hle/service/boss_u.h"
+#include "core/hle/service/cam_u.h"
 #include "core/hle/service/cecd_u.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"
@@ -92,6 +93,7 @@ void Init() {
     g_manager->AddService(new APT_S::Interface);
     g_manager->AddService(new APT_U::Interface);
     g_manager->AddService(new BOSS_U::Interface);
+    g_manager->AddService(new CAM_U::Interface);
     g_manager->AddService(new CECD_U::Interface);
     g_manager->AddService(new CFG_I::Interface);
     g_manager->AddService(new CFG_S::Interface);
