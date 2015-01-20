@@ -28,6 +28,6 @@ Handle CreateMutex(bool initial_locked, const std::string& name="Unknown");
  * Releases all the mutexes held by the specified thread
  * @param thread Thread that is holding the mutexes
  */
-void ReleaseThreadMutexes(Handle thread);
+void ReleaseThreadMutexes(Thread* thread);
 
 } // namespace

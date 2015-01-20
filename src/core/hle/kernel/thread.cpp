@@ -100,7 +100,7 @@ static bool CheckWait_AddressArbiter(const Thread* thread, VAddr wait_address) {
 /// Stops the current thread
 void Thread::Stop(const char* reason) {
     // Release all the mutexes that this thread holds
-    ReleaseThreadMutexes(GetHandle());
+    ReleaseThreadMutexes(this);
 
     ChangeReadyState(this, false);
     status = THREADSTATUS_DORMANT;
