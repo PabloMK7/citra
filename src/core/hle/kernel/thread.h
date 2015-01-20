@@ -134,7 +134,7 @@ void WaitCurrentThread(WaitType wait_type, Object* wait_object = GetCurrentThrea
 
 /**
  * Schedules an event to wake up the specified thread after the specified delay.
- * @param handle The thread handle.
+ * @param thread The thread to wake after the delay.
  * @param nanoseconds The time this thread will be allowed to sleep for.
  */
 void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
