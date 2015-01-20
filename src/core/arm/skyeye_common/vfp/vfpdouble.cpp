@@ -1400,7 +1400,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
         u32 except;
         char type;
 
-        type = fop->flags & OP_SD ? 's' : 'd';
+        type = (fop->flags & OP_SD) ? 's' : 'd';
         if (op == FOP_EXT)
             pr_debug("VFP: itr%d (%c%u) = op[%u] (d%u)\n",
                      vecitr >> FPSCR_LENGTH_BIT,
