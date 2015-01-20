@@ -4177,7 +4177,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 cpu->Reg[14] = (cpu->Reg[15] + GET_INST_SIZE(cpu));
                 cpu->TFlag = 0x1;
                 int signed_int = inst_cream->val.signed_immed_24;
-                signed_int = (signed_int) & 0x800000 ? (0x3F000000 | signed_int) : signed_int;
+                signed_int = (signed_int & 0x800000) ? (0x3F000000 | signed_int) : signed_int;
                 signed_int = signed_int << 2;
                 cpu->Reg[15] = cpu->Reg[15] + 8 + signed_int + (BIT(inst, 24) << 1);
             }
