@@ -32,7 +32,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -59,6 +59,7 @@
      <string>&amp;View</string>
     </property>
     <addaction name="action_Single_Window_Mode"/>
+    <addaction name="actionDisplay_widget_title_bars"/>
     <addaction name="action_Hotkeys"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -73,17 +74,17 @@
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-   <action name="action_Load_File">
-     <property name="text">
-       <string>Load File...</string>
-     </property>
-   </action>
-   <action name="action_Load_Symbol_Map">
-     <property name="text">
-       <string>Load Symbol Map...</string>
-     </property>
-   </action>
-   <action name="action_Exit">
+  <action name="action_Load_File">
+   <property name="text">
+    <string>Load File...</string>
+   </property>
+  </action>
+  <action name="action_Load_Symbol_Map">
+   <property name="text">
+    <string>Load Symbol Map...</string>
+   </property>
+  </action>
+  <action name="action_Exit">
    <property name="text">
     <string>E&amp;xit</string>
    </property>
@@ -101,28 +102,28 @@
     <string>&amp;Pause</string>
    </property>
   </action>
-   <action name="action_Stop">
-     <property name="enabled">
-       <bool>false</bool>
-     </property>
-     <property name="text">
-       <string>&amp;Stop</string>
-     </property>
-   </action>
-   <action name="action_About">
-     <property name="text">
-       <string>About Citra</string>
-     </property>
-   </action>
-   <action name="action_Single_Window_Mode">
-     <property name="checkable">
-       <bool>true</bool>
-     </property>
-     <property name="text">
-       <string>Single Window Mode</string>
-     </property>
-   </action>
-   <action name="action_Hotkeys">
+  <action name="action_Stop">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Stop</string>
+   </property>
+  </action>
+  <action name="action_About">
+   <property name="text">
+    <string>About Citra</string>
+   </property>
+  </action>
+  <action name="action_Single_Window_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Single Window Mode</string>
+   </property>
+  </action>
+  <action name="action_Hotkeys">
    <property name="text">
     <string>Configure &amp;Hotkeys ...</string>
    </property>
@@ -130,6 +131,14 @@
   <action name="action_Configure">
    <property name="text">
     <string>Configure ...</string>
+   </property>
+  </action>
+  <action name="actionDisplay_widget_title_bars">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Display Dock Widget Headers</string>
    </property>
   </action>
  </widget>
@@ -167,8 +176,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionDisplay_widget_title_bars</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>OnDisplayTitleBars(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>540</x>
+     <y>364</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>OnConfigure()</slot>
+  <slot>OnDisplayTitleBars(bool)</slot>
  </slots>
 </ui>
