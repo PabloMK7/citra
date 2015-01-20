@@ -85,10 +85,11 @@ static void ChangeReadyState(Thread* t, bool ready) {
 
 /// Check if a thread is waiting on a the specified wait object
 static bool CheckWait_WaitObject(const Thread* thread, WaitObject* wait_object) {
-    for (auto itr = thread->wait_objects.begin(); itr != thread->wait_objects.end(); ++itr) {
-        if (*itr == wait_object)
-            return (thread->IsWaiting());
-    }
+    auto itr = std::find(thread->wait_objects.begin(), thread->wait_objects.end(), wait_object);
+
+    if (itr != thread->wait_objects.end())
+        return thread->IsWaiting();
+
     return false;
 }
 
