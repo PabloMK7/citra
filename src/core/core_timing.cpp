@@ -33,7 +33,7 @@ struct EventType
     const char* name;
 };
 
-std::vector<EventType> event_types;
+static std::vector<EventType> event_types;
 
 struct BaseEvent
 {
@@ -44,30 +44,30 @@ struct BaseEvent
 
 typedef LinkedListItem<BaseEvent> Event;
 
-Event* first;
-Event* ts_first;
-Event* ts_last;
+static Event* first;
+static Event* ts_first;
+static Event* ts_last;
 
 // event pools
-Event* event_pool = 0;
-Event* event_ts_pool = 0;
-int allocated_ts_events = 0;
+static Event* event_pool = nullptr;
+static Event* event_ts_pool = nullptr;
+static int allocated_ts_events = 0;
 // Optimization to skip MoveEvents when possible.
-std::atomic<bool> has_ts_events(false);
+static std::atomic<bool> has_ts_events(false);
 
 int g_slice_length;
 
-s64 global_timer;
-s64 idled_cycles;
-s64 last_global_time_ticks;
-s64 last_global_time_us;
+static s64 global_timer;
+static s64 idled_cycles;
+static s64 last_global_time_ticks;
+static s64 last_global_time_us;
 
 static std::recursive_mutex external_event_section;
 
 // Warning: not included in save state.
 using AdvanceCallback = void(int cycles_executed);
-AdvanceCallback* advance_callback = nullptr;
-std::vector<MHzChangeCallback> mhz_change_callbacks;
+static AdvanceCallback* advance_callback = nullptr;
+static std::vector<MHzChangeCallback> mhz_change_callbacks;
 
 void FireMhzChange() {
     for (auto callback : mhz_change_callbacks)
