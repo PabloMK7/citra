@@ -42,7 +42,7 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
 
 /**
  * Closes an archive
- * @param id_code IdCode of the archive to open
+ * @param handle Handle to the archive to close
  */
 ResultCode CloseArchive(ArchiveHandle handle);
 

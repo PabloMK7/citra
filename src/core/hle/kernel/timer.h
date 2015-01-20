@@ -33,7 +33,7 @@ ResultCode ClearTimer(Handle handle);
 
 /**
  * Creates a timer
- * @param Handle to newly created Timer object
+ * @param handle Handle to the newly created Timer object
  * @param reset_type ResetType describing how to create the timer
  * @param name Optional name of timer
  * @return ResultCode of the error

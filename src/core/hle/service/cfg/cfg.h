@@ -110,7 +110,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output);
  * The config savegame file in the filesystem is not updated.
  * @param block_id The id of the block we want to create
  * @param size The size of the block we want to create
- * @param flag The flags of the new block
+ * @param flags The flags of the new block
  * @param data A pointer containing the data we will write to the new block
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
