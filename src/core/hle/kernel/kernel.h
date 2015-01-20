@@ -120,13 +120,10 @@ public:
      * Check if the current thread should wait until the object is available
      * @return True if the current thread should wait due to this object being unavailable
      */
-    virtual ResultVal<bool> ShouldWait() = 0;
+    virtual bool ShouldWait() = 0;
 
-    /**
-     * Acquire/lock the object if it is available
-     * @return True if we were able to acquire this object, otherwise false
-     */
-    virtual ResultVal<bool> Acquire() = 0;
+    /// Acquire/lock the object if it is available
+    virtual void Acquire() = 0;
 
     /**
      * Add a thread to wait on this object

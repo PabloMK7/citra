@@ -27,8 +27,8 @@ public:
     std::string name;                           ///< Name of mutex (optional)
     SharedPtr<Thread> current_thread;           ///< Thread that has acquired the mutex
 
-    ResultVal<bool> ShouldWait() override;
-    ResultVal<bool> Acquire() override;
+    bool ShouldWait() override;
+    void Acquire() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,20 +159,14 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
     return handle;
 }
 
-ResultVal<bool> Mutex::ShouldWait() {
-    return MakeResult<bool>(locked && (current_thread != GetCurrentThread()));
+bool Mutex::ShouldWait() {
+    return locked && current_thread != GetCurrentThread();
 }
 
-ResultVal<bool> Mutex::Acquire() {
-    bool res = false;
-
-    if (!locked) {
-        // Lock the mutex when the first thread accesses it
-        locked = true;
-        res = true;
-        MutexAcquireLock(this);
-    }
-
-    return MakeResult<bool>(res);
+void Mutex::Acquire() {
+    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    locked = true;
+    MutexAcquireLock(this);
 }
+
 } // namespace

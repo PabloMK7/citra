@@ -22,12 +22,12 @@
 
 namespace Kernel {
 
-ResultVal<bool> Thread::ShouldWait() {
-    return MakeResult<bool>(status != THREADSTATUS_DORMANT);
+bool Thread::ShouldWait() {
+    return status != THREADSTATUS_DORMANT;
 }
 
-ResultVal<bool> Thread::Acquire() {
-    return MakeResult<bool>(true);
+void Thread::Acquire() {
+    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
 }
 
 // Lists all thread ids that aren't deleted/etc.
@@ -269,9 +269,7 @@ void Thread::ReleaseWaitObject(WaitObject* wait_object) {
 
     // Iterate through all waiting objects to check availability...
     for (auto itr = wait_objects.begin(); itr != wait_objects.end(); ++itr) {
-        auto res = (*itr)->ShouldWait();
-
-        if (*res && res.Succeeded())
+        if ((*itr)->ShouldWait())
             wait_all_failed = true;
 
         // The output should be the last index of wait_object

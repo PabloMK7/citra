@@ -57,12 +57,12 @@ public:
     // TODO(bunnei): These functions exist to satisfy a hardware test with a Session object
     // passed into WaitSynchronization. Figure out the meaning of them.
 
-    ResultVal<bool> ShouldWait() override {
-        return MakeResult<bool>(true);
+    bool ShouldWait() override {
+        return true;
     }
 
-    ResultVal<bool> Acquire() override {
-        return MakeResult<bool>(false);
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
     }
 };
 

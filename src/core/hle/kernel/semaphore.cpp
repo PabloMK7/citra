@@ -24,27 +24,13 @@ public:
     s32 available_count;                        ///< Number of free slots left in the semaphore
     std::string name;                           ///< Name of semaphore (optional)
 
-    /**
-     * Tests whether a semaphore still has free slots
-     * @return Whether the semaphore is available
-     */
-    bool IsAvailable() const {
-        return available_count > 0;
+    bool ShouldWait() override {
+        return available_count <= 0;
     }
 
-    ResultVal<bool> ShouldWait() override {
-        return MakeResult<bool>(!IsAvailable());
-    }
-
-    ResultVal<bool> Acquire() override {
-        bool res = false;
-
-        if (IsAvailable()) {
-            --available_count;
-            res = true;
-        }
-
-        return MakeResult<bool>(res);
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+        --available_count;
     }
 };
 
@@ -84,8 +70,8 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
 
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
-    while (semaphore->IsAvailable() && semaphore->ReleaseNextThread() != nullptr) {
-        --semaphore->available_count;
+    while (!semaphore->ShouldWait() && semaphore->ReleaseNextThread() != nullptr) {
+        semaphore->Acquire();
     }
 
     return RESULT_SUCCESS;

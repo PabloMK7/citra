@@ -29,12 +29,12 @@ public:
     u64 initial_delay;                      ///< The delay until the timer fires for the first time
     u64 interval_delay;                     ///< The delay until the timer fires after the first time
 
-    ResultVal<bool> ShouldWait() override {
-        return MakeResult<bool>(!signaled);
+    bool ShouldWait() override {
+        return !signaled;
     }
 
-    ResultVal<bool> Acquire() override {
-        return MakeResult<bool>(true);
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
     }
 };
 

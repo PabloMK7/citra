@@ -28,16 +28,16 @@ public:
     bool signaled;                          ///< Whether the event has already been signaled
     std::string name;                       ///< Name of event (optional)
 
-    ResultVal<bool> ShouldWait() override {
-        return MakeResult<bool>(!signaled);
+    bool ShouldWait() override {
+        return !signaled;
     }
 
-    ResultVal<bool> Acquire() override {
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+
         // Release the event if it's not sticky...
         if (reset_type != RESETTYPE_STICKY)
             signaled = false;
-
-        return MakeResult<bool>(true);
     }
 };
 
