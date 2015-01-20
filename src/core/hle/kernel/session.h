@@ -54,10 +54,15 @@ public:
      */
     virtual ResultVal<bool> SyncRequest() = 0;
 
-    ResultVal<bool> Wait() override {
-        // TODO(bunnei): This function exists to satisfy a hardware test with a Session object
-        // passed into WaitSynchronization. Not sure if it's possible for this to ever be false?
+    // TODO(bunnei): These functions exist to satisfy a hardware test with a Session object
+    // passed into WaitSynchronization. Figure out the meaning of them.
+
+    ResultVal<bool> ShouldWait() override {
         return MakeResult<bool>(true);
+    }
+
+    ResultVal<bool> Acquire() override {
+        return MakeResult<bool>(false);
     }
 };
 

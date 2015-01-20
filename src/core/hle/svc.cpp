@@ -122,7 +122,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    ResultVal<bool> wait = object->Wait();
+    ResultVal<bool> wait = object->ShouldWait();
 
     // Check for next thread to schedule
     if (wait.Succeeded() && *wait) {
@@ -167,7 +167,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
             if (object == nullptr)
                 return InvalidHandle(ErrorModule::Kernel).raw;
 
-            ResultVal<bool> wait = object->Wait();
+            ResultVal<bool> wait = object->ShouldWait();
 
             // Check if the current thread should wait on this object...
             if (wait.Succeeded() && *wait) {

@@ -22,7 +22,7 @@
 
 namespace Kernel {
 
-ResultVal<bool> Thread::Wait() {
+ResultVal<bool> Thread::ShouldWait() {
     return MakeResult<bool>(status != THREADSTATUS_DORMANT);
 }
 
@@ -269,7 +269,7 @@ void Thread::ReleaseWaitObject(WaitObject* wait_object) {
 
     // Iterate through all waiting objects to check availability...
     for (auto itr = wait_objects.begin(); itr != wait_objects.end(); ++itr) {
-        auto res = (*itr)->Wait();
+        auto res = (*itr)->ShouldWait();
 
         if (*res && res.Succeeded())
             wait_all_failed = true;

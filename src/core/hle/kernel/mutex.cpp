@@ -27,7 +27,7 @@ public:
     std::string name;                           ///< Name of mutex (optional)
     SharedPtr<Thread> current_thread;           ///< Thread that has acquired the mutex
 
-    ResultVal<bool> Wait() override;
+    ResultVal<bool> ShouldWait() override;
     ResultVal<bool> Acquire() override;
 };
 
@@ -159,7 +159,7 @@ Handle CreateMutex(bool initial_locked, const std::string& name) {
     return handle;
 }
 
-ResultVal<bool> Mutex::Wait() {
+ResultVal<bool> Mutex::ShouldWait() {
     return MakeResult<bool>(locked && (current_thread != GetCurrentThread()));
 }
 

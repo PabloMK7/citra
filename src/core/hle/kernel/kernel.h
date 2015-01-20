@@ -117,22 +117,16 @@ class WaitObject : public Object {
 public:
 
     /**
-     * Check if this object is available
+     * Check if the current thread should wait until the object is available
      * @return True if the current thread should wait due to this object being unavailable
      */
-    virtual ResultVal<bool> Wait() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
-    }
+    virtual ResultVal<bool> ShouldWait() = 0;
 
     /**
-     * Acquire/lock the this object if it is available
+     * Acquire/lock the object if it is available
      * @return True if we were able to acquire this object, otherwise false
      */
-    virtual ResultVal<bool> Acquire() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
-    }
+    virtual ResultVal<bool> Acquire() = 0;
 
     /**
      * Add a thread to wait on this object

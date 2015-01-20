@@ -29,7 +29,7 @@ public:
     u64 initial_delay;                      ///< The delay until the timer fires for the first time
     u64 interval_delay;                     ///< The delay until the timer fires after the first time
 
-    ResultVal<bool> Wait() override {
+    ResultVal<bool> ShouldWait() override {
         return MakeResult<bool>(!signaled);
     }
 

@@ -28,7 +28,7 @@ public:
     bool signaled;                          ///< Whether the event has already been signaled
     std::string name;                       ///< Name of event (optional)
 
-    ResultVal<bool> Wait() override {
+    ResultVal<bool> ShouldWait() override {
         return MakeResult<bool>(!signaled);
     }
 

@@ -32,7 +32,7 @@ public:
         return available_count > 0;
     }
 
-    ResultVal<bool> Wait() override {
+    ResultVal<bool> ShouldWait() override {
         return MakeResult<bool>(!IsAvailable());
     }
 
