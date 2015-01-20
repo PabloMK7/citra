@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "common/common.h"
+#include "common/file_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Loader namespace
@@ -37,10 +38,14 @@ enum class ResultStatus {
     ErrorMemoryAllocationFailed,
 };
 
+static u32 MakeMagic(char a, char b, char c, char d) {
+    return a | b << 8 | c << 16 | d << 24;
+}
+
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    AppLoader() { }
+    AppLoader(std::unique_ptr<FileUtil::IOFile>&& file) : file(std::move(file)) { }
     virtual ~AppLoader() { }
 
     /**
@@ -93,14 +98,11 @@ public:
     virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) const {
         return ResultStatus::ErrorNotImplemented;
     }
-};
 
-/**
- * Identifies the type of a bootable file
- * @param filename String filename of bootable file
- * @return FileType of file
- */
-FileType IdentifyFile(const std::string &filename);
+protected:
+    std::unique_ptr<FileUtil::IOFile> file;
+    bool                              is_loaded = false;
+};
 
 /**
  * Identifies and loads a bootable file

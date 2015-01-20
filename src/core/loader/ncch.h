@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common.h"
-#include "common/file_util.h"
 
 #include "core/loader/loader.h"
 
@@ -14,7 +13,7 @@
 
 struct NCCH_Header {
     u8 signature[0x100];
-    char magic[4];
+    u32 magic;
     u32 content_size;
     u8 partition_id[8];
     u16 maker_code;
@@ -147,8 +146,14 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class AppLoader_NCCH final : public AppLoader {
 public:
-    AppLoader_NCCH(const std::string& filename);
-    ~AppLoader_NCCH() override;
+    AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
+
+    /**
+     * Returns the type of the file
+     * @param file FileUtil::IOFile open file
+     * @return FileType found, or FileType::Error if this loader doesn't know it
+     */
+    static FileType IdentifyType(FileUtil::IOFile& file);
 
     /**
      * Load the application
@@ -213,14 +218,11 @@ private:
      */
     ResultStatus LoadExec() const;
 
-    std::string     filename;
+    bool            is_compressed = false;
 
-    bool            is_loaded;
-    bool            is_compressed;
-
-    u32             entry_point;
-    u32             ncch_offset; // Offset to NCCH header, can be 0 or after NCSD header
-    u32             exefs_offset;
+    u32             entry_point = 0;
+    u32             ncch_offset = 0; // Offset to NCCH header, can be 0 or after NCSD header
+    u32             exefs_offset = 0;
 
     NCCH_Header     ncch_header;
     ExeFs_Header    exefs_header;

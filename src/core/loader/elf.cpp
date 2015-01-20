@@ -18,25 +18,25 @@
 
 // File type
 enum ElfType {
-    ET_NONE = 0,
-    ET_REL = 1,
-    ET_EXEC = 2,
-    ET_DYN = 3,
-    ET_CORE = 4,
+    ET_NONE   = 0,
+    ET_REL    = 1,
+    ET_EXEC   = 2,
+    ET_DYN    = 3,
+    ET_CORE   = 4,
     ET_LOPROC = 0xFF00,
     ET_HIPROC = 0xFFFF,
 };
 
 // Machine/Architecture
 enum ElfMachine {
-    EM_NONE = 0,
-    EM_M32 = 1,
+    EM_NONE  = 0,
+    EM_M32   = 1,
     EM_SPARC = 2,
-    EM_386 = 3,
-    EM_68K = 4,
-    EM_88K = 5,
-    EM_860 = 7,
-    EM_MIPS = 8
+    EM_386   = 3,
+    EM_68K   = 4,
+    EM_88K   = 5,
+    EM_860   = 7,
+    EM_MIPS  = 8
 };
 
 // File version
@@ -53,12 +53,6 @@ enum ElfMachine {
 #define EI_VERSION 6
 #define EI_PAD     7
 #define EI_NIDENT 16
-
-// Magic number
-#define ELFMAG0 0x7F
-#define ELFMAG1  'E'
-#define ELFMAG2  'L'
-#define ELFMAG3  'F'
 
 // Sections constants
 
@@ -83,10 +77,10 @@ enum ElfMachine {
 // Section flags
 enum ElfSectionFlags
 {
-    SHF_WRITE = 0x1,
-    SHF_ALLOC = 0x2,
+    SHF_WRITE     = 0x1,
+    SHF_ALLOC     = 0x2,
     SHF_EXECINSTR = 0x4,
-    SHF_MASKPROC = 0xF0000000,
+    SHF_MASKPROC  = 0xF0000000,
 };
 
 // Segment types
@@ -100,11 +94,11 @@ enum ElfSectionFlags
 #define PT_LOPROC  0x70000000
 #define PT_HIPROC  0x7FFFFFFF
 
-typedef unsigned int  Elf32_Addr;
+typedef unsigned int   Elf32_Addr;
 typedef unsigned short Elf32_Half;
-typedef unsigned int  Elf32_Off;
-typedef signed   int  Elf32_Sword;
-typedef unsigned int  Elf32_Word;
+typedef unsigned int   Elf32_Off;
+typedef signed   int   Elf32_Sword;
+typedef unsigned int   Elf32_Word;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ELF file header
@@ -188,7 +182,6 @@ private:
 
 public:
     ElfReader(void *ptr);
-    ~ElfReader() { }
 
     u32 Read32(int off) const { return base32[off >> 2]; }
 
@@ -197,7 +190,7 @@ public:
     ElfMachine GetMachine() const { return (ElfMachine)(header->e_machine); }
     u32 GetEntryPoint() const { return entryPoint; }
     u32 GetFlags() const { return (u32)(header->e_flags); }
-    bool LoadInto(u32 vaddr);
+    void LoadInto(u32 vaddr);
     bool LoadSymbols();
 
     int GetNumSegments() const { return (int)(header->e_phnum); }
@@ -229,11 +222,11 @@ public:
 
 ElfReader::ElfReader(void *ptr) {
     base = (char*)ptr;
-    base32 = (u32 *)ptr;
+    base32 = (u32*)ptr;
     header = (Elf32_Ehdr*)ptr;
 
-    segments = (Elf32_Phdr *)(base + header->e_phoff);
-    sections = (Elf32_Shdr *)(base + header->e_shoff);
+    segments = (Elf32_Phdr*)(base + header->e_phoff);
+    sections = (Elf32_Shdr*)(base + header->e_shoff);
 
     entryPoint = header->e_entry;
 
@@ -245,7 +238,7 @@ const char *ElfReader::GetSectionName(int section) const {
         return nullptr;
 
     int name_offset = sections[section].sh_name;
-    char *ptr = (char*)GetSectionDataPtr(header->e_shstrndx);
+    const char* ptr = (char*)GetSectionDataPtr(header->e_shstrndx);
 
     if (ptr)
         return ptr + name_offset;
@@ -253,7 +246,7 @@ const char *ElfReader::GetSectionName(int section) const {
     return nullptr;
 }
 
-bool ElfReader::LoadInto(u32 vaddr) {
+void ElfReader::LoadInto(u32 vaddr) {
     LOG_DEBUG(Loader, "String section: %i", header->e_shstrndx);
 
     // Should we relocate?
@@ -271,20 +264,19 @@ bool ElfReader::LoadInto(u32 vaddr) {
     u32 segment_addr[32];
     u32 base_addr = relocate ? vaddr : 0;
 
-    for (int i = 0; i < header->e_phnum; i++) {
-        Elf32_Phdr *p = segments + i;
+    for (unsigned i = 0; i < header->e_phnum; i++) {
+        Elf32_Phdr* p = segments + i;
         LOG_DEBUG(Loader, "Type: %i Vaddr: %08x Filesz: %i Memsz: %i ", p->p_type, p->p_vaddr,
-            p->p_filesz, p->p_memsz);
+                  p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
             segment_addr[i] = base_addr + p->p_vaddr;
             memcpy(Memory::GetPointer(segment_addr[i]), GetSegmentPtr(i), p->p_filesz);
             LOG_DEBUG(Loader, "Loadable Segment Copied to %08x, size %08x", segment_addr[i],
-                p->p_memsz);
+                      p->p_memsz);
         }
     }
     LOG_DEBUG(Loader, "Done loading.");
-    return true;
 }
 
 SectionID ElfReader::GetSectionByName(const char *name, int firstSection) const {
@@ -305,9 +297,9 @@ bool ElfReader::LoadSymbols() {
         const char *stringBase = (const char *)GetSectionDataPtr(stringSection);
 
         //We have a symbol table!
-        Elf32_Sym *symtab = (Elf32_Sym *)(GetSectionDataPtr(sec));
+        Elf32_Sym* symtab = (Elf32_Sym *)(GetSectionDataPtr(sec));
         int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
-        for (int sym = 0; sym < numSymbols; sym++) {
+        for (unsigned sym = 0; sym < numSymbols; sym++) {
             int size = symtab[sym].st_size;
             if (size == 0)
                 continue;
@@ -330,40 +322,38 @@ bool ElfReader::LoadSymbols() {
 
 namespace Loader {
 
-/// AppLoader_ELF constructor
-AppLoader_ELF::AppLoader_ELF(const std::string& filename) : is_loaded(false) {
-    this->filename = filename;
+FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
+    u32 magic;
+    file.Seek(0, SEEK_SET);
+    if (1 != file.ReadArray<u32>(&magic, 1))
+        return FileType::Error;
+
+    if (MakeMagic('\x7f', 'E', 'L', 'F') == magic)
+        return FileType::ELF;
+
+    return FileType::Error;
 }
 
-/// AppLoader_NCCH destructor
-AppLoader_ELF::~AppLoader_ELF() {
-}
-
-/**
- * Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
- * @param error_string Pointer to string to put error message if an error has occurred
- * @todo Move NCSD parsing out of here and create a separate function for loading these
- * @return True on success, otherwise false
- */
 ResultStatus AppLoader_ELF::Load() {
-    LOG_INFO(Loader, "Loading ELF file %s...", filename.c_str());
-
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    FileUtil::IOFile file(filename, "rb");
-
-    if (file.IsOpen()) {
-        u32 size = (u32)file.GetSize();
-        std::unique_ptr<u8[]> buffer(new u8[size]);
-        file.ReadBytes(&buffer[0], size);
-
-        ElfReader elf_reader(&buffer[0]);
-        elf_reader.LoadInto(0x00100000);
-        Kernel::LoadExec(elf_reader.GetEntryPoint());
-    } else {
+    if (!file->IsOpen())
         return ResultStatus::Error;
-    }
+
+    // Reset read pointer in case this file has been read before.
+    file->Seek(0, SEEK_SET);
+
+    u32 size = static_cast<u32>(file->GetSize());
+    std::unique_ptr<u8[]> buffer(new u8[size]);
+    if (file->ReadBytes(&buffer[0], size) != size)
+        return ResultStatus::Error;
+
+    ElfReader elf_reader(&buffer[0]);
+    elf_reader.LoadInto(0x00100000);
+    Kernel::LoadExec(elf_reader.GetEntryPoint());
+
+    is_loaded = true;
     return ResultStatus::Success;
 }
 
