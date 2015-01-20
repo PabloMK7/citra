@@ -47,7 +47,7 @@ ResultCode SignalEvent(const Handle handle) {
         return InvalidHandle(ErrorModule::Kernel);
 
     evt->signaled = true;
-    evt->ReleaseAllWaitingThreads();
+    evt->WakeupAllWaitingThreads();
 
     return RESULT_SUCCESS;
 }

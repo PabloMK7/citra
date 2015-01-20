@@ -90,7 +90,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
     timer->signaled = true;
 
     // Resume all waiting threads
-    timer->ReleaseAllWaitingThreads();
+    timer->WakeupAllWaitingThreads();
 
     if (timer->reset_type == RESETTYPE_ONESHOT)
         timer->signaled = false;

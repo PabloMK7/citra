@@ -138,13 +138,13 @@ public:
     void RemoveWaitingThread(Thread* thead);
 
     /**
-     * Releases (and removes) the next thread waiting on this object
+     * Wake up the next thread waiting on this object
      * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
      */
-    Thread* ReleaseNextThread();
+    Thread* WakeupNextThread();
 
-    /// Releases all threads waiting on this object
-    void ReleaseAllWaitingThreads();
+    /// Wake up all threads waiting on this object
+    void WakeupAllWaitingThreads();
 
 private:
     std::vector<Thread*> waiting_threads; ///< Threads waiting for this object to become available

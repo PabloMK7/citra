@@ -70,7 +70,7 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
 
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
-    while (!semaphore->ShouldWait() && semaphore->ReleaseNextThread() != nullptr) {
+    while (!semaphore->ShouldWait() && semaphore->WakeupNextThread() != nullptr) {
         semaphore->Acquire();
     }
 

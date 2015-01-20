@@ -104,7 +104,7 @@ void Thread::Stop(const char* reason) {
 
     ChangeReadyState(this, false);
     status = THREADSTATUS_DORMANT;
-    ReleaseAllWaitingThreads();
+    WakeupAllWaitingThreads();
 
     // Stopped threads are never waiting.
     wait_objects.clear();

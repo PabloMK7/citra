@@ -30,7 +30,7 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
         waiting_threads.erase(itr);
 }
 
-Thread* WaitObject::ReleaseNextThread() {
+Thread* WaitObject::WakeupNextThread() {
     if (waiting_threads.empty())
         return nullptr;
 

@@ -53,7 +53,7 @@ void MutexAcquireLock(Mutex* mutex, Handle thread = GetCurrentThread()->GetHandl
  */
 void ResumeWaitingThread(Mutex* mutex) {
     // Find the next waiting thread for the mutex...
-    auto next_thread = mutex->ReleaseNextThread();
+    auto next_thread = mutex->WakeupNextThread();
     if (next_thread != nullptr) {
         MutexAcquireLock(mutex, next_thread->GetHandle());
     } else {
