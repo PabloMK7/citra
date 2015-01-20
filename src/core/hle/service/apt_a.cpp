@@ -11,6 +11,7 @@ namespace APT_U {
     extern void GetLockHandle(Service::Interface* self);
     extern void ReceiveParameter(Service::Interface* self);
     extern void GlanceParameter(Service::Interface* self);
+    extern void GetSharedFont(Service::Interface* self);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000E0080, APT_U::GlanceParameter,    "GlanceParameter?"},
     {0x003B0040, nullptr,                   "CancelLibraryApplet?"},
     {0x00430040, nullptr,                   "NotifyToWait?"},
+    {0x00440000, APT_U::GetSharedFont,      "GetSharedFont?"},
     {0x004B00C2, nullptr,                   "AppletUtility?"},
     {0x00550040, nullptr,                   "WriteInputToNsState?"},
 };
