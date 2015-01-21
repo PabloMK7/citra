@@ -78,11 +78,16 @@ public:
     void ResumeFromWait();
 
     /**
-     * Sets the output values after the thread awakens from WaitSynchronization
-     * @param return_val Value returned
-     * @param out_val Value to set to the output parameter
+     * Sets the result after the thread awakens (from either WaitSynchronization SVC)
+     * @param result Value to set to the returned result
      */
-    void SetReturnValue(ResultCode return_val, s32 out_val);
+    void SetWaitSynchronizationResult(ResultCode result);
+
+    /**
+     * Sets the output parameter value after the thread awakens (from WaitSynchronizationN SVC only)
+     * @param output Value to set to the output parameter
+     */
+    void SetWaitSynchronizationOutput(s32 output);
 
     Core::ThreadContext context;
 
@@ -100,8 +105,9 @@ public:
 
     std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
 
-    VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address 
-    bool wait_all;      ///< True if the thread is waiting on all objects before resuming
+    VAddr wait_address;     ///< If waiting on an AddressArbiter, this is the arbitration address
+    bool wait_all;          ///< True if the thread is waiting on all objects before resuming
+    bool wait_set_output;   ///< True if the output parameter should be set on thread wakeup
 
     std::string name;
 
@@ -134,9 +140,10 @@ void WaitCurrentThread_Sleep();
 /**
  * Waits the current thread from a WaitSynchronization call
  * @param wait_object Kernel object that we are waiting on
+ * @param wait_set_output If true, set the output parameter on thread wakeup (for WaitSynchronizationN only)
  * @param wait_all If true, wait on all objects before resuming (for WaitSynchronizationN only)
  */
-void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_all = false);
+void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_set_output, bool wait_all);
 
 /**
  * Waits the current thread from an ArbitrateAddress call

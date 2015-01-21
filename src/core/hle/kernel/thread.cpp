@@ -205,25 +205,24 @@ static Thread* NextThread() {
 
 void WaitCurrentThread_Sleep() {
     Thread* thread = GetCurrentThread();
-    thread->wait_all = false;
-    thread->wait_address = 0;
-    thread->wait_objects.clear();
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
-void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_all) {
+void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bool wait_set_output, bool wait_all) {
     Thread* thread = GetCurrentThread();
+    thread->wait_set_output = wait_set_output;
     thread->wait_all = wait_all;
-    thread->wait_address = 0;
-    thread->wait_objects.push_back(wait_object);
+
+    // It's possible to call WaitSynchronizationN without any objects passed in...
+    if (wait_object != nullptr)
+        thread->wait_objects.push_back(wait_object);
+
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
     Thread* thread = GetCurrentThread();
-    thread->wait_all = false;
     thread->wait_address = wait_address;
-    thread->wait_objects.clear();
     ChangeThreadState(thread, ThreadStatus(THREADSTATUS_WAIT | (thread->status & THREADSTATUS_SUSPEND)));
 }
 
@@ -239,8 +238,11 @@ static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
         return;
     }
 
-    thread->SetReturnValue(ResultCode(ErrorDescription::Timeout, ErrorModule::OS, 
-        ErrorSummary::StatusChanged, ErrorLevel::Info), -1);
+    thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
+        ErrorSummary::StatusChanged, ErrorLevel::Info));
+
+    if (thread->wait_set_output)
+        thread->SetWaitSynchronizationOutput(-1);
 
     thread->ResumeFromWait();
 }
@@ -282,12 +284,18 @@ void Thread::ReleaseWaitObject(WaitObject* wait_object) {
     if (wait_all) {
         // Resume the thread only if all are available...
         if (!wait_all_failed) {
-            SetReturnValue(RESULT_SUCCESS, -1);
+            SetWaitSynchronizationResult(RESULT_SUCCESS);
+            SetWaitSynchronizationOutput(-1);
+
             ResumeFromWait();
         }
     } else {
         // Otherwise, resume
-        SetReturnValue(RESULT_SUCCESS, index);
+        SetWaitSynchronizationResult(RESULT_SUCCESS);
+
+        if (wait_set_output)
+            SetWaitSynchronizationOutput(index);
+
         ResumeFromWait();
     }
 }
@@ -303,6 +311,7 @@ void Thread::ResumeFromWait() {
         wait_object->RemoveWaitingThread(this);
 
     wait_objects.clear();
+    wait_set_output = false;
     wait_all = false;
     wait_address = 0;
 
@@ -371,6 +380,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->stack_size = stack_size;
     thread->initial_priority = thread->current_priority = priority;
     thread->processor_id = processor_id;
+    thread->wait_set_output = false;
     thread->wait_all = false;
     thread->wait_objects.clear();
     thread->wait_address = 0;
@@ -462,9 +472,12 @@ void Reschedule() {
     }
 }
 
-void Thread::SetReturnValue(ResultCode return_val, s32 out_val) {
-    context.cpu_registers[0] = return_val.raw;
-    context.cpu_registers[1] = out_val;
+void Thread::SetWaitSynchronizationResult(ResultCode result) {
+    context.cpu_registers[0] = result.raw;
+}
+
+void Thread::SetWaitSynchronizationOutput(s32 output) {
+    context.cpu_registers[1] = output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

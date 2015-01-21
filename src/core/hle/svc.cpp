@@ -126,7 +126,7 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
     if (object->ShouldWait()) {
 
         object->AddWaitingThread(Kernel::GetCurrentThread());
-        Kernel::WaitCurrentThread_WaitSynchronization(object);
+        Kernel::WaitCurrentThread_WaitSynchronization(object, false, false);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
@@ -187,7 +187,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         // NOTE: This should deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
-            Kernel::WaitCurrentThread_Sleep();
+            Kernel::WaitCurrentThread_WaitSynchronization(nullptr, true, wait_all);
         }
     }
 
@@ -198,7 +198,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         for (int i = 0; i < handle_count; ++i) {
             auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             object->AddWaitingThread(Kernel::GetCurrentThread());
-            Kernel::WaitCurrentThread_WaitSynchronization(object, wait_all);
+            Kernel::WaitCurrentThread_WaitSynchronization(object, true, wait_all);
         }
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
