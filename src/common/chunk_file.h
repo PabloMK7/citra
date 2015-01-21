@@ -180,7 +180,7 @@ public:
         case MODE_MEASURE: break;  // MODE_MEASURE - don't need to do anything
         case MODE_VERIFY:
             for (int i = 0; i < size; i++) {
-                _dbg_assert_msg_(Common, ((u8*)data)[i] == (*ptr)[i],
+                DEBUG_ASSERT_MSG(((u8*)data)[i] == (*ptr)[i],
                     "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i],
                     (*ptr)[i], (*ptr)[i], &(*ptr)[i]);
@@ -200,7 +200,7 @@ public:
         case MODE_MEASURE: break;  // MODE_MEASURE - don't need to do anything
         case MODE_VERIFY:
             for (int i = 0; i < size; i++) {
-                _dbg_assert_msg_(Common, ((u8*)data)[i] == (*ptr)[i],
+                DEBUG_ASSERT_MSG(((u8*)data)[i] == (*ptr)[i],
                     "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i],
                     (*ptr)[i], (*ptr)[i], &(*ptr)[i]);
@@ -505,8 +505,7 @@ public:
         case MODE_WRITE:    memcpy(*ptr, x.c_str(), stringLen); break;
         case MODE_MEASURE: break;
         case MODE_VERIFY:
-            _dbg_assert_msg_(Common,
-                !strcmp(x.c_str(), (char*)*ptr),
+            DEBUG_ASSERT_MSG((x == (char*)*ptr),
                 "Savestate verification failure: \"%s\" != \"%s\" (at %p).\n",
                 x.c_str(), (char*)*ptr, ptr);
             break;
@@ -524,7 +523,7 @@ public:
         case MODE_WRITE:    memcpy(*ptr, x.c_str(), stringLen); break;
         case MODE_MEASURE: break;
         case MODE_VERIFY:
-            _dbg_assert_msg_(Common, x == (wchar_t*)*ptr,
+            DEBUG_ASSERT_MSG((x == (wchar_t*)*ptr),
                 "Savestate verification failure: \"%ls\" != \"%ls\" (at %p).\n",
                 x.c_str(), (wchar_t*)*ptr, ptr);
             break;

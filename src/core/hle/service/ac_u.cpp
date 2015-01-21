@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/log.h"
+#include "common/logging/log.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/ac_u.h"
 

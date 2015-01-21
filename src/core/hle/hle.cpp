@@ -45,7 +45,7 @@ void CallSVC(u32 opcode) {
 }
 
 void Reschedule(const char *reason) {
-    _dbg_assert_msg_(Kernel, reason != 0 && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
+    DEBUG_ASSERT_MSG(reason != nullptr && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
 
     // TODO(bunnei): It seems that games depend on some CPU execution time elapsing during HLE
     // routines. This simulates that time by artificially advancing the number of CPU "ticks".

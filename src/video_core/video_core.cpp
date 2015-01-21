@@ -4,7 +4,6 @@
 
 #include "common/common.h"
 #include "common/emu_window.h"
-#include "common/log.h"
 
 #include "core/core.h"
 

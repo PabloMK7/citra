@@ -5,6 +5,7 @@
 #include "common/common.h"
 #include "common/debug_interface.h"
 #include "common/break_points.h"
+#include "common/logging/log.h"
 
 #include <sstream>
 #include <algorithm>

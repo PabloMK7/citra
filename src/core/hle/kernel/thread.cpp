@@ -29,7 +29,7 @@ bool Thread::ShouldWait() {
 }
 
 void Thread::Acquire() {
-    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    ASSERT_MSG(!ShouldWait(), "object unavailable!");
 }
 
 // Lists all thread ids that aren't deleted/etc.
@@ -144,7 +144,7 @@ void ArbitrateAllThreads(u32 address) {
  * @param new_thread The thread to switch to
  */
 static void SwitchContext(Thread* new_thread) {
-    _dbg_assert_msg_(Kernel, new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
+    DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
 
     Thread* previous_thread = GetCurrentThread();
 
@@ -304,14 +304,12 @@ void Thread::ResumeFromWait() {
             break;
         case THREADSTATUS_RUNNING:
         case THREADSTATUS_READY:
-            LOG_ERROR(Kernel, "Thread with object id %u has already resumed.", GetObjectId());
-            _dbg_assert_(Kernel, false);
+            DEBUG_ASSERT_MSG(false, "Thread with object id %u has already resumed.", GetObjectId());
             return;
         case THREADSTATUS_DEAD:
             // This should never happen, as threads must complete before being stopped.
-            LOG_CRITICAL(Kernel, "Thread with object id %u cannot be resumed because it's DEAD.",
+            DEBUG_ASSERT_MSG(false, "Thread with object id %u cannot be resumed because it's DEAD.",
                 GetObjectId());
-            _dbg_assert_(Kernel, false);
             return;
     }
     
@@ -387,7 +385,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 // TODO(peachum): Remove this. Range checking should be done, and an appropriate error should be returned.
 static void ClampPriority(const Thread* thread, s32* priority) {
     if (*priority < THREADPRIO_HIGHEST || *priority > THREADPRIO_LOWEST) {
-        _dbg_assert_msg_(Kernel, false, "Application passed an out of range priority. An error should be returned.");
+        DEBUG_ASSERT_MSG(false, "Application passed an out of range priority. An error should be returned.");
 
         s32 new_priority = CLAMP(*priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
         LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
@@ -425,7 +423,7 @@ SharedPtr<Thread> SetupIdleThread() {
 }
 
 SharedPtr<Thread> SetupMainThread(u32 stack_size, u32 entry_point, s32 priority) {
-    _dbg_assert_(Kernel, !GetCurrentThread());
+    DEBUG_ASSERT(!GetCurrentThread());
 
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0,

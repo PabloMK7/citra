@@ -136,9 +136,9 @@ inline void Write(const VAddr vaddr, const T data) {
         *(T*)&g_dsp_mem[vaddr - DSP_MEMORY_VADDR] = data;
 
     //} else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
-    //    _assert_msg_(MEMMAP, false, "umimplemented write to Configuration Memory");
+    //    ASSERT_MSG(MEMMAP, false, "umimplemented write to Configuration Memory");
     //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
-    //    _assert_msg_(MEMMAP, false, "umimplemented write to shared page");
+    //    ASSERT_MSG(MEMMAP, false, "umimplemented write to shared page");
 
     // Error out...
     } else {

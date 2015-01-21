@@ -146,13 +146,10 @@ static void ProcessShaderCode(VertexShaderState& state) {
         case Instruction::OpCodeType::Arithmetic:
         {
             bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
-            if (is_inverted) {
-                // TODO: We don't really support this properly: For instance, the address register
-                //       offset needs to be applied to SRC2 instead, etc.
-                //       For now, we just abort in this situation.
-                LOG_CRITICAL(HW_GPU, "Bad condition...");
-                exit(0);
-            }
+            // TODO: We don't really support this properly: For instance, the address register
+            //       offset needs to be applied to SRC2 instead, etc.
+            //       For now, we just abort in this situation.
+            ASSERT_MSG(!is_inverted, "Bad condition...");
 
             const int address_offset = (instr.common.address_register_index == 0)
                                        ? 0 : state.address_registers[instr.common.address_register_index - 1];
@@ -342,7 +339,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             default:
                 LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
-                _dbg_assert_(HW_GPU, 0);
+                DEBUG_ASSERT(false);
                 break;
             }
 

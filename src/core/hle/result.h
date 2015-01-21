@@ -363,7 +363,7 @@ public:
     /// Asserts that the result succeeded and returns a reference to it.
     T& Unwrap() {
         // TODO(yuriks): Should be a release assert
-        _assert_msg_(Common, Succeeded(), "Tried to Unwrap empty ResultVal");
+        ASSERT_MSG(Succeeded(), "Tried to Unwrap empty ResultVal");
         return **this;
     }
 

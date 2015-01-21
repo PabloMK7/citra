@@ -26,6 +26,7 @@ set(SRCS
             )
 
 set(HEADERS
+            assert.h
             bit_field.h
             break_points.h
             chunk_file.h
@@ -44,7 +45,6 @@ set(HEADERS
             hash.h
             key_map.h
             linear_disk_cache.h
-            log.h
             logging/text_formatter.h
             logging/filter.h
             logging/log.h

@@ -29,7 +29,6 @@
 #include <poll.h>
 #endif
 
-#include "common/log.h"
 #include "common/scope_exit.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/soc_u.h"
@@ -259,7 +258,7 @@ union CTRSockAddr {
             break;
         }
         default:
-            _dbg_assert_msg_(Service_SOC, false, "Unhandled address family (sa_family) in CTRSockAddr::ToPlatform");
+            ASSERT_MSG(false, "Unhandled address family (sa_family) in CTRSockAddr::ToPlatform");
             break;
         }
         return result;
@@ -280,7 +279,7 @@ union CTRSockAddr {
             break;
         }
         default:
-            _dbg_assert_msg_(Service_SOC, false, "Unhandled address family (sa_family) in CTRSockAddr::ToPlatform");
+            ASSERT_MSG(false, "Unhandled address family (sa_family) in CTRSockAddr::ToPlatform");
             break;
         }
         return result;

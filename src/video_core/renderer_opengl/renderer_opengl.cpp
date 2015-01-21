@@ -99,15 +99,15 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
 
     // TODO: Handle other pixel formats
-    _dbg_assert_msg_(Render_OpenGL, framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
+    ASSERT_MSG(framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
                      "Unsupported 3DS pixel format.");
 
     size_t pixel_stride = framebuffer.stride / 3;
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
-    _dbg_assert_(Render_OpenGL, pixel_stride * 3 == framebuffer.stride);
+    ASSERT(pixel_stride * 3 == framebuffer.stride);
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
     // only allows rows to have a memory alignement of 4.
-    _dbg_assert_(Render_OpenGL, pixel_stride % 4 == 0);
+    ASSERT(pixel_stride % 4 == 0);
 
     glBindTexture(GL_TEXTURE_2D, texture.handle);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);

@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-#include "common/log.h" // For _dbg_assert_
+#include "common/assert.h"
 
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
@@ -67,7 +67,7 @@ Logger::Logger() {
 #undef SUB
 
     // Ensures that ALL_LOG_CLASSES isn't missing any entries.
-    _dbg_assert_(Log, all_classes.size() == (size_t)Class::Count);
+    DEBUG_ASSERT(all_classes.size() == (size_t)Class::Count);
 }
 
 // GetClassName is a macro defined by Windows.h, grrr...

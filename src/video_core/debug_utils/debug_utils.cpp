@@ -16,7 +16,7 @@
 
 #include <nihstro/shader_binary.h>
 
-#include "common/log.h"
+#include "common/assert.h"
 #include "common/file_util.h"
 #include "common/math_util.h"
 
@@ -197,7 +197,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                         it->component_mask = it->component_mask | component_mask;
                     }
                 } catch (const std::out_of_range& ) {
-                    _dbg_assert_msg_(HW_GPU, 0, "Unknown output attribute mapping");
+                    DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");
                     LOG_ERROR(HW_GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
                               (int)output_attributes[i].map_x.Value(),
                               (int)output_attributes[i].map_y.Value(),
@@ -571,7 +571,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     default:
         LOG_ERROR(HW_GPU, "Unknown texture format: %x", (u32)info.format);
-        _dbg_assert_(HW_GPU, 0);
+        DEBUG_ASSERT(false);
         return {};
     }
 }

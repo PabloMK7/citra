@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "gl_shader_util.h"
-#include "common/log.h"
+#include "common/logging/log.h"
 
 #include <vector>
 #include <algorithm>

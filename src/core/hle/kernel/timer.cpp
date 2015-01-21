@@ -38,7 +38,7 @@ bool Timer::ShouldWait() {
 }
 
 void Timer::Acquire() {
-    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    ASSERT_MSG( !ShouldWait(), "object unavailable!");
 }
 
 void Timer::Set(s64 initial, s64 interval) {

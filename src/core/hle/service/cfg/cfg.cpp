@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include "common/log.h"
 #include "common/make_unique.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -109,7 +108,7 @@ ResultCode UpdateConfigNANDSavegame() {
     mode.create_flag = 1;
     FileSys::Path path("config");
     auto file = cfg_system_save_data->OpenFile(path, mode);
-    _assert_msg_(Service_CFG, file != nullptr, "could not open file");
+    ASSERT_MSG(file != nullptr, "could not open file");
     file->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
     return RESULT_SUCCESS;
 }

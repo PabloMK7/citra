@@ -4,6 +4,7 @@
 
 #include <assert.h>
 
+#include "common/logging/log.h"
 #include "core/arm/skyeye_common/armdefs.h"
 
 void switch_mode(arm_core_t *core, uint32_t mode) {

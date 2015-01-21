@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/file_util.h"
-#include "common/log.h"
 #include "common/string_util.h"
 #include "core/settings.h"
 #include "core/file_sys/archive_systemsavedata.h"
@@ -84,7 +83,7 @@ static void GetCountryCodeID(Service::Interface* self) {
     u16 country_code_id = 0;
 
     // The following algorithm will fail if the first country code isn't 0.
-    _dbg_assert_(Service_CFG, country_codes[0] == 0);
+    DEBUG_ASSERT(country_codes[0] == 0);
 
     for (size_t id = 0; id < country_codes.size(); ++id) {
         if (country_codes[id] == country_code) {
