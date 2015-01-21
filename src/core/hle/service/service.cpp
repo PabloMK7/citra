@@ -24,7 +24,8 @@
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/frd_u.h"
 #include "core/hle/service/gsp_gpu.h"
-#include "core/hle/service/hid_user.h"
+#include "core/hle/service/hid/hid_spvr.h"
+#include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/http_c.h"
 #include "core/hle/service/ir_rst.h"
 #include "core/hle/service/ir_u.h"
@@ -101,6 +102,7 @@ void Init() {
     g_manager->AddService(new FRD_U::Interface);
     g_manager->AddService(new FS::FSUserInterface);
     g_manager->AddService(new GSP_GPU::Interface);
+    g_manager->AddService(new HID_SPVR::Interface);
     g_manager->AddService(new HID_User::Interface);
     g_manager->AddService(new HTTP_C::Interface);
     g_manager->AddService(new IR_RST::Interface);

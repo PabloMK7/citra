@@ -268,33 +268,33 @@ QByteArray GRenderWindow::saveGeometry()
 void GRenderWindow::keyPressEvent(QKeyEvent* event)
 {
     EmuWindow::KeyPressed({event->key(), keyboard_id});
-    HID_User::PadUpdateComplete();
+    Service::HID::PadUpdateComplete();
 }
 
 void GRenderWindow::keyReleaseEvent(QKeyEvent* event)
 {
     EmuWindow::KeyReleased({event->key(), keyboard_id});
-    HID_User::PadUpdateComplete();
+    Service::HID::PadUpdateComplete();
 }
 
 void GRenderWindow::ReloadSetKeymaps()
 {
-    KeyMap::SetKeyMapping({Settings::values.pad_a_key,      keyboard_id}, HID_User::PAD_A);
-    KeyMap::SetKeyMapping({Settings::values.pad_b_key,      keyboard_id}, HID_User::PAD_B);
-    KeyMap::SetKeyMapping({Settings::values.pad_select_key, keyboard_id}, HID_User::PAD_SELECT);
-    KeyMap::SetKeyMapping({Settings::values.pad_start_key,  keyboard_id}, HID_User::PAD_START);
-    KeyMap::SetKeyMapping({Settings::values.pad_dright_key, keyboard_id}, HID_User::PAD_RIGHT);
-    KeyMap::SetKeyMapping({Settings::values.pad_dleft_key,  keyboard_id}, HID_User::PAD_LEFT);
-    KeyMap::SetKeyMapping({Settings::values.pad_dup_key,    keyboard_id}, HID_User::PAD_UP);
-    KeyMap::SetKeyMapping({Settings::values.pad_ddown_key,  keyboard_id}, HID_User::PAD_DOWN);
-    KeyMap::SetKeyMapping({Settings::values.pad_r_key,      keyboard_id}, HID_User::PAD_R);
-    KeyMap::SetKeyMapping({Settings::values.pad_l_key,      keyboard_id}, HID_User::PAD_L);
-    KeyMap::SetKeyMapping({Settings::values.pad_x_key,      keyboard_id}, HID_User::PAD_X);
-    KeyMap::SetKeyMapping({Settings::values.pad_y_key,      keyboard_id}, HID_User::PAD_Y);
-    KeyMap::SetKeyMapping({Settings::values.pad_sright_key, keyboard_id}, HID_User::PAD_CIRCLE_RIGHT);
-    KeyMap::SetKeyMapping({Settings::values.pad_sleft_key,  keyboard_id}, HID_User::PAD_CIRCLE_LEFT);
-    KeyMap::SetKeyMapping({Settings::values.pad_sup_key,    keyboard_id}, HID_User::PAD_CIRCLE_UP);
-    KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, HID_User::PAD_CIRCLE_DOWN);
+    KeyMap::SetKeyMapping({Settings::values.pad_a_key,      keyboard_id}, Service::HID::PAD_A);
+    KeyMap::SetKeyMapping({Settings::values.pad_b_key,      keyboard_id}, Service::HID::PAD_B);
+    KeyMap::SetKeyMapping({Settings::values.pad_select_key, keyboard_id}, Service::HID::PAD_SELECT);
+    KeyMap::SetKeyMapping({Settings::values.pad_start_key,  keyboard_id}, Service::HID::PAD_START);
+    KeyMap::SetKeyMapping({Settings::values.pad_dright_key, keyboard_id}, Service::HID::PAD_RIGHT);
+    KeyMap::SetKeyMapping({Settings::values.pad_dleft_key,  keyboard_id}, Service::HID::PAD_LEFT);
+    KeyMap::SetKeyMapping({Settings::values.pad_dup_key,    keyboard_id}, Service::HID::PAD_UP);
+    KeyMap::SetKeyMapping({Settings::values.pad_ddown_key,  keyboard_id}, Service::HID::PAD_DOWN);
+    KeyMap::SetKeyMapping({Settings::values.pad_r_key,      keyboard_id}, Service::HID::PAD_R);
+    KeyMap::SetKeyMapping({Settings::values.pad_l_key,      keyboard_id}, Service::HID::PAD_L);
+    KeyMap::SetKeyMapping({Settings::values.pad_x_key,      keyboard_id}, Service::HID::PAD_X);
+    KeyMap::SetKeyMapping({Settings::values.pad_y_key,      keyboard_id}, Service::HID::PAD_Y);
+    KeyMap::SetKeyMapping({Settings::values.pad_sright_key, keyboard_id}, Service::HID::PAD_CIRCLE_RIGHT);
+    KeyMap::SetKeyMapping({Settings::values.pad_sleft_key,  keyboard_id}, Service::HID::PAD_CIRCLE_LEFT);
+    KeyMap::SetKeyMapping({Settings::values.pad_sup_key,    keyboard_id}, Service::HID::PAD_CIRCLE_UP);
+    KeyMap::SetKeyMapping({Settings::values.pad_sdown_key,  keyboard_id}, Service::HID::PAD_CIRCLE_DOWN);
 }
 
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)

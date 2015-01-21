@@ -1,19 +1,26 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2015 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include <array>
+
+#include "core/hle/kernel/kernel.h"
 #include "common/bit_field.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_User
+namespace Service {
+namespace HID {
 
-// This service is used for interfacing to physical user controls.
-// Uses include game pad controls, touchscreen, accelerometers, gyroscopes, and debug pad.
+// Handle to shared memory region designated to HID_User service
+extern Handle g_shared_mem;
 
-namespace HID_User {
+// Event handles
+extern Handle g_event_pad_or_touch_1;
+extern Handle g_event_pad_or_touch_2;
+extern Handle g_event_accelerometer;
+extern Handle g_event_gyroscope;
+extern Handle g_event_debug_pad;
 
 /**
  * Structure of a Pad controller state.
@@ -97,16 +104,8 @@ void PadButtonPress(const PadState& pad_state);
 void PadButtonRelease(const PadState& pad_state);
 void PadUpdateComplete();
 
-/**
- * HID service interface.
- */
-class Interface : public Service::Interface {
-public:
-    Interface();
+void HIDInit();
+void HIDShutdown();
 
-    std::string GetPortName() const override {
-        return "hid:USER";
-    }
-};
-
-} // namespace
+}
+}
