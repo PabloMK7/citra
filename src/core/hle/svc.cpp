@@ -29,6 +29,9 @@ using Kernel::SharedPtr;
 
 namespace SVC {
 
+/// An invalid result code that is meant to be overwritten when a thread resumes from waiting
+const ResultCode RESULT_INVALID(0xDEADC0DE);
+
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
     MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
@@ -132,9 +135,12 @@ static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
 
         HLE::Reschedule(__func__);
-    } else {
-        object->Acquire();
+
+        // NOTE: output of this SVC will be set later depending on how the thread resumes
+        return RESULT_INVALID.raw;
     }
+
+    object->Acquire();
 
     return RESULT_SUCCESS.raw;
 }
@@ -207,7 +213,7 @@ static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, 
         HLE::Reschedule(__func__);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
-        return 0xDEADBEEF;
+        return RESULT_INVALID.raw;
     }
 
     // Acquire objects if we did not wait...
