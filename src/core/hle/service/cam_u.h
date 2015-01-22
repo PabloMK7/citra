@@ -16,8 +16,8 @@ public:
     Interface();
 
     std::string GetPortName() const override {
-    return "cam:u";
-}
+        return "cam:u";
+    }
 };
 
 } // namespace
