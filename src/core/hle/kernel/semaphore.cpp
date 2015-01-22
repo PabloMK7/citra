@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-class Semaphore : public Object {
+class Semaphore : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Semaphore"; }
     std::string GetName() const override { return name; }
@@ -22,28 +22,15 @@ public:
 
     s32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
     s32 available_count;                        ///< Number of free slots left in the semaphore
-    std::queue<Handle> waiting_threads;         ///< Threads that are waiting for the semaphore
     std::string name;                           ///< Name of semaphore (optional)
 
-    /**
-     * Tests whether a semaphore still has free slots
-     * @return Whether the semaphore is available
-     */
-    bool IsAvailable() const {
-        return available_count > 0;
+    bool ShouldWait() override {
+        return available_count <= 0;
     }
 
-    ResultVal<bool> WaitSynchronization() override {
-        bool wait = !IsAvailable();
-
-        if (wait) {
-            Kernel::WaitCurrentThread(WAITTYPE_SEMA, this);
-            waiting_threads.push(GetCurrentThread()->GetHandle());
-        } else {
-            --available_count;
-        }
-
-        return MakeResult<bool>(wait);
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+        --available_count;
     }
 };
 
@@ -83,12 +70,8 @@ ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
 
     // Notify some of the threads that the semaphore has been released
     // stop once the semaphore is full again or there are no more waiting threads
-    while (!semaphore->waiting_threads.empty() && semaphore->IsAvailable()) {
-        Thread* thread = Kernel::g_handle_table.Get<Thread>(semaphore->waiting_threads.front()).get();
-        if (thread != nullptr)
-            thread->ResumeFromWait();
-        semaphore->waiting_threads.pop();
-        --semaphore->available_count;
+    while (!semaphore->ShouldWait() && semaphore->WakeupNextThread() != nullptr) {
+        semaphore->Acquire();
     }
 
     return RESULT_SUCCESS;

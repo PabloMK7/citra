@@ -18,6 +18,41 @@ SharedPtr<Thread> g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
+void WaitObject::AddWaitingThread(Thread* thread) {
+    auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    if (itr == waiting_threads.end())
+        waiting_threads.push_back(thread);
+}
+
+void WaitObject::RemoveWaitingThread(Thread* thread) {
+    auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    if (itr != waiting_threads.end())
+        waiting_threads.erase(itr);
+}
+
+Thread* WaitObject::WakeupNextThread() {
+    if (waiting_threads.empty())
+        return nullptr;
+
+    auto next_thread = waiting_threads.front();
+    waiting_threads.erase(waiting_threads.begin());
+
+    next_thread->ReleaseWaitObject(this);
+
+    return next_thread;
+}
+
+void WaitObject::WakeupAllWaitingThreads() {
+    auto waiting_threads_copy = waiting_threads;
+
+    // We use a copy because ReleaseWaitObject will remove the thread from this object's
+    // waiting_threads list
+    for (auto thread : waiting_threads_copy)
+        thread->ReleaseWaitObject(this);
+
+    _assert_msg_(Kernel, waiting_threads.empty(), "failed to awaken all waiting threads!");
+}
+
 HandleTable::HandleTable() {
     next_generation = 1;
     Clear();

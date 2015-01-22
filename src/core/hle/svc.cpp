@@ -29,6 +29,9 @@ using Kernel::SharedPtr;
 
 namespace SVC {
 
+/// An invalid result code that is meant to be overwritten when a thread resumes from waiting
+const ResultCode RESULT_INVALID(0xDEADC0DE);
+
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
     MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
@@ -103,12 +106,7 @@ static Result SendSyncRequest(Handle handle) {
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    ResultVal<bool> wait = session->SyncRequest();
-    if (wait.Succeeded() && *wait) {
-        Kernel::WaitCurrentThread(WAITTYPE_SYNCH); // TODO(bunnei): Is this correct?
-    }
-
-    return wait.Code().raw;
+    return session->SyncRequest().Code().raw;
 }
 
 /// Close a handle
@@ -120,64 +118,122 @@ static Result CloseHandle(Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static Result WaitSynchronization1(Handle handle, s64 nano_seconds) {
-    SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handle);
+    auto object = Kernel::g_handle_table.GetWaitObject(handle);
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel).raw;
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    ResultVal<bool> wait = object->WaitSynchronization();
-
     // Check for next thread to schedule
-    if (wait.Succeeded() && *wait) {
+    if (object->ShouldWait()) {
+
+        object->AddWaitingThread(Kernel::GetCurrentThread());
+        Kernel::WaitCurrentThread_WaitSynchronization(object, false, false);
+
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+
         HLE::Reschedule(__func__);
+
+        // NOTE: output of this SVC will be set later depending on how the thread resumes
+        return RESULT_INVALID.raw;
     }
 
-    return wait.Code().raw;
+    object->Acquire();
+
+    return RESULT_SUCCESS.raw;
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
-    s64 nano_seconds) {
+static Result WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all, s64 nano_seconds) {
+    bool wait_thread = !wait_all;
+    int handle_index = 0;
 
-    // TODO(bunnei): Do something with nano_seconds, currently ignoring this
-    bool unlock_all = true;
-    bool wait_infinite = (nano_seconds == -1); // Used to wait until a thread has terminated
+    // Check if 'handles' is invalid
+    if (handles == nullptr)
+        return ResultCode(ErrorDescription::InvalidPointer, ErrorModule::Kernel, ErrorSummary::InvalidArgument, ErrorLevel::Permanent).raw;
 
-    LOG_TRACE(Kernel_SVC, "called handle_count=%d, wait_all=%s, nanoseconds=%lld",
-        handle_count, (wait_all ? "true" : "false"), nano_seconds);
+    // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
+    // this happens, the running application will crash.
+    _assert_msg_(Kernel, out != nullptr, "invalid output pointer specified!");
 
-    // Iterate through each handle, synchronize kernel object
-    for (s32 i = 0; i < handle_count; i++) {
-        SharedPtr<Kernel::Object> object = Kernel::g_handle_table.GetGeneric(handles[i]);
-        if (object == nullptr)
-            return InvalidHandle(ErrorModule::Kernel).raw;
+    // Check if 'handle_count' is invalid
+    if (handle_count < 0)
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
 
-        LOG_TRACE(Kernel_SVC, "\thandle[%d] = 0x%08X(%s:%s)", i, handles[i],
-                object->GetTypeName().c_str(), object->GetName().c_str());
+    // If 'handle_count' is non-zero, iterate through each handle and wait the current thread if
+    // necessary
+    if (handle_count != 0) {
+        bool selected = false; // True once an object has been selected
+        for (int i = 0; i < handle_count; ++i) {
+            auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+            if (object == nullptr)
+                return InvalidHandle(ErrorModule::Kernel).raw;
 
-        // TODO(yuriks): Verify how the real function behaves when an error happens here
-        ResultVal<bool> wait_result = object->WaitSynchronization();
-        bool wait = wait_result.Succeeded() && *wait_result;
+            // Check if the current thread should wait on this object...
+            if (object->ShouldWait()) {
 
-        if (!wait && !wait_all) {
-            *out = i;
-            return RESULT_SUCCESS.raw;
-        } else {
-            unlock_all = false;
+                // Check we are waiting on all objects...
+                if (wait_all)
+                    // Wait the thread
+                    wait_thread = true;
+            } else {
+                // Do not wait on this object, check if this object should be selected...
+                if (!wait_all && !selected) {
+                    // Do not wait the thread
+                    wait_thread = false;
+                    handle_index = i;
+                    selected = true;
+                }
+            }
+        }
+    } else {
+        // If no handles were passed in, put the thread to sleep only when 'wait_all' is false
+        // NOTE: This should deadlock the current thread if no timeout was specified
+        if (!wait_all) {
+            wait_thread = true;
+            Kernel::WaitCurrentThread_WaitSynchronization(nullptr, true, wait_all);
         }
     }
 
-    if (wait_all && unlock_all) {
-        *out = handle_count;
-        return RESULT_SUCCESS.raw;
+    // If thread should wait, then set its state to waiting and then reschedule...
+    if (wait_thread) {
+
+        // Actually wait the current thread on each object if we decided to wait...
+        for (int i = 0; i < handle_count; ++i) {
+            auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+            object->AddWaitingThread(Kernel::GetCurrentThread());
+            Kernel::WaitCurrentThread_WaitSynchronization(object, true, wait_all);
+        }
+
+        // Create an event to wake the thread up after the specified nanosecond delay has passed
+        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+
+        HLE::Reschedule(__func__);
+
+        // NOTE: output of this SVC will be set later depending on how the thread resumes
+        return RESULT_INVALID.raw;
     }
 
-    // Check for next thread to schedule
-    HLE::Reschedule(__func__);
+    // Acquire objects if we did not wait...
+    for (int i = 0; i < handle_count; ++i) {
+        auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+
+        // Acquire the object if it is not waiting...
+        if (!object->ShouldWait()) {
+            object->Acquire();
+
+            // If this was the first non-waiting object and 'wait_all' is false, don't acquire
+            // any other objects
+            if (!wait_all)
+                break;
+        }
+    }
+
+    // TODO(bunnei): If 'wait_all' is true, this is probably wrong. However, real hardware does
+    // not seem to set it to any meaningful value.
+    *out = wait_all ? 0 : handle_index;
 
     return RESULT_SUCCESS.raw;
 }
@@ -351,6 +407,7 @@ static Result DuplicateHandle(Handle* out, Handle handle) {
 /// Signals an event
 static Result SignalEvent(Handle evt) {
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", evt);
+    HLE::Reschedule(__func__);
     return Kernel::SignalEvent(evt).raw;
 }
 
@@ -391,7 +448,7 @@ static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
 
     // Sleep current thread and check for next thread to schedule
-    Kernel::WaitCurrentThread(WAITTYPE_SLEEP);
+    Kernel::WaitCurrentThread_Sleep();
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);

@@ -41,7 +41,7 @@ inline static u32* GetCommandBuffer(const int offset=0) {
  * CTR-OS so that IPC calls can be optionally handled by the real implementations of processes, as
  * opposed to HLE simulations.
  */
-class Session : public Object {
+class Session : public WaitObject {
 public:
     std::string GetTypeName() const override { return "Session"; }
 
@@ -53,6 +53,17 @@ public:
      * aren't supported yet.
      */
     virtual ResultVal<bool> SyncRequest() = 0;
+
+    // TODO(bunnei): These functions exist to satisfy a hardware test with a Session object
+    // passed into WaitSynchronization. Figure out the meaning of them.
+
+    bool ShouldWait() override {
+        return true;
+    }
+
+    void Acquire() override {
+        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    }
 };
 
 }

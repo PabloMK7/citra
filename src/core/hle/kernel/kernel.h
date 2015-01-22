@@ -8,6 +8,8 @@
 
 #include <array>
 #include <string>
+#include <vector>
+
 #include "common/common.h"
 #include "core/hle/result.h"
 
@@ -58,17 +60,35 @@ class Object : NonCopyable {
 public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
+
     virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
-     * Wait for kernel object to synchronize.
-     * @return True if the current thread should wait as a result of the wait
+     * Check if a thread can wait on the object
+     * @return True if a thread can wait on the object, otherwise false
      */
-    virtual ResultVal<bool> WaitSynchronization() {
-        LOG_ERROR(Kernel, "(UNIMPLEMENTED)");
-        return UnimplementedFunction(ErrorModule::Kernel);
+    bool IsWaitable() const {
+        switch (GetHandleType()) {
+        case HandleType::Session:
+        case HandleType::Event:
+        case HandleType::Mutex:
+        case HandleType::Thread:
+        case HandleType::Semaphore:
+        case HandleType::Timer:
+            return true;
+
+        case HandleType::Unknown:
+        case HandleType::Port:
+        case HandleType::SharedMemory:
+        case HandleType::Redirection:
+        case HandleType::Process:
+        case HandleType::AddressArbiter:
+            return false;
+        }
+
+        return false;
     }
 
 private:
@@ -91,6 +111,44 @@ inline void intrusive_ptr_release(Object* object) {
 
 template <typename T>
 using SharedPtr = boost::intrusive_ptr<T>;
+
+/// Class that represents a Kernel object that a thread can be waiting on
+class WaitObject : public Object {
+public:
+
+    /**
+     * Check if the current thread should wait until the object is available
+     * @return True if the current thread should wait due to this object being unavailable
+     */
+    virtual bool ShouldWait() = 0;
+
+    /// Acquire/lock the object if it is available
+    virtual void Acquire() = 0;
+
+    /**
+     * Add a thread to wait on this object
+     * @param thread Pointer to thread to add
+     */
+    void AddWaitingThread(Thread* thread);
+
+    /**
+     * Removes a thread from waiting on this object (e.g. if it was resumed already)
+     * @param thread Pointer to thread to remove
+     */
+    void RemoveWaitingThread(Thread* thead);
+
+    /**
+     * Wake up the next thread waiting on this object
+     * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
+     */
+    Thread* WakeupNextThread();
+
+    /// Wake up all threads waiting on this object
+    void WakeupAllWaitingThreads();
+
+private:
+    std::vector<Thread*> waiting_threads; ///< Threads waiting for this object to become available
+};
 
 /**
  * This class allows the creation of Handles, which are references to objects that can be tested
@@ -146,20 +204,33 @@ public:
 
     /**
      * Looks up a handle.
-     * @returns Pointer to the looked-up object, or `nullptr` if the handle is not valid.
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid.
      */
     SharedPtr<Object> GetGeneric(Handle handle) const;
 
     /**
      * Looks up a handle while verifying its type.
-     * @returns Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
-     *          type differs from the handle type `T::HANDLE_TYPE`.
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
+     *         type differs from the handle type `T::HANDLE_TYPE`.
      */
     template <class T>
     SharedPtr<T> Get(Handle handle) const {
         SharedPtr<Object> object = GetGeneric(handle);
         if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
             return boost::static_pointer_cast<T>(std::move(object));
+        }
+        return nullptr;
+    }
+
+    /**
+     * Looks up a handle while verifying that it is an object that a thread can wait on
+     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or it is
+     *         not a waitable object.
+     */
+    SharedPtr<WaitObject> GetWaitObject(Handle handle) const {
+        SharedPtr<Object> object = GetGeneric(handle);
+        if (object != nullptr && object->IsWaitable()) {
+            return boost::static_pointer_cast<WaitObject>(std::move(object));
         }
         return nullptr;
     }

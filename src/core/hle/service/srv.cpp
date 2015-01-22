@@ -24,7 +24,7 @@ static void GetProcSemaphore(Service::Interface* self) {
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
     g_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "SRV:Event");
-    Kernel::SetEventLocked(g_event_handle, false);
+    Kernel::ClearEvent(g_event_handle);
 
     cmd_buff[1] = 0; // No error
     cmd_buff[3] = g_event_handle;

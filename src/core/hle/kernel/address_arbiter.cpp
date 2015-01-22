@@ -30,7 +30,8 @@ public:
 
 /// Arbitrate an address
 ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value, u64 nanoseconds) {
-    Object* object = Kernel::g_handle_table.GetGeneric(handle).get();
+    AddressArbiter* object = Kernel::g_handle_table.Get<AddressArbiter>(handle).get();
+
     if (object == nullptr)
         return InvalidHandle(ErrorModule::Kernel);
 
@@ -40,24 +41,24 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
     case ArbitrationType::Signal:
         // Negative value means resume all threads
         if (value < 0) {
-            ArbitrateAllThreads(object, address);
+            ArbitrateAllThreads(address);
         } else {
             // Resume first N threads
             for(int i = 0; i < value; i++)
-                ArbitrateHighestPriorityThread(object, address);
+                ArbitrateHighestPriorityThread(address);
         }
         break;
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)Memory::Read32(address) <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
+            Kernel::WaitCurrentThread_ArbitrateAddress(address);
             HLE::Reschedule(__func__);
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
+            Kernel::WaitCurrentThread_ArbitrateAddress(address);
             Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
             HLE::Reschedule(__func__);
         }
@@ -67,7 +68,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
         s32 memory_value = Memory::Read32(address) - 1;
         Memory::Write32(address, memory_value);
         if (memory_value <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
+            Kernel::WaitCurrentThread_ArbitrateAddress(address);
             HLE::Reschedule(__func__);
         }
         break;
@@ -77,7 +78,7 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
         s32 memory_value = Memory::Read32(address) - 1;
         Memory::Write32(address, memory_value);
         if (memory_value <= value) {
-            Kernel::WaitCurrentThread(WAITTYPE_ARB, object, address);
+            Kernel::WaitCurrentThread_ArbitrateAddress(address);
             Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
             HLE::Reschedule(__func__);
         }
