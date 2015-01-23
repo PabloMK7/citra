@@ -11,6 +11,7 @@
 
 namespace Kernel {
     class SharedMemory;
+    class Event;
 }
 
 namespace Service {
@@ -20,11 +21,11 @@ namespace HID {
 extern Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem;
 
 // Event handles
-extern Handle g_event_pad_or_touch_1;
-extern Handle g_event_pad_or_touch_2;
-extern Handle g_event_accelerometer;
-extern Handle g_event_gyroscope;
-extern Handle g_event_debug_pad;
+extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
+extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_2;
+extern Kernel::SharedPtr<Kernel::Event> g_event_accelerometer;
+extern Kernel::SharedPtr<Kernel::Event> g_event_gyroscope;
+extern Kernel::SharedPtr<Kernel::Event> g_event_debug_pad;
 
 /**
  * Structure of a Pad controller state.

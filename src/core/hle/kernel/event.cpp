@@ -14,78 +14,37 @@
 
 namespace Kernel {
 
-class Event : public WaitObject {
-public:
-    std::string GetTypeName() const override { return "Event"; }
-    std::string GetName() const override { return name; }
-
-    static const HandleType HANDLE_TYPE = HandleType::Event;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
-
-    ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
-    ResetType reset_type;                   ///< Current ResetType
-
-    bool signaled;                          ///< Whether the event has already been signaled
-    std::string name;                       ///< Name of event (optional)
-
-    bool ShouldWait() override {
-        return !signaled;
-    }
-
-    void Acquire() override {
-        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
-
-        // Release the event if it's not sticky...
-        if (reset_type != RESETTYPE_STICKY)
-            signaled = false;
-    }
-};
-
-ResultCode SignalEvent(const Handle handle) {
-    Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
-    evt->signaled = true;
-    evt->WakeupAllWaitingThreads();
-
-    return RESULT_SUCCESS;
-}
-
-ResultCode ClearEvent(Handle handle) {
-    Event* evt = g_handle_table.Get<Event>(handle).get();
-    if (evt == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
-    evt->signaled = false;
-
-    return RESULT_SUCCESS;
-}
-
-/**
- * Creates an event
- * @param handle Reference to handle for the newly created mutex
- * @param reset_type ResetType describing how to create event
- * @param name Optional name of event
- * @return Newly created Event object
- */
-static Event* CreateEvent(Handle& handle, const ResetType reset_type, const std::string& name) {
-    Event* evt = new Event;
-
-    // TOOD(yuriks): Fix error reporting
-    handle = Kernel::g_handle_table.Create(evt).ValueOr(INVALID_HANDLE);
+ResultVal<SharedPtr<Event>> Event::Create(ResetType reset_type, std::string name) {
+    SharedPtr<Event> evt(new Event);
+    // TOOD(yuriks): Don't create Handle (see Thread::Create())
+    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(evt));
 
     evt->signaled = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
-    evt->name = name;
+    evt->name = std::move(name);
 
-    return evt;
+    return MakeResult<SharedPtr<Event>>(evt);
 }
 
-Handle CreateEvent(const ResetType reset_type, const std::string& name) {
-    Handle handle;
-    Event* evt = CreateEvent(handle, reset_type, name);
-    return handle;
+bool Event::ShouldWait() {
+    return !signaled;
+}
+
+void Event::Acquire() {
+    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+
+    // Release the event if it's not sticky...
+    if (reset_type != RESETTYPE_STICKY)
+        signaled = false;
+}
+
+void Event::Signal() {
+    signaled = true;
+    WakeupAllWaitingThreads();
+}
+
+void Event::Clear() {
+    signaled = false;
 }
 
 } // namespace

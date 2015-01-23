@@ -447,11 +447,17 @@ static Result QueryMemory(void* info, void* out, u32 addr) {
 }
 
 /// Create an event
-static Result CreateEvent(Handle* evt, u32 reset_type) {
-    *evt = Kernel::CreateEvent((ResetType)reset_type);
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
-        reset_type, *evt);
-    return 0;
+static Result CreateEvent(Handle* handle, u32 reset_type) {
+    auto evt_res = Kernel::Event::Create(static_cast<ResetType>(reset_type));
+    if (evt_res.Failed())
+        return evt_res.Code().raw;
+    auto handle_res = Kernel::g_handle_table.Create(evt_res.MoveFrom());
+    if (handle_res.Failed())
+        return handle_res.Code().raw;
+    *handle = handle_res.MoveFrom();
+
+    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type, *handle);
+    return RESULT_SUCCESS.raw;
 }
 
 /// Duplicates a kernel handle
@@ -465,16 +471,28 @@ static Result DuplicateHandle(Handle* out, Handle handle) {
 }
 
 /// Signals an event
-static Result SignalEvent(Handle evt) {
-    LOG_TRACE(Kernel_SVC, "called event=0x%08X", evt);
+static Result SignalEvent(Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
+
+    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    if (evt == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    evt->Signal();
     HLE::Reschedule(__func__);
-    return Kernel::SignalEvent(evt).raw;
+    return RESULT_SUCCESS.raw;
 }
 
 /// Clears an event
-static Result ClearEvent(Handle evt) {
-    LOG_TRACE(Kernel_SVC, "called event=0x%08X", evt);
-    return Kernel::ClearEvent(evt).raw;
+static Result ClearEvent(Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
+
+    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    if (evt == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    evt->Clear();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Creates a timer

@@ -14,11 +14,11 @@ namespace HID {
 
 Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem = nullptr;
 
-Handle g_event_pad_or_touch_1 = 0;
-Handle g_event_pad_or_touch_2 = 0;
-Handle g_event_accelerometer = 0;
-Handle g_event_gyroscope = 0;
-Handle g_event_debug_pad = 0;
+Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
+Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_2;
+Kernel::SharedPtr<Kernel::Event> g_event_accelerometer;
+Kernel::SharedPtr<Kernel::Event> g_event_gyroscope;
+Kernel::SharedPtr<Kernel::Event> g_event_debug_pad;
 
 // Next Pad state update information
 static PadState next_state = {{0}};
@@ -115,19 +115,21 @@ void PadUpdateComplete() {
     }
     
     // Signal both handles when there's an update to Pad or touch
-    Kernel::SignalEvent(g_event_pad_or_touch_1);
-    Kernel::SignalEvent(g_event_pad_or_touch_2);
+    g_event_pad_or_touch_1->Signal();
+    g_event_pad_or_touch_2->Signal();
 }
 
 void HIDInit() {
-    g_shared_mem = Kernel::SharedMemory::Create("HID:SharedMem").MoveFrom();
+    using namespace Kernel;
+
+    g_shared_mem = SharedMemory::Create("HID:SharedMem").MoveFrom();
 
     // Create event handles
-    g_event_pad_or_touch_1 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1");
-    g_event_pad_or_touch_2 = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventPadOrTouch2");
-    g_event_accelerometer = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventAccelerometer");
-    g_event_gyroscope = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventGyroscope");
-    g_event_debug_pad = Kernel::CreateEvent(RESETTYPE_ONESHOT, "HID:EventDebugPad");
+    g_event_pad_or_touch_1 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1").MoveFrom();
+    g_event_pad_or_touch_2 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch2").MoveFrom();
+    g_event_accelerometer  = Event::Create(RESETTYPE_ONESHOT, "HID:EventAccelerometer").MoveFrom();
+    g_event_gyroscope      = Event::Create(RESETTYPE_ONESHOT, "HID:EventGyroscope").MoveFrom();
+    g_event_debug_pad      = Event::Create(RESETTYPE_ONESHOT, "HID:EventDebugPad").MoveFrom();
 }
 
 void HIDShutdown() {

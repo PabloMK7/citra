@@ -30,8 +30,8 @@ static const VAddr SHARED_FONT_VADDR = 0x18000000;
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
 
 static Kernel::SharedPtr<Kernel::Mutex> lock;
-static Handle notification_event_handle = 0; ///< APT notification event handle
-static Handle pause_event_handle = 0; ///< APT pause event handle
+static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
+static Kernel::SharedPtr<Kernel::Event> pause_event = 0; ///< APT pause event
 static std::vector<u8> shared_font;
 
 /// Signals used by APT functions
@@ -68,14 +68,16 @@ enum class AppID : u32 {
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    notification_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Notification");
-    pause_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause");
+    // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
+    notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification").MoveFrom();
+    pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause").MoveFrom();
 
-    cmd_buff[3] = notification_event_handle;
-    cmd_buff[4] = pause_event_handle;
+    cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(pause_event).MoveFrom();
 
-    Kernel::ClearEvent(notification_event_handle);
-    Kernel::SignalEvent(pause_event_handle); // Fire start event
+    // TODO(bunnei): Check if these events are cleared/signaled every time Initialize is called.
+    notification_event->Clear();
+    pause_event->Signal(); // Fire start event
 
     _assert_msg_(KERNEL, (nullptr != lock), "Cannot initialize without lock");
     lock->Release();
@@ -94,7 +96,7 @@ void NotifyToWait(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     // TODO(Subv): Verify this, it seems to get SWKBD and Home Menu further.
-    Kernel::SignalEvent(pause_event_handle);
+    pause_event->Signal();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
@@ -104,10 +106,6 @@ void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
 
-    if (nullptr == lock) {
-        // TODO(bunnei): Verify if this is created here or at application boot?
-        lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
-    }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     // Not sure what these parameters are used for, but retail apps check that they are 0 after
@@ -520,7 +518,7 @@ Interface::Interface() {
         shared_font_mem = nullptr;
     }
 
-    lock = nullptr;
+    lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }

@@ -11,7 +11,7 @@
 
 namespace SRV {
 
-static Handle g_event_handle = 0;
+static Kernel::SharedPtr<Kernel::Event> event_handle;
 
 static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -23,11 +23,11 @@ static void GetProcSemaphore(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
-    g_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "SRV:Event");
-    Kernel::ClearEvent(g_event_handle);
+    event_handle = Kernel::Event::Create(RESETTYPE_ONESHOT, "SRV:Event").MoveFrom();
+    event_handle->Clear();
 
     cmd_buff[1] = 0; // No error
-    cmd_buff[3] = g_event_handle;
+    cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
 }
 
 static void GetServiceHandle(Service::Interface* self) {
