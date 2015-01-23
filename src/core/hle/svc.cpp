@@ -26,6 +26,7 @@
 // Namespace SVC
 
 using Kernel::SharedPtr;
+using Kernel::ERR_INVALID_HANDLE;
 
 namespace SVC {
 
@@ -71,7 +72,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 
     SharedPtr<SharedMemory> shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     MemoryPermission permissions_type = static_cast<MemoryPermission>(permissions);
     switch (permissions_type) {
@@ -108,7 +109,7 @@ static ResultCode ConnectToPort(Handle* out, const char* port_name) {
 static ResultCode SendSyncRequest(Handle handle) {
     SharedPtr<Kernel::Session> session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
     if (session == nullptr) {
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
     }
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
@@ -127,7 +128,7 @@ static ResultCode CloseHandle(Handle handle) {
 static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     auto object = Kernel::g_handle_table.GetWaitObject(handle);
     if (object == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
@@ -176,7 +177,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         for (int i = 0; i < handle_count; ++i) {
             auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             if (object == nullptr)
-                return InvalidHandle(ErrorModule::Kernel);
+                return ERR_INVALID_HANDLE;
 
             // Check if the current thread should wait on this object...
             if (object->ShouldWait()) {
@@ -272,7 +273,7 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
 
     SharedPtr<AddressArbiter> arbiter = Kernel::g_handle_table.Get<AddressArbiter>(handle);
     if (arbiter == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     return arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type),
             address, value, nanoseconds);
@@ -347,7 +348,7 @@ static void ExitThread() {
 static ResultCode GetThreadPriority(s32* priority, Handle handle) {
     const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     *priority = thread->GetPriority();
     return RESULT_SUCCESS;
@@ -357,7 +358,7 @@ static ResultCode GetThreadPriority(s32* priority, Handle handle) {
 static ResultCode SetThreadPriority(Handle handle, s32 priority) {
     SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     thread->SetPriority(priority);
     return RESULT_SUCCESS;
@@ -386,7 +387,7 @@ static ResultCode ReleaseMutex(Handle handle) {
 
     SharedPtr<Mutex> mutex = Kernel::g_handle_table.Get<Mutex>(handle);
     if (mutex == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     mutex->Release();
     return RESULT_SUCCESS;
@@ -398,7 +399,7 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 
     const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     *thread_id = thread->GetThreadId();
     return RESULT_SUCCESS;
@@ -430,7 +431,7 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
 
     SharedPtr<Semaphore> semaphore = Kernel::g_handle_table.Get<Semaphore>(handle);
     if (semaphore == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     ResultVal<s32> release_res = semaphore->Release(release_count);
     if (release_res.Failed())
@@ -476,7 +477,7 @@ static ResultCode SignalEvent(Handle handle) {
 
     auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     evt->Signal();
     HLE::Reschedule(__func__);
@@ -489,7 +490,7 @@ static ResultCode ClearEvent(Handle handle) {
 
     auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     evt->Clear();
     return RESULT_SUCCESS;
@@ -520,7 +521,7 @@ static ResultCode ClearTimer(Handle handle) {
 
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     timer->Clear();
     return RESULT_SUCCESS;
@@ -534,7 +535,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     timer->Set(initial, interval);
     return RESULT_SUCCESS;
@@ -548,7 +549,7 @@ static ResultCode CancelTimer(Handle handle) {
 
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
+        return ERR_INVALID_HANDLE;
 
     timer->Cancel();
     return RESULT_SUCCESS;

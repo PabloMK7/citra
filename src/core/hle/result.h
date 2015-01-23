@@ -227,11 +227,6 @@ inline ResultCode UnimplementedFunction(ErrorModule module) {
     return ResultCode(ErrorDescription::NotImplemented, module,
             ErrorSummary::NotSupported, ErrorLevel::Permanent);
 }
-/// Returned when a function is passed an invalid handle.
-inline ResultCode InvalidHandle(ErrorModule module) {
-    return ResultCode(ErrorDescription::InvalidHandle, module,
-            ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-}
 
 /**
  * This is an optional value type. It holds a `ResultCode` and, if that code is a success code,
