@@ -10,6 +10,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/service/apt_s.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

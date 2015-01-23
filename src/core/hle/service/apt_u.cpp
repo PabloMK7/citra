@@ -10,6 +10,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/service/apt_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,7 @@ static const VAddr SHARED_FONT_VADDR = 0x18000000;
 /// Handle to shared memory region designated to for shared system font
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
 
-static Handle lock_handle = 0;
+static Kernel::SharedPtr<Kernel::Mutex> lock;
 static Handle notification_event_handle = 0; ///< APT notification event handle
 static Handle pause_event_handle = 0; ///< APT pause event handle
 static std::vector<u8> shared_font;
@@ -76,8 +77,8 @@ void Initialize(Service::Interface* self) {
     Kernel::ClearEvent(notification_event_handle);
     Kernel::SignalEvent(pause_event_handle); // Fire start event
 
-    _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
-    Kernel::ReleaseMutex(lock_handle);
+    _assert_msg_(KERNEL, (nullptr != lock), "Cannot initialize without lock");
+    lock->Release();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 }
@@ -103,10 +104,9 @@ void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
 
-    if (0 == lock_handle) {
+    if (nullptr == lock) {
         // TODO(bunnei): Verify if this is created here or at application boot?
-        lock_handle = Kernel::CreateMutex(false, "APT_U:Lock");
-        Kernel::ReleaseMutex(lock_handle);
+        lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
@@ -116,7 +116,7 @@ void GetLockHandle(Service::Interface* self) {
     cmd_buff[3] = 0;
     cmd_buff[4] = 0;
 
-    cmd_buff[5] = lock_handle;
+    cmd_buff[5] = Kernel::g_handle_table.Create(lock).MoveFrom();
     LOG_TRACE(Service_APT, "called handle=0x%08X", cmd_buff[5]);
 }
 
@@ -520,7 +520,7 @@ Interface::Interface() {
         shared_font_mem = nullptr;
     }
 
-    lock_handle = 0;
+    lock = nullptr;
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }

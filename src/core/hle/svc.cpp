@@ -364,18 +364,32 @@ static Result SetThreadPriority(Handle handle, s32 priority) {
 }
 
 /// Create a mutex
-static Result CreateMutex(Handle* mutex, u32 initial_locked) {
-    *mutex = Kernel::CreateMutex((initial_locked != 0));
+static Result CreateMutex(Handle* handle, u32 initial_locked) {
+    using Kernel::Mutex;
+
+    auto mutex_res = Mutex::Create(initial_locked != 0);
+    if (mutex_res.Failed())
+        return mutex_res.Code().raw;
+    SharedPtr<Mutex> mutex = mutex_res.MoveFrom();
+
+    *handle = Kernel::g_handle_table.Create(mutex).MoveFrom();
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
-        initial_locked ? "true" : "false", *mutex);
+        initial_locked ? "true" : "false", *handle);
     return 0;
 }
 
 /// Release a mutex
 static Result ReleaseMutex(Handle handle) {
+    using Kernel::Mutex;
+
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X", handle);
-    ResultCode res = Kernel::ReleaseMutex(handle);
-    return res.raw;
+
+    SharedPtr<Mutex> mutex = Kernel::g_handle_table.Get<Mutex>(handle);
+    if (mutex == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    mutex->Release();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Get the ID for the specified thread.
