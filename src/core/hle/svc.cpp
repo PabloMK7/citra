@@ -247,20 +247,12 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
-static ResultCode CreateAddressArbiter(u32* arbiter) {
+static ResultCode CreateAddressArbiter(Handle* out_handle) {
     using Kernel::AddressArbiter;
 
-    ResultVal<SharedPtr<AddressArbiter>> arbiter_res = AddressArbiter::Create();
-    if (arbiter_res.Failed())
-        return arbiter_res.Code();
-
-    ResultVal<Handle> handle_res = Kernel::g_handle_table.Create(*arbiter_res);
-    if (handle_res.Failed())
-        return handle_res.Code();
-
-    LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *handle_res);
-
-    *arbiter = *handle_res;
+    CASCADE_RESULT(SharedPtr<AddressArbiter> arbiter, AddressArbiter::Create());
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(arbiter)));
+    LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -304,7 +296,7 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_lim
 }
 
 /// Creates a new thread
-static ResultCode CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
+static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
     using Kernel::Thread;
 
     std::string name;
@@ -315,18 +307,13 @@ static ResultCode CreateThread(u32 priority, u32 entry_point, u32 arg, u32 stack
         name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
-    ResultVal<SharedPtr<Thread>> thread_res = Kernel::Thread::Create(
-            name, entry_point, priority, arg, processor_id, stack_top, Kernel::DEFAULT_STACK_SIZE);
-    if (thread_res.Failed())
-        return thread_res.Code();
-    SharedPtr<Thread> thread = std::move(*thread_res);
-
-    // TODO(yuriks): Create new handle instead of using built-in
-    Core::g_app_core->SetReg(1, thread->GetHandle());
+    CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(
+            name, entry_point, priority, arg, processor_id, stack_top, Kernel::DEFAULT_STACK_SIZE));
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
 
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
-        name.c_str(), arg, stack_top, priority, processor_id, thread->GetHandle());
+        name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
 
     if (THREADPROCESSORID_1 == processor_id) {
         LOG_WARNING(Kernel_SVC,
@@ -365,17 +352,14 @@ static ResultCode SetThreadPriority(Handle handle, s32 priority) {
 }
 
 /// Create a mutex
-static ResultCode CreateMutex(Handle* handle, u32 initial_locked) {
+static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
-    auto mutex_res = Mutex::Create(initial_locked != 0);
-    if (mutex_res.Failed())
-        return mutex_res.Code();
-    SharedPtr<Mutex> mutex = mutex_res.MoveFrom();
+    CASCADE_RESULT(SharedPtr<Mutex> mutex, Mutex::Create(initial_locked != 0));
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
-    *handle = Kernel::g_handle_table.Create(mutex).MoveFrom();
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
-        initial_locked ? "true" : "false", *handle);
+        initial_locked ? "true" : "false", *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -406,20 +390,14 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 }
 
 /// Creates a semaphore
-static ResultCode CreateSemaphore(Handle* semaphore, s32 initial_count, s32 max_count) {
+static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
     using Kernel::Semaphore;
 
-    ResultVal<SharedPtr<Semaphore>> semaphore_res = Semaphore::Create(initial_count, max_count);
-    if (semaphore_res.Failed())
-        return semaphore_res.Code();
+    CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(semaphore)));
 
-    ResultVal<Handle> handle_res = Kernel::g_handle_table.Create(*semaphore_res);
-    if (handle_res.Failed())
-        return handle_res.Code();
-
-    *semaphore = *handle_res;
     LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
-        initial_count, max_count, *semaphore);
+        initial_count, max_count, *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -433,11 +411,7 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
     if (semaphore == nullptr)
         return ERR_INVALID_HANDLE;
 
-    ResultVal<s32> release_res = semaphore->Release(release_count);
-    if (release_res.Failed())
-        return release_res.Code();
-
-    *count = *release_res;
+    CASCADE_RESULT(*count, semaphore->Release(release_count));
     return RESULT_SUCCESS;
 }
 
@@ -448,16 +422,12 @@ static ResultCode QueryMemory(void* info, void* out, u32 addr) {
 }
 
 /// Create an event
-static ResultCode CreateEvent(Handle* handle, u32 reset_type) {
-    auto evt_res = Kernel::Event::Create(static_cast<ResetType>(reset_type));
-    if (evt_res.Failed())
-        return evt_res.Code();
-    auto handle_res = Kernel::g_handle_table.Create(evt_res.MoveFrom());
-    if (handle_res.Failed())
-        return handle_res.Code();
-    *handle = handle_res.MoveFrom();
+static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
+    CASCADE_RESULT(auto evt, Kernel::Event::Create(static_cast<ResetType>(reset_type)));
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type, *handle);
+    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
+            reset_type, *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -497,19 +467,14 @@ static ResultCode ClearEvent(Handle handle) {
 }
 
 /// Creates a timer
-static ResultCode CreateTimer(Handle* handle, u32 reset_type) {
+static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
-    auto timer_res = Timer::Create(static_cast<ResetType>(reset_type));
-    if (timer_res.Failed())
-        return timer_res.Code();
+    CASCADE_RESULT(auto timer, Timer::Create(static_cast<ResetType>(reset_type)));
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
-    auto handle_res = Kernel::g_handle_table.Create(timer_res.MoveFrom());
-    if (handle_res.Failed())
-        return handle_res.Code();
-    *handle = handle_res.MoveFrom();
-
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type, *handle);
+    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
+            reset_type, *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -574,20 +539,14 @@ static s64 GetSystemTick() {
 }
 
 /// Creates a memory block at the specified address with the specified permissions and size
-static ResultCode CreateMemoryBlock(Handle* memblock, u32 addr, u32 size, u32 my_permission,
+static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_permission,
         u32 other_permission) {
     using Kernel::SharedMemory;
     // TODO(Subv): Implement this function
 
-    ResultVal<SharedPtr<SharedMemory>> shared_memory_res = SharedMemory::Create();
-    if (shared_memory_res.Failed())
-        return shared_memory_res.Code();
+    CASCADE_RESULT(auto shared_memory, SharedMemory::Create());
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(shared_memory)));
 
-    ResultVal<Handle> handle_res = Kernel::g_handle_table.Create(*shared_memory_res);
-    if (handle_res.Failed())
-        return handle_res.Code();
-
-    *memblock = *handle_res;
     LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);
     return RESULT_SUCCESS;
 }
