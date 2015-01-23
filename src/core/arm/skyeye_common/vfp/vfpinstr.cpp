@@ -26,9 +26,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmla_inst));
     vmla_inst *inst_cream = (vmla_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -149,9 +149,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmls_inst));
     vmls_inst *inst_cream = (vmls_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -272,9 +272,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmla_inst));
     vnmla_inst *inst_cream = (vnmla_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -397,9 +397,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmls_inst));
     vnmls_inst *inst_cream = (vnmls_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -520,9 +520,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmul_inst));
     vnmul_inst *inst_cream = (vnmul_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -634,9 +634,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmul_inst));
     vmul_inst *inst_cream = (vmul_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -761,9 +761,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vadd_inst));
     vadd_inst *inst_cream = (vadd_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -882,9 +882,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vsub_inst));
     vsub_inst *inst_cream = (vsub_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1001,9 +1001,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vdiv_inst));
     vdiv_inst *inst_cream = (vdiv_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1124,13 +1124,13 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovi_inst));
     vmovi_inst *inst_cream = (vmovi_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->single   = BIT(inst, 8) == 0;
-    inst_cream->d        = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
+    inst_cream->single = BIT(inst, 8) == 0;
+    inst_cream->d      = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
     unsigned int imm8 = BITS(inst, 16, 19) << 4 | BITS(inst, 0, 3);
     if (inst_cream->single)
         inst_cream->imm = BIT(imm8, 7)<<31 | (BIT(imm8, 6)==0)<<30 | (BIT(imm8, 6) ? 0x1f : 0)<<25 | BITS(imm8, 0, 5)<<19;
@@ -1215,14 +1215,14 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovr_inst));
     vmovr_inst *inst_cream = (vmovr_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->single   = BIT(inst, 8) == 0;
-    inst_cream->d        = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
-    inst_cream->m        = (inst_cream->single ? BITS(inst, 0, 3)<<1 | BIT(inst, 5) : BITS(inst, 0, 3) | BIT(inst, 5)<<4);
+    inst_cream->single = BIT(inst, 8) == 0;
+    inst_cream->d      = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
+    inst_cream->m      = (inst_cream->single ? BITS(inst, 0, 3)<<1 | BIT(inst, 5) : BITS(inst, 0, 3) | BIT(inst, 5)<<4);
     return inst_base;
 }
 #endif
@@ -1294,9 +1294,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vabs_inst));
     vabs_inst *inst_cream = (vabs_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1400,9 +1400,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vneg_inst));
     vneg_inst *inst_cream = (vneg_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1507,9 +1507,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vsqrt_inst));
     vsqrt_inst *inst_cream = (vsqrt_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1602,9 +1602,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcmp_inst));
     vcmp_inst *inst_cream = (vcmp_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1724,9 +1724,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcmp2_inst));
     vcmp2_inst *inst_cream = (vcmp2_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -1846,9 +1846,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcvtbds_inst));
     vcvtbds_inst *inst_cream = (vcvtbds_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -2016,9 +2016,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcvtbfi_inst));
     vcvtbfi_inst *inst_cream = (vcvtbfi_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->dp_operation = BIT(inst, 8);
@@ -2188,14 +2188,14 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrs_inst));
     vmovbrs_inst *inst_cream = (vmovbrs_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->to_arm   = BIT(inst, 20) == 1;
-    inst_cream->t        = BITS(inst, 12, 15);
-    inst_cream->n        = BIT(inst, 7) | BITS(inst, 16, 19)<<1;
+    inst_cream->to_arm = BIT(inst, 20) == 1;
+    inst_cream->t      = BITS(inst, 12, 15);
+    inst_cream->n      = BIT(inst, 7) | BITS(inst, 16, 19)<<1;
 
     return inst_base;
 }
@@ -2268,13 +2268,13 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmsr_inst));
     vmsr_inst *inst_cream = (vmsr_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->reg  = BITS(inst, 16, 19);
-    inst_cream->Rd   = BITS(inst, 12, 15);
+    inst_cream->reg = BITS(inst, 16, 19);
+    inst_cream->Rd  = BITS(inst, 12, 15);
 
     return inst_base;
 }
@@ -2367,9 +2367,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrc_inst));
     vmovbrc_inst *inst_cream = (vmovbrc_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
@@ -2436,13 +2436,13 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmrs_inst));
     vmrs_inst *inst_cream = (vmrs_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->reg  = BITS(inst, 16, 19);
-    inst_cream->Rt     = BITS(inst, 12, 15);
+    inst_cream->reg = BITS(inst, 16, 19);
+    inst_cream->Rt  = BITS(inst, 12, 15);
 
     return inst_base;
 }
@@ -2596,9 +2596,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbcr_inst));
     vmovbcr_inst *inst_cream = (vmovbcr_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
@@ -2672,15 +2672,15 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrrss_inst));
     vmovbrrss_inst *inst_cream = (vmovbrrss_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->to_arm     = BIT(inst, 20) == 1;
-    inst_cream->t          = BITS(inst, 12, 15);
-    inst_cream->t2         = BITS(inst, 16, 19);
-    inst_cream->m          = BITS(inst, 0, 3)<<1|BIT(inst, 5);
+    inst_cream->to_arm = BIT(inst, 20) == 1;
+    inst_cream->t      = BITS(inst, 12, 15);
+    inst_cream->t2     = BITS(inst, 16, 19);
+    inst_cream->m      = BITS(inst, 0, 3)<<1|BIT(inst, 5);
 
     return inst_base;
 }
@@ -2756,15 +2756,15 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrrd_inst));
     vmovbrrd_inst *inst_cream = (vmovbrrd_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->to_arm   = BIT(inst, 20) == 1;
-    inst_cream->t        = BITS(inst, 12, 15);
-    inst_cream->t2       = BITS(inst, 16, 19);
-    inst_cream->m        = BIT(inst, 5)<<4 | BITS(inst, 0, 3);
+    inst_cream->to_arm = BIT(inst, 20) == 1;
+    inst_cream->t      = BITS(inst, 12, 15);
+    inst_cream->t2     = BITS(inst, 16, 19);
+    inst_cream->m      = BIT(inst, 5)<<4 | BITS(inst, 0, 3);
 
     return inst_base;
 }
@@ -2846,16 +2846,16 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vstr_inst));
     vstr_inst *inst_cream = (vstr_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single = BIT(inst, 8) == 0;
-    inst_cream->add       = BIT(inst, 23);
+    inst_cream->add    = BIT(inst, 23);
     inst_cream->imm32  = BITS(inst, 0,7) << 2;
     inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
-    inst_cream->n       = BITS(inst, 16, 19);
+    inst_cream->n      = BITS(inst, 16, 19);
 
     return inst_base;
 }
@@ -2907,10 +2907,10 @@ int DYNCOM_TAG(vstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *
 #ifdef VFP_DYNCOM_TRANS
 int DYNCOM_TRANS(vstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
     int single = BIT(8) == 0;
-    int add       = BIT(23);
+    int add    = BIT(23);
     int imm32  = BITS(0,7) << 2;
     int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
-    int n       = BITS(16, 19);
+    int n      = BITS(16, 19);
 
     Value* base = (n == 15) ? ADD(AND(R(n), CONST(0xFFFFFFFC)), CONST(8)): R(n);
     Value* Addr = add ? ADD(base, CONST(imm32)) : SUB(base, CONST(imm32));
@@ -2956,9 +2956,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vpush_inst));
     vpush_inst *inst_cream = (vpush_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single  = BIT(inst, 8) == 0;
@@ -2974,13 +2974,12 @@ VPUSH_INST:
 {
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
-        int i;
 
         vpush_inst *inst_cream = (vpush_inst *)inst_base->component;
 
         addr = cpu->Reg[R13] - inst_cream->imm32;
 
-        for (i = 0; i < inst_cream->regs; i++)
+        for (int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -3032,8 +3031,8 @@ int DYNCOM_TRANS(vpush)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
     //else
     //    bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
     //Value* phys_addr;
-    int i;
-    for (i = 0; i < regs; i++)
+
+    for (int i = 0; i < regs; i++)
     {
         if (single)
         {
@@ -3084,9 +3083,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vstm_inst));
     vstm_inst *inst_cream = (vstm_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single = BIT(inst, 8) == 0;
@@ -3106,13 +3105,11 @@ VSTM_INST: /* encoding 1 */
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        int i;
-
         vstm_inst *inst_cream = (vstm_inst *)inst_base->component;
 
         addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 
-        for (i = 0; i < inst_cream->regs; i++)
+        for (int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -3237,9 +3234,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vpop_inst));
     vpop_inst *inst_cream = (vpop_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single  = BIT(inst, 8) == 0;
@@ -3256,14 +3253,13 @@ VPOP_INST:
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        int i;
         unsigned int value1, value2;
 
         vpop_inst *inst_cream = (vpop_inst *)inst_base->component;
 
         addr = cpu->Reg[R13];
 
-        for (i = 0; i < inst_cream->regs; i++)
+        for (int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -3379,16 +3375,16 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vldr_inst));
     vldr_inst *inst_cream = (vldr_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single = BIT(inst, 8) == 0;
-    inst_cream->add       = BIT(inst, 23);
+    inst_cream->add    = BIT(inst, 23);
     inst_cream->imm32  = BITS(inst, 0,7) << 2;
     inst_cream->d      = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
-    inst_cream->n       = BITS(inst, 16, 19);
+    inst_cream->n      = BITS(inst, 16, 19);
 
     return inst_base;
 }
@@ -3511,9 +3507,9 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vldm_inst));
     vldm_inst *inst_cream = (vldm_inst *)inst_base->component;
 
-    inst_base->cond  = BITS(inst, 28, 31);
-    inst_base->idx     = index;
-    inst_base->br     = NON_BRANCH;
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
     inst_cream->single = BIT(inst, 8) == 0;
@@ -3533,13 +3529,11 @@ VLDM_INST:
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        int i;
-
         vldm_inst *inst_cream = (vldm_inst *)inst_base->component;
 
         addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 
-        for (i = 0; i < inst_cream->regs; i++)
+        for (int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
