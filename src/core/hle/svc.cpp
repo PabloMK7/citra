@@ -479,28 +479,61 @@ static Result ClearEvent(Handle evt) {
 
 /// Creates a timer
 static Result CreateTimer(Handle* handle, u32 reset_type) {
-    ResultCode res = Kernel::CreateTimer(handle, static_cast<ResetType>(reset_type));
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
-        reset_type, *handle);
-    return res.raw;
+    using Kernel::Timer;
+
+    auto timer_res = Timer::Create(static_cast<ResetType>(reset_type));
+    if (timer_res.Failed())
+        return timer_res.Code().raw;
+
+    auto handle_res = Kernel::g_handle_table.Create(timer_res.MoveFrom());
+    if (handle_res.Failed())
+        return handle_res.Code().raw;
+    *handle = handle_res.MoveFrom();
+
+    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type, *handle);
+    return RESULT_SUCCESS.raw;
 }
 
 /// Clears a timer
 static Result ClearTimer(Handle handle) {
+    using Kernel::Timer;
+
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
-    return Kernel::ClearTimer(handle).raw;
+
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
+    if (timer == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    timer->Clear();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Starts a timer
 static Result SetTimer(Handle handle, s64 initial, s64 interval) {
+    using Kernel::Timer;
+
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
-    return Kernel::SetTimer(handle, initial, interval).raw;
+
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
+    if (timer == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    timer->Set(initial, interval);
+    return RESULT_SUCCESS.raw;
 }
 
 /// Cancels a timer
 static Result CancelTimer(Handle handle) {
+    using Kernel::Timer;
+
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
-    return Kernel::CancelTimer(handle).raw;
+
+    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
+    if (timer == nullptr)
+        return InvalidHandle(ErrorModule::Kernel).raw;
+
+    timer->Cancel();
+    return RESULT_SUCCESS.raw;
 }
 
 /// Sleep the current thread

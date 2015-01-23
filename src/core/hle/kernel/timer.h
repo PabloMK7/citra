@@ -11,37 +11,50 @@
 
 namespace Kernel {
 
-/**
- * Cancels a timer
- * @param handle Handle of the timer to cancel
- */
-ResultCode CancelTimer(Handle handle);
+class Timer : public WaitObject {
+public:
+    /**
+     * Creates a timer
+     * @param reset_type ResetType describing how to create the timer
+     * @param name Optional name of timer
+     * @return The created Timer
+     */
+    static ResultVal<SharedPtr<Timer>> Create(ResetType reset_type, std::string name = "Unknown");
 
-/**
- * Starts a timer with the specified initial delay and interval
- * @param handle Handle of the timer to start
- * @param initial Delay until the timer is first fired
- * @param interval Delay until the timer is fired after the first time
- */
-ResultCode SetTimer(Handle handle, s64 initial, s64 interval);
+    std::string GetTypeName() const override { return "Timer"; }
+    std::string GetName() const override { return name; }
 
-/**
- * Clears a timer
- * @param handle Handle of the timer to clear
- */
-ResultCode ClearTimer(Handle handle);
+    static const HandleType HANDLE_TYPE = HandleType::Timer;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
-/**
- * Creates a timer
- * @param handle Handle to the newly created Timer object
- * @param reset_type ResetType describing how to create the timer
- * @param name Optional name of timer
- * @return ResultCode of the error
- */
-ResultCode CreateTimer(Handle* handle, const ResetType reset_type, const std::string& name="Unknown");
+    ResetType reset_type;                   ///< The ResetType of this timer
+
+    bool signaled;                          ///< Whether the timer has been signaled or not
+    std::string name;                       ///< Name of timer (optional)
+
+    u64 initial_delay;                      ///< The delay until the timer fires for the first time
+    u64 interval_delay;                     ///< The delay until the timer fires after the first time
+
+    bool ShouldWait() override;
+    void Acquire() override;
+
+    /**
+     * Starts the timer, with the specified initial delay and interval.
+     * @param initial Delay until the timer is first fired
+     * @param interval Delay until the timer is fired after the first time
+     */
+    void Set(s64 initial, s64 interval);
+
+    void Cancel();
+    void Clear();
+
+private:
+    Timer() = default;
+};
 
 /// Initializes the required variables for timers
 void TimersInit();
 /// Tears down the timer variables
 void TimersShutdown();
+
 } // namespace
