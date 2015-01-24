@@ -6,9 +6,11 @@ clone_depth: 1
 
 environment:
   QTDIR: C:\Qt\5.4\msvc2013_opengl
+  MEGA_EMAIL:
+    secure: dLyH/46MKKuCZyozkwwVGCL7nVyX+Cxyo1hVlCUaQDU=
   MEGA_PASSWORD:
     secure: ozgp54EZj98kcbD/O+Xl5Q==
-    
+
 platform:
   - Win32
 
@@ -23,7 +25,7 @@ before_build:
   - cd build
   - cmake ..
   - cd ..
-  
+
 after_build:
   # upload the build to Mega
   - cinst wget -x86
@@ -38,12 +40,9 @@ after_build:
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Gui.dll  build\bin\release
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5OpenGL.dll build\bin\release
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Widgets.dll  build\bin\release
-    # delete build craps
-  - del /F /S /Q /A "build\bin\release\*.ilk"
-  - del /F /S /Q /A "build\bin\release\*.pdb"
     # zip up the build folder -> build.7z
   - 7z a build .\build\bin\release\*
     # rename, upload to Mega
+  - npm install sanitize-filename
   - cd megatools-1.9.94-win64
   - node ..\upload_to_mega.js
-  
