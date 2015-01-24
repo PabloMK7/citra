@@ -40,6 +40,8 @@ after_build:
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Gui.dll  build\bin\release
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5OpenGL.dll build\bin\release
   - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Widgets.dll  build\bin\release
+  - mkdir build\bin\release\platforms\
+  - copy C:\Qt\5.4\msvc2013_opengl\plugins\platforms\qwindows.dll build\bin\release\platforms
     # zip up the build folder -> build.7z
   - 7z a build .\build\bin\release\*
     # rename, upload to Mega
