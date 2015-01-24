@@ -50,7 +50,7 @@
  * this code that are retained.
  * ===========================================================================
  */
- 
+
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
@@ -63,7 +63,7 @@ static struct vfp_double vfp_double_default_qnan = {
 
 static void vfp_double_dump(const char *str, struct vfp_double *d)
 {
-    pr_debug("VFP: %s: sign=%d exponent=%d significand=%016llx\n",
+    LOG_TRACE(Core_ARM11, "VFP: %s: sign=%d exponent=%d significand=%016llx\n",
              str, d->sign != 0, d->exponent, d->significand);
 }
 
@@ -155,7 +155,7 @@ u32 vfp_double_normaliseroundintern(ARMul_State* state, struct vfp_double *vd, u
     else if ((rmode == FPSCR_ROUND_PLUSINF) ^ (vd->sign != 0))
         incr = (1ULL << (VFP_DOUBLE_LOW_BITS + 1)) - 1;
 
-    pr_debug("VFP: rounding increment = 0x%08llx\n", incr);
+    LOG_TRACE(Core_ARM11, "VFP: rounding increment = 0x%08llx\n", incr);
 
     /*
     * Is our rounding going to overflow?
@@ -281,7 +281,7 @@ u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double *vd,
     } else if ((rmode == FPSCR_ROUND_PLUSINF) ^ (vd->sign != 0))
         incr = (1ULL << (VFP_DOUBLE_LOW_BITS + 1)) - 1;
 
-    pr_debug("VFP: rounding increment = 0x%08llx\n", incr);
+    LOG_TRACE(Core_ARM11, "VFP: rounding increment = 0x%08llx\n", incr);
 
     /*
      * Is our rounding going to overflow?
@@ -336,7 +336,7 @@ pack:
     vfp_double_dump("pack: final", vd);
     {
         s64 d = vfp_double_pack(vd);
-        pr_debug("VFP: %s: d(d%d)=%016llx exceptions=%08x\n", func,
+        LOG_TRACE(Core_ARM11, "VFP: %s: d(d%d)=%016llx exceptions=%08x\n", func,
                  dd, d, exceptions);
         vfp_put_double(state, d, dd);
     }
@@ -393,28 +393,28 @@ vfp_propagate_nan(struct vfp_double *vdd, struct vfp_double *vdn,
  */
 static u32 vfp_double_fabs(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_put_double(state, vfp_double_packed_abs(vfp_get_double(state, dm)), dd);
     return 0;
 }
 
 static u32 vfp_double_fcpy(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_put_double(state, vfp_get_double(state, dm), dd);
     return 0;
 }
 
 static u32 vfp_double_fneg(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_put_double(state, vfp_double_packed_negate(vfp_get_double(state, dm)), dd);
     return 0;
 }
 
 static u32 vfp_double_fsqrt(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double vdm, vdd, *vdp;
     int ret, tm;
 
@@ -508,7 +508,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
     s64 d, m;
     u32 ret = 0;
 
-    pr_debug("In %s, state=0x%x, fpscr=0x%x\n", __FUNCTION__, state, fpscr);
+    LOG_TRACE(Core_ARM11, "In %s, state=0x%x, fpscr=0x%x\n", __FUNCTION__, state, fpscr);
     m = vfp_get_double(state, dm);
     if (vfp_double_packed_exponent(m) == 2047 && vfp_double_packed_mantissa(m)) {
         ret |= FPSCR_C | FPSCR_V;
@@ -563,32 +563,32 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
             ret |= FPSCR_C;
         }
     }
-    pr_debug("In %s, state=0x%x, ret=0x%x\n", __FUNCTION__, state, ret);
+    LOG_TRACE(Core_ARM11, "In %s, state=0x%x, ret=0x%x\n", __FUNCTION__, state, ret);
 
     return ret;
 }
 
 static u32 vfp_double_fcmp(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_compare(state, dd, 0, dm, fpscr);
 }
 
 static u32 vfp_double_fcmpe(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_compare(state, dd, 1, dm, fpscr);
 }
 
 static u32 vfp_double_fcmpz(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_compare(state, dd, 0, VFP_REG_ZERO, fpscr);
 }
 
 static u32 vfp_double_fcmpez(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_compare(state, dd, 1, VFP_REG_ZERO, fpscr);
 }
 
@@ -598,7 +598,7 @@ u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, struct vfp_double*
     int tm;
     u32 exceptions = 0;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
 
     tm = vfp_double_type(dm);
 
@@ -642,7 +642,7 @@ static u32 vfp_double_fcvts(ARMul_State* state, int sd, int unused, int dm, u32 
     int tm;
     u32 exceptions = 0;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdm, vfp_get_double(state, dm));
 
     tm = vfp_double_type(&vdm);
@@ -684,7 +684,7 @@ static u32 vfp_double_fuito(ARMul_State* state, int dd, int unused, int dm, u32 
     struct vfp_double vdm;
     u32 m = vfp_get_float(state, dm);
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vdm.sign = 0;
     vdm.exponent = 1023 + 63 - 1;
     vdm.significand = (u64)m;
@@ -697,7 +697,7 @@ static u32 vfp_double_fsito(ARMul_State* state, int dd, int unused, int dm, u32 
     struct vfp_double vdm;
     u32 m = vfp_get_float(state, dm);
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vdm.sign = (m & 0x80000000) >> 16;
     vdm.exponent = 1023 + 63 - 1;
     vdm.significand = vdm.sign ? -m : m;
@@ -712,7 +712,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
     int rmode = fpscr & FPSCR_RMODE_MASK;
     int tm;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdm, vfp_get_double(state, dm));
 
     /*
@@ -773,7 +773,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
         }
     }
 
-    pr_debug("VFP: ftoui: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
+    LOG_TRACE(Core_ARM11, "VFP: ftoui: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
 
     vfp_put_float(state, d, sd);
 
@@ -782,7 +782,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
 
 static u32 vfp_double_ftouiz(ARMul_State* state, int sd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_ftoui(state, sd, unused, dm, FPSCR_ROUND_TOZERO);
 }
 
@@ -793,7 +793,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
     int rmode = fpscr & FPSCR_RMODE_MASK;
     int tm;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdm, vfp_get_double(state, dm));
     vfp_double_dump("VDM", &vdm);
 
@@ -850,7 +850,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
         }
     }
 
-    pr_debug("VFP: ftosi: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
+    LOG_TRACE(Core_ARM11, "VFP: ftosi: d(s%d)=%08x exceptions=%08x\n", sd, d, exceptions);
 
     vfp_put_float(state, (s32)d, sd);
 
@@ -859,7 +859,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
 
 static u32 vfp_double_ftosiz(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_ftosi(state, dd, unused, dm, FPSCR_ROUND_TOZERO);
 }
 
@@ -893,9 +893,6 @@ static struct op fops_ext[] = {
     { vfp_double_ftosi,  OP_SCALAR },         //0x0000001A - FEXT_FTOSI
     { vfp_double_ftosiz, OP_SCALAR },         //0x0000001B - FEXT_FTOSIZ
 };
-
-
-
 
 static u32
 vfp_double_fadd_nonnumber(struct vfp_double *vdd, struct vfp_double *vdn,
@@ -946,7 +943,7 @@ u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn,struct vfp_dou
 
     if (vdn->significand & (1ULL << 63) ||
             vdm->significand & (1ULL << 63)) {
-        pr_info("VFP: bad FP values in %s\n", __func__);
+        LOG_INFO(Core_ARM11, "VFP: bad FP values in %s\n", __func__);
         vfp_double_dump("VDN", vdn);
         vfp_double_dump("VDM", vdm);
     }
@@ -1018,7 +1015,7 @@ vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn,
         struct vfp_double *t = vdn;
         vdn = vdm;
         vdm = t;
-        pr_debug("VFP: swapping M <-> N\n");
+        LOG_TRACE(Core_ARM11, "VFP: swapping M <-> N\n");
     }
 
     vdd->sign = vdn->sign ^ vdm->sign;
@@ -1099,7 +1096,7 @@ vfp_double_multiply_accumulate(ARMul_State* state, int dd, int dn, int dm, u32 f
  */
 static u32 vfp_double_fmac(ARMul_State* state, int dd, int dn, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, 0, "fmac");
 }
 
@@ -1108,7 +1105,7 @@ static u32 vfp_double_fmac(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
  */
 static u32 vfp_double_fnmac(ARMul_State* state, int dd, int dn, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_MULTIPLY, "fnmac");
 }
 
@@ -1117,7 +1114,7 @@ static u32 vfp_double_fnmac(ARMul_State* state, int dd, int dn, int dm, u32 fpsc
  */
 static u32 vfp_double_fmsc(ARMul_State* state, int dd, int dn, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_SUBTRACT, "fmsc");
 }
 
@@ -1126,7 +1123,7 @@ static u32 vfp_double_fmsc(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
  */
 static u32 vfp_double_fnmsc(ARMul_State* state, int dd, int dn, int dm, u32 fpscr)
 {
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_SUBTRACT | NEG_MULTIPLY, "fnmsc");
 }
 
@@ -1138,7 +1135,7 @@ static u32 vfp_double_fmul(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
     struct vfp_double vdd, vdn, vdm;
     u32 exceptions;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdn, vfp_get_double(state, dn));
     if (vdn.exponent == 0 && vdn.significand)
         vfp_double_normalise_denormal(&vdn);
@@ -1159,7 +1156,7 @@ static u32 vfp_double_fnmul(ARMul_State* state, int dd, int dn, int dm, u32 fpsc
     struct vfp_double vdd, vdn, vdm;
     u32 exceptions;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdn, vfp_get_double(state, dn));
     if (vdn.exponent == 0 && vdn.significand)
         vfp_double_normalise_denormal(&vdn);
@@ -1182,7 +1179,7 @@ static u32 vfp_double_fadd(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
     struct vfp_double vdd, vdn, vdm;
     u32 exceptions;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdn, vfp_get_double(state, dn));
     if (vdn.exponent == 0 && vdn.significand)
         vfp_double_normalise_denormal(&vdn);
@@ -1204,7 +1201,7 @@ static u32 vfp_double_fsub(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
     struct vfp_double vdd, vdn, vdm;
     u32 exceptions;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdn, vfp_get_double(state, dn));
     if (vdn.exponent == 0 && vdn.significand)
         vfp_double_normalise_denormal(&vdn);
@@ -1232,7 +1229,7 @@ static u32 vfp_double_fdiv(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
     u32 exceptions = 0;
     int tm, tn;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vfp_double_unpack(&vdn, vfp_get_double(state, dn));
     vfp_double_unpack(&vdm, vfp_get_double(state, dm));
 
@@ -1357,7 +1354,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
     unsigned int vecitr, veclen, vecstride;
     struct op *fop;
 
-    pr_debug("In %s\n", __FUNCTION__);
+    LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vecstride = (1 + ((fpscr & FPSCR_STRIDE_MASK) == FPSCR_STRIDE_MASK));
 
     fop = (op == FOP_EXT) ? &fops_ext[FEXT_TO_IDX(inst)] : &fops[FOP_TO_IDX(op)];
@@ -1388,7 +1385,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
     else
         veclen = fpscr & FPSCR_LENGTH_MASK;
 
-    pr_debug("VFP: vecstride=%u veclen=%u\n", vecstride,
+    LOG_TRACE(Core_ARM11, "VFP: vecstride=%u veclen=%u\n", vecstride,
              (veclen >> FPSCR_LENGTH_BIT) + 1);
 
     if (!fop->fn) {
@@ -1402,16 +1399,16 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
 
         type = (fop->flags & OP_SD) ? 's' : 'd';
         if (op == FOP_EXT)
-            pr_debug("VFP: itr%d (%c%u) = op[%u] (d%u)\n",
+            LOG_TRACE(Core_ARM11, "VFP: itr%d (%c%u) = op[%u] (d%u)\n",
                      vecitr >> FPSCR_LENGTH_BIT,
                      type, dest, dn, dm);
         else
-            pr_debug("VFP: itr%d (%c%u) = (d%u) op[%u] (d%u)\n",
+            LOG_TRACE(Core_ARM11, "VFP: itr%d (%c%u) = (d%u) op[%u] (d%u)\n",
                      vecitr >> FPSCR_LENGTH_BIT,
                      type, dest, dn, FOP_TO_IDX(op), dm);
 
         except = fop->fn(state, dest, dn, dm, fpscr);
-        pr_debug("VFP: itr%d: exceptions=%08x\n",
+        LOG_TRACE(Core_ARM11, "VFP: itr%d: exceptions=%08x\n",
                  vecitr >> FPSCR_LENGTH_BIT, except);
 
         exceptions |= except;

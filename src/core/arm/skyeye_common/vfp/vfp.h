@@ -1,4 +1,4 @@
-/* 
+/*
     vfp/vfp.h - ARM VFPv3 emulation unit - vfp interface
     Copyright (C) 2003 Skyeye Develop Group
     for help please send mail to <skyeye-developer@lists.gro.clinux.org>
@@ -21,15 +21,10 @@
 #ifndef __VFP_H__
 #define __VFP_H__
 
-#define DBG(...) //DEBUG_LOG(ARM11, __VA_ARGS__)
-
-#define vfpdebug //printf
-
 #include "core/arm/skyeye_common/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
-#define VFP_DEBUG_TRANSLATE DBG("in func %s, %x\n", __FUNCTION__, inst);
-#define VFP_DEBUG_UNIMPLEMENTED(x) printf("in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
-#define VFP_DEBUG_UNTESTED(x) printf("in func %s, " #x " untested\n", __FUNCTION__);
+#define VFP_DEBUG_UNIMPLEMENTED(x) LOG_ERROR(Core_ARM11, "in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
+#define VFP_DEBUG_UNTESTED(x) LOG_TRACE(Core_ARM11, "in func %s, " #x " untested\n", __FUNCTION__);
 #define CHECK_VFP_ENABLED
 #define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
 
