@@ -7,9 +7,9 @@ clone_depth: 1
 environment:
   QTDIR: C:\Qt\5.4\msvc2013_opengl
   MEGA_EMAIL:
-    secure: dLyH/46MKKuCZyozkwwVGCL7nVyX+Cxyo1hVlCUaQDU=
+    secure: rEo9CGAYX87GKTqZCZ9vLCNCNqxO5JLgbERaHF3YJWg=
   MEGA_PASSWORD:
-    secure: ozgp54EZj98kcbD/O+Xl5Q==
+    secure: zE1zmgjS/6GfN/19ROl/O0fVR58svORQ5gdtsxI7J8k=
 
 platform:
   - Win32
