@@ -150,7 +150,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     if (object->ShouldWait()) {
 
         object->AddWaitingThread(Kernel::GetCurrentThread());
-        Kernel::WaitCurrentThread_WaitSynchronization(object, false, false);
+        Kernel::WaitCurrentThread_WaitSynchronization({ object }, false, false);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
@@ -212,7 +212,6 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         // NOTE: This should deadlock the current thread if no timeout was specified
         if (!wait_all) {
             wait_thread = true;
-            Kernel::WaitCurrentThread_WaitSynchronization(nullptr, true, wait_all);
         }
     }
 
@@ -222,11 +221,16 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
     if (wait_thread) {
 
         // Actually wait the current thread on each object if we decided to wait...
+        std::vector<SharedPtr<Kernel::WaitObject>> wait_objects;
+        wait_objects.reserve(handle_count);
+        
         for (int i = 0; i < handle_count; ++i) {
             auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             object->AddWaitingThread(Kernel::GetCurrentThread());
-            Kernel::WaitCurrentThread_WaitSynchronization(object, true, wait_all);
+            wait_objects.push_back(object);
         }
+
+        Kernel::WaitCurrentThread_WaitSynchronization(std::move(wait_objects), true, wait_all);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
@@ -319,7 +323,7 @@ static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u
     }
 
     CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(
-            name, entry_point, priority, arg, processor_id, stack_top, Kernel::DEFAULT_STACK_SIZE));
+            name, entry_point, priority, arg, processor_id, stack_top));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
 
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
@@ -338,7 +342,7 @@ static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u
 static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC());
 
-    Kernel::GetCurrentThread()->Stop(__func__);
+    Kernel::GetCurrentThread()->Stop();
     HLE::Reschedule(__func__);
 }
 

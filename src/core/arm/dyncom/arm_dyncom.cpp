@@ -93,6 +93,16 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     AddTicks(ticks_executed);
 }
 
+void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
+    memset(&context, 0, sizeof(Core::ThreadContext));
+
+    context.cpu_registers[0] = arg;
+    context.pc = entry_point;
+    context.sp = stack_top;
+    context.cpsr = 0x1F; // Usermode
+    context.mode = 8;    // Instructs dyncom CPU core to start execution as if it's "resuming" a thread.
+}
+
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
