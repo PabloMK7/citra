@@ -311,9 +311,14 @@ struct Regs {
 
     struct {
         enum DepthFunc : u32 {
-            Always      = 1,
-            LessThan    = 4,
-            GreaterThan = 6,
+            Never               = 0,
+            Always              = 1,
+            Equal               = 2,
+            NotEqual            = 3,
+            LessThan            = 4,
+            LessThanOrEqual     = 5,
+            GreaterThan         = 6,
+            GreaterThanOrEqual  = 7,
         };
 
         union {

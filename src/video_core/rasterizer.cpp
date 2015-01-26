@@ -441,16 +441,36 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 bool pass = false;
 
                 switch (registers.output_merger.depth_test_func) {
+                case registers.output_merger.Never:
+                    pass = false;
+                    break;
+
                 case registers.output_merger.Always:
                     pass = true;
+                    break;
+
+                case registers.output_merger.Equal:
+                    pass = z == ref_z;
+                    break;
+
+                case registers.output_merger.NotEqual:
+                    pass = z != ref_z;
                     break;
 
                 case registers.output_merger.LessThan:
                     pass = z < ref_z;
                     break;
 
+                case registers.output_merger.LessThanOrEqual:
+                    pass = z <= ref_z;
+                    break;
+
                 case registers.output_merger.GreaterThan:
                     pass = z > ref_z;
+                    break;
+
+                case registers.output_merger.GreaterThanOrEqual:
+                    pass = z >= ref_z;
                     break;
 
                 default:
