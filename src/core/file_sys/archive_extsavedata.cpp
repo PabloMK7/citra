@@ -17,7 +17,7 @@
 
 namespace FileSys {
 
-static std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
+std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
     std::vector<u8> vec_data = path.AsBinary();
     const u32* data = reinterpret_cast<const u32*>(vec_data.data());
     u32 save_low = data[1];
@@ -25,7 +25,7 @@ static std::string GetExtSaveDataPath(const std::string& mount_point, const Path
     return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_high, save_low);
 }
 
-static std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
+std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
         return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(), SYSTEM_ID.c_str());
     

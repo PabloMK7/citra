@@ -10,12 +10,15 @@
 #include "core/hle/service/act_u.h"
 #include "core/hle/service/am_app.h"
 #include "core/hle/service/am_net.h"
+#include "core/hle/service/am_sys.h"
 #include "core/hle/service/apt_a.h"
 #include "core/hle/service/apt_s.h"
 #include "core/hle/service/apt_u.h"
+#include "core/hle/service/boss_p.h"
 #include "core/hle/service/boss_u.h"
 #include "core/hle/service/cam_u.h"
 #include "core/hle/service/cecd_u.h"
+#include "core/hle/service/cecd_s.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
@@ -23,18 +26,22 @@
 #include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hle/service/frd_a.h"
 #include "core/hle/service/frd_u.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
+#include "core/hle/service/gsp_lcd.h"
 #include "core/hle/service/http_c.h"
 #include "core/hle/service/ir_rst.h"
 #include "core/hle/service/ir_u.h"
 #include "core/hle/service/ldr_ro.h"
 #include "core/hle/service/mic_u.h"
 #include "core/hle/service/ndm_u.h"
+#include "core/hle/service/news_s.h"
 #include "core/hle/service/news_u.h"
 #include "core/hle/service/nim_aoc.h"
+#include "core/hle/service/ns_s.h"
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
 #include "core/hle/service/ptm_play.h"
@@ -90,11 +97,14 @@ void Init() {
     g_manager->AddService(new ACT_U::Interface);
     g_manager->AddService(new AM_APP::Interface);
     g_manager->AddService(new AM_NET::Interface);
+    g_manager->AddService(new AM_SYS::Interface);
     g_manager->AddService(new APT_A::Interface);
     g_manager->AddService(new APT_S::Interface);
     g_manager->AddService(new APT_U::Interface);
+    g_manager->AddService(new BOSS_P::Interface);
     g_manager->AddService(new BOSS_U::Interface);
     g_manager->AddService(new CAM_U::Interface);
+    g_manager->AddService(new CECD_S::Interface);
     g_manager->AddService(new CECD_U::Interface);
     g_manager->AddService(new CFG_I::Interface);
     g_manager->AddService(new CFG_S::Interface);
@@ -102,19 +112,23 @@ void Init() {
     g_manager->AddService(new CSND_SND::Interface);
     g_manager->AddService(new DSP_DSP::Interface);
     g_manager->AddService(new ERR_F::Interface);
+    g_manager->AddService(new FRD_A::Interface);
     g_manager->AddService(new FRD_U::Interface);
     g_manager->AddService(new FS::FSUserInterface);
     g_manager->AddService(new GSP_GPU::Interface);
-    g_manager->AddService(new HID_SPVR::Interface);
+    g_manager->AddService(new GSP_LCD::Interface);
     g_manager->AddService(new HID_User::Interface);
+    g_manager->AddService(new HID_SPVR::Interface);
     g_manager->AddService(new HTTP_C::Interface);
     g_manager->AddService(new IR_RST::Interface);
     g_manager->AddService(new IR_U::Interface);
     g_manager->AddService(new LDR_RO::Interface);
     g_manager->AddService(new MIC_U::Interface);
     g_manager->AddService(new NDM_U::Interface);
+    g_manager->AddService(new NEWS_S::Interface);
     g_manager->AddService(new NEWS_U::Interface);
     g_manager->AddService(new NIM_AOC::Interface);
+    g_manager->AddService(new NS_S::Interface);
     g_manager->AddService(new NWM_UDS::Interface);
     g_manager->AddService(new PM_APP::Interface);
     g_manager->AddService(new PTM_PLAY::Interface);

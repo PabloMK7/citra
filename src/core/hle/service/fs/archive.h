@@ -131,6 +131,14 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
  */
 ResultCode FormatSaveData();
 
+/**
+ * Creates a blank SharedExtSaveData archive for the specified extdata ID
+ * @param high The high word of the extdata id to create
+ * @param low The low word of the extdata id to create
+ * @return ResultCode 0 on success or the corresponding code on error
+ */
+ResultCode CreateExtSaveData(u32 high, u32 low);
+
 /// Initialize archives
 void ArchiveInit();
 

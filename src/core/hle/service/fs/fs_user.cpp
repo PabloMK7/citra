@@ -484,6 +484,15 @@ static void FormatThisUserSaveData(Service::Interface* self) {
     cmd_buff[1] = FormatSaveData().raw;
 }
 
+static void CreateExtSaveData(Service::Interface* self) {
+    // TODO(Subv): Figure out the other parameters.
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 save_high = cmd_buff[1];
+    u32 save_low = cmd_buff[2];
+    // TODO(Subv): For now it is assumed that only SharedExtSaveData can be created like this
+    cmd_buff[1] = CreateExtSaveData(save_high, save_low).raw;
+}
+
 const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
@@ -567,6 +576,8 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x084E0342, nullptr,               "UpdateSha256Context"},
     {0x084F0102, nullptr,               "ReadSpecialFile"},
     {0x08500040, nullptr,               "GetSpecialFileSize"},
+    {0x08510242, CreateExtSaveData,     "CreateExtSaveData"},
+    {0x08520100, nullptr,               "DeleteExtSaveData"},
     {0x08580000, nullptr,               "GetMovableSedHashedKeyYRandomData"},
     {0x08610042, nullptr,               "InitializeWithSdkVersion"},
     {0x08620040, nullptr,               "SetPriority"},
