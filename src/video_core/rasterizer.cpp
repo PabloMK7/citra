@@ -431,6 +431,47 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 combiner_output = Math::MakeVec(color_output, alpha_output);
             }
 
+            if (registers.output_merger.alpha_test.enable) {
+                bool pass = false;
+
+                switch (registers.output_merger.alpha_test.func) {
+                case registers.output_merger.Never:
+                    pass = false;
+                    break;
+
+                case registers.output_merger.Always:
+                    pass = true;
+                    break;
+
+                case registers.output_merger.Equal:
+                    pass = combiner_output.a() == registers.output_merger.alpha_test.ref;
+                    break;
+
+                case registers.output_merger.NotEqual:
+                    pass = combiner_output.a() != registers.output_merger.alpha_test.ref;
+                    break;
+
+                case registers.output_merger.LessThan:
+                    pass = combiner_output.a() < registers.output_merger.alpha_test.ref;
+                    break;
+
+                case registers.output_merger.LessThanOrEqual:
+                    pass = combiner_output.a() <= registers.output_merger.alpha_test.ref;
+                    break;
+
+                case registers.output_merger.GreaterThan:
+                    pass = combiner_output.a() > registers.output_merger.alpha_test.ref;
+                    break;
+
+                case registers.output_merger.GreaterThanOrEqual:
+                    pass = combiner_output.a() >= registers.output_merger.alpha_test.ref;
+                    break;
+                }
+
+                if (!pass)
+                    continue;
+            }
+
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
                 u16 z = (u16)(-(v0.screenpos[2].ToFloat32() * w0 +
@@ -471,10 +512,6 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                 case registers.output_merger.GreaterThanOrEqual:
                     pass = z >= ref_z;
-                    break;
-
-                default:
-                    LOG_ERROR(HW_GPU, "Unknown depth test function %x", registers.output_merger.depth_test_func.Value());
                     break;
                 }
 

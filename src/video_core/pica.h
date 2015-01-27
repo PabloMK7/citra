@@ -310,7 +310,7 @@ struct Regs {
     };
 
     struct {
-        enum DepthFunc : u32 {
+        enum CompareFunc : u32 {
             Never               = 0,
             Always              = 1,
             Equal               = 2,
@@ -357,11 +357,19 @@ struct Regs {
             BitField<0, 4, Op> op;
         } logic_op;
 
-        INSERT_PADDING_WORDS(0x4);
+        INSERT_PADDING_WORDS(0x1);
+
+        union {
+            BitField< 0, 1, u32> enable;
+            BitField< 4, 3, CompareFunc> func;
+            BitField< 8, 8, u32> ref;
+        } alpha_test;
+
+        INSERT_PADDING_WORDS(0x2);
 
         union {
             BitField< 0, 1, u32> depth_test_enable;
-            BitField< 4, 3, DepthFunc> depth_test_func;
+            BitField< 4, 3, CompareFunc> depth_test_func;
             BitField<12, 1, u32> depth_write_enable;
         };
 
