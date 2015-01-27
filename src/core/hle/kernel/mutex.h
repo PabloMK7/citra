@@ -14,7 +14,7 @@ namespace Kernel {
 
 class Thread;
 
-class Mutex : public WaitObject {
+class Mutex final : public WaitObject {
 public:
     /**
      * Creates a mutex.

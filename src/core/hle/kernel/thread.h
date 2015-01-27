@@ -40,7 +40,7 @@ enum ThreadStatus {
 
 namespace Kernel {
 
-class Thread : public WaitObject {
+class Thread final : public WaitObject {
 public:
     static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, s32 priority,
         u32 arg, s32 processor_id, VAddr stack_top, u32 stack_size);
@@ -115,7 +115,6 @@ public:
     bool idle = false;
 
 private:
-
     Thread() = default;
 };
 

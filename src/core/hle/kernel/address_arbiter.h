@@ -26,7 +26,7 @@ enum class ArbitrationType : u32 {
     DecrementAndWaitIfLessThanWithTimeout,
 };
 
-class AddressArbiter : public Object {
+class AddressArbiter final : public Object {
 public:
     /**
      * Creates an address arbiter.

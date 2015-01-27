@@ -23,7 +23,7 @@ enum class MemoryPermission : u32 {
     DontCare         = (1u << 28)
 };
 
-class SharedMemory : public Object {
+class SharedMemory final : public Object {
 public:
     /**
      * Creates a shared memory object

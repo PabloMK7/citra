@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-class Semaphore : public WaitObject {
+class Semaphore final : public WaitObject {
 public:
     /**
      * Creates a semaphore.

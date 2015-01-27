@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-class Timer : public WaitObject {
+class Timer final : public WaitObject {
 public:
     /**
      * Creates a timer

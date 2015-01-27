@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-class Event : public WaitObject {
+class Event final : public WaitObject {
 public:
     /**
      * Creates an event
