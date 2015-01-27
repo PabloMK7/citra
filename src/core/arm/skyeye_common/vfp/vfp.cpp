@@ -807,7 +807,7 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
 {
     int si_code = 0;
 
-    LOG_DEBUG(Core_ARM11, "VFP: raising exceptions %08x\n", exceptions);
+    LOG_TRACE(Core_ARM11, "VFP: raising exceptions %08x\n", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {
         LOG_TRACE(Core_ARM11, "unhandled bounce %x\n", inst);
