@@ -594,7 +594,14 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 exit(0);
             }
 
-            DrawPixel(x >> 4, y >> 4, combiner_output);
+            const Math::Vec4<u8> result = {
+                registers.output_merger.red_enable   ? combiner_output.r() : dest.r(),
+                registers.output_merger.green_enable ? combiner_output.g() : dest.g(),
+                registers.output_merger.blue_enable  ? combiner_output.b() : dest.b(),
+                registers.output_merger.alpha_enable ? combiner_output.a() : dest.a()
+            };
+
+            DrawPixel(x >> 4, y >> 4, result);
         }
     }
 }

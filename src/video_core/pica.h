@@ -370,6 +370,10 @@ struct Regs {
         union {
             BitField< 0, 1, u32> depth_test_enable;
             BitField< 4, 3, CompareFunc> depth_test_func;
+            BitField< 8, 1, u32> red_enable;
+            BitField< 9, 1, u32> green_enable;
+            BitField<10, 1, u32> blue_enable;
+            BitField<11, 1, u32> alpha_enable;
             BitField<12, 1, u32> depth_write_enable;
         };
 
