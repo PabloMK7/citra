@@ -33,114 +33,105 @@ static inline void FuncReturn64(u64 res) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Function wrappers that return type s32
+// Function wrappers that return type ResultCode
 
-template<s32 func(u32, u32, u32, u32)> void Wrap() {
-    FuncReturn(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3)));
+template<ResultCode func(u32, u32, u32, u32)> void Wrap() {
+    FuncReturn(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3)).raw);
 }
 
-template<s32 func(u32, u32, u32, u32, u32)> void Wrap() {
-    FuncReturn(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4)));
-}
-
-template<s32 func(u32*, u32, u32, u32, u32, u32)> void Wrap(){
+template<ResultCode func(u32*, u32, u32, u32, u32, u32)> void Wrap(){
     u32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+    u32 retval = func(&param_1, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(s32*, u32*, s32, bool, s64)> void Wrap() {
+template<ResultCode func(s32*, u32*, s32, bool, s64)> void Wrap() {
     s32 param_1 = 0;
     s32 retval = func(&param_1, (Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
-        (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)));
+        (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0))).raw;
     Core::g_app_core->SetReg(1, (u32)param_1);
     FuncReturn(retval);
 }
 
-// TODO(bunnei): Is this correct? Probably not - Last parameter looks wrong for ArbitrateAddress
-template<s32 func(u32, u32, u32, u32, s64)> void Wrap() {
-    FuncReturn(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3), (((s64)PARAM(5) << 32) | PARAM(4))));
+template<ResultCode func(u32, u32, u32, u32, s64)> void Wrap() {
+    FuncReturn(func(PARAM(0), PARAM(1), PARAM(2), PARAM(3), (((s64)PARAM(5) << 32) | PARAM(4))).raw);
 }
 
-template<s32 func(u32*)> void Wrap(){
+template<ResultCode func(u32*)> void Wrap(){
     u32 param_1 = 0;
-    u32 retval = func(&param_1);
+    u32 retval = func(&param_1).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32, s64)> void Wrap() {
-    FuncReturn(func(PARAM(0), (((s64)PARAM(3) << 32) | PARAM(2))));
+template<ResultCode func(u32, s64)> void Wrap() {
+    FuncReturn(func(PARAM(0), (((s64)PARAM(3) << 32) | PARAM(2))).raw);
 }
 
-template<s32 func(void*, void*, u32)> void Wrap(){
-    FuncReturn(func(Memory::GetPointer(PARAM(0)), Memory::GetPointer(PARAM(1)), PARAM(2)));
+template<ResultCode func(void*, void*, u32)> void Wrap(){
+    FuncReturn(func(Memory::GetPointer(PARAM(0)), Memory::GetPointer(PARAM(1)), PARAM(2)).raw);
 }
 
-template<s32 func(s32*, u32)> void Wrap(){
+template<ResultCode func(s32*, u32)> void Wrap(){
     s32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(1));
+    u32 retval = func(&param_1, PARAM(1)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32, s32)> void Wrap() {
-    FuncReturn(func(PARAM(0), (s32)PARAM(1)));
+template<ResultCode func(u32, s32)> void Wrap() {
+    FuncReturn(func(PARAM(0), (s32)PARAM(1)).raw);
 }
 
-template<s32 func(u32*, u32)> void Wrap(){
+template<ResultCode func(u32*, u32)> void Wrap(){
     u32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(1));
+    u32 retval = func(&param_1, PARAM(1)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32)> void Wrap() {
-    FuncReturn(func(PARAM(0)));
+template<ResultCode func(u32)> void Wrap() {
+    FuncReturn(func(PARAM(0)).raw);
 }
 
-template<s32 func(void*)> void Wrap() {
-    FuncReturn(func(Memory::GetPointer(PARAM(0))));
-}
-
-template<s32 func(s64*, u32, void*, s32)> void Wrap(){
+template<ResultCode func(s64*, u32, void*, s32)> void Wrap(){
     FuncReturn(func((s64*)Memory::GetPointer(PARAM(0)), PARAM(1), Memory::GetPointer(PARAM(2)),
-        (s32)PARAM(3)));
+        (s32)PARAM(3)).raw);
 }
 
-template<s32 func(u32*, const char*)> void Wrap() {
+template<ResultCode func(u32*, const char*)> void Wrap() {
     u32 param_1 = 0;
-    u32 retval = func(&param_1, Memory::GetCharPointer(PARAM(1)));
+    u32 retval = func(&param_1, Memory::GetCharPointer(PARAM(1))).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32*, s32, s32)> void Wrap() {
+template<ResultCode func(u32*, s32, s32)> void Wrap() {
     u32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(1), PARAM(2));
+    u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(s32*, u32, s32)> void Wrap() {
+template<ResultCode func(s32*, u32, s32)> void Wrap() {
     s32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(1), PARAM(2));
+    u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32*, u32, u32, u32, u32)> void Wrap() {
+template<ResultCode func(u32*, u32, u32, u32, u32)> void Wrap() {
     u32 param_1 = 0;
-    u32 retval = func(&param_1, PARAM(1), PARAM(2), PARAM(3), PARAM(4));
+    u32 retval = func(&param_1, PARAM(1), PARAM(2), PARAM(3), PARAM(4)).raw;
     Core::g_app_core->SetReg(1, param_1);
     FuncReturn(retval);
 }
 
-template<s32 func(u32, s64, s64)> void Wrap() {
+template<ResultCode func(u32, s64, s64)> void Wrap() {
     s64 param1 = ((u64)PARAM(3) << 32) | PARAM(2);
     s64 param2 = ((u64)PARAM(4) << 32) | PARAM(1);
-    FuncReturn(func(PARAM(0), param1, param2));
+    FuncReturn(func(PARAM(0), param1, param2).raw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

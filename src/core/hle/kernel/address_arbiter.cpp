@@ -15,26 +15,18 @@
 
 namespace Kernel {
 
-class AddressArbiter : public Object {
-public:
-    std::string GetTypeName() const override { return "Arbiter"; }
-    std::string GetName() const override { return name; }
+ResultVal<SharedPtr<AddressArbiter>> AddressArbiter::Create(std::string name) {
+    SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);
+    // TOOD(yuriks): Don't create Handle (see Thread::Create())
+    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(address_arbiter));
 
-    static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    address_arbiter->name = std::move(name);
 
-    std::string name;   ///< Name of address arbiter object (optional)
-};
+    return MakeResult<SharedPtr<AddressArbiter>>(std::move(address_arbiter));
+}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Arbitrate an address
-ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value, u64 nanoseconds) {
-    AddressArbiter* object = Kernel::g_handle_table.Get<AddressArbiter>(handle).get();
-
-    if (object == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
+ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address, s32 value,
+        u64 nanoseconds) {
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -90,22 +82,6 @@ ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s3
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel, ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
     return RESULT_SUCCESS;
-}
-
-/// Create an address arbiter
-AddressArbiter* CreateAddressArbiter(Handle& handle, const std::string& name) {
-    AddressArbiter* address_arbiter = new AddressArbiter;
-    // TOOD(yuriks): Fix error reporting
-    handle = Kernel::g_handle_table.Create(address_arbiter).ValueOr(INVALID_HANDLE);
-    address_arbiter->name = name;
-    return address_arbiter;
-}
-
-/// Create an address arbiter
-Handle CreateAddressArbiter(const std::string& name) {
-    Handle handle;
-    CreateAddressArbiter(handle, name);
-    return handle;
 }
 
 } // namespace Kernel

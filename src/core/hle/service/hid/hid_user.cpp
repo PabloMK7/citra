@@ -5,6 +5,8 @@
 #include "common/log.h"
 
 #include "core/hle/hle.h"
+#include "core/hle/kernel/event.h"
+#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"
 #include "hid_user.h"
 
@@ -46,12 +48,13 @@ void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
-    cmd_buff[3] = Service::HID::g_shared_mem;
-    cmd_buff[4] = Service::HID::g_event_pad_or_touch_1;
-    cmd_buff[5] = Service::HID::g_event_pad_or_touch_2;
-    cmd_buff[6] = Service::HID::g_event_accelerometer;
-    cmd_buff[7] = Service::HID::g_event_gyroscope;
-    cmd_buff[8] = Service::HID::g_event_debug_pad;
+    // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
+    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::g_shared_mem).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_1).MoveFrom();
+    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_2).MoveFrom();
+    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::g_event_accelerometer).MoveFrom();
+    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::g_event_gyroscope).MoveFrom();
+    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::g_event_debug_pad).MoveFrom();
 }
 
 const Interface::FunctionInfo FunctionTable[] = {

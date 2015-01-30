@@ -16,6 +16,11 @@
 typedef u32 Handle;
 typedef s32 Result;
 
+// TODO: It would be nice to eventually replace these with strong types that prevent accidental
+// conversion between each other.
+typedef u32 VAddr; ///< Represents a pointer in the userspace virtual address space.
+typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space.
+
 const Handle INVALID_HANDLE = 0;
 
 namespace Kernel {
@@ -26,7 +31,8 @@ class Thread;
 const ResultCode ERR_OUT_OF_HANDLES(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
         ErrorSummary::OutOfResource, ErrorLevel::Temporary);
 // TOOD: Verify code
-const ResultCode ERR_INVALID_HANDLE = InvalidHandle(ErrorModule::Kernel);
+const ResultCode ERR_INVALID_HANDLE(ErrorDescription::InvalidHandle, ErrorModule::Kernel,
+        ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
 enum KernelHandle : Handle {
     CurrentThread   = 0xFFFF8000,

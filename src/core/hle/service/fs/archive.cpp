@@ -43,6 +43,11 @@ const std::string SDCARD_ID = "00000000000000000000000000000000";
 namespace Service {
 namespace FS {
 
+// TODO: Verify code
+/// Returned when a function is passed an invalid handle.
+const ResultCode ERR_INVALID_HANDLE(ErrorDescription::InvalidHandle, ErrorModule::FS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+
 // Command to access archive file
 enum class FileCommand : u32 {
     Dummy1          = 0x000100C6,
@@ -280,7 +285,7 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
 
 ResultCode CloseArchive(ArchiveHandle handle) {
     if (handle_map.erase(handle) == 0)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
     else
         return RESULT_SUCCESS;
 }
@@ -301,7 +306,7 @@ ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, Arc
 ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     std::unique_ptr<FileSys::FileBackend> backend = archive->backend->OpenFile(path, mode);
     if (backend == nullptr) {
@@ -318,7 +323,7 @@ ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSy
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     if (archive->backend->DeleteFile(path))
         return RESULT_SUCCESS;
@@ -331,7 +336,7 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const Fil
     Archive* src_archive = GetArchive(src_archive_handle);
     Archive* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameFile(src_path, dest_path))
@@ -350,7 +355,7 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const Fil
 ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     if (archive->backend->DeleteDirectory(path))
         return RESULT_SUCCESS;
@@ -361,7 +366,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
 ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     return archive->backend->CreateFile(path, file_size);
 }
@@ -369,7 +374,7 @@ ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path
 ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     if (archive->backend->CreateDirectory(path))
         return RESULT_SUCCESS;
@@ -382,7 +387,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
     Archive* src_archive = GetArchive(src_archive_handle);
     Archive* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     if (src_archive == dest_archive) {
         if (src_archive->backend->RenameDirectory(src_path, dest_path))
@@ -407,7 +412,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
 ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return InvalidHandle(ErrorModule::FS);
+        return ERR_INVALID_HANDLE;
 
     std::unique_ptr<FileSys::DirectoryBackend> backend = archive->backend->OpenDirectory(path);
     if (backend == nullptr) {

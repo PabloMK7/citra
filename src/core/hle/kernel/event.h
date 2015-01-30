@@ -11,26 +11,35 @@
 
 namespace Kernel {
 
-/**
- * Signals an event
- * @param handle Handle to event to signal
- * @return Result of operation, 0 on success, otherwise error code
- */
-ResultCode SignalEvent(const Handle handle);
+class Event final : public WaitObject {
+public:
+    /**
+     * Creates an event
+     * @param reset_type ResetType describing how to create event
+     * @param name Optional name of event
+     */
+    static ResultVal<SharedPtr<Event>> Create(ResetType reset_type, std::string name = "Unknown");
 
-/**
- * Clears an event
- * @param handle Handle to event to clear
- * @return Result of operation, 0 on success, otherwise error code
- */
-ResultCode ClearEvent(Handle handle);
+    std::string GetTypeName() const override { return "Event"; }
+    std::string GetName() const override { return name; }
 
-/**
- * Creates an event
- * @param reset_type ResetType describing how to create event
- * @param name Optional name of event
- * @return Handle to newly created Event object
- */
-Handle CreateEvent(const ResetType reset_type, const std::string& name="Unknown");
+    static const HandleType HANDLE_TYPE = HandleType::Event;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
+    ResetType reset_type;                   ///< Current ResetType
+
+    bool signaled;                          ///< Whether the event has already been signaled
+    std::string name;                       ///< Name of event (optional)
+
+    bool ShouldWait() override;
+    void Acquire() override;
+
+    void Signal();
+    void Clear();
+
+private:
+    Event() = default;
+};
 
 } // namespace

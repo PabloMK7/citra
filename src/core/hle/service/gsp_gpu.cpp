@@ -22,13 +22,16 @@ GraphicsDebugger g_debugger;
 
 namespace GSP_GPU {
 
-Handle g_interrupt_event = 0;   ///< Handle to event triggered when GSP interrupt has been signalled
-Handle g_shared_memory = 0;     ///< Handle to GSP shared memorys
-u32 g_thread_id = 1;            ///< Thread index into interrupt relay queue, 1 is arbitrary
+/// Event triggered when GSP interrupt has been signalled
+Kernel::SharedPtr<Kernel::Event> g_interrupt_event;
+/// GSP shared memoryings
+Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
+/// Thread index into interrupt relay queue, 1 is arbitrary
+u32 g_thread_id = 1;
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
-    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, 0x800 + (thread_id * sizeof(CommandBuffer)));
+    ResultVal<u8*> ptr = g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
     return ptr.ValueOr(nullptr);
 }
 
@@ -37,13 +40,13 @@ static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_in
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
-    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, offset);
+    ResultVal<u8*> ptr = g_shared_memory->GetPointer(offset);
     return reinterpret_cast<FrameBufferUpdate*>(ptr.ValueOr(nullptr));
 }
 
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
-    ResultVal<u8*> ptr = Kernel::GetSharedMemoryPointer(g_shared_memory, sizeof(InterruptRelayQueue) * thread_id);
+    ResultVal<u8*> ptr = g_shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
     return reinterpret_cast<InterruptRelayQueue*>(ptr.ValueOr(nullptr));
 }
 
@@ -181,16 +184,18 @@ static void FlushDataCache(Service::Interface* self) {
 static void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1];
-    g_interrupt_event = cmd_buff[3];
-    g_shared_memory = Kernel::CreateSharedMemory("GSPSharedMem");
 
-    _assert_msg_(GSP, (g_interrupt_event != 0), "handle is not valid!");
+    g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
+    _assert_msg_(GSP, (g_interrupt_event != nullptr), "handle is not valid!");
+    g_shared_memory = Kernel::SharedMemory::Create("GSPSharedMem").MoveFrom();
+
+    Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 
     cmd_buff[1] = 0x2A07; // Value verified by 3dmoo team, purpose unknown, but needed for GSP init
     cmd_buff[2] = g_thread_id++; // Thread ID
-    cmd_buff[4] = g_shared_memory; // GSP shared memory
+    cmd_buff[4] = shmem_handle; // GSP shared memory
 
-    Kernel::SignalEvent(g_interrupt_event); // TODO(bunnei): Is this correct?
+    g_interrupt_event->Signal(); // TODO(bunnei): Is this correct?
 }
 
 /**
@@ -204,7 +209,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
-    if (0 == g_shared_memory) {
+    if (nullptr == g_shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
@@ -232,7 +237,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
             info->is_dirty = false;
         }
     }
-    Kernel::SignalEvent(g_interrupt_event);
+    g_interrupt_event->Signal();
 }
 
 /// Executes the next GSP command

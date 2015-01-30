@@ -13,8 +13,8 @@
 namespace DSP_DSP {
 
 static u32 read_pipe_count    = 0;
-static Handle semaphore_event = 0;
-static Handle interrupt_event = 0;
+static Kernel::SharedPtr<Kernel::Event> semaphore_event;
+static Kernel::SharedPtr<Kernel::Event> interrupt_event;
 
 void SignalInterrupt() {
     // TODO(bunnei): This is just a stub, it does not do anything other than signal to the emulated
@@ -24,7 +24,7 @@ void SignalInterrupt() {
     // DSP interrupts, and trigger them at the appropriate times.
 
     if (interrupt_event != 0)
-        Kernel::SignalEvent(interrupt_event);
+        interrupt_event->Signal();
 }
 
 /**
@@ -78,8 +78,8 @@ void LoadComponent(Service::Interface* self) {
 void GetSemaphoreEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[1] = 0; // No error
-    cmd_buff[3] = semaphore_event; // Event handle
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[3] = Kernel::g_handle_table.Create(semaphore_event).MoveFrom(); // Event handle
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
@@ -96,9 +96,16 @@ void GetSemaphoreEventHandle(Service::Interface* self) {
 void RegisterInterruptEvents(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    interrupt_event = static_cast<Handle>(cmd_buff[4]);
+    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
+    if (evt != nullptr) {
+        interrupt_event = evt;
+        cmd_buff[1] = 0; // No error
+    } else {
+        LOG_ERROR(Service_DSP, "called with invalid handle=%08X", cmd_buff[4]);
 
-    cmd_buff[1] = 0; // No error
+        // TODO(yuriks): An error should be returned from SendSyncRequest, not in the cmdbuf
+        cmd_buff[1] = -1;
+    }
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
 }
@@ -194,8 +201,9 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    semaphore_event = Kernel::CreateEvent(RESETTYPE_ONESHOT, "DSP_DSP::semaphore_event");
-    interrupt_event = 0;
+    semaphore_event = Kernel::Event::Create(RESETTYPE_ONESHOT,
+            "DSP_DSP::semaphore_event").MoveFrom();
+    interrupt_event = nullptr;
     read_pipe_count = 0;
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));

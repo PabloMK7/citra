@@ -13,59 +13,30 @@
 
 namespace Kernel {
 
-class Mutex : public WaitObject {
-public:
-    std::string GetTypeName() const override { return "Mutex"; }
-    std::string GetName() const override { return name; }
-
-    static const HandleType HANDLE_TYPE = HandleType::Mutex;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
-
-    bool initial_locked;                        ///< Initial lock state when mutex was created
-    bool locked;                                ///< Current locked state
-    std::string name;                           ///< Name of mutex (optional)
-    SharedPtr<Thread> holding_thread;           ///< Thread that has acquired the mutex
-
-    bool ShouldWait() override;
-    void Acquire() override;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 typedef std::multimap<SharedPtr<Thread>, SharedPtr<Mutex>> MutexMap;
 static MutexMap g_mutex_held_locks;
-
-/**
- * Acquires the specified mutex for the specified thread
- * @param mutex Mutex that is to be acquired
- * @param thread Thread that will acquire the mutex
- */
-void MutexAcquireLock(Mutex* mutex, Thread* thread) {
-    g_mutex_held_locks.insert(std::make_pair(thread, mutex));
-    mutex->holding_thread = thread;
-}
 
 /**
  * Resumes a thread waiting for the specified mutex
  * @param mutex The mutex that some thread is waiting on
  */
-void ResumeWaitingThread(Mutex* mutex) {
+static void ResumeWaitingThread(Mutex* mutex) {
+    // Reset mutex lock thread handle, nothing is waiting
+    mutex->locked = false;
+    mutex->holding_thread = nullptr;
+
     // Find the next waiting thread for the mutex...
     auto next_thread = mutex->WakeupNextThread();
     if (next_thread != nullptr) {
-        MutexAcquireLock(mutex, next_thread);
-    } else {
-        // Reset mutex lock thread handle, nothing is waiting
-        mutex->locked = false;
-        mutex->holding_thread = nullptr;
+        mutex->Acquire(next_thread);
     }
 }
 
 void ReleaseThreadMutexes(Thread* thread) {
-    auto locked = g_mutex_held_locks.equal_range(thread);
+    auto locked_range = g_mutex_held_locks.equal_range(thread);
     
     // Release every mutex that the thread holds, and resume execution on the waiting threads
-    for (auto iter = locked.first; iter != locked.second; ++iter) {
+    for (auto iter = locked_range.first; iter != locked_range.second; ++iter) {
         ResumeWaitingThread(iter->second.get());
     }
 
@@ -73,72 +44,21 @@ void ReleaseThreadMutexes(Thread* thread) {
     g_mutex_held_locks.erase(thread);
 }
 
-bool ReleaseMutex(Mutex* mutex) {
-    if (mutex->locked) {
-        auto locked = g_mutex_held_locks.equal_range(mutex->holding_thread);
+ResultVal<SharedPtr<Mutex>> Mutex::Create(bool initial_locked, std::string name) {
+    SharedPtr<Mutex> mutex(new Mutex);
+    // TOOD(yuriks): Don't create Handle (see Thread::Create())
+    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(mutex));
 
-        for (MutexMap::iterator iter = locked.first; iter != locked.second; ++iter) {
-            if (iter->second == mutex) {
-                g_mutex_held_locks.erase(iter);
-                break;
-            }
-        }
-
-        ResumeWaitingThread(mutex);
-    }
-    return true;
-}
-
-/**
- * Releases a mutex
- * @param handle Handle to mutex to release
- */
-ResultCode ReleaseMutex(Handle handle) {
-    Mutex* mutex = Kernel::g_handle_table.Get<Mutex>(handle).get();
-    if (mutex == nullptr) return InvalidHandle(ErrorModule::Kernel);
-
-    if (!ReleaseMutex(mutex)) {
-        // TODO(yuriks): Verify error code, this one was pulled out of thin air. I'm not even sure
-        // what error condition this is supposed to be signaling.
-        return ResultCode(ErrorDescription::AlreadyDone, ErrorModule::Kernel,
-                ErrorSummary::NothingHappened, ErrorLevel::Temporary);
-    }
-    return RESULT_SUCCESS;
-}
-
-/**
- * Creates a mutex
- * @param handle Reference to handle for the newly created mutex
- * @param initial_locked Specifies if the mutex should be locked initially
- * @param name Optional name of mutex
- * @return Pointer to new Mutex object
- */
-Mutex* CreateMutex(Handle& handle, bool initial_locked, const std::string& name) {
-    Mutex* mutex = new Mutex;
-    // TODO(yuriks): Fix error reporting
-    handle = Kernel::g_handle_table.Create(mutex).ValueOr(INVALID_HANDLE);
-
-    mutex->locked = mutex->initial_locked = initial_locked;
-    mutex->name = name;
+    mutex->initial_locked = initial_locked;
+    mutex->locked = false;
+    mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
 
     // Acquire mutex with current thread if initialized as locked...
-    if (mutex->locked)
-        MutexAcquireLock(mutex, GetCurrentThread());
+    if (initial_locked)
+        mutex->Acquire();
 
-    return mutex;
-}
-
-/**
- * Creates a mutex
- * @param initial_locked Specifies if the mutex should be locked initially
- * @param name Optional name of mutex
- * @return Handle to newly created object
- */
-Handle CreateMutex(bool initial_locked, const std::string& name) {
-    Handle handle;
-    Mutex* mutex = CreateMutex(handle, initial_locked, name);
-    return handle;
+    return MakeResult<SharedPtr<Mutex>>(mutex);
 }
 
 bool Mutex::ShouldWait() {
@@ -146,9 +66,34 @@ bool Mutex::ShouldWait() {
 }
 
 void Mutex::Acquire() {
+    Acquire(GetCurrentThread());
+}
+
+void Mutex::Acquire(Thread* thread) {
     _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    if (locked)
+        return;
+
     locked = true;
-    MutexAcquireLock(this, GetCurrentThread());
+
+    g_mutex_held_locks.insert(std::make_pair(thread, this));
+    holding_thread = thread;
+}
+
+void Mutex::Release() {
+    if (!locked)
+        return;
+
+    auto locked_range = g_mutex_held_locks.equal_range(holding_thread);
+
+    for (MutexMap::iterator iter = locked_range.first; iter != locked_range.second; ++iter) {
+        if (iter->second == this) {
+            g_mutex_held_locks.erase(iter);
+            break;
+        }
+    }
+
+    ResumeWaitingThread(this);
 }
 
 } // namespace

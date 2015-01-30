@@ -4,25 +4,51 @@
 
 #pragma once
 
+#include <string>
+
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
 
-/**
- * Releases a mutex
- * @param handle Handle to mutex to release
- */
-ResultCode ReleaseMutex(Handle handle);
+class Thread;
 
-/**
- * Creates a mutex
- * @param initial_locked Specifies if the mutex should be locked initially
- * @param name Optional name of mutex
- * @return Handle to newly created object
- */
-Handle CreateMutex(bool initial_locked, const std::string& name="Unknown");
+class Mutex final : public WaitObject {
+public:
+    /**
+     * Creates a mutex.
+     * @param initial_locked Specifies if the mutex should be locked initially
+     * @param name Optional name of mutex
+     * @return Pointer to new Mutex object
+     */
+    static ResultVal<SharedPtr<Mutex>> Create(bool initial_locked, std::string name = "Unknown");
+
+    std::string GetTypeName() const override { return "Mutex"; }
+    std::string GetName() const override { return name; }
+
+    static const HandleType HANDLE_TYPE = HandleType::Mutex;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    bool initial_locked;                        ///< Initial lock state when mutex was created
+    bool locked;                                ///< Current locked state
+    std::string name;                           ///< Name of mutex (optional)
+    SharedPtr<Thread> holding_thread;           ///< Thread that has acquired the mutex
+
+    bool ShouldWait() override;
+    void Acquire() override;
+
+    /**
+    * Acquires the specified mutex for the specified thread
+    * @param mutex Mutex that is to be acquired
+    * @param thread Thread that will acquire the mutex
+    */
+    void Acquire(Thread* thread);
+    void Release();
+
+private:
+    Mutex() = default;
+};
 
 /**
  * Releases all the mutexes held by the specified thread

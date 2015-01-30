@@ -9,8 +9,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "common/common_types.h"
 #include "common/bit_field.h"
+#include "common/common_funcs.h"
+#include "common/common_types.h"
 
 // All the constants in this file come from http://3dbrew.org/wiki/Error_codes
 
@@ -226,11 +227,6 @@ inline ResultCode UnimplementedFunction(ErrorModule module) {
     return ResultCode(ErrorDescription::NotImplemented, module,
             ErrorSummary::NotSupported, ErrorLevel::Permanent);
 }
-/// Returned when a function is passed an invalid handle.
-inline ResultCode InvalidHandle(ErrorModule module) {
-    return ResultCode(ErrorDescription::InvalidHandle, module,
-            ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-}
 
 /**
  * This is an optional value type. It holds a `ResultCode` and, if that code is a success code,
@@ -364,6 +360,17 @@ public:
         return !empty() ? *GetPointer() : std::move(value);
     }
 
+    /// Asserts that the result succeeded and returns a reference to it.
+    T& Unwrap() {
+        // TODO(yuriks): Should be a release assert
+        _assert_msg_(Common, Succeeded(), "Tried to Unwrap empty ResultVal");
+        return **this;
+    }
+
+    T&& MoveFrom() {
+        return std::move(Unwrap());
+    }
+
 private:
     typedef typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type StorageType;
 
@@ -400,3 +407,15 @@ template <typename T, typename... Args>
 ResultVal<T> MakeResult(Args&&... args) {
     return ResultVal<T>::WithCode(RESULT_SUCCESS, std::forward<Args>(args)...);
 }
+
+/**
+ * Check for the success of `source` (which must evaluate to a ResultVal). If it succeeds, unwraps
+ * the contained value and assigns it to `target`, which can be either an l-value expression or a
+ * variable declaration. If it fails the return code is returned from the current function. Thus it
+ * can be used to cascade errors out, achieving something akin to exception handling.
+ */
+#define CASCADE_RESULT(target, source) \
+        auto CONCAT2(check_result_L, __LINE__) = source; \
+        if (CONCAT2(check_result_L, __LINE__).Failed()) \
+            return CONCAT2(check_result_L, __LINE__).Code(); \
+        target = std::move(*CONCAT2(check_result_L, __LINE__))

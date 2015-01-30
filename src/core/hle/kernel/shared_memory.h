@@ -23,29 +23,41 @@ enum class MemoryPermission : u32 {
     DontCare         = (1u << 28)
 };
 
-/**
- * Creates a shared memory object
- * @param name Optional name of shared memory object
- * @return Handle of newly created shared memory object
- */
-Handle CreateSharedMemory(const std::string& name="Unknown");
+class SharedMemory final : public Object {
+public:
+    /**
+     * Creates a shared memory object
+     * @param name Optional object name, used only for debugging purposes.
+     */
+    static ResultVal<SharedPtr<SharedMemory>> Create(std::string name = "Unknown");
 
-/**
- * Maps a shared memory block to an address in system memory
- * @param handle Shared memory block handle
- * @param address Address in system memory to map shared memory block to
- * @param permissions Memory block map permissions (specified by SVC field)
- * @param other_permissions Memory block map other permissions (specified by SVC field)
- */
-ResultCode MapSharedMemory(Handle handle, u32 address, MemoryPermission permissions,
-    MemoryPermission other_permissions);
+    std::string GetTypeName() const override { return "SharedMemory"; }
 
-/**
- * Gets a pointer to the shared memory block
- * @param handle Shared memory block handle
- * @param offset Offset from the start of the shared memory block to get pointer
- * @return Pointer to the shared memory block from the specified offset
- */
-ResultVal<u8*> GetSharedMemoryPointer(Handle handle, u32 offset);
+    static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    /**
+     * Maps a shared memory block to an address in system memory
+     * @param address Address in system memory to map shared memory block to
+     * @param permissions Memory block map permissions (specified by SVC field)
+     * @param other_permissions Memory block map other permissions (specified by SVC field)
+     */
+    ResultCode Map(VAddr address, MemoryPermission permissions, MemoryPermission other_permissions);
+
+    /**
+    * Gets a pointer to the shared memory block
+    * @param offset Offset from the start of the shared memory block to get pointer
+    * @return Pointer to the shared memory block from the specified offset
+    */
+    ResultVal<u8*> GetPointer(u32 offset = 0);
+
+    VAddr base_address;                   ///< Address of shared memory block in RAM
+    MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
+    MemoryPermission other_permissions; ///< Other permissions of shared memory block (SVC field)
+    std::string name;                   ///< Name of shared memory object (optional)
+
+private:
+    SharedMemory() = default;
+};
 
 } // namespace

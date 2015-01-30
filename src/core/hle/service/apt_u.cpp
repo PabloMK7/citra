@@ -10,6 +10,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/service/apt_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,11 +27,11 @@ namespace APT_U {
 static const VAddr SHARED_FONT_VADDR = 0x18000000;
 
 /// Handle to shared memory region designated to for shared system font
-static Handle shared_font_mem = 0;
+static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
 
-static Handle lock_handle = 0;
-static Handle notification_event_handle = 0; ///< APT notification event handle
-static Handle pause_event_handle = 0; ///< APT pause event handle
+static Kernel::SharedPtr<Kernel::Mutex> lock;
+static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
+static Kernel::SharedPtr<Kernel::Event> pause_event = 0; ///< APT pause event
 static std::vector<u8> shared_font;
 
 /// Signals used by APT functions
@@ -67,17 +68,19 @@ enum class AppID : u32 {
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    notification_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Notification");
-    pause_event_handle = Kernel::CreateEvent(RESETTYPE_ONESHOT, "APT_U:Pause");
+    // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
+    notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification").MoveFrom();
+    pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause").MoveFrom();
 
-    cmd_buff[3] = notification_event_handle;
-    cmd_buff[4] = pause_event_handle;
+    cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(pause_event).MoveFrom();
 
-    Kernel::ClearEvent(notification_event_handle);
-    Kernel::SignalEvent(pause_event_handle); // Fire start event
+    // TODO(bunnei): Check if these events are cleared/signaled every time Initialize is called.
+    notification_event->Clear();
+    pause_event->Signal(); // Fire start event
 
-    _assert_msg_(KERNEL, (0 != lock_handle), "Cannot initialize without lock");
-    Kernel::ReleaseMutex(lock_handle);
+    _assert_msg_(KERNEL, (nullptr != lock), "Cannot initialize without lock");
+    lock->Release();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 }
@@ -93,7 +96,7 @@ void NotifyToWait(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     // TODO(Subv): Verify this, it seems to get SWKBD and Home Menu further.
-    Kernel::SignalEvent(pause_event_handle);
+    pause_event->Signal();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
@@ -103,11 +106,6 @@ void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
 
-    if (0 == lock_handle) {
-        // TODO(bunnei): Verify if this is created here or at application boot?
-        lock_handle = Kernel::CreateMutex(false, "APT_U:Lock");
-        Kernel::ReleaseMutex(lock_handle);
-    }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     // Not sure what these parameters are used for, but retail apps check that they are 0 after
@@ -116,7 +114,7 @@ void GetLockHandle(Service::Interface* self) {
     cmd_buff[3] = 0;
     cmd_buff[4] = 0;
 
-    cmd_buff[5] = lock_handle;
+    cmd_buff[5] = Kernel::g_handle_table.Create(lock).MoveFrom();
     LOG_TRACE(Service_APT, "called handle=0x%08X", cmd_buff[5]);
 }
 
@@ -354,7 +352,7 @@ void GetSharedFont(Service::Interface* self) {
         cmd_buff[0] = 0x00440082;
         cmd_buff[1] = RESULT_SUCCESS.raw; // No error
         cmd_buff[2] = SHARED_FONT_VADDR;
-        cmd_buff[4] = shared_font_mem;
+        cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
     } else {
         cmd_buff[1] = -1; // Generic error (not really possible to verify this on hardware)
         LOG_ERROR(Kernel_SVC, "called, but %s has not been loaded!", SHARED_FONT);
@@ -514,13 +512,13 @@ Interface::Interface() {
         file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
 
         // Create shared font memory object
-        shared_font_mem = Kernel::CreateSharedMemory("APT_U:shared_font_mem");
+        shared_font_mem = Kernel::SharedMemory::Create("APT_U:shared_font_mem").MoveFrom();
     } else {
         LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
-        shared_font_mem = 0;
+        shared_font_mem = nullptr;
     }
 
-    lock_handle = 0;
+    lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
 
     Register(FunctionTable, ARRAY_SIZE(FunctionTable));
 }

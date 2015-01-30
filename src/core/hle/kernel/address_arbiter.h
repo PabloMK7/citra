@@ -18,7 +18,6 @@
 
 namespace Kernel {
 
-/// Address arbitration types
 enum class ArbitrationType : u32 {
     Signal,
     WaitIfLessThan,
@@ -27,10 +26,28 @@ enum class ArbitrationType : u32 {
     DecrementAndWaitIfLessThanWithTimeout,
 };
 
-/// Arbitrate an address
-ResultCode ArbitrateAddress(Handle handle, ArbitrationType type, u32 address, s32 value, u64 nanoseconds);
+class AddressArbiter final : public Object {
+public:
+    /**
+     * Creates an address arbiter.
+     *
+     * @param name Optional name used for debugging.
+     * @returns The created AddressArbiter.
+     */
+    static ResultVal<SharedPtr<AddressArbiter>> Create(std::string name = "Unknown");
 
-/// Create an address arbiter
-Handle CreateAddressArbiter(const std::string& name = "Unknown");
+    std::string GetTypeName() const override { return "Arbiter"; }
+    std::string GetName() const override { return name; }
+
+    static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    std::string name;   ///< Name of address arbiter object (optional)
+
+    ResultCode ArbitrateAddress(ArbitrationType type, VAddr address, s32 value, u64 nanoseconds);
+
+private:
+    AddressArbiter() = default;
+};
 
 } // namespace FileSys

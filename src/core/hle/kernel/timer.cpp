@@ -13,75 +13,54 @@
 
 namespace Kernel {
 
-class Timer : public WaitObject {
-public:
-    std::string GetTypeName() const override { return "Timer"; }
-    std::string GetName() const override { return name; }
+/// The event type of the generic timer callback event
+static int timer_callback_event_type = -1;
 
-    static const HandleType HANDLE_TYPE = HandleType::Timer;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
-
-    ResetType reset_type;                   ///< The ResetType of this timer
-
-    bool signaled;                          ///< Whether the timer has been signaled or not
-    std::string name;                       ///< Name of timer (optional)
-
-    u64 initial_delay;                      ///< The delay until the timer fires for the first time
-    u64 interval_delay;                     ///< The delay until the timer fires after the first time
-
-    bool ShouldWait() override {
-        return !signaled;
-    }
-
-    void Acquire() override {
-        _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
-    }
-};
-
-/**
- * Creates a timer.
- * @param handle Reference to handle for the newly created timer
- * @param reset_type ResetType describing how to create timer
- * @param name Optional name of timer
- * @return Newly created Timer object
- */
-Timer* CreateTimer(Handle& handle, const ResetType reset_type, const std::string& name) {
-    Timer* timer = new Timer;
-
-    handle = Kernel::g_handle_table.Create(timer).ValueOr(INVALID_HANDLE);
+ResultVal<SharedPtr<Timer>> Timer::Create(ResetType reset_type, std::string name) {
+    SharedPtr<Timer> timer(new Timer);
+    // TOOD(yuriks): Don't create Handle (see Thread::Create())
+    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(timer));
 
     timer->reset_type = reset_type;
     timer->signaled = false;
-    timer->name = name;
+    timer->name = std::move(name);
     timer->initial_delay = 0;
     timer->interval_delay = 0;
-    return timer;
+    return MakeResult<SharedPtr<Timer>>(timer);
 }
 
-ResultCode CreateTimer(Handle* handle, const ResetType reset_type, const std::string& name) {
-    CreateTimer(*handle, reset_type, name);
-    return RESULT_SUCCESS;
+bool Timer::ShouldWait() {
+    return !signaled;
 }
 
-ResultCode ClearTimer(Handle handle) {
-    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
-    
-    if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
-    timer->signaled = false;
-    return RESULT_SUCCESS;
+void Timer::Acquire() {
+    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
 }
 
-/// The event type of the generic timer callback event
-static int TimerCallbackEventType = -1;
+void Timer::Set(s64 initial, s64 interval) {
+    initial_delay = initial;
+    interval_delay = interval;
+
+    u64 initial_microseconds = initial / 1000;
+    // TODO(yuriks): Figure out a replacement for GetHandle here
+    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
+            GetHandle());
+}
+
+void Timer::Cancel() {
+    CoreTiming::UnscheduleEvent(timer_callback_event_type, GetHandle());
+}
+
+void Timer::Clear() {
+    signaled = false;
+}
 
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(timer_handle);
 
     if (timer == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid timer %u", timer_handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid timer %08X", timer_handle);
         return;
     }
 
@@ -99,36 +78,12 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
         // Reschedule the timer with the interval delay
         u64 interval_microseconds = timer->interval_delay / 1000;
         CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late, 
-                TimerCallbackEventType, timer_handle);
+                timer_callback_event_type, timer_handle);
     }
 }
 
-ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
-    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
-
-    if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
-    timer->initial_delay = initial;
-    timer->interval_delay = interval;
-
-    u64 initial_microseconds = initial / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), TimerCallbackEventType, handle);
-    return RESULT_SUCCESS;
-}
-
-ResultCode CancelTimer(Handle handle) {
-    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
-
-    if (timer == nullptr)
-        return InvalidHandle(ErrorModule::Kernel);
-
-    CoreTiming::UnscheduleEvent(TimerCallbackEventType, handle);
-    return RESULT_SUCCESS;
-}
-
 void TimersInit() {
-    TimerCallbackEventType = CoreTiming::RegisterEvent("TimerCallback", TimerCallback);
+    timer_callback_event_type = CoreTiming::RegisterEvent("TimerCallback", TimerCallback);
 }
 
 void TimersShutdown() {
