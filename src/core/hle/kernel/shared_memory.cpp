@@ -30,9 +30,9 @@ ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    base_address = address;
-    permissions = permissions;
-    other_permissions = other_permissions;
+    this->base_address = address;
+    this->permissions = permissions;
+    this->other_permissions = other_permissions;
 
     return RESULT_SUCCESS;
 }

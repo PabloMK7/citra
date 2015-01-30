@@ -51,7 +51,7 @@ public:
     */
     ResultVal<u8*> GetPointer(u32 offset = 0);
 
-    VAddr base_address;                   ///< Address of shared memory block in RAM
+    VAddr base_address;                 ///< Address of shared memory block in RAM
     MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
     MemoryPermission other_permissions; ///< Other permissions of shared memory block (SVC field)
     std::string name;                   ///< Name of shared memory object (optional)
