@@ -36,7 +36,7 @@
 
 #include "spinbox.h"
 
-CSpinBox::CSpinBox(QWidget* parent) : QAbstractSpinBox(parent), base(10), min_value(-100), max_value(100), value(0), num_digits(0)
+CSpinBox::CSpinBox(QWidget* parent) : QAbstractSpinBox(parent), min_value(-100), max_value(100), value(0), base(10), num_digits(0)
 {
     // TODO: Might be nice to not immediately call the slot.
     //       Think of an address that is being replaced by a different one, in which case a lot
