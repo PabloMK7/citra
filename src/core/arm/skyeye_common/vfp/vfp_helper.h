@@ -30,8 +30,7 @@
  * published by the Free Software Foundation.
  */
 
-#ifndef __VFP_HELPER_H__
-#define __VFP_HELPER_H__
+#pragma once
 
 /* Custom edit */
 
@@ -536,5 +535,3 @@ u32 vfp_double_normaliseroundintern(ARMul_State* state, struct vfp_double *vd, u
 u32 vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
 u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
 u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, struct vfp_double* dm, u32 fpscr);
-
-#endif

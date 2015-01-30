@@ -1,7 +1,6 @@
-#ifndef __ARM_REGFORMAT_H__
-#define __ARM_REGFORMAT_H__
+#pragma once
 
-enum arm_regno{
+enum {
     R0 = 0,
     R1,
     R2,
@@ -20,7 +19,7 @@ enum arm_regno{
     R15, //PC,
     CPSR_REG,
     SPSR_REG,
-#if 1
+
     PHYS_PC,
     R13_USR,
     R14_USR,
@@ -95,11 +94,9 @@ enum arm_regno{
     VFP_FPSID = VFP_BASE,
     VFP_FPSCR,
     VFP_FPEXC,
-#endif    
+
     MAX_REG_NUM,
 };
 
 #define CP15(idx)       (idx - CP15_BASE)
 #define VFP_OFFSET(x)   (x - VFP_BASE)
-
-#endif

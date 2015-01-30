@@ -5,6 +5,8 @@
  * First, the standard VFP set.
  */
 
+#pragma once
+
 #define FPSID			cr0
 #define FPSCR			cr1
 #define MVFR1			cr6

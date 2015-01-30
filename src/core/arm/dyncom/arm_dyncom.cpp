@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/arm/skyeye_common/armcpu.h"
 #include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 

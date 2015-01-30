@@ -18,8 +18,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef __VFP_H__
-#define __VFP_H__
+#pragma once
 
 #include "core/arm/skyeye_common/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
@@ -108,6 +107,4 @@ int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value);
 
 #ifdef __cplusplus
  }
-#endif
-
 #endif
