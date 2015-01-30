@@ -6,14 +6,6 @@
 
 #define BITS(a,b)   ((instr >> (a)) & ((1 << (1+(b)-(a)))-1))
 #define BIT(n)      ((instr >> (n)) & 1)
-#define BAD         do { printf("meet BAD at %s, instr is %x\n", __FUNCTION__, instr ); } while(0);
-#define ptr_N       cpu->ptr_N
-#define ptr_Z       cpu->ptr_Z
-#define ptr_C       cpu->ptr_C
-#define ptr_V       cpu->ptr_V
-#define ptr_I       cpu->ptr_I
-#define ptr_T       cpu->ptr_T
-#define ptr_CPSR    cpu->ptr_gpr[16]
 
 // For MUL instructions
 #define RDHi        ((instr >> 16) & 0xF)
@@ -49,24 +41,6 @@
 #define SBIT        BIT(20)
 #define DESTReg     (BITS (12, 15))
 
-// They are in unused state, give a corrent value when using
-#define IS_V5E 0
-#define IS_V5  0
-#define IS_V6  0
-#define LHSReg 0
-
-// Temp define the using the pc reg need implement a flow
-#define STORE_CHECK_RD_PC   ADD(R(RD), CONST(INSTR_SIZE * 2))
-
-#define OPERAND             operand(cpu,instr,bb,NULL)
-#define SCO_OPERAND(sco)    operand(cpu,instr,bb,sco)
-#define BOPERAND            boperand(instr)
-
-#define CHECK_RN_PC         (RN == 15 ? ADD(AND(R(RN), CONST(~0x1)), CONST(INSTR_SIZE * 2)) : R(RN))
-#define CHECK_RN_PC_WA      (RN == 15 ? ADD(AND(R(RN), CONST(~0x3)), CONST(INSTR_SIZE * 2)) : R(RN))
-
-#define GET_USER_MODE()     (OR(ICMP_EQ(R(MODE_REG), CONST(USER32MODE)), ICMP_EQ(R(MODE_REG), CONST(SYSTEM32MODE))))
-
 int decode_arm_instr(uint32_t instr, int32_t *idx);
 
 enum DECODE_STATUS {
@@ -83,23 +57,8 @@ struct instruction_set_encoding_item {
 
 typedef struct instruction_set_encoding_item ISEITEM;
 
-#define RECORD_WB(value, flag) { cpu->dyncom_engine->wb_value = value;cpu->dyncom_engine->wb_flag = flag; }
-#define INIT_WB(wb_value, wb_flag) RECORD_WB(wb_value, wb_flag)
-
-#define EXECUTE_WB(base_reg) { if(cpu->dyncom_engine->wb_flag) LET(base_reg, cpu->dyncom_engine->wb_value); }
-
-inline int get_reg_count(uint32_t instr) {
-    int i = BITS(0, 15);
-    int count = 0;
-    while (i) {
-        if (i & 1)
-            count++;
-        i = i >> 1;
-    }
-    return count;
-}
-
-enum ARMVER {
+// ARM versions
+enum {
     INVALID = 0,
     ARMALL,
     ARMV4,
