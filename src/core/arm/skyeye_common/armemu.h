@@ -575,8 +575,6 @@ extern ARMword ARMul_GetPC (ARMul_State *);
 extern ARMword ARMul_GetNextPC (ARMul_State *);
 extern ARMword ARMul_GetR15 (ARMul_State *);
 extern ARMword ARMul_GetCPSR (ARMul_State *);
-extern void ARMul_EnvokeEvent (ARMul_State *);
-extern unsigned int ARMul_Time (ARMul_State *);
 extern void ARMul_NegZero (ARMul_State *, ARMword);
 extern void ARMul_SetPC (ARMul_State *, ARMword);
 extern void ARMul_SetR15 (ARMul_State *, ARMword);
@@ -603,8 +601,7 @@ extern void ARMul_AddCarry (ARMul_State *, ARMword, ARMword, ARMword);
 extern tdstate ARMul_ThumbDecode (ARMul_State *, ARMword, ARMword, ARMword *);
 extern ARMword ARMul_GetReg (ARMul_State *, unsigned, unsigned);
 extern void ARMul_SetReg (ARMul_State *, unsigned, unsigned, ARMword);
-extern void ARMul_ScheduleEvent (ARMul_State *, unsigned int,
-				 unsigned (*)(ARMul_State *));
+
 /* Coprocessor support functions.  */
 extern unsigned ARMul_CoProInit (ARMul_State *);
 extern void ARMul_CoProExit (ARMul_State *);
