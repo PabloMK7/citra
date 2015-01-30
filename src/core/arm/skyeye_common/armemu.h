@@ -14,14 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
-#ifndef __ARMEMU_H__
-#define __ARMEMU_H__
 
+#pragma once
 
 #include "core/arm/skyeye_common/armdefs.h"
-//#include "skyeye.h"
-
-//extern ARMword isize;
 
 /* Shift Opcodes.  */
 #define LSL 0
@@ -625,6 +621,3 @@ extern unsigned DSPCDP5 (ARMul_State *, unsigned, ARMword);
 extern unsigned DSPMCR6 (ARMul_State *, unsigned, ARMword, ARMword);
 extern unsigned DSPMRC6 (ARMul_State *, unsigned, ARMword, ARMword *);
 extern unsigned DSPCDP6 (ARMul_State *, unsigned, ARMword);
-
-
-#endif

@@ -24,8 +24,7 @@
 * @date 2011-11-07
 */
 
-#ifndef __ARM_DYNCOM_THUMB_H__
-#define __ARM_DYNCOM_THUMB_H__
+#pragma once
 
 #include "core/arm/skyeye_common/armdefs.h"
 
@@ -46,5 +45,3 @@ static inline u32 get_thumb_instr(u32 instr, addr_t pc) {
         tinstr = instr & 0xFFFF;
     return tinstr;
 }
-
-#endif

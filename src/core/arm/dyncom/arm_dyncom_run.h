@@ -16,8 +16,7 @@
 *
 */
 
-#ifndef __ARM_DYNCOM_RUN__
-#define __ARM_DYNCOM_RUN__
+#pragma once
 
 void switch_mode(arm_core_t *core, uint32_t mode);
 
@@ -49,5 +48,3 @@ static inline addr_t CHECK_READ_REG15_WA(arm_core_t* core, int Rn) {
 static inline u32 CHECK_READ_REG15(arm_core_t* core, int Rn) {
     return (Rn == 15)? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
 }
-
-#endif
