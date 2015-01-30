@@ -395,53 +395,41 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 #define DIFF_WRITE 0
 
 typedef ARMul_State arm_core_t;
-#define ResetPin NresetSig
-#define FIQPin NfiqSig
-#define IRQPin NirqSig
-#define AbortPin abortSig
-#define TransPin NtransSig
-#define BigEndPin bigendSig
-#define Prog32Pin prog32Sig
-#define Data32Pin data32Sig
-#define LateAbortPin lateabtSig
 
 /***************************************************************************\
 *                        Types of ARM we know about                         *
 \***************************************************************************/
 
-/* The bitflags */
-#define ARM_Fix26_Prop   0x01
-#define ARM_Nexec_Prop   0x02
-#define ARM_Debug_Prop   0x10
-#define ARM_Isync_Prop   ARM_Debug_Prop
-#define ARM_Lock_Prop    0x20
-#define ARM_v4_Prop      0x40
-#define ARM_v5_Prop      0x80
-#define ARM_v6_Prop      0xc0
+enum {
+    ARM_Fix26_Prop  = 0x01,
+    ARM_Nexec_Prop  = 0x02,
+    ARM_Debug_Prop  = 0x10,
+    ARM_Isync_Prop  = ARM_Debug_Prop,
+    ARM_Lock_Prop   = 0x20,
+    ARM_v4_Prop     = 0x40,
+    ARM_v5_Prop     = 0x80,
+    ARM_v6_Prop     = 0xc0,
 
-#define ARM_v5e_Prop     0x100
-#define ARM_XScale_Prop  0x200
-#define ARM_ep9312_Prop  0x400
-#define ARM_iWMMXt_Prop  0x800
-#define ARM_PXA27X_Prop  0x1000
-#define ARM_v7_Prop      0x2000
+    ARM_v5e_Prop    = 0x100,
+    ARM_XScale_Prop = 0x200,
+    ARM_ep9312_Prop = 0x400,
+    ARM_iWMMXt_Prop = 0x800,
+    ARM_PXA27X_Prop = 0x1000,
+    ARM_v7_Prop     = 0x2000,
 
-/* ARM2 family */
-#define ARM2    (ARM_Fix26_Prop)
-#define ARM2as  ARM2
-#define ARM61   ARM2
-#define ARM3    ARM2
+    // ARM2 family
+    ARM2    = ARM_Fix26_Prop,
+    ARM2as  = ARM2,
+    ARM61   = ARM2,
+    ARM3    = ARM2,
 
-#ifdef ARM60            /* previous definition in armopts.h */
-#undef ARM60
-#endif
-
-/* ARM6 family */
-#define ARM6    (ARM_Lock_Prop)
-#define ARM60   ARM6
-#define ARM600  ARM6
-#define ARM610  ARM6
-#define ARM620  ARM6
+    // ARM6 family
+    ARM6    = ARM_Lock_Prop,
+    ARM60   = ARM6,
+    ARM600  = ARM6,
+    ARM610  = ARM6,
+    ARM620  = ARM6
+};
 
 
 /***************************************************************************\
@@ -456,41 +444,44 @@ typedef ARMul_State arm_core_t;
 *                      The hardware vector addresses                        *
 \***************************************************************************/
 
-#define ARMResetV 0L
-#define ARMUndefinedInstrV 4L
-#define ARMSWIV 8L
-#define ARMPrefetchAbortV 12L
-#define ARMDataAbortV 16L
-#define ARMAddrExceptnV 20L
-#define ARMIRQV 24L
-#define ARMFIQV 28L
-#define ARMErrorV 32L        /* This is an offset, not an address ! */
+enum {
+    ARMResetV          = 0,
+    ARMUndefinedInstrV = 4,
+    ARMSWIV            = 8,
+    ARMPrefetchAbortV  = 12,
+    ARMDataAbortV      = 16,
+    ARMAddrExceptnV    = 20,
+    ARMIRQV            = 24,
+    ARMFIQV            = 28,
+    ARMErrorV          = 32, // This is an offset, not an address!
 
-#define ARMul_ResetV ARMResetV
-#define ARMul_UndefinedInstrV ARMUndefinedInstrV
-#define ARMul_SWIV ARMSWIV
-#define ARMul_PrefetchAbortV ARMPrefetchAbortV
-#define ARMul_DataAbortV ARMDataAbortV
-#define ARMul_AddrExceptnV ARMAddrExceptnV
-#define ARMul_IRQV ARMIRQV
-#define ARMul_FIQV ARMFIQV
+    ARMul_ResetV          = ARMResetV,
+    ARMul_UndefinedInstrV = ARMUndefinedInstrV,
+    ARMul_SWIV            = ARMSWIV,
+    ARMul_PrefetchAbortV  = ARMPrefetchAbortV,
+    ARMul_DataAbortV      = ARMDataAbortV,
+    ARMul_AddrExceptnV    = ARMAddrExceptnV,
+    ARMul_IRQV            = ARMIRQV,
+    ARMul_FIQV            = ARMFIQV
+};
 
 /***************************************************************************\
 *                          Mode and Bank Constants                          *
 \***************************************************************************/
 
-#define USER26MODE 0L
-#define FIQ26MODE 1L
-#define IRQ26MODE 2L
-#define SVC26MODE 3L
-#define USER32MODE 16L
-#define FIQ32MODE 17L
-#define IRQ32MODE 18L
-#define SVC32MODE 19L
-#define ABORT32MODE 23L
-#define UNDEF32MODE 27L
-//chy 2006-02-15 add system32 mode
-#define SYSTEM32MODE 31L
+enum {
+    USER26MODE   = 0,
+    FIQ26MODE    = 1,
+    IRQ26MODE    = 2,
+    SVC26MODE    = 3,
+    USER32MODE   = 16,
+    FIQ32MODE    = 17,
+    IRQ32MODE    = 18,
+    SVC32MODE    = 19,
+    ABORT32MODE  = 23,
+    UNDEF32MODE  = 27,
+    SYSTEM32MODE = 31
+};
 
 #define ARM32BITMODE (state->Mode > 3)
 #define ARM26BITMODE (state->Mode <= 3)
@@ -499,14 +490,17 @@ typedef ARMul_State arm_core_t;
 #define ARMul_MODE32BIT ARM32BITMODE
 #define ARMul_MODE26BIT ARM26BITMODE
 
-#define USERBANK 0
-#define FIQBANK 1
-#define IRQBANK 2
-#define SVCBANK 3
-#define ABORTBANK 4
-#define UNDEFBANK 5
-#define DUMMYBANK 6
-#define SYSTEMBANK USERBANK
+enum {
+    USERBANK   = 0,
+    FIQBANK    = 1,
+    IRQBANK    = 2,
+    SVCBANK    = 3,
+    ABORTBANK  = 4,
+    UNDEFBANK  = 5,
+    DUMMYBANK  = 6,
+    SYSTEMBANK = USERBANK
+};
+
 #define BANK_CAN_ACCESS_SPSR(bank)  \
   ((bank) != USERBANK && (bank) != SYSTEMBANK && (bank) != DUMMYBANK)
 
@@ -613,40 +607,44 @@ extern ARMword ARMul_MemAccess(ARMul_State* state, ARMword, ARMword,
 *            Definitons of things in the co-processor interface             *
 \***************************************************************************/
 
-#define ARMul_FIRST 0
-#define ARMul_TRANSFER 1
-#define ARMul_BUSY 2
-#define ARMul_DATA 3
-#define ARMul_INTERRUPT 4
-#define ARMul_DONE 0
-#define ARMul_CANT 1
-#define ARMul_INC 3
+enum {
+    ARMul_FIRST     = 0,
+    ARMul_TRANSFER  = 1,
+    ARMul_BUSY      = 2,
+    ARMul_DATA      = 3,
+    ARMul_INTERRUPT = 4,
+    ARMul_DONE      = 0,
+    ARMul_CANT      = 1,
+    ARMul_INC       = 3
+};
 
-#define ARMul_CP13_R0_FIQ       0x1
-#define ARMul_CP13_R0_IRQ       0x2
-#define ARMul_CP13_R8_PMUS      0x1
+enum {
+    ARMul_CP13_R0_FIQ       = 0x1,
+    ARMul_CP13_R0_IRQ       = 0x2,
+    ARMul_CP13_R8_PMUS      = 0x1,
 
-#define ARMul_CP14_R0_ENABLE    0x0001
-#define ARMul_CP14_R0_CLKRST    0x0004
-#define ARMul_CP14_R0_CCD       0x0008
-#define ARMul_CP14_R0_INTEN0    0x0010
-#define ARMul_CP14_R0_INTEN1    0x0020
-#define ARMul_CP14_R0_INTEN2    0x0040
-#define ARMul_CP14_R0_FLAG0     0x0100
-#define ARMul_CP14_R0_FLAG1     0x0200
-#define ARMul_CP14_R0_FLAG2     0x0400
-#define ARMul_CP14_R10_MOE_IB   0x0004
-#define ARMul_CP14_R10_MOE_DB   0x0008
-#define ARMul_CP14_R10_MOE_BT   0x000c
-#define ARMul_CP15_R1_ENDIAN    0x0080
-#define ARMul_CP15_R1_ALIGN     0x0002
-#define ARMul_CP15_R5_X         0x0400
-#define ARMul_CP15_R5_ST_ALIGN  0x0001
-#define ARMul_CP15_R5_IMPRE     0x0406
-#define ARMul_CP15_R5_MMU_EXCPT 0x0400
-#define ARMul_CP15_DBCON_M      0x0100
-#define ARMul_CP15_DBCON_E1     0x000c
-#define ARMul_CP15_DBCON_E0     0x0003
+    ARMul_CP14_R0_ENABLE    = 0x0001,
+    ARMul_CP14_R0_CLKRST    = 0x0004,
+    ARMul_CP14_R0_CCD       = 0x0008,
+    ARMul_CP14_R0_INTEN0    = 0x0010,
+    ARMul_CP14_R0_INTEN1    = 0x0020,
+    ARMul_CP14_R0_INTEN2    = 0x0040,
+    ARMul_CP14_R0_FLAG0     = 0x0100,
+    ARMul_CP14_R0_FLAG1     = 0x0200,
+    ARMul_CP14_R0_FLAG2     = 0x0400,
+    ARMul_CP14_R10_MOE_IB   = 0x0004,
+    ARMul_CP14_R10_MOE_DB   = 0x0008,
+    ARMul_CP14_R10_MOE_BT   = 0x000c,
+    ARMul_CP15_R1_ENDIAN    = 0x0080,
+    ARMul_CP15_R1_ALIGN     = 0x0002,
+    ARMul_CP15_R5_X         = 0x0400,
+    ARMul_CP15_R5_ST_ALIGN  = 0x0001,
+    ARMul_CP15_R5_IMPRE     = 0x0406,
+    ARMul_CP15_R5_MMU_EXCPT = 0x0400,
+    ARMul_CP15_DBCON_M      = 0x0100,
+    ARMul_CP15_DBCON_E1     = 0x000c,
+    ARMul_CP15_DBCON_E0     = 0x0003
+};
 
 extern unsigned ARMul_CoProInit(ARMul_State* state);
 extern void ARMul_CoProExit(ARMul_State* state);
@@ -675,12 +673,9 @@ extern unsigned ARMul_OSHandleSWI(ARMul_State* state, ARMword number);
 }
 #endif
 
-
 extern ARMword ARMul_OSLastErrorP(ARMul_State* state);
-
 extern ARMword ARMul_Debug(ARMul_State* state, ARMword pc, ARMword instr);
 extern unsigned ARMul_OSException(ARMul_State* state, ARMword vector, ARMword pc);
-extern int rdi_log;
 
 enum ConditionCode {
     EQ = 0,
@@ -729,12 +724,6 @@ enum ConditionCode {
 #define IFFLAGS    state->IFFlags
 #endif //VFLAG
 
-#define FLAG_MASK    0xf0000000
-#define NBIT_SHIFT    31
-#define ZBIT_SHIFT    30
-#define CBIT_SHIFT    29
-#define VBIT_SHIFT    28
-
 #define SKYEYE_OUTREGS(fd) { fprintf ((fd), "R %x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,C %x,S %x,%x,%x,%x,%x,%x,%x,M %x,B %x,E %x,I %x,P %x,T %x,L %x,D %x,",\
                          state->Reg[0],state->Reg[1],state->Reg[2],state->Reg[3], \
                          state->Reg[4],state->Reg[5],state->Reg[6],state->Reg[7], \
@@ -777,14 +766,6 @@ RUn %x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n",\
                          state->RegBank[5][8],state->RegBank[5][9],state->RegBank[5][10],state->RegBank[5][11], \
                          state->RegBank[5][12],state->RegBank[5][13],state->RegBank[5][14],state->RegBank[5][15] \
         );}
-
-
-#define SA1110        0x6901b110
-#define SA1100        0x4401a100
-#define PXA250        0x69052100
-#define PXA270        0x69054110
-//#define PXA250      0x69052903
-// 0x69052903;  //PXA250 B1 from intel 278522-001.pdf
 
 extern bool AddOverflow(ARMword, ARMword, ARMword);
 extern bool SubOverflow(ARMword, ARMword, ARMword);
