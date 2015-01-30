@@ -15,8 +15,6 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
-//#include <unistd.h>
-
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armemu.h"
 
@@ -24,26 +22,21 @@
 *                 Definitions for the emulator architecture                 *
 \***************************************************************************/
 
-void ARMul_EmulateInit (void);
-ARMul_State *ARMul_NewState (ARMul_State * state);
-void ARMul_Reset (ARMul_State * state);
-ARMword ARMul_DoCycle (ARMul_State * state);
-unsigned ARMul_DoCoPro (ARMul_State * state);
-ARMword ARMul_DoProg (ARMul_State * state);
-ARMword ARMul_DoInstr (ARMul_State * state);
-void ARMul_Abort (ARMul_State * state, ARMword address);
+void ARMul_EmulateInit();
+ARMul_State* ARMul_NewState(ARMul_State* state);
+void ARMul_Reset (ARMul_State* state);
+ARMword ARMul_DoCycle(ARMul_State* state);
+unsigned ARMul_DoCoPro(ARMul_State* state);
+ARMword ARMul_DoProg(ARMul_State* state);
+ARMword ARMul_DoInstr(ARMul_State* state);
+void ARMul_Abort(ARMul_State* state, ARMword address);
 
 unsigned ARMul_MultTable[32] = {
     1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,
     10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16
 };
-ARMword ARMul_ImmedTable[4096];	/* immediate DP LHS values */
-char ARMul_BitList[256];	/* number of bits in a byte table */
-
-//chy 2006-02-22 add test debugmode
-extern int debugmode;
-extern int remote_interrupt( void );
-
+ARMword ARMul_ImmedTable[4096]; /* immediate DP LHS values */
+char ARMul_BitList[256];        /* number of bits in a byte table */
 
 void arm_dyncom_Abort(ARMul_State * state, ARMword vector)
 {
@@ -51,36 +44,10 @@ void arm_dyncom_Abort(ARMul_State * state, ARMword vector)
 }
 
 
-/* ahe-ykl : the following code to initialize user mode
-   code is architecture dependent and probably model dependant. */
-
-/*#include "skyeye_arch.h"
-#include "skyeye_pref.h"
-#include "skyeye_exec_info.h"
-#include "bank_defs.h"*/
-//#include "armcpu.h"
-//#include "skyeye_callback.h"
-
-/*
-		ARM_CPU_State* cpu = get_current_cpu();
-		arm_core_t* core = &cpu->core[0];
-
-		uint32_t sp = info->initial_sp;
-
-		core->Cpsr = 0x10; // User mode
-// FIXME: may need to add thumb
-core->Reg[13] = sp;
-core->Reg[10] = info->start_data;
-core->Reg[0] = 0;
-bus_read(32, sp + 4, &(core->Reg[1]));
-bus_read(32, sp + 8, &(core->Reg[2]));
-*/
 /***************************************************************************\
 *         Call this routine once to set up the emulator's tables.           *
 \***************************************************************************/
-
-void
-ARMul_EmulateInit (void)
+void ARMul_EmulateInit()
 {
     unsigned int i, j;
 
@@ -102,9 +69,7 @@ ARMul_EmulateInit (void)
 /***************************************************************************\
 *            Returns a new instantiation of the ARMulator's state           *
 \***************************************************************************/
-
-ARMul_State *
-ARMul_NewState (ARMul_State *state)
+ARMul_State* ARMul_NewState(ARMul_State* state)
 {
     unsigned i, j;
 
@@ -120,41 +85,12 @@ ARMul_NewState (ARMul_State *state)
         state->Spsr[i] = 0;
     state->Mode = 0;
 
-    state->CallDebug = FALSE;
     state->Debug = FALSE;
     state->VectorCatch = 0;
     state->Aborted = FALSE;
     state->Reseted = FALSE;
     state->Inted = 3;
     state->LastInted = 3;
-
-    state->CommandLine = NULL;
-
-    state->EventSet = 0;
-    state->Now = 0;
-    state->EventPtr =
-        (struct EventNode **) malloc ((unsigned) EVENTLISTSIZE *
-                                      sizeof (struct EventNode *));
-#if DIFF_STATE
-    state->state_log = fopen("/data/state.log", "w");
-    printf("create pc log file.\n");
-#endif
-    if (state->EventPtr == NULL) {
-        printf ("SKYEYE: ARMul_NewState malloc state->EventPtr error\n");
-        exit(-1);
-        //skyeye_exit (-1);
-    }
-    for (i = 0; i < EVENTLISTSIZE; i++)
-        *(state->EventPtr + i) = NULL;
-#if SAVE_LOG
-    state->state_log = fopen("/tmp/state.log", "w");
-    printf("create pc log file.\n");
-#else
-#if DIFF_LOG
-    state->state_log = fopen("/tmp/state.log", "r");
-    printf("loaded pc log file.\n");
-#endif
-#endif
 
 #ifdef ARM61
     state->prog32Sig = LOW;
@@ -168,28 +104,19 @@ ARMul_NewState (ARMul_State *state)
     state->bigendSig = LOW;
 
     //chy:2003-08-19
-    state->LastTime = 0;
     state->CP14R0_CCD = -1;
-
-    /* ahe-ykl: common function for interpret and dyncom */
-    /*sky_pref_t *pref = get_skyeye_pref();
-    if (pref->user_mode_sim)
-    	register_callback(arm_user_mode_init, Bootmach_callback);
-        */
 
     memset(&state->exclusive_tag_array[0], 0xFF, sizeof(state->exclusive_tag_array[0]) * 128);
     state->exclusive_access_state = 0;
-    //state->cpu = (cpu_config_t *) malloc (sizeof (cpu_config_t));
-    //state->mem_bank = (mem_config_t *) malloc (sizeof (mem_config_t));
-    return (state);
+
+    return state;
 }
 
 /***************************************************************************\
 *       Call this routine to set ARMulator to model a certain processor     *
 \***************************************************************************/
 
-void
-ARMul_SelectProcessor (ARMul_State * state, unsigned properties)
+void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
 {
     if (properties & ARM_Fix26_Prop) {
         state->prog32Sig = LOW;
@@ -198,27 +125,16 @@ ARMul_SelectProcessor (ARMul_State * state, unsigned properties)
         state->prog32Sig = HIGH;
         state->data32Sig = HIGH;
     }
-    /* 2004-05-09 chy
-    below line sould be in skyeye_mach_XXX.c 's XXX_mach_init function
-    */
-    // state->lateabtSig = HIGH;
 
-
-    state->is_v4 =
-        (properties & (ARM_v4_Prop | ARM_v5_Prop)) ? HIGH : LOW;
-    state->is_v5 = (properties & ARM_v5_Prop) ? HIGH : LOW;
-    state->is_v5e = (properties & ARM_v5e_Prop) ? HIGH : LOW;
+    state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) ? HIGH : LOW;
+    state->is_v5     = (properties & ARM_v5_Prop) ? HIGH : LOW;
+    state->is_v5e    = (properties & ARM_v5e_Prop) ? HIGH : LOW;
     state->is_XScale = (properties & ARM_XScale_Prop) ? HIGH : LOW;
     state->is_iWMMXt = (properties & ARM_iWMMXt_Prop) ? HIGH : LOW;
-    /* state->is_v6 = LOW */;
-    /* jeff.du 2010-08-05 */
-    state->is_v6 = (properties & ARM_v6_Prop) ? HIGH : LOW;
+    state->is_v6     = (properties & ARM_v6_Prop) ? HIGH : LOW;
     state->is_ep9312 = (properties & ARM_ep9312_Prop) ? HIGH : LOW;
-    //chy 2005-09-19
     state->is_pxa27x = (properties & ARM_PXA27X_Prop) ? HIGH : LOW;
-
-    /* shenoubang 2012-3-11 */
-    state->is_v7 = (properties & ARM_v7_Prop) ? HIGH : LOW;
+    state->is_v7     = (properties & ARM_v7_Prop) ? HIGH : LOW;
 
     /* Only initialse the coprocessor support once we
        know what kind of chip we are dealing with.  */
@@ -229,11 +145,8 @@ ARMul_SelectProcessor (ARMul_State * state, unsigned properties)
 /***************************************************************************\
 * Call this routine to set up the initial machine state (or perform a RESET *
 \***************************************************************************/
-
-void
-ARMul_Reset (ARMul_State * state)
+void ARMul_Reset(ARMul_State* state)
 {
-    //fprintf(stderr,"armul_reset 0: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
     state->NextInstr = 0;
     if (state->prog32Sig) {
         state->Reg[15] = 0;
@@ -244,15 +157,13 @@ ARMul_Reset (ARMul_State * state)
         state->Cpsr = INTBITS | SVC26MODE;
         state->Mode = SVC26MODE;
     }
-    //fprintf(stderr,"armul_reset 1: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
-    //ARMul_CPSRAltered (state);
+
     state->Bank = SVCBANK;
     FLUSHPIPE;
 
     state->EndCondition = 0;
     state->ErrorCode = 0;
 
-    //fprintf(stderr,"armul_reset 2: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
     state->NresetSig = HIGH;
     state->NfiqSig = HIGH;
     state->NirqSig = HIGH;
@@ -266,33 +177,6 @@ ARMul_Reset (ARMul_State * state)
     state->NumIcycles = 0;
     state->NumCcycles = 0;
     state->NumFcycles = 0;
-
-    //fprintf(stderr,"armul_reset 3: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
-    //mmu_reset (state);
-    //fprintf(stderr,"armul_reset 4: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
-
-    //mem_reset (state); /* move to memory/ram.c */
-
-    //fprintf(stderr,"armul_reset 5: state->  Cpsr 0x%x, Mode %d\n",state->Cpsr,state->Mode);
-    /*remove later. walimis 03.7.17 */
-    //io_reset(state);
-    //lcd_disable(state);
-
-    /*ywc 2005-04-07 move from ARMul_NewState , because skyeye_config.no_dbct will
-     *be configured in skyeye_option_init and it is called after ARMul_NewState*/
-    state->tea_break_ok = 0;
-    state->tea_break_addr = 0;
-    state->tea_pc = 0;
-#ifdef DBCT
-    if (!skyeye_config.no_dbct) {
-        //teawater add for arm2x86 2005.02.14-------------------------------------------
-        if (arm2x86_init (state)) {
-            printf ("SKYEYE: arm2x86_init error\n");
-            //skyeye_exit (-1);
-        }
-        //AJ2D--------------------------------------------------------------------------
-    }
-#endif
 }
 
 
@@ -301,108 +185,23 @@ ARMul_Reset (ARMul_State * state)
 * (Emulate26 for a 26 bit ARM and Emulate32 for a 32 bit ARM), return the   *
 * address of the last instruction that is executed.                         *
 \***************************************************************************/
-
-//teawater add DBCT_TEST_SPEED 2005.10.04---------------------------------------
-#ifdef DBCT_TEST_SPEED
-static ARMul_State	*dbct_test_speed_state = NULL;
-static void
-dbct_test_speed_sig(int signo)
-{
-    printf("\n0x%llx %llu\n", dbct_test_speed_state->instr_count, dbct_test_speed_state->instr_count);
-    exit(0);
-    //skyeye_exit(0);
-}
-#endif	//DBCT_TEST_SPEED
-//AJ2D--------------------------------------------------------------------------
-
-ARMword
-ARMul_DoProg (ARMul_State * state)
+ARMword ARMul_DoProg(ARMul_State* state)
 {
     ARMword pc = 0;
 
-    /*
-     * 2007-01-24 removed the term-io functions by Anthony Lee,
-     * moved to "device/uart/skyeye_uart_stdio.c".
-     */
-
-//teawater add DBCT_TEST_SPEED 2005.10.04---------------------------------------
-#ifdef DBCT_TEST_SPEED
-    {
-        if (!dbct_test_speed_state) {
-            //init timer
-            struct itimerval	value;
-            struct sigaction	act;
-
-            dbct_test_speed_state = state;
-            state->instr_count = 0;
-            act.sa_handler = dbct_test_speed_sig;
-            act.sa_flags = SA_RESTART;
-            //cygwin don't support ITIMER_VIRTUAL or ITIMER_PROF
-#ifndef __CYGWIN__
-            if (sigaction(SIGVTALRM, &act, NULL) == -1) {
-#else
-            if (sigaction(SIGALRM, &act, NULL) == -1) {
-#endif	//__CYGWIN__
-                fprintf(stderr, "init timer error.\n");
-                exit(-1);
-                //skyeye_exit(-1);
-            }
-            if (skyeye_config.dbct_test_speed_sec) {
-                value.it_value.tv_sec = skyeye_config.dbct_test_speed_sec;
-            } else {
-                value.it_value.tv_sec = DBCT_TEST_SPEED_SEC;
-            }
-            printf("dbct_test_speed_sec = %ld\n", value.it_value.tv_sec);
-            value.it_value.tv_usec = 0;
-            value.it_interval.tv_sec = 0;
-            value.it_interval.tv_usec = 0;
-#ifndef __CYGWIN__
-            if (setitimer(ITIMER_VIRTUAL, &value, NULL) == -1) {
-#else
-            if (setitimer(ITIMER_REAL, &value, NULL) == -1) {
-#endif	//__CYGWIN__
-                fprintf(stderr, "init timer error.\n");
-                //skyeye_exit(-1);
-            }
-        }
-    }
-#endif	//DBCT_TEST_SPEED
-//AJ2D--------------------------------------------------------------------------
     state->Emulate = RUN;
     while (state->Emulate != STOP) {
         state->Emulate = RUN;
 
-        /*ywc 2005-03-31 */
         if (state->prog32Sig && ARMul_MODE32BIT) {
-#ifdef DBCT
-            if (skyeye_config.no_dbct) {
-                pc = ARMul_Emulate32 (state);
-            } else {
-                pc = ARMul_Emulate32_dbct (state);
-            }
-#else
             pc = ARMul_Emulate32 (state);
-#endif
         }
-
         else {
             //pc = ARMul_Emulate26 (state);
         }
-        //chy 2006-02-22, should test debugmode first
-        //chy 2006-04-14, put below codes in ARMul_Emulate
-#if 0
-        if(debugmode)
-            if(remote_interrupt())
-                state->Emulate = STOP;
-#endif
     }
 
-    /*
-     * 2007-01-24 removed the term-io functions by Anthony Lee,
-     * moved to "device/uart/skyeye_uart_stdio.c".
-     */
-
-    return (pc);
+    return pc;
 }
 
 /***************************************************************************\
@@ -410,38 +209,17 @@ ARMul_DoProg (ARMul_State * state)
 * (Emulate26 for a 26 bit ARM and Emulate32 for a 32 bit ARM), return the   *
 * address of the instruction that is executed.                              *
 \***************************************************************************/
-
-ARMword
-ARMul_DoInstr (ARMul_State * state)
+ARMword ARMul_DoInstr(ARMul_State* state)
 {
     ARMword pc = 0;
 
     state->Emulate = ONCE;
 
-    /*ywc 2005-03-31 */
     if (state->prog32Sig && ARMul_MODE32BIT) {
-#ifdef DBCT
-        if (skyeye_config.no_dbct) {
-            pc = ARMul_Emulate32 (state);
-        } else {
-//teawater add compile switch for DBCT GDB RSP function 2005.10.21--------------
-#ifndef DBCT_GDBRSP
-            printf("DBCT GDBRSP function switch is off.\n");
-            printf("To use this function, open \"#define DBCT_GDBRSP\" in arch/arm/common/armdefs.h & recompile skyeye.\n");
-            skyeye_exit(-1);
-#endif	//DBCT_GDBRSP
-//AJ2D--------------------------------------------------------------------------
-            pc = ARMul_Emulate32_dbct (state);
-        }
-#else
         pc = ARMul_Emulate32 (state);
-#endif
     }
 
-    //else
-    //pc = ARMul_Emulate26 (state);
-
-    return (pc);
+    return pc;
 }
 
 /***************************************************************************\
@@ -449,9 +227,7 @@ ARMul_DoInstr (ARMul_State * state)
 * mode, register bank, and the saving of registers.  Call with the          *
 * appropriate vector's memory address (0,4,8 ....)                          *
 \***************************************************************************/
-
-void
-ARMul_Abort (ARMul_State * state, ARMword vector)
+void ARMul_Abort(ARMul_State* state, ARMword vector)
 {
     ARMword temp;
     int isize = INSN_SIZE;
@@ -494,21 +270,11 @@ ARMul_Abort (ARMul_State * state, ARMword vector)
         SETABORT (IBIT, SVC26MODE, isize);
         break;
     case ARMul_IRQV:	/* IRQ */
-        //chy 2003-09-02 the if sentence seems no use
-#if 0
-        if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
-                || (temp & ARMul_CP13_R0_IRQ))
-#endif
             SETABORT (IBIT,
                       state->prog32Sig ? IRQ32MODE : IRQ26MODE,
                       esize);
         break;
     case ARMul_FIQV:	/* FIQ */
-        //chy 2003-09-02 the if sentence seems no use
-#if 0
-        if (!state->is_XScale || !state->CPRead[13] (state, 0, &temp)
-                || (temp & ARMul_CP13_R0_FIQ))
-#endif
             SETABORT (INTBITS,
                       state->prog32Sig ? FIQ32MODE : FIQ26MODE,
                       esize);

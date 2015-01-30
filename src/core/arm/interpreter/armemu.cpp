@@ -16,30 +16,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
 
-//#include <util.h> // DEBUG()
-
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armemu.h"
 #include "core/hle/hle.h"
-
-//#include "svc.h"
-
-//ichfly
-//#define callstacker 1
-
-//#include "skyeye_callback.h"
-//#include "skyeye_bus.h"
-//#include "sim_control.h"
-//#include "skyeye_pref.h"
-//#include "skyeye.h"
-//#include "skyeye2gdb.h"
-//#include "code_cov.h"
-
-//#include "iwmmxt.h"
-//chy 2003-07-11: for debug instrs
-//extern int skyeye_instr_debug;
-extern FILE *skyeye_logfd;
 
 static ARMword GetDPRegRHS (ARMul_State *, ARMword);
 static ARMword GetDPSRegRHS (ARMul_State *, ARMword);
@@ -63,24 +43,12 @@ static unsigned MultiplyAdd64 (ARMul_State *, ARMword, int, int);
 static void Handle_Load_Double (ARMul_State *, ARMword);
 static void Handle_Store_Double (ARMul_State *, ARMword);
 
-static int
-handle_v6_insn (ARMul_State * state, ARMword instr);
+static int handle_v6_insn (ARMul_State * state, ARMword instr);
 
 #define LUNSIGNED (0)		/* unsigned operation */
 #define LSIGNED   (1)		/* signed operation */
 #define LDEFAULT  (0)		/* default : do nothing */
 #define LSCC      (1)		/* set condition codes on result */
-
-#ifdef NEED_UI_LOOP_HOOK
-/* How often to run the ui_loop update, when in use.  */
-#define UI_LOOP_POLL_INTERVAL 0x32000
-
-/* Counter for the ui_loop_hook update.  */
-static int ui_loop_hook_counter = UI_LOOP_POLL_INTERVAL;
-
-/* Actual hook to call to run through gdb's gui event loop.  */
-extern int (*ui_loop_hook) (int);
-#endif /* NEED_UI_LOOP_HOOK */
 
 /* Short-hand macros for LDR/STR.  */
 
@@ -290,20 +258,8 @@ extern int (*ui_loop_hook) (int);
      break;                                            		\
 }
 
-/*ywc 2005-03-31*/
-//teawater add for arm2x86 2005.02.17-------------------------------------------
-#ifdef DBCT
-#include "dbct/tb.h"
-#include "dbct/arm2x86_self.h"
-#endif
-//AJ2D--------------------------------------------------------------------------
-
-//Diff register
-unsigned int mirror_register_file[39];
-
 /* EMULATION of ARM6.  */
 
-extern int debugmode;
 int ARMul_ICE_debug(ARMul_State *state,ARMword instr,ARMword addr);
 #ifdef MODE32
 //chy 2006-04-12, for ICE debug
@@ -312,59 +268,14 @@ int ARMul_ICE_debug(ARMul_State *state,ARMword instr,ARMword addr)
     return 0;
 }
 
-static int dump = 0;
 ARMword ARMul_Debug(ARMul_State * state, ARMword pc, ARMword instr)
 {
-    /*printf("[%08x] ", pc);
-    arm11_Disasm32(pc);*/
-
-    /*if (pc >= 0x0010303C && pc <= 0x00103050)
-    {
-    printf("[%08x] = %08X = ", pc, instr);
-    arm11_Disasm32(pc);
-    arm11_Dump();
-    }*/
-
-    //fprintf(stderr,"[%08x]\n", pc);
-
-    //if (pc == 0x00240C88)
-    //    arm11_Dump();
-
-    /*if (pc == 0x188e04)
-    {
-        DEBUG("read %08X %08X %016X %08X %08X from %08X", state->Reg[0], state->Reg[1], state->Reg[2] | state->Reg[3] << 32, mem_Read32(state->Reg[13]), mem_Read32(state->Reg[13] + 4), state->Reg[14]);
-    }
-    if (pc == 0x21222c)
-    {
-        arm11_Dump();
-        mem_Dbugdump();
-    }*/
-
-    /*if (pc == 0x0022D168)
-    {
-    int j = 0;
-    }*/
-
-    /*if (state->Reg[4] == 0x00105734)
-    {
-    printf("[%08x] ", pc);
-    arm11_Disasm32(pc);
-    }*/
-
     return 0;
 }
 
-/*
-void chy_debug()
-{
-	printf("SkyEye chy_deubeg begin\n");
-}
-*/
-ARMword
-ARMul_Emulate32 (ARMul_State * state)
+ARMword ARMul_Emulate32(ARMul_State* state)
 #else
-ARMword
-ARMul_Emulate26 (ARMul_State * state)
+ARMword ARMul_Emulate26(ARMul_State* state)
 #endif
 {
     /* The PC pipeline value depends on whether ARM
@@ -383,39 +294,6 @@ ARMul_Emulate26 (ARMul_State * state)
     ARMword loaded_addr=0;
     ARMword have_bp=0;
 
-#ifdef callstacker
-    char a[256];
-#endif
-    /* shenoubang */
-    static int instr_sum = 0;
-    int reg_index = 0;
-#if DIFF_STATE
-//initialize all mirror register for follow mode
-    for (reg_index = 0; reg_index < 16; reg_index ++) {
-        mirror_register_file[reg_index] = state->Reg[reg_index];
-    }
-    mirror_register_file[CPSR_REG] = state->Cpsr;
-    mirror_register_file[R13_SVC] = state->RegBank[SVCBANK][13];
-    mirror_register_file[R14_SVC] = state->RegBank[SVCBANK][14];
-    mirror_register_file[R13_ABORT] = state->RegBank[ABORTBANK][13];
-    mirror_register_file[R14_ABORT] = state->RegBank[ABORTBANK][14];
-    mirror_register_file[R13_UNDEF] = state->RegBank[UNDEFBANK][13];
-    mirror_register_file[R14_UNDEF] = state->RegBank[UNDEFBANK][14];
-    mirror_register_file[R13_IRQ] = state->RegBank[IRQBANK][13];
-    mirror_register_file[R14_IRQ] = state->RegBank[IRQBANK][14];
-    mirror_register_file[R8_FIRQ] = state->RegBank[FIQBANK][8];
-    mirror_register_file[R9_FIRQ] = state->RegBank[FIQBANK][9];
-    mirror_register_file[R10_FIRQ] = state->RegBank[FIQBANK][10];
-    mirror_register_file[R11_FIRQ] = state->RegBank[FIQBANK][11];
-    mirror_register_file[R12_FIRQ] = state->RegBank[FIQBANK][12];
-    mirror_register_file[R13_FIRQ] = state->RegBank[FIQBANK][13];
-    mirror_register_file[R14_FIRQ] = state->RegBank[FIQBANK][14];
-    mirror_register_file[SPSR_SVC] = state->Spsr[SVCBANK];
-    mirror_register_file[SPSR_ABORT] = state->Spsr[ABORTBANK];
-    mirror_register_file[SPSR_UNDEF] = state->Spsr[UNDEFBANK];
-    mirror_register_file[SPSR_IRQ] = state->Spsr[IRQBANK];
-    mirror_register_file[SPSR_FIRQ] = state->Spsr[FIQBANK];
-#endif
     /* Execute the next instruction.  */
     if (state->NextInstr < PRIMEPIPE) {
         decoded = state->decoded;
@@ -533,392 +411,38 @@ ARMul_Emulate26 (ARMul_State * state)
 
             //chy 2006-04-12, for ICE debug
             have_bp=ARMul_ICE_debug(state,instr,pc);
-#if 0
-            decoded =
-                ARMul_LoadInstrS (state, pc + (isize), isize);
-#endif
+
             decoded_addr=pc+isize;
-#if 0
-            loaded = ARMul_LoadInstrS (state, pc + (isize * 2),
-                                       isize);
-#endif
+
             loaded_addr=pc + isize * 2;
             NORMALCYCLE;
             if (have_bp) goto  TEST_EMULATE;
             break;
         }
-#if 0
-        int idx = 0;
-        printf("pc:%x\n", pc);
-        for (; idx < 17; idx ++) {
-            printf("R%d:%x\t", idx, state->Reg[idx]);
-        }
-        printf("\n");
-#endif
 
         instr = ARMul_LoadInstrN (state, pc, isize);
         state->last_instr = state->CurrInstr;
         state->CurrInstr = instr;
         ARMul_Debug(state, pc, instr);
-#if 0
-        if((state->NumInstrs % 10000000) == 0)
-            printf("---|%p|---  %lld\n", pc, state->NumInstrs);
-        if(state->NumInstrs > (3000000000)) {
-            static int flag = 0;
-            if(pc == 0x8032ccc4) {
-                flag = 300;
-            }
-            if(flag) {
-                int idx = 0;
-                printf("------------------------------------\n");
-                printf("pc:%x\n", pc);
-                for (; idx < 17; idx ++) {
-                    printf("R%d:%x\t", idx, state->Reg[idx]);
-                }
-                printf("\nN:%d\t Z:%d\t C:%d\t V:%d\n", state->NFlag,  state->ZFlag, state->CFlag, state->VFlag);
-                printf("\n");
-                printf("------------------------------------\n");
-                flag--;
-            }
-        }
-#endif
-#if DIFF_STATE
-        fprintf(state->state_log, "PC:0x%x\n", pc);
-        if (pc && (pc + 8) != state->Reg[15]) {
-            printf("lucky dog\n");
-            printf("pc is %x, R15 is %x\n", pc, state->Reg[15]);
-            //exit(-1);
-        }
-        for (reg_index = 0; reg_index < 16; reg_index ++) {
-            if (state->Reg[reg_index] != mirror_register_file[reg_index]) {
-                fprintf(state->state_log, "R%d:0x%x\n", reg_index, state->Reg[reg_index]);
-                mirror_register_file[reg_index] = state->Reg[reg_index];
-            }
-        }
-        if (state->Cpsr != mirror_register_file[CPSR_REG]) {
-            fprintf(state->state_log, "Cpsr:0x%x\n", state->Cpsr);
-            mirror_register_file[CPSR_REG] = state->Cpsr;
-        }
-        if (state->RegBank[SVCBANK][13] != mirror_register_file[R13_SVC]) {
-            fprintf(state->state_log, "R13_SVC:0x%x\n", state->RegBank[SVCBANK][13]);
-            mirror_register_file[R13_SVC] = state->RegBank[SVCBANK][13];
-        }
-        if (state->RegBank[SVCBANK][14] != mirror_register_file[R14_SVC]) {
-            fprintf(state->state_log, "R14_SVC:0x%x\n", state->RegBank[SVCBANK][14]);
-            mirror_register_file[R14_SVC] = state->RegBank[SVCBANK][14];
-        }
-        if (state->RegBank[ABORTBANK][13] != mirror_register_file[R13_ABORT]) {
-            fprintf(state->state_log, "R13_ABORT:0x%x\n", state->RegBank[ABORTBANK][13]);
-            mirror_register_file[R13_ABORT] = state->RegBank[ABORTBANK][13];
-        }
-        if (state->RegBank[ABORTBANK][14] != mirror_register_file[R14_ABORT]) {
-            fprintf(state->state_log, "R14_ABORT:0x%x\n", state->RegBank[ABORTBANK][14]);
-            mirror_register_file[R14_ABORT] = state->RegBank[ABORTBANK][14];
-        }
-        if (state->RegBank[UNDEFBANK][13] != mirror_register_file[R13_UNDEF]) {
-            fprintf(state->state_log, "R13_UNDEF:0x%x\n", state->RegBank[UNDEFBANK][13]);
-            mirror_register_file[R13_UNDEF] = state->RegBank[UNDEFBANK][13];
-        }
-        if (state->RegBank[UNDEFBANK][14] != mirror_register_file[R14_UNDEF]) {
-            fprintf(state->state_log, "R14_UNDEF:0x%x\n", state->RegBank[UNDEFBANK][14]);
-            mirror_register_file[R14_UNDEF] = state->RegBank[UNDEFBANK][14];
-        }
-        if (state->RegBank[IRQBANK][13] != mirror_register_file[R13_IRQ]) {
-            fprintf(state->state_log, "R13_IRQ:0x%x\n", state->RegBank[IRQBANK][13]);
-            mirror_register_file[R13_IRQ] = state->RegBank[IRQBANK][13];
-        }
-        if (state->RegBank[IRQBANK][14] != mirror_register_file[R14_IRQ]) {
-            fprintf(state->state_log, "R14_IRQ:0x%x\n", state->RegBank[IRQBANK][14]);
-            mirror_register_file[R14_IRQ] = state->RegBank[IRQBANK][14];
-        }
-        if (state->RegBank[FIQBANK][8] != mirror_register_file[R8_FIRQ]) {
-            fprintf(state->state_log, "R8_FIRQ:0x%x\n", state->RegBank[FIQBANK][8]);
-            mirror_register_file[R8_FIRQ] = state->RegBank[FIQBANK][8];
-        }
-        if (state->RegBank[FIQBANK][9] != mirror_register_file[R9_FIRQ]) {
-            fprintf(state->state_log, "R9_FIRQ:0x%x\n", state->RegBank[FIQBANK][9]);
-            mirror_register_file[R9_FIRQ] = state->RegBank[FIQBANK][9];
-        }
-        if (state->RegBank[FIQBANK][10] != mirror_register_file[R10_FIRQ]) {
-            fprintf(state->state_log, "R10_FIRQ:0x%x\n", state->RegBank[FIQBANK][10]);
-            mirror_register_file[R10_FIRQ] = state->RegBank[FIQBANK][10];
-        }
-        if (state->RegBank[FIQBANK][11] != mirror_register_file[R11_FIRQ]) {
-            fprintf(state->state_log, "R11_FIRQ:0x%x\n", state->RegBank[FIQBANK][11]);
-            mirror_register_file[R11_FIRQ] = state->RegBank[FIQBANK][11];
-        }
-        if (state->RegBank[FIQBANK][12] != mirror_register_file[R12_FIRQ]) {
-            fprintf(state->state_log, "R12_FIRQ:0x%x\n", state->RegBank[FIQBANK][12]);
-            mirror_register_file[R12_FIRQ] = state->RegBank[FIQBANK][12];
-        }
-        if (state->RegBank[FIQBANK][13] != mirror_register_file[R13_FIRQ]) {
-            fprintf(state->state_log, "R13_FIRQ:0x%x\n", state->RegBank[FIQBANK][13]);
-            mirror_register_file[R13_FIRQ] = state->RegBank[FIQBANK][13];
-        }
-        if (state->RegBank[FIQBANK][14] != mirror_register_file[R14_FIRQ]) {
-            fprintf(state->state_log, "R14_FIRQ:0x%x\n", state->RegBank[FIQBANK][14]);
-            mirror_register_file[R14_FIRQ] = state->RegBank[FIQBANK][14];
-        }
-        if (state->Spsr[SVCBANK] != mirror_register_file[SPSR_SVC]) {
-            fprintf(state->state_log, "SPSR_SVC:0x%x\n", state->Spsr[SVCBANK]);
-            mirror_register_file[SPSR_SVC] = state->RegBank[SVCBANK];
-        }
-        if (state->Spsr[ABORTBANK] != mirror_register_file[SPSR_ABORT]) {
-            fprintf(state->state_log, "SPSR_ABORT:0x%x\n", state->Spsr[ABORTBANK]);
-            mirror_register_file[SPSR_ABORT] = state->RegBank[ABORTBANK];
-        }
-        if (state->Spsr[UNDEFBANK] != mirror_register_file[SPSR_UNDEF]) {
-            fprintf(state->state_log, "SPSR_UNDEF:0x%x\n", state->Spsr[UNDEFBANK]);
-            mirror_register_file[SPSR_UNDEF] = state->RegBank[UNDEFBANK];
-        }
-        if (state->Spsr[IRQBANK] != mirror_register_file[SPSR_IRQ]) {
-            fprintf(state->state_log, "SPSR_IRQ:0x%x\n", state->Spsr[IRQBANK]);
-            mirror_register_file[SPSR_IRQ] = state->RegBank[IRQBANK];
-        }
-        if (state->Spsr[FIQBANK] != mirror_register_file[SPSR_FIRQ]) {
-            fprintf(state->state_log, "SPSR_FIRQ:0x%x\n", state->Spsr[FIQBANK]);
-            mirror_register_file[SPSR_FIRQ] = state->RegBank[FIQBANK];
-        }
-#endif
 
-#if 0
-        uint32_t alex = 0;
-        static int flagged = 0;
-        if ((flagged == 0) && (pc == 0xb224)) {
-            flagged++;
-        }
-        if ((flagged == 1) && (pc == 0x1a800)) {
-            flagged++;
-        }
-        if (flagged == 3) {
-            printf("---|%p|---  %x\n", pc, state->NumInstrs);
-            for (alex = 0; alex < 15; alex++) {
-                printf("R%02d % 8x\n", alex, state->Reg[alex]);
-            }
-            printf("R%02d % 8x\n", alex, state->Reg[alex] - 8);
-            printf("CPS %x%07x\n", (state->NFlag<<3 | state->ZFlag<<2 | state->CFlag<<1 | state->VFlag), state->Cpsr & 0xfffffff);
-        } else {
-            if (state->NumInstrs < 0x400000) {
-                //exit(-1);
-            }
-        }
-#endif
-
-        /*if (state->EventSet)
-                  ARMul_EnvokeEvent (state);*/
-
-#if 0
-        /* do profiling for code coverage */
-        if (skyeye_config.code_cov.prof_on)
-            cov_prof(EXEC_FLAG, pc);
-#endif
-//2003-07-11 chy: for test
-#if 0
-        if (skyeye_config.log.logon >= 1) {
-            if (state->NumInstrs >= skyeye_config.log.start &&
-                    state->NumInstrs <= skyeye_config.log.end) {
-                static int mybegin = 0;
-                static int myinstrnum = 0;
-                if (mybegin == 0)
-                    mybegin = 1;
-#if 0
-                if (state->NumInstrs == 3695) {
-                    printf ("***********SKYEYE: numinstr = 3695\n");
-                }
-                static int mybeg2 = 0;
-                static int mybeg3 = 0;
-                static int mybeg4 = 0;
-                static int mybeg5 = 0;
-
-                if (pc == 0xa0008000) {
-                    //mybegin=1;
-                    printf ("************SKYEYE: real vmlinux begin now  numinstr is %llu  ****************\n", state->NumInstrs);
-                }
-
-                //chy 2003-09-02 test fiq
-                if (state->NumInstrs == 67347000) {
-                    printf ("***********SKYEYE: numinstr = 67347000, begin log\n");
-                    mybegin = 1;
-                }
-                if (pc == 0xc00087b4) {	//numinstr=67348714
-                    mybegin = 1;
-                    printf ("************SKYEYE: test irq now  numinstr is %llu  ****************\n", state->NumInstrs);
-                }
-                if (pc == 0xc00087b8) {	//in start_kernel::sti()
-                    mybeg4 = 1;
-                    printf ("************SKYEYE: startkerenl: sti now  numinstr is %llu  ********\n", state->NumInstrs);
-                }
-                /*if (pc==0xc001e4f4||pc==0xc001e4f8||pc==0xc001e4fc||pc==0xc001e500||pc==0xffff0004) { //MRA instr */
-                if (pc == 0xc001e500) {	//MRA instr
-                    mybeg5 = 1;
-                    printf ("************SKYEYE: MRA instr now  numinstr is %llu  ********\n", state->NumInstrs);
-                }
-                if (pc >= 0xc0000000 && mybeg2 == 0) {
-                    mybeg2 = 1;
-                    printf ("************SKYEYE: enable mmu&cache, now numinstr is %llu **************\n", state->NumInstrs);
-                    SKYEYE_OUTREGS (stderr);
-                    printf ("************************************************************************\n");
-                }
-                //chy 2003-09-01 test after tlb-flush
-                if (pc == 0xc00261ac) {
-                    //sleep(2);
-                    mybeg3 = 1;
-                    printf ("************SKYEYE: after tlb-flush  numinstr is %llu  ****************\n", state->NumInstrs);
-                }
-                if (mybeg3 == 1) {
-                    SKYEYE_OUTREGS (skyeye_logfd);
-                    SKYEYE_OUTMOREREGS (skyeye_logfd);
-                    fprintf (skyeye_logfd, "\n");
-                }
-#endif
-                if (mybegin == 1) {
-                    //fprintf(skyeye_logfd,"p %x,i %x,d %x,l %x,",pc,instr,decoded,loaded);
-                    //chy for test 20050729
-                    /*if (state->NumInstrs>=3302294) {
-                       if (pc==0x100c9d4 && instr==0xe1b0f00e){
-                       chy_debug();
-                       printf("*********************************************\n");
-                       printf("******SKYEYE N %llx :p %x,i %x\n  SKYEYE******\n",state->NumInstrs,pc,instr);
-                       printf("*********************************************\n");
-                       }
-                     */
-                    if (skyeye_config.log.logon >= 1)
-                        /*
-                        	fprintf (skyeye_logfd,
-                        		 "N %llx :p %x,i %x,",
-                        		 state->NumInstrs, pc,
-                        #ifdef MODET
-                        		 TFLAG ? instr & 0xffff : instr
-                        #else
-                        		 instr
-                        #endif
-                        		);
-                        */
-                        fprintf(skyeye_logfd, "pc=0x%x,r3=0x%x\n", pc, state->Reg[3]);
-                    if (skyeye_config.log.logon >= 2)
-                        SKYEYE_OUTREGS (skyeye_logfd);
-                    if (skyeye_config.log.logon >= 3)
-                        SKYEYE_OUTMOREREGS
-                        (skyeye_logfd);
-                    //fprintf (skyeye_logfd, "\n");
-                    if (skyeye_config.log.length > 0) {
-                        myinstrnum++;
-                        if (myinstrnum >=
-                                skyeye_config.log.
-                                length) {
-                            myinstrnum = 0;
-                            fflush (skyeye_logfd);
-                            fseek (skyeye_logfd,
-                                   0L, SEEK_SET);
-                        }
-                    }
-                }
-                //SKYEYE_OUTREGS(skyeye_logfd);
-                //SKYEYE_OUTMOREREGS(skyeye_logfd);
-            }
-        }
-#endif
-#if 0				/* Enable this for a helpful bit of debugging when tracing is needed.  */
-        fprintf (stderr, "pc: %x, instr: %x\n", pc & ~1, instr);
-        if (instr == 0)
-            abort ();
-#endif
-#if 0				/* Enable this code to help track down stack alignment bugs.  */
-        {
-            static ARMword old_sp = -1;
-
-            if (old_sp != state->Reg[13]) {
-                old_sp = state->Reg[13];
-                fprintf (stderr,
-                         "pc: %08x: SP set to %08x%s\n",
-                         pc & ~1, old_sp,
-                         (old_sp % 8) ? " [UNALIGNED!]" : "");
-            }
-        }
-#endif
         /* Any exceptions ?  */
         if (state->NresetSig == LOW) {
             ARMul_Abort (state, ARMul_ResetV);
-
-            /*added energy_prof statement by ksh in 2004-11-26 */
-            //chy 2005-07-28 for standalone
-            //ARMul_do_energy(state,instr,pc);
             break;
         } else if (!state->NfiqSig && !FFLAG) {
             ARMul_Abort (state, ARMul_FIQV);
-            /*added energy_prof statement by ksh in 2004-11-26 */
-            //chy 2005-07-28 for standalone
-            //ARMul_do_energy(state,instr,pc);
             break;
         } else if (!state->NirqSig && !IFLAG) {
             ARMul_Abort (state, ARMul_IRQV);
-            /*added energy_prof statement by ksh in 2004-11-26 */
-            //chy 2005-07-28 for standalone
-            //ARMul_do_energy(state,instr,pc);
             break;
         }
 
-//teawater add for arm2x86 2005.04.26-------------------------------------------
-#if 0
-//        if (state->pc == 0xc011a868 || state->pc == 0xc011a86c) {
-        if (state->NumInstrs == 1671574 || state->NumInstrs == 1671573 || state->NumInstrs == 1671572
-                || state->NumInstrs == 1671575) {
-            for (reg_index = 0; reg_index < 16; reg_index ++) {
-                printf("R%d:%x\t", reg_index, state->Reg[reg_index]);
-            }
-            printf("\n");
-        }
-#endif
-        if (state->tea_pc) {
-            int i;
-
-            if (state->tea_reg_fd) {
-                fprintf (state->tea_reg_fd, "\n");
-                for (i = 0; i < 15; i++) {
-                    fprintf (state->tea_reg_fd, "%x,",
-                             state->Reg[i]);
-                }
-                fprintf (state->tea_reg_fd, "%x,", pc);
-                state->Cpsr = ARMul_GetCPSR (state);
-                fprintf (state->tea_reg_fd, "%x\n",
-                         state->Cpsr);
-            } else {
-                printf ("\n");
-                for (i = 0; i < 15; i++) {
-                    printf ("%x,", state->Reg[i]);
-                }
-                printf ("%x,", pc);
-                state->Cpsr = ARMul_GetCPSR (state);
-                printf ("%x\n", state->Cpsr);
-            }
-        }
-//AJ2D--------------------------------------------------------------------------
-
-        /*if (state->CallDebug > 0) {
-        	instr = ARMul_Debug (state, pc, instr);
-        	if (state->Emulate < ONCE) {
-        		state->NextInstr = RESUME;
-        		break;
-        	}
-        	if (state->Debug) {
-        		fprintf (stderr,
-        			 "sim: At %08lx Instr %08lx Mode %02lx\n",
-        			 pc, instr, state->Mode);
-        		(void) fgetc (stdin);
-        	}
-        }
-        else*/
         if (state->Emulate < ONCE) {
             state->NextInstr = RESUME;
             break;
         }
-        //io_do_cycle (state);
+
         state->NumInstrs++;
-#if 0
-        if (state->NumInstrs % 10000000 == 0) {
-            printf("10 MIPS instr have been executed\n");
-        }
-#endif
 
 #ifdef MODET
         /* Provide Thumb instruction decoding. If the processor is in Thumb
@@ -990,12 +514,6 @@ ARMul_Emulate26 (ARMul_State * state)
                 /* clrex do nothing here temporary */
                 if (instr == 0xf57ff01f) {
                     //printf("clrex \n");
-#if 0
-                    int i;
-                    for(i = 0; i < 128; i++) {
-                        state->exclusive_tag_array[i] = 0xffffffff;
-                    }
-#endif
                     /* shenoubang 2012-3-14 refer the dyncom_interpreter */
                     state->exclusive_tag_array[0] = 0xFFFFFFFF;
                     state->exclusive_access_state = 0;
@@ -1169,9 +687,9 @@ mainswitch:
                     Rn = BITS(0, 3);
                     lsb = BITS(7, 11);
                     msb = BITS(16, 20); //-V519
-                    if ((Rd == 15)) {
+                    if (Rd == 15) {
                         ARMul_UndefInstr (state, instr);
-                    } else if ((Rn == 15)) {
+                    } else if (Rn == 15) {
                         data = state->Reg[Rd];
                         tmp_rd = ((ARMword)(data << (31 - lsb)) >> (31 - lsb));
                         dst = ((data >> msb) << (msb - lsb));
@@ -3209,16 +2727,6 @@ mainswitch:
                     break;
 
                 case 0x6e:	/* Store Byte, WriteBack, Post Inc, Reg.  */
-#if 0
-                    if (state->is_v6) {
-                        int Rm = 0;
-                        /* utxb */
-                        if (BITS(15, 19) == 0xf && BITS(4, 7) == 0x7) {
-                            Rm = (RHS >> (8 * BITS(10, 11))) & 0xff;
-                            DEST = Rm;
-                        }
-                    }
-#endif
                     if (BIT (4)) {
 #ifdef MODE32
                         if (state->is_v6
@@ -3656,13 +3164,6 @@ mainswitch:
 #endif
                     state->Reg[15] = pc + 8 + POSBRANCH;
                     FLUSHPIPE;
-
-#ifdef callstacker
-                    memset(a, 0, 256);
-                    aufloeser(a, state->Reg[15]);
-                    printf("call %08X %08X %s(%08X %08X %08X %08X %08X %08X %08X)\n", state->Reg[14], state->Reg[15], a, state->Reg[0], state->Reg[1], state->Reg[2], state->Reg[3], mem_Read32(state->Reg[13]), mem_Read32(state->Reg[13] - 4),mem_Read32(state->Reg[13] - 8));
-#endif
-
                     break;
 
                 /* Branch and Link backward.  */
@@ -3682,13 +3183,6 @@ mainswitch:
 #endif
                     state->Reg[15] = pc + 8 + NEGBRANCH;
                     FLUSHPIPE;
-
-#ifdef callstacker
-                    memset(a, 0, 256);
-                    aufloeser(a, state->Reg[15]);
-                    printf("call %08X %08X %s(%08X %08X %08X %08X %08X %08X %08X)\n", state->Reg[14], state->Reg[15], a, state->Reg[0], state->Reg[1], state->Reg[2], state->Reg[3], mem_Read32(state->Reg[13]), mem_Read32(state->Reg[13] - 4),mem_Read32(state->Reg[13] - 8));
-#endif
-
                     break;
 
                 /* Co-Processor Data Transfers.  */
@@ -3909,165 +3403,6 @@ mainswitch:
 donext:
 #endif
             state->pc = pc;
-#if 0
-            /* shenoubang */
-            instr_sum++;
-            int i, j;
-            i = j = 0;
-            if (instr_sum >= 7388648) {
-                //if (pc == 0xc0008ab4) {
-                //	printf("instr_sum: %d\n", instr_sum);
-                // start_kernel : 0xc000895c
-                printf("--------------------------------------------------\n");
-                for (i = 0; i < 16; i++) {
-                    printf("[R%02d]:[0x%08x]\t", i, state->Reg[i]);
-                    if ((i % 3) == 2) {
-                        printf("\n");
-                    }
-                }
-                printf("[cpr]:[0x%08x]\t[spr0]:[0x%08x]\n", state->Cpsr, state->Spsr[0]);
-                for (j = 1; j < 7; j++) {
-                    printf("[spr%d]:[0x%08x]\t", j, state->Spsr[j]);
-                    if ((j % 4) == 3) {
-                        printf("\n");
-                    }
-                }
-                printf("\n[PC]:[0x%08x]\t[INST]:[0x%08x]\t[COUNT]:[%d]\n", pc, instr, instr_sum);
-                printf("--------------------------------------------------\n");
-            }
-#endif
-
-#if 0
-            fprintf(state->state_log, "PC:0x%x\n", pc);
-            for (reg_index = 0; reg_index < 16; reg_index ++) {
-                if (state->Reg[reg_index] != mirror_register_file[reg_index]) {
-                    fprintf(state->state_log, "R%d:0x%x\n", reg_index, state->Reg[reg_index]);
-                    mirror_register_file[reg_index] = state->Reg[reg_index];
-                }
-            }
-            if (state->Cpsr != mirror_register_file[CPSR_REG]) {
-                fprintf(state->state_log, "Cpsr:0x%x\n", state->Cpsr);
-                mirror_register_file[CPSR_REG] = state->Cpsr;
-            }
-            if (state->RegBank[SVCBANK][13] != mirror_register_file[R13_SVC]) {
-                fprintf(state->state_log, "R13_SVC:0x%x\n", state->RegBank[SVCBANK][13]);
-                mirror_register_file[R13_SVC] = state->RegBank[SVCBANK][13];
-            }
-            if (state->RegBank[SVCBANK][14] != mirror_register_file[R14_SVC]) {
-                fprintf(state->state_log, "R14_SVC:0x%x\n", state->RegBank[SVCBANK][14]);
-                mirror_register_file[R14_SVC] = state->RegBank[SVCBANK][14];
-            }
-            if (state->RegBank[ABORTBANK][13] != mirror_register_file[R13_ABORT]) {
-                fprintf(state->state_log, "R13_ABORT:0x%x\n", state->RegBank[ABORTBANK][13]);
-                mirror_register_file[R13_ABORT] = state->RegBank[ABORTBANK][13];
-            }
-            if (state->RegBank[ABORTBANK][14] != mirror_register_file[R14_ABORT]) {
-                fprintf(state->state_log, "R14_ABORT:0x%x\n", state->RegBank[ABORTBANK][14]);
-                mirror_register_file[R14_ABORT] = state->RegBank[ABORTBANK][14];
-            }
-            if (state->RegBank[UNDEFBANK][13] != mirror_register_file[R13_UNDEF]) {
-                fprintf(state->state_log, "R13_UNDEF:0x%x\n", state->RegBank[UNDEFBANK][13]);
-                mirror_register_file[R13_UNDEF] = state->RegBank[UNDEFBANK][13];
-            }
-            if (state->RegBank[UNDEFBANK][14] != mirror_register_file[R14_UNDEF]) {
-                fprintf(state->state_log, "R14_UNDEF:0x%x\n", state->RegBank[UNDEFBANK][14]);
-                mirror_register_file[R14_UNDEF] = state->RegBank[UNDEFBANK][14];
-            }
-            if (state->RegBank[IRQBANK][13] != mirror_register_file[R13_IRQ]) {
-                fprintf(state->state_log, "R13_IRQ:0x%x\n", state->RegBank[IRQBANK][13]);
-                mirror_register_file[R13_IRQ] = state->RegBank[IRQBANK][13];
-            }
-            if (state->RegBank[IRQBANK][14] != mirror_register_file[R14_IRQ]) {
-                fprintf(state->state_log, "R14_IRQ:0x%x\n", state->RegBank[IRQBANK][14]);
-                mirror_register_file[R14_IRQ] = state->RegBank[IRQBANK][14];
-            }
-            if (state->RegBank[FIQBANK][8] != mirror_register_file[R8_FIRQ]) {
-                fprintf(state->state_log, "R8_FIRQ:0x%x\n", state->RegBank[FIQBANK][8]);
-                mirror_register_file[R8_FIRQ] = state->RegBank[FIQBANK][8];
-            }
-            if (state->RegBank[FIQBANK][9] != mirror_register_file[R9_FIRQ]) {
-                fprintf(state->state_log, "R9_FIRQ:0x%x\n", state->RegBank[FIQBANK][9]);
-                mirror_register_file[R9_FIRQ] = state->RegBank[FIQBANK][9];
-            }
-            if (state->RegBank[FIQBANK][10] != mirror_register_file[R10_FIRQ]) {
-                fprintf(state->state_log, "R10_FIRQ:0x%x\n", state->RegBank[FIQBANK][10]);
-                mirror_register_file[R10_FIRQ] = state->RegBank[FIQBANK][10];
-            }
-            if (state->RegBank[FIQBANK][11] != mirror_register_file[R11_FIRQ]) {
-                fprintf(state->state_log, "R11_FIRQ:0x%x\n", state->RegBank[FIQBANK][11]);
-                mirror_register_file[R11_FIRQ] = state->RegBank[FIQBANK][11];
-            }
-            if (state->RegBank[FIQBANK][12] != mirror_register_file[R12_FIRQ]) {
-                fprintf(state->state_log, "R12_FIRQ:0x%x\n", state->RegBank[FIQBANK][12]);
-                mirror_register_file[R12_FIRQ] = state->RegBank[FIQBANK][12];
-            }
-            if (state->RegBank[FIQBANK][13] != mirror_register_file[R13_FIRQ]) {
-                fprintf(state->state_log, "R13_FIRQ:0x%x\n", state->RegBank[FIQBANK][13]);
-                mirror_register_file[R13_FIRQ] = state->RegBank[FIQBANK][13];
-            }
-            if (state->RegBank[FIQBANK][14] != mirror_register_file[R14_FIRQ]) {
-                fprintf(state->state_log, "R14_FIRQ:0x%x\n", state->RegBank[FIQBANK][14]);
-                mirror_register_file[R14_FIRQ] = state->RegBank[FIQBANK][14];
-            }
-            if (state->Spsr[SVCBANK] != mirror_register_file[SPSR_SVC]) {
-                fprintf(state->state_log, "SPSR_SVC:0x%x\n", state->Spsr[SVCBANK]);
-                mirror_register_file[SPSR_SVC] = state->RegBank[SVCBANK];
-            }
-            if (state->Spsr[ABORTBANK] != mirror_register_file[SPSR_ABORT]) {
-                fprintf(state->state_log, "SPSR_ABORT:0x%x\n", state->Spsr[ABORTBANK]);
-                mirror_register_file[SPSR_ABORT] = state->RegBank[ABORTBANK];
-            }
-            if (state->Spsr[UNDEFBANK] != mirror_register_file[SPSR_UNDEF]) {
-                fprintf(state->state_log, "SPSR_UNDEF:0x%x\n", state->Spsr[UNDEFBANK]);
-                mirror_register_file[SPSR_UNDEF] = state->RegBank[UNDEFBANK];
-            }
-            if (state->Spsr[IRQBANK] != mirror_register_file[SPSR_IRQ]) {
-                fprintf(state->state_log, "SPSR_IRQ:0x%x\n", state->Spsr[IRQBANK]);
-                mirror_register_file[SPSR_IRQ] = state->RegBank[IRQBANK];
-            }
-            if (state->Spsr[FIQBANK] != mirror_register_file[SPSR_FIRQ]) {
-                fprintf(state->state_log, "SPSR_FIRQ:0x%x\n", state->Spsr[FIQBANK]);
-                mirror_register_file[SPSR_FIRQ] = state->RegBank[FIQBANK];
-            }
-
-#endif
-
-#ifdef NEED_UI_LOOP_HOOK
-            if (ui_loop_hook != NULL && ui_loop_hook_counter-- < 0) {
-                ui_loop_hook_counter = UI_LOOP_POLL_INTERVAL;
-                ui_loop_hook (0);
-            }
-#endif /* NEED_UI_LOOP_HOOK */
-
-            /*added energy_prof statement by ksh in 2004-11-26 */
-            //chy 2005-07-28 for standalone
-            //ARMul_do_energy(state,instr,pc);
-//teawater add for record reg value to ./reg.txt 2005.07.10---------------------
-            if (state->tea_break_ok && pc == state->tea_break_addr) {
-                //ARMul_Debug (state, 0, 0);
-                state->tea_break_ok = 0;
-            } else {
-                state->tea_break_ok = 1;
-            }
-//AJ2D--------------------------------------------------------------------------
-//chy 2006-04-14 for ctrl-c debug
-#if 0
-            if (debugmode) {
-                if (instr != ARMul_ABORTWORD) {
-                    remote_interrupt_test_time++;
-                    //chy 2006-04-14 2000 should be changed in skyeye_conf ???!!!
-                    if (remote_interrupt_test_time >= 2000) {
-                        remote_interrupt_test_time=0;
-                        if (remote_interrupt()) {
-                            //for test
-                            //printf("SKYEYE: ICE_debug recv Ctrl_C\n");
-                            state->EndCondition = 0;
-                            state->Emulate = STOP;
-                        }
-                    }
-                }
-            }
-#endif
 
             /* jump out every time */
             //state->EndCondition = 0;
@@ -4076,10 +3411,6 @@ donext:
 TEST_EMULATE:
             if (state->Emulate == ONCE)
                 state->Emulate = STOP;
-            //chy: 2003-08-23: should not use CHANGEMODE !!!!
-            /* If we have changed mode, allow the PC to advance before stopping.  */
-            //    else if (state->Emulate == CHANGEMODE)
-            //        continue;
             else if (state->Emulate != RUN)
                 break;
     }
@@ -4096,224 +3427,13 @@ exit:
         return pc;
     }
 
-//teawater add for arm2x86 2005.02.17-------------------------------------------
-    /*ywc 2005-04-01*/
-//#include "tb.h"
-//#include "arm2x86_self.h"
-
     static volatile void (*gen_func) (void);
-//static volatile ARMul_State   *tmp_st;
-//static volatile ARMul_State   *save_st;
+
     static volatile uint32_t tmp_st;
     static volatile uint32_t save_st;
     static volatile uint32_t save_T0;
     static volatile uint32_t save_T1;
     static volatile uint32_t save_T2;
-
-#ifdef MODE32
-#ifdef DBCT
-//teawater change for debug function 2005.07.09---------------------------------
-    ARMword
-    ARMul_Emulate32_dbct (ARMul_State * state) {
-        static int init = 0;
-        static FILE *fd;
-
-        /*if (!init) {
-           fd = fopen("./pc.txt", "w");
-           if (!fd) {
-           exit(-1);
-           }
-           init = 1;
-           } */
-
-        state->Reg[15] += INSN_SIZE;
-        do {
-            /*if (skyeye_config.log.logon>=1) {
-               if (state->NumInstrs>=skyeye_config.log.start && state->NumInstrs<=skyeye_config.log.end) {
-               static int mybegin=0;
-               static int myinstrnum=0;
-
-               if (mybegin==0) mybegin=1;
-               if (mybegin==1) {
-               state->Reg[15] -= INSN_SIZE;
-               if (skyeye_config.log.logon>=1) fprintf(skyeye_logfd,"N %llx :p %x,i %x,",state->NumInstrs, (state->Reg[15] - INSN_SIZE), instr);
-               if (skyeye_config.log.logon>=2) SKYEYE_OUTREGS(skyeye_logfd);
-               if (skyeye_config.log.logon>=3) SKYEYE_OUTMOREREGS(skyeye_logfd);
-               fprintf(skyeye_logfd,"\n");
-               if (skyeye_config.log.length>0) {
-               myinstrnum++;
-               if (myinstrnum>=skyeye_config.log.length) {
-               myinstrnum=0;
-               fflush(skyeye_logfd);
-               fseek(skyeye_logfd,0L,SEEK_SET);
-               }
-               }
-               state->Reg[15] += INSN_SIZE;
-               }
-               }
-               } */
-            state->trap = 0;
-            gen_func =
-                (void *) tb_find (state, state->Reg[15] - INSN_SIZE);
-            if (!gen_func) {
-                //fprintf(stderr, "SKYEYE: tb_find: Error in find the translate block.\n");
-                //exit(-1);
-                //TRAP_INSN_ABORT
-                //TEA_OUT(printf("\n------------\npc:%x\n", state->Reg[15] - INSN_SIZE));
-                //TEA_OUT(printf("TRAP_INSN_ABORT\n"));
-//teawater add for xscale(arm v5) 2005.09.01------------------------------------
-                /*XScale_set_fsr_far(state, ARMul_CP15_R5_MMU_EXCPT, state->Reg[15] - INSN_SIZE);
-                   state->Reg[15] += INSN_SIZE;
-                   ARMul_Abort(state, ARMul_PrefetchAbortV);
-                   state->Reg[15] += INSN_SIZE;
-                   goto next; */
-                state->trap = TRAP_INSN_ABORT;
-                goto check;
-//AJ2D--------------------------------------------------------------------------
-            }
-
-            save_st = (uint32_t) st;
-            save_T0 = T0;
-            save_T1 = T1;
-            save_T2 = T2;
-            tmp_st = (uint32_t) state;
-            wmb ();
-            st = (ARMul_State *) tmp_st;
-            gen_func ();
-            st = (ARMul_State *) save_st;
-            T0 = save_T0;
-            T1 = save_T1;
-            T2 = save_T2;
-
-            /*if (state->trap != TRAP_OUT) {
-               state->tea_break_ok = 1;
-               }
-               if (state->trap <= TRAP_SET_R15) {
-               goto next;
-               } */
-            //TEA_OUT(printf("\n------------\npc:%x\n", state->Reg[15] - INSN_SIZE));
-//teawater add check thumb 2005.07.21-------------------------------------------
-            /*if (TFLAG) {
-               state->Reg[15] -= 2;
-               return(state->Reg[15]);
-               } */
-//AJ2D--------------------------------------------------------------------------
-
-//teawater add for xscale(arm v5) 2005.09.01------------------------------------
-check:
-//AJ2D--------------------------------------------------------------------------
-            switch (state->trap) {
-            case TRAP_RESET: {
-                //TEA_OUT(printf("TRAP_RESET\n"));
-                ARMul_Abort (state, ARMul_ResetV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_UNPREDICTABLE: {
-                //ARMul_Debug (state, 0, 0);
-            }
-            break;
-            case TRAP_INSN_UNDEF: {
-                //TEA_OUT(printf("TRAP_INSN_UNDEF\n"));
-                state->Reg[15] += INSN_SIZE;
-                ARMul_UndefInstr (state, 0);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_SWI: {
-                //TEA_OUT(printf("TRAP_SWI\n"));
-                state->Reg[15] += INSN_SIZE;
-                ARMul_Abort (state, ARMul_SWIV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-//teawater add for xscale(arm v5) 2005.09.01------------------------------------
-            case TRAP_INSN_ABORT: {
-                /*XScale_set_fsr_far (state,
-                		    ARMul_CP15_R5_MMU_EXCPT,
-                		    state->Reg[15] -
-                		    INSN_SIZE);*/
-                state->Reg[15] += INSN_SIZE;
-                ARMul_Abort (state, ARMul_PrefetchAbortV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-//AJ2D--------------------------------------------------------------------------
-            case TRAP_DATA_ABORT: {
-                //TEA_OUT(printf("TRAP_DATA_ABORT\n"));
-                state->Reg[15] += INSN_SIZE;
-                ARMul_Abort (state, ARMul_DataAbortV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_IRQ: {
-                //TEA_OUT(printf("TRAP_IRQ\n"));
-                state->Reg[15] += INSN_SIZE;
-                ARMul_Abort (state, ARMul_IRQV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_FIQ: {
-                //TEA_OUT(printf("TRAP_FIQ\n"));
-                state->Reg[15] += INSN_SIZE;
-                ARMul_Abort (state, ARMul_FIQV);
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_SETS_R15: {
-                //TEA_OUT(printf("TRAP_SETS_R15\n"));
-                /*if (state->Bank > 0) {
-                   state->Cpsr = state->Spsr[state->Bank];
-                   ARMul_CPSRAltered (state);
-                   } */
-                WriteSR15 (state, state->Reg[15]);
-            }
-            break;
-            case TRAP_SET_CPSR: {
-                //TEA_OUT(printf("TRAP_SET_CPSR\n"));
-                //chy 2006-02-15 USERBANK=SYSTEMBANK=0
-                //chy 2006-02-16 should use Mode to test
-                //if (state->Bank > 0) {
-                if (state->Mode != USER26MODE && state->Mode != USER32MODE) {
-                    //ARMul_CPSRAltered (state);
-                }
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            case TRAP_OUT: {
-                //TEA_OUT(printf("TRAP_OUT\n"));
-                goto out;
-            }
-            break;
-            case TRAP_BREAKPOINT: {
-                //TEA_OUT(printf("TRAP_BREAKPOINT\n"));
-                state->Reg[15] -= INSN_SIZE;
-                if (!ARMul_OSHandleSWI
-                        (state, SWI_Breakpoint)) {
-                    ARMul_Abort (state, ARMul_SWIV);
-                }
-                state->Reg[15] += INSN_SIZE;
-            }
-            break;
-            }
-
-next:
-            if (state->Emulate == ONCE) {
-                state->Emulate = STOP;
-                break;
-            } else if (state->Emulate != RUN) {
-                break;
-            }
-        } while (!state->stop_simulator);
-
-out:
-        state->Reg[15] -= INSN_SIZE;
-        return (state->Reg[15]);
-    }
-#endif
-//AJ2D--------------------------------------------------------------------------
-#endif
-//AJ2D--------------------------------------------------------------------------
 
     /* This routine evaluates most Data Processing register RHS's with the S
        bit clear.  It is intended to be called from the macro DPRegRHS, which
@@ -4672,21 +3792,6 @@ out:
         return BITS (0, 3) | (BITS (8, 11) << 4);
     }
 
-    /* This function does the work of loading a word for a LDR instruction.  */
-#define MEM_LOAD_LOG(description) if (skyeye_config.log.memlogon >= 1) { \
-		fprintf(skyeye_logfd, \
-			"m LOAD %s: N %llx :p %x :i %x :a %x :d %x\n", \
-			description, state->NumInstrs, state->pc, instr, \
-			address, dest); \
-	}
-
-#define MEM_STORE_LOG(description) if (skyeye_config.log.memlogon >= 1) { \
-		fprintf(skyeye_logfd, \
-			"m STORE %s: N %llx :p %x :i %x :a %x :d %x\n", \
-			description, state->NumInstrs, state->pc, instr, \
-			address, DEST); \
-	}
-
     static unsigned
     LoadWord (ARMul_State * state, ARMword instr, ARMword address) {
         ARMword dest;
@@ -4707,8 +3812,6 @@ out:
             dest = ARMul_Align (state, address, dest);
         WRITEDESTB (dest);
         ARMul_Icycles (state, 1, 0L);
-
-        //MEM_LOAD_LOG("WORD");
 
         return (DESTReg != LHSReg);
     }
@@ -4739,8 +3842,6 @@ out:
         WRITEDEST (dest);
         ARMul_Icycles (state, 1, 0L);
 
-        //MEM_LOAD_LOG("HALFWORD");
-
         return (DESTReg != LHSReg);
     }
 
@@ -4769,8 +3870,6 @@ out:
 
         WRITEDEST (dest);
         ARMul_Icycles (state, 1, 0L);
-
-        //MEM_LOAD_LOG("BYTE");
 
         return (DESTReg != LHSReg);
     }
@@ -4980,8 +4079,6 @@ out:
 
     static unsigned
     StoreWord (ARMul_State * state, ARMword instr, ARMword address) {
-        //MEM_STORE_LOG("WORD");
-
         BUSUSEDINCPCN;
 #ifndef MODE32
         if (DESTReg == 15)
@@ -5009,8 +4106,6 @@ out:
 
     static unsigned
     StoreHalfWord (ARMul_State * state, ARMword instr, ARMword address) {
-        //MEM_STORE_LOG("HALFWORD");
-
         BUSUSEDINCPCN;
 
 #ifndef MODE32
@@ -5041,8 +4136,6 @@ out:
 
     static unsigned
     StoreByte (ARMul_State * state, ARMword instr, ARMword address) {
-        //MEM_STORE_LOG("BYTE");
-
         BUSUSEDINCPCN;
 #ifndef MODE32
         if (DESTReg == 15)

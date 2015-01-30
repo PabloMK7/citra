@@ -22,13 +22,6 @@
 
 
 static ARMword ModeToBank (ARMword);
-static void EnvokeList (ARMul_State *, unsigned int, unsigned int);
-
-struct EventNode {
-    /* An event list node.  */
-    unsigned (*func) (ARMul_State *);	/* The function to call.  */
-    struct EventNode *next;
-};
 
 /* This routine returns the value of a register from a mode.  */
 
@@ -1067,77 +1060,4 @@ ARMul_Align (ARMul_State* state, ARMword address, ARMword data)
 
     address = (address & 3) << 3;	/* Get the word address.  */
     return ((data >> address) | (data << (32 - address)));	/* rot right */
-}
-
-/* This routine is used to call another routine after a certain number of
-   cycles have been executed. The first parameter is the number of cycles
-   delay before the function is called, the second argument is a pointer
-   to the function. A delay of zero doesn't work, just call the function.  */
-
-void
-ARMul_ScheduleEvent (ARMul_State * state, unsigned int delay,
-                     unsigned (*what) (ARMul_State *))
-{
-    unsigned int when;
-    struct EventNode *event;
-
-    if (state->EventSet++ == 0)
-        state->Now = ARMul_Time (state);
-    when = (state->Now + delay) % EVENTLISTSIZE;
-    event = (struct EventNode *) malloc (sizeof (struct EventNode));
-    if (!event) {
-        printf ("SKYEYE:ARMul_ScheduleEvent: malloc event error\n");
-        exit(-1);
-        //skyeye_exit (-1);
-    }
-    event->func = what;
-    event->next = *(state->EventPtr + when);
-    *(state->EventPtr + when) = event;
-}
-
-/* This routine is called at the beginning of
-   every cycle, to envoke scheduled events.  */
-
-void
-ARMul_EnvokeEvent (ARMul_State * state)
-{
-    static unsigned int then;
-
-    then = state->Now;
-    state->Now = ARMul_Time (state) % EVENTLISTSIZE;
-    if (then < state->Now)
-        /* Schedule events.  */
-        EnvokeList (state, then, state->Now);
-    else if (then > state->Now) {
-        /* Need to wrap around the list.  */
-        EnvokeList (state, then, EVENTLISTSIZE - 1L);
-        EnvokeList (state, 0L, state->Now);
-    }
-}
-
-/* Envokes all the entries in a range.  */
-
-static void
-EnvokeList (ARMul_State * state, unsigned int from, unsigned int to)
-{
-    for (; from <= to; from++) {
-        struct EventNode *anevent;
-
-        anevent = *(state->EventPtr + from);
-        while (anevent) {
-            (anevent->func) (state);
-            state->EventSet--;
-            anevent = anevent->next;
-        }
-        *(state->EventPtr + from) = NULL;
-    }
-}
-
-/* This routine is returns the number of clock ticks since the last reset.  */
-
-unsigned int
-ARMul_Time (ARMul_State * state)
-{
-    return (state->NumScycles + state->NumNcycles +
-            state->NumIcycles + state->NumCcycles + state->NumFcycles);
 }
