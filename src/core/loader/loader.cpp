@@ -150,7 +150,7 @@ ResultStatus LoadFile(const std::string& filename) {
     // IdentifyFile could know identify file type...
     case FileType::Unknown:
     {
-        LOG_CRITICAL(Loader, "File %s is of unknown type.");
+        LOG_CRITICAL(Loader, "File %s is of unknown type.", filename.c_str());
         return ResultStatus::ErrorInvalidFormat;
     }
     }
