@@ -28,7 +28,6 @@
 #define __ARM_DYNCOM_THUMB_H__
 
 #include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/skyeye_types.h"
 
 enum tdstate {
     t_undefined,    // Undefined Thumb instruction

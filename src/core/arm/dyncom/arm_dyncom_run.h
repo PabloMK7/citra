@@ -19,8 +19,6 @@
 #ifndef __ARM_DYNCOM_RUN__
 #define __ARM_DYNCOM_RUN__
 
-#include "core/arm/skyeye_common/skyeye_types.h"
-
 void switch_mode(arm_core_t *core, uint32_t mode);
 
 /* FIXME, we temporarily think thumb instruction is always 16 bit */
