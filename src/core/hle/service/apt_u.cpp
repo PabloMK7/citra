@@ -373,7 +373,7 @@ void SetAppCpuTimeLimit(Service::Interface* self) {
     u32 percent = cmd_buff[2];
 
     if (value != 1) {
-        LOG_ERROR(Service_APT, "This value must be one!", value);
+        LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -395,7 +395,7 @@ void GetAppCpuTimeLimit(Service::Interface* self) {
     u32 value = cmd_buff[1];
 
     if (value != 1) {
-        LOG_ERROR(Service_APT, "This value must be one!", value);
+        LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
 
     // TODO(purpasmart96): This is incorrect, I'm pretty sure the percentage should
