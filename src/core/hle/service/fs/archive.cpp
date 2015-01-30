@@ -303,7 +303,8 @@ ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, Arc
     return RESULT_SUCCESS;
 }
 
-ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode) {
+ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
+        const FileSys::Path& path, const FileSys::Mode mode) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
@@ -314,10 +315,8 @@ ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSy
                           ErrorSummary::NotFound, ErrorLevel::Status);
     }
 
-    auto file = Common::make_unique<File>(std::move(backend), path);
-    // TOOD(yuriks): Fix error reporting
-    Handle handle = Kernel::g_handle_table.Create(file.release()).ValueOr(INVALID_HANDLE);
-    return MakeResult<Handle>(handle);
+    auto file = Kernel::SharedPtr<File>(new File(std::move(backend), path));
+    return MakeResult<Kernel::SharedPtr<Kernel::Session>>(std::move(file));
 }
 
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
@@ -403,13 +402,8 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-/**
- * Open a Directory from an Archive
- * @param archive_handle Handle to an open Archive object
- * @param path Path to the Directory inside of the Archive
- * @return Opened Directory object
- */
-ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
+ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+        const FileSys::Path& path) {
     Archive* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
@@ -420,10 +414,8 @@ ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const F
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
-    auto directory = Common::make_unique<Directory>(std::move(backend), path);
-    // TOOD(yuriks): Fix error reporting
-    Handle handle = Kernel::g_handle_table.Create(directory.release()).ValueOr(INVALID_HANDLE);
-    return MakeResult<Handle>(handle);
+    auto directory = Kernel::SharedPtr<Directory>(new Directory(std::move(backend), path));
+    return MakeResult<Kernel::SharedPtr<Kernel::Session>>(std::move(directory));
 }
 
 ResultCode FormatSaveData() {
