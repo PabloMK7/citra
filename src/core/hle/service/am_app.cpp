@@ -18,7 +18,7 @@ namespace AM_APP {
 // Interface class
 
 Interface::Interface() {
-    //Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    //Register(FunctionTable);
 }
 
 } // namespace

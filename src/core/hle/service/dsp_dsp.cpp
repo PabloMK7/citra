@@ -206,7 +206,7 @@ Interface::Interface() {
     interrupt_event = nullptr;
     read_pipe_count = 0;
 
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
 }
 
 } // namespace

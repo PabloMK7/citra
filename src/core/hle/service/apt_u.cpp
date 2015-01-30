@@ -520,7 +520,7 @@ Interface::Interface() {
 
     lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
 
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
 }
 
 } // namespace

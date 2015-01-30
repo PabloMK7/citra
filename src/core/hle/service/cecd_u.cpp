@@ -18,7 +18,7 @@ namespace CECD_U {
 // Interface class
 
 Interface::Interface() {
-    //Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    //Register(FunctionTable);
 }
 
 } // namespace

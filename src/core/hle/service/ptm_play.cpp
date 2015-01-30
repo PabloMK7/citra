@@ -22,7 +22,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
 }
     
 } // namespace

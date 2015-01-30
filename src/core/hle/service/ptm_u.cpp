@@ -137,7 +137,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
     // Create the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
     // TODO(Subv): In the future we should use the FS service to query this archive
     std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);

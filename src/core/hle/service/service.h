@@ -5,10 +5,11 @@
 #pragma once
 
 #include <algorithm>
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <boost/container/flat_map.hpp>
 
 #include "common/common.h"
 #include "common/string_util.h"
@@ -69,21 +70,6 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    /// Allocates a new handle for the service
-    Handle CreateHandle(Kernel::Object *obj) {
-        // TODO(yuriks): Fix error reporting
-        Handle handle = Kernel::g_handle_table.Create(obj).ValueOr(INVALID_HANDLE);
-        m_handles.push_back(handle);
-        return handle;
-    }
-
-    /// Frees a handle from the service
-    template <class T>
-    void DeleteHandle(const Handle handle) {
-        Kernel::g_handle_table.Close(handle);
-        m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
-    }
-
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
@@ -109,16 +95,17 @@ protected:
     /**
      * Registers the functions in the service
      */
-    void Register(const FunctionInfo* functions, int len) {
-        for (int i = 0; i < len; i++) {
-            m_functions[functions[i].id] = functions[i];
+    template <size_t N>
+    void Register(const FunctionInfo (&functions)[N]) {
+        m_functions.reserve(N);
+        for (auto& fn : functions) {
+            // Usually this array is sorted by id already, so hint to instead at the end
+            m_functions.emplace_hint(m_functions.cend(), fn.id, fn);
         }
     }
 
 private:
-
-    std::vector<Handle>         m_handles;
-    std::map<u32, FunctionInfo> m_functions;
+    boost::container::flat_map<u32, FunctionInfo> m_functions;
 
 };
 

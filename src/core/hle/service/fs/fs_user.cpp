@@ -591,7 +591,7 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 FSUserInterface::FSUserInterface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
 }
 
 } // namespace FS
