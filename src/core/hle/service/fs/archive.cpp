@@ -89,7 +89,7 @@ public:
 class File : public Kernel::Session {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-            : path(path), backend(std::move(backend)), priority(0) {
+            : path(path), priority(0), backend(std::move(backend)) {
     }
 
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
