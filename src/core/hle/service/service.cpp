@@ -54,96 +54,76 @@
 
 namespace Service {
 
-Manager* g_manager = nullptr;  ///< Service manager
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Service Manager class
-
-void Manager::AddService(Interface* service) {
-    // TOOD(yuriks): Fix error reporting
-    m_port_map[service->GetPortName()] = Kernel::g_handle_table.Create(service).ValueOr(INVALID_HANDLE);
-    m_services.push_back(service);
-}
-
-void Manager::DeleteService(const std::string& port_name) {
-    Interface* service = FetchFromPortName(port_name);
-    m_services.erase(std::remove(m_services.begin(), m_services.end(), service), m_services.end());
-    m_port_map.erase(port_name);
-}
-
-Interface* Manager::FetchFromHandle(Handle handle) {
-    // TODO(yuriks): This function is very suspicious and should probably be exterminated.
-    return Kernel::g_handle_table.Get<Interface>(handle).get();
-}
-
-Interface* Manager::FetchFromPortName(const std::string& port_name) {
-    auto itr = m_port_map.find(port_name);
-    if (itr == m_port_map.end()) {
-        return nullptr;
-    }
-    return FetchFromHandle(itr->second);
-}
-
+std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
+std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
 
+static void AddNamedPort(Interface* interface) {
+    g_kernel_named_ports.emplace(interface->GetPortName(), interface);
+}
+
+static void AddService(Interface* interface) {
+    g_srv_services.emplace(interface->GetPortName(), interface);
+}
+
 /// Initialize ServiceManager
 void Init() {
-    g_manager = new Manager;
+    AddNamedPort(new SRV::Interface);
 
-    g_manager->AddService(new SRV::Interface);
-    g_manager->AddService(new AC_U::Interface);
-    g_manager->AddService(new ACT_U::Interface);
-    g_manager->AddService(new AM_APP::Interface);
-    g_manager->AddService(new AM_NET::Interface);
-    g_manager->AddService(new AM_SYS::Interface);
-    g_manager->AddService(new APT_A::Interface);
-    g_manager->AddService(new APT_S::Interface);
-    g_manager->AddService(new APT_U::Interface);
-    g_manager->AddService(new BOSS_P::Interface);
-    g_manager->AddService(new BOSS_U::Interface);
-    g_manager->AddService(new CAM_U::Interface);
-    g_manager->AddService(new CECD_S::Interface);
-    g_manager->AddService(new CECD_U::Interface);
-    g_manager->AddService(new CFG_I::Interface);
-    g_manager->AddService(new CFG_S::Interface);
-    g_manager->AddService(new CFG_U::Interface);
-    g_manager->AddService(new CSND_SND::Interface);
-    g_manager->AddService(new DSP_DSP::Interface);
-    g_manager->AddService(new ERR_F::Interface);
-    g_manager->AddService(new FRD_A::Interface);
-    g_manager->AddService(new FRD_U::Interface);
-    g_manager->AddService(new FS::FSUserInterface);
-    g_manager->AddService(new GSP_GPU::Interface);
-    g_manager->AddService(new GSP_LCD::Interface);
-    g_manager->AddService(new HID_User::Interface);
-    g_manager->AddService(new HID_SPVR::Interface);
-    g_manager->AddService(new HTTP_C::Interface);
-    g_manager->AddService(new IR_RST::Interface);
-    g_manager->AddService(new IR_U::Interface);
-    g_manager->AddService(new LDR_RO::Interface);
-    g_manager->AddService(new MIC_U::Interface);
-    g_manager->AddService(new NDM_U::Interface);
-    g_manager->AddService(new NEWS_S::Interface);
-    g_manager->AddService(new NEWS_U::Interface);
-    g_manager->AddService(new NIM_AOC::Interface);
-    g_manager->AddService(new NS_S::Interface);
-    g_manager->AddService(new NWM_UDS::Interface);
-    g_manager->AddService(new PM_APP::Interface);
-    g_manager->AddService(new PTM_PLAY::Interface);
-    g_manager->AddService(new PTM_U::Interface);
-    g_manager->AddService(new PTM_SYSM::Interface);
-    g_manager->AddService(new SOC_U::Interface);
-    g_manager->AddService(new SSL_C::Interface);
-    g_manager->AddService(new Y2R_U::Interface);
+    AddService(new AC_U::Interface);
+    AddService(new ACT_U::Interface);
+    AddService(new AM_APP::Interface);
+    AddService(new AM_NET::Interface);
+    AddService(new AM_SYS::Interface);
+    AddService(new APT_A::Interface);
+    AddService(new APT_S::Interface);
+    AddService(new APT_U::Interface);
+    AddService(new BOSS_P::Interface);
+    AddService(new BOSS_U::Interface);
+    AddService(new CAM_U::Interface);
+    AddService(new CECD_S::Interface);
+    AddService(new CECD_U::Interface);
+    AddService(new CFG_I::Interface);
+    AddService(new CFG_S::Interface);
+    AddService(new CFG_U::Interface);
+    AddService(new CSND_SND::Interface);
+    AddService(new DSP_DSP::Interface);
+    AddService(new ERR_F::Interface);
+    AddService(new FRD_A::Interface);
+    AddService(new FRD_U::Interface);
+    AddService(new FS::FSUserInterface);
+    AddService(new GSP_GPU::Interface);
+    AddService(new GSP_LCD::Interface);
+    AddService(new HID_User::Interface);
+    AddService(new HID_SPVR::Interface);
+    AddService(new HTTP_C::Interface);
+    AddService(new IR_RST::Interface);
+    AddService(new IR_U::Interface);
+    AddService(new LDR_RO::Interface);
+    AddService(new MIC_U::Interface);
+    AddService(new NDM_U::Interface);
+    AddService(new NEWS_S::Interface);
+    AddService(new NEWS_U::Interface);
+    AddService(new NIM_AOC::Interface);
+    AddService(new NS_S::Interface);
+    AddService(new NWM_UDS::Interface);
+    AddService(new PM_APP::Interface);
+    AddService(new PTM_PLAY::Interface);
+    AddService(new PTM_U::Interface);
+    AddService(new PTM_SYSM::Interface);
+    AddService(new SOC_U::Interface);
+    AddService(new SSL_C::Interface);
+    AddService(new Y2R_U::Interface);
 
     LOG_DEBUG(Service, "initialized OK");
 }
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    delete g_manager;
+    g_srv_services.clear();
+    g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
 

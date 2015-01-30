@@ -5,9 +5,10 @@
 #pragma once
 
 #include <algorithm>
-#include <vector>
 #include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "common/common.h"
 #include "common/string_util.h"
@@ -121,34 +122,15 @@ private:
 
 };
 
-/// Simple class to manage accessing services from ports and UID handles
-class Manager {
-public:
-    /// Add a service to the manager
-    void AddService(Interface* service);
-
-    /// Removes a service from the manager
-    void DeleteService(const std::string& port_name);
-
-    /// Get a Service Interface from its Handle
-    Interface* FetchFromHandle(Handle handle);
-
-    /// Get a Service Interface from its port
-    Interface* FetchFromPortName(const std::string& port_name);
-
-private:
-    std::vector<Interface*>     m_services;
-    std::map<std::string, u32>  m_port_map;
-};
-
 /// Initialize ServiceManager
 void Init();
 
 /// Shutdown ServiceManager
 void Shutdown();
 
-
-extern Manager* g_manager; ///< Service manager
-
+/// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
+extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
+/// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
+extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
 } // namespace

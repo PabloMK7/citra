@@ -35,10 +35,10 @@ static void GetServiceHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
-    Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
+    auto it = Service::g_srv_services.find(port_name);
 
-    if (nullptr != service) {
-        cmd_buff[3] = service->GetHandle();
+    if (it != Service::g_srv_services.end()) {
+        cmd_buff[3] = Kernel::g_handle_table.Create(it->second).MoveFrom();
         LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
         LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());

@@ -30,6 +30,11 @@ using Kernel::ERR_INVALID_HANDLE;
 
 namespace SVC {
 
+const ResultCode ERR_NOT_FOUND(ErrorDescription::NotFound, ErrorModule::Kernel,
+        ErrorSummary::NotFound, ErrorLevel::Permanent); // 0xD88007FA
+const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E0181E
+
 /// An invalid result code that is meant to be overwritten when a thread resumes from waiting
 const ResultCode RESULT_INVALID(0xDEADC0DE);
 
@@ -94,14 +99,21 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-static ResultCode ConnectToPort(Handle* out, const char* port_name) {
-    Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
+static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
+    if (port_name == nullptr)
+        return ERR_NOT_FOUND;
+    if (std::strlen(port_name) > 11)
+        return ERR_PORT_NAME_TOO_LONG;
 
     LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name);
-    _assert_msg_(KERNEL, (service != nullptr), "called, but service is not implemented!");
 
-    *out = service->GetHandle();
+    auto it = Service::g_kernel_named_ports.find(port_name);
+    if (it == Service::g_kernel_named_ports.end()) {
+        LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name);
+        return ERR_NOT_FOUND;
+    }
 
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(it->second));
     return RESULT_SUCCESS;
 }
 
