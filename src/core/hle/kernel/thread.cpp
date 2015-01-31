@@ -326,11 +326,11 @@ static void DebugThreadQueue() {
     if (!thread) {
         return;
     }
-    LOG_DEBUG(Kernel, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThread()->GetHandle());
+    LOG_DEBUG(Kernel, "0x%02X %u (current)", thread->current_priority, GetCurrentThread()->GetObjectId());
     for (auto& t : thread_list) {
         s32 priority = thread_ready_queue.contains(t.get());
         if (priority != -1) {
-            LOG_DEBUG(Kernel, "0x%02X 0x%08X", priority, t->GetHandle());
+            LOG_DEBUG(Kernel, "0x%02X %u", priority, t->GetObjectId());
         }
     }
 }
@@ -459,13 +459,13 @@ void Reschedule() {
     HLE::g_reschedule = false;
 
     if (next != nullptr) {
-        LOG_TRACE(Kernel, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
+        LOG_TRACE(Kernel, "context switch %u -> %u", prev->GetObjectId(), next->GetObjectId());
         SwitchContext(next);
     } else {
-        LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
+        LOG_TRACE(Kernel, "cannot context switch from %u, no higher priority thread!", prev->GetObjectId());
 
         for (auto& thread : thread_list) {
-            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X", thread->GetHandle(), 
+            LOG_TRACE(Kernel, "\tid=%u prio=0x%02X, status=0x%08X", thread->GetObjectId(), 
                       thread->current_priority, thread->status);
         }
     }

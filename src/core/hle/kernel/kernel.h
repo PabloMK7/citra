@@ -67,6 +67,9 @@ public:
     virtual ~Object() {}
     Handle GetHandle() const { return handle; }
 
+    /// Returns a unique identifier for the object. For debugging purposes only.
+    unsigned int GetObjectId() const { return object_id; }
+
     virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
     virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
     virtual Kernel::HandleType GetHandleType() const = 0;
@@ -101,7 +104,10 @@ private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
 
+    static unsigned int next_object_id;
+
     unsigned int ref_count = 0;
+    unsigned int object_id = next_object_id++;
 };
 
 // Special functions used by boost::instrusive_ptr to do automatic ref-counting

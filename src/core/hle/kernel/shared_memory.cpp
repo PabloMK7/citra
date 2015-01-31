@@ -23,8 +23,8 @@ ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,
         MemoryPermission other_permissions) {
 
     if (address < Memory::SHARED_MEMORY_VADDR || address >= Memory::SHARED_MEMORY_VADDR_END) {
-        LOG_ERROR(Kernel, "cannot map handle=0x%08X, address=0x%08X outside of shared mem bounds!",
-                GetHandle(), address);
+        LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X outside of shared mem bounds!",
+                GetObjectId(), address);
         // TODO: Verify error code with hardware
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                 ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
@@ -41,7 +41,7 @@ ResultVal<u8*> SharedMemory::GetPointer(u32 offset) {
     if (base_address != 0)
         return MakeResult<u8*>(Memory::GetPointer(base_address + offset));
 
-    LOG_ERROR(Kernel_SVC, "memory block handle=0x%08X not mapped!", GetHandle());
+    LOG_ERROR(Kernel_SVC, "memory block id=%u not mapped!", GetObjectId());
     // TODO(yuriks): Verify error code.
     return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
             ErrorSummary::InvalidState, ErrorLevel::Permanent);

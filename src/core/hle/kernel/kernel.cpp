@@ -14,6 +14,8 @@
 
 namespace Kernel {
 
+unsigned int Object::next_object_id = 0;
+
 SharedPtr<Thread> g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
