@@ -38,6 +38,9 @@ void Timer::Acquire() {
 }
 
 void Timer::Set(s64 initial, s64 interval) {
+    // Ensure we get rid of any previous scheduled event
+    Cancel();
+
     initial_delay = initial;
     interval_delay = interval;
 
