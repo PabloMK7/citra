@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/container/flat_set.hpp>
+
 #include "common/common_types.h"
 
 #include "core/core.h"
@@ -39,6 +41,8 @@ enum ThreadStatus {
 };
 
 namespace Kernel {
+
+class Mutex;
 
 class Thread final : public WaitObject {
 public:
@@ -109,8 +113,10 @@ public:
 
     s32 processor_id;
 
-    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
+    /// Mutexes currently held by this thread, which will be released when it exits.
+    boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
+    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
     VAddr wait_address;     ///< If waiting on an AddressArbiter, this is the arbitration address
     bool wait_all;          ///< True if the thread is waiting on all objects before resuming
     bool wait_set_output;   ///< True if the output parameter should be set on thread wakeup
@@ -121,7 +127,7 @@ public:
     bool idle = false;
 
 private:
-    Thread() = default;
+    Thread();
 
     /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
     Handle callback_handle;
