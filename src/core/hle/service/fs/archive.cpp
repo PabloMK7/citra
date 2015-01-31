@@ -163,7 +163,7 @@ public:
         case FileCommand::OpenLinkFile:
         {
             LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
-            cmd_buff[3] = GetHandle();
+            cmd_buff[3] = Kernel::g_handle_table.Create(this).ValueOr(INVALID_HANDLE);
             break;
         }
 
