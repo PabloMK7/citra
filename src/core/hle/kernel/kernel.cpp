@@ -76,13 +76,10 @@ ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
     // CTR-OS doesn't use generation 0, so skip straight to 1.
     if (next_generation >= (1 << 15)) next_generation = 1;
 
-    Handle handle = generation | (slot << 15);
-    if (obj->handle == INVALID_HANDLE)
-        obj->handle = handle;
-
     generations[slot] = generation;
     objects[slot] = std::move(obj);
 
+    Handle handle = generation | (slot << 15);
     return MakeResult<Handle>(handle);
 }
 

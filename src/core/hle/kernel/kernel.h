@@ -58,14 +58,9 @@ enum {
     DEFAULT_STACK_SIZE  = 0x4000,
 };
 
-class HandleTable;
-
 class Object : NonCopyable {
-    friend class HandleTable;
-    u32 handle = INVALID_HANDLE;
 public:
     virtual ~Object() {}
-    Handle GetHandle() const { return handle; }
 
     /// Returns a unique identifier for the object. For debugging purposes only.
     unsigned int GetObjectId() const { return object_id; }
