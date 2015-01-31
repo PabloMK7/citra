@@ -30,6 +30,8 @@ static s16 next_circle_y = 0;
  * Gets a pointer to the PadData structure inside HID shared memory
  */
 static inline PadData* GetPadData() {
+    if (g_shared_mem == nullptr)
+        return nullptr;
     return reinterpret_cast<PadData*>(g_shared_mem->GetPointer().ValueOr(nullptr));
 }
 
