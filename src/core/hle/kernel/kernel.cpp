@@ -101,7 +101,7 @@ ResultCode HandleTable::Close(Handle handle) {
 
     objects[slot] = nullptr;
 
-    generations[generation] = next_free_slot;
+    generations[slot] = next_free_slot;
     next_free_slot = slot;
     return RESULT_SUCCESS;
 }
