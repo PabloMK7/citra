@@ -51,7 +51,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) <= value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
+            GetCurrentThread()->WakeAfterDelay(nanoseconds);
             HLE::Reschedule(__func__);
         }
         break;
@@ -71,7 +71,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
         Memory::Write32(address, memory_value);
         if (memory_value <= value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
+            GetCurrentThread()->WakeAfterDelay(nanoseconds);
             HLE::Reschedule(__func__);
         }
         break;

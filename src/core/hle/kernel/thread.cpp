@@ -248,14 +248,13 @@ static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
 }
 
 
-void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds) {
+void Thread::WakeAfterDelay(s64 nanoseconds) {
     // Don't schedule a wakeup if the thread wants to wait forever
     if (nanoseconds == -1)
         return;
-    _dbg_assert_(Kernel, thread != nullptr);
 
     u64 microseconds = nanoseconds / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, thread->GetHandle());
+    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, GetHandle());
 }
 
 void Thread::ReleaseWaitObject(WaitObject* wait_object) {
@@ -418,7 +417,7 @@ void Thread::SetPriority(s32 priority) {
     }
 }
 
-Handle SetupIdleThread() {
+SharedPtr<Thread> SetupIdleThread() {
     // We need to pass a few valid values to get around parameter checking in Thread::Create.
     auto thread_res = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
             THREADPROCESSORID_0, 0, Kernel::DEFAULT_STACK_SIZE);
@@ -427,7 +426,7 @@ Handle SetupIdleThread() {
 
     thread->idle = true;
     CallThread(thread.get());
-    return thread->GetHandle();
+    return thread;
 }
 
 SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size) {

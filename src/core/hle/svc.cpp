@@ -152,7 +152,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
         Kernel::WaitCurrentThread_WaitSynchronization(object, false, false);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
-        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+        Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
 
         HLE::Reschedule(__func__);
 
@@ -228,7 +228,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         }
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
-        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+        Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
 
         HLE::Reschedule(__func__);
 
@@ -540,7 +540,7 @@ static void SleepThread(s64 nanoseconds) {
     Kernel::WaitCurrentThread_Sleep();
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
-    Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);
+    Kernel::GetCurrentThread()->WakeAfterDelay(nanoseconds);
 
     HLE::Reschedule(__func__);
 }

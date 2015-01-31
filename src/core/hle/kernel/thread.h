@@ -78,6 +78,12 @@ public:
     void ResumeFromWait();
 
     /**
+    * Schedules an event to wake up the specified thread after the specified delay.
+    * @param nanoseconds The time this thread will be allowed to sleep for.
+    */
+    void WakeAfterDelay(s64 nanoseconds);
+
+    /**
      * Sets the result after the thread awakens (from either WaitSynchronization SVC)
      * @param result Value to set to the returned result
      */
@@ -151,19 +157,12 @@ void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bo
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
 
 /**
- * Schedules an event to wake up the specified thread after the specified delay.
- * @param handle The thread handle.
- * @param nanoseconds The time this thread will be allowed to sleep for.
- */
-void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
-
-/**
  * Sets up the idle thread, this is a thread that is intended to never execute instructions,
  * only to advance the timing. It is scheduled when there are no other ready threads in the thread queue
  * and will try to yield on every call.
  * @returns The handle of the idle thread
  */
-Handle SetupIdleThread();
+SharedPtr<Thread> SetupIdleThread();
 
 /// Initialize threading
 void ThreadingInit();
