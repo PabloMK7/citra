@@ -34,6 +34,9 @@ frame_skip = ## 0: No frameskip (default), 1 : 2x frameskip, 2 : 4x frameskip, e
 [Data Storage]
 use_virtual_sd =
 
+[System Region]
+region_value = ## 0 : Japan, 1 : Usa (default), 2 : Europe, 3 : Australia, 4 : China, 5 : Korea, 6 : Taiwan.
+
 [Miscellaneous]
 log_filter = *:Info  ## Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
 )";

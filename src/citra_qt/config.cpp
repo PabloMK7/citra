@@ -52,6 +52,10 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
     qt_config->endGroup();
 
+    qt_config->beginGroup("System Region");
+    Settings::values.region_value = qt_config->value("region_value", 1).toInt();
+    qt_config->endGroup();
+
     qt_config->beginGroup("Miscellaneous");
     Settings::values.log_filter = qt_config->value("log_filter", "*:Info").toString().toStdString();
     qt_config->endGroup();
@@ -86,6 +90,10 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("Data Storage");
     qt_config->setValue("use_virtual_sd", Settings::values.use_virtual_sd);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("System Region");
+    qt_config->setValue("region_value", Settings::values.region_value);
     qt_config->endGroup();
 
     qt_config->beginGroup("Miscellaneous");

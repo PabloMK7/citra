@@ -57,6 +57,7 @@ enum class Class : ClassType {
     Service_GSP,                ///< The GSP (GPU control) service
     Service_AC,                 ///< The AC (WiFi status) service
     Service_PTM,                ///< The PTM (Power status & misc.) service
+    Service_LDR,                ///< The LDR (3ds dll loader) service
     Service_CFG,                ///< The CFG (Configuration) service
     Service_DSP,                ///< The DSP (DSP control) service
     Service_HID,                ///< The HID (User input) service
