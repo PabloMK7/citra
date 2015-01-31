@@ -131,9 +131,8 @@ static ResultCode SendSyncRequest(Handle handle) {
 
 /// Close a handle
 static ResultCode CloseHandle(Handle handle) {
-    // ImplementMe
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
-    return RESULT_SUCCESS;
+    LOG_TRACE(Kernel_SVC, "Closing handle 0x%08X", handle);
+    return Kernel::g_handle_table.Close(handle);
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
@@ -445,12 +444,9 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
 
 /// Duplicates a kernel handle
 static ResultCode DuplicateHandle(Handle* out, Handle handle) {
-    ResultVal<Handle> out_h = Kernel::g_handle_table.Duplicate(handle);
-    if (out_h.Succeeded()) {
-        *out = *out_h;
-        LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
-    }
-    return out_h.Code();
+    CASCADE_RESULT(*out, Kernel::g_handle_table.Duplicate(handle));
+    LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
+    return RESULT_SUCCESS;
 }
 
 /// Signals an event
