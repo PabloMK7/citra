@@ -122,6 +122,9 @@ public:
 
 private:
     Thread() = default;
+
+    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
+    Handle callback_handle;
 };
 
 /// Sets up the primary application thread

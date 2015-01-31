@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <list>
-#include <map>
 #include <vector>
 
 #include "common/common.h"
@@ -228,13 +227,15 @@ void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
 
 /// Event type for the thread wake up event
 static int ThreadWakeupEventType = -1;
+// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
+//               us to simply use a pool index or similar.
+static Kernel::HandleTable wakeup_callback_handle_table;
 
 /// Callback that will wake up the thread it was scheduled for
-static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
-    Handle handle = static_cast<Handle>(parameter);
-    SharedPtr<Thread> thread = Kernel::g_handle_table.Get<Thread>(handle);
+static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
+    SharedPtr<Thread> thread = wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle);
     if (thread == nullptr) {
-        LOG_ERROR(Kernel, "Thread doesn't exist %u", handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid thread %08X", thread_handle);
         return;
     }
 
@@ -254,7 +255,7 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
         return;
 
     u64 microseconds = nanoseconds / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, GetHandle());
+    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, callback_handle);
 }
 
 void Thread::ReleaseWaitObject(WaitObject* wait_object) {
@@ -301,7 +302,7 @@ void Thread::ReleaseWaitObject(WaitObject* wait_object) {
 
 void Thread::ResumeFromWait() {
     // Cancel any outstanding wakeup events
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, GetHandle());
+    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
 
     status &= ~THREADSTATUS_WAIT;
 
@@ -384,6 +385,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
+    thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
 
     ResetThread(thread.get(), arg, 0);
     CallThread(thread.get());
@@ -419,10 +421,8 @@ void Thread::SetPriority(s32 priority) {
 
 SharedPtr<Thread> SetupIdleThread() {
     // We need to pass a few valid values to get around parameter checking in Thread::Create.
-    auto thread_res = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
-            THREADPROCESSORID_0, 0, Kernel::DEFAULT_STACK_SIZE);
-    _dbg_assert_(Kernel, thread_res.Succeeded());
-    SharedPtr<Thread> thread = std::move(*thread_res);
+    auto thread = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
+            THREADPROCESSORID_0, 0, Kernel::DEFAULT_STACK_SIZE).MoveFrom();
 
     thread->idle = true;
     CallThread(thread.get());

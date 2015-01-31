@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <set>
-
 #include "common/common.h"
 
 #include "core/core_timing.h"
@@ -15,6 +13,9 @@ namespace Kernel {
 
 /// The event type of the generic timer callback event
 static int timer_callback_event_type = -1;
+// TODO(yuriks): This can be removed if Timer objects are explicitly pooled in the future, allowing
+//               us to simply use a pool index or similar.
+static Kernel::HandleTable timer_callback_handle_table;
 
 ResultVal<SharedPtr<Timer>> Timer::Create(ResetType reset_type, std::string name) {
     SharedPtr<Timer> timer(new Timer);
@@ -26,6 +27,7 @@ ResultVal<SharedPtr<Timer>> Timer::Create(ResetType reset_type, std::string name
     timer->name = std::move(name);
     timer->initial_delay = 0;
     timer->interval_delay = 0;
+    timer->callback_handle = timer_callback_handle_table.Create(timer).MoveFrom();
     return MakeResult<SharedPtr<Timer>>(timer);
 }
 
@@ -45,13 +47,12 @@ void Timer::Set(s64 initial, s64 interval) {
     interval_delay = interval;
 
     u64 initial_microseconds = initial / 1000;
-    // TODO(yuriks): Figure out a replacement for GetHandle here
-    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
-            GetHandle());
+    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds),
+            timer_callback_event_type, callback_handle);
 }
 
 void Timer::Cancel() {
-    CoreTiming::UnscheduleEvent(timer_callback_event_type, GetHandle());
+    CoreTiming::UnscheduleEvent(timer_callback_event_type, callback_handle);
 }
 
 void Timer::Clear() {
@@ -60,7 +61,7 @@ void Timer::Clear() {
 
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
-    SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(timer_handle);
+    SharedPtr<Timer> timer = timer_callback_handle_table.Get<Timer>(timer_handle);
 
     if (timer == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer %08X", timer_handle);
