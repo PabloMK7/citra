@@ -95,12 +95,6 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
     state->lateabtSig = HIGH;
     state->bigendSig = LOW;
 
-    //chy:2003-08-19
-    state->CP14R0_CCD = -1;
-
-    memset(&state->exclusive_tag_array[0], 0xFF, sizeof(state->exclusive_tag_array[0]) * 128);
-    state->exclusive_access_state = 0;
-
     return state;
 }
 
@@ -118,15 +112,15 @@ void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
         state->data32Sig = HIGH;
     }
 
-    state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) ? HIGH : LOW;
-    state->is_v5     = (properties & ARM_v5_Prop) ? HIGH : LOW;
-    state->is_v5e    = (properties & ARM_v5e_Prop) ? HIGH : LOW;
-    state->is_XScale = (properties & ARM_XScale_Prop) ? HIGH : LOW;
-    state->is_iWMMXt = (properties & ARM_iWMMXt_Prop) ? HIGH : LOW;
-    state->is_v6     = (properties & ARM_v6_Prop) ? HIGH : LOW;
-    state->is_ep9312 = (properties & ARM_ep9312_Prop) ? HIGH : LOW;
-    state->is_pxa27x = (properties & ARM_PXA27X_Prop) ? HIGH : LOW;
-    state->is_v7     = (properties & ARM_v7_Prop) ? HIGH : LOW;
+    state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
+    state->is_v5     = (properties & ARM_v5_Prop) != 0;
+    state->is_v5e    = (properties & ARM_v5e_Prop) != 0;
+    state->is_XScale = (properties & ARM_XScale_Prop) != 0;
+    state->is_iWMMXt = (properties & ARM_iWMMXt_Prop) != 0;
+    state->is_v6     = (properties & ARM_v6_Prop) != 0;
+    state->is_ep9312 = (properties & ARM_ep9312_Prop) != 0;
+    state->is_pxa27x = (properties & ARM_PXA27X_Prop) != 0;
+    state->is_v7     = (properties & ARM_v7_Prop) != 0;
 
     /* Only initialse the coprocessor support once we
        know what kind of chip we are dealing with.  */
@@ -164,9 +158,4 @@ void ARMul_Reset(ARMul_State* state)
     state->AbortAddr = 1;
 
     state->NumInstrs = 0;
-    state->NumNcycles = 0;
-    state->NumScycles = 0;
-    state->NumIcycles = 0;
-    state->NumCcycles = 0;
-    state->NumFcycles = 0;
 }

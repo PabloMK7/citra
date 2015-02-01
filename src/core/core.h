@@ -23,7 +23,6 @@ struct ThreadContext {
     u32 fpexc;
 
     // These are not part of native ThreadContext, but needed by emu
-    u32 reg_15;
     u32 mode;
 };
 

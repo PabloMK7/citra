@@ -74,88 +74,69 @@ typedef unsigned ARMul_CPWrites(ARMul_State* state, unsigned reg, ARMword value)
 #define VFP_REG_NUM 64
 struct ARMul_State
 {
-    ARMword Emulate;       /* to start and stop emulation */
-    unsigned EndCondition; /* reason for stopping */
-    unsigned ErrorCode;    /* type of illegal instruction */
+    ARMword Emulate;       // To start and stop emulation
+    unsigned EndCondition; // Reason for stopping
+    unsigned ErrorCode;    // Type of illegal instruction
 
-    /* Order of the following register should not be modified */
-    ARMword Reg[16];            /* the current register file */
-    ARMword Cpsr;               /* the current psr */
+    // Order of the following register should not be modified
+    ARMword Reg[16];            // The current register file
+    ARMword Cpsr;               // The current PSR
     ARMword Spsr_copy;
     ARMword phys_pc;
     ARMword Reg_usr[2];
-    ARMword Reg_svc[2];         /* R13_SVC R14_SVC */
-    ARMword Reg_abort[2];       /* R13_ABORT R14_ABORT */
-    ARMword Reg_undef[2];       /* R13 UNDEF R14 UNDEF */
-    ARMword Reg_irq[2];         /* R13_IRQ R14_IRQ */
-    ARMword Reg_firq[7];        /* R8---R14 FIRQ */
-    ARMword Spsr[7];            /* the exception psr's */
-    ARMword Mode;               /* the current mode */
-    ARMword Bank;               /* the current register bank */
-    ARMword exclusive_tag;      /* the address for which the local monitor is in exclusive access mode */
+    ARMword Reg_svc[2];         // R13_SVC R14_SVC
+    ARMword Reg_abort[2];       // R13_ABORT R14_ABORT
+    ARMword Reg_undef[2];       // R13 UNDEF R14 UNDEF
+    ARMword Reg_irq[2];         // R13_IRQ R14_IRQ
+    ARMword Reg_firq[7];        // R8---R14 FIRQ
+    ARMword Spsr[7];            // The exception psr's
+    ARMword Mode;               // The current mode
+    ARMword Bank;               // The current register bank
+    ARMword exclusive_tag;      // The address for which the local monitor is in exclusive access mode
     ARMword exclusive_state;
     ARMword exclusive_result;
     ARMword CP15[VFP_BASE - CP15_BASE];
-    ARMword VFP[3]; /* FPSID, FPSCR, and FPEXC */
-    /* VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
-       VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
-        and only 32 singleword registers are accessible (S0-S31). */
+    ARMword VFP[3]; // FPSID, FPSCR, and FPEXC
+    // VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
+    // VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
+    // and only 32 singleword registers are accessible (S0-S31).
     ARMword ExtReg[VFP_REG_NUM];
     /* ---- End of the ordered registers ---- */
     
-    ARMword RegBank[7][16];    /* all the registers */
-    //chy:2003-08-19, used in arm xscale
-    /* 40 bit accumulator.  We always keep this 64 bits wide,
-       and move only 40 bits out of it in an MRA insn.  */
-    ARMdword Accumulator;
+    ARMword RegBank[7][16]; // all the registers
 
-    ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags;    /* dummy flags for speed */
-    unsigned long long int icounter, debug_icounter, kernel_icounter;
+    ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;
 
-    /* add armv6 flags dyf:2010-08-09 */
+    // Add armv6 flags dyf:2010-08-09
     ARMword GEFlag, EFlag, AFlag, QFlag;
-    //chy:2003-08-19, used in arm v5e|xscale
-    ARMword SFlag;
+
 #ifdef MODET
-    ARMword TFlag;        /* Thumb state */
+    ARMword TFlag; // Thumb state
 #endif
-    ARMword instr, pc, temp;    /* saved register state */
-    ARMword loaded, decoded;    /* saved pipeline state */
-    //chy 2006-04-12 for ICE breakpoint
-    ARMword loaded_addr, decoded_addr;    /* saved pipeline state addr*/
-    unsigned int NumScycles, NumNcycles, NumIcycles, NumCcycles, NumFcycles;    /* emulated cycles used */
-    unsigned long long NumInstrs;    /* the number of instructions executed */
+
+    unsigned long long NumInstrs; // The number of instructions executed
     unsigned NumInstrsToExecute;
 
-    ARMword currentexaddr;
-    ARMword currentexval;
-    ARMword currentexvald;
-    ARMword servaddr;
-
     unsigned NextInstr;
-    unsigned VectorCatch;                   /* caught exception mask */
-    unsigned CallDebug;                     /* set to call the debugger */
-    unsigned CanWatch;                      /* set by memory interface if its willing to suffer the
-                                               overhead of checking for watchpoints on each memory
-                                               access */
+    unsigned VectorCatch;                   // Caught exception mask
 
-    ARMul_CPInits *CPInit[16];              /* coprocessor initialisers */
-    ARMul_CPExits *CPExit[16];              /* coprocessor finalisers */
-    ARMul_LDCs *LDC[16];                    /* LDC instruction */
-    ARMul_STCs *STC[16];                    /* STC instruction */
-    ARMul_MRCs *MRC[16];                    /* MRC instruction */
-    ARMul_MCRs *MCR[16];                    /* MCR instruction */
-    ARMul_MRRCs *MRRC[16];                  /* MRRC instruction */
-    ARMul_MCRRs *MCRR[16];                  /* MCRR instruction */
-    ARMul_CDPs *CDP[16];                    /* CDP instruction */
-    ARMul_CPReads *CPRead[16];              /* Read CP register */
-    ARMul_CPWrites *CPWrite[16];            /* Write CP register */
-    unsigned char *CPData[16];              /* Coprocessor data */
-    unsigned char const *CPRegWords[16];    /* map of coprocessor register sizes */
+    ARMul_CPInits* CPInit[16];              // Coprocessor initialisers
+    ARMul_CPExits* CPExit[16];              // Coprocessor finalisers
+    ARMul_LDCs* LDC[16];                    // LDC instruction
+    ARMul_STCs* STC[16];                    // STC instruction
+    ARMul_MRCs* MRC[16];                    // MRC instruction
+    ARMul_MCRs* MCR[16];                    // MCR instruction
+    ARMul_MRRCs* MRRC[16];                  // MRRC instruction
+    ARMul_MCRRs* MCRR[16];                  // MCRR instruction
+    ARMul_CDPs* CDP[16];                    // CDP instruction
+    ARMul_CPReads* CPRead[16];              // Read CP register
+    ARMul_CPWrites* CPWrite[16];            // Write CP register
+    unsigned char* CPData[16];              // Coprocessor data
+    unsigned char const* CPRegWords[16];    // Map of coprocessor register sizes
 
-    unsigned Debug;                         /* show instructions as they are executed */
-    unsigned NresetSig;                     /* reset the processor */
+    unsigned Debug;                         // Show instructions as they are executed
+    unsigned NresetSig;                     // Reset the processor
     unsigned NfiqSig;
     unsigned NirqSig;
 
@@ -199,54 +180,34 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 */
     unsigned lateabtSig;
 
-    ARMword Vector;              /* synthesize aborts in cycle modes */
-    ARMword Aborted;             /* sticky flag for aborts */
-    ARMword Reseted;             /* sticky flag for Reset */
-    ARMword Inted, LastInted;    /* sticky flags for interrupts */
-    ARMword Base;                /* extra hand for base writeback */
-    ARMword AbortAddr;           /* to keep track of Prefetch aborts */
+    ARMword Vector;           // Synthesize aborts in cycle modes
+    ARMword Aborted;          // Sticky flag for aborts
+    ARMword Reseted;          // Sticky flag for Reset
+    ARMword Inted, LastInted; // Sticky flags for interrupts
+    ARMword Base;             // Extra hand for base writeback
+    ARMword AbortAddr;        // To keep track of Prefetch aborts
 
-    int verbose;        /* non-zero means print various messages like the banner */
+    // For differentiating ARM core emulaiton.
+    bool is_v4;     // Are we emulating a v4 architecture (or higher)?
+    bool is_v5;     // Are we emulating a v5 architecture?
+    bool is_v5e;    // Are we emulating a v5e architecture?
+    bool is_v6;     // Are we emulating a v6 architecture?
+    bool is_v7;     // Are we emulating a v7 architecture?
+    bool is_XScale; // Are we emulating an XScale architecture?
+    bool is_iWMMXt; // Are we emulating an iWMMXt co-processor?
+    bool is_ep9312; // Are we emulating a Cirrus Maverick co-processor?
+    bool is_pxa27x; // Are we emulating a Intel PXA27x co-processor?
 
-    int mmu_inited;
+    // ARM_ARM A2-18
+    // 0 Base Restored Abort Model, 1 the Early Abort Model, 2 Base Updated Abort Model
+    int abort_model;
 
-    //chy: 2003-08-11, for different arm core type
-    unsigned is_v4;        /* Are we emulating a v4 architecture (or higher) ?  */
-    unsigned is_v5;        /* Are we emulating a v5 architecture ?  */
-    unsigned is_v5e;       /* Are we emulating a v5e architecture ?  */
-    unsigned is_v6;        /* Are we emulating a v6 architecture ?  */
-    unsigned is_v7;        /* Are we emulating a v7 architecture ?  */
-    unsigned is_XScale;    /* Are we emulating an XScale architecture ?  */
-    unsigned is_iWMMXt;    /* Are we emulating an iWMMXt co-processor ?  */
-    unsigned is_ep9312;    /* Are we emulating a Cirrus Maverick co-processor ?  */
-    unsigned is_pxa27x;    /* Are we emulating a Intel PXA27x co-processor ?  */
-
-    //chy: seems only used in xscale's CP14
-    ARMword CP14R0_CCD;    /* used to count 64 clock cycles with CP14 R0 bit 3 set */
-
-    //teawater add for arm2x86 2005.07.05-------------------------------------------
-    //arm_arm A2-18
-    int abort_model;    //0 Base Restored Abort Model, 1 the Early Abort Model, 2 Base Updated Abort Model
-
-    /*added by ksh in 2005-10-1*/
-    cpu_config_t *cpu;
-
-    /* added LPC remap function */
-    int vector_remap_flag;
-    u32 vector_remap_addr;
-    u32 vector_remap_size;
-
-    u32 step;
-    u32 cycle;
-
-    /* monitored memory for exclusice access */
-    ARMword exclusive_tag_array[128];
-    /* 1 means exclusive access and 0 means open access */
-    ARMword exclusive_access_state;
+    // Added by ksh in 2005-10-1
+    cpu_config_t* cpu;
 
     u32 CurrInstr;
-    u32 last_pc; /* the last pc executed */
-    u32 last_instr; /* the last inst executed */
+    u32 last_pc;      // The last PC executed
+    u32 last_instr;   // The last instruction executed
     u32 WriteAddr[17];
     u32 WriteData[17];
     u32 WritePc[17];

@@ -50,7 +50,7 @@ static void ResetThread(Thread* t, u32 arg, s32 lowest_priority) {
     memset(&t->context, 0, sizeof(Core::ThreadContext));
 
     t->context.cpu_registers[0] = arg;
-    t->context.pc = t->context.reg_15 = t->entry_point;
+    t->context.pc = t->entry_point;
     t->context.sp = t->stack_top;
     t->context.cpsr = 0x1F; // Usermode
 
