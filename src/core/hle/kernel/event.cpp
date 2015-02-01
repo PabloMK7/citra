@@ -14,6 +14,9 @@
 
 namespace Kernel {
 
+Event::Event() {}
+Event::~Event() {}
+
 ResultVal<SharedPtr<Event>> Event::Create(ResetType reset_type, std::string name) {
     SharedPtr<Event> evt(new Event);
     // TOOD(yuriks): Don't create Handle (see Thread::Create())

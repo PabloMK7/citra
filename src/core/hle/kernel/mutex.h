@@ -47,7 +47,8 @@ public:
     void Release();
 
 private:
-    Mutex() = default;
+    Mutex();
+    ~Mutex() override;
 };
 
 /**

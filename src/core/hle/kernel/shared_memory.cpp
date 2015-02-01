@@ -9,6 +9,9 @@
 
 namespace Kernel {
 
+SharedMemory::SharedMemory() {}
+SharedMemory::~SharedMemory() {}
+
 ResultVal<SharedPtr<SharedMemory>> SharedMemory::Create(std::string name) {
     SharedPtr<SharedMemory> shared_memory(new SharedMemory);
 

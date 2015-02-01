@@ -38,6 +38,9 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
+Mutex::Mutex() {}
+Mutex::~Mutex() {}
+
 ResultVal<SharedPtr<Mutex>> Mutex::Create(bool initial_locked, std::string name) {
     SharedPtr<Mutex> mutex(new Mutex);
     // TOOD(yuriks): Don't create Handle (see Thread::Create())

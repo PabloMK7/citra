@@ -39,7 +39,8 @@ public:
     void Clear();
 
 private:
-    Event() = default;
+    Event();
+    ~Event() override;
 };
 
 } // namespace

@@ -57,7 +57,8 @@ public:
     std::string name;                   ///< Name of shared memory object (optional)
 
 private:
-    SharedMemory() = default;
+    SharedMemory();
+    ~SharedMemory() override;
 };
 
 } // namespace

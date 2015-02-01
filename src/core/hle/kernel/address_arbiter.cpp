@@ -15,6 +15,9 @@
 
 namespace Kernel {
 
+AddressArbiter::AddressArbiter() {}
+AddressArbiter::~AddressArbiter() {}
+
 ResultVal<SharedPtr<AddressArbiter>> AddressArbiter::Create(std::string name) {
     SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);
     // TOOD(yuriks): Don't create Handle (see Thread::Create())

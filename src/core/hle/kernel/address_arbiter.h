@@ -47,7 +47,8 @@ public:
     ResultCode ArbitrateAddress(ArbitrationType type, VAddr address, s32 value, u64 nanoseconds);
 
 private:
-    AddressArbiter() = default;
+    AddressArbiter();
+    ~AddressArbiter() override;
 };
 
 } // namespace FileSys

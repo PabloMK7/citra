@@ -49,7 +49,8 @@ public:
     void Clear();
 
 private:
-    Timer() = default;
+    Timer();
+    ~Timer() override;
 
     /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
     Handle callback_handle;
