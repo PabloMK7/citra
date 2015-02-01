@@ -12,11 +12,6 @@ class ARM_Interface;
 
 namespace Core {
 
-enum CPUCore {
-    CPU_Interpreter,
-    CPU_OldInterpreter,
-};
-
 struct ThreadContext {
     u32 cpu_registers[13];
     u32 sp;

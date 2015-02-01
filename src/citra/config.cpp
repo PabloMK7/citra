@@ -57,7 +57,6 @@ void Config::ReadValues() {
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
 
     // Core
-    Settings::values.cpu_core = glfw_config->GetInteger("Core", "cpu_core", Core::CPU_Interpreter);
     Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 30);
     Settings::values.frame_skip = glfw_config->GetInteger("Core", "frame_skip", 0);
 

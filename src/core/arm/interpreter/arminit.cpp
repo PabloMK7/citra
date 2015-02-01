@@ -25,24 +25,13 @@
 void ARMul_EmulateInit();
 ARMul_State* ARMul_NewState(ARMul_State* state);
 void ARMul_Reset (ARMul_State* state);
-ARMword ARMul_DoCycle(ARMul_State* state);
-unsigned ARMul_DoCoPro(ARMul_State* state);
-ARMword ARMul_DoProg(ARMul_State* state);
-ARMword ARMul_DoInstr(ARMul_State* state);
-void ARMul_Abort(ARMul_State* state, ARMword address);
 
 unsigned ARMul_MultTable[32] = {
     1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,
     10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16
 };
-ARMword ARMul_ImmedTable[4096]; /* immediate DP LHS values */
-char ARMul_BitList[256];        /* number of bits in a byte table */
-
-void arm_dyncom_Abort(ARMul_State * state, ARMword vector)
-{
-    ARMul_Abort(state, vector);
-}
-
+ARMword ARMul_ImmedTable[4096]; // immediate DP LHS values
+char ARMul_BitList[256];        // number of bits in a byte table
 
 /***************************************************************************\
 *         Call this routine once to set up the emulator's tables.           *
@@ -51,18 +40,21 @@ void ARMul_EmulateInit()
 {
     unsigned int i, j;
 
-    for (i = 0; i < 4096; i++) {	/* the values of 12 bit dp rhs's */
+    // the values of 12 bit dp rhs's
+    for (i = 0; i < 4096; i++) {
         ARMul_ImmedTable[i] = ROTATER (i & 0xffL, (i >> 7L) & 0x1eL);
     }
 
-    for (i = 0; i < 256; ARMul_BitList[i++] = 0);	/* how many bits in LSM */
+    // how many bits in LSM
+    for (i = 0; i < 256; ARMul_BitList[i++] = 0);
     for (j = 1; j < 256; j <<= 1)
         for (i = 0; i < 256; i++)
             if ((i & j) > 0)
                 ARMul_BitList[i]++;
 
+    // you always need 4 times these values
     for (i = 0; i < 256; i++)
-        ARMul_BitList[i] *= 4;	/* you always need 4 times these values */
+        ARMul_BitList[i] *= 4;
 
 }
 
@@ -177,116 +169,4 @@ void ARMul_Reset(ARMul_State* state)
     state->NumIcycles = 0;
     state->NumCcycles = 0;
     state->NumFcycles = 0;
-}
-
-
-/***************************************************************************\
-* Emulate the execution of an entire program.  Start the correct emulator   *
-* (Emulate26 for a 26 bit ARM and Emulate32 for a 32 bit ARM), return the   *
-* address of the last instruction that is executed.                         *
-\***************************************************************************/
-ARMword ARMul_DoProg(ARMul_State* state)
-{
-    ARMword pc = 0;
-
-    state->Emulate = RUN;
-    while (state->Emulate != STOP) {
-        state->Emulate = RUN;
-
-        if (state->prog32Sig && ARMul_MODE32BIT) {
-            pc = ARMul_Emulate32 (state);
-        }
-        else {
-            //pc = ARMul_Emulate26 (state);
-        }
-    }
-
-    return pc;
-}
-
-/***************************************************************************\
-* Emulate the execution of one instruction.  Start the correct emulator     *
-* (Emulate26 for a 26 bit ARM and Emulate32 for a 32 bit ARM), return the   *
-* address of the instruction that is executed.                              *
-\***************************************************************************/
-ARMword ARMul_DoInstr(ARMul_State* state)
-{
-    ARMword pc = 0;
-
-    state->Emulate = ONCE;
-
-    if (state->prog32Sig && ARMul_MODE32BIT) {
-        pc = ARMul_Emulate32 (state);
-    }
-
-    return pc;
-}
-
-/***************************************************************************\
-* This routine causes an Abort to occur, including selecting the correct    *
-* mode, register bank, and the saving of registers.  Call with the          *
-* appropriate vector's memory address (0,4,8 ....)                          *
-\***************************************************************************/
-void ARMul_Abort(ARMul_State* state, ARMword vector)
-{
-    ARMword temp;
-    int isize = INSN_SIZE;
-    int esize = (TFLAG ? 0 : 4);
-    int e2size = (TFLAG ? -4 : 0);
-
-    state->Aborted = FALSE;
-
-    if (state->prog32Sig)
-        if (ARMul_MODE26BIT)
-            temp = R15PC;
-        else
-            temp = state->Reg[15];
-    else
-        temp = R15PC | ECC | ER15INT | EMODE;
-
-    switch (vector) {
-    case ARMul_ResetV:	/* RESET */
-        SETABORT (INTBITS, state->prog32Sig ? SVC32MODE : SVC26MODE,
-                  0);
-        break;
-    case ARMul_UndefinedInstrV:	/* Undefined Instruction */
-        SETABORT (IBIT, state->prog32Sig ? UNDEF32MODE : SVC26MODE,
-                  isize);
-        break;
-    case ARMul_SWIV:	/* Software Interrupt */
-        SETABORT (IBIT, state->prog32Sig ? SVC32MODE : SVC26MODE,
-                  isize);
-        break;
-    case ARMul_PrefetchAbortV:	/* Prefetch Abort */
-        state->AbortAddr = 1;
-        SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
-                  esize);
-        break;
-    case ARMul_DataAbortV:	/* Data Abort */
-        SETABORT (IBIT, state->prog32Sig ? ABORT32MODE : SVC26MODE,
-                  e2size);
-        break;
-    case ARMul_AddrExceptnV:	/* Address Exception */
-        SETABORT (IBIT, SVC26MODE, isize);
-        break;
-    case ARMul_IRQV:	/* IRQ */
-            SETABORT (IBIT,
-                      state->prog32Sig ? IRQ32MODE : IRQ26MODE,
-                      esize);
-        break;
-    case ARMul_FIQV:	/* FIQ */
-            SETABORT (INTBITS,
-                      state->prog32Sig ? FIQ32MODE : FIQ26MODE,
-                      esize);
-        break;
-    }
-
-    if (ARMul_MODE32BIT) {
-        /*if (state->mmu.control & CONTROL_VECTOR)
-          vector += 0xffff0000;	//for v4 high exception  address*/
-        if (state->vector_remap_flag)
-            vector += state->vector_remap_addr; /* support some remap function in LPC processor */
-        ARMul_SetR15 (state, vector);
-    } else
-        ARMul_SetR15 (state, R15CCINTMODE | vector);
 }

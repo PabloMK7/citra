@@ -34,10 +34,6 @@ enum {
     THUMB           = (1 << 7)
 };
 
-#undef BITS
-#undef BIT
-#define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
-#define BIT(s, n) ((s >> (n)) & 1)
 #define RM    BITS(sht_oper, 0, 3)
 #define RS    BITS(sht_oper, 8, 11)
 
