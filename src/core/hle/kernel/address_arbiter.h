@@ -34,7 +34,7 @@ public:
      * @param name Optional name used for debugging.
      * @returns The created AddressArbiter.
      */
-    static ResultVal<SharedPtr<AddressArbiter>> Create(std::string name = "Unknown");
+    static SharedPtr<AddressArbiter> Create(std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "Arbiter"; }
     std::string GetName() const override { return name; }

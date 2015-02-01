@@ -23,7 +23,7 @@ static void GetProcSemaphore(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
-    event_handle = Kernel::Event::Create(RESETTYPE_ONESHOT, "SRV:Event").MoveFrom();
+    event_handle = Kernel::Event::Create(RESETTYPE_ONESHOT, "SRV:Event");
     event_handle->Clear();
 
     cmd_buff[1] = 0; // No error

@@ -20,10 +20,8 @@ static Kernel::HandleTable timer_callback_handle_table;
 Timer::Timer() {}
 Timer::~Timer() {}
 
-ResultVal<SharedPtr<Timer>> Timer::Create(ResetType reset_type, std::string name) {
+SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
     SharedPtr<Timer> timer(new Timer);
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(timer));
 
     timer->reset_type = reset_type;
     timer->signaled = false;
@@ -31,7 +29,8 @@ ResultVal<SharedPtr<Timer>> Timer::Create(ResetType reset_type, std::string name
     timer->initial_delay = 0;
     timer->interval_delay = 0;
     timer->callback_handle = timer_callback_handle_table.Create(timer).MoveFrom();
-    return MakeResult<SharedPtr<Timer>>(timer);
+
+    return timer;
 }
 
 bool Timer::ShouldWait() {

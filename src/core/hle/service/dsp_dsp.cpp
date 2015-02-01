@@ -201,8 +201,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    semaphore_event = Kernel::Event::Create(RESETTYPE_ONESHOT,
-            "DSP_DSP::semaphore_event").MoveFrom();
+    semaphore_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "DSP_DSP::semaphore_event");
     interrupt_event = nullptr;
     read_pipe_count = 0;
 

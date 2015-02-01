@@ -69,8 +69,8 @@ void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
-    notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification").MoveFrom();
-    pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause").MoveFrom();
+    notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification");
+    pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause");
 
     cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(pause_event).MoveFrom();
@@ -512,13 +512,13 @@ Interface::Interface() {
         file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
 
         // Create shared font memory object
-        shared_font_mem = Kernel::SharedMemory::Create("APT_U:shared_font_mem").MoveFrom();
+        shared_font_mem = Kernel::SharedMemory::Create("APT_U:shared_font_mem");
     } else {
         LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
         shared_font_mem = nullptr;
     }
 
-    lock = Kernel::Mutex::Create(false, "APT_U:Lock").MoveFrom();
+    lock = Kernel::Mutex::Create(false, "APT_U:Lock");
 
     Register(FunctionTable);
 }

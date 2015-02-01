@@ -41,10 +41,8 @@ void ReleaseThreadMutexes(Thread* thread) {
 Mutex::Mutex() {}
 Mutex::~Mutex() {}
 
-ResultVal<SharedPtr<Mutex>> Mutex::Create(bool initial_locked, std::string name) {
+SharedPtr<Mutex> Mutex::Create(bool initial_locked, std::string name) {
     SharedPtr<Mutex> mutex(new Mutex);
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(mutex));
 
     mutex->initial_locked = initial_locked;
     mutex->locked = false;
@@ -55,7 +53,7 @@ ResultVal<SharedPtr<Mutex>> Mutex::Create(bool initial_locked, std::string name)
     if (initial_locked)
         mutex->Acquire();
 
-    return MakeResult<SharedPtr<Mutex>>(mutex);
+    return mutex;
 }
 
 bool Mutex::ShouldWait() {

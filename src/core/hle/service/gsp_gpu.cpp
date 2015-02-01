@@ -187,7 +187,7 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
     _assert_msg_(GSP, (g_interrupt_event != nullptr), "handle is not valid!");
-    g_shared_memory = Kernel::SharedMemory::Create("GSPSharedMem").MoveFrom();
+    g_shared_memory = Kernel::SharedMemory::Create("GSPSharedMem");
 
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 

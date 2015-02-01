@@ -29,7 +29,7 @@ public:
      * Creates a shared memory object
      * @param name Optional object name, used only for debugging purposes.
      */
-    static ResultVal<SharedPtr<SharedMemory>> Create(std::string name = "Unknown");
+    static SharedPtr<SharedMemory> Create(std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "SharedMemory"; }
 

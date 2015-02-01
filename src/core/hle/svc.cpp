@@ -261,7 +261,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
     using Kernel::AddressArbiter;
 
-    CASCADE_RESULT(SharedPtr<AddressArbiter> arbiter, AddressArbiter::Create());
+    SharedPtr<AddressArbiter> arbiter = AddressArbiter::Create();
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(arbiter)));
     LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *out_handle);
     return RESULT_SUCCESS;
@@ -366,7 +366,7 @@ static ResultCode SetThreadPriority(Handle handle, s32 priority) {
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
-    CASCADE_RESULT(SharedPtr<Mutex> mutex, Mutex::Create(initial_locked != 0));
+    SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
@@ -434,7 +434,9 @@ static ResultCode QueryMemory(void* info, void* out, u32 addr) {
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    CASCADE_RESULT(auto evt, Kernel::Event::Create(static_cast<ResetType>(reset_type)));
+    using Kernel::Event;
+
+    SharedPtr<Event> evt = Kernel::Event::Create(static_cast<ResetType>(reset_type));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
@@ -451,9 +453,10 @@ static ResultCode DuplicateHandle(Handle* out, Handle handle) {
 
 /// Signals an event
 static ResultCode SignalEvent(Handle handle) {
+    using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
-    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    SharedPtr<Event> evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
         return ERR_INVALID_HANDLE;
 
@@ -464,9 +467,10 @@ static ResultCode SignalEvent(Handle handle) {
 
 /// Clears an event
 static ResultCode ClearEvent(Handle handle) {
+    using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
-    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    SharedPtr<Event> evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
         return ERR_INVALID_HANDLE;
 
@@ -478,7 +482,7 @@ static ResultCode ClearEvent(Handle handle) {
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
-    CASCADE_RESULT(auto timer, Timer::Create(static_cast<ResetType>(reset_type)));
+    SharedPtr<Timer> timer = Timer::Create(static_cast<ResetType>(reset_type));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
@@ -552,7 +556,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     using Kernel::SharedMemory;
     // TODO(Subv): Implement this function
 
-    CASCADE_RESULT(auto shared_memory, SharedMemory::Create());
+    SharedPtr<SharedMemory> shared_memory = SharedMemory::Create();
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(shared_memory)));
 
     LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);

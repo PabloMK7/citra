@@ -368,14 +368,6 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     SharedPtr<Thread> thread(new Thread);
 
-    // TODO(yuriks): Thread requires a handle to be inserted into the various scheduling queues for
-    //               the time being. Create a handle here, it will be copied to the handle field in
-    //               the object and use by the rest of the code. This should be removed when other
-    //               code doesn't rely on the handle anymore.
-    ResultVal<Handle> handle = Kernel::g_handle_table.Create(thread);
-    if (handle.Failed())
-        return handle.Code();
-
     thread_list.push_back(thread);
     thread_ready_queue.prepare(priority);
 

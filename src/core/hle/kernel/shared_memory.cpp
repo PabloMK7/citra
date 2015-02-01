@@ -12,14 +12,12 @@ namespace Kernel {
 SharedMemory::SharedMemory() {}
 SharedMemory::~SharedMemory() {}
 
-ResultVal<SharedPtr<SharedMemory>> SharedMemory::Create(std::string name) {
+SharedPtr<SharedMemory> SharedMemory::Create(std::string name) {
     SharedPtr<SharedMemory> shared_memory(new SharedMemory);
 
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(shared_memory));
-
     shared_memory->name = std::move(name);
-    return MakeResult<SharedPtr<SharedMemory>>(std::move(shared_memory));
+
+    return shared_memory;
 }
 
 ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,

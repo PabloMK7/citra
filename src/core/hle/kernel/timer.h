@@ -19,7 +19,7 @@ public:
      * @param name Optional name of timer
      * @return The created Timer
      */
-    static ResultVal<SharedPtr<Timer>> Create(ResetType reset_type, std::string name = "Unknown");
+    static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "Timer"; }
     std::string GetName() const override { return name; }
