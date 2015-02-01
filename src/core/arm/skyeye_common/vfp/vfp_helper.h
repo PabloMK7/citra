@@ -43,7 +43,6 @@
 #define pr_info //printf
 #define pr_debug //printf
 
-static u32 fls(ARMword x);
 #define do_div(n, base) {n/=base;}
 
 /* From vfpinstr.h */
@@ -501,7 +500,7 @@ struct op {
 	u32 flags;
 };
 
-static u32 fls(ARMword x)
+static inline u32 fls(ARMword x)
 {
 	int r = 32;
 
