@@ -528,18 +528,48 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 auto params = registers.output_merger.alpha_blending;
 
                 auto LookupFactorRGB = [&](decltype(params)::BlendFactor factor) -> Math::Vec3<u8> {
-                    switch(factor) {
+                    switch (factor) {
                     case params.Zero:
                         return Math::Vec3<u8>(0, 0, 0);
 
                     case params.One:
                         return Math::Vec3<u8>(255, 255, 255);
 
+                    case params.SourceColor:
+                        return combiner_output.rgb();
+
+                    case params.OneMinusSourceColor:
+                        return Math::Vec3<u8>(255 - combiner_output.r(), 255 - combiner_output.g(), 255 - combiner_output.b());
+
+                    case params.DestColor:
+                        return dest.rgb();
+
+                    case params.OneMinusDestColor:
+                        return Math::Vec3<u8>(255 - dest.r(), 255 - dest.g(), 255 - dest.b());
+
                     case params.SourceAlpha:
-                        return Math::MakeVec(combiner_output.a(), combiner_output.a(), combiner_output.a());
+                        return Math::Vec3<u8>(combiner_output.a(), combiner_output.a(), combiner_output.a());
 
                     case params.OneMinusSourceAlpha:
-                        return Math::Vec3<u8>(255-combiner_output.a(), 255-combiner_output.a(), 255-combiner_output.a());
+                        return Math::Vec3<u8>(255 - combiner_output.a(), 255 - combiner_output.a(), 255 - combiner_output.a());
+
+                    case params.DestAlpha:
+                        return Math::Vec3<u8>(dest.a(), dest.a(), dest.a());
+
+                    case params.OneMinusDestAlpha:
+                        return Math::Vec3<u8>(255 - dest.a(), 255 - dest.a(), 255 - dest.a());
+
+                    case params.ConstantColor:
+                        return Math::Vec3<u8>(registers.output_merger.blend_const.r, registers.output_merger.blend_const.g, registers.output_merger.blend_const.b);
+
+                    case params.OneMinusConstantColor:
+                        return Math::Vec3<u8>(255 - registers.output_merger.blend_const.r, 255 - registers.output_merger.blend_const.g, 255 - registers.output_merger.blend_const.b);
+
+                    case params.ConstantAlpha:
+                        return Math::Vec3<u8>(registers.output_merger.blend_const.a, registers.output_merger.blend_const.a, registers.output_merger.blend_const.a);
+
+                    case params.OneMinusConstantAlpha:
+                        return Math::Vec3<u8>(255 - registers.output_merger.blend_const.a, 255 - registers.output_merger.blend_const.a, 255 - registers.output_merger.blend_const.a);
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
@@ -549,7 +579,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 };
 
                 auto LookupFactorA = [&](decltype(params)::BlendFactor factor) -> u8 {
-                    switch(factor) {
+                    switch (factor) {
                     case params.Zero:
                         return 0;
 
@@ -561,6 +591,18 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     case params.OneMinusSourceAlpha:
                         return 255 - combiner_output.a();
+
+                    case params.DestAlpha:
+                        return dest.a();
+
+                    case params.OneMinusDestAlpha:
+                        return 255 - dest.a();
+
+                    case params.ConstantAlpha:
+                        return registers.output_merger.blend_const.a;
+
+                    case params.OneMinusConstantAlpha:
+                        return 255 - registers.output_merger.blend_const.a;
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);

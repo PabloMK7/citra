@@ -332,11 +332,21 @@ struct Regs {
             };
 
             enum BlendFactor : u32 {
-                Zero = 0,
-                One = 1,
-
-                SourceAlpha = 6,
-                OneMinusSourceAlpha = 7,
+                Zero                    = 0,
+                One                     = 1,
+                SourceColor             = 2,
+                OneMinusSourceColor     = 3,
+                DestColor               = 4,
+                OneMinusDestColor       = 5,
+                SourceAlpha             = 6,
+                OneMinusSourceAlpha     = 7,
+                DestAlpha               = 8,
+                OneMinusDestAlpha       = 9,
+                ConstantColor           = 10,
+                OneMinusConstantColor   = 11,
+                ConstantAlpha           = 12,
+                OneMinusConstantAlpha   = 13,
+                SourceAlphaSaturate     = 14
             };
 
             BitField< 0, 8, BlendEquation> blend_equation_rgb;
@@ -357,7 +367,12 @@ struct Regs {
             BitField<0, 4, Op> op;
         } logic_op;
 
-        INSERT_PADDING_WORDS(0x1);
+        union {
+            BitField< 0, 8, u32> r;
+            BitField< 8, 8, u32> g;
+            BitField<16, 8, u32> b;
+            BitField<24, 8, u32> a;
+        } blend_const;
 
         union {
             BitField< 0, 1, u32> enable;
