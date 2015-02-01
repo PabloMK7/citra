@@ -252,7 +252,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
                     // TODO: Be stable against division by zero!
                     // TODO: I think this might be wrong... we should only use one component here
-                    dest[i] = float24::FromFloat32(1.0 / src1[i].ToFloat32());
+                    dest[i] = float24::FromFloat32(1.0f / src1[i].ToFloat32());
                 }
 
                 break;
@@ -267,7 +267,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
                     // TODO: Be stable against division by zero!
                     // TODO: I think this might be wrong... we should only use one component here
-                    dest[i] = float24::FromFloat32(1.0 / sqrt(src1[i].ToFloat32()));
+                    dest[i] = float24::FromFloat32(1.0f / sqrt(src1[i].ToFloat32()));
                 }
 
                 break;

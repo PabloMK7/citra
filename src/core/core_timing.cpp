@@ -459,7 +459,7 @@ void MoveEvents() {
 }
 
 void ForceCheck() {
-    int cycles_executed = g_slice_length - Core::g_app_core->down_count;
+    s64 cycles_executed = g_slice_length - Core::g_app_core->down_count;
     global_timer += cycles_executed;
     // This will cause us to check for new events immediately.
     Core::g_app_core->down_count = 0;
@@ -468,7 +468,7 @@ void ForceCheck() {
 }
 
 void Advance() {
-    int cycles_executed = g_slice_length - Core::g_app_core->down_count;
+    s64 cycles_executed = g_slice_length - Core::g_app_core->down_count;
     global_timer += cycles_executed;
     Core::g_app_core->down_count = g_slice_length;
 
@@ -504,13 +504,13 @@ void LogPendingEvents() {
 }
 
 void Idle(int max_idle) {
-    int cycles_down = Core::g_app_core->down_count;
+    s64 cycles_down = Core::g_app_core->down_count;
     if (max_idle != 0 && cycles_down > max_idle)
         cycles_down = max_idle;
 
     if (first && cycles_down > 0) {
-        int cycles_executed = g_slice_length - Core::g_app_core->down_count;
-        int cycles_next_event = (int)(first->time - global_timer);
+        s64 cycles_executed = g_slice_length - Core::g_app_core->down_count;
+        s64 cycles_next_event = first->time - global_timer;
 
         if (cycles_next_event < cycles_executed + cycles_down) {
             cycles_down = cycles_next_event - cycles_executed;

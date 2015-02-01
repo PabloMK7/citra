@@ -86,8 +86,10 @@ static const char* GetFileTypeString(FileType type) {
         return "raw";
     case FileType::Error:
     case FileType::Unknown:
-        return "unknown";
+        break;
     }
+
+    return "unknown";
 }
 
 ResultStatus LoadFile(const std::string& filename) {

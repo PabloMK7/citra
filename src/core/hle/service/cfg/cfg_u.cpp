@@ -85,7 +85,7 @@ static void GetCountryCodeID(Service::Interface* self) {
     // The following algorithm will fail if the first country code isn't 0.
     DEBUG_ASSERT(country_codes[0] == 0);
 
-    for (size_t id = 0; id < country_codes.size(); ++id) {
+    for (u16 id = 0; id < country_codes.size(); ++id) {
         if (country_codes[id] == country_code) {
             country_code_id = id;
             break;

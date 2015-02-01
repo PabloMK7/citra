@@ -64,7 +64,7 @@ public:
         memcpy(&cmd, command_data, sizeof(GSP_GPU::Command));
 
         ForEachObserver([this](DebuggerObserver* observer) {
-                          observer->GXCommandProcessed(this->gx_command_history.size());
+                          observer->GXCommandProcessed(static_cast<int>(this->gx_command_history.size()));
                         } );
     }
 

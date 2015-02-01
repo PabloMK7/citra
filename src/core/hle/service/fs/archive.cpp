@@ -87,8 +87,8 @@ ResultVal<bool> File::SyncRequest() {
             u32 length = cmd_buff[3];
             u32 address = cmd_buff[5];
             LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
-                GetTypeName().c_str(), GetName().c_str(), offset, length, address);
-            cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
+                      GetTypeName().c_str(), GetName().c_str(), offset, length, address);
+            cmd_buff[2] = static_cast<u32>(backend->Read(offset, length, Memory::GetPointer(address)));
             break;
         }
 
@@ -100,8 +100,8 @@ ResultVal<bool> File::SyncRequest() {
             u32 flush = cmd_buff[4];
             u32 address = cmd_buff[6];
             LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
-                GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
-            cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
+                      GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
+            cmd_buff[2] = static_cast<u32>(backend->Write(offset, length, flush, Memory::GetPointer(address)));
             break;
         }
 
