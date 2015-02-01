@@ -27,7 +27,6 @@ pad_sleft =
 pad_sright =
 
 [Core]
-cpu_core = ## 0: Interpreter (default), 1: OldInterpreter (may work better, soon to be deprecated)
 gpu_refresh_rate = ## 30 (default)
 frame_skip = ## 0: No frameskip (default), 1 : 2x frameskip, 2 : 4x frameskip, etc.
 

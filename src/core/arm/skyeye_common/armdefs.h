@@ -32,6 +32,9 @@
 #include "core/arm/skyeye_common/armmmu.h"
 #include "core/arm/skyeye_common/skyeye_defs.h"
 
+#define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
+#define BIT(s, n) ((s >> (n)) & 1)
+
 #ifndef FALSE
 #define FALSE 0
 #define TRUE 1
@@ -287,15 +290,6 @@ enum {
     ARM620  = ARM6
 };
 
-
-/***************************************************************************\
-*                   Macros to extract instruction fields                    *
-\***************************************************************************/
-
-#define BIT(n) ( (ARMword)(instr>>(n))&1)    /* bit n of instruction */
-#define BITS(m,n) ( (ARMword)(instr<<(31-(n))) >> ((31-(n))+(m)) )    /* bits m to n of instr */
-#define TOPBITS(n) (instr >> (n))    /* bits 31 to n of instr */
-
 /***************************************************************************\
 *                      The hardware vector addresses                        *
 \***************************************************************************/
@@ -339,13 +333,6 @@ enum {
     SYSTEM32MODE = 31
 };
 
-#define ARM32BITMODE (state->Mode > 3)
-#define ARM26BITMODE (state->Mode <= 3)
-#define ARMMODE (state->Mode)
-#define ARMul_MODEBITS 0x1fL
-#define ARMul_MODE32BIT ARM32BITMODE
-#define ARMul_MODE26BIT ARM26BITMODE
-
 enum {
     USERBANK   = 0,
     FIQBANK    = 1,
@@ -356,10 +343,6 @@ enum {
     DUMMYBANK  = 6,
     SYSTEMBANK = USERBANK
 };
-
-#define BANK_CAN_ACCESS_SPSR(bank)  \
-  ((bank) != USERBANK && (bank) != SYSTEMBANK && (bank) != DUMMYBANK)
-
 
 /***************************************************************************\
 *                  Definitons of things in the emulator                     *
@@ -372,85 +355,7 @@ extern void ARMul_Reset(ARMul_State* state);
 #ifdef __cplusplus
     }
 #endif
-extern ARMul_State *ARMul_NewState(ARMul_State* state);
-extern ARMword ARMul_DoProg(ARMul_State* state);
-extern ARMword ARMul_DoInstr(ARMul_State* state);
-
-/***************************************************************************\
-*                          Useful support routines                          *
-\***************************************************************************/
-
-extern ARMword ARMul_GetReg (ARMul_State* state, unsigned mode, unsigned reg);
-extern void ARMul_SetReg (ARMul_State* state, unsigned mode, unsigned reg, ARMword value);
-extern ARMword ARMul_GetPC(ARMul_State* state);
-extern ARMword ARMul_GetNextPC(ARMul_State* state);
-extern void ARMul_SetPC(ARMul_State* state, ARMword value);
-extern ARMword ARMul_GetR15(ARMul_State* state);
-extern void ARMul_SetR15(ARMul_State* state, ARMword value);
-
-extern ARMword ARMul_GetCPSR(ARMul_State* state);
-extern void ARMul_SetCPSR(ARMul_State* state, ARMword value);
-extern ARMword ARMul_GetSPSR(ARMul_State* state, ARMword mode);
-extern void ARMul_SetSPSR(ARMul_State* state, ARMword mode, ARMword value);
-
-/***************************************************************************\
-*                  Definitons of things to handle aborts                    *
-\***************************************************************************/
-
-extern void ARMul_Abort(ARMul_State* state, ARMword address);
-#ifdef MODET
-#define ARMul_ABORTWORD (state->TFlag ? 0xefffdfff : 0xefffffff)    /* SWI -1 */
-#define ARMul_PREFETCHABORT(address) if (state->AbortAddr == 1) \
-                                        state->AbortAddr = (address & (state->TFlag ? ~1L : ~3L))
-#else
-#define ARMul_ABORTWORD 0xefffffff    /* SWI -1 */
-#define ARMul_PREFETCHABORT(address) if (state->AbortAddr == 1) \
-                                        state->AbortAddr = (address & ~3L)
-#endif
-#define ARMul_DATAABORT(address) state->abortSig = HIGH ; \
-                                 state->Aborted = ARMul_DataAbortV ;
-#define ARMul_CLEARABORT state->abortSig = LOW
-
-/***************************************************************************\
-*              Definitons of things in the memory interface                 *
-\***************************************************************************/
-
-extern unsigned ARMul_MemoryInit(ARMul_State* state, unsigned int initmemsize);
-extern void ARMul_MemoryExit(ARMul_State* state);
-
-extern ARMword ARMul_LoadInstrS(ARMul_State* state, ARMword address, ARMword isize);
-extern ARMword ARMul_LoadInstrN(ARMul_State* state, ARMword address, ARMword isize);
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern ARMword ARMul_ReLoadInstr(ARMul_State* state, ARMword address, ARMword isize);
-#ifdef __cplusplus
-    }
-#endif
-extern ARMword ARMul_LoadWordS(ARMul_State* state, ARMword address);
-extern ARMword ARMul_LoadWordN(ARMul_State* state, ARMword address);
-extern ARMword ARMul_LoadHalfWord(ARMul_State* state, ARMword address);
-extern ARMword ARMul_LoadByte(ARMul_State* state, ARMword address);
-
-extern void ARMul_StoreWordS(ARMul_State* state, ARMword address, ARMword data);
-extern void ARMul_StoreWordN(ARMul_State* state, ARMword address, ARMword data);
-extern void ARMul_StoreHalfWord(ARMul_State* state, ARMword address, ARMword data);
-extern void ARMul_StoreByte(ARMul_State* state, ARMword address, ARMword data);
-
-extern ARMword ARMul_SwapWord(ARMul_State* state, ARMword address, ARMword data);
-extern ARMword ARMul_SwapByte(ARMul_State* state, ARMword address, ARMword data);
-
-extern void ARMul_Icycles(ARMul_State* state, unsigned number, ARMword address);
-extern void ARMul_Ccycles(ARMul_State* state, unsigned number, ARMword address);
-
-extern ARMword ARMul_ReadWord(ARMul_State* state, ARMword address);
-extern ARMword ARMul_ReadByte(ARMul_State* state, ARMword address);
-extern void ARMul_WriteWord(ARMul_State* state, ARMword address, ARMword data);
-extern void ARMul_WriteByte(ARMul_State* state, ARMword address, ARMword data);
-
-extern ARMword ARMul_MemAccess(ARMul_State* state, ARMword, ARMword,
-                ARMword, ARMword, ARMword, ARMword, ARMword,
-                ARMword, ARMword, ARMword);
+extern ARMul_State* ARMul_NewState(ARMul_State* state);
 
 /***************************************************************************\
 *            Definitons of things in the co-processor interface             *
@@ -495,36 +400,9 @@ enum {
     ARMul_CP15_DBCON_E0     = 0x0003
 };
 
-extern unsigned ARMul_CoProInit(ARMul_State* state);
-extern void ARMul_CoProExit(ARMul_State* state);
-extern void ARMul_CoProAttach (ARMul_State* state, unsigned number,
-                   ARMul_CPInits* init, ARMul_CPExits* exit,
-                   ARMul_LDCs* ldc, ARMul_STCs* stc,
-                   ARMul_MRCs* mrc, ARMul_MCRs* mcr,
-                   ARMul_MRRCs* mrrc, ARMul_MCRRs* mcrr,
-                   ARMul_CDPs* cdp,
-                   ARMul_CPReads* read, ARMul_CPWrites* write);
-extern void ARMul_CoProDetach(ARMul_State* state, unsigned number);
-
 /***************************************************************************\
 *               Definitons of things in the host environment                *
 \***************************************************************************/
-
-extern unsigned ARMul_OSInit(ARMul_State* state);
-extern void ARMul_OSExit(ARMul_State* state);
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-
-extern unsigned ARMul_OSHandleSWI(ARMul_State* state, ARMword number);
-#ifdef __cplusplus
-}
-#endif
-
-extern ARMword ARMul_OSLastErrorP(ARMul_State* state);
-extern ARMword ARMul_Debug(ARMul_State* state, ARMword pc, ARMword instr);
-extern unsigned ARMul_OSException(ARMul_State* state, ARMword vector, ARMword pc);
 
 enum ConditionCode {
     EQ = 0,
@@ -545,40 +423,9 @@ enum ConditionCode {
     NV = 15,
 };
 
-#ifndef NFLAG
-#define NFLAG    state->NFlag
-#endif //NFLAG
-
-#ifndef ZFLAG
-#define ZFLAG    state->ZFlag
-#endif //ZFLAG
-
-#ifndef CFLAG
-#define CFLAG    state->CFlag
-#endif //CFLAG
-
-#ifndef VFLAG
-#define VFLAG    state->VFlag
-#endif //VFLAG
-
-#ifndef IFLAG
-#define IFLAG    (state->IFFlags >> 1)
-#endif //IFLAG
-
-#ifndef FFLAG
-#define FFLAG    (state->IFFlags & 1)
-#endif //FFLAG
-
-#ifndef IFFLAGS
-#define IFFLAGS    state->IFFlags
-#endif //VFLAG
-
 extern bool AddOverflow(ARMword, ARMword, ARMword);
 extern bool SubOverflow(ARMword, ARMword, ARMword);
 
-extern void ARMul_UndefInstr(ARMul_State*, ARMword);
-extern void ARMul_FixCPSR(ARMul_State*, ARMword, ARMword);
-extern void ARMul_FixSPSR(ARMul_State*, ARMword, ARMword);
 extern void ARMul_SelectProcessor(ARMul_State*, unsigned);
 
 extern u32 AddWithCarry(u32, u32, u32, bool*, bool*);

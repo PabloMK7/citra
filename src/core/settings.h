@@ -29,7 +29,6 @@ struct Values {
     int pad_sright_key;
 
     // Core
-    int cpu_core;
     int gpu_refresh_rate;
     int frame_skip;
 

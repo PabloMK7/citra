@@ -43,12 +43,12 @@ unsigned VFPInit(ARMul_State* state)
 unsigned VFPMRC(ARMul_State* state, unsigned type, u32 instr, u32* value)
 {
     /* MRC<c> <coproc>,<opc1>,<Rt>,<CRn>,<CRm>{,<opc2>} */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int OPC_1 = BITS (21, 23);
-    int Rt = BITS (12, 15);
-    int CRn = BITS (16, 19);
-    int CRm = BITS (0, 3);
-    int OPC_2 = BITS (5, 7);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int OPC_1 = BITS(instr, 21, 23);
+    int Rt = BITS(instr, 12, 15);
+    int CRn = BITS(instr, 16, 19);
+    int CRm = BITS(instr, 0, 3);
+    int OPC_2 = BITS(instr, 5, 7);
 
     /* TODO check access permission */
 
@@ -60,7 +60,7 @@ unsigned VFPMRC(ARMul_State* state, unsigned type, u32 instr, u32* value)
         {
             /* VMOV r to s */
             /* Transfering Rt is not mandatory, as the value of interest is pointed by value */
-            VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, value);
+            VMOVBRS(state, BIT(instr, 20), Rt, BIT(instr, 7)|CRn<<1, value);
             return ARMul_DONE;
         }
 
@@ -79,12 +79,12 @@ unsigned VFPMRC(ARMul_State* state, unsigned type, u32 instr, u32* value)
 unsigned VFPMCR(ARMul_State* state, unsigned type, u32 instr, u32 value)
 {
     /* MCR<c> <coproc>,<opc1>,<Rt>,<CRn>,<CRm>{,<opc2>} */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int OPC_1 = BITS (21, 23);
-    int Rt = BITS (12, 15);
-    int CRn = BITS (16, 19);
-    int CRm = BITS (0, 3);
-    int OPC_2 = BITS (5, 7);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int OPC_1 = BITS(instr, 21, 23);
+    int Rt = BITS(instr, 12, 15);
+    int CRn = BITS(instr, 16, 19);
+    int CRm = BITS(instr, 0, 3);
+    int OPC_2 = BITS(instr, 5, 7);
 
     /* TODO check access permission */
 
@@ -95,7 +95,7 @@ unsigned VFPMCR(ARMul_State* state, unsigned type, u32 instr, u32 value)
         {
             /* VMOV s to r */
             /* Transfering Rt is not mandatory, as the value of interest is pointed by value */
-            VMOVBRS(state, BIT(20), Rt, BIT(7)|CRn<<1, &value);
+            VMOVBRS(state, BIT(instr, 20), Rt, BIT(instr, 7)|CRn<<1, &value);
             return ARMul_DONE;
         }
 
@@ -126,24 +126,24 @@ unsigned VFPMCR(ARMul_State* state, unsigned type, u32 instr, u32 value)
 unsigned VFPMRRC(ARMul_State* state, unsigned type, u32 instr, u32* value1, u32* value2)
 {
     /* MCRR<c> <coproc>,<opc1>,<Rt>,<Rt2>,<CRm> */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int OPC_1 = BITS (4, 7);
-    int Rt = BITS (12, 15);
-    int Rt2 = BITS (16, 19);
-    int CRm = BITS (0, 3);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int OPC_1 = BITS(instr, 4, 7);
+    int Rt = BITS(instr, 12, 15);
+    int Rt2 = BITS(instr, 16, 19);
+    int CRm = BITS(instr, 0, 3);
 
     if (CoProc == 10 || CoProc == 11)
     {
         if (CoProc == 10 && (OPC_1 & 0xD) == 1)
         {
-            VMOVBRRSS(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, value1, value2);
+            VMOVBRRSS(state, BIT(instr, 20), Rt, Rt2, BIT(instr, 5)<<4|CRm, value1, value2);
             return ARMul_DONE;
         }
 
         if (CoProc == 11 && (OPC_1 & 0xD) == 1)
         {
             /* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
-            VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, value1, value2);
+            VMOVBRRD(state, BIT(instr, 20), Rt, Rt2, BIT(instr, 5)<<4|CRm, value1, value2);
             return ARMul_DONE;
         }
     }
@@ -156,11 +156,11 @@ unsigned VFPMRRC(ARMul_State* state, unsigned type, u32 instr, u32* value1, u32*
 unsigned VFPMCRR(ARMul_State* state, unsigned type, u32 instr, u32 value1, u32 value2)
 {
     /* MCRR<c> <coproc>,<opc1>,<Rt>,<Rt2>,<CRm> */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int OPC_1 = BITS (4, 7);
-    int Rt = BITS (12, 15);
-    int Rt2 = BITS (16, 19);
-    int CRm = BITS (0, 3);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int OPC_1 = BITS(instr, 4, 7);
+    int Rt = BITS(instr, 12, 15);
+    int Rt2 = BITS(instr, 16, 19);
+    int CRm = BITS(instr, 0, 3);
 
     /* TODO check access permission */
 
@@ -170,14 +170,14 @@ unsigned VFPMCRR(ARMul_State* state, unsigned type, u32 instr, u32 value1, u32 v
     {
         if (CoProc == 10 && (OPC_1 & 0xD) == 1)
         {
-            VMOVBRRSS(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, &value1, &value2);
+            VMOVBRRSS(state, BIT(instr, 20), Rt, Rt2, BIT(instr, 5)<<4|CRm, &value1, &value2);
             return ARMul_DONE;
         }
 
         if (CoProc == 11 && (OPC_1 & 0xD) == 1)
         {
             /* Transfering Rt and Rt2 is not mandatory, as the value of interest is pointed by value1 and value2 */
-            VMOVBRRD(state, BIT(20), Rt, Rt2, BIT(5)<<4|CRm, &value1, &value2);
+            VMOVBRRD(state, BIT(instr, 20), Rt, Rt2, BIT(instr, 5)<<4|CRm, &value1, &value2);
             return ARMul_DONE;
         }
     }
@@ -190,14 +190,14 @@ unsigned VFPMCRR(ARMul_State* state, unsigned type, u32 instr, u32 value1, u32 v
 unsigned VFPSTC(ARMul_State* state, unsigned type, u32 instr, u32 * value)
 {
     /* STC{L}<c> <coproc>,<CRd>,[<Rn>],<option> */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int CRd = BITS (12, 15);
-    int Rn = BITS (16, 19);
-    int imm8 = BITS (0, 7);
-    int P = BIT(24);
-    int U = BIT(23);
-    int D = BIT(22);
-    int W = BIT(21);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int CRd = BITS(instr, 12, 15);
+    int Rn = BITS(instr, 16, 19);
+    int imm8 = BITS(instr, 0, 7);
+    int P = BIT(instr, 24);
+    int U = BIT(instr, 23);
+    int D = BIT(instr, 22);
+    int W = BIT(instr, 21);
 
     /* TODO check access permission */
 
@@ -239,14 +239,14 @@ unsigned VFPSTC(ARMul_State* state, unsigned type, u32 instr, u32 * value)
 unsigned VFPLDC(ARMul_State* state, unsigned type, u32 instr, u32 value)
 {
     /* LDC{L}<c> <coproc>,<CRd>,[<Rn>] */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int CRd = BITS (12, 15);
-    int Rn = BITS (16, 19);
-    int imm8 = BITS (0, 7);
-    int P = BIT(24);
-    int U = BIT(23);
-    int D = BIT(22);
-    int W = BIT(21);
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int CRd = BITS(instr, 12, 15);
+    int Rn = BITS(instr, 16, 19);
+    int imm8 = BITS(instr, 0, 7);
+    int P = BIT(instr, 24);
+    int U = BIT(instr, 23);
+    int D = BIT(instr, 22);
+    int W = BIT(instr, 21);
 
     /* TODO check access permission */
 
@@ -277,57 +277,12 @@ unsigned VFPLDC(ARMul_State* state, unsigned type, u32 instr, u32 value)
 unsigned VFPCDP(ARMul_State* state, unsigned type, u32 instr)
 {
     /* CDP<c> <coproc>,<opc1>,<CRd>,<CRn>,<CRm>,<opc2> */
-    int CoProc = BITS (8, 11); /* 10 or 11 */
-    int OPC_1 = BITS (20, 23);
-    int CRd = BITS (12, 15);
-    int CRn = BITS (16, 19);
-    int CRm = BITS (0, 3);
-    int OPC_2 = BITS (5, 7);
-
-    //ichfly
-    /*if ((instr & 0x0FBF0FD0) == 0x0EB70AC0) //vcvt.f64.f32	d8, s16 (s is bit 0-3 and LSB bit 22) (d is bit 12 - 15 MSB is Bit 6)
-    {
-        struct vfp_double vdd;
-        struct vfp_single vsd;
-        int dn = BITS(12, 15) + (BIT(22) << 4);
-        int sd = (BITS(0, 3) << 1) + BIT(5);
-        s32 n = vfp_get_float(state, sd);
-        vfp_single_unpack(&vsd, n);
-        if (vsd.exponent & 0x80)
-        {
-            vdd.exponent = (vsd.exponent&~0x80) | 0x400;
-        }
-        else
-        {
-            vdd.exponent = vsd.exponent | 0x380;
-        }
-        vdd.sign = vsd.sign;
-        vdd.significand = (u64)(vsd.significand & ~0xC0000000) << 32; // I have no idea why but the 2 uppern bits are not from the significand
-        vfp_put_double(state, vfp_double_pack(&vdd), dn);
-        return ARMul_DONE;
-    }
-    if ((instr & 0x0FBF0FD0) == 0x0EB70BC0) //vcvt.f32.f64	s15, d6
-    {
-        struct vfp_double vdd;
-        struct vfp_single vsd;
-        int sd = BITS(0, 3) + (BIT(5) << 4);
-        int dn = (BITS(12, 15) << 1) + BIT(22);
-        vfp_double_unpack(&vdd, vfp_get_double(state, sd));
-        if (vdd.exponent & 0x400) //todo if the exponent is to low or to high for this convert
-        {
-            vsd.exponent = (vdd.exponent) | 0x80;
-        }
-        else
-        {
-            vsd.exponent = vdd.exponent & ~0x80;
-        }
-        vsd.exponent &= 0xFF;
-       // vsd.exponent = vdd.exponent >> 3;
-        vsd.sign = vdd.sign;
-        vsd.significand = ((u64)(vdd.significand ) >> 32)& ~0xC0000000;
-        vfp_put_float(state, vfp_single_pack(&vsd), dn);
-        return ARMul_DONE;
-    }*/
+    int CoProc = BITS(instr, 8, 11); /* 10 or 11 */
+    int OPC_1 = BITS(instr, 20, 23);
+    int CRd = BITS(instr, 12, 15);
+    int CRn = BITS(instr, 16, 19);
+    int CRm = BITS(instr, 0, 3);
+    int OPC_2 = BITS(instr, 5, 7);
 
     /* TODO check access permission */
 
@@ -335,17 +290,17 @@ unsigned VFPCDP(ARMul_State* state, unsigned type, u32 instr)
 
     if (CoProc == 10 || CoProc == 11)
     {
-        if ((OPC_1 & 0xB) == 0xB && BITS(4, 7) == 0)
+        if ((OPC_1 & 0xB) == 0xB && BITS(instr, 4, 7) == 0)
         {
-            unsigned int single   = BIT(8) == 0;
-            unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
+            unsigned int single = BIT(instr, 8) == 0;
+            unsigned int d      = (single ? BITS(instr, 12,15)<<1 | BIT(instr, 22) : BITS(instr, 12,15) | BIT(instr, 22)<<4);
             unsigned int imm;
-            instr = BITS(16, 19) << 4 | BITS(0, 3); /* FIXME dirty workaround to get a correct imm */
+            instr = BITS(instr, 16, 19) << 4 | BITS(instr, 0, 3); // FIXME dirty workaround to get a correct imm
 
             if (single)
-                imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0x1f : 0)<<25 | BITS(0, 5)<<19;
+                imm = BIT(instr, 7)<<31 | (BIT(instr, 6)==0)<<30 | (BIT(instr, 6) ? 0x1f : 0)<<25 | BITS(instr, 0, 5)<<19;
             else
-                imm = BIT(7)<<31 | (BIT(6)==0)<<30 | (BIT(6) ? 0xff : 0)<<22 | BITS(0, 5)<<16;
+                imm = BIT(instr, 7)<<31 | (BIT(instr, 6)==0)<<30 | (BIT(instr, 6) ? 0xff : 0)<<22 | BITS(instr, 0, 5)<<16;
 
             VMOVI(state, single, d, imm);
             return ARMul_DONE;
@@ -353,9 +308,9 @@ unsigned VFPCDP(ARMul_State* state, unsigned type, u32 instr)
 
         if ((OPC_1 & 0xB) == 0xB && CRn == 0 && (OPC_2 & 0x6) == 0x2)
         {
-            unsigned int single   = BIT(8) == 0;
-            unsigned int d        = (single ? BITS(12,15)<<1 | BIT(22) : BITS(12,15) | BIT(22)<<4);
-            unsigned int m        = (single ? BITS( 0, 3)<<1 | BIT( 5) : BITS( 0, 3) | BIT( 5)<<4);;
+            unsigned int single = BIT(instr, 8) == 0;
+            unsigned int d      = (single ? BITS(instr, 12,15)<<1 | BIT(instr, 22) : BITS(instr, 12,15) | BIT(instr, 22)<<4);
+            unsigned int m      = (single ? BITS(instr,  0, 3)<<1 | BIT(instr,  5) : BITS(instr,  0, 3) | BIT(instr, 5)<<4);
             VMOVR(state, single, d, m);
             return ARMul_DONE;
         }
@@ -477,11 +432,11 @@ int VSTR(ARMul_State* state, int type, ARMword instr, ARMword* value)
     static int single_reg, add, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_reg = BIT(8) == 0;	/* Double precision */
-        add = BIT(23);		/* */
-        imm32 = BITS(0,7)<<2;	/* may not be used */
-        d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        n = BITS(16, 19);	/* destination register */
+        single_reg = BIT(instr, 8) == 0; // Double precision
+        add = BIT(instr, 23);
+        imm32 = BITS(instr, 0,7)<<2; // may not be used
+        d = single_reg ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); /* Base register */
+        n = BITS(instr, 16, 19); // destination register
 
         i = 0;
         regs = 1;
@@ -519,10 +474,10 @@ int VPUSH(ARMul_State* state, int type, ARMword instr, ARMword* value)
     static int single_regs, add, wback, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_regs = BIT(8) == 0;	/* Single precision */
-        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        imm32 = BITS(0,7)<<2;	/* may not be used */
-        regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FSTMX if regs is odd */
+        single_regs = BIT(instr, 8) == 0; // Single precision
+        d = single_regs ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); // Base register
+        imm32 = BITS(instr, 0,7)<<2; // may not be used
+        regs = single_regs ? BITS(instr, 0, 7) : BITS(instr, 1, 7); // FSTMX if regs is odd
 
         state->Reg[R13] = state->Reg[R13] - imm32;
 
@@ -561,13 +516,13 @@ int VSTM(ARMul_State* state, int type, ARMword instr, ARMword* value)
     static int single_regs, add, wback, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_regs = BIT(8) == 0;	/* Single precision */
-        add = BIT(23);		/* */
-        wback = BIT(21);	/* write-back */
-        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        n = BITS(16, 19);	/* destination register */
-        imm32 = BITS(0,7) * 4;	/* may not be used */
-        regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FSTMX if regs is odd */
+        single_regs = BIT(instr, 8) == 0; // Single precision
+        add = BIT(instr, 23);
+        wback = BIT(instr, 21); // write-back
+        d = single_regs ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); // Base register
+        n = BITS(instr, 16, 19); // destination register
+        imm32 = BITS(instr, 0,7) * 4; // may not be used
+        regs = single_regs ? BITS(instr, 0, 7) : BITS(instr, 0, 7)>>1; // FSTMX if regs is odd
 
         if (wback) {
             state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
@@ -610,10 +565,10 @@ int VPOP(ARMul_State* state, int type, ARMword instr, ARMword value)
     static int single_regs, add, wback, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_regs = BIT(8) == 0;	/* Single precision */
-        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        imm32 = BITS(0,7)<<2;	/* may not be used */
-        regs = single_regs ? BITS(0, 7) : BITS(1, 7); /* FLDMX if regs is odd */
+        single_regs = BIT(instr, 8) == 0; // Single precision
+        d = single_regs ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); // Base register
+        imm32 = BITS(instr, 0, 7)<<2; // may not be used
+        regs = single_regs ? BITS(instr, 0, 7) : BITS(instr, 1, 7); // FLDMX if regs is odd
 
         state->Reg[R13] = state->Reg[R13] + imm32;
 
@@ -656,11 +611,11 @@ int VLDR(ARMul_State* state, int type, ARMword instr, ARMword value)
     static int single_reg, add, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_reg = BIT(8) == 0;	/* Double precision */
-        add = BIT(23);		/* */
-        imm32 = BITS(0,7)<<2;	/* may not be used */
-        d = single_reg ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        n = BITS(16, 19);	/* destination register */
+        single_reg = BIT(instr, 8) == 0; // Double precision
+        add = BIT(instr, 23);
+        imm32 = BITS(instr, 0, 7)<<2; // may not be used
+        d = single_reg ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); // Base register
+        n = BITS(instr, 16, 19); // destination register
 
         i = 0;
         regs = 1;
@@ -702,13 +657,13 @@ int VLDM(ARMul_State* state, int type, ARMword instr, ARMword value)
     static int single_regs, add, wback, d, n, imm32, regs;
     if (type == ARMul_FIRST)
     {
-        single_regs = BIT(8) == 0;	/* Single precision */
-        add = BIT(23);		/* */
-        wback = BIT(21);	/* write-back */
-        d = single_regs ? BITS(12, 15)<<1|BIT(22) : BIT(22)<<4|BITS(12, 15); /* Base register */
-        n = BITS(16, 19);	/* destination register */
-        imm32 = BITS(0,7) * 4;	/* may not be used */
-        regs = single_regs ? BITS(0, 7) : BITS(0, 7)>>1; /* FLDMX if regs is odd */
+        single_regs = BIT(instr, 8) == 0; // Single precision
+        add = BIT(instr, 23);
+        wback = BIT(instr, 21); // write-back
+        d = single_regs ? BITS(instr, 12, 15)<<1|BIT(instr, 22) : BIT(instr, 22)<<4|BITS(instr, 12, 15); // Base register
+        n = BITS(instr, 16, 19); // destination register
+        imm32 = BITS(instr, 0, 7) * 4; // may not be used
+        regs = single_regs ? BITS(instr, 0, 7) : BITS(instr, 0, 7)>>1; // FLDMX if regs is odd
 
         if (wback) {
             state->Reg[n] = (add ? state->Reg[n] + imm32 : state->Reg[n] - imm32);
@@ -787,8 +742,7 @@ void vfp_put_float(arm_core_t* state, int32_t val, unsigned int reg)
 
 uint64_t vfp_get_double(arm_core_t* state, unsigned int reg)
 {
-    uint64_t result;
-    result = ((uint64_t) state->ExtReg[reg*2+1])<<32 | state->ExtReg[reg*2];
+    uint64_t result = ((uint64_t) state->ExtReg[reg*2+1])<<32 | state->ExtReg[reg*2];
     LOG_TRACE(Core_ARM11, "VFP get double: s[%d-%d]=[%016llx]\n", reg * 2 + 1, reg * 2, result);
     return result;
 }

@@ -10,7 +10,6 @@
 #include "core/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"
-#include "core/arm/interpreter/arm_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
@@ -59,17 +58,8 @@ void Stop() {
 int Init() {
     LOG_DEBUG(Core, "initialized OK");
 
-    g_sys_core = new ARM_Interpreter();
-
-    switch (Settings::values.cpu_core) {
-        case CPU_Interpreter:
-            g_app_core = new ARM_DynCom();
-            break;
-        case CPU_OldInterpreter:
-        default:
-            g_app_core = new ARM_Interpreter();
-            break;
-    }
+    g_sys_core = new ARM_DynCom();
+    g_app_core = new ARM_DynCom();
 
     return 0;
 }
