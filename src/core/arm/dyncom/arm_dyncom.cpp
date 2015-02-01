@@ -36,9 +36,8 @@ ARM_DynCom::ARM_DynCom() {
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = 3;
 
-    state->pc = state->Reg[15] = 0x00000000;
+    state->Reg[15] = 0x00000000;
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
-    state->servaddr = 0xFFFF0000;
     state->NirqSig = HIGH;
 
     VFPInit(state.get()); // Initialize the VFP
@@ -50,7 +49,7 @@ ARM_DynCom::~ARM_DynCom() {
 }
 
 void ARM_DynCom::SetPC(u32 pc) {
-    state->pc = state->Reg[15] = pc;
+    state->Reg[15] = pc;
 }
 
 u32 ARM_DynCom::GetPC() const {
@@ -106,7 +105,6 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     ctx.fpscr = state->VFP[1];
     ctx.fpexc = state->VFP[2];
 
-    ctx.reg_15 = state->Reg[15];
     ctx.mode = state->NextInstr;
 }
 
@@ -116,13 +114,12 @@ void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
 
     state->Reg[13] = ctx.sp;
     state->Reg[14] = ctx.lr;
-    state->pc = ctx.pc;
+    state->Reg[15] = ctx.pc;
     state->Cpsr = ctx.cpsr;
 
     state->VFP[1] = ctx.fpscr;
     state->VFP[2] = ctx.fpexc;
 
-    state->Reg[15] = ctx.reg_15;
     state->NextInstr = ctx.mode;
 }
 
