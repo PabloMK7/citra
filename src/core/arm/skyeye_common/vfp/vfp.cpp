@@ -471,7 +471,7 @@ int VSTR(ARMul_State* state, int type, ARMword instr, ARMword* value)
 int VPUSH(ARMul_State* state, int type, ARMword instr, ARMword* value)
 {
     static int i = 0;
-    static int single_regs, add, wback, d, n, imm32, regs;
+    static int single_regs, d, imm32, regs;
     if (type == ARMul_FIRST)
     {
         single_regs = BIT(instr, 8) == 0; // Single precision
@@ -562,7 +562,7 @@ int VSTM(ARMul_State* state, int type, ARMword instr, ARMword* value)
 int VPOP(ARMul_State* state, int type, ARMword instr, ARMword value)
 {
     static int i = 0;
-    static int single_regs, add, wback, d, n, imm32, regs;
+    static int single_regs, d, imm32, regs;
     if (type == ARMul_FIRST)
     {
         single_regs = BIT(instr, 8) == 0; // Single precision
@@ -759,8 +759,6 @@ void vfp_put_double(arm_core_t* state, uint64_t val, unsigned int reg)
  */
 void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpscr)
 {
-    int si_code = 0;
-
     LOG_TRACE(Core_ARM11, "VFP: raising exceptions %08x\n", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {
