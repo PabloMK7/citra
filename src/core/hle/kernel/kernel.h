@@ -136,25 +136,26 @@ public:
      * Add a thread to wait on this object
      * @param thread Pointer to thread to add
      */
-    void AddWaitingThread(Thread* thread);
+    void AddWaitingThread(SharedPtr<Thread> thread);
 
     /**
      * Removes a thread from waiting on this object (e.g. if it was resumed already)
      * @param thread Pointer to thread to remove
      */
-    void RemoveWaitingThread(Thread* thead);
+    void RemoveWaitingThread(Thread* thread);
 
     /**
      * Wake up the next thread waiting on this object
      * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
      */
-    Thread* WakeupNextThread();
+    SharedPtr<Thread> WakeupNextThread();
 
     /// Wake up all threads waiting on this object
     void WakeupAllWaitingThreads();
 
 private:
-    std::vector<Thread*> waiting_threads; ///< Threads waiting for this object to become available
+    /// Threads waiting for this object to become available
+    std::vector<SharedPtr<Thread>> waiting_threads;
 };
 
 /**
@@ -275,7 +276,6 @@ private:
 };
 
 extern HandleTable g_handle_table;
-extern SharedPtr<Thread> g_main_thread;
 
 /// The ID code of the currently running game
 /// TODO(Subv): This variable should not be here, 

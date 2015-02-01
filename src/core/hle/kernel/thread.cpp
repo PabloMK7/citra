@@ -110,6 +110,9 @@ void Thread::Stop(const char* reason) {
     WakeupAllWaitingThreads();
 
     // Stopped threads are never waiting.
+    for (auto& wait_object : wait_objects) {
+        wait_object->RemoveWaitingThread(this);
+    }
     wait_objects.clear();
     wait_address = 0;
 }

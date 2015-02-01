@@ -134,6 +134,8 @@ private:
     Handle callback_handle;
 };
 
+extern SharedPtr<Thread> g_main_thread;
+
 /// Sets up the primary application thread
 SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size);
 

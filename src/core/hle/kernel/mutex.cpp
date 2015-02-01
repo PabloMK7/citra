@@ -66,7 +66,7 @@ void Mutex::Acquire() {
     Acquire(GetCurrentThread());
 }
 
-void Mutex::Acquire(Thread* thread) {
+void Mutex::Acquire(SharedPtr<Thread> thread) {
     _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
     if (locked)
         return;
@@ -74,7 +74,7 @@ void Mutex::Acquire(Thread* thread) {
     locked = true;
 
     thread->held_mutexes.insert(this);
-    holding_thread = thread;
+    holding_thread = std::move(thread);
 }
 
 void Mutex::Release() {
