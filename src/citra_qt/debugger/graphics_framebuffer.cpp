@@ -170,8 +170,8 @@ void GraphicsFramebufferWidget::OnFramebufferWidthChanged(int new_value)
 
 void GraphicsFramebufferWidget::OnFramebufferHeightChanged(int new_value)
 {
-    if (framebuffer_height != new_value) {
-        framebuffer_height = new_value;
+    if (framebuffer_height != static_cast<unsigned>(new_value)) {
+        framebuffer_height = static_cast<unsigned>(new_value);
 
         framebuffer_source_list->setCurrentIndex(static_cast<int>(Source::Custom));
         emit Update();

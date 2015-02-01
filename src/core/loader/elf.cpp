@@ -212,7 +212,7 @@ public:
         return GetPtr(segments[segment].p_offset);
     }
     u32 GetSectionAddr(SectionID section) const { return sectionAddrs[section]; }
-    int GetSectionSize(SectionID section) const { return sections[section].sh_size; }
+    unsigned int GetSectionSize(SectionID section) const { return sections[section].sh_size; }
     SectionID GetSectionByName(const char *name, int firstSection = 0) const; //-1 for not found
 
     bool DidRelocate() const {
@@ -298,7 +298,7 @@ bool ElfReader::LoadSymbols() {
 
         //We have a symbol table!
         Elf32_Sym* symtab = (Elf32_Sym *)(GetSectionDataPtr(sec));
-        int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
+        unsigned int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
         for (unsigned sym = 0; sym < numSymbols; sym++) {
             int size = symtab[sym].st_size;
             if (size == 0)
