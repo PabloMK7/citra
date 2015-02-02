@@ -5,6 +5,7 @@
 #pragma once
 
 #include "core/hle/kernel/kernel.h"
+#include "core/mem_map.h"
 
 namespace Kernel {
 
@@ -43,6 +44,9 @@ inline static u32* GetCommandBuffer(const int offset=0) {
  */
 class Session : public WaitObject {
 public:
+    Session();
+    ~Session() override;
+
     std::string GetTypeName() const override { return "Session"; }
 
     static const HandleType HANDLE_TYPE = HandleType::Session;

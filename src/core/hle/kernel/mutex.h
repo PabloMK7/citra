@@ -22,7 +22,7 @@ public:
      * @param name Optional name of mutex
      * @return Pointer to new Mutex object
      */
-    static ResultVal<SharedPtr<Mutex>> Create(bool initial_locked, std::string name = "Unknown");
+    static SharedPtr<Mutex> Create(bool initial_locked, std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "Mutex"; }
     std::string GetName() const override { return name; }
@@ -43,11 +43,12 @@ public:
     * @param mutex Mutex that is to be acquired
     * @param thread Thread that will acquire the mutex
     */
-    void Acquire(Thread* thread);
+    void Acquire(SharedPtr<Thread> thread);
     void Release();
 
 private:
-    Mutex() = default;
+    Mutex();
+    ~Mutex() override;
 };
 
 /**

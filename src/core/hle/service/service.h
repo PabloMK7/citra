@@ -5,9 +5,11 @@
 #pragma once
 
 #include <algorithm>
-#include <vector>
-#include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
+
+#include <boost/container/flat_map.hpp>
 
 #include "common/common.h"
 #include "common/string_util.h"
@@ -27,7 +29,7 @@ static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 character
 class Manager;
 
 /// Interface to a CTROS service
-class Interface  : public Kernel::Session {
+class Interface : public Kernel::Session {
     // TODO(yuriks): An "Interface" being a Kernel::Object is mostly non-sense. Interface should be
     // just something that encapsulates a session and acts as a helper to implement service
     // processes.
@@ -38,11 +40,11 @@ class Interface  : public Kernel::Session {
      * Creates a function string for logging, complete with the name (or header code, depending 
      * on what's passed in) the port name, and all the cmd_buff arguments.
      */
-    std::string MakeFunctionString(const std::string& name, const std::string& port_name, const u32* cmd_buff) {
+    std::string MakeFunctionString(const char* name, const char* port_name, const u32* cmd_buff) {
         // Number of params == bits 0-5 + bits 6-11
         int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
 
-        std::string function_string = Common::StringFromFormat("function '%s': port=%s", name.c_str(), port_name.c_str());
+        std::string function_string = Common::StringFromFormat("function '%s': port=%s", name, port_name);
         for (int i = 1; i <= num_params; ++i) {
             function_string += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
         }
@@ -57,7 +59,7 @@ public:
     struct FunctionInfo {
         u32         id;
         Function    func;
-        std::string name;
+        const char* name;
     };
 
     /**
@@ -68,34 +70,19 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    /// Allocates a new handle for the service
-    Handle CreateHandle(Kernel::Object *obj) {
-        // TODO(yuriks): Fix error reporting
-        Handle handle = Kernel::g_handle_table.Create(obj).ValueOr(INVALID_HANDLE);
-        m_handles.push_back(handle);
-        return handle;
-    }
-
-    /// Frees a handle from the service
-    template <class T>
-    void DeleteHandle(const Handle handle) {
-        Kernel::g_handle_table.Close(handle);
-        m_handles.erase(std::remove(m_handles.begin(), m_handles.end(), handle), m_handles.end());
-    }
-
     ResultVal<bool> SyncRequest() override {
         u32* cmd_buff = Kernel::GetCommandBuffer();
         auto itr = m_functions.find(cmd_buff[0]);
 
         if (itr == m_functions.end() || itr->second.func == nullptr) {
             std::string function_name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
-            LOG_ERROR(Service, "%s %s", "unknown/unimplemented", MakeFunctionString(function_name, GetPortName(), cmd_buff).c_str());
+            LOG_ERROR(Service, "unknown / unimplemented %s", MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff).c_str());
 
             // TODO(bunnei): Hack - ignore error
             cmd_buff[1] = 0;
             return MakeResult<bool>(false);
         } else {
-            LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName(), cmd_buff).c_str());
+            LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
         }
 
         itr->second.func(this);
@@ -108,37 +95,18 @@ protected:
     /**
      * Registers the functions in the service
      */
-    void Register(const FunctionInfo* functions, int len) {
-        for (int i = 0; i < len; i++) {
-            m_functions[functions[i].id] = functions[i];
+    template <size_t N>
+    void Register(const FunctionInfo (&functions)[N]) {
+        m_functions.reserve(N);
+        for (auto& fn : functions) {
+            // Usually this array is sorted by id already, so hint to instead at the end
+            m_functions.emplace_hint(m_functions.cend(), fn.id, fn);
         }
     }
 
 private:
+    boost::container::flat_map<u32, FunctionInfo> m_functions;
 
-    std::vector<Handle>         m_handles;
-    std::map<u32, FunctionInfo> m_functions;
-
-};
-
-/// Simple class to manage accessing services from ports and UID handles
-class Manager {
-public:
-    /// Add a service to the manager
-    void AddService(Interface* service);
-
-    /// Removes a service from the manager
-    void DeleteService(const std::string& port_name);
-
-    /// Get a Service Interface from its Handle
-    Interface* FetchFromHandle(Handle handle);
-
-    /// Get a Service Interface from its port
-    Interface* FetchFromPortName(const std::string& port_name);
-
-private:
-    std::vector<Interface*>     m_services;
-    std::map<std::string, u32>  m_port_map;
 };
 
 /// Initialize ServiceManager
@@ -147,8 +115,9 @@ void Init();
 /// Shutdown ServiceManager
 void Shutdown();
 
-
-extern Manager* g_manager; ///< Service manager
-
+/// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
+extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
+/// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
+extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
 } // namespace

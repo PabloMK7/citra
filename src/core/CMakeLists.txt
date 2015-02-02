@@ -26,6 +26,7 @@ set(SRCS
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
             hle/kernel/semaphore.cpp
+            hle/kernel/session.cpp
             hle/kernel/shared_memory.cpp
             hle/kernel/timer.cpp
             hle/kernel/thread.cpp

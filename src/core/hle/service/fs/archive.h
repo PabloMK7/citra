@@ -15,6 +15,10 @@ extern const std::string SYSTEM_ID;
 /// The scrambled SD card CID, also known as ID1
 extern const std::string SDCARD_ID;
 
+namespace Kernel {
+    class Session;
+}
+
 namespace Service {
 namespace FS {
 
@@ -58,9 +62,10 @@ ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, Arc
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the File inside of the Archive
  * @param mode Mode under which to open the File
- * @return Handle to the opened File object
+ * @return The opened File object as a Session
  */
-ResultVal<Handle> OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path, const FileSys::Mode mode);
+ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
+        const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
  * Delete a File from an Archive
@@ -121,9 +126,10 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
  * Open a Directory from an Archive
  * @param archive_handle Handle to an open Archive object
  * @param path Path to the Directory inside of the Archive
- * @return Handle to the opened File object
+ * @return The opened Directory object as a Session
  */
-ResultVal<Handle> OpenDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path);
+ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+        const FileSys::Path& path);
 
 /**
  * Creates a blank SaveData archive.

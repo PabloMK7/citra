@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/container/flat_set.hpp>
+
 #include "common/common_types.h"
 
 #include "core/core.h"
@@ -39,6 +41,8 @@ enum ThreadStatus {
 };
 
 namespace Kernel {
+
+class Mutex;
 
 class Thread final : public WaitObject {
 public:
@@ -78,6 +82,12 @@ public:
     void ResumeFromWait();
 
     /**
+    * Schedules an event to wake up the specified thread after the specified delay.
+    * @param nanoseconds The time this thread will be allowed to sleep for.
+    */
+    void WakeAfterDelay(s64 nanoseconds);
+
+    /**
      * Sets the result after the thread awakens (from either WaitSynchronization SVC)
      * @param result Value to set to the returned result
      */
@@ -103,8 +113,10 @@ public:
 
     s32 processor_id;
 
-    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
+    /// Mutexes currently held by this thread, which will be released when it exits.
+    boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
+    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
     VAddr wait_address;     ///< If waiting on an AddressArbiter, this is the arbitration address
     bool wait_all;          ///< True if the thread is waiting on all objects before resuming
     bool wait_set_output;   ///< True if the output parameter should be set on thread wakeup
@@ -115,8 +127,14 @@ public:
     bool idle = false;
 
 private:
-    Thread() = default;
+    Thread();
+    ~Thread() override;
+
+    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
+    Handle callback_handle;
 };
+
+extern SharedPtr<Thread> g_main_thread;
 
 /// Sets up the primary application thread
 SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size);
@@ -151,19 +169,12 @@ void WaitCurrentThread_WaitSynchronization(SharedPtr<WaitObject> wait_object, bo
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
 
 /**
- * Schedules an event to wake up the specified thread after the specified delay.
- * @param handle The thread handle.
- * @param nanoseconds The time this thread will be allowed to sleep for.
- */
-void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds);
-
-/**
  * Sets up the idle thread, this is a thread that is intended to never execute instructions,
  * only to advance the timing. It is scheduled when there are no other ready threads in the thread queue
  * and will try to yield on every call.
  * @returns The handle of the idle thread
  */
-Handle SetupIdleThread();
+SharedPtr<Thread> SetupIdleThread();
 
 /// Initialize threading
 void ThreadingInit();

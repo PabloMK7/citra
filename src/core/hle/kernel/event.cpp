@@ -14,16 +14,17 @@
 
 namespace Kernel {
 
-ResultVal<SharedPtr<Event>> Event::Create(ResetType reset_type, std::string name) {
+Event::Event() {}
+Event::~Event() {}
+
+SharedPtr<Event> Event::Create(ResetType reset_type, std::string name) {
     SharedPtr<Event> evt(new Event);
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(evt));
 
     evt->signaled = false;
     evt->reset_type = evt->intitial_reset_type = reset_type;
     evt->name = std::move(name);
 
-    return MakeResult<SharedPtr<Event>>(evt);
+    return evt;
 }
 
 bool Event::ShouldWait() {

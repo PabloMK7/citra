@@ -14,6 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace FS_User
 
+using Kernel::SharedPtr;
+using Kernel::Session;
+
 namespace Service {
 namespace FS {
 
@@ -58,10 +61,10 @@ static void OpenFile(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
-    ResultVal<Handle> handle = OpenFileFromArchive(archive_handle, file_path, mode);
-    cmd_buff[1] = handle.Code().raw;
-    if (handle.Succeeded()) {
-        cmd_buff[3] = *handle;
+    ResultVal<SharedPtr<Session>> file_res = OpenFileFromArchive(archive_handle, file_path, mode);
+    cmd_buff[1] = file_res.Code().raw;
+    if (file_res.Succeeded()) {
+        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -114,10 +117,10 @@ static void OpenFileDirectly(Service::Interface* self) {
     }
     SCOPE_EXIT({ CloseArchive(*archive_handle); });
 
-    ResultVal<Handle> handle = OpenFileFromArchive(*archive_handle, file_path, mode);
-    cmd_buff[1] = handle.Code().raw;
-    if (handle.Succeeded()) {
-        cmd_buff[3] = *handle;
+    ResultVal<SharedPtr<Session>> file_res = OpenFileFromArchive(*archive_handle, file_path, mode);
+    cmd_buff[1] = file_res.Code().raw;
+    if (file_res.Succeeded()) {
+        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -334,10 +337,10 @@ static void OpenDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    ResultVal<Handle> handle = OpenDirectoryFromArchive(archive_handle, dir_path);
-    cmd_buff[1] = handle.Code().raw;
-    if (handle.Succeeded()) {
-        cmd_buff[3] = *handle;
+    ResultVal<SharedPtr<Session>> dir_res = OpenDirectoryFromArchive(archive_handle, dir_path);
+    cmd_buff[1] = dir_res.Code().raw;
+    if (dir_res.Succeeded()) {
+        cmd_buff[3] = Kernel::g_handle_table.Create(*dir_res).MoveFrom();
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory");
     }
@@ -588,7 +591,7 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 FSUserInterface::FSUserInterface() {
-    Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    Register(FunctionTable);
 }
 
 } // namespace FS

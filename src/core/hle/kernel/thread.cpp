@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <list>
-#include <map>
 #include <vector>
 
 #include "common/common.h"
@@ -40,6 +39,9 @@ static Thread* current_thread;
 
 static const u32 INITIAL_THREAD_ID = 1; ///< The first available thread id at startup
 static u32 next_thread_id; ///< The next available thread id
+
+Thread::Thread() {}
+Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
     return current_thread;
@@ -108,6 +110,9 @@ void Thread::Stop(const char* reason) {
     WakeupAllWaitingThreads();
 
     // Stopped threads are never waiting.
+    for (auto& wait_object : wait_objects) {
+        wait_object->RemoveWaitingThread(this);
+    }
     wait_objects.clear();
     wait_address = 0;
 }
@@ -228,13 +233,15 @@ void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
 
 /// Event type for the thread wake up event
 static int ThreadWakeupEventType = -1;
+// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
+//               us to simply use a pool index or similar.
+static Kernel::HandleTable wakeup_callback_handle_table;
 
 /// Callback that will wake up the thread it was scheduled for
-static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
-    Handle handle = static_cast<Handle>(parameter);
-    SharedPtr<Thread> thread = Kernel::g_handle_table.Get<Thread>(handle);
+static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
+    SharedPtr<Thread> thread = wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle);
     if (thread == nullptr) {
-        LOG_ERROR(Kernel, "Thread doesn't exist %u", handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid thread %08X", thread_handle);
         return;
     }
 
@@ -248,14 +255,13 @@ static void ThreadWakeupCallback(u64 parameter, int cycles_late) {
 }
 
 
-void WakeThreadAfterDelay(Thread* thread, s64 nanoseconds) {
+void Thread::WakeAfterDelay(s64 nanoseconds) {
     // Don't schedule a wakeup if the thread wants to wait forever
     if (nanoseconds == -1)
         return;
-    _dbg_assert_(Kernel, thread != nullptr);
 
     u64 microseconds = nanoseconds / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, thread->GetHandle());
+    CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, callback_handle);
 }
 
 void Thread::ReleaseWaitObject(WaitObject* wait_object) {
@@ -302,7 +308,7 @@ void Thread::ReleaseWaitObject(WaitObject* wait_object) {
 
 void Thread::ResumeFromWait() {
     // Cancel any outstanding wakeup events
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, GetHandle());
+    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
 
     status &= ~THREADSTATUS_WAIT;
 
@@ -326,11 +332,11 @@ static void DebugThreadQueue() {
     if (!thread) {
         return;
     }
-    LOG_DEBUG(Kernel, "0x%02X 0x%08X (current)", thread->current_priority, GetCurrentThread()->GetHandle());
+    LOG_DEBUG(Kernel, "0x%02X %u (current)", thread->current_priority, GetCurrentThread()->GetObjectId());
     for (auto& t : thread_list) {
         s32 priority = thread_ready_queue.contains(t.get());
         if (priority != -1) {
-            LOG_DEBUG(Kernel, "0x%02X 0x%08X", priority, t->GetHandle());
+            LOG_DEBUG(Kernel, "0x%02X %u", priority, t->GetObjectId());
         }
     }
 }
@@ -362,14 +368,6 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     SharedPtr<Thread> thread(new Thread);
 
-    // TODO(yuriks): Thread requires a handle to be inserted into the various scheduling queues for
-    //               the time being. Create a handle here, it will be copied to the handle field in
-    //               the object and use by the rest of the code. This should be removed when other
-    //               code doesn't rely on the handle anymore.
-    ResultVal<Handle> handle = Kernel::g_handle_table.Create(thread);
-    if (handle.Failed())
-        return handle.Code();
-
     thread_list.push_back(thread);
     thread_ready_queue.prepare(priority);
 
@@ -385,6 +383,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
+    thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
 
     ResetThread(thread.get(), arg, 0);
     CallThread(thread.get());
@@ -418,16 +417,14 @@ void Thread::SetPriority(s32 priority) {
     }
 }
 
-Handle SetupIdleThread() {
+SharedPtr<Thread> SetupIdleThread() {
     // We need to pass a few valid values to get around parameter checking in Thread::Create.
-    auto thread_res = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
-            THREADPROCESSORID_0, 0, Kernel::DEFAULT_STACK_SIZE);
-    _dbg_assert_(Kernel, thread_res.Succeeded());
-    SharedPtr<Thread> thread = std::move(*thread_res);
+    auto thread = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
+            THREADPROCESSORID_0, 0, Kernel::DEFAULT_STACK_SIZE).MoveFrom();
 
     thread->idle = true;
     CallThread(thread.get());
-    return thread->GetHandle();
+    return thread;
 }
 
 SharedPtr<Thread> SetupMainThread(s32 priority, u32 stack_size) {
@@ -460,13 +457,13 @@ void Reschedule() {
     HLE::g_reschedule = false;
 
     if (next != nullptr) {
-        LOG_TRACE(Kernel, "context switch 0x%08X -> 0x%08X", prev->GetHandle(), next->GetHandle());
+        LOG_TRACE(Kernel, "context switch %u -> %u", prev->GetObjectId(), next->GetObjectId());
         SwitchContext(next);
     } else {
-        LOG_TRACE(Kernel, "cannot context switch from 0x%08X, no higher priority thread!", prev->GetHandle());
+        LOG_TRACE(Kernel, "cannot context switch from %u, no higher priority thread!", prev->GetObjectId());
 
         for (auto& thread : thread_list) {
-            LOG_TRACE(Kernel, "\thandle=0x%08X prio=0x%02X, status=0x%08X", thread->GetHandle(), 
+            LOG_TRACE(Kernel, "\tid=%u prio=0x%02X, status=0x%08X", thread->GetObjectId(), 
                       thread->current_priority, thread->status);
         }
     }

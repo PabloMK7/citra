@@ -14,14 +14,16 @@
 
 namespace Kernel {
 
+unsigned int Object::next_object_id = 0;
+
 SharedPtr<Thread> g_main_thread = nullptr;
 HandleTable g_handle_table;
 u64 g_program_id = 0;
 
-void WaitObject::AddWaitingThread(Thread* thread) {
+void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
     if (itr == waiting_threads.end())
-        waiting_threads.push_back(thread);
+        waiting_threads.push_back(std::move(thread));
 }
 
 void WaitObject::RemoveWaitingThread(Thread* thread) {
@@ -30,11 +32,11 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
         waiting_threads.erase(itr);
 }
 
-Thread* WaitObject::WakeupNextThread() {
+SharedPtr<Thread> WaitObject::WakeupNextThread() {
     if (waiting_threads.empty())
         return nullptr;
 
-    auto next_thread = waiting_threads.front();
+    auto next_thread = std::move(waiting_threads.front());
     waiting_threads.erase(waiting_threads.begin());
 
     next_thread->ReleaseWaitObject(this);
@@ -74,13 +76,10 @@ ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
     // CTR-OS doesn't use generation 0, so skip straight to 1.
     if (next_generation >= (1 << 15)) next_generation = 1;
 
-    Handle handle = generation | (slot << 15);
-    if (obj->handle == INVALID_HANDLE)
-        obj->handle = handle;
-
     generations[slot] = generation;
     objects[slot] = std::move(obj);
 
+    Handle handle = generation | (slot << 15);
     return MakeResult<Handle>(handle);
 }
 
@@ -102,7 +101,7 @@ ResultCode HandleTable::Close(Handle handle) {
 
     objects[slot] = nullptr;
 
-    generations[generation] = next_free_slot;
+    generations[slot] = next_free_slot;
     next_free_slot = slot;
     return RESULT_SUCCESS;
 }

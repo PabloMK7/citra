@@ -47,7 +47,8 @@ public:
     ResultVal<s32> Release(s32 release_count);
 
 private:
-    Semaphore() = default;
+    Semaphore();
+    ~Semaphore() override;
 };
 
 } // namespace

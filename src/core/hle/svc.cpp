@@ -30,6 +30,11 @@ using Kernel::ERR_INVALID_HANDLE;
 
 namespace SVC {
 
+const ResultCode ERR_NOT_FOUND(ErrorDescription::NotFound, ErrorModule::Kernel,
+        ErrorSummary::NotFound, ErrorLevel::Permanent); // 0xD88007FA
+const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E0181E
+
 /// An invalid result code that is meant to be overwritten when a thread resumes from waiting
 const ResultCode RESULT_INVALID(0xDEADC0DE);
 
@@ -94,14 +99,21 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-static ResultCode ConnectToPort(Handle* out, const char* port_name) {
-    Service::Interface* service = Service::g_manager->FetchFromPortName(port_name);
+static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
+    if (port_name == nullptr)
+        return ERR_NOT_FOUND;
+    if (std::strlen(port_name) > 11)
+        return ERR_PORT_NAME_TOO_LONG;
 
     LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name);
-    _assert_msg_(KERNEL, (service != nullptr), "called, but service is not implemented!");
 
-    *out = service->GetHandle();
+    auto it = Service::g_kernel_named_ports.find(port_name);
+    if (it == Service::g_kernel_named_ports.end()) {
+        LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name);
+        return ERR_NOT_FOUND;
+    }
 
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(it->second));
     return RESULT_SUCCESS;
 }
 
@@ -119,9 +131,8 @@ static ResultCode SendSyncRequest(Handle handle) {
 
 /// Close a handle
 static ResultCode CloseHandle(Handle handle) {
-    // ImplementMe
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called handle=0x%08X", handle);
-    return RESULT_SUCCESS;
+    LOG_TRACE(Kernel_SVC, "Closing handle 0x%08X", handle);
+    return Kernel::g_handle_table.Close(handle);
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
@@ -140,7 +151,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
         Kernel::WaitCurrentThread_WaitSynchronization(object, false, false);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
-        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+        Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
 
         HLE::Reschedule(__func__);
 
@@ -216,7 +227,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         }
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
-        Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nano_seconds);
+        Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
 
         HLE::Reschedule(__func__);
 
@@ -250,7 +261,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
     using Kernel::AddressArbiter;
 
-    CASCADE_RESULT(SharedPtr<AddressArbiter> arbiter, AddressArbiter::Create());
+    SharedPtr<AddressArbiter> arbiter = AddressArbiter::Create();
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(arbiter)));
     LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *out_handle);
     return RESULT_SUCCESS;
@@ -355,7 +366,7 @@ static ResultCode SetThreadPriority(Handle handle, s32 priority) {
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
-    CASCADE_RESULT(SharedPtr<Mutex> mutex, Mutex::Create(initial_locked != 0));
+    SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
@@ -423,7 +434,9 @@ static ResultCode QueryMemory(void* info, void* out, u32 addr) {
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    CASCADE_RESULT(auto evt, Kernel::Event::Create(static_cast<ResetType>(reset_type)));
+    using Kernel::Event;
+
+    SharedPtr<Event> evt = Kernel::Event::Create(static_cast<ResetType>(reset_type));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
@@ -433,19 +446,17 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
 
 /// Duplicates a kernel handle
 static ResultCode DuplicateHandle(Handle* out, Handle handle) {
-    ResultVal<Handle> out_h = Kernel::g_handle_table.Duplicate(handle);
-    if (out_h.Succeeded()) {
-        *out = *out_h;
-        LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
-    }
-    return out_h.Code();
+    CASCADE_RESULT(*out, Kernel::g_handle_table.Duplicate(handle));
+    LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
+    return RESULT_SUCCESS;
 }
 
 /// Signals an event
 static ResultCode SignalEvent(Handle handle) {
+    using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
-    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    SharedPtr<Event> evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
         return ERR_INVALID_HANDLE;
 
@@ -456,9 +467,10 @@ static ResultCode SignalEvent(Handle handle) {
 
 /// Clears an event
 static ResultCode ClearEvent(Handle handle) {
+    using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
-    auto evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
+    SharedPtr<Event> evt = Kernel::g_handle_table.Get<Kernel::Event>(handle);
     if (evt == nullptr)
         return ERR_INVALID_HANDLE;
 
@@ -470,7 +482,7 @@ static ResultCode ClearEvent(Handle handle) {
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
-    CASCADE_RESULT(auto timer, Timer::Create(static_cast<ResetType>(reset_type)));
+    SharedPtr<Timer> timer = Timer::Create(static_cast<ResetType>(reset_type));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X",
@@ -528,7 +540,7 @@ static void SleepThread(s64 nanoseconds) {
     Kernel::WaitCurrentThread_Sleep();
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
-    Kernel::WakeThreadAfterDelay(Kernel::GetCurrentThread(), nanoseconds);
+    Kernel::GetCurrentThread()->WakeAfterDelay(nanoseconds);
 
     HLE::Reschedule(__func__);
 }
@@ -544,7 +556,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     using Kernel::SharedMemory;
     // TODO(Subv): Implement this function
 
-    CASCADE_RESULT(auto shared_memory, SharedMemory::Create());
+    SharedPtr<SharedMemory> shared_memory = SharedMemory::Create();
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(shared_memory)));
 
     LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);

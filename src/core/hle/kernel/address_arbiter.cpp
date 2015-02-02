@@ -15,14 +15,15 @@
 
 namespace Kernel {
 
-ResultVal<SharedPtr<AddressArbiter>> AddressArbiter::Create(std::string name) {
+AddressArbiter::AddressArbiter() {}
+AddressArbiter::~AddressArbiter() {}
+
+SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
     SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(address_arbiter));
 
     address_arbiter->name = std::move(name);
 
-    return MakeResult<SharedPtr<AddressArbiter>>(std::move(address_arbiter));
+    return address_arbiter;
 }
 
 ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address, s32 value,
@@ -51,7 +52,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) <= value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
+            GetCurrentThread()->WakeAfterDelay(nanoseconds);
             HLE::Reschedule(__func__);
         }
         break;
@@ -71,7 +72,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
         Memory::Write32(address, memory_value);
         if (memory_value <= value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            Kernel::WakeThreadAfterDelay(GetCurrentThread(), nanoseconds);
+            GetCurrentThread()->WakeAfterDelay(nanoseconds);
             HLE::Reschedule(__func__);
         }
         break;

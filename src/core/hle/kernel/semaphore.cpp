@@ -10,6 +10,9 @@
 
 namespace Kernel {
 
+Semaphore::Semaphore() {}
+Semaphore::~Semaphore() {}
+
 ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_count,
         std::string name) {
 
@@ -18,8 +21,6 @@ ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_cou
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
     SharedPtr<Semaphore> semaphore(new Semaphore);
-    // TOOD(yuriks): Don't create Handle (see Thread::Create())
-    CASCADE_RESULT(auto unused, Kernel::g_handle_table.Create(semaphore));
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread

@@ -19,7 +19,7 @@ public:
      * @param name Optional name of timer
      * @return The created Timer
      */
-    static ResultVal<SharedPtr<Timer>> Create(ResetType reset_type, std::string name = "Unknown");
+    static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "Timer"; }
     std::string GetName() const override { return name; }
@@ -49,7 +49,11 @@ public:
     void Clear();
 
 private:
-    Timer() = default;
+    Timer();
+    ~Timer() override;
+
+    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
+    Handle callback_handle;
 };
 
 /// Initializes the required variables for timers

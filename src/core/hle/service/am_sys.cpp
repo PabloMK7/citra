@@ -18,7 +18,7 @@ namespace AM_SYS {
 // Interface class
 
 Interface::Interface() {
-    //Register(FunctionTable, ARRAY_SIZE(FunctionTable));
+    //Register(FunctionTable);
 }
 
 } // namespace
