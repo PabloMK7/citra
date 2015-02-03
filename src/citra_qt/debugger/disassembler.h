@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QAbstractItemModel>
+#pragma once
+
+#include <QAbstractListModel>
 #include <QDockWidget>
+
 #include "ui_disassembler.h"
 
 #include "common/common.h"
@@ -12,15 +15,13 @@
 class QAction;
 class EmuThread;
 
-class DisassemblerModel : public QAbstractItemModel
+class DisassemblerModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
     DisassemblerModel(QObject* parent);
 
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
