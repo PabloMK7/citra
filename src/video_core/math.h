@@ -457,27 +457,41 @@ public:
     const T& b() const { return z; }
     const T& a() const { return w; }
 
-    // swizzlers - create a subvector of specific components
+    // Swizzlers - Create a subvector of specific components
     // e.g. Vec2 uv() { return Vec2(x,y); }
-    // _DEFINE_SWIZZLER2 defines a single such function, DEFINE_SWIZZLER2 defines all of them for all component names (x<->r) and permutations (xy<->yx)
+
+    // _DEFINE_SWIZZLER2 defines a single such function
+    // DEFINE_SWIZZLER2_COMP1 defines one-component functions for all component names (x<->r) 
+    // DEFINE_SWIZZLER2_COMP2 defines two component functions for all component names (x<->r) and permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name) const Vec2<T> name() const { return Vec2<T>(a, b); }
-#define DEFINE_SWIZZLER2(a, b, a2, b2) \
+#define DEFINE_SWIZZLER2_COMP1(a, a2) \
+    _DEFINE_SWIZZLER2(a, a, a##a); \
+    _DEFINE_SWIZZLER2(a, a, a2##a2)
+#define DEFINE_SWIZZLER2_COMP2(a, b, a2, b2) \
     _DEFINE_SWIZZLER2(a, b, a##b); \
     _DEFINE_SWIZZLER2(a, b, a2##b2); \
     _DEFINE_SWIZZLER2(b, a, b##a); \
     _DEFINE_SWIZZLER2(b, a, b2##a2)
 
-    DEFINE_SWIZZLER2(x, y, r, g);
-    DEFINE_SWIZZLER2(x, z, r, b);
-    DEFINE_SWIZZLER2(x, w, r, a);
-    DEFINE_SWIZZLER2(y, z, g, b);
-    DEFINE_SWIZZLER2(y, w, g, a);
-    DEFINE_SWIZZLER2(z, w, b, a);
-#undef DEFINE_SWIZZLER2
+    DEFINE_SWIZZLER2_COMP2(x, y, r, g);
+    DEFINE_SWIZZLER2_COMP2(x, z, r, b);
+    DEFINE_SWIZZLER2_COMP2(x, w, r, a);
+    DEFINE_SWIZZLER2_COMP2(y, z, g, b);
+    DEFINE_SWIZZLER2_COMP2(y, w, g, a);
+    DEFINE_SWIZZLER2_COMP2(z, w, b, a);
+    DEFINE_SWIZZLER2_COMP1(x, r);
+    DEFINE_SWIZZLER2_COMP1(y, g);
+    DEFINE_SWIZZLER2_COMP1(z, b);
+    DEFINE_SWIZZLER2_COMP1(w, a);
+#undef DEFINE_SWIZZLER2_COMP1
+#undef DEFINE_SWIZZLER2_COMP2
 #undef _DEFINE_SWIZZLER2
 
 #define _DEFINE_SWIZZLER3(a, b, c, name) const Vec3<T> name() const { return Vec3<T>(a, b, c); }
-#define DEFINE_SWIZZLER3(a, b, c, a2, b2, c2) \
+#define DEFINE_SWIZZLER3_COMP1(a, a2) \
+    _DEFINE_SWIZZLER3(a, a, a, a##a##a); \
+    _DEFINE_SWIZZLER3(a, a, a, a2##a2##a2)
+#define DEFINE_SWIZZLER3_COMP3(a, b, c, a2, b2, c2) \
     _DEFINE_SWIZZLER3(a, b, c, a##b##c); \
     _DEFINE_SWIZZLER3(a, c, b, a##c##b); \
     _DEFINE_SWIZZLER3(b, a, c, b##a##c); \
@@ -491,11 +505,16 @@ public:
     _DEFINE_SWIZZLER3(c, a, b, c2##a2##b2); \
     _DEFINE_SWIZZLER3(c, b, a, c2##b2##a2)
 
-    DEFINE_SWIZZLER3(x, y, z, r, g, b);
-    DEFINE_SWIZZLER3(x, y, w, r, g, a);
-    DEFINE_SWIZZLER3(x, z, w, r, b, a);
-    DEFINE_SWIZZLER3(y, z, w, g, b, a);
-#undef DEFINE_SWIZZLER3
+    DEFINE_SWIZZLER3_COMP3(x, y, z, r, g, b);
+    DEFINE_SWIZZLER3_COMP3(x, y, w, r, g, a);
+    DEFINE_SWIZZLER3_COMP3(x, z, w, r, b, a);
+    DEFINE_SWIZZLER3_COMP3(y, z, w, g, b, a);
+    DEFINE_SWIZZLER3_COMP1(x, r);
+    DEFINE_SWIZZLER3_COMP1(y, g);
+    DEFINE_SWIZZLER3_COMP1(z, b);
+    DEFINE_SWIZZLER3_COMP1(w, a);
+#undef DEFINE_SWIZZLER3_COMP1
+#undef DEFINE_SWIZZLER3_COMP3
 #undef _DEFINE_SWIZZLER3
 };
 
