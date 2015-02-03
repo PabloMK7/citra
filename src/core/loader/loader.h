@@ -38,7 +38,7 @@ enum class ResultStatus {
     ErrorMemoryAllocationFailed,
 };
 
-static u32 MakeMagic(char a, char b, char c, char d) {
+static inline u32 MakeMagic(char a, char b, char c, char d) {
     return a | b << 8 | c << 16 | d << 24;
 }
 

@@ -3553,7 +3553,6 @@ static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr
         case 26:
         case 27:
             if (((tinstr & 0x0F00) != 0x0E00) && ((tinstr & 0x0F00) != 0x0F00)){
-                u32 cond = (tinstr & 0x0F00) >> 8;
                 inst_index = table_length - 4;
                 *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             } else {
@@ -3693,6 +3692,9 @@ static bool InAPrivilegedMode(arm_core_t *core) {
 }
 
 unsigned InterpreterMainLoop(ARMul_State* state) {
+    #undef RM
+    #undef RS
+
     #define CRn             inst_cream->crn
     #define OPCODE_2        inst_cream->opcode_2
     #define CRm             inst_cream->crm
@@ -4999,7 +5001,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             }
             uint32_t byte_mask = (BIT(inst, 16) ? 0xff : 0) | (BIT(inst, 17) ? 0xff00 : 0)
                         | (BIT(inst, 18) ? 0xff0000 : 0) | (BIT(inst, 19) ? 0xff000000 : 0);
-            uint32_t mask;
+            uint32_t mask = 0;
             if (!inst_cream->R) {
                 if (InAPrivilegedMode(cpu)) {
                     if ((operand & StateMask) != 0) {
