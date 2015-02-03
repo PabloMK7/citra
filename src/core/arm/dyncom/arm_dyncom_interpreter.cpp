@@ -44,10 +44,6 @@ enum {
 #define ROTATE_RIGHT_32(n, i) ROTATE_RIGHT(n, i, 32)
 #define ROTATE_LEFT_32(n, i)  ROTATE_LEFT(n, i, 32)
 
-#define rotr(x,n) ( (x >> n) | ((x & ((1 << (n + 1)) - 1)) << (32 - n)) )
-
-extern void switch_mode(arm_core_t *core, uint32_t mode);
-
 typedef arm_core_t arm_processor;
 typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
 
@@ -227,45 +223,6 @@ unsigned int DPO(RotateRightByRegister)(arm_processor *cpu, unsigned int sht_ope
     return shifter_operand;
 }
 
-typedef struct _MiscImmeData {
-    unsigned int U;
-    unsigned int Rn;
-    unsigned int offset_8;
-} MiscLSData;
-
-typedef struct _MiscRegData {
-    unsigned int U;
-    unsigned int Rn;
-    unsigned int Rm;
-} MiscRegData;
-
-typedef struct _MiscImmePreIdx {
-    unsigned int offset_8;
-    unsigned int U;
-    unsigned int Rn;
-} MiscImmePreIdx;
-
-typedef struct _MiscRegPreIdx {
-    unsigned int U;
-    unsigned int Rn;
-    unsigned int Rm;
-} MiscRegPreIdx;
-
-typedef struct _MiscImmePstIdx {
-    unsigned int offset_8;
-    unsigned int U;
-    unsigned int Rn;
-} MIscImmePstIdx;
-
-typedef struct _MiscRegPstIdx {
-    unsigned int Rn;
-    unsigned int Rm;
-    unsigned int U;
-} MiscRegPstIdx;
-
-typedef struct _LSWordorUnsignedByte {
-} LDnST;
-
 typedef void (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw);
 
 typedef struct _ldst_inst {
@@ -275,8 +232,9 @@ typedef struct _ldst_inst {
 #define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
 int CondPassed(arm_processor *cpu, unsigned int cond);
-#define LnSWoUB(s)    glue(LnSWoUB, s)
-#define MLnS(s)        glue(MLnS, s)
+
+#define LnSWoUB(s)   glue(LnSWoUB, s)
+#define MLnS(s)      glue(MLnS, s)
 #define LdnStM(s)    glue(LdnStM, s)
 
 #define W_BIT        BIT(inst, 21)
