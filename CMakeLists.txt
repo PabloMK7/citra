@@ -16,7 +16,7 @@ else()
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
-    message(STATUS "Cache compiler flags ignored, please edit CMakeFiles.txt to change the flags.")
+    message(STATUS "Cache compiler flags ignored, please edit CMakeLists.txt to change the flags.")
     # /MP - Multi-threaded compilation
     # /MD - Multi-threaded runtime
     # /Ox - Full optimization
@@ -66,8 +66,11 @@ if (ENABLE_GLFW)
         if (MSVC)
             if (CMAKE_SIZEOF_VOID_P EQUAL 8)
                 set(TMP_ARCH "x64")
-            else()
+            elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
                 set(TMP_ARCH "Win32")
+            else()
+                set(TMP_ARCH "UNKNOWN")
+                message(SEND_ERROR "Couldn't detect your compiler's architecture, you'll have to manually specify the GLFW library to use. (Try checking CMakeOutput.log to find out why.)")
             endif()
 
             if (MSVC11) # Visual C++ 2012
@@ -84,8 +87,11 @@ if (ENABLE_GLFW)
             # Assume mingw
             if (CMAKE_SIZEOF_VOID_P EQUAL 8)
                 set(TMP_ARCH "x86_64")
-            else()
+            elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
                 set(TMP_ARCH "i686")
+            else()
+                set(TMP_ARCH "UNKNOWN")
+                message(SEND_ERROR "Couldn't detect your compiler's architecture, you'll have to manually specify the GLFW library to use.")
             endif()
 
             set(TMP_TOOLSET "mingw-${TMP_ARCH}")
