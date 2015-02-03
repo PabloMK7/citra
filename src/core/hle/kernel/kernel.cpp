@@ -97,7 +97,6 @@ ResultCode HandleTable::Close(Handle handle) {
         return ERR_INVALID_HANDLE;
 
     size_t slot = GetSlot(handle);
-    u16 generation = GetGeneration(handle);
 
     objects[slot] = nullptr;
 
