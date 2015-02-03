@@ -17,16 +17,9 @@
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
-DisassemblerModel::DisassemblerModel(QObject* parent) : QAbstractItemModel(parent), base_address(0), code_size(0), program_counter(0), selection(QModelIndex()) {
 
-}
+DisassemblerModel::DisassemblerModel(QObject* parent) : QAbstractListModel(parent), base_address(0), code_size(0), program_counter(0), selection(QModelIndex()) {
 
-QModelIndex DisassemblerModel::index(int row, int column, const QModelIndex& parent) const {
-    return createIndex(row, column);
-}
-
-QModelIndex DisassemblerModel::parent(const QModelIndex& child) const {
-    return QModelIndex();
 }
 
 int DisassemblerModel::columnCount(const QModelIndex& parent) const {
