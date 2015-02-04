@@ -880,18 +880,18 @@ static struct op fops_ext[] = {
     { NULL, 0 },
     { NULL, 0 },
     { vfp_double_fcvts,  OP_SCALAR|OP_DD },   //0x0000000F - FEXT_FCVT
-    { vfp_double_fuito,  OP_SCALAR },         //0x00000010 - FEXT_FUITO
-    { vfp_double_fsito,  OP_SCALAR },         //0x00000011 - FEXT_FSITO
+    { vfp_double_fuito,  OP_SCALAR|OP_SM },   //0x00000010 - FEXT_FUITO
+    { vfp_double_fsito,  OP_SCALAR|OP_SM },   //0x00000011 - FEXT_FSITO
     { NULL, 0 },
     { NULL, 0 },
     { NULL, 0 },
     { NULL, 0 },
     { NULL, 0 },
     { NULL, 0 },
-    { vfp_double_ftoui,  OP_SCALAR },         //0x00000018 - FEXT_FTOUI
-    { vfp_double_ftouiz, OP_SCALAR },         //0x00000019 - FEXT_FTOUIZ
-    { vfp_double_ftosi,  OP_SCALAR },         //0x0000001A - FEXT_FTOSI
-    { vfp_double_ftosiz, OP_SCALAR },         //0x0000001B - FEXT_FTOSIZ
+    { vfp_double_ftoui,  OP_SCALAR|OP_SD },   //0x00000018 - FEXT_FTOUI
+    { vfp_double_ftouiz, OP_SCALAR|OP_SD },   //0x00000019 - FEXT_FTOUIZ
+    { vfp_double_ftosi,  OP_SCALAR|OP_SD },   //0x0000001A - FEXT_FTOSI
+    { vfp_double_ftosiz, OP_SCALAR|OP_SD },   //0x0000001B - FEXT_FTOSIZ
 };
 
 static u32
