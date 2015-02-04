@@ -102,38 +102,6 @@
 #define FPSCR_C (1 << 29)
 #define FPSCR_V	(1 << 28)
 
-/* -------------- */
-
-/* From asm/include/vfp.h */
-
-/* FPSCR bits */
-#define FPSCR_DEFAULT_NAN	(1<<25)
-#define FPSCR_FLUSHTOZERO	(1<<24)
-#define FPSCR_ROUND_NEAREST	(0<<22)
-#define FPSCR_ROUND_PLUSINF	(1<<22)
-#define FPSCR_ROUND_MINUSINF	(2<<22)
-#define FPSCR_ROUND_TOZERO	(3<<22)
-#define FPSCR_RMODE_BIT		(22)
-#define FPSCR_RMODE_MASK	(3 << FPSCR_RMODE_BIT)
-#define FPSCR_STRIDE_BIT	(20)
-#define FPSCR_STRIDE_MASK	(3 << FPSCR_STRIDE_BIT)
-#define FPSCR_LENGTH_BIT	(16)
-#define FPSCR_LENGTH_MASK	(7 << FPSCR_LENGTH_BIT)
-#define FPSCR_IOE		(1<<8)
-#define FPSCR_DZE		(1<<9)
-#define FPSCR_OFE		(1<<10)
-#define FPSCR_UFE		(1<<11)
-#define FPSCR_IXE		(1<<12)
-#define FPSCR_IDE		(1<<15)
-#define FPSCR_IOC		(1<<0)
-#define FPSCR_DZC		(1<<1)
-#define FPSCR_OFC		(1<<2)
-#define FPSCR_UFC		(1<<3)
-#define FPSCR_IXC		(1<<4)
-#define FPSCR_IDC		(1<<7)
-
-/* ---------------- */
-
 static inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift)
 {
 	if (shift) {

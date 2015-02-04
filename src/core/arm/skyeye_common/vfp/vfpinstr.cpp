@@ -59,73 +59,6 @@ VMLA_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmla),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmla)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int add = (BIT(6) == 0);
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG32(tmp);
-        mm = FR32(d);
-        tmp = FPADD(mm,tmp);
-        //LETS(d,tmp);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * m)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
-        tmp = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(tmp);
-        tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
-        nn = OR(SHL(nn,CONST64(32)),tmp);
-        nn = FPBITCAST64(nn);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG64(tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * d)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
-        mm = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(mm);
-        tmp = FPADD(mm,tmp);
-        mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
-        nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
-        LETFPS(2*d ,FPBITCAST32(nn));
-        LETFPS(d*2 + 1 , FPBITCAST32(mm));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VNMLS */
 /* cond 1110 0D00 Vn-- Vd-- 101X N1M0 Vm-- */
@@ -176,74 +109,6 @@ VMLS_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmls),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmls)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmls)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s VMLS instruction is executed out of here.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int add = (BIT(6) == 0);
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG32(tmp);
-        mm = FR32(d);
-        tmp = FPADD(mm,tmp);
-        //LETS(d,tmp);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * m)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
-        tmp = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(tmp);
-        tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
-        nn = OR(SHL(nn,CONST64(32)),tmp);
-        nn = FPBITCAST64(nn);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG64(tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * d)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
-        mm = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(mm);
-        tmp = FPADD(mm,tmp);
-        mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
-        nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
-        LETFPS(2*d ,FPBITCAST32(nn));
-        LETFPS(d*2 + 1 , FPBITCAST32(mm));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VNMLA */
 /* cond 1110 0D01 Vn-- Vd-- 101X N1M0 Vm-- */
@@ -291,75 +156,6 @@ VNMLA_INST:
     INC_PC(sizeof(vnmla_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vnmla),
-DYNCOM_FILL_ACTION(vnmla),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vnmla)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vnmla)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s VNMLA instruction is executed out of here.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int add = (BIT(6) == 0);
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG32(tmp);
-        mm = FR32(d);
-        tmp = FPADD(FPNEG32(mm),tmp);
-        //LETS(d,tmp);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * m)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
-        tmp = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(tmp);
-        tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
-        nn = OR(SHL(nn,CONST64(32)),tmp);
-        nn = FPBITCAST64(nn);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG64(tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * d)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
-        mm = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(mm);
-        tmp = FPADD(FPNEG64(mm),tmp);
-        mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
-        nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
-        LETFPS(2*d ,FPBITCAST32(nn));
-        LETFPS(d*2 + 1 , FPBITCAST32(mm));
-    }
-    return No_exp;
 }
 #endif
 
@@ -414,75 +210,6 @@ VNMLS_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vnmls),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vnmls)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vnmls)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int add = (BIT(6) == 0);
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG32(tmp);
-        mm = FR32(d);
-        tmp = FPADD(FPNEG32(mm),tmp);
-        //LETS(d,tmp);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * m)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
-        tmp = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(tmp);
-        tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
-        nn = OR(SHL(nn,CONST64(32)),tmp);
-        nn = FPBITCAST64(nn);
-        tmp = FPMUL(nn,mm);
-        if(!add)
-            tmp = FPNEG64(tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * d)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * d  + 1)));
-        mm = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(mm);
-        tmp = FPADD(FPNEG64(mm),tmp);
-        mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
-        nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
-        LETFPS(2*d ,FPBITCAST32(nn));
-        LETFPS(d*2 + 1 , FPBITCAST32(mm));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VNMUL */
 /* cond 1110 0D10 Vn-- Vd-- 101X N0M0 Vm-- */
@@ -530,65 +257,6 @@ VNMUL_INST:
     INC_PC(sizeof(vnmul_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vnmul),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vnmul)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vnmul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int add = (BIT(6) == 0);
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        //LETS(d,tmp);
-        LETFPS(d,FPNEG32(tmp));
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        mm = ZEXT64(IBITCAST32(FR32(2 * m)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * m  + 1)));
-        tmp = OR(SHL(nn,CONST64(32)),mm);
-        mm = FPBITCAST64(tmp);
-        tmp = ZEXT64(IBITCAST32(FR32(2 * n)));
-        nn = ZEXT64(IBITCAST32(FR32(2 * n  + 1)));
-        nn = OR(SHL(nn,CONST64(32)),tmp);
-        nn = FPBITCAST64(nn);
-        tmp = FPMUL(nn,mm);
-        tmp = FPNEG64(tmp);
-        mm = TRUNC32(LSHR(IBITCAST64(tmp),CONST64(32)));
-        nn = TRUNC32(AND(IBITCAST64(tmp),CONST64(0xffffffff)));
-        LETFPS(2*d ,FPBITCAST32(nn));
-        LETFPS(d*2 + 1 , FPBITCAST32(mm));
-    }
-    return No_exp;
 }
 #endif
 
@@ -642,77 +310,6 @@ VMUL_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmul),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmul)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmul)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        //mm = SITOFP(32,FR(m));
-        //nn = SITOFP(32,FRn));
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPMUL(nn,mm);
-        //LETS(d,tmp);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        //mm = SITOFP(32,RSPR(m));
-        //LETS(d,tmp);
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value* m0 = FPBITCAST64(v64);
-        lo = FR32(2 * n);
-        hi = FR32(2 * n + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        hi64 = ZEXT64(hi);
-        lo64 = ZEXT64(lo);
-        v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value *n0 = FPBITCAST64(v64);
-        tmp = FPMUL(n0,m0);
-        Value *val64 = IBITCAST64(tmp);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VADD */
 /* cond 1110 0D11 Vn-- Vd-- 101X N0M0 Vm-- */
@@ -763,73 +360,6 @@ VADD_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vadd),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vadd)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vadd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction will implement out of JIT.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPADD(nn,mm);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value* m0 = FPBITCAST64(v64);
-        lo = FR32(2 * n);
-        hi = FR32(2 * n + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        hi64 = ZEXT64(hi);
-        lo64 = ZEXT64(lo);
-        v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value *n0 = FPBITCAST64(v64);
-        tmp = FPADD(n0,m0);
-        Value *val64 = IBITCAST64(tmp);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VSUB */
 /* cond 1110 0D11 Vn-- Vd-- 101X N1M0 Vm-- */
@@ -877,71 +407,6 @@ VSUB_INST:
     INC_PC(sizeof(vsub_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vsub),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vsub)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vsub)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instr=0x%x, instruction is executed out of JIT.\n", __FUNCTION__, instr);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPSUB(nn,mm);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value* m0 = FPBITCAST64(v64);
-        lo = FR32(2 * n);
-        hi = FR32(2 * n + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        hi64 = ZEXT64(hi);
-        lo64 = ZEXT64(lo);
-        v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value *n0 = FPBITCAST64(v64);
-        tmp = FPSUB(n0,m0);
-        Value *val64 = IBITCAST64(tmp);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
 }
 #endif
 
@@ -995,73 +460,6 @@ VDIV_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vdiv),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vdiv)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vdiv)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int m;
-    int n;
-    int d ;
-    int s = BIT(8) == 0;
-    Value *mm;
-    Value *nn;
-    Value *tmp;
-    if(s){
-        m = BIT(5) | BITS(0,3) << 1;
-        n = BIT(7) | BITS(16,19) << 1;
-        d = BIT(22) | BITS(12,15) << 1;
-        mm = FR32(m);
-        nn = FR32(n);
-        tmp = FPDIV(nn,mm);
-        LETFPS(d,tmp);
-    }else {
-        m = BITS(0,3) | BIT(5) << 4;
-        n = BITS(16,19) | BIT(7) << 4;
-        d = BIT(22) << 4 | BITS(12,15);
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value* m0 = FPBITCAST64(v64);
-        lo = FR32(2 * n);
-        hi = FR32(2 * n + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        hi64 = ZEXT64(hi);
-        lo64 = ZEXT64(lo);
-        v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        Value *n0 = FPBITCAST64(v64);
-        tmp = FPDIV(n0,m0);
-        Value *val64 = IBITCAST64(tmp);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VMOVI move immediate */
 /* cond 1110 1D11 im4H Vd-- 101X 0000 im4L */
@@ -1111,46 +509,6 @@ VMOVI_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovi),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovi)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int single = (BIT(8) == 0);
-    int d;
-    int imm32;
-    Value *v;
-    Value *tmp;
-    v = CONST32(BITS(0,3) | BITS(16,19) << 4);
-    //v = CONST64(0x3ff0000000000000);
-    if(single){
-        d = BIT(22) | BITS(12,15) << 1;
-    }else {
-        d = BITS(12,15) | BIT(22) << 4;
-    }
-    if(single){
-        LETFPS(d,FPBITCAST32(v));
-    }else {
-        //v = UITOFP(64,v);
-        //tmp = IBITCAST64(v);
-        LETFPS(d*2 ,FPBITCAST32(TRUNC32(AND(v,CONST64(0xffffffff)))));
-        LETFPS(d * 2 + 1,FPBITCAST32(TRUNC32(LSHR(v,CONST64(32)))));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VMOVR move register */
 /* cond 1110 1D11 0000 Vd-- 101X 01M0 Vm-- */
@@ -1193,40 +551,6 @@ VMOVR_INST:
     INC_PC(sizeof(vmovr_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int single   = BIT(8) == 0;
-    int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
-    int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
-
-    if (single)
-    {
-        LETFPS(d, FR32(m));
-    }
-    else
-    {
-        /* Check endian please */
-        LETFPS((d*2 + 1), FR32(m*2 + 1));
-        LETFPS((d * 2), FR32(m * 2));
-    }
-    return No_exp;
 }
 #endif
 
@@ -1277,57 +601,6 @@ VABS_INST:
     INC_PC(sizeof(vabs_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vabs),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vabs)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vabs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    int single   = BIT(8) == 0;
-    int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
-    int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
-    Value* m0;
-    if (single)
-    {
-        m0 =  FR32(m);
-        m0 = SELECT(FPCMP_OLT(m0,FPCONST32(0.0)),FPNEG32(m0),m0);
-        LETFPS(d,m0);
-    }
-    else
-    {
-        /* Check endian please */
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        m0 = FPBITCAST64(v64);
-        m0 = SELECT(FPCMP_OLT(m0,FPCONST64(0.0)),FPNEG64(m0),m0);
-        Value *val64 = IBITCAST64(m0);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
 }
 #endif
 
@@ -1382,59 +655,6 @@ VNEG_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vneg),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vneg)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vneg)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int single   = BIT(8) == 0;
-    int d        = (single ? BITS(12,15)<<1 | BIT(22) : BIT(22) << 4 | BITS(12,15));
-    int m        = (single ? BITS(0, 3)<<1 | BIT(5) : BITS(0, 3) | BIT(5)<<4);
-    Value* m0;
-    if (single)
-    {
-        m0 =  FR32(m);
-        m0 = FPNEG32(m0);
-        LETFPS(d,m0);
-    }
-    else
-    {
-        /* Check endian please */
-        Value *lo = FR32(2 * m);
-        Value *hi = FR32(2 * m + 1);
-        hi = IBITCAST32(hi);
-        lo = IBITCAST32(lo);
-        Value *hi64 = ZEXT64(hi);
-        Value* lo64 = ZEXT64(lo);
-        Value* v64 = OR(SHL(hi64,CONST64(32)),lo64);
-        m0 = FPBITCAST64(v64);
-        m0 = FPNEG64(m0);
-        Value *val64 = IBITCAST64(m0);
-        hi = LSHR(val64,CONST64(32));
-        lo = AND(val64,CONST64(0xffffffff));
-        hi = TRUNC32(hi);
-        lo  = TRUNC32(lo);
-        hi = FPBITCAST32(hi);
-        lo = FPBITCAST32(lo);
-        LETFPS(2*d ,lo);
-        LETFPS(d*2 + 1 , hi);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VSQRT */
 /* cond 1110 1D11 0001 Vd-- 101X 11M0 Vm-- */
@@ -1482,47 +702,6 @@ VSQRT_INST:
     INC_PC(sizeof(vsqrt_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vsqrt),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vsqrt)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vsqrt)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int dp_op = (BIT(8) == 1);
-    int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
-    int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
-    Value* v;
-    Value* tmp;
-    if(dp_op){
-        v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
-        tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
-        v = OR(v,tmp);
-        v = FPSQRT(FPBITCAST64(v));
-        tmp = TRUNC32(LSHR(IBITCAST64(v),CONST64(32)));
-        v = TRUNC32(AND(IBITCAST64(v),CONST64( 0xffffffff)));
-        LETFPS(2 * d , FPBITCAST32(v));
-        LETFPS(2 * d + 1, FPBITCAST32(tmp));
-    }else {
-        v = FR32(m);
-        v = FPSQRT(FPEXT(64,v));
-        v = FPTRUNC(32,v);
-        LETFPS(d,v);
-    }
-    return No_exp;
 }
 #endif
 
@@ -1576,74 +755,6 @@ VCMP_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vcmp),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vcmp)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vcmp)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is executed out of JIT.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int dp_op = (BIT(8) == 1);
-    int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
-    int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
-    Value* v;
-    Value* tmp;
-    Value* n;
-    Value* z;
-    Value* c;
-    Value* vt;
-    Value* v1;
-    Value* nzcv;
-    if(dp_op){
-        v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
-        tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
-        v1 = OR(v,tmp);
-        v = SHL(ZEXT64(IBITCAST32(FR32(2 * d + 1))),CONST64(32));
-        tmp = ZEXT64(IBITCAST32(FR32(2 * d)));
-        v = OR(v,tmp);
-        z = FPCMP_OEQ(FPBITCAST64(v),FPBITCAST64(v1));
-        n = FPCMP_OLT(FPBITCAST64(v),FPBITCAST64(v1));
-        c = FPCMP_OGE(FPBITCAST64(v),FPBITCAST64(v1));
-        tmp =  FPCMP_UNO(FPBITCAST64(v),FPBITCAST64(v1));
-        v1 = tmp;
-        c = OR(c,tmp);
-        n = SHL(ZEXT32(n),CONST32(31));
-        z = SHL(ZEXT32(z),CONST32(30));
-        c = SHL(ZEXT32(c),CONST32(29));
-        v1 = SHL(ZEXT32(v1),CONST(28));
-        nzcv = OR(OR(OR(n,z),c),v1);
-        v = R(VFP_FPSCR);
-        tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
-        LET(VFP_FPSCR,tmp);
-    }else {
-        z = FPCMP_OEQ(FR32(d),FR32(m));
-        n = FPCMP_OLT(FR32(d),FR32(m));
-        c = FPCMP_OGE(FR32(d),FR32(m));
-        tmp = FPCMP_UNO(FR32(d),FR32(m));
-        c = OR(c,tmp);
-        v1 = tmp;
-        n = SHL(ZEXT32(n),CONST32(31));
-        z = SHL(ZEXT32(z),CONST32(30));
-        c = SHL(ZEXT32(c),CONST32(29));
-        v1 = SHL(ZEXT32(v1),CONST(28));
-        nzcv = OR(OR(OR(n,z),c),v1);
-        v = R(VFP_FPSCR);
-        tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
-        LET(VFP_FPSCR,tmp);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VCMP VCMPE */
 /* cond 1110 1D11 0100 Vd-- 101X E1M0 Vm-- Encoding 2 */
@@ -1694,74 +805,6 @@ VCMP2_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vcmp2),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vcmp2)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vcmp2)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction will executed out of JIT.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int dp_op = (BIT(8) == 1);
-    int d = dp_op ? BITS(12,15) | BIT(22) << 4 : BIT(22) | BITS(12,15) << 1;
-    //int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
-    Value* v;
-    Value* tmp;
-    Value* n;
-    Value* z;
-    Value* c;
-    Value* vt;
-    Value* v1;
-    Value* nzcv;
-    if(dp_op){
-        v1 = CONST64(0);
-        v = SHL(ZEXT64(IBITCAST32(FR32(2 * d + 1))),CONST64(32));
-        tmp = ZEXT64(IBITCAST32(FR32(2 * d)));
-        v = OR(v,tmp);
-        z = FPCMP_OEQ(FPBITCAST64(v),FPBITCAST64(v1));
-        n = FPCMP_OLT(FPBITCAST64(v),FPBITCAST64(v1));
-        c = FPCMP_OGE(FPBITCAST64(v),FPBITCAST64(v1));
-        tmp =  FPCMP_UNO(FPBITCAST64(v),FPBITCAST64(v1));
-        v1 = tmp;
-        c = OR(c,tmp);
-        n = SHL(ZEXT32(n),CONST32(31));
-        z = SHL(ZEXT32(z),CONST32(30));
-        c = SHL(ZEXT32(c),CONST32(29));
-        v1 = SHL(ZEXT32(v1),CONST(28));
-        nzcv = OR(OR(OR(n,z),c),v1);
-        v = R(VFP_FPSCR);
-        tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
-        LET(VFP_FPSCR,tmp);
-    }else {
-        v1 = CONST(0);
-        v1 = FPBITCAST32(v1);
-        z = FPCMP_OEQ(FR32(d),v1);
-        n = FPCMP_OLT(FR32(d),v1);
-        c = FPCMP_OGE(FR32(d),v1);
-        tmp = FPCMP_UNO(FR32(d),v1);
-        c = OR(c,tmp);
-        v1 = tmp;
-        n = SHL(ZEXT32(n),CONST32(31));
-        z = SHL(ZEXT32(z),CONST32(30));
-        c = SHL(ZEXT32(c),CONST32(29));
-        v1 = SHL(ZEXT32(v1),CONST(28));
-        nzcv = OR(OR(OR(n,z),c),v1);
-        v = R(VFP_FPSCR);
-        tmp = OR(nzcv,AND(v,CONST32(0x0fffffff)));
-        LET(VFP_FPSCR,tmp);
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VCVTBDS between double and single */
 /* cond 1110 1D11 0111 Vd-- 101X 11M0 Vm-- */
@@ -1809,48 +852,6 @@ VCVTBDS_INST:
     INC_PC(sizeof(vcvtbds_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vcvtbds),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vcvtbds)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vcvtbds)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is executed out.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    int dp_op = (BIT(8) == 1);
-    int d = dp_op ? BITS(12,15) << 1 | BIT(22) : BIT(22) << 4 | BITS(12,15);
-    int m = dp_op ? BITS(0,3) | BIT(5) << 4 : BIT(5) | BITS(0,3) << 1;
-    int d2s = dp_op;
-    Value* v;
-    Value* tmp;
-    Value* v1;
-    if(d2s){
-        v = SHL(ZEXT64(IBITCAST32(FR32(2 * m + 1))),CONST64(32));
-        tmp = ZEXT64(IBITCAST32(FR32(2 * m)));
-        v1 = OR(v,tmp);
-        tmp = FPTRUNC(32,FPBITCAST64(v1));
-        LETFPS(d,tmp);
-    }else {
-        v = FR32(m);
-        tmp = FPEXT(64,v);
-        v = IBITCAST64(tmp);
-        tmp = TRUNC32(AND(v,CONST64(0xffffffff)));
-        v1 = TRUNC32(LSHR(v,CONST64(32)));
-        LETFPS(2 * d, FPBITCAST32(tmp) );
-        LETFPS(2 * d + 1, FPBITCAST32(v1));
-    }
-    return No_exp;
 }
 #endif
 
@@ -1906,26 +907,6 @@ VCVTBFF_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vcvtbff),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vcvtbff)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vcvtbff)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arch_arm_undef(cpu, bb, instr);
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VCVTBFI between floating point and integer */
 /* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
@@ -1973,114 +954,6 @@ VCVTBFI_INST:
     INC_PC(sizeof(vcvtbfi_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vcvtbfi),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vcvtbfi)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s, instruction will be executed out of JIT.\n", __FUNCTION__);
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vcvtbfi)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s, instruction will be executed out of JIT.\n", __FUNCTION__);
-    //arch_arm_undef(cpu, bb, instr);
-    unsigned int opc2 = BITS(16,18);
-    int to_integer = ((opc2 >> 2) == 1);
-    int dp_op =  (BIT(8) == 1);
-    unsigned int op = BIT(7);
-    int m,d;
-    Value* v;
-    Value* hi;
-    Value* lo;
-    Value* v64;
-    if(to_integer){
-        d = BIT(22) | (BITS(12,15) << 1);
-        if(dp_op)
-            m = BITS(0,3) | BIT(5) << 4;
-        else
-            m = BIT(5) | BITS(0,3) << 1;
-    }else {
-        m = BIT(5) | BITS(0,3) << 1;
-        if(dp_op)
-            d = BITS(12,15) | BIT(22) << 4;
-        else
-            d  = BIT(22) | BITS(12,15) << 1;
-    }
-    if(to_integer){
-        if(dp_op){
-            lo = FR32(m * 2);
-            hi = FR32(m * 2 + 1);
-            hi = ZEXT64(IBITCAST32(hi));
-            lo = ZEXT64(IBITCAST32(lo));
-            v64 = OR(SHL(hi,CONST64(32)),lo);
-            if(BIT(16)){
-                v = FPTOSI(32,FPBITCAST64(v64));
-            }
-            else
-                v = FPTOUI(32,FPBITCAST64(v64));
-
-            v = FPBITCAST32(v);
-            LETFPS(d,v);
-        }else {
-            v = FR32(m);
-            if(BIT(16)){
-                v = FPTOSI(32,v);
-            }
-            else
-                v = FPTOUI(32,v);
-            LETFPS(d,FPBITCAST32(v));
-        }
-    }else {
-        if(dp_op){
-            v = IBITCAST32(FR32(m));
-            if(BIT(7))
-                v64 = SITOFP(64,v);
-            else
-                v64 = UITOFP(64,v);
-            v = IBITCAST64(v64);
-            hi = FPBITCAST32(TRUNC32(LSHR(v,CONST64(32))));
-            lo = FPBITCAST32(TRUNC32(AND(v,CONST64(0xffffffff))));
-            LETFPS(2 * d , lo);
-            LETFPS(2 * d + 1, hi);
-        }else {
-            v = IBITCAST32(FR32(m));
-            if(BIT(7))
-                v = SITOFP(32,v);
-            else
-                v = UITOFP(32,v);
-            LETFPS(d,v);
-        }
-    }
-    return No_exp;
-}
-
-/**
-* @brief The implementation of c language for vcvtbfi instruction of dyncom
-*
-* @param cpu
-* @param instr
-*
-* @return
-*/
-int vcvtbfi_instr_impl(arm_core_t* cpu, uint32 instr){
-    int dp_operation = BIT(8);
-    int ret;
-    if (dp_operation)
-        ret = vfp_double_cpdo(cpu, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
-    else
-        ret = vfp_single_cpdo(cpu, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
-
-    vfp_raise_exceptions(cpu, ret, instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]);
-    return 0;
 }
 #endif
 
@@ -2135,35 +1008,6 @@ VMOVBRS_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovbrs),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovbrs)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovbrs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int to_arm   = BIT(20) == 1;
-    int t        = BITS(12, 15);
-    int n        = BIT(7) | BITS(16, 19)<<1;
-
-    if (to_arm)
-    {
-        LET(t, IBITCAST32(FR32(n)));
-    }
-    else
-    {
-        LETFPS(n, FPBITCAST32(R(t)));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VMSR */
 /* cond 1110 1110 reg- Rt-- 1010 0001 0000 */
@@ -2208,48 +1052,6 @@ VMSR_INST:
     INC_PC(sizeof(vmsr_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmsr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmsr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmsr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    if(RD == 15) {
-        LOG_ERROR(Core_ARM11, "in %s is not implementation.\n", __FUNCTION__);
-        exit(-1);
-    }
-
-    Value *data = NULL;
-    int reg = RN;
-    int Rt   = RD;
-    if (reg == 1)
-    {
-        LET(VFP_FPSCR, R(Rt));
-    }
-    else
-    {
-        switch (reg)
-        {
-        case 8:
-            LET(VFP_FPEXC, R(Rt));
-            break;
-        default:
-            break;
-        }
-    }
-    return No_exp;
 }
 #endif
 
@@ -2299,26 +1101,6 @@ VMOVBRC_INST:
     INC_PC(sizeof(vmovbrc_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovbrc),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovbrc)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovbrc)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arch_arm_undef(cpu, bb, instr);
-    return No_exp;
 }
 #endif
 
@@ -2404,64 +1186,6 @@ VMRS_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmrs),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmrs)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmrs)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-
-    Value *data = NULL;
-    int reg = BITS(16, 19);;
-    int Rt   = BITS(12, 15);
-    if (reg == 1)
-    {
-        if (Rt != 15)
-        {
-            LET(Rt, R(VFP_FPSCR));
-        }
-        else
-        {
-            //LET(Rt, R(VFP_FPSCR));
-            update_cond_from_fpscr(cpu, instr, bb, pc);
-        }
-    }
-    else
-    {
-        switch (reg)
-        {
-        case 0:
-            LET(Rt, R(VFP_FPSID));
-            break;
-        case 6:
-            /* MVFR1, VFPv3 only ? */
-            LOG_TRACE(Core_ARM11, "\tr%d <= MVFR1 unimplemented\n", Rt);
-            break;
-        case 7:
-            /* MVFR0, VFPv3 only? */
-            LOG_TRACE(Core_ARM11, "\tr%d <= MVFR0 unimplemented\n", Rt);
-            break;
-        case 8:
-            LET(Rt, R(VFP_FPEXC));
-            break;
-        default:
-            break;
-        }
-    }
-
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VMOVBCR scalar to register */
 /* cond 1110 XXX1 Vd-- Rt-- 1011 NXX1 0000 */
@@ -2508,26 +1232,6 @@ VMOVBCR_INST:
     INC_PC(sizeof(vmovbcr_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovbcr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovbcr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovbcr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    LOG_TRACE(Core_ARM11, "\t\tin %s instruction is not implemented.\n", __FUNCTION__);
-    arch_arm_undef(cpu, bb, instr);
-    return No_exp;
 }
 #endif
 
@@ -2584,39 +1288,6 @@ VMOVBRRSS_INST:
     GOTO_NEXT_INST;
 }
 #endif
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovbrrss),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovbrrss)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    if (instr >> 28 != 0xE)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovbrrss)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc)
-{
-    int to_arm   = BIT(20) == 1;
-    int t        = BITS(12, 15);
-    int t2       = BITS(16, 19);
-    int n        = BIT(5)<<4 | BITS(0, 3);
-    if (to_arm) {
-        LET(t, IBITCAST32(FR32(n + 0)));
-        LET(t2, IBITCAST32(FR32(n + 1)));
-    }
-    else {
-        LETFPS(n + 0, FPBITCAST32(R(t)));
-        LETFPS(n + 1, FPBITCAST32(R(t2)));
-    }
-    return No_exp;
-}
-#endif
 
 /* ----------------------------------------------------------------------- */
 /* VMOVBRRD between 2 registers and 1 double */
@@ -2664,38 +1335,6 @@ VMOVBRRD_INST:
     INC_PC(sizeof(vmovbrrd_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vmovbrrd),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vmovbrrd)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vmovbrrd)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    int to_arm   = BIT(20) == 1;
-    int t        = BITS(12, 15);
-    int t2       = BITS(16, 19);
-    int n        = BIT(5)<<4 | BITS(0, 3);
-    if(to_arm){
-        LET(t, IBITCAST32(FR32(n * 2)));
-        LET(t2, IBITCAST32(FR32(n * 2 + 1)));
-    }
-    else{
-        LETFPS(n * 2, FPBITCAST32(R(t)));
-        LETFPS(n * 2 + 1, FPBITCAST32(R(t2)));
-    }
-    return No_exp;
 }
 #endif
 
@@ -2764,53 +1403,6 @@ VSTR_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vstr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vstr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vstr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int single = BIT(8) == 0;
-    int add    = BIT(23);
-    int imm32  = BITS(0,7) << 2;
-    int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
-    int n      = BITS(16, 19);
-
-    Value* base = (n == 15) ? ADD(AND(R(n), CONST(0xFFFFFFFC)), CONST(8)): R(n);
-    Value* Addr = add ? ADD(base, CONST(imm32)) : SUB(base, CONST(imm32));
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, 4, 0, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, 8, 0, cpu->dyncom_engine->bb_trap);
-    //Value* phys_addr;
-    if(single){
-        //memory_write(cpu, bb, Addr, RSPR(d), 32);
-        memory_write(cpu, bb, Addr, IBITCAST32(FR32(d)), 32);
-        bb = cpu->dyncom_engine->bb;
-    }
-    else{
-        //memory_write(cpu, bb, Addr, RSPR(d * 2), 32);
-        memory_write(cpu, bb, Addr, IBITCAST32(FR32(d * 2)), 32);
-        bb = cpu->dyncom_engine->bb;
-        //memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR(d * 2 + 1), 32);
-        memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32(d * 2 + 1)), 32);
-        bb = cpu->dyncom_engine->bb;
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VPUSH */
 /* cond 1101 0D10 1101 Vd-- 101X imm8 imm8 */
@@ -2871,63 +1463,6 @@ VPUSH_INST:
     INC_PC(sizeof(vpush_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vpush),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vpush)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vpush)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int single  = BIT(8) == 0;
-    int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
-    int imm32   = BITS(0, 7)<<2;
-    int regs    = (single ? BITS(0, 7) : BITS(1, 7));
-
-    Value* Addr = SUB(R(13), CONST(imm32));
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 0, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
-    //Value* phys_addr;
-
-    for (int i = 0; i < regs; i++)
-    {
-        if (single)
-        {
-            //Memory::Write32(addr, cpu->ExtReg[inst_cream->d+i]);
-            //memory_write(cpu, bb, Addr, RSPR(d + i), 32);
-            memory_write(cpu, bb, Addr, IBITCAST32(FR32(d + i)), 32);
-            bb = cpu->dyncom_engine->bb;
-            Addr = ADD(Addr, CONST(4));
-        }
-        else
-        {
-            /* Careful of endianness, little by default */
-            //memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
-            memory_write(cpu, bb, Addr, IBITCAST32(FR32((d + i) * 2)), 32);
-            bb = cpu->dyncom_engine->bb;
-            //memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
-            memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32((d + i) * 2 + 1)), 32);
-            bb = cpu->dyncom_engine->bb;
-
-            Addr = ADD(Addr, CONST(8));
-        }
-    }
-    LET(13, SUB(R(13), CONST(imm32)));
-
-    return No_exp;
 }
 #endif
 
@@ -3004,76 +1539,6 @@ VSTM_INST: /* encoding 1 */
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vstm),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vstm)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vstm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    int single = BIT(8) == 0;
-    int add    = BIT(23);
-    int wback  = BIT(21);
-    int d      = single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4);
-    int n      = BITS(16, 19);
-    int imm32  = BITS(0, 7)<<2;
-    int regs   = single ? BITS(0, 7) : BITS(1, 7);
-
-    Value* Addr = SELECT(CONST1(add), R(n), SUB(R(n), CONST(imm32)));
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 0, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 8, 0, cpu->dyncom_engine->bb_trap);
-
-    int i;
-    Value* phys_addr;
-    for (i = 0; i < regs; i++)
-    {
-        if (single)
-        {
-            //Memory::Write32(addr, cpu->ExtReg[inst_cream->d+i]);
-            /* if R(i) is R15? */
-            //memory_write(cpu, bb, Addr, RSPR(d + i), 32);
-            memory_write(cpu, bb, Addr, IBITCAST32(FR32(d + i)),32);
-            bb = cpu->dyncom_engine->bb;
-            Addr = ADD(Addr, CONST(4));
-        }
-        else
-        {
-            //Memory::Write32(addr, cpu->ExtReg[(inst_cream->d+i)*2]);
-            //memory_write(cpu, bb, Addr, RSPR((d + i) * 2), 32);
-            memory_write(cpu, bb, Addr, IBITCAST32(FR32((d + i) * 2)),32);
-            bb = cpu->dyncom_engine->bb;
-
-            //Memory::Write32(addr + 4, cpu->ExtReg[(inst_cream->d+i)*2 + 1]);
-            //memory_write(cpu, bb, ADD(Addr, CONST(4)), RSPR((d + i) * 2 + 1), 32);
-            memory_write(cpu, bb, ADD(Addr, CONST(4)), IBITCAST32(FR32((d + i) * 2 + 1)), 32);
-            bb = cpu->dyncom_engine->bb;
-            //addr += 8;
-            Addr = ADD(Addr, CONST(8));
-        }
-    }
-    if (wback){
-        //cpu->Reg[n] = (add ? cpu->Reg[n] + imm32 :
-        //               cpu->Reg[n] - imm32);
-        LET(n, SELECT(CONST1(add), ADD(R(n), CONST(imm32)), SUB(R(n), CONST(imm32))));
-    }
-    return No_exp;
-}
-#endif
-
 /* ----------------------------------------------------------------------- */
 /* VPOP */
 /* cond 1100 1D11 1101 Vd-- 101X imm8 imm8 */
@@ -3142,70 +1607,6 @@ VPOP_INST:
 }
 #endif
 
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vpop),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vpop)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    /* Should check if PC is destination register */
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vpop)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    //arch_arm_undef(cpu, bb, instr);
-    int single  = BIT(8) == 0;
-    int d       = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
-    int imm32   = BITS(0, 7)<<2;
-    int regs    = (single ? BITS(0, 7) : BITS(1, 7));
-
-    int i;
-    unsigned int value1, value2;
-
-    Value* Addr = R(13);
-    Value* val;
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
-    //Value* phys_addr;
-    for (i = 0; i < regs; i++)
-    {
-        if (single)
-        {
-            memory_read(cpu, bb, Addr, 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            LETFPS(d + i, FPBITCAST32(val));
-            Addr = ADD(Addr, CONST(4));
-        }
-        else
-        {
-            /* Careful of endianness, little by default */
-            memory_read(cpu, bb, Addr, 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            LETFPS((d + i) * 2, FPBITCAST32(val));
-            memory_read(cpu, bb, ADD(Addr, CONST(4)), 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            LETFPS((d + i) * 2 + 1, FPBITCAST32(val));
-
-            Addr = ADD(Addr, CONST(8));
-        }
-    }
-    LET(13, ADD(R(13), CONST(imm32)));
-    return No_exp;
-}
-#endif
 
 /* ----------------------------------------------------------------------- */
 /* VLDR */
@@ -3268,67 +1669,6 @@ VLDR_INST:
     INC_PC(sizeof(vldr_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vldr),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vldr)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    /* Should check if PC is destination register */
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vldr)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int single = BIT(8) == 0;
-    int add    = BIT(23);
-    int wback  = BIT(21);
-    int d      = (single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|(BIT(22)<<4));
-    int n      = BITS(16, 19);
-    int imm32  = BITS(0, 7)<<2;
-    int regs   = (single ? BITS(0, 7) : BITS(1, 7));
-    Value* base = R(n);
-    if(n == 15){
-        base = ADD(AND(base, CONST(0xFFFFFFFC)), CONST(8));
-    }
-    Value* Addr = add ? (ADD(base, CONST(imm32))) : (SUB(base, CONST(imm32)));
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, 4, 1, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, 8, 1, cpu->dyncom_engine->bb_trap);
-    //Value* phys_addr;
-    Value* val;
-    if(single){
-        memory_read(cpu, bb, Addr, 0, 32);
-        bb = cpu->dyncom_engine->bb;
-        val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-        //LETS(d, val);
-        LETFPS(d,FPBITCAST32(val));
-    }
-    else{
-        memory_read(cpu, bb, Addr, 0, 32);
-        bb = cpu->dyncom_engine->bb;
-        val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-        //LETS(d * 2, val);
-        LETFPS(d * 2,FPBITCAST32(val));
-        memory_read(cpu, bb, ADD(Addr, CONST(4)), 0,32);
-        bb = cpu->dyncom_engine->bb;
-        val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-        //LETS(d * 2 + 1, val);
-        LETFPS( d * 2 + 1,FPBITCAST32(val));
-    }
-
-    return No_exp;
 }
 #endif
 
@@ -3401,78 +1741,5 @@ VLDM_INST:
     INC_PC(sizeof(vldm_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
-}
-#endif
-
-#ifdef VFP_DYNCOM_TABLE
-DYNCOM_FILL_ACTION(vldm),
-#endif
-#ifdef VFP_DYNCOM_TAG
-int DYNCOM_TAG(vldm)(cpu_t *cpu, addr_t pc, uint32_t instr, tag_t *tag, addr_t *new_pc, addr_t *next_pc)
-{
-    int instr_size = INSTR_SIZE;
-    //arm_tag_trap(cpu, pc, instr, tag, new_pc, next_pc);
-    arm_tag_continue(cpu, pc, instr, tag, new_pc, next_pc);
-    *tag |= TAG_NEW_BB;
-    if(instr >> 28 != 0xe)
-        *tag |= TAG_CONDITIONAL;
-
-    return instr_size;
-}
-#endif
-#ifdef VFP_DYNCOM_TRANS
-int DYNCOM_TRANS(vldm)(cpu_t *cpu, uint32_t instr, BasicBlock *bb, addr_t pc){
-    int single = BIT(8) == 0;
-    int add    = BIT(23);
-    int wback  = BIT(21);
-    int d      = single ? BITS(12, 15)<<1|BIT(22) : BITS(12, 15)|BIT(22)<<4;
-    int n      = BITS(16, 19);
-    int imm32  = BITS(0, 7)<<2;
-    int regs   = single ? BITS(0, 7) : BITS(1, 7);
-
-    Value* Addr = SELECT(CONST1(add), R(n), SUB(R(n), CONST(imm32)));
-    //if(single)
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
-    //else
-    //    bb = arch_check_mm(cpu, bb, Addr, regs * 4, 1, cpu->dyncom_engine->bb_trap);
-
-    int i;
-    //Value* phys_addr;
-    Value* val;
-    for (i = 0; i < regs; i++)
-    {
-        if (single)
-        {
-            //Memory::Write32(addr, cpu->ExtReg[inst_cream->d+i]);
-            /* if R(i) is R15? */
-            memory_read(cpu, bb, Addr, 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            //LETS(d + i, val);
-            LETFPS(d + i, FPBITCAST32(val));
-            Addr = ADD(Addr, CONST(4));
-        }
-        else
-        {
-            memory_read(cpu, bb, Addr, 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            LETFPS((d + i) * 2, FPBITCAST32(val));
-            memory_read(cpu, bb, Addr, 0, 32);
-            bb = cpu->dyncom_engine->bb;
-            val = new LoadInst(cpu->dyncom_engine->read_value, "", false, bb);
-            LETFPS((d + i) * 2 + 1, FPBITCAST32(val));
-
-            //Memory::Write(addr + 4, phys_addr, cpu->ExtReg[(inst_cream->d+i)*2 + 1], 32);
-            //addr += 8;
-            Addr = ADD(Addr, CONST(8));
-        }
-    }
-    if (wback){
-        //cpu->Reg[n] = (add ? cpu->Reg[n] + imm32 :
-        //               cpu->Reg[n] - imm32);
-        LET(n, SELECT(CONST1(add), ADD(R(n), CONST(imm32)), SUB(R(n), CONST(imm32))));
-    }
-    return No_exp;
 }
 #endif
