@@ -4,7 +4,10 @@
 
 #include "core/hw/gpu.h"
 #include "core/mem_map.h"
+
 #include "common/emu_window.h"
+#include "common/profiler_reporting.h"
+
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
@@ -75,9 +78,18 @@ void RendererOpenGL::SwapBuffers() {
 
     DrawScreens();
 
+    auto& profiler = Common::Profiling::GetProfilingManager();
+    profiler.FinishFrame();
+    {
+        auto aggregator = Common::Profiling::GetTimingResultsAggregator();
+        aggregator->AddFrame(profiler.GetPreviousFrameResults());
+    }
+
     // Swap buffers
     render_window->PollEvents();
     render_window->SwapBuffers();
+
+    profiler.BeginFrame();
 }
 
 /**

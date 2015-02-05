@@ -35,6 +35,7 @@
 #include "debugger/graphics_cmdlists.h"
 #include "debugger/graphics_framebuffer.h"
 #include "debugger/graphics_vertex_shader.h"
+#include "debugger/profiler.h"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -56,6 +57,10 @@ GMainWindow::GMainWindow()
 
     render_window = new GRenderWindow;
     render_window->hide();
+
+    profilerWidget = new ProfilerWidget(this);
+    addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
+    profilerWidget->hide();
 
     disasmWidget = new DisassemblerWidget(this, render_window->GetEmuThread());
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
@@ -90,6 +95,7 @@ GMainWindow::GMainWindow()
     graphicsVertexShaderWidget->hide();
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
+    debug_menu->addAction(profilerWidget->toggleViewAction());
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());

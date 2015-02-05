@@ -11,6 +11,7 @@
 
 class GImageInfo;
 class GRenderWindow;
+class ProfilerWidget;
 class DisassemblerWidget;
 class RegistersWidget;
 class CallstackWidget;
@@ -54,6 +55,7 @@ private:
 
     GRenderWindow* render_window;
 
+    ProfilerWidget* profilerWidget;
     DisassemblerWidget* disasmWidget;
     RegistersWidget* registersWidget;
     CallstackWidget* callstackWidget;

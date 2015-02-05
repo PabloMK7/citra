@@ -14,6 +14,7 @@ set(SRCS
             mem_arena.cpp
             memory_util.cpp
             misc.cpp
+            profiler.cpp
             scm_rev.cpp
             string_util.cpp
             symbols.cpp
@@ -48,11 +49,14 @@ set(HEADERS
             mem_arena.h
             memory_util.h
             platform.h
+            profiler.h
+            profiler_reporting.h
             scm_rev.h
             scope_exit.h
             string_util.h
             swap.h
             symbols.h
+            synchronized_wrapper.h
             thread.h
             thread_queue_list.h
             thunk.h
