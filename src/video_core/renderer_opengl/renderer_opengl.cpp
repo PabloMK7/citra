@@ -61,15 +61,13 @@ void RendererOpenGL::SwapBuffers() {
     for(int i : {0, 1}) {
         const auto& framebuffer = GPU::g_regs.framebuffer_config[i];
 
-        if (textures[i].width != (GLsizei)framebuffer.width || textures[i].height != (GLsizei)framebuffer.height) {
+        if (textures[i].width != (GLsizei)framebuffer.width ||
+            textures[i].height != (GLsizei)framebuffer.height ||
+            textures[i].format != framebuffer.color_format) {
             // Reallocate texture if the framebuffer size has changed.
             // This is expected to not happen very often and hence should not be a
             // performance problem.
-            glBindTexture(GL_TEXTURE_2D, textures[i].handle);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebuffer.width, framebuffer.height, 0,
-                GL_BGR, GL_UNSIGNED_BYTE, nullptr);
-            textures[i].width = framebuffer.width;
-            textures[i].height = framebuffer.height;
+            ConfigureFramebufferTexture(textures[i], framebuffer);
         }
 
         LoadFBToActiveGLTexture(GPU::g_regs.framebuffer_config[i], textures[i]);
@@ -98,13 +96,12 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
 
     const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
 
-    // TODO: Handle other pixel formats
-    ASSERT_MSG(framebuffer.color_format == GPU::Regs::PixelFormat::RGB8,
-                     "Unsupported 3DS pixel format.");
+    int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
+    size_t pixel_stride = framebuffer.stride / bpp;
 
-    size_t pixel_stride = framebuffer.stride / 3;
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
-    ASSERT(pixel_stride * 3 == framebuffer.stride);
+    ASSERT(pixel_stride * bpp == framebuffer.stride);
+
     // Ensure no bad interactions with GL_UNPACK_ALIGNMENT, which by default
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
@@ -118,7 +115,7 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     // TODO: Applications could theoretically crash Citra here by specifying too large
     //       framebuffer sizes. We should make sure that this cannot happen.
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
-        GL_BGR, GL_UNSIGNED_BYTE, framebuffer_data);
+        texture.gl_format, texture.gl_type, framebuffer_data);
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
@@ -169,6 +166,59 @@ void RendererOpenGL::InitOpenGLObjects() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
+                                                 const GPU::Regs::FramebufferConfig& framebuffer) {
+    GPU::Regs::PixelFormat format = framebuffer.color_format;
+    GLint internal_format;
+
+    texture.format = format;
+    texture.width = framebuffer.width;
+    texture.height = framebuffer.height;
+
+    switch (format) {
+    case GPU::Regs::PixelFormat::RGBA8:
+        internal_format = GL_RGBA;
+        texture.gl_format = GL_RGBA;
+        texture.gl_type = GL_UNSIGNED_INT_8_8_8_8;
+        break;
+
+    case GPU::Regs::PixelFormat::RGB8:
+        // This pixel format uses BGR since GL_UNSIGNED_BYTE specifies byte-order, unlike every
+        // specific OpenGL type used in this function using native-endian (that is, little-endian
+        // mostly everywhere) for words or half-words.
+        // TODO: check how those behave on big-endian processors.
+        internal_format = GL_RGB;
+        texture.gl_format = GL_BGR;
+        texture.gl_type = GL_UNSIGNED_BYTE;
+        break;
+
+    case GPU::Regs::PixelFormat::RGB565:
+        internal_format = GL_RGB;
+        texture.gl_format = GL_RGB;
+        texture.gl_type = GL_UNSIGNED_SHORT_5_6_5;
+        break;
+
+    case GPU::Regs::PixelFormat::RGB5A1:
+        internal_format = GL_RGBA;
+        texture.gl_format = GL_RGBA;
+        texture.gl_type = GL_UNSIGNED_SHORT_5_5_5_1;
+        break;
+
+    case GPU::Regs::PixelFormat::RGBA4:
+        internal_format = GL_RGBA;
+        texture.gl_format = GL_RGBA;
+        texture.gl_type = GL_UNSIGNED_SHORT_4_4_4_4;
+        break;
+
+    default:
+        UNIMPLEMENTED();
+    }
+
+    glBindTexture(GL_TEXTURE_2D, texture.handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
+            texture.gl_format, texture.gl_type, nullptr);
 }
 
 /**
