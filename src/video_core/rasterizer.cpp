@@ -260,7 +260,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
                 using Operation = Regs::TevStageConfig::Operation;
 
-                auto GetColorSource = [&](Source source) -> Math::Vec4<u8> {
+                auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
                     case Source::PrimaryColor:
                         return primary_color;
@@ -287,36 +287,8 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto GetAlphaSource = [&](Source source) -> u8 {
-                    switch (source) {
-                    case Source::PrimaryColor:
-                        return primary_color.a();
-
-                    case Source::Texture0:
-                        return texture_color[0].a();
-
-                    case Source::Texture1:
-                        return texture_color[1].a();
-
-                    case Source::Texture2:
-                        return texture_color[2].a();
-
-                    case Source::Constant:
-                        return tev_stage.const_a;
-
-                    case Source::Previous:
-                        return combiner_output.a();
-
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown alpha combiner source %d\n", (int)source);
-                        _dbg_assert_(HW_GPU, 0);
-                        return 0;
-                    }
-                };
-
                 static auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
-                    switch (factor)
-                    {
+                    switch (factor) {
                     case ColorModifier::SourceColor:
                         return values.rgb();
 
@@ -324,27 +296,56 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return (Math::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
 
                     case ColorModifier::SourceAlpha:
-                        return { values.a(), values.a(), values.a() };
+                        return values.aaa();
 
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown color factor %d\n", (int)factor);
-                        _dbg_assert_(HW_GPU, 0);
-                        return {};
+                    case ColorModifier::OneMinusSourceAlpha:
+                        return (Math::Vec3<u8>(255, 255, 255) - values.aaa()).Cast<u8>();
+
+                    case ColorModifier::SourceRed:
+                        return values.rrr();
+
+                    case ColorModifier::OneMinusSourceRed:
+                        return (Math::Vec3<u8>(255, 255, 255) - values.rrr()).Cast<u8>();
+
+                    case ColorModifier::SourceGreen:
+                        return values.ggg();
+
+                    case ColorModifier::OneMinusSourceGreen:
+                        return (Math::Vec3<u8>(255, 255, 255) - values.ggg()).Cast<u8>();
+
+                    case ColorModifier::SourceBlue:
+                        return values.bbb();
+
+                    case ColorModifier::OneMinusSourceBlue:
+                        return (Math::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
                     }
                 };
 
-                static auto GetAlphaModifier = [](AlphaModifier factor, u8 value) -> u8 {
+                static auto GetAlphaModifier = [](AlphaModifier factor, const Math::Vec4<u8>& values) -> u8 {
                     switch (factor) {
                     case AlphaModifier::SourceAlpha:
-                        return value;
+                        return values.a();
 
                     case AlphaModifier::OneMinusSourceAlpha:
-                        return 255 - value;
+                        return 255 - values.a();
 
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown alpha factor %d\n", (int)factor);
-                        _dbg_assert_(HW_GPU, 0);
-                        return 0;
+                    case AlphaModifier::SourceRed:
+                        return values.r();
+
+                    case AlphaModifier::OneMinusSourceRed:
+                        return 255 - values.r();
+
+                    case AlphaModifier::SourceGreen:
+                        return values.g();
+
+                    case AlphaModifier::OneMinusSourceGreen:
+                        return 255 - values.g();
+
+                    case AlphaModifier::SourceBlue:
+                        return values.b();
+
+                    case AlphaModifier::OneMinusSourceBlue:
+                        return 255 - values.b();
                     }
                 };
 
@@ -414,17 +415,17 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 //       combiner_output.rgb(), but instead store it in a temporary variable until
                 //       alpha combining has been done.
                 Math::Vec3<u8> color_result[3] = {
-                    GetColorModifier(tev_stage.color_modifier1, GetColorSource(tev_stage.color_source1)),
-                    GetColorModifier(tev_stage.color_modifier2, GetColorSource(tev_stage.color_source2)),
-                    GetColorModifier(tev_stage.color_modifier3, GetColorSource(tev_stage.color_source3))
+                    GetColorModifier(tev_stage.color_modifier1, GetSource(tev_stage.color_source1)),
+                    GetColorModifier(tev_stage.color_modifier2, GetSource(tev_stage.color_source2)),
+                    GetColorModifier(tev_stage.color_modifier3, GetSource(tev_stage.color_source3))
                 };
                 auto color_output = ColorCombine(tev_stage.color_op, color_result);
 
                 // alpha combiner
                 std::array<u8,3> alpha_result = {
-                    GetAlphaModifier(tev_stage.alpha_modifier1, GetAlphaSource(tev_stage.alpha_source1)),
-                    GetAlphaModifier(tev_stage.alpha_modifier2, GetAlphaSource(tev_stage.alpha_source2)),
-                    GetAlphaModifier(tev_stage.alpha_modifier3, GetAlphaSource(tev_stage.alpha_source3))
+                    GetAlphaModifier(tev_stage.alpha_modifier1, GetSource(tev_stage.alpha_source1)),
+                    GetAlphaModifier(tev_stage.alpha_modifier2, GetSource(tev_stage.alpha_source2)),
+                    GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3))
                 };
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 

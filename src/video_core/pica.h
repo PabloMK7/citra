@@ -233,19 +233,29 @@ struct Regs {
         };
 
         enum class ColorModifier : u32 {
-            SourceColor         = 0,
-            OneMinusSourceColor = 1,
-            SourceAlpha         = 2,
-            OneMinusSourceAlpha = 3,
+            SourceColor         = 0x0,
+            OneMinusSourceColor = 0x1,
+            SourceAlpha         = 0x2,
+            OneMinusSourceAlpha = 0x3,
+            SourceRed           = 0x4,
+            OneMinusSourceRed   = 0x5,
 
-            // Other values seem to be non-standard extensions
+            SourceGreen         = 0x8,
+            OneMinusSourceGreen = 0x9,
+
+            SourceBlue          = 0xc,
+            OneMinusSourceBlue  = 0xd,
         };
 
         enum class AlphaModifier : u32 {
-            SourceAlpha         = 0,
-            OneMinusSourceAlpha = 1,
-
-            // Other values seem to be non-standard extensions
+            SourceAlpha         = 0x0,
+            OneMinusSourceAlpha = 0x1,
+            SourceRed           = 0x2,
+            OneMinusSourceRed   = 0x3,
+            SourceGreen         = 0x4,
+            OneMinusSourceGreen = 0x5,
+            SourceBlue          = 0x6,
+            OneMinusSourceBlue  = 0x7,
         };
 
         enum class Operation : u32 {
