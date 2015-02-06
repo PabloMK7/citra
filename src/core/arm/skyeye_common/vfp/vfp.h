@@ -25,86 +25,42 @@
 #define VFP_DEBUG_UNIMPLEMENTED(x) LOG_ERROR(Core_ARM11, "in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
 #define VFP_DEBUG_UNTESTED(x) LOG_TRACE(Core_ARM11, "in func %s, " #x " untested\n", __FUNCTION__);
 #define CHECK_VFP_ENABLED
-#define CHECK_VFP_CDP_RET	vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
+#define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
 
-unsigned VFPInit (ARMul_State *state);
-unsigned VFPMRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value);
-unsigned VFPMCR (ARMul_State * state, unsigned type, ARMword instr, ARMword value);
-unsigned VFPMRRC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value1, ARMword * value2);
-unsigned VFPMCRR (ARMul_State * state, unsigned type, ARMword instr, ARMword value1, ARMword value2);
-unsigned VFPSTC (ARMul_State * state, unsigned type, ARMword instr, ARMword * value);
-unsigned VFPLDC (ARMul_State * state, unsigned type, ARMword instr, ARMword value);
-unsigned VFPCDP (ARMul_State * state, unsigned type, ARMword instr);
+unsigned VFPInit(ARMul_State* state);
+unsigned VFPMRC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
+unsigned VFPMCR(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
+unsigned VFPMRRC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value1, ARMword* value2);
+unsigned VFPMCRR(ARMul_State* state, unsigned type, ARMword instr, ARMword value1, ARMword value2);
+unsigned VFPSTC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
+unsigned VFPLDC(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
+unsigned VFPCDP(ARMul_State* state, unsigned type, ARMword instr);
 
-/* FPSID Information */
-#define VFP_FPSID_IMPLMEN 0 	/* should be the same as cp15 0 c0 0*/
-#define VFP_FPSID_SW 0
-#define VFP_FPSID_SUBARCH 0x2 	/* VFP version. Current is v3 (not strict) */
-#define VFP_FPSID_PARTNUM 0x1
-#define VFP_FPSID_VARIANT 0x1
-#define VFP_FPSID_REVISION 0x1
-
-/* FPEXC Flags */
-#define VFP_FPEXC_EX 1<<31
-#define VFP_FPEXC_EN 1<<30
-
-/* FPSCR Flags */
-#define VFP_FPSCR_NFLAG 1<<31
-#define VFP_FPSCR_ZFLAG 1<<30
-#define VFP_FPSCR_CFLAG 1<<29
-#define VFP_FPSCR_VFLAG 1<<28
-
-#define VFP_FPSCR_AHP 1<<26 	/* Alternative Half Precision */
-#define VFP_FPSCR_DN 1<<25 	/* Default NaN */
-#define VFP_FPSCR_FZ 1<<24 	/* Flush-to-zero */
-#define VFP_FPSCR_RMODE 3<<22 	/* Rounding Mode */
-#define VFP_FPSCR_STRIDE 3<<20 	/* Stride (vector) */
-#define VFP_FPSCR_LEN 7<<16 	/* Stride (vector) */
-
-#define VFP_FPSCR_IDE 1<<15	/* Input Denormal exc */
-#define VFP_FPSCR_IXE 1<<12	/* Inexact exc */
-#define VFP_FPSCR_UFE 1<<11	/* Undeflow exc */
-#define VFP_FPSCR_OFE 1<<10	/* Overflow exc */
-#define VFP_FPSCR_DZE 1<<9	/* Division by Zero exc */
-#define VFP_FPSCR_IOE 1<<8	/* Invalid Operation exc */
-
-#define VFP_FPSCR_IDC 1<<7	/* Input Denormal cum exc */
-#define VFP_FPSCR_IXC 1<<4	/* Inexact cum exc */
-#define VFP_FPSCR_UFC 1<<3	/* Undeflow cum exc */
-#define VFP_FPSCR_OFC 1<<2	/* Overflow cum exc */
-#define VFP_FPSCR_DZC 1<<1	/* Division by Zero cum exc */
-#define VFP_FPSCR_IOC 1<<0	/* Invalid Operation cum exc */
-
-/* Inline instructions. Note: Used in a cpp file as well */
-#ifdef __cplusplus
- extern "C" {
-#endif
-int32_t vfp_get_float(ARMul_State * state, unsigned int reg);
-void vfp_put_float(ARMul_State * state, int32_t val, unsigned int reg);
-uint64_t vfp_get_double(ARMul_State * state, unsigned int reg);
-void vfp_put_double(ARMul_State * state, uint64_t val, unsigned int reg);
-void vfp_raise_exceptions(ARMul_State * state, uint32_t exceptions, uint32_t inst, uint32_t fpscr);
+s32 vfp_get_float(ARMul_State* state, u32 reg);
+void vfp_put_float(ARMul_State* state, s32 val, u32 reg);
+u64 vfp_get_double(ARMul_State* state, u32 reg);
+void vfp_put_double(ARMul_State* state, u64 val, u32 reg);
+void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpscr);
 u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 
-/* MRC */
-void VMRS(ARMul_State * state, ARMword reg, ARMword Rt, ARMword *value);
-void VMOVBRS(ARMul_State * state, ARMword to_arm, ARMword t, ARMword n, ARMword *value);
-void VMOVBRRD(ARMul_State * state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword *value1, ARMword *value2);
+// MRC
+void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value);
+void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value);
+void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
 void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
-void VMOVI(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
-void VMOVR(ARMul_State * state, ARMword single, ARMword d, ARMword imm);
-/* MCR */
-void VMSR(ARMul_State * state, ARMword reg, ARMword Rt);
-/* STC */
-int VSTM(ARMul_State * state, int type, ARMword instr, ARMword* value);
-int VPUSH(ARMul_State * state, int type, ARMword instr, ARMword* value);
-int VSTR(ARMul_State * state, int type, ARMword instr, ARMword* value);
-/* LDC */
-int VLDM(ARMul_State * state, int type, ARMword instr, ARMword value);
-int VPOP(ARMul_State * state, int type, ARMword instr, ARMword value);
-int VLDR(ARMul_State * state, int type, ARMword instr, ARMword value);
+void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
+void VMOVR(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
 
-#ifdef __cplusplus
- }
-#endif
+// MCR
+void VMSR(ARMul_State* state, ARMword reg, ARMword Rt);
+
+// STC
+int VSTM(ARMul_State* state, int type, ARMword instr, ARMword* value);
+int VPUSH(ARMul_State* state, int type, ARMword instr, ARMword* value);
+int VSTR(ARMul_State* state, int type, ARMword instr, ARMword* value);
+
+// LDC
+int VLDM(ARMul_State* state, int type, ARMword instr, ARMword value);
+int VPOP(ARMul_State* state, int type, ARMword instr, ARMword value);
+int VLDR(ARMul_State* state, int type, ARMword instr, ARMword value);

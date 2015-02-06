@@ -23,6 +23,7 @@
 #include "common/common.h"
 
 #include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/vfp/asm_vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
 //ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
