@@ -5,6 +5,8 @@
 #include <memory>
 #include <unordered_map>
 
+#include <boost/container/flat_map.hpp>
+
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/make_unique.h"
@@ -233,22 +235,23 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using FileSys::ArchiveBackend;
+using FileSys::ArchiveFactory;
 
 /**
  * Map of registered archives, identified by id code. Once an archive is registered here, it is
  * never removed until the FS service is shut down.
  */
-static std::unordered_map<ArchiveIdCode, std::unique_ptr<ArchiveBackend>> id_code_map;
+static boost::container::flat_map<ArchiveIdCode, std::unique_ptr<ArchiveFactory>> id_code_map;
 
 /**
  * Map of active archive handles. Values are pointers to the archives in `idcode_map`.
  */
-static std::unordered_map<ArchiveHandle, ArchiveBackend*> handle_map;
+static std::unordered_map<ArchiveHandle, std::unique_ptr<ArchiveBackend>> handle_map;
 static ArchiveHandle next_handle;
 
 static ArchiveBackend* GetArchive(ArchiveHandle handle) {
     auto itr = handle_map.find(handle);
-    return (itr == handle_map.end()) ? nullptr : itr->second;
+    return (itr == handle_map.end()) ? nullptr : itr->second.get();
 }
 
 ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path) {
@@ -261,15 +264,13 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
-    ResultCode res = itr->second->Open(archive_path);
-    if (!res.IsSuccess())
-        return res;
+    CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res, itr->second->Open(archive_path));
 
     // This should never even happen in the first place with 64-bit handles, 
     while (handle_map.count(next_handle) != 0) {
         ++next_handle;
     }
-    handle_map.emplace(next_handle, itr->second.get());
+    handle_map.emplace(next_handle, std::move(res));
     return MakeResult<ArchiveHandle>(next_handle++);
 }
 
@@ -282,11 +283,11 @@ ResultCode CloseArchive(ArchiveHandle handle) {
 
 // TODO(yuriks): This might be what the fs:REG service is for. See the Register/Unregister calls in
 // http://3dbrew.org/wiki/Filesystem_services#ProgramRegistry_service_.22fs:REG.22
-ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code) {
-    auto result = id_code_map.emplace(id_code, std::move(backend));
+ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory, ArchiveIdCode id_code) {
+    auto result = id_code_map.emplace(id_code, std::move(factory));
 
     bool inserted = result.second;
-    _dbg_assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
+    _assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
 
     auto& archive = result.first->second;
     LOG_DEBUG(Service_FS, "Registered archive %s with id code 0x%08X", archive->GetName().c_str(), id_code);
@@ -450,32 +451,32 @@ void ArchiveInit() {
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    auto sdmc_archive = Common::make_unique<FileSys::Archive_SDMC>(sdmc_directory);
-    if (sdmc_archive->Initialize())
-        CreateArchive(std::move(sdmc_archive), ArchiveIdCode::SDMC);
+    auto sdmc_factory = Common::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory);
+    if (sdmc_factory->Initialize())
+        RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
     
     // Create the SaveData archive
-    auto savedata_archive = Common::make_unique<FileSys::Archive_SaveData>(sdmc_directory);
-    CreateArchive(std::move(savedata_archive), ArchiveIdCode::SaveData);
+    auto savedata_factory = Common::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
+    RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
 
-    auto extsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(sdmc_directory, false);
-    if (extsavedata_archive->Initialize())
-        CreateArchive(std::move(extsavedata_archive), ArchiveIdCode::ExtSaveData);
+    auto extsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);
+    if (extsavedata_factory->Initialize())
+        RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
     else
-        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_archive->GetMountPoint().c_str());
+        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_factory->GetMountPoint().c_str());
 
-    auto sharedextsavedata_archive = Common::make_unique<FileSys::Archive_ExtSaveData>(nand_directory, true);
-    if (sharedextsavedata_archive->Initialize())
-        CreateArchive(std::move(sharedextsavedata_archive), ArchiveIdCode::SharedExtSaveData);
+    auto sharedextsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
+    if (sharedextsavedata_factory->Initialize())
+        RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s", 
-            sharedextsavedata_archive->GetMountPoint().c_str());
+            sharedextsavedata_factory->GetMountPoint().c_str());
 
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
-    auto savedatacheck_archive = Common::make_unique<FileSys::Archive_SaveDataCheck>(nand_directory);
-    CreateArchive(std::move(savedatacheck_archive), ArchiveIdCode::SaveDataCheck);
+    auto savedatacheck_factory = Common::make_unique<FileSys::ArchiveFactory_SaveDataCheck>(nand_directory);
+    RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::SaveDataCheck);
 }
 
 /// Shutdown archives

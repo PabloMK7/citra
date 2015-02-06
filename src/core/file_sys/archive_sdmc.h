@@ -15,9 +15,9 @@
 namespace FileSys {
 
 /// File system interface to the SDMC archive
-class Archive_SDMC final : public DiskArchive {
+class ArchiveFactory_SDMC final : public ArchiveFactory {
 public:
-    Archive_SDMC(const std::string& mount_point);
+    ArchiveFactory_SDMC(const std::string& mount_point);
 
     /**
      * Initialize the archive.
@@ -26,6 +26,12 @@ public:
     bool Initialize();
 
     std::string GetName() const override { return "SDMC"; }
+
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
+    ResultCode Format(const Path& path) override;
+
+private:
+    std::string sdmc_directory;
 };
 
 } // namespace FileSys

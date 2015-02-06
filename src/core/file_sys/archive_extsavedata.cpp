@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/disk_archive.h"
@@ -33,12 +34,12 @@ std::string GetExtDataContainerPath(const std::string& mount_point, bool shared)
             SYSTEM_ID.c_str(), SDCARD_ID.c_str());
 }
 
-Archive_ExtSaveData::Archive_ExtSaveData(const std::string& mount_location, bool shared)
-        : DiskArchive(GetExtDataContainerPath(mount_location, shared)) {
+ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location, bool shared)
+        : mount_point(GetExtDataContainerPath(mount_location, shared)) {
     LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
 }
 
-bool Archive_ExtSaveData::Initialize() {
+bool ArchiveFactory_ExtSaveData::Initialize() {
     if (!FileUtil::CreateFullPath(mount_point)) {
         LOG_ERROR(Service_FS, "Unable to create ExtSaveData base path.");
         return false;
@@ -47,18 +48,18 @@ bool Archive_ExtSaveData::Initialize() {
     return true;
 }
 
-ResultCode Archive_ExtSaveData::Open(const Path& path) {
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
     std::string fullpath = GetExtSaveDataPath(mount_point, path);
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
         return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
             ErrorSummary::InvalidState, ErrorLevel::Status);
     }
-    concrete_mount_point = fullpath;
-    return RESULT_SUCCESS;
+    auto archive = Common::make_unique<DiskArchive>(fullpath);
+    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode Archive_ExtSaveData::Format(const Path& path) const {
+ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path) {
     std::string fullpath = GetExtSaveDataPath(mount_point, path);
     FileUtil::CreateFullPath(fullpath);
     return RESULT_SUCCESS;

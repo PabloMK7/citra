@@ -18,26 +18,26 @@ namespace FileSys {
 
 std::unique_ptr<FileBackend> DiskArchive::OpenFile(const Path& path, const Mode mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
-    auto file = Common::make_unique<DiskFile>(this, path, mode);
+    auto file = Common::make_unique<DiskFile>(*this, path, mode);
     if (!file->Open())
         return nullptr;
     return std::move(file);
 }
 
 bool DiskArchive::DeleteFile(const Path& path) const {
-    return FileUtil::Delete(GetMountPoint() + path.AsString());
+    return FileUtil::Delete(mount_point + path.AsString());
 }
 
 bool DiskArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
+    return FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString());
 }
 
 bool DiskArchive::DeleteDirectory(const Path& path) const {
-    return FileUtil::DeleteDir(GetMountPoint() + path.AsString());
+    return FileUtil::DeleteDir(mount_point + path.AsString());
 }
 
 ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u32 size) const {
-    std::string full_path = GetMountPoint() + path.AsString();
+    std::string full_path = mount_point + path.AsString();
 
     if (FileUtil::Exists(full_path))
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::FS, ErrorSummary::NothingHappened, ErrorLevel::Info);
@@ -58,16 +58,16 @@ ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u32 size) const {
 
 
 bool DiskArchive::CreateDirectory(const Path& path) const {
-    return FileUtil::CreateDir(GetMountPoint() + path.AsString());
+    return FileUtil::CreateDir(mount_point + path.AsString());
 }
 
 bool DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    return FileUtil::Rename(GetMountPoint() + src_path.AsString(), GetMountPoint() + dest_path.AsString());
+    return FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString());
 }
 
 std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
-    auto directory = Common::make_unique<DiskDirectory>(this, path);
+    auto directory = Common::make_unique<DiskDirectory>(*this, path);
     if (!directory->Open())
         return nullptr;
     return std::move(directory);
@@ -75,13 +75,12 @@ std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) c
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DiskFile::DiskFile(const DiskArchive* archive, const Path& path, const Mode mode) {
+DiskFile::DiskFile(const DiskArchive& archive, const Path& path, const Mode mode) {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../etc/passwd can give the emulated program your users list.
-    this->path = archive->GetMountPoint() + path.AsString();
+    this->path = archive.mount_point + path.AsString();
     this->mode.hex = mode.hex;
-    this->archive = archive;
 }
 
 bool DiskFile::Open() {
@@ -134,12 +133,11 @@ bool DiskFile::Close() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DiskDirectory::DiskDirectory(const DiskArchive* archive, const Path& path) {
+DiskDirectory::DiskDirectory(const DiskArchive& archive, const Path& path) {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../usr/bin can give the emulated program your installed programs.
-    this->path = archive->GetMountPoint() + path.AsString();
-    this->archive = archive;
+    this->path = archive.mount_point + path.AsString();
 }
 
 bool DiskDirectory::Open() {

@@ -4,8 +4,9 @@
 
 #include "common/log.h"
 #include "common/make_unique.h"
-#include "core/file_sys/archive_extsavedata.h"
+
 #include "core/hle/hle.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,6 @@ struct GameCoin {
     u8 day;
 };
 static const GameCoin default_game_coin = { 0x4F00, 42, 0, 0, 0, 2014, 12, 29 };
-static std::unique_ptr<FileSys::Archive_ExtSaveData> ptm_shared_extsavedata;
 static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
 
 /// Charge levels used by PTM functions
@@ -138,6 +138,10 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     Register(FunctionTable);
+
+    // TODO(Subv): This code needs to be updated to not directly create archives and use the
+    //             standard archive.h interfaces.
+#if 0
     // Create the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
     // TODO(Subv): In the future we should use the FS service to query this archive
     std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
@@ -165,6 +169,7 @@ Interface::Interface() {
             gamecoin->Close();
         }
     }
+#endif
 }
 
 } // namespace

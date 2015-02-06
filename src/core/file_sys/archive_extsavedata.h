@@ -15,9 +15,9 @@
 namespace FileSys {
 
 /// File system interface to the ExtSaveData archive
-class Archive_ExtSaveData final : public DiskArchive {
+class ArchiveFactory_ExtSaveData final : public ArchiveFactory {
 public:
-    Archive_ExtSaveData(const std::string& mount_point, bool shared);
+    ArchiveFactory_ExtSaveData(const std::string& mount_point, bool shared);
 
     /**
      * Initialize the archive.
@@ -25,21 +25,20 @@ public:
      */
     bool Initialize();
 
-    ResultCode Open(const Path& path) override;
-    ResultCode Format(const Path& path) const override;
     std::string GetName() const override { return "ExtSaveData"; }
 
-    const std::string& GetMountPoint() const override {
-        return concrete_mount_point;
-    }
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
+    ResultCode Format(const Path& path) override;
 
-protected:
+    const std::string& GetMountPoint() const { return mount_point; }
+
+private:
     /**
-     * This holds the full directory path for this archive, it is only set after a successful call to Open, 
-     * this is formed as <base extsavedatapath>/<type>/<high>/<low>. 
+     * This holds the full directory path for this archive, it is only set after a successful call
+     * to Open, this is formed as <base extsavedatapath>/<type>/<high>/<low>. 
      * See GetExtSaveDataPath for the code that extracts this data from an archive path.
      */
-    std::string concrete_mount_point;
+    std::string mount_point;
 };
 
 /**

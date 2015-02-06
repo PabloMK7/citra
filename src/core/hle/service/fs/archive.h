@@ -51,11 +51,11 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
 ResultCode CloseArchive(ArchiveHandle handle);
 
 /**
- * Creates an Archive
+ * Registers an Archive type, instances of which can later be opened using its IdCode.
  * @param backend File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
-ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code);
+ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory, ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive

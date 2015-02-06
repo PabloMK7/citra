@@ -15,11 +15,15 @@
 
 namespace FileSys {
 
-IVFCArchive::IVFCArchive() {
+IVFCArchive::IVFCArchive(std::shared_ptr<const std::vector<u8>> data) : data(data) {
+}
+
+std::string IVFCArchive::GetName() const {
+    return "IVFC";
 }
 
 std::unique_ptr<FileBackend> IVFCArchive::OpenFile(const Path& path, const Mode mode) const {
-    return Common::make_unique<IVFCFile>(this);
+    return Common::make_unique<IVFCFile>(data);
 }
 
 bool IVFCArchive::DeleteFile(const Path& path) const {
@@ -57,31 +61,25 @@ std::unique_ptr<DirectoryBackend> IVFCArchive::OpenDirectory(const Path& path) c
     return Common::make_unique<IVFCDirectory>();
 }
 
-ResultCode IVFCArchive::Format(const Path& path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to format an IVFC archive (%s).", GetName().c_str());
-    // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported, ErrorLevel::Permanent);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 size_t IVFCFile::Read(const u64 offset, const u32 length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%llu, length=%d", offset, length);
-    memcpy(buffer, &archive->raw_data[(u32)offset], length);
+    memcpy(buffer, data->data() + offset, length);
     return length;
 }
 
 size_t IVFCFile::Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const {
-    LOG_CRITICAL(Service_FS, "Attempted to write to IVFC file in archive %s.", archive->GetName().c_str());
+    LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     return 0;
 }
 
 size_t IVFCFile::GetSize() const {
-    return sizeof(u8) * archive->raw_data.size();
+    return sizeof(u8) * data->size();
 }
 
 bool IVFCFile::SetSize(const u64 size) const {
-    LOG_CRITICAL(Service_FS, "Attempted to set the size of an IVFC file in archive %s", archive->GetName().c_str());
+    LOG_ERROR(Service_FS, "Attempted to set the size of an IVFC file");
     return false;
 }
 
