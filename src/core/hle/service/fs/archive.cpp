@@ -74,18 +74,6 @@ enum class DirectoryCommand : u32 {
     Close           = 0x08020000,
 };
 
-class Archive {
-public:
-    Archive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code)
-            : id_code(id_code), backend(std::move(backend)) {
-    }
-
-    std::string GetName() const { return "Archive: " + backend->GetName(); }
-
-    ArchiveIdCode id_code; ///< Id code of the archive
-    std::unique_ptr<FileSys::ArchiveBackend> backend; ///< Archive backend interface
-};
-
 class File : public Kernel::Session {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
@@ -244,19 +232,21 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+using FileSys::ArchiveBackend;
+
 /**
  * Map of registered archives, identified by id code. Once an archive is registered here, it is
  * never removed until the FS service is shut down.
  */
-static std::unordered_map<ArchiveIdCode, std::unique_ptr<Archive>> id_code_map;
+static std::unordered_map<ArchiveIdCode, std::unique_ptr<ArchiveBackend>> id_code_map;
 
 /**
  * Map of active archive handles. Values are pointers to the archives in `idcode_map`.
  */
-static std::unordered_map<ArchiveHandle, Archive*> handle_map;
+static std::unordered_map<ArchiveHandle, ArchiveBackend*> handle_map;
 static ArchiveHandle next_handle;
 
-static Archive* GetArchive(ArchiveHandle handle) {
+static ArchiveBackend* GetArchive(ArchiveHandle handle) {
     auto itr = handle_map.find(handle);
     return (itr == handle_map.end()) ? nullptr : itr->second;
 }
@@ -271,7 +261,7 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
-    ResultCode res = itr->second->backend->Open(archive_path);
+    ResultCode res = itr->second->Open(archive_path);
     if (!res.IsSuccess())
         return res;
 
@@ -293,7 +283,7 @@ ResultCode CloseArchive(ArchiveHandle handle) {
 // TODO(yuriks): This might be what the fs:REG service is for. See the Register/Unregister calls in
 // http://3dbrew.org/wiki/Filesystem_services#ProgramRegistry_service_.22fs:REG.22
 ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code) {
-    auto result = id_code_map.emplace(id_code, Common::make_unique<Archive>(std::move(backend), id_code));
+    auto result = id_code_map.emplace(id_code, std::move(backend));
 
     bool inserted = result.second;
     _dbg_assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
@@ -305,11 +295,11 @@ ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, Arc
 
 ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path, const FileSys::Mode mode) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    std::unique_ptr<FileSys::FileBackend> backend = archive->backend->OpenFile(path, mode);
+    std::unique_ptr<FileSys::FileBackend> backend = archive->OpenFile(path, mode);
     if (backend == nullptr) {
         return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Status);
@@ -320,11 +310,11 @@ ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle 
 }
 
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    if (archive->backend->DeleteFile(path))
+    if (archive->DeleteFile(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
@@ -332,13 +322,13 @@ ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Pa
 
 ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
                                      ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path) {
-    Archive* src_archive = GetArchive(src_archive_handle);
-    Archive* dest_archive = GetArchive(dest_archive_handle);
+    ArchiveBackend* src_archive = GetArchive(src_archive_handle);
+    ArchiveBackend* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
         return ERR_INVALID_HANDLE;
 
     if (src_archive == dest_archive) {
-        if (src_archive->backend->RenameFile(src_path, dest_path))
+        if (src_archive->RenameFile(src_path, dest_path))
             return RESULT_SUCCESS;
     } else {
         // TODO: Implement renaming across archives
@@ -352,30 +342,30 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const Fil
 }
 
 ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    if (archive->backend->DeleteDirectory(path))
+    if (archive->DeleteDirectory(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
 ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    return archive->backend->CreateFile(path, file_size);
+    return archive->CreateFile(path, file_size);
 }
 
 ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    if (archive->backend->CreateDirectory(path))
+    if (archive->CreateDirectory(path))
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
                       ErrorSummary::Canceled, ErrorLevel::Status);
@@ -383,13 +373,13 @@ ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
 
 ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
                                           ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path) {
-    Archive* src_archive = GetArchive(src_archive_handle);
-    Archive* dest_archive = GetArchive(dest_archive_handle);
+    ArchiveBackend* src_archive = GetArchive(src_archive_handle);
+    ArchiveBackend* dest_archive = GetArchive(dest_archive_handle);
     if (src_archive == nullptr || dest_archive == nullptr)
         return ERR_INVALID_HANDLE;
 
     if (src_archive == dest_archive) {
-        if (src_archive->backend->RenameDirectory(src_path, dest_path))
+        if (src_archive->RenameDirectory(src_path, dest_path))
             return RESULT_SUCCESS;
     } else {
         // TODO: Implement renaming across archives
@@ -404,11 +394,11 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
 
 ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path) {
-    Archive* archive = GetArchive(archive_handle);
+    ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    std::unique_ptr<FileSys::DirectoryBackend> backend = archive->backend->OpenDirectory(path);
+    std::unique_ptr<FileSys::DirectoryBackend> backend = archive->OpenDirectory(path);
     if (backend == nullptr) {
         return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
@@ -426,7 +416,7 @@ ResultCode FormatSaveData() {
     }
 
     // Use an empty path, we do not use it when formatting the savedata
-    return archive_itr->second->backend->Format(FileSys::Path());
+    return archive_itr->second->Format(FileSys::Path());
 }
 
 ResultCode CreateExtSaveData(u32 high, u32 low) {
