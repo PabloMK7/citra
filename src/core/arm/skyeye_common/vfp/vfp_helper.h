@@ -239,15 +239,6 @@ struct vfp_single {
 	u32	significand;
 };
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-extern s32 vfp_get_float(ARMul_State * state, unsigned int reg);
-extern void vfp_put_float(ARMul_State * state, s32 val, unsigned int reg);
-#ifdef __cplusplus
- }
-#endif
-
 /*
  * VFP_SINGLE_MANTISSA_BITS - number of bits in the mantissa
  * VFP_SINGLE_EXPONENT_BITS - number of bits in the exponent
@@ -356,14 +347,7 @@ struct vfp_double {
 #else
 #define VFP_REG_ZERO	16
 #endif
-#ifdef __cplusplus
- extern "C" {
-#endif
-extern u64 vfp_get_double(ARMul_State * state, unsigned int reg);
-extern void vfp_put_double(ARMul_State * state, u64 val, unsigned int reg);
-#ifdef __cplusplus
- }
-#endif
+
 #define VFP_DOUBLE_MANTISSA_BITS	(52)
 #define VFP_DOUBLE_EXPONENT_BITS	(11)
 #define VFP_DOUBLE_LOW_BITS		(64 - VFP_DOUBLE_MANTISSA_BITS - 2)
