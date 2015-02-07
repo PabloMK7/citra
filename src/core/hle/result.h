@@ -307,14 +307,14 @@ public:
     }
 
     ResultVal& operator=(const ResultVal& o) {
-        if (*this) {
-            if (o) {
+        if (!empty()) {
+            if (!o.empty()) {
                 *GetPointer() = *o.GetPointer();
             } else {
                 GetPointer()->~T();
             }
         } else {
-            if (o) {
+            if (!o.empty()) {
                 new (&storage) T(*o.GetPointer());
             }
         }
