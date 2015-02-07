@@ -616,14 +616,57 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                                                LookupFactorA(params.factor_source_a));
                 auto dstfactor = Math::MakeVec(LookupFactorRGB(params.factor_dest_rgb),
                                                LookupFactorA(params.factor_dest_a));
+                                               
+                auto src_result = (combiner_output * srcfactor).Cast<int>();
+                auto dst_result = (dest * dstfactor).Cast<int>();
 
                 switch (params.blend_equation_rgb) {
                 case params.Add:
                 {
-                    auto result = (combiner_output * srcfactor + dest * dstfactor) / 255;
+                    auto result = (src_result + dst_result) / 255;
                     result.r() = std::min(255, result.r());
                     result.g() = std::min(255, result.g());
                     result.b() = std::min(255, result.b());
+                    combiner_output = result.Cast<u8>();
+                    break;
+                }
+                
+                case params.Subtract:
+                {
+                    auto result = (src_result - dst_result) / 255;
+                    result.r() = std::max(0, result.r());
+                    result.g() = std::max(0, result.g());
+                    result.b() = std::max(0, result.b());
+                    combiner_output = result.Cast<u8>();
+                    break;
+                }
+                
+                case params.ReverseSubtract:
+                {
+                    auto result = (dst_result - src_result) / 255;
+                    result.r() = std::max(0, result.r());
+                    result.g() = std::max(0, result.g());
+                    result.b() = std::max(0, result.b());
+                    combiner_output = result.Cast<u8>();
+                    break;
+                }
+                
+                case params.Min:
+                {
+                    Math::Vec4<int> result;
+                    result.r() = std::min(src_result.r(),dst_result.r());
+                    result.g() = std::min(src_result.g(),dst_result.g());
+                    result.b() = std::min(src_result.b(),dst_result.b());
+                    combiner_output = result.Cast<u8>();
+                    break;
+                }
+                
+                case params.Max:
+                {
+                    Math::Vec4<int> result;
+                    result.r() = std::max(src_result.r(),dst_result.r());
+                    result.g() = std::max(src_result.g(),dst_result.g());
+                    result.b() = std::max(src_result.b(),dst_result.b());
                     combiner_output = result.Cast<u8>();
                     break;
                 }

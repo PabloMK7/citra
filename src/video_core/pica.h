@@ -338,7 +338,11 @@ struct Regs {
 
         union {
             enum BlendEquation : u32 {
-                Add = 0,
+                Add             = 0,
+                Subtract        = 1,
+                ReverseSubtract = 2,
+                Min             = 3,
+                Max             = 4
             };
 
             enum BlendFactor : u32 {
