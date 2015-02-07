@@ -20,7 +20,6 @@
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
 // Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
@@ -76,31 +75,19 @@ enum class DirectoryCommand : u32 {
     Close           = 0x08020000,
 };
 
-class File : public Kernel::Session {
-public:
-    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-            : path(path), priority(0), backend(std::move(backend)) {
-    }
-
-    std::string GetName() const override { return "Path: " + path.DebugStr(); }
-
-    FileSys::Path path; ///< Path of the file
-    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
-    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
-
-    ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Kernel::GetCommandBuffer();
-        FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
-        switch (cmd) {
+ResultVal<bool> File::SyncRequest() {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
+    switch (cmd) {
 
         // Read from file...
         case FileCommand::Read:
         {
-            u64 offset = cmd_buff[1] | ((u64) cmd_buff[2]) << 32;
-            u32 length  = cmd_buff[3];
+            u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
+            u32 length = cmd_buff[3];
             u32 address = cmd_buff[5];
             LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
-                      GetTypeName().c_str(), GetName().c_str(), offset, length, address);
+                GetTypeName().c_str(), GetName().c_str(), offset, length, address);
             cmd_buff[2] = backend->Read(offset, length, Memory::GetPointer(address));
             break;
         }
@@ -108,12 +95,12 @@ public:
         // Write to file...
         case FileCommand::Write:
         {
-            u64 offset  = cmd_buff[1] | ((u64) cmd_buff[2]) << 32;
-            u32 length  = cmd_buff[3];
-            u32 flush   = cmd_buff[4];
+            u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
+            u32 length = cmd_buff[3];
+            u32 flush = cmd_buff[4];
             u32 address = cmd_buff[6];
             LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
-                      GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
+                GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
             cmd_buff[2] = backend->Write(offset, length, flush, Memory::GetPointer(address));
             break;
         }
@@ -131,7 +118,7 @@ public:
         {
             u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
             LOG_TRACE(Service_FS, "SetSize %s %s size=%llu",
-                    GetTypeName().c_str(), GetName().c_str(), size);
+                GetTypeName().c_str(), GetName().c_str(), size);
             backend->SetSize(size);
             break;
         }
@@ -177,27 +164,15 @@ public:
             ResultCode error = UnimplementedFunction(ErrorModule::FS);
             cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
             return error;
-        }
-        cmd_buff[1] = 0; // No error
-        return MakeResult<bool>(false);
     }
-};
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    return MakeResult<bool>(false);
+}
 
-class Directory : public Kernel::Session {
-public:
-    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
-            : path(path), backend(std::move(backend)) {
-    }
-
-    std::string GetName() const override { return "Directory: " + path.DebugStr(); }
-
-    FileSys::Path path; ///< Path of the directory
-    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
-
-    ResultVal<bool> SyncRequest() override {
-        u32* cmd_buff = Kernel::GetCommandBuffer();
-        DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
-        switch (cmd) {
+ResultVal<bool> Directory::SyncRequest() {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
+    switch (cmd) {
 
         // Read from directory...
         case DirectoryCommand::Read:
@@ -206,7 +181,7 @@ public:
             u32 address = cmd_buff[3];
             auto entries = reinterpret_cast<FileSys::Entry*>(Memory::GetPointer(address));
             LOG_TRACE(Service_FS, "Read %s %s: count=%d",
-                    GetTypeName().c_str(), GetName().c_str(), count);
+                GetTypeName().c_str(), GetName().c_str(), count);
 
             // Number of entries actually read
             cmd_buff[2] = backend->Read(count, entries);
@@ -226,11 +201,10 @@ public:
             ResultCode error = UnimplementedFunction(ErrorModule::FS);
             cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
             return MakeResult<bool>(false);
-        }
-        cmd_buff[1] = 0; // No error
-        return MakeResult<bool>(false);
     }
-};
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    return MakeResult<bool>(false);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -294,7 +268,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
     return RESULT_SUCCESS;
 }
 
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path, const FileSys::Mode mode) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
@@ -307,7 +281,7 @@ ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle 
     }
 
     auto file = Kernel::SharedPtr<File>(new File(std::move(backend), path));
-    return MakeResult<Kernel::SharedPtr<Kernel::Session>>(std::move(file));
+    return MakeResult<Kernel::SharedPtr<File>>(std::move(file));
 }
 
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
@@ -393,7 +367,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
                       ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
@@ -406,7 +380,7 @@ ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHa
     }
 
     auto directory = Kernel::SharedPtr<Directory>(new Directory(std::move(backend), path));
-    return MakeResult<Kernel::SharedPtr<Kernel::Session>>(std::move(directory));
+    return MakeResult<Kernel::SharedPtr<Directory>>(std::move(directory));
 }
 
 ResultCode FormatSaveData() {

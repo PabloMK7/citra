@@ -8,6 +8,7 @@
 
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
 /// The unique system identifier hash, also known as ID0
@@ -35,6 +36,35 @@ enum class ArchiveIdCode : u32 {
 };
 
 typedef u64 ArchiveHandle;
+
+class File : public Kernel::Session {
+public:
+    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
+        : path(path), priority(0), backend(std::move(backend)) {
+    }
+
+    std::string GetName() const override { return "Path: " + path.DebugStr(); }
+
+    FileSys::Path path; ///< Path of the file
+    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
+    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
+
+    ResultVal<bool> SyncRequest() override;
+};
+
+class Directory : public Kernel::Session {
+public:
+    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
+        : path(path), backend(std::move(backend)) {
+    }
+
+    std::string GetName() const override { return "Directory: " + path.DebugStr(); }
+
+    FileSys::Path path; ///< Path of the directory
+    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
+
+    ResultVal<bool> SyncRequest() override;
+};
 
 /**
  * Opens an archive
@@ -64,7 +94,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
  * @param mode Mode under which to open the File
  * @return The opened File object as a Session
  */
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
@@ -128,7 +158,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
  * @param path Path to the Directory inside of the Archive
  * @return The opened Directory object as a Session
  */
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path);
 
 /**
