@@ -139,37 +139,29 @@ const Interface::FunctionInfo FunctionTable[] = {
 Interface::Interface() {
     Register(FunctionTable);
 
-    // TODO(Subv): This code needs to be updated to not directly create archives and use the
-    //             standard archive.h interfaces.
-#if 0
-    // Create the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
-    // TODO(Subv): In the future we should use the FS service to query this archive
-    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    ptm_shared_extsavedata = Common::make_unique<FileSys::Archive_ExtSaveData>(nand_directory, true);
-    if (!ptm_shared_extsavedata->Initialize()) {
-        LOG_CRITICAL(Service_PTM, "Could not initialize SharedExtSaveData archive for the PTM:U service");
-        return;
-    }
+    // Open the SharedExtSaveData archive 0xF000000B and the gamecoin.dat file
     FileSys::Path archive_path(ptm_shared_extdata_id);
-    ResultCode result = ptm_shared_extsavedata->Open(archive_path);
+    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
     // If the archive didn't exist, create the files inside
-    if (result.description == ErrorDescription::FS_NotFormatted) {
-        // Format the archive to clear the directories
-        ptm_shared_extsavedata->Format(archive_path);
+    if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
+        // Format the archive to create the directories
+        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
         // Open it again to get a valid archive now that the folder exists
-        ptm_shared_extsavedata->Open(archive_path);
+        archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+        _assert_msg_(Service_PTM, archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
+
         FileSys::Path gamecoin_path("gamecoin.dat");
         FileSys::Mode open_mode = {};
         open_mode.write_flag = 1;
         open_mode.create_flag = 1;
         // Open the file and write the default gamecoin information
-        auto gamecoin = ptm_shared_extsavedata->OpenFile(gamecoin_path, open_mode);
-        if (gamecoin != nullptr) {
-            gamecoin->Write(0, sizeof(GameCoin), 1, reinterpret_cast<const u8*>(&default_game_coin));
-            gamecoin->Close();
+        auto gamecoin_result = Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
+        if (gamecoin_result.Succeeded()) {
+            auto gamecoin = gamecoin_result.MoveFrom();
+            gamecoin->backend->Write(0, sizeof(GameCoin), 1, reinterpret_cast<const u8*>(&default_game_coin));
+            gamecoin->backend->Close();
         }
     }
-#endif
 }
 
 } // namespace
