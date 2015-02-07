@@ -383,15 +383,13 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
     return MakeResult<Kernel::SharedPtr<Directory>>(std::move(directory));
 }
 
-ResultCode FormatSaveData() {
-    // Do not create the archive again if it already exists
-    auto archive_itr = id_code_map.find(ArchiveIdCode::SaveData);
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path) {
+    auto archive_itr = id_code_map.find(id_code);
     if (archive_itr == id_code_map.end()) {
         return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
 
-    // Use an empty path, we do not use it when formatting the savedata
-    return archive_itr->second->Format(FileSys::Path());
+    return archive_itr->second->Format(path);
 }
 
 ResultCode CreateExtSaveData(u32 high, u32 low) {

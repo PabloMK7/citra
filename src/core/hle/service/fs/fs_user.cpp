@@ -468,7 +468,7 @@ static void FormatSaveData(Service::Interface* self) {
         return;
     }
 
-    cmd_buff[1] = FormatSaveData().raw;
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
 }
 
 /**
@@ -484,7 +484,7 @@ static void FormatThisUserSaveData(Service::Interface* self) {
 
     // TODO(Subv): Find out what the inputs and outputs of this function are
 
-    cmd_buff[1] = FormatSaveData().raw;
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
 }
 
 static void CreateExtSaveData(Service::Interface* self) {

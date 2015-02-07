@@ -162,10 +162,13 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
         const FileSys::Path& path);
 
 /**
- * Creates a blank SaveData archive.
+ * Erases the contents of the physical folder that contains the archive
+ * identified by the specified id code and path
+ * @param id_code The id of the archive to format
+ * @param path The path to the archive, if relevant.
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode FormatSaveData();
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = FileSys::Path());
 
 /**
  * Creates a blank SharedExtSaveData archive for the specified extdata ID
