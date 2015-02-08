@@ -2,7 +2,7 @@
 os: unstable
 
 # shallow clone
-clone_depth: 1
+clone_depth: 5
 
 environment:
   QTDIR: C:\Qt\5.4\msvc2013_64_opengl
@@ -18,7 +18,7 @@ configuration:
   - Release
 
 install:
-  - git submodule update --init --recursive
+  - git submodule update --init --recursive --depth 20
 
 before_build:
   - mkdir build
