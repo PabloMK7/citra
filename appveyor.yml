@@ -5,14 +5,14 @@ os: unstable
 clone_depth: 1
 
 environment:
-  QTDIR: C:\Qt\5.4\msvc2013_opengl
+  QTDIR: C:\Qt\5.4\msvc2013_64_opengl
   MEGA_EMAIL:
     secure: rEo9CGAYX87GKTqZCZ9vLCNCNqxO5JLgbERaHF3YJWg=
   MEGA_PASSWORD:
     secure: zE1zmgjS/6GfN/19ROl/O0fVR58svORQ5gdtsxI7J8k=
 
 platform:
-  - Win32
+  - x64
 
 configuration:
   - Release
@@ -23,7 +23,7 @@ install:
 before_build:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -G "Visual Studio 12 Win64" ..
   - cd ..
 
 after_build:
@@ -32,16 +32,16 @@ after_build:
   - wget -q http://megatools.megous.com/builds/megatools-1.9.94-win64.zip
     # extract megatools silently. See http://stackoverflow.com/a/11629736/1748450
   - 7z x megatools-1.9.94-win64.zip | FIND /V "ing  "
-    # copy the qt dlls 
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\icudt53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\icuin53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\icuuc53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Core.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Gui.dll  build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5OpenGL.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_opengl\bin\Qt5Widgets.dll  build\bin\release
+    # copy the qt dlls
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icudt53.dll build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icuin53.dll build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icuuc53.dll build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Core.dll build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Gui.dll  build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5OpenGL.dll build\bin\release
+  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Widgets.dll  build\bin\release
   - mkdir build\bin\release\platforms\
-  - copy C:\Qt\5.4\msvc2013_opengl\plugins\platforms\qwindows.dll build\bin\release\platforms
+  - copy C:\Qt\5.4\msvc2013_64_opengl\plugins\platforms\qwindows.dll build\bin\release\platforms
     # zip up the build folder -> build.7z
   - 7z a build .\build\bin\release\*
     # rename, upload to Mega
