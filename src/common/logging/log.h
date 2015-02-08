@@ -32,7 +32,7 @@ typedef u8 ClassType;
 /**
  * Specifies the sub-system that generated the log message.
  *
- * @note If you add a new entry here, also add a corresponding one to `ALL_LOG_CLASSES` in log.cpp.
+ * @note If you add a new entry here, also add a corresponding one to `ALL_LOG_CLASSES` in backend.cpp.
  */
 enum class Class : ClassType {
     Log,                        ///< Messages about the log system itself
