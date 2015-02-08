@@ -27,10 +27,16 @@ enum : u32 {
     MPCORE_PRIV_PADDR_END       = (MPCORE_PRIV_PADDR + MPCORE_PRIV_SIZE),
 
     FCRAM_SIZE                  = 0x08000000,   ///< FCRAM size
-    FCRAM_PADDR                 = 0x20000000,                       ///< FCRAM physical address
-    FCRAM_PADDR_END             = (FCRAM_PADDR + FCRAM_SIZE),       ///< FCRAM end of physical space
-    FCRAM_VADDR                 = 0x08000000,                       ///< FCRAM virtual address
-    FCRAM_VADDR_END             = (FCRAM_VADDR + FCRAM_SIZE),       ///< FCRAM end of virtual space
+    FCRAM_PADDR                 = 0x20000000,   ///< FCRAM physical address
+    FCRAM_PADDR_END             = (FCRAM_PADDR + FCRAM_SIZE),
+
+    HEAP_SIZE                   = FCRAM_SIZE,   ///< Application heap size
+    HEAP_VADDR                  = 0x08000000,
+    HEAP_VADDR_END              = (HEAP_VADDR + HEAP_SIZE),
+
+    HEAP_LINEAR_SIZE            = FCRAM_SIZE,
+    HEAP_LINEAR_VADDR           = 0x14000000,
+    HEAP_LINEAR_VADDR_END       = (HEAP_LINEAR_VADDR + HEAP_LINEAR_SIZE),
     
     AXI_WRAM_SIZE               = 0x00080000,   ///< AXI WRAM size
     AXI_WRAM_PADDR              = 0x1FF80000,   ///< AXI WRAM physical address
@@ -64,18 +70,6 @@ enum : u32 {
     SYSTEM_MEMORY_SIZE          = 0x02C00000,   ///< 44MB
     SYSTEM_MEMORY_VADDR         = 0x04000000,
     SYSTEM_MEMORY_VADDR_END     = (SYSTEM_MEMORY_VADDR + SYSTEM_MEMORY_SIZE),
-
-    HEAP_SIZE                   = FCRAM_SIZE,   ///< Application heap size
-    //HEAP_PADDR                  = HEAP_GSP_SIZE,
-    //HEAP_PADDR_END              = (HEAP_PADDR + HEAP_SIZE),
-    HEAP_VADDR                  = 0x08000000,
-    HEAP_VADDR_END              = (HEAP_VADDR + HEAP_SIZE),
-
-    HEAP_LINEAR_SIZE            = 0x08000000,   ///< Linear heap size... TODO: Define correctly?
-    HEAP_LINEAR_VADDR           = 0x14000000,
-    HEAP_LINEAR_VADDR_END       = (HEAP_LINEAR_VADDR + HEAP_LINEAR_SIZE),
-    HEAP_LINEAR_PADDR           = 0x00000000,
-    HEAP_LINEAR_PADDR_END       = (HEAP_LINEAR_PADDR + HEAP_LINEAR_SIZE),
 
     HARDWARE_IO_SIZE            = 0x01000000,
     HARDWARE_IO_PADDR           = 0x10000000,                       ///< IO physical address start
