@@ -104,125 +104,125 @@
 
 static inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift)
 {
-	if (shift) {
-		if (shift < 32)
-			val = val >> shift | ((val << (32 - shift)) != 0);
-		else
-			val = val != 0;
-	}
-	return val;
+    if (shift) {
+        if (shift < 32)
+            val = val >> shift | ((val << (32 - shift)) != 0);
+        else
+            val = val != 0;
+    }
+    return val;
 }
 
 static inline u64 vfp_shiftright64jamming(u64 val, unsigned int shift)
 {
-	if (shift) {
-		if (shift < 64)
-			val = val >> shift | ((val << (64 - shift)) != 0);
-		else
-			val = val != 0;
-	}
-	return val;
+    if (shift) {
+        if (shift < 64)
+            val = val >> shift | ((val << (64 - shift)) != 0);
+        else
+            val = val != 0;
+    }
+    return val;
 }
 
 static inline u32 vfp_hi64to32jamming(u64 val)
 {
-	u32 v;
-	u32 highval = val >> 32;
-	u32 lowval = val & 0xffffffff;
+    u32 v;
+    u32 highval = val >> 32;
+    u32 lowval = val & 0xffffffff;
 
-	if (lowval >= 1)
-		v = highval | 1;
-	else
-		v = highval;
+    if (lowval >= 1)
+        v = highval | 1;
+    else
+        v = highval;
 
-	return v;
+    return v;
 }
 
-static inline void add128(u64 *resh, u64 *resl, u64 nh, u64 nl, u64 mh, u64 ml)
+static inline void add128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml)
 {
-	*resl = nl + ml;
-	*resh = nh + mh;
-	if (*resl < nl)
-		*resh += 1;
+    *resl = nl + ml;
+    *resh = nh + mh;
+    if (*resl < nl)
+        *resh += 1;
 }
 
-static inline void sub128(u64 *resh, u64 *resl, u64 nh, u64 nl, u64 mh, u64 ml)
+static inline void sub128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml)
 {
-	*resl = nl - ml;
-	*resh = nh - mh;
-	if (*resl > nl)
-		*resh -= 1;
+    *resl = nl - ml;
+    *resh = nh - mh;
+    if (*resl > nl)
+        *resh -= 1;
 }
 
-static inline void mul64to128(u64 *resh, u64 *resl, u64 n, u64 m)
+static inline void mul64to128(u64* resh, u64* resl, u64 n, u64 m)
 {
-	u32 nh, nl, mh, ml;
-	u64 rh, rma, rmb, rl;
+    u32 nh, nl, mh, ml;
+    u64 rh, rma, rmb, rl;
 
-	nl = n;
-	ml = m;
-	rl = (u64)nl * ml;
+    nl = n;
+    ml = m;
+    rl = (u64)nl * ml;
 
-	nh = n >> 32;
-	rma = (u64)nh * ml;
+    nh = n >> 32;
+    rma = (u64)nh * ml;
 
-	mh = m >> 32;
-	rmb = (u64)nl * mh;
-	rma += rmb;
+    mh = m >> 32;
+    rmb = (u64)nl * mh;
+    rma += rmb;
 
-	rh = (u64)nh * mh;
-	rh += ((u64)(rma < rmb) << 32) + (rma >> 32);
+    rh = (u64)nh * mh;
+    rh += ((u64)(rma < rmb) << 32) + (rma >> 32);
 
-	rma <<= 32;
-	rl += rma;
-	rh += (rl < rma);
+    rma <<= 32;
+    rl += rma;
+    rh += (rl < rma);
 
-	*resl = rl;
-	*resh = rh;
+    *resl = rl;
+    *resh = rh;
 }
 
-static inline void shift64left(u64 *resh, u64 *resl, u64 n)
+static inline void shift64left(u64* resh, u64* resl, u64 n)
 {
-	*resh = n >> 63;
-	*resl = n << 1;
+    *resh = n >> 63;
+    *resl = n << 1;
 }
 
 static inline u64 vfp_hi64multiply64(u64 n, u64 m)
 {
-	u64 rh, rl;
-	mul64to128(&rh, &rl, n, m);
-	return rh | (rl != 0);
+    u64 rh, rl;
+    mul64to128(&rh, &rl, n, m);
+    return rh | (rl != 0);
 }
 
 static inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m)
 {
-	u64 mh, ml, remh, reml, termh, terml, z;
+    u64 mh, ml, remh, reml, termh, terml, z;
 
-	if (nh >= m)
-		return ~0ULL;
-	mh = m >> 32;
-	if (mh << 32 <= nh) {
-		z = 0xffffffff00000000ULL;
-	} else {
-		z = nh;
-		do_div(z, mh);
-		z <<= 32;
-	}
-	mul64to128(&termh, &terml, m, z);
-	sub128(&remh, &reml, nh, nl, termh, terml);
-	ml = m << 32;
-	while ((s64)remh < 0) {
-		z -= 0x100000000ULL;
-		add128(&remh, &reml, remh, reml, mh, ml);
-	}
-	remh = (remh << 32) | (reml >> 32);
-	if (mh << 32 <= remh) {
-		z |= 0xffffffff;
-	} else {
-		do_div(remh, mh);
-		z |= remh;
-	}
-	return z;
+    if (nh >= m)
+        return ~0ULL;
+    mh = m >> 32;
+    if (mh << 32 <= nh) {
+        z = 0xffffffff00000000ULL;
+    } else {
+        z = nh;
+        do_div(z, mh);
+        z <<= 32;
+    }
+    mul64to128(&termh, &terml, m, z);
+    sub128(&remh, &reml, nh, nl, termh, terml);
+    ml = m << 32;
+    while ((s64)remh < 0) {
+        z -= 0x100000000ULL;
+        add128(&remh, &reml, remh, reml, mh, ml);
+    }
+    remh = (remh << 32) | (reml >> 32);
+    if (mh << 32 <= remh) {
+        z |= 0xffffffff;
+    } else {
+        do_div(remh, mh);
+        z |= remh;
+    }
+    return z;
 }
 
 /*
@@ -234,9 +234,9 @@ static inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m)
  * Single-precision
  */
 struct vfp_single {
-	s16	exponent;
-	u16	sign;
-	u32	significand;
+    s16	exponent;
+    u16	sign;
+    u32	significand;
 };
 
 /*
@@ -271,16 +271,16 @@ struct vfp_single {
  */
 static inline void vfp_single_unpack(struct vfp_single *s, s32 val)
 {
-	u32 significand;
+    u32 significand;
 
-	s->sign = vfp_single_packed_sign(val) >> 16,
-	s->exponent = vfp_single_packed_exponent(val);
+    s->sign = vfp_single_packed_sign(val) >> 16,
+    s->exponent = vfp_single_packed_exponent(val);
 
-	significand = (u32) val;
-	significand = (significand << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
-	if (s->exponent && s->exponent != 255)
-		significand |= 0x40000000;
-	s->significand = significand;
+    significand = (u32) val;
+    significand = (significand << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
+    if (s->exponent && s->exponent != 255)
+        significand |= 0x40000000;
+    s->significand = significand;
 }
 
 /*
@@ -289,11 +289,10 @@ static inline void vfp_single_unpack(struct vfp_single *s, s32 val)
  */
 static inline s32 vfp_single_pack(struct vfp_single *s)
 {
-	u32 val;
-	val = (s->sign << 16) +
-	      (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
-	      (s->significand >> VFP_SINGLE_LOW_BITS);
-	return (s32)val;
+    u32 val = (s->sign << 16) +
+              (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
+              (s->significand >> VFP_SINGLE_LOW_BITS);
+    return (s32)val;
 }
 
 #define VFP_NUMBER		(1<<0)
@@ -308,21 +307,21 @@ static inline s32 vfp_single_pack(struct vfp_single *s)
 
 static inline int vfp_single_type(struct vfp_single *s)
 {
-	int type = VFP_NUMBER;
-	if (s->exponent == 255) {
-		if (s->significand == 0)
-			type = VFP_INFINITY;
-		else if (s->significand & VFP_SINGLE_SIGNIFICAND_QNAN)
-			type = VFP_QNAN;
-		else
-			type = VFP_SNAN;
-	} else if (s->exponent == 0) {
-		if (s->significand == 0)
-			type |= VFP_ZERO;
-		else
-			type |= VFP_DENORMAL;
-	}
-	return type;
+    int type = VFP_NUMBER;
+    if (s->exponent == 255) {
+        if (s->significand == 0)
+            type = VFP_INFINITY;
+        else if (s->significand & VFP_SINGLE_SIGNIFICAND_QNAN)
+            type = VFP_QNAN;
+        else
+            type = VFP_SNAN;
+    } else if (s->exponent == 0) {
+        if (s->significand == 0)
+            type |= VFP_ZERO;
+        else
+            type |= VFP_DENORMAL;
+    }
+    return type;
 }
 
 
@@ -332,9 +331,9 @@ u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single *vs,
  * Double-precision
  */
 struct vfp_double {
-	s16	exponent;
-	u16	sign;
-	u64	significand;
+    s16	exponent;
+    u16	sign;
+    u64	significand;
 };
 
 /*
@@ -374,16 +373,16 @@ struct vfp_double {
  */
 static inline void vfp_double_unpack(struct vfp_double *s, s64 val)
 {
-	u64 significand;
+    u64 significand;
 
-	s->sign = vfp_double_packed_sign(val) >> 48;
-	s->exponent = vfp_double_packed_exponent(val);
+    s->sign = vfp_double_packed_sign(val) >> 48;
+    s->exponent = vfp_double_packed_exponent(val);
 
-	significand = (u64) val;
-	significand = (significand << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
-	if (s->exponent && s->exponent != 2047)
-		significand |= (1ULL << 62);
-	s->significand = significand;
+    significand = (u64) val;
+    significand = (significand << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
+    if (s->exponent && s->exponent != 2047)
+        significand |= (1ULL << 62);
+    s->significand = significand;
 }
 
 /*
@@ -392,30 +391,29 @@ static inline void vfp_double_unpack(struct vfp_double *s, s64 val)
  */
 static inline s64 vfp_double_pack(struct vfp_double *s)
 {
-	u64 val;
-	val = ((u64)s->sign << 48) +
-	      ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
-	      (s->significand >> VFP_DOUBLE_LOW_BITS);
-	return (s64)val;
+    u64 val = ((u64)s->sign << 48) +
+              ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
+              (s->significand >> VFP_DOUBLE_LOW_BITS);
+    return (s64)val;
 }
 
 static inline int vfp_double_type(struct vfp_double *s)
 {
-	int type = VFP_NUMBER;
-	if (s->exponent == 2047) {
-		if (s->significand == 0)
-			type = VFP_INFINITY;
-		else if (s->significand & VFP_DOUBLE_SIGNIFICAND_QNAN)
-			type = VFP_QNAN;
-		else
-			type = VFP_SNAN;
-	} else if (s->exponent == 0) {
-		if (s->significand == 0)
-			type |= VFP_ZERO;
-		else
-			type |= VFP_DENORMAL;
-	}
-	return type;
+    int type = VFP_NUMBER;
+    if (s->exponent == 2047) {
+        if (s->significand == 0)
+            type = VFP_INFINITY;
+        else if (s->significand & VFP_DOUBLE_SIGNIFICAND_QNAN)
+            type = VFP_QNAN;
+        else
+            type = VFP_SNAN;
+    } else if (s->exponent == 0) {
+        if (s->significand == 0)
+            type |= VFP_ZERO;
+        else
+            type |= VFP_DENORMAL;
+    }
+    return type;
 }
 
 u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
@@ -448,37 +446,37 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 #define OP_SM		(1 << 2)
 
 struct op {
-	u32 (* const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
-	u32 flags;
+    u32 (* const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
+    u32 flags;
 };
 
 static inline u32 fls(ARMword x)
 {
-	int r = 32;
+    int r = 32;
 
-	if (!x)
-		return 0;
-	if (!(x & 0xffff0000u)) {
-		x <<= 16;
-		r -= 16;
-	}
-	if (!(x & 0xff000000u)) {
-		x <<= 8;
-		r -= 8;
-	}
-	if (!(x & 0xf0000000u)) {
-		x <<= 4;
-		r -= 4;
-	}
-	if (!(x & 0xc0000000u)) {
-		x <<= 2;
-		r -= 2;
-	}
-	if (!(x & 0x80000000u)) {
-		x <<= 1;
-		r -= 1;
-	}
-	return r;
+    if (!x)
+        return 0;
+    if (!(x & 0xffff0000u)) {
+        x <<= 16;
+        r -= 16;
+    }
+    if (!(x & 0xff000000u)) {
+        x <<= 8;
+        r -= 8;
+    }
+    if (!(x & 0xf0000000u)) {
+        x <<= 4;
+        r -= 4;
+    }
+    if (!(x & 0xc0000000u)) {
+        x <<= 2;
+        r -= 2;
+    }
+    if (!(x & 0x80000000u)) {
+        x <<= 1;
+        r -= 1;
+    }
+    return r;
 
 }
 
