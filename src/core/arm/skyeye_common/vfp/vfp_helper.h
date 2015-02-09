@@ -45,62 +45,51 @@
 
 #define do_div(n, base) {n/=base;}
 
-/* From vfpinstr.h */
+enum : u32 {
+    FOP_MASK  = 0x00b00040,
+    FOP_FMAC  = 0x00000000,
+    FOP_FNMAC = 0x00000040,
+    FOP_FMSC  = 0x00100000,
+    FOP_FNMSC = 0x00100040,
+    FOP_FMUL  = 0x00200000,
+    FOP_FNMUL = 0x00200040,
+    FOP_FADD  = 0x00300000,
+    FOP_FSUB  = 0x00300040,
+    FOP_FDIV  = 0x00800000,
+    FOP_EXT   = 0x00b00040
+};
 
-#define INST_CPRTDO(inst)	(((inst) & 0x0f000000) == 0x0e000000)
-#define INST_CPRT(inst)		((inst) & (1 << 4))
-#define INST_CPRT_L(inst)	((inst) & (1 << 20))
-#define INST_CPRT_Rd(inst)	(((inst) & (15 << 12)) >> 12)
-#define INST_CPRT_OP(inst)	(((inst) >> 21) & 7)
-#define INST_CPNUM(inst)	((inst) & 0xf00)
-#define CPNUM(cp)		((cp) << 8)
+#define FOP_TO_IDX(inst) ((inst & 0x00b00000) >> 20 | (inst & (1 << 6)) >> 4)
 
-#define FOP_MASK	(0x00b00040)
-#define FOP_FMAC	(0x00000000)
-#define FOP_FNMAC	(0x00000040)
-#define FOP_FMSC	(0x00100000)
-#define FOP_FNMSC	(0x00100040)
-#define FOP_FMUL	(0x00200000)
-#define FOP_FNMUL	(0x00200040)
-#define FOP_FADD	(0x00300000)
-#define FOP_FSUB	(0x00300040)
-#define FOP_FDIV	(0x00800000)
-#define FOP_EXT		(0x00b00040)
+enum : u32 {
+    FEXT_MASK   = 0x000f0080,
+    FEXT_FCPY   = 0x00000000,
+    FEXT_FABS   = 0x00000080,
+    FEXT_FNEG   = 0x00010000,
+    FEXT_FSQRT  = 0x00010080,
+    FEXT_FCMP   = 0x00040000,
+    FEXT_FCMPE  = 0x00040080,
+    FEXT_FCMPZ  = 0x00050000,
+    FEXT_FCMPEZ = 0x00050080,
+    FEXT_FCVT   = 0x00070080,
+    FEXT_FUITO  = 0x00080000,
+    FEXT_FSITO  = 0x00080080,
+    FEXT_FTOUI  = 0x000c0000,
+    FEXT_FTOUIZ = 0x000c0080,
+    FEXT_FTOSI  = 0x000d0000,
+    FEXT_FTOSIZ = 0x000d0080
+};
 
-#define FOP_TO_IDX(inst)	((inst & 0x00b00000) >> 20 | (inst & (1 << 6)) >> 4)
+#define FEXT_TO_IDX(inst) ((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
 
-#define FEXT_MASK	(0x000f0080)
-#define FEXT_FCPY	(0x00000000)
-#define FEXT_FABS	(0x00000080)
-#define FEXT_FNEG	(0x00010000)
-#define FEXT_FSQRT	(0x00010080)
-#define FEXT_FCMP	(0x00040000)
-#define FEXT_FCMPE	(0x00040080)
-#define FEXT_FCMPZ	(0x00050000)
-#define FEXT_FCMPEZ	(0x00050080)
-#define FEXT_FCVT	(0x00070080)
-#define FEXT_FUITO	(0x00080000)
-#define FEXT_FSITO	(0x00080080)
-#define FEXT_FTOUI	(0x000c0000)
-#define FEXT_FTOUIZ	(0x000c0080)
-#define FEXT_FTOSI	(0x000d0000)
-#define FEXT_FTOSIZ	(0x000d0080)
+#define vfp_get_sd(inst)  ((inst & 0x0000f000) >> 11 | (inst & (1 << 22)) >> 22)
+#define vfp_get_dd(inst)  ((inst & 0x0000f000) >> 12 | (inst & (1 << 22)) >> 18)
+#define vfp_get_sm(inst)  ((inst & 0x0000000f) << 1 | (inst & (1 << 5)) >> 5)
+#define vfp_get_dm(inst)  ((inst & 0x0000000f) | (inst & (1 << 5)) >> 1)
+#define vfp_get_sn(inst)  ((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
+#define vfp_get_dn(inst)  ((inst & 0x000f0000) >> 16 | (inst & (1 << 7)) >> 3)
 
-#define FEXT_TO_IDX(inst)	((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
-
-#define vfp_get_sd(inst)	((inst & 0x0000f000) >> 11 | (inst & (1 << 22)) >> 22)
-#define vfp_get_dd(inst)	((inst & 0x0000f000) >> 12 | (inst & (1 << 22)) >> 18)
-#define vfp_get_sm(inst)	((inst & 0x0000000f) << 1 | (inst & (1 << 5)) >> 5)
-#define vfp_get_dm(inst)	((inst & 0x0000000f) | (inst & (1 << 5)) >> 1)
-#define vfp_get_sn(inst)	((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
-#define vfp_get_dn(inst)	((inst & 0x000f0000) >> 16 | (inst & (1 << 7)) >> 3)
-
-#define vfp_single(inst)	(((inst) & 0x0000f00) == 0xa00)
-
-#define FPSCR_N	(1 << 31)
-#define FPSCR_Z	(1 << 30)
-#define FPSCR_C (1 << 29)
-#define FPSCR_V	(1 << 28)
+#define vfp_single(inst)  (((inst) & 0x0000f00) == 0xa00)
 
 static inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift)
 {
@@ -225,51 +214,39 @@ static inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m)
     return z;
 }
 
-/*
- * Operations on unpacked elements
- */
-#define vfp_sign_negate(sign)	(sign ^ 0x8000)
+// Operations on unpacked elements
+#define vfp_sign_negate(sign) (sign ^ 0x8000)
 
-/*
- * Single-precision
- */
+// Single-precision
 struct vfp_single {
     s16	exponent;
     u16	sign;
     u32	significand;
 };
 
-/*
- * VFP_SINGLE_MANTISSA_BITS - number of bits in the mantissa
- * VFP_SINGLE_EXPONENT_BITS - number of bits in the exponent
- * VFP_SINGLE_LOW_BITS - number of low bits in the unpacked significand
- *  which are not propagated to the float upon packing.
- */
-#define VFP_SINGLE_MANTISSA_BITS	(23)
-#define VFP_SINGLE_EXPONENT_BITS	(8)
-#define VFP_SINGLE_LOW_BITS		(32 - VFP_SINGLE_MANTISSA_BITS - 2)
-#define VFP_SINGLE_LOW_BITS_MASK	((1 << VFP_SINGLE_LOW_BITS) - 1)
+// VFP_SINGLE_MANTISSA_BITS - number of bits in the mantissa
+// VFP_SINGLE_EXPONENT_BITS - number of bits in the exponent
+// VFP_SINGLE_LOW_BITS - number of low bits in the unpacked significand
+// which are not propagated to the float upon packing.
+#define VFP_SINGLE_MANTISSA_BITS (23)
+#define VFP_SINGLE_EXPONENT_BITS (8)
+#define VFP_SINGLE_LOW_BITS      (32 - VFP_SINGLE_MANTISSA_BITS - 2)
+#define VFP_SINGLE_LOW_BITS_MASK ((1 << VFP_SINGLE_LOW_BITS) - 1)
 
-/*
- * The bit in an unpacked float which indicates that it is a quiet NaN
- */
+// The bit in an unpacked float which indicates that it is a quiet NaN
 #define VFP_SINGLE_SIGNIFICAND_QNAN	(1 << (VFP_SINGLE_MANTISSA_BITS - 1 + VFP_SINGLE_LOW_BITS))
 
-/*
- * Operations on packed single-precision numbers
- */
-#define vfp_single_packed_sign(v)	((v) & 0x80000000)
-#define vfp_single_packed_negate(v)	((v) ^ 0x80000000)
-#define vfp_single_packed_abs(v)	((v) & ~0x80000000)
-#define vfp_single_packed_exponent(v)	(((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
-#define vfp_single_packed_mantissa(v)	((v) & ((1 << VFP_SINGLE_MANTISSA_BITS) - 1))
+// Operations on packed single-precision numbers
+#define vfp_single_packed_sign(v)     ((v) & 0x80000000)
+#define vfp_single_packed_negate(v)   ((v) ^ 0x80000000)
+#define vfp_single_packed_abs(v)      ((v) & ~0x80000000)
+#define vfp_single_packed_exponent(v) (((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
+#define vfp_single_packed_mantissa(v) ((v) & ((1 << VFP_SINGLE_MANTISSA_BITS) - 1))
 
-/*
- * Unpack a single-precision float.  Note that this returns the magnitude
- * of the single-precision float mantissa with the 1. if necessary,
- * aligned to bit 30.
- */
-static inline void vfp_single_unpack(struct vfp_single *s, s32 val)
+// Unpack a single-precision float.  Note that this returns the magnitude
+// of the single-precision float mantissa with the 1. if necessary,
+// aligned to bit 30.
+static inline void vfp_single_unpack(vfp_single* s, s32 val)
 {
     u32 significand;
 
@@ -283,11 +260,9 @@ static inline void vfp_single_unpack(struct vfp_single *s, s32 val)
     s->significand = significand;
 }
 
-/*
- * Re-pack a single-precision float.  This assumes that the float is
- * already normalised such that the MSB is bit 30, _not_ bit 31.
- */
-static inline s32 vfp_single_pack(struct vfp_single *s)
+// Re-pack a single-precision float.  This assumes that the float is
+// already normalised such that the MSB is bit 30, _not_ bit 31.
+static inline s32 vfp_single_pack(vfp_single* s)
 {
     u32 val = (s->sign << 16) +
               (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
@@ -295,17 +270,19 @@ static inline s32 vfp_single_pack(struct vfp_single *s)
     return (s32)val;
 }
 
-#define VFP_NUMBER		(1<<0)
-#define VFP_ZERO		(1<<1)
-#define VFP_DENORMAL		(1<<2)
-#define VFP_INFINITY		(1<<3)
-#define VFP_NAN			(1<<4)
-#define VFP_NAN_SIGNAL		(1<<5)
+enum : u32 {
+    VFP_NUMBER     = (1 << 0),
+    VFP_ZERO       = (1 << 1),
+    VFP_DENORMAL   = (1 << 2),
+    VFP_INFINITY   = (1 << 3),
+    VFP_NAN        = (1 << 4),
+    VFP_NAN_SIGNAL = (1 << 5),
 
-#define VFP_QNAN		(VFP_NAN)
-#define VFP_SNAN		(VFP_NAN|VFP_NAN_SIGNAL)
+    VFP_QNAN       = (VFP_NAN),
+    VFP_SNAN       = (VFP_NAN|VFP_NAN_SIGNAL)
+};
 
-static inline int vfp_single_type(struct vfp_single *s)
+static inline int vfp_single_type(vfp_single* s)
 {
     int type = VFP_NUMBER;
     if (s->exponent == 255) {
@@ -325,53 +302,43 @@ static inline int vfp_single_type(struct vfp_single *s)
 }
 
 
-u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single *vs, u32 fpscr, u32 exceptions, const char *func);
+u32 vfp_single_normaliseround(ARMul_State* state, int sd, vfp_single* vs, u32 fpscr, u32 exceptions, const char* func);
 
-/*
- * Double-precision
- */
+// Double-precision
 struct vfp_double {
     s16	exponent;
     u16	sign;
     u64	significand;
 };
 
-/*
- * VFP_REG_ZERO is a special register number for vfp_get_double
- * which returns (double)0.0.  This is useful for the compare with
- * zero instructions.
- */
+// VFP_REG_ZERO is a special register number for vfp_get_double
+// which returns (double)0.0.  This is useful for the compare with
+// zero instructions.
 #ifdef CONFIG_VFPv3
-#define VFP_REG_ZERO	32
+#define VFP_REG_ZERO 32
 #else
-#define VFP_REG_ZERO	16
+#define VFP_REG_ZERO 16
 #endif
 
-#define VFP_DOUBLE_MANTISSA_BITS	(52)
-#define VFP_DOUBLE_EXPONENT_BITS	(11)
-#define VFP_DOUBLE_LOW_BITS		(64 - VFP_DOUBLE_MANTISSA_BITS - 2)
-#define VFP_DOUBLE_LOW_BITS_MASK	((1 << VFP_DOUBLE_LOW_BITS) - 1)
+#define VFP_DOUBLE_MANTISSA_BITS (52)
+#define VFP_DOUBLE_EXPONENT_BITS (11)
+#define VFP_DOUBLE_LOW_BITS      (64 - VFP_DOUBLE_MANTISSA_BITS - 2)
+#define VFP_DOUBLE_LOW_BITS_MASK ((1 << VFP_DOUBLE_LOW_BITS) - 1)
 
-/*
- * The bit in an unpacked double which indicates that it is a quiet NaN
- */
-#define VFP_DOUBLE_SIGNIFICAND_QNAN	(1ULL << (VFP_DOUBLE_MANTISSA_BITS - 1 + VFP_DOUBLE_LOW_BITS))
+// The bit in an unpacked double which indicates that it is a quiet NaN
+#define VFP_DOUBLE_SIGNIFICAND_QNAN (1ULL << (VFP_DOUBLE_MANTISSA_BITS - 1 + VFP_DOUBLE_LOW_BITS))
 
-/*
- * Operations on packed single-precision numbers
- */
-#define vfp_double_packed_sign(v)	((v) & (1ULL << 63))
-#define vfp_double_packed_negate(v)	((v) ^ (1ULL << 63))
-#define vfp_double_packed_abs(v)	((v) & ~(1ULL << 63))
-#define vfp_double_packed_exponent(v)	(((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
-#define vfp_double_packed_mantissa(v)	((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
+// Operations on packed single-precision numbers
+#define vfp_double_packed_sign(v)     ((v) & (1ULL << 63))
+#define vfp_double_packed_negate(v)   ((v) ^ (1ULL << 63))
+#define vfp_double_packed_abs(v)      ((v) & ~(1ULL << 63))
+#define vfp_double_packed_exponent(v) (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
+#define vfp_double_packed_mantissa(v) ((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
 
-/*
- * Unpack a double-precision float.  Note that this returns the magnitude
- * of the double-precision float mantissa with the 1. if necessary,
- * aligned to bit 62.
- */
-static inline void vfp_double_unpack(struct vfp_double *s, s64 val)
+// Unpack a double-precision float.  Note that this returns the magnitude
+// of the double-precision float mantissa with the 1. if necessary,
+// aligned to bit 62.
+static inline void vfp_double_unpack(vfp_double* s, s64 val)
 {
     u64 significand;
 
@@ -385,11 +352,9 @@ static inline void vfp_double_unpack(struct vfp_double *s, s64 val)
     s->significand = significand;
 }
 
-/*
- * Re-pack a double-precision float.  This assumes that the float is
- * already normalised such that the MSB is bit 30, _not_ bit 31.
- */
-static inline s64 vfp_double_pack(struct vfp_double *s)
+// Re-pack a double-precision float.  This assumes that the float is
+// already normalised such that the MSB is bit 30, _not_ bit 31.
+static inline s64 vfp_double_pack(vfp_double* s)
 {
     u64 val = ((u64)s->sign << 48) +
               ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
@@ -397,7 +362,7 @@ static inline s64 vfp_double_pack(struct vfp_double *s)
     return (s64)val;
 }
 
-static inline int vfp_double_type(struct vfp_double *s)
+static inline int vfp_double_type(vfp_double* s)
 {
     int type = VFP_NUMBER;
     if (s->exponent == 2047) {
@@ -416,34 +381,30 @@ static inline int vfp_double_type(struct vfp_double *s)
     return type;
 }
 
-u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
+u32 vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, u32 fpscr, u32 exceptions, const char* func);
 
 u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 
-/*
- * A special flag to tell the normalisation code not to normalise.
- */
-#define VFP_NAN_FLAG	0x100
+// A special flag to tell the normalisation code not to normalise.
+#define VFP_NAN_FLAG 0x100
 
-/*
- * A bit pattern used to indicate the initial (unset) value of the
- * exception mask, in case nothing handles an instruction.  This
- * doesn't include the NAN flag, which get masked out before
- * we check for an error.
- */
-#define VFP_EXCEPTION_ERROR	((u32)-1 & ~VFP_NAN_FLAG)
+// A bit pattern used to indicate the initial (unset) value of the
+// exception mask, in case nothing handles an instruction.  This
+// doesn't include the NAN flag, which get masked out before
+// we check for an error.
+#define VFP_EXCEPTION_ERROR ((u32)-1 & ~VFP_NAN_FLAG)
 
-/*
- * A flag to tell vfp instruction type.
- *  OP_SCALAR - this operation always operates in scalar mode
- *  OP_SD - the instruction exceptionally writes to a single precision result.
- *  OP_DD - the instruction exceptionally writes to a double precision result.
- *  OP_SM - the instruction exceptionally reads from a single precision operand.
- */
-#define OP_SCALAR	(1 << 0)
-#define OP_SD		(1 << 1)
-#define OP_DD		(1 << 1)
-#define OP_SM		(1 << 2)
+// A flag to tell vfp instruction type.
+//  OP_SCALAR - This operation always operates in scalar mode
+//  OP_SD     - The instruction exceptionally writes to a single precision result.
+//  OP_DD     - The instruction exceptionally writes to a double precision result.
+//  OP_SM     - The instruction exceptionally reads from a single precision operand.
+enum : u32 {
+    OP_SCALAR = (1 << 0),
+    OP_SD     = (1 << 1),
+    OP_DD     = (1 << 1),
+    OP_SM     = (1 << 2)
+};
 
 struct op {
     u32 (* const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
@@ -480,7 +441,7 @@ static inline u32 fls(ARMword x)
 
 }
 
-u32 vfp_double_normaliseroundintern(ARMul_State* state, struct vfp_double *vd, u32 fpscr, u32 exceptions, const char *func);
-u32 vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
-u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn, struct vfp_double *vdm, u32 fpscr);
-u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, struct vfp_double* dm, u32 fpscr);
+u32 vfp_double_normaliseroundintern(ARMul_State* state, vfp_double* vd, u32 fpscr, u32 exceptions, const char* func);
+u32 vfp_double_multiply(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, u32 fpscr);
+u32 vfp_double_add(vfp_double* vdd, vfp_double* vdn, vfp_double *vdm, u32 fpscr);
+u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, vfp_double* dm, u32 fpscr);

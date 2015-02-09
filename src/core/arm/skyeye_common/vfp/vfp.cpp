@@ -773,8 +773,8 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
      * Comparison instructions always return at least one of
      * these flags set.
      */
-    if (exceptions & (FPSCR_N|FPSCR_Z|FPSCR_C|FPSCR_V))
-        fpscr &= ~(FPSCR_N|FPSCR_Z|FPSCR_C|FPSCR_V);
+    if (exceptions & (FPSCR_NFLAG|FPSCR_ZFLAG|FPSCR_CFLAG|FPSCR_VFLAG))
+        fpscr &= ~(FPSCR_NFLAG|FPSCR_ZFLAG|FPSCR_CFLAG|FPSCR_VFLAG);
 
     fpscr |= exceptions;
 
