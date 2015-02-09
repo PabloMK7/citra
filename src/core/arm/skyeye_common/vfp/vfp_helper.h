@@ -381,8 +381,6 @@ static inline int vfp_double_type(vfp_double* s)
     return type;
 }
 
-u32 vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, u32 fpscr, u32 exceptions, const char* func);
-
 u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 
 // A special flag to tell the normalisation code not to normalise.
@@ -441,7 +439,6 @@ static inline u32 fls(ARMword x)
 
 }
 
-u32 vfp_double_normaliseroundintern(ARMul_State* state, vfp_double* vd, u32 fpscr, u32 exceptions, const char* func);
 u32 vfp_double_multiply(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, u32 fpscr);
 u32 vfp_double_add(vfp_double* vdd, vfp_double* vdn, vfp_double *vdm, u32 fpscr);
-u32 vfp_double_fcvtsinterncutting(ARMul_State* state, int sd, vfp_double* dm, u32 fpscr);
+u32 vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, u32 fpscr, u32 exceptions, const char* func);
