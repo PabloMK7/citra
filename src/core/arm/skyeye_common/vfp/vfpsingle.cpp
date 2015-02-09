@@ -419,7 +419,7 @@ static u32 vfp_compare(ARMul_State* state, int sd, int signal_on_qnan, s32 m, u3
 
     d = vfp_get_float(state, sd);
     if (vfp_single_packed_exponent(m) == 255 && vfp_single_packed_mantissa(m)) {
-        ret |= FPSCR_C | FPSCR_V;
+        ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan || !(vfp_single_packed_mantissa(m) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
@@ -428,7 +428,7 @@ static u32 vfp_compare(ARMul_State* state, int sd, int signal_on_qnan, s32 m, u3
     }
 
     if (vfp_single_packed_exponent(d) == 255 && vfp_single_packed_mantissa(d)) {
-        ret |= FPSCR_C | FPSCR_V;
+        ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan || !(vfp_single_packed_mantissa(d) & (1 << (VFP_SINGLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
@@ -441,7 +441,7 @@ static u32 vfp_compare(ARMul_State* state, int sd, int signal_on_qnan, s32 m, u3
             /*
              * equal
              */
-            ret |= FPSCR_Z | FPSCR_C;
+            ret |= FPSCR_ZFLAG | FPSCR_CFLAG;
         } else if (vfp_single_packed_sign(d ^ m)) {
             /*
              * different signs
@@ -450,22 +450,22 @@ static u32 vfp_compare(ARMul_State* state, int sd, int signal_on_qnan, s32 m, u3
                 /*
                  * d is negative, so d < m
                  */
-                ret |= FPSCR_N;
+                ret |= FPSCR_NFLAG;
             else
                 /*
                  * d is positive, so d > m
                  */
-                ret |= FPSCR_C;
+                ret |= FPSCR_CFLAG;
         } else if ((vfp_single_packed_sign(d) != 0) ^ (d < m)) {
             /*
              * d < m
              */
-            ret |= FPSCR_N;
+            ret |= FPSCR_NFLAG;
         } else if ((vfp_single_packed_sign(d) != 0) ^ (d > m)) {
             /*
              * d > m
              */
-            ret |= FPSCR_C;
+            ret |= FPSCR_CFLAG;
         }
     }
     return ret;

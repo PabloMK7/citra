@@ -511,7 +511,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
     LOG_TRACE(Core_ARM11, "In %s, state=0x%x, fpscr=0x%x\n", __FUNCTION__, state, fpscr);
     m = vfp_get_double(state, dm);
     if (vfp_double_packed_exponent(m) == 2047 && vfp_double_packed_mantissa(m)) {
-        ret |= FPSCR_C | FPSCR_V;
+        ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan || !(vfp_double_packed_mantissa(m) & (1ULL << (VFP_DOUBLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
@@ -521,7 +521,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
 
     d = vfp_get_double(state, dd);
     if (vfp_double_packed_exponent(d) == 2047 && vfp_double_packed_mantissa(d)) {
-        ret |= FPSCR_C | FPSCR_V;
+        ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan || !(vfp_double_packed_mantissa(d) & (1ULL << (VFP_DOUBLE_MANTISSA_BITS - 1))))
             /*
              * Signalling NaN, or signalling on quiet NaN
@@ -535,7 +535,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
             /*
              * equal
              */
-            ret |= FPSCR_Z | FPSCR_C;
+            ret |= FPSCR_ZFLAG | FPSCR_CFLAG;
             //printf("In %s,1 ret=0x%x\n", __FUNCTION__, ret);
         } else if (vfp_double_packed_sign(d ^ m)) {
             /*
@@ -545,22 +545,22 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
                 /*
                  * d is negative, so d < m
                  */
-                ret |= FPSCR_N;
+                ret |= FPSCR_NFLAG;
             else
                 /*
                  * d is positive, so d > m
                  */
-                ret |= FPSCR_C;
+                ret |= FPSCR_CFLAG;
         } else if ((vfp_double_packed_sign(d) != 0) ^ (d < m)) {
             /*
              * d < m
              */
-            ret |= FPSCR_N;
+            ret |= FPSCR_NFLAG;
         } else if ((vfp_double_packed_sign(d) != 0) ^ (d > m)) {
             /*
              * d > m
              */
-            ret |= FPSCR_C;
+            ret |= FPSCR_CFLAG;
         }
     }
     LOG_TRACE(Core_ARM11, "In %s, state=0x%x, ret=0x%x\n", __FUNCTION__, state, ret);
