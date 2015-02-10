@@ -63,24 +63,22 @@ void ARMul_EmulateInit()
 \***************************************************************************/
 ARMul_State* ARMul_NewState(ARMul_State* state)
 {
-    unsigned i, j;
-
     memset (state, 0, sizeof (ARMul_State));
 
     state->Emulate = RUN;
-    for (i = 0; i < 16; i++) {
+    for (unsigned int i = 0; i < 16; i++) {
         state->Reg[i] = 0;
-        for (j = 0; j < 7; j++)
+        for (unsigned int j = 0; j < 7; j++)
             state->RegBank[j][i] = 0;
     }
-    for (i = 0; i < 7; i++)
+    for (unsigned int i = 0; i < 7; i++)
         state->Spsr[i] = 0;
+
     state->Mode = 0;
 
-    state->Debug = FALSE;
     state->VectorCatch = 0;
-    state->Aborted = FALSE;
-    state->Reseted = FALSE;
+    state->Aborted = false;
+    state->Reseted = false;
     state->Inted = 3;
     state->LastInted = 3;
 
