@@ -63,6 +63,9 @@ void Config::ReadValues() {
     // Data Storage
     Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
+    // System Region
+    Settings::values.region_value = glfw_config->GetInteger("System Region", "region_value", 1);
+
     // Miscellaneous
     Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
 }

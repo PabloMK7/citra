@@ -11,9 +11,69 @@
 
 namespace LDR_RO {
 
+/**
+ * LDR_RO::Initialize service function
+ *  Inputs:
+ *      1 : CRS buffer pointer
+ *      2 : CRS Size
+ *      3 : Process memory address where the CRS will be mapped
+ *      4 : Value, must be zero
+ *      5 : KProcess handle
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void Initialize(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 crs_buffer_ptr = cmd_buff[1];
+    u32 crs_size       = cmd_buff[2];
+    u32 address        = cmd_buff[3];
+    u32 value          = cmd_buff[4];
+    u32 process        = cmd_buff[5];
+
+    if (value != 0) {
+        LOG_ERROR(Service_LDR, "This value should be zero, but is actually %u!", value);
+    }
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_WARNING(Service_LDR, "(STUBBED) called");
+}
+
+/**
+ * LDR_RO::LoadCRR service function
+ *  Inputs:
+ *      1 : CRS buffer pointer
+ *      2 : CRS Size
+ *      3 : Value, must be zero
+ *      4 : KProcess handle
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void LoadCRR(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 crs_buffer_ptr = cmd_buff[1];
+    u32 crs_size       = cmd_buff[2];
+    u32 value          = cmd_buff[3];
+    u32 process        = cmd_buff[4];
+
+    if (value != 0) {
+        LOG_ERROR(Service_LDR, "This value should be zero, but is actually %u!", value);
+    }
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_WARNING(Service_LDR, "(STUBBED) called");
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C2, nullptr,               "Initialize"},
-    {0x00020082, nullptr,               "LoadCRR"},
+    {0x000100C2, Initialize,            "Initialize"},
+    {0x00020082, LoadCRR,               "LoadCRR"},
     {0x00030042, nullptr,               "UnloadCCR"},
     {0x000402C2, nullptr,               "LoadExeCRO"},
     {0x000500C2, nullptr,               "LoadCROSymbols"},

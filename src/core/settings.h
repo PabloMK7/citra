@@ -35,6 +35,9 @@ struct Values {
     // Data Storage
     bool use_virtual_sd;
 
+    // System Region
+    int region_value;
+
     std::string log_filter;
 } extern values;
 

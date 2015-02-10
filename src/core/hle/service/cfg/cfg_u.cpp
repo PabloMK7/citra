@@ -5,6 +5,7 @@
 #include "common/file_util.h"
 #include "common/log.h"
 #include "common/string_util.h"
+#include "core/settings.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -129,6 +130,65 @@ static void GetConfigInfoBlk2(Service::Interface* self) {
 }
 
 /**
+ * CFG_User::SecureInfoGetRegion service function
+ *  Inputs:
+ *      1 : None
+ *  Outputs:
+ *      0 : Result Header code
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Region value loaded from SecureInfo offset 0x100
+ */
+static void SecureInfoGetRegion(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+
+    cmd_buffer[1] = RESULT_SUCCESS.raw; // No Error
+    cmd_buffer[2] = Settings::values.region_value;
+}
+
+/**
+ * CFG_User::GenHashConsoleUnique service function
+ *  Inputs:
+ *      1 : 20 bit application ID salt
+ *  Outputs:
+ *      0 : Result Header code
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Hash/"ID" lower word
+ *      3 : Hash/"ID" upper word
+ */
+static void GenHashConsoleUnique(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 app_id_salt = cmd_buffer[1];
+
+    cmd_buffer[1] = RESULT_SUCCESS.raw; // No Error
+    cmd_buffer[2] = 0x33646D6F ^ (app_id_salt & 0xFFFFF); // 3dmoo hash
+    cmd_buffer[3] = 0x6F534841 ^ (app_id_salt & 0xFFFFF);
+
+    LOG_WARNING(Service_CFG, "(STUBBED) called app_id_salt=0x%08X", app_id_salt);
+}
+
+/**
+ * CFG_User::GetRegionCanadaUSA service function
+ *  Inputs:
+ *      1 : None
+ *  Outputs:
+ *      0 : Result Header code
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Output value
+ */
+static void GetRegionCanadaUSA(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+
+    cmd_buffer[1] = RESULT_SUCCESS.raw; // No Error
+
+    u8 canada_or_usa = 1;
+    if (canada_or_usa == Settings::values.region_value) {
+        cmd_buffer[2] = 1;
+    } else {
+        cmd_buffer[2] = 0;
+    }
+}
+
+/**
  * CFG_User::GetSystemModel service function
  *  Inputs:
  *      0 : 0x00050000
@@ -171,9 +231,9 @@ static void GetModelNintendo2DS(Service::Interface* self) {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, GetConfigInfoBlk2,     "GetConfigInfoBlk2"},
-    {0x00020000, nullptr,               "SecureInfoGetRegion"},
-    {0x00030040, nullptr,               "GenHashConsoleUnique"},
-    {0x00040000, nullptr,               "GetRegionCanadaUSA"},
+    {0x00020000, SecureInfoGetRegion,   "SecureInfoGetRegion"},
+    {0x00030040, GenHashConsoleUnique,  "GenHashConsoleUnique"},
+    {0x00040000, GetRegionCanadaUSA,    "GetRegionCanadaUSA"},
     {0x00050000, GetSystemModel,        "GetSystemModel"},
     {0x00060000, GetModelNintendo2DS,   "GetModelNintendo2DS"},
     {0x00070040, nullptr,               "WriteToFirstByteCfgSavegame"},
