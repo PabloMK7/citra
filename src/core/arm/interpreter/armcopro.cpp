@@ -47,7 +47,7 @@ static unsigned int NoCoPro5W(ARMul_State* state, unsigned int a, ARMword b, ARM
 }
 
 // Install co-processor instruction handlers in this routine.
-unsigned int ARMul_CoProInit(ARMul_State* state)
+void ARMul_CoProInit(ARMul_State* state)
 {
     // Initialise tham all first.
     for (unsigned int i = 0; i < 16; i++)
@@ -71,11 +71,10 @@ unsigned int ARMul_CoProInit(ARMul_State* state)
     // No handlers below here.
 
     // Call all the initialisation routines.
-    for (unsigned int i = 0; i < 16; i++)
+    for (unsigned int i = 0; i < 16; i++) {
         if (state->CPInit[i])
             (state->CPInit[i]) (state);
-
-    return TRUE;
+    }
 }
 
 // Install co-processor finalisation routines in this routine.

@@ -35,11 +35,6 @@
 #define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
 #define BIT(s, n) ((s >> (n)) & 1)
 
-#ifndef FALSE
-#define FALSE 0
-#define TRUE 1
-#endif
-
 #define LOW 0
 #define HIGH 1
 #define LOWHIGH 1
@@ -135,7 +130,6 @@ struct ARMul_State
     unsigned char* CPData[16];              // Coprocessor data
     unsigned char const* CPRegWords[16];    // Map of coprocessor register sizes
 
-    unsigned Debug;                         // Show instructions as they are executed
     unsigned NresetSig;                     // Reset the processor
     unsigned NfiqSig;
     unsigned NirqSig;
@@ -180,12 +174,12 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 */
     unsigned lateabtSig;
 
-    ARMword Vector;           // Synthesize aborts in cycle modes
-    ARMword Aborted;          // Sticky flag for aborts
-    ARMword Reseted;          // Sticky flag for Reset
+    bool Aborted;             // Sticky flag for aborts
+    bool Reseted;             // Sticky flag for Reset
     ARMword Inted, LastInted; // Sticky flags for interrupts
     ARMword Base;             // Extra hand for base writeback
     ARMword AbortAddr;        // To keep track of Prefetch aborts
+    ARMword Vector;           // Synthesize aborts in cycle modes
 
     // For differentiating ARM core emulaiton.
     bool is_v4;     // Are we emulating a v4 architecture (or higher)?

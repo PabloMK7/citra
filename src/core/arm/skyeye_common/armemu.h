@@ -100,10 +100,10 @@ extern ARMword ARMul_ImmedTable[]; // Immediate DP LHS values.
 extern char ARMul_BitList[];       // Number of bits in a byte table.
 
 // Coprocessor support functions.
-extern unsigned ARMul_CoProInit (ARMul_State *);
-extern void ARMul_CoProExit (ARMul_State *);
-extern void ARMul_CoProAttach (ARMul_State *, unsigned, ARMul_CPInits *,
-			       ARMul_CPExits *, ARMul_LDCs *, ARMul_STCs *,
-			       ARMul_MRCs *, ARMul_MCRs *, ARMul_MRRCs *, ARMul_MCRRs *, 
-			       ARMul_CDPs *, ARMul_CPReads *, ARMul_CPWrites *);
-extern void ARMul_CoProDetach (ARMul_State *, unsigned);
+extern void ARMul_CoProInit(ARMul_State*);
+extern void ARMul_CoProExit(ARMul_State*);
+extern void ARMul_CoProAttach(ARMul_State*, unsigned, ARMul_CPInits*,
+                              ARMul_CPExits*, ARMul_LDCs*, ARMul_STCs*,
+                              ARMul_MRCs*, ARMul_MCRs*, ARMul_MRRCs*, ARMul_MCRRs*,
+                              ARMul_CDPs*, ARMul_CPReads*, ARMul_CPWrites*);
+extern void ARMul_CoProDetach(ARMul_State*, unsigned);
