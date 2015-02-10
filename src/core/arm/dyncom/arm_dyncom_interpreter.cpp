@@ -4725,20 +4725,20 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 if (inst_cream->cp_num == 15) {
                     if(CRn == 0 && OPCODE_2 == 0 && CRm == 0) {
                         CP15_REG(CP15_MAIN_ID) = RD;
+                    } else if(CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
+                        CP15_REG(CP15_CONTROL) = RD;
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
                         CP15_REG(CP15_AUXILIARY_CONTROL) = RD;
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
                         CP15_REG(CP15_COPROCESSOR_ACCESS_CONTROL) = RD;
-                    } else if(CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
-                        CP15_REG(CP15_CONTROL) = RD;
-                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
-                        CP15_REG(CP15_DOMAIN_ACCESS_CONTROL) = RD;
                     } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
                         CP15_REG(CP15_TRANSLATION_BASE_TABLE_0) = RD;
                     } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 1) {
                         CP15_REG(CP15_TRANSLATION_BASE_TABLE_1) = RD;
                     } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
                         CP15_REG(CP15_TRANSLATION_BASE_CONTROL) = RD;
+                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
+                        CP15_REG(CP15_DOMAIN_ACCESS_CONTROL) = RD;
                     } else if(CRn == MMU_CACHE_OPS){
                         //LOG_WARNING(Core_ARM11, "cache operations have not implemented.");
                     } else if(CRn == MMU_TLB_OPS){
@@ -4793,12 +4793,18 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                             break;
                         }
                     } else if(CRn == MMU_PID) {
-                        if(OPCODE_2 == 0)
+                        if(OPCODE_2 == 0) {
                             CP15_REG(CP15_PID) = RD;
-                        else if(OPCODE_2 == 1)
+                        } else if(OPCODE_2 == 1) {
                             CP15_REG(CP15_CONTEXT_ID) = RD;
-                        else if(OPCODE_2 == 3) {
-                            CP15_REG(CP15_THREAD_URO) = RD;
+                        } else if (OPCODE_2 == 2) {
+                            CP15_REG(CP15_THREAD_UPRW) = RD;
+                        } else if(OPCODE_2 == 3) {
+                            if (InAPrivilegedMode(cpu))
+                                CP15_REG(CP15_THREAD_URO) = RD;
+                        } else if (OPCODE_2 == 4) {
+                            if (InAPrivilegedMode(cpu))
+                                CP15_REG(CP15_THREAD_PRW) = RD;
                         } else {
                             LOG_ERROR(Core_ARM11, "mmu_mcr wrote UNKNOWN - reg %d", CRn);
                         }
@@ -4886,31 +4892,40 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 if (inst_cream->cp_num == 15) {
                     if(CRn == 0 && OPCODE_2 == 0 && CRm == 0) {
                         RD = cpu->CP15[CP15(CP15_MAIN_ID)];
+                    } else if (CRn == 0 && CRm == 0 && OPCODE_2 == 1) {
+                        RD = cpu->CP15[CP15(CP15_CACHE_TYPE)];
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
                         RD = cpu->CP15[CP15(CP15_CONTROL)];
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
                         RD = cpu->CP15[CP15(CP15_AUXILIARY_CONTROL)];
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
                         RD = cpu->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)];
-                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
                     } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
                         RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)];
+                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 1) {
+                        RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)];
+                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
+                        RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_CONTROL)];
+                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
+                        RD = cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
                     } else if (CRn == 5 && CRm == 0 && OPCODE_2 == 0) {
                         RD = cpu->CP15[CP15(CP15_FAULT_STATUS)];
-                    } else if (CRn == 6 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_FAULT_ADDRESS)];
-                    } else if (CRn == 0 && CRm == 0 && OPCODE_2 == 1) {
-                        RD = cpu->CP15[CP15(CP15_CACHE_TYPE)];
                     } else if (CRn == 5 && CRm == 0 && OPCODE_2 == 1) {
                         RD = cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)];
+                    } else if (CRn == 6 && CRm == 0 && OPCODE_2 == 0) {
+                        RD = cpu->CP15[CP15(CP15_FAULT_ADDRESS)];
                     } else if (CRn == 13) {
-                        if(OPCODE_2 == 0)
+                        if(OPCODE_2 == 0) {
                             RD = CP15_REG(CP15_PID);
-                        else if(OPCODE_2 == 1)
+                        } else if(OPCODE_2 == 1) {
                             RD = CP15_REG(CP15_CONTEXT_ID);
-                        else if(OPCODE_2 == 3) {
+                        } else if (OPCODE_2 == 2) {
+                            RD = CP15_REG(CP15_THREAD_UPRW);
+                        } else if(OPCODE_2 == 3) {
                             RD = Memory::KERNEL_MEMORY_VADDR;
+                        } else if (OPCODE_2 == 4) {
+                            if (InAPrivilegedMode(cpu))
+                                RD = CP15_REG(CP15_THREAD_PRW);
                         } else {
                             LOG_ERROR(Core_ARM11, "mmu_mrr wrote UNKNOWN - reg %d", CRn);
                         }
