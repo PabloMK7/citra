@@ -48,7 +48,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
 
     case 3: // ADD/SUB
         {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE0900000,     // ADDS Rd,Rs,Rn
                 0xE0500000,     // SUBS Rd,Rs,Rn
                 0xE2900000,     // ADDS Rd,Rs,#imm3
@@ -67,7 +67,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
     case 6: // ADD
     case 7: // SUB
         {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE3B00000,     // MOVS Rd,#imm8
                 0xE3500000,     // CMP  Rd,#imm8
                 0xE2900000,     // ADDS Rd,Rd,#imm8
@@ -95,7 +95,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
                 t_mul
             };
 
-            struct {
+            static const struct {
                 ARMword opcode;
                 otype type;
             } subset[16] = {
@@ -205,7 +205,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
         // merged into a single subset, saving on the following boolean:
 
         if ((tinstr & (1 << 9)) == 0) {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE7800000, // STR  Rd,[Rb,Ro]
                 0xE7C00000, // STRB Rd,[Rb,Ro]
                 0xE7900000, // LDR  Rd,[Rb,Ro]
@@ -218,7 +218,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
                 |((tinstr & 0x01C0) >> 6);              // Ro
 
         } else {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE18000B0, // STRH  Rd,[Rb,Ro]
                 0xE19000D0, // LDRSB Rd,[Rb,Ro]
                 0xE19000B0, // LDRH  Rd,[Rb,Ro]
@@ -236,7 +236,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
     case 14: // STRB Rd,[Rb,#imm5]
     case 15: // LDRB Rd,[Rb,#imm5]
         {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE5800000,     // STR  Rd,[Rb,#imm5]
                 0xE5900000,     // LDR  Rd,[Rb,#imm5]
                 0xE5C00000,     // STRB Rd,[Rb,#imm5]
@@ -300,7 +300,7 @@ tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t
         } else if ((tinstr & 0x0F00) == 0x0e00)
             *ainstr = 0xEF000000 | SWI_Breakpoint;
         else {
-            ARMword subset[4] = {
+            static const ARMword subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
                 0xE92D4000, // STMDB sp!,{rlist,lr}
                 0xE8BD0000, // LDMIA sp!,{rlist}
