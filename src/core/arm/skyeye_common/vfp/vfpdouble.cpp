@@ -552,7 +552,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
         exceptions |= FPSCR_IDC;
 
     if (tm & VFP_NAN)
-        vdm.sign = 0;
+        vdm.sign = 1;
 
     if (vdm.exponent >= 1023 + 32) {
         d = vdm.sign ? 0 : 0xffffffff;
