@@ -86,7 +86,9 @@ enum {
     CP15_IFAR,
     CP15_PID,
     CP15_CONTEXT_ID,
-    CP15_THREAD_URO,
+    CP15_THREAD_UPRW, // Thread ID register - User/Privileged Read/Write
+    CP15_THREAD_URO,  // Thread ID register - User Read Only (Privileged R/W)
+    CP15_THREAD_PRW,  // Thread ID register - Privileged R/W only.
     CP15_TLB_FAULT_ADDR, /* defined by SkyEye */
     CP15_TLB_FAULT_STATUS, /* defined by SkyEye */
     /* VFP registers */
