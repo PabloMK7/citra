@@ -30,8 +30,7 @@ public:
     static const HandleType HANDLE_TYPE = HandleType::Mutex;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
-    bool initial_locked;                        ///< Initial lock state when mutex was created
-    bool locked;                                ///< Current locked state
+    int lock_count;                             ///< Number of times the mutex has been acquired
     std::string name;                           ///< Name of mutex (optional)
     SharedPtr<Thread> holding_thread;           ///< Thread that has acquired the mutex
 

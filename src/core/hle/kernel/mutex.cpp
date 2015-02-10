@@ -21,7 +21,7 @@ namespace Kernel {
  */
 static void ResumeWaitingThread(Mutex* mutex) {
     // Reset mutex lock thread handle, nothing is waiting
-    mutex->locked = false;
+    mutex->lock_count = 0;
     mutex->holding_thread = nullptr;
 
     // Find the next waiting thread for the mutex...
@@ -44,8 +44,7 @@ Mutex::~Mutex() {}
 SharedPtr<Mutex> Mutex::Create(bool initial_locked, std::string name) {
     SharedPtr<Mutex> mutex(new Mutex);
 
-    mutex->initial_locked = initial_locked;
-    mutex->locked = false;
+    mutex->lock_count = 0;
     mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
 
@@ -57,7 +56,7 @@ SharedPtr<Mutex> Mutex::Create(bool initial_locked, std::string name) {
 }
 
 bool Mutex::ShouldWait() {
-    return locked && holding_thread != GetCurrentThread();
+    return lock_count > 0 && holding_thread != GetCurrentThread();;
 }
 
 void Mutex::Acquire() {
@@ -66,21 +65,27 @@ void Mutex::Acquire() {
 
 void Mutex::Acquire(SharedPtr<Thread> thread) {
     _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
-    if (locked)
-        return;
 
-    locked = true;
+    // Actually "acquire" the mutex only if we don't already have it...
+    if (lock_count == 0) {
+        thread->held_mutexes.insert(this);
+        holding_thread = std::move(thread);
+    }
 
-    thread->held_mutexes.insert(this);
-    holding_thread = std::move(thread);
+    lock_count++;
 }
 
 void Mutex::Release() {
-    if (!locked)
-        return;
+    // Only release if the mutex is held...
+    if (lock_count > 0) {
+        lock_count--;
 
-    holding_thread->held_mutexes.erase(this);
-    ResumeWaitingThread(this);
+        // Yield to the next thread only if we've fully released the mutex...
+        if (lock_count == 0) {
+            holding_thread->held_mutexes.erase(this);
+            ResumeWaitingThread(this);
+        }
+    }
 }
 
 } // namespace
