@@ -908,6 +908,9 @@ vfp_double_multiply_accumulate(ARMul_State* state, int dd, int dn, int dm, u32 f
         vdp.sign = vfp_sign_negate(vdp.sign);
 
     vfp_double_unpack(&vdn, vfp_get_double(state, dd));
+    if (vdn.exponent == 0 && vdn.significand != 0)
+        vfp_double_normalise_denormal(&vdn);
+
     if (negate & NEG_SUBTRACT)
         vdn.sign = vfp_sign_negate(vdn.sign);
 
