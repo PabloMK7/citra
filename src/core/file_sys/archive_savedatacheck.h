@@ -17,12 +17,14 @@
 namespace FileSys {
 
 /// File system interface to the SaveDataCheck archive
-class Archive_SaveDataCheck final : public IVFCArchive {
+class ArchiveFactory_SaveDataCheck final : public ArchiveFactory {
 public:
-    Archive_SaveDataCheck(const std::string& mount_point);
+    ArchiveFactory_SaveDataCheck(const std::string& mount_point);
 
     std::string GetName() const override { return "SaveDataCheck"; }
-    ResultCode Open(const Path& path) override;
+
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
+    ResultCode Format(const Path& path) override;
 
 private:
     std::string mount_point;

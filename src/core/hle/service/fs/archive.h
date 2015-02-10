@@ -8,6 +8,7 @@
 
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 
 /// The unique system identifier hash, also known as ID0
@@ -36,6 +37,35 @@ enum class ArchiveIdCode : u32 {
 
 typedef u64 ArchiveHandle;
 
+class File : public Kernel::Session {
+public:
+    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
+        : path(path), priority(0), backend(std::move(backend)) {
+    }
+
+    std::string GetName() const override { return "Path: " + path.DebugStr(); }
+
+    FileSys::Path path; ///< Path of the file
+    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
+    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
+
+    ResultVal<bool> SyncRequest() override;
+};
+
+class Directory : public Kernel::Session {
+public:
+    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
+        : path(path), backend(std::move(backend)) {
+    }
+
+    std::string GetName() const override { return "Directory: " + path.DebugStr(); }
+
+    FileSys::Path path; ///< Path of the directory
+    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
+
+    ResultVal<bool> SyncRequest() override;
+};
+
 /**
  * Opens an archive
  * @param id_code IdCode of the archive to open
@@ -51,11 +81,11 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
 ResultCode CloseArchive(ArchiveHandle handle);
 
 /**
- * Creates an Archive
+ * Registers an Archive type, instances of which can later be opened using its IdCode.
  * @param backend File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
-ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, ArchiveIdCode id_code);
+ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory, ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive
@@ -64,7 +94,7 @@ ResultCode CreateArchive(std::unique_ptr<FileSys::ArchiveBackend>&& backend, Arc
  * @param mode Mode under which to open the File
  * @return The opened File object as a Session
  */
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenFileFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path, const FileSys::Mode mode);
 
 /**
@@ -128,14 +158,17 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
  * @param path Path to the Directory inside of the Archive
  * @return The opened Directory object as a Session
  */
-ResultVal<Kernel::SharedPtr<Kernel::Session>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
         const FileSys::Path& path);
 
 /**
- * Creates a blank SaveData archive.
+ * Erases the contents of the physical folder that contains the archive
+ * identified by the specified id code and path
+ * @param id_code The id of the archive to format
+ * @param path The path to the archive, if relevant.
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode FormatSaveData();
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = FileSys::Path());
 
 /**
  * Creates a blank SharedExtSaveData archive for the specified extdata ID

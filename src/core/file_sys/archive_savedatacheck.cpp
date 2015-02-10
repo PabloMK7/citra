@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/file_util.h"
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_savedatacheck.h"
 #include "core/hle/service/fs/archive.h"
@@ -21,32 +22,33 @@ static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high
             mount_point.c_str(), high, low);
 }
 
-Archive_SaveDataCheck::Archive_SaveDataCheck(const std::string& nand_directory) :
+ArchiveFactory_SaveDataCheck::ArchiveFactory_SaveDataCheck(const std::string& nand_directory) :
         mount_point(GetSaveDataCheckContainerPath(nand_directory)) {
 }
 
-ResultCode Archive_SaveDataCheck::Open(const Path& path) {
-    // TODO(Subv): We should not be overwriting raw_data everytime this function is called,
-    // but until we use factory classes to create the archives at runtime instead of creating them beforehand
-    // and allow multiple archives of the same type to be open at the same time without clobbering each other,
-    // we won't be able to maintain the state of each archive, hence we overwrite it every time it's needed.
-    // There are a number of problems with this, for example opening a file in this archive, then opening
-    // this archive again with a different path, will corrupt the previously open file.
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(const Path& path) {
     auto vec = path.AsBinary();
     const u32* data = reinterpret_cast<u32*>(vec.data());
     std::string file_path = GetSaveDataCheckPath(mount_point, data[1], data[0]);
     FileUtil::IOFile file(file_path, "rb");
 
-    std::fill(raw_data.begin(), raw_data.end(), 0);
-
     if (!file.IsOpen()) {
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
     auto size = file.GetSize();
-    raw_data.resize(size);
-    file.ReadBytes(raw_data.data(), size);
+    auto raw_data = std::make_shared<std::vector<u8>>(size);
+    file.ReadBytes(raw_data->data(), size);
     file.Close();
-    return RESULT_SUCCESS;
+
+    auto archive = Common::make_unique<IVFCArchive>(std::move(raw_data));
+    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
+}
+
+ResultCode ArchiveFactory_SaveDataCheck::Format(const Path& path) {
+    LOG_ERROR(Service_FS, "Attempted to format a SaveDataCheck archive.");
+    // TODO: Verify error code
+    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS,
+        ErrorSummary::NotSupported, ErrorLevel::Permanent);
 }
 
 } // namespace FileSys

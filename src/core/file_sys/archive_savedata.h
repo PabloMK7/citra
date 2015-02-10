@@ -15,22 +15,17 @@
 namespace FileSys {
 
 /// File system interface to the SaveData archive
-class Archive_SaveData final : public DiskArchive {
+class ArchiveFactory_SaveData final : public ArchiveFactory {
 public:
-    Archive_SaveData(const std::string& mount_point);
+    ArchiveFactory_SaveData(const std::string& mount_point);
 
     std::string GetName() const override { return "SaveData"; }
 
-    ResultCode Open(const Path& path) override;
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
+    ResultCode Format(const Path& path) override;
 
-    ResultCode Format(const Path& path) const override;
-
-    const std::string& GetMountPoint() const override {
-        return concrete_mount_point;
-    }
-
-protected:
-    std::string concrete_mount_point;
+private:
+    std::string mount_point;
 };
 
 } // namespace FileSys

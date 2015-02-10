@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "common/common_types.h"
@@ -17,12 +18,16 @@
 namespace FileSys {
 
 /// File system interface to the RomFS archive
-class Archive_RomFS final : public IVFCArchive {
+class ArchiveFactory_RomFS final : public ArchiveFactory {
 public:
-    Archive_RomFS(const Loader::AppLoader& app_loader);
+    ArchiveFactory_RomFS(const Loader::AppLoader& app_loader);
 
     std::string GetName() const override { return "RomFS"; }
-    ResultCode Open(const Path& path) override { return RESULT_SUCCESS; }
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
+    ResultCode Format(const Path& path) override;
+
+private:
+    std::shared_ptr<std::vector<u8>> romfs_data;
 };
 
 } // namespace FileSys

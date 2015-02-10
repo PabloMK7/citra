@@ -61,7 +61,7 @@ static void OpenFile(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%d attrs=%u", file_path.DebugStr().c_str(), mode.hex, attributes);
 
-    ResultVal<SharedPtr<Session>> file_res = OpenFileFromArchive(archive_handle, file_path, mode);
+    ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
         cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
@@ -117,7 +117,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     }
     SCOPE_EXIT({ CloseArchive(*archive_handle); });
 
-    ResultVal<SharedPtr<Session>> file_res = OpenFileFromArchive(*archive_handle, file_path, mode);
+    ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(*archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
         cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
@@ -337,7 +337,7 @@ static void OpenDirectory(Service::Interface* self) {
 
     LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size, dir_path.DebugStr().c_str());
 
-    ResultVal<SharedPtr<Session>> dir_res = OpenDirectoryFromArchive(archive_handle, dir_path);
+    ResultVal<SharedPtr<Directory>> dir_res = OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = dir_res.Code().raw;
     if (dir_res.Succeeded()) {
         cmd_buff[3] = Kernel::g_handle_table.Create(*dir_res).MoveFrom();
@@ -468,7 +468,7 @@ static void FormatSaveData(Service::Interface* self) {
         return;
     }
 
-    cmd_buff[1] = FormatSaveData().raw;
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
 }
 
 /**
@@ -484,7 +484,7 @@ static void FormatThisUserSaveData(Service::Interface* self) {
 
     // TODO(Subv): Find out what the inputs and outputs of this function are
 
-    cmd_buff[1] = FormatSaveData().raw;
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
 }
 
 static void CreateExtSaveData(Service::Interface* self) {

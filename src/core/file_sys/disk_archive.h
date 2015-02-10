@@ -24,8 +24,8 @@ class DiskArchive : public ArchiveBackend {
 public:
     DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
 
-    virtual std::string GetName() const = 0;
-    virtual ResultCode Format(const Path& path) const { return RESULT_SUCCESS; }
+    virtual std::string GetName() const { return "DiskArchive: " + mount_point; }
+
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
     bool DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
@@ -35,26 +35,17 @@ public:
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
-    virtual ResultCode Open(const Path& path) override {
-        return RESULT_SUCCESS;
-    }
-
-    /**
-     * Getter for the path used for this Archive
-     * @return Mount point of that passthrough archive
-     */
-    virtual const std::string& GetMountPoint() const {
-        return mount_point;
-    }
-
 protected:
+    friend class DiskFile;
+    friend class DiskDirectory;
+
     std::string mount_point;
 };
 
 class DiskFile : public FileBackend {
 public:
     DiskFile();
-    DiskFile(const DiskArchive* archive, const Path& path, const Mode mode);
+    DiskFile(const DiskArchive& archive, const Path& path, const Mode mode);
 
     bool Open() override;
     size_t Read(const u64 offset, const u32 length, u8* buffer) const override;
@@ -68,7 +59,6 @@ public:
     }
 
 protected:
-    const DiskArchive* archive;
     std::string path;
     Mode mode;
     std::unique_ptr<FileUtil::IOFile> file;
@@ -77,7 +67,7 @@ protected:
 class DiskDirectory : public DirectoryBackend {
 public:
     DiskDirectory();
-    DiskDirectory(const DiskArchive* archive, const Path& path);
+    DiskDirectory(const DiskArchive& archive, const Path& path);
 
     ~DiskDirectory() override {
         Close();
@@ -91,7 +81,6 @@ public:
     }
 
 protected:
-    const DiskArchive* archive;
     std::string path;
     u32 total_entries_in_directory;
     FileUtil::FSTEntry directory;

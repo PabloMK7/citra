@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "common/common_types.h"
@@ -23,7 +24,9 @@ namespace FileSys {
  */
 class IVFCArchive : public ArchiveBackend {
 public:
-    IVFCArchive();
+    IVFCArchive(std::shared_ptr<const std::vector<u8>> data);
+
+    std::string GetName() const override;
 
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
     bool DeleteFile(const Path& path) const override;
@@ -33,16 +36,14 @@ public:
     bool CreateDirectory(const Path& path) const override;
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
-    ResultCode Format(const Path& path) const override;
 
 protected:
-    friend class IVFCFile;
-    std::vector<u8> raw_data;
+    std::shared_ptr<const std::vector<u8>> data;
 };
 
 class IVFCFile : public FileBackend {
 public:
-    IVFCFile(const IVFCArchive* archive) : archive(archive) {}
+    IVFCFile(std::shared_ptr<const std::vector<u8>> data) : data(data) {}
 
     bool Open() override { return true; }
     size_t Read(const u64 offset, const u32 length, u8* buffer) const override;
@@ -53,7 +54,7 @@ public:
     void Flush() const override { }
 
 private:
-    const IVFCArchive* archive;
+    std::shared_ptr<const std::vector<u8>> data;
 };
 
 class IVFCDirectory : public DirectoryBackend {
