@@ -144,6 +144,8 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
             object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
+    HLE::Reschedule(__func__);
+
     // Check for next thread to schedule
     if (object->ShouldWait()) {
 
@@ -152,8 +154,6 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
-
-        HLE::Reschedule(__func__);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
         return RESULT_INVALID;
@@ -216,6 +216,8 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         }
     }
 
+    HLE::Reschedule(__func__);
+
     // If thread should wait, then set its state to waiting and then reschedule...
     if (wait_thread) {
 
@@ -228,8 +230,6 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
-
-        HLE::Reschedule(__func__);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
         return RESULT_INVALID;
