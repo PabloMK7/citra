@@ -153,12 +153,8 @@ void Shutdown() {
  * @return True on success, otherwise false
  */
 bool LoadExec(u32 entry_point) {
-    Core::g_app_core->SetPC(entry_point);
-
     // 0x30 is the typical main thread priority I've seen used so far
-    g_main_thread = Kernel::SetupMainThread(0x30, Kernel::DEFAULT_STACK_SIZE);
-    // Setup the idle thread
-    Kernel::SetupIdleThread();
+    g_main_thread = Kernel::SetupMainThread(Kernel::DEFAULT_STACK_SIZE, entry_point, 0x30);
 
     return true;
 }
