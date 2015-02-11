@@ -343,7 +343,7 @@ struct Regs {
         };
 
         union {
-            enum BlendEquation : u32 {
+            enum class BlendEquation : u32 {
                 Add             = 0,
                 Subtract        = 1,
                 ReverseSubtract = 2,

@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "common/common_types.h"
+#include "common/math_util.h"
 
 #include "math.h"
 #include "pica.h"
@@ -596,6 +597,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             }
 
             auto dest = GetPixel(x >> 4, y >> 4);
+            Math::Vec4<u8> blend_output = combiner_output;
 
             if (registers.output_merger.alphablend_enable) {
                 auto params = registers.output_merger.alpha_blending;
@@ -684,81 +686,73 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     }
                 };
 
+                using BlendEquation = decltype(params)::BlendEquation;
+                static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
+                                                       const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
+                                                       BlendEquation equation) {
+                    Math::Vec4<int> result;
+
+                    auto src_result = (src  *  srcfactor).Cast<int>();
+                    auto dst_result = (dest * destfactor).Cast<int>();
+
+                    switch (equation) {
+                    case BlendEquation::Add:
+                        result = (src_result + dst_result) / 255;
+                        break;
+
+                    case BlendEquation::Subtract:
+                        result = (src_result - dst_result) / 255;
+                        break;
+
+                    case BlendEquation::ReverseSubtract:
+                        result = (dst_result - src_result) / 255;
+                        break;
+
+                    // TODO: How do these two actually work?
+                    //       OpenGL doesn't include the blend factors in the min/max computations,
+                    //       but is this what the 3DS actually does?
+                    case BlendEquation::Min:
+                        result.r() = std::min(src.r(), dest.r());
+                        result.g() = std::min(src.g(), dest.g());
+                        result.b() = std::min(src.b(), dest.b());
+                        result.a() = std::min(src.a(), dest.a());
+                        break;
+
+                    case BlendEquation::Max:
+                        result.r() = std::max(src.r(), dest.r());
+                        result.g() = std::max(src.g(), dest.g());
+                        result.b() = std::max(src.b(), dest.b());
+                        result.a() = std::max(src.a(), dest.a());
+                        break;
+
+                    default:
+                        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
+                        exit(0);
+                    }
+
+                    return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255),
+                                    MathUtil::Clamp(result.g(), 0, 255),
+                                    MathUtil::Clamp(result.b(), 0, 255),
+                                    MathUtil::Clamp(result.a(), 0, 255));
+                };
+
                 auto srcfactor = Math::MakeVec(LookupFactorRGB(params.factor_source_rgb),
                                                LookupFactorA(params.factor_source_a));
                 auto dstfactor = Math::MakeVec(LookupFactorRGB(params.factor_dest_rgb),
                                                LookupFactorA(params.factor_dest_a));
-                                               
-                auto src_result = (combiner_output * srcfactor).Cast<int>();
-                auto dst_result = (dest * dstfactor).Cast<int>();
 
-                switch (params.blend_equation_rgb) {
-                case params.Add:
-                {
-                    auto result = (src_result + dst_result) / 255;
-                    result.r() = std::min(255, result.r());
-                    result.g() = std::min(255, result.g());
-                    result.b() = std::min(255, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Subtract:
-                {
-                    auto result = (src_result - dst_result) / 255;
-                    result.r() = std::max(0, result.r());
-                    result.g() = std::max(0, result.g());
-                    result.b() = std::max(0, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.ReverseSubtract:
-                {
-                    auto result = (dst_result - src_result) / 255;
-                    result.r() = std::max(0, result.r());
-                    result.g() = std::max(0, result.g());
-                    result.b() = std::max(0, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Min:
-                {
-                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
-                    Math::Vec4<int> result;
-                    result.r() = std::min(combiner_output.r(),dest.r());
-                    result.g() = std::min(combiner_output.g(),dest.g());
-                    result.b() = std::min(combiner_output.b(),dest.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Max:
-                {
-                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
-                    Math::Vec4<int> result;
-                    result.r() = std::max(combiner_output.r(),dest.r());
-                    result.g() = std::max(combiner_output.g(),dest.g());
-                    result.b() = std::max(combiner_output.b(),dest.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-
-                default:
-                    LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", params.blend_equation_rgb.Value());
-                    exit(0);
-                }
+                blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
+                blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
             } else {
                 LOG_CRITICAL(HW_GPU, "logic op: %x", registers.output_merger.logic_op);
                 exit(0);
             }
 
             const Math::Vec4<u8> result = {
-                registers.output_merger.red_enable   ? combiner_output.r() : dest.r(),
-                registers.output_merger.green_enable ? combiner_output.g() : dest.g(),
-                registers.output_merger.blue_enable  ? combiner_output.b() : dest.b(),
-                registers.output_merger.alpha_enable ? combiner_output.a() : dest.a()
+                registers.output_merger.red_enable   ? blend_output.r() : dest.r(),
+                registers.output_merger.green_enable ? blend_output.g() : dest.g(),
+                registers.output_merger.blue_enable  ? blend_output.b() : dest.b(),
+                registers.output_merger.alpha_enable ? blend_output.a() : dest.a()
             };
 
             DrawPixel(x >> 4, y >> 4, result);
