@@ -175,7 +175,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
     // this happens, the running application will crash.
-    _assert_msg_(Kernel, out != nullptr, "invalid output pointer specified!");
+    ASSERT_MSG(out != nullptr, "invalid output pointer specified!");
 
     // Check if 'handle_count' is invalid
     if (handle_count < 0)

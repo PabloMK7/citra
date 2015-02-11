@@ -79,7 +79,7 @@ void Initialize(Service::Interface* self) {
     notification_event->Clear();
     pause_event->Signal(); // Fire start event
 
-    _assert_msg_(KERNEL, (nullptr != lock), "Cannot initialize without lock");
+    ASSERT_MSG((nullptr != lock), "Cannot initialize without lock");
     lock->Release();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error

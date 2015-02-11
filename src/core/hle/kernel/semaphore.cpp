@@ -36,7 +36,7 @@ bool Semaphore::ShouldWait() {
 }
 
 void Semaphore::Acquire() {
-    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    ASSERT_MSG(!ShouldWait(), "object unavailable!");
     --available_count;
 }
 

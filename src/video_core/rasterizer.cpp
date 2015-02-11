@@ -216,7 +216,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 if (!texture.enabled)
                     continue;
 
-                _dbg_assert_(HW_GPU, 0 != texture.config.address);
+                DEBUG_ASSERT(0 != texture.config.address);
 
                 int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
                 int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
@@ -232,7 +232,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                         default:
                             LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x\n", (int)mode);
-                            _dbg_assert_(HW_GPU, 0);
+                            UNIMPLEMENTED();
                             return 0;
                     }
                 };
@@ -282,7 +282,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
-                        _dbg_assert_(HW_GPU, 0);
+                        UNIMPLEMENTED();
                         return {};
                     }
                 };
@@ -380,7 +380,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
-                        _dbg_assert_(HW_GPU, 0);
+                        UNIMPLEMENTED();
                         return {};
                     }
                 };
@@ -404,7 +404,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
-                        _dbg_assert_(HW_GPU, 0);
+                        UNIMPLEMENTED();
                         return 0;
                     }
                 };

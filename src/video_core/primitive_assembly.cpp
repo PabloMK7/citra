@@ -6,6 +6,7 @@
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
 
+#include "common/logging/log.h"
 #include "video_core/debug_utils/debug_utils.h"
 
 namespace Pica {

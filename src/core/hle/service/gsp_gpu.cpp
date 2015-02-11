@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-#include "common/log.h"
 #include "common/bit_field.h"
 
 #include "core/mem_map.h"
@@ -36,7 +34,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
 }
 
 static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
-    _dbg_assert_msg_(Service_GSP, screen_index < 2, "Invalid screen index");
+    DEBUG_ASSERT_MSG(screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
@@ -186,7 +184,7 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32 flags = cmd_buff[1];
 
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
-    _assert_msg_(GSP, (g_interrupt_event != nullptr), "handle is not valid!");
+    ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
     g_shared_memory = Kernel::SharedMemory::Create("GSPSharedMem");
 
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();

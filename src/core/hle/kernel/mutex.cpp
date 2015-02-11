@@ -64,7 +64,7 @@ void Mutex::Acquire() {
 }
 
 void Mutex::Acquire(SharedPtr<Thread> thread) {
-    _assert_msg_(Kernel, !ShouldWait(), "object unavailable!");
+    ASSERT_MSG(!ShouldWait(), "object unavailable!");
 
     // Actually "acquire" the mutex only if we don't already have it...
     if (lock_count == 0) {

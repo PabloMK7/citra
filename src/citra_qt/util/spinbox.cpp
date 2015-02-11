@@ -32,8 +32,7 @@
 #include <QLineEdit>
 #include <QRegExpValidator>
 
-#include "common/log.h"
-
+#include "common/assert.h"
 #include "spinbox.h"
 
 CSpinBox::CSpinBox(QWidget* parent) : QAbstractSpinBox(parent), min_value(-100), max_value(100), value(0), base(10), num_digits(0)
@@ -244,7 +243,7 @@ QValidator::State CSpinBox::validate(QString& input, int& pos) const
     if (strpos >= input.length() - HasSign() - suffix.length())
         return QValidator::Intermediate;
 
-    _dbg_assert_(Frontend, base <= 10 || base == 16);
+    DEBUG_ASSERT(base <= 10 || base == 16);
     QString regexp;
 
     // Demand sign character for negative ranges

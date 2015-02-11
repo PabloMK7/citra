@@ -7,8 +7,8 @@
 #include <mutex>
 #include <vector>
 
+#include "common/assert.h"
 #include "common/chunk_file.h"
-#include "common/log.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/core.h"

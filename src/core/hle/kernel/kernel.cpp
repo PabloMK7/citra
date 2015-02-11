@@ -52,7 +52,7 @@ void WaitObject::WakeupAllWaitingThreads() {
     for (auto thread : waiting_threads_copy)
         thread->ReleaseWaitObject(this);
 
-    _assert_msg_(Kernel, waiting_threads.empty(), "failed to awaken all waiting threads!");
+    ASSERT_MSG(waiting_threads.empty(), "failed to awaken all waiting threads!");
 }
 
 HandleTable::HandleTable() {
@@ -61,7 +61,7 @@ HandleTable::HandleTable() {
 }
 
 ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
-    _dbg_assert_(Kernel, obj != nullptr);
+    DEBUG_ASSERT(obj != nullptr);
 
     u16 slot = next_free_slot;
     if (slot >= generations.size()) {

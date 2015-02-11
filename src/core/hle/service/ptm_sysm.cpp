@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/log.h"
 #include "common/make_unique.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/hle/hle.h"

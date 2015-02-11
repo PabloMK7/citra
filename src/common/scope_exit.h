@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_funcs.h"
+#include <utility>
 
 namespace detail {
     template <typename Func>

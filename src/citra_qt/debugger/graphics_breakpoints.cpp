@@ -47,7 +47,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
                 { Pica::DebugContext::Event::VertexLoaded, tr("Vertex loaded") }
             };
 
-            _dbg_assert_(Debug_GPU, map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
+            DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
 
             return (map.find(event) != map.end()) ? map.at(event) : QString();
         }

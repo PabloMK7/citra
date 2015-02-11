@@ -11,7 +11,6 @@
 #include <thread>
 
 #include "common/common.h" // for NonCopyable
-#include "common/log.h" // for _dbg_assert_
 
 namespace Common {
 
@@ -93,7 +92,7 @@ public:
                 return QUEUE_CLOSED;
             }
         }
-        _dbg_assert_(Common, CanRead());
+        DEBUG_ASSERT(CanRead());
         return PopInternal(dest, dest_len);
     }
 
@@ -119,7 +118,7 @@ private:
     size_t PopInternal(T* dest, size_t dest_len) {
         size_t output_count = 0;
         while (output_count < dest_len && CanRead()) {
-            _dbg_assert_(Common, CanRead());
+            DEBUG_ASSERT(CanRead());
 
             T* item = &Data()[reader_index];
             T out_val = std::move(*item);

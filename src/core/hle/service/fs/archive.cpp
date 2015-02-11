@@ -261,7 +261,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
     auto result = id_code_map.emplace(id_code, std::move(factory));
 
     bool inserted = result.second;
-    _assert_msg_(Service_FS, inserted, "Tried to register more than one archive with same id code");
+    ASSERT_MSG(inserted, "Tried to register more than one archive with same id code");
 
     auto& archive = result.first->second;
     LOG_DEBUG(Service_FS, "Registered archive %s with id code 0x%08X", archive->GetName().c_str(), id_code);

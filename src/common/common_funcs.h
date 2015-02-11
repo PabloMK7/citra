@@ -44,15 +44,14 @@ template<> struct CompileTimeAssert<true> {};
 #include <sys/endian.h>
 #endif
 
-// go to debugger mode
-    #ifdef GEKKO
-        #define Crash()
-    #elif defined _M_GENERIC
-        #define Crash() { exit(1); }
-    #else
-        #define Crash() {asm ("int $3");}
-    #endif
-    #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
+#if defined(__x86_64__) || defined(_M_X64)
+#define Crash() __asm__ __volatile__("int $3")
+#elif defined(_M_ARM)
+#define Crash() __asm__ __volatile__("trap")
+#else
+#define Crash() exit(1)
+#endif
+
 // GCC 4.8 defines all the rotate functions now
 // Small issue with GCC's lrotl/lrotr intrinsics is they are still 32bit while we require 64bit
 #ifndef _rotl
@@ -97,10 +96,10 @@ inline u64 _rotr64(u64 x, unsigned int shift){
     #define LC_GLOBAL_LOCALE    ((locale_t)-1)
     #define LC_ALL_MASK            LC_ALL
     #define LC_COLLATE_MASK        LC_COLLATE
-    #define LC_CTYPE_MASK        LC_CTYPE
-    #define LC_MONETARY_MASK    LC_MONETARY
+    #define LC_CTYPE_MASK          LC_CTYPE
+    #define LC_MONETARY_MASK       LC_MONETARY
     #define LC_NUMERIC_MASK        LC_NUMERIC
-    #define LC_TIME_MASK        LC_TIME
+    #define LC_TIME_MASK           LC_TIME
 
     inline locale_t uselocale(locale_t new_locale)
     {
@@ -136,14 +135,10 @@ inline u64 _rotr64(u64 x, unsigned int shift){
     #define fstat64 _fstat64
     #define fileno _fileno
 
-    #if _M_IX86
-        #define Crash() {__asm int 3}
-    #else
-extern "C" {
-    __declspec(dllimport) void __stdcall DebugBreak(void);
-}
-        #define Crash() {DebugBreak();}
-    #endif // M_IX86
+    extern "C" {
+        __declspec(dllimport) void __stdcall DebugBreak(void);
+    }
+    #define Crash() {DebugBreak();}
 #endif // _MSC_VER ndef
 
 // Dolphin's min and max functions

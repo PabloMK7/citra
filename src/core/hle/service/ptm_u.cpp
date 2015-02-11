@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/log.h"
 #include "common/make_unique.h"
 
 #include "core/hle/hle.h"
@@ -148,7 +147,7 @@ Interface::Interface() {
         Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
         // Open it again to get a valid archive now that the folder exists
         archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
-        _assert_msg_(Service_PTM, archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
+        ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
 
         FileSys::Path gamecoin_path("gamecoin.dat");
         FileSys::Mode open_mode = {};
