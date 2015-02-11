@@ -74,7 +74,7 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
     for (unsigned int i = 0; i < 7; i++)
         state->Spsr[i] = 0;
 
-    state->Mode = 0;
+    state->Mode = USER32MODE;
 
     state->VectorCatch = 0;
     state->Aborted = false;

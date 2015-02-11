@@ -50,6 +50,13 @@ enum {
     INSTCACHE = 2,
 };
 
+// Abort models
+enum {
+    ABORT_BASE_RESTORED = 0,
+    ABORT_EARLY         = 1,
+    ABORT_BASE_UPDATED  = 2
+};
+
 #define POS(i) ( (~(i)) >> 31 )
 #define NEG(i) ( (i) >> 31 )
 
