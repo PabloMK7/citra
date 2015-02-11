@@ -149,8 +149,6 @@ struct ARMul_State
     unsigned abortSig;
     unsigned NtransSig;
     unsigned bigendSig;
-    unsigned prog32Sig;
-    unsigned data32Sig;
     unsigned syscallSig;
 
 /* 2004-05-09 chy
@@ -227,7 +225,6 @@ typedef ARMul_State arm_core_t;
 \***************************************************************************/
 
 enum {
-    ARM_Fix26_Prop  = 0x01,
     ARM_Nexec_Prop  = 0x02,
     ARM_Debug_Prop  = 0x10,
     ARM_Isync_Prop  = ARM_Debug_Prop,
@@ -242,19 +239,6 @@ enum {
     ARM_iWMMXt_Prop = 0x800,
     ARM_PXA27X_Prop = 0x1000,
     ARM_v7_Prop     = 0x2000,
-
-    // ARM2 family
-    ARM2    = ARM_Fix26_Prop,
-    ARM2as  = ARM2,
-    ARM61   = ARM2,
-    ARM3    = ARM2,
-
-    // ARM6 family
-    ARM6    = ARM_Lock_Prop,
-    ARM60   = ARM6,
-    ARM600  = ARM6,
-    ARM610  = ARM6,
-    ARM620  = ARM6
 };
 
 /***************************************************************************\
@@ -287,10 +271,6 @@ enum {
 \***************************************************************************/
 
 enum {
-    USER26MODE   = 0,
-    FIQ26MODE    = 1,
-    IRQ26MODE    = 2,
-    SVC26MODE    = 3,
     USER32MODE   = 16,
     FIQ32MODE    = 17,
     IRQ32MODE    = 18,
