@@ -227,14 +227,13 @@ void SignalInterrupt(InterruptId interrupt_id) {
         // Update framebuffer information if requested
         // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
         //               executing any GSP commands, only waiting on the event.
-        for (int screen_id = 0; screen_id < 2; ++screen_id) {
+        int screen_id = (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC0) ? 1 : -1;
+        if (screen_id != -1) {
             FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
-
             if (info->is_dirty) {
                 SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+                info->is_dirty = false;
             }
-
-            info->is_dirty = false;
         }
     }
     g_interrupt_event->Signal();
