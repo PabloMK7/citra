@@ -23,7 +23,7 @@ ARM_DynCom::ARM_DynCom() {
 
     ARMul_NewState((ARMul_State*)state.get());
 
-    state->abort_model = 0;
+    state->abort_model = ABORT_BASE_RESTORED;
     state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
     state->bigendSig = LOW;
 
@@ -34,7 +34,7 @@ ARM_DynCom::ARM_DynCom() {
     ARMul_CoProInit(state.get());
     ARMul_Reset(state.get());
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
-    state->Emulate = 3;
+    state->Emulate = RUN;
 
     state->Reg[15] = 0x00000000;
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
