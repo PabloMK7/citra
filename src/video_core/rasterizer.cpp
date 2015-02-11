@@ -653,20 +653,22 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                 
                 case params.Min:
                 {
+                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
                     Math::Vec4<int> result;
-                    result.r() = std::min(src_result.r(),dst_result.r());
-                    result.g() = std::min(src_result.g(),dst_result.g());
-                    result.b() = std::min(src_result.b(),dst_result.b());
+                    result.r() = std::min(combiner_output.r(),dest.r());
+                    result.g() = std::min(combiner_output.g(),dest.g());
+                    result.b() = std::min(combiner_output.b(),dest.b());
                     combiner_output = result.Cast<u8>();
                     break;
                 }
                 
                 case params.Max:
                 {
+                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
                     Math::Vec4<int> result;
-                    result.r() = std::max(src_result.r(),dst_result.r());
-                    result.g() = std::max(src_result.g(),dst_result.g());
-                    result.b() = std::max(src_result.b(),dst_result.b());
+                    result.r() = std::max(combiner_output.r(),dest.r());
+                    result.g() = std::max(combiner_output.g(),dest.g());
+                    result.b() = std::max(combiner_output.b(),dest.b());
                     combiner_output = result.Cast<u8>();
                     break;
                 }
