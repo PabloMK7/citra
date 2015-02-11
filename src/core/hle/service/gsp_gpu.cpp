@@ -48,19 +48,41 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
     return reinterpret_cast<InterruptRelayQueue*>(ptr.ValueOr(nullptr));
 }
 
-static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+/**
+ * Checks if the parameters in a register write call are valid and logs in the case that
+ * they are not
+ * @param base_address The first address in the sequence of registers that will be written
+ * @param size_in_bytes The number of registers that will be written
+ * @return true if the parameters are valid, false otherwise
+ */
+static bool CheckWriteParameters(u32 base_address, u32 size_in_bytes) {
     // TODO: Return proper error codes
     if (base_address + size_in_bytes >= 0x420000) {
         LOG_ERROR(Service_GSP, "Write address out of range! (address=0x%08x, size=0x%08x)",
                   base_address, size_in_bytes);
-        return;
+        return false;
     }
 
     // size should be word-aligned
     if ((size_in_bytes % 4) != 0) {
         LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size_in_bytes);
-        return;
+        return false;
     }
+
+    return true;
+}
+
+/**
+ * Writes sequential GSP GPU hardware registers using an array of source data
+ *
+ * @param base_address The address of the first register in the sequence
+ * @param size_in_bytes The number of registers to update (size of data)
+ * @param data A pointer to the source data
+ */
+static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+    // TODO: Return proper error codes
+    if (!CheckWriteParameters(base_address, size_in_bytes))
+        return;
 
     while (size_in_bytes > 0) {
         GPU::Write<u32>(base_address + 0x1EB00000, *data);
@@ -71,15 +93,78 @@ static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
     }
 }
 
-/// Write a GSP GPU hardware register
+/**
+ * GSP_GPU::WriteHWRegs service function
+ *
+ * Writes sequential GSP GPU hardware registers
+ *
+ *  Inputs:
+ *      1 : address of first GPU register
+ *      2 : number of registers to write sequentially
+ *      4 : pointer to source data array
+ */
 static void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
-    u32* src = (u32*)Memory::GetPointer(cmd_buff[0x4]);
+    u32* src = (u32*)Memory::GetPointer(cmd_buff[4]);
 
     WriteHWRegs(reg_addr, size, src);
+}
+
+/**
+ * Updates sequential GSP GPU hardware registers using parallel arrays of source data and masks.
+ * For each register, the value is updated only where the mask is high
+ *
+ * @param base_address The address of the first register in the sequence
+ * @param size_in_bytes The number of registers to update (size of data)
+ * @param data A pointer to the source data to use for updates
+ * @param masks A pointer to the masks
+ */
+static void WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* data, const u32* masks) {
+    // TODO: Return proper error codes
+    if (!CheckWriteParameters(base_address, size_in_bytes))
+        return;
+
+    while (size_in_bytes > 0) {
+        const u32 reg_address = base_address + 0x1EB00000;
+
+        u32 reg_value;
+        GPU::Read<u32>(reg_value, reg_address);
+
+        // Update the current value of the register only for set mask bits
+        reg_value = (reg_value & ~*masks) | (*data | *masks);
+
+        GPU::Write<u32>(reg_address, reg_value);
+
+        size_in_bytes -= 4;
+        ++data;
+        ++masks;
+        base_address += 4;
+    }
+}
+
+/**
+ * GSP_GPU::WriteHWRegsWithMask service function
+ *
+ * Updates sequential GSP GPU hardware registers using masks
+ *
+ *  Inputs:
+ *      1 : address of first GPU register
+ *      2 : number of registers to update sequentially
+ *      4 : pointer to source data array
+ *      6 : pointer to mask array
+ */
+static void WriteHWRegsWithMask(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 reg_addr = cmd_buff[1];
+    u32 size = cmd_buff[2];
+    
+    u32* src_data = (u32*)Memory::GetPointer(cmd_buff[4]);
+    u32* mask_data = (u32*)Memory::GetPointer(cmd_buff[6]);
+
+    WriteHWRegsWithMask(reg_addr, size, src_data, mask_data);
 }
 
 /// Read a GSP GPU hardware register
@@ -350,7 +435,7 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, WriteHWRegs,                   "WriteHWRegs"},
-    {0x00020084, nullptr,                       "WriteHWRegsWithMask"},
+    {0x00020084, WriteHWRegsWithMask,           "WriteHWRegsWithMask"},
     {0x00030082, nullptr,                       "WriteHWRegRepeat"},
     {0x00040080, ReadHWRegs,                    "ReadHWRegs"},
     {0x00050200, SetBufferSwap,                 "SetBufferSwap"},
