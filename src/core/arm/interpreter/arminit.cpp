@@ -82,14 +82,6 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
     state->Inted = 3;
     state->LastInted = 3;
 
-#ifdef ARM61
-    state->prog32Sig = LOW;
-    state->data32Sig = LOW;
-#else
-    state->prog32Sig = HIGH;
-    state->data32Sig = HIGH;
-#endif
-
     state->lateabtSig = HIGH;
     state->bigendSig = LOW;
 
@@ -102,14 +94,6 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
 
 void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
 {
-    if (properties & ARM_Fix26_Prop) {
-        state->prog32Sig = LOW;
-        state->data32Sig = LOW;
-    } else {
-        state->prog32Sig = HIGH;
-        state->data32Sig = HIGH;
-    }
-
     state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
     state->is_v5     = (properties & ARM_v5_Prop) != 0;
     state->is_v5e    = (properties & ARM_v5e_Prop) != 0;
@@ -132,15 +116,10 @@ void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
 void ARMul_Reset(ARMul_State* state)
 {
     state->NextInstr = 0;
-    if (state->prog32Sig) {
-        state->Reg[15] = 0;
-        state->Cpsr = INTBITS | SVC32MODE;
-        state->Mode = SVC32MODE;
-    } else {
-        state->Reg[15] = R15INTBITS | SVC26MODE;
-        state->Cpsr = INTBITS | SVC26MODE;
-        state->Mode = SVC26MODE;
-    }
+
+    state->Reg[15] = 0;
+    state->Cpsr = INTBITS | SVC32MODE;
+    state->Mode = SVC32MODE;
 
     state->Bank = SVCBANK;
     FLUSHPIPE;
