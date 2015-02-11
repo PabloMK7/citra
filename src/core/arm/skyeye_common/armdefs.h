@@ -35,15 +35,20 @@
 #define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
 #define BIT(s, n) ((s >> (n)) & 1)
 
-#define LOW 0
-#define HIGH 1
-#define LOWHIGH 1
-#define HIGHLOW 2
+// Signal levels
+enum {
+    LOW     = 0,
+    HIGH    = 1,
+    LOWHIGH = 1,
+    HIGHLOW = 2
+};
 
-//the define of cachetype
-#define NONCACHE  0
-#define DATACACHE  1
-#define INSTCACHE  2
+// Cache types
+enum {
+    NONCACHE  = 0,
+    DATACACHE = 1,
+    INSTCACHE = 2,
+};
 
 #define POS(i) ( (~(i)) >> 31 )
 #define NEG(i) ( (i) >> 31 )

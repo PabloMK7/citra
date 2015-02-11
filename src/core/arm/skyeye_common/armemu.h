@@ -76,23 +76,27 @@
 #define R15MODE (state->Reg[15] & R15MODEBITS)
 
 // Different ways to start the next instruction.
-#define SEQ           0
-#define NONSEQ        1
-#define PCINCEDSEQ    2
-#define PCINCEDNONSEQ 3
-#define PRIMEPIPE     4
-#define RESUME        8
+enum {
+    SEQ           = 0,
+    NONSEQ        = 1,
+    PCINCEDSEQ    = 2,
+    PCINCEDNONSEQ = 3,
+    PRIMEPIPE     = 4,
+    RESUME        = 8
+};
+
+// Values for Emulate.
+enum {
+    STOP       = 0, // Stop
+    CHANGEMODE = 1, // Change mode
+    ONCE       = 2, // Execute just one interation
+    RUN        = 3  // Continuous execution
+};
 
 #define FLUSHPIPE state->NextInstr |= PRIMEPIPE
 
 // Macro to rotate n right by b bits.
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))
-
-// Values for Emulate.
-#define STOP            0 // stop
-#define CHANGEMODE      1 // change mode
-#define ONCE            2 // execute just one interation
-#define RUN             3 // continuous execution
 
 // Stuff that is shared across modes.
 extern unsigned ARMul_MultTable[]; // Number of I cycles for a mult.
