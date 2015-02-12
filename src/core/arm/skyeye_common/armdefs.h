@@ -294,14 +294,8 @@ enum {
 /***************************************************************************\
 *                  Definitons of things in the emulator                     *
 \***************************************************************************/
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern void ARMul_EmulateInit();
 extern void ARMul_Reset(ARMul_State* state);
-#ifdef __cplusplus
-    }
-#endif
 extern ARMul_State* ARMul_NewState(ARMul_State* state);
 
 /***************************************************************************\
