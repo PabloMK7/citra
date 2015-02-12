@@ -2,9 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <assert.h>
-
-#include "common/logging/log.h"
 #include "core/arm/skyeye_common/armdefs.h"
 
 void switch_mode(arm_core_t *core, uint32_t mode) {
@@ -13,6 +10,7 @@ void switch_mode(arm_core_t *core, uint32_t mode) {
 
     if (mode != USERBANK) {
         switch (core->Mode) {
+        case SYSTEM32MODE: // Shares registers with user mode
         case USER32MODE:
             core->Reg_usr[0] = core->Reg[13];
             core->Reg_usr[1] = core->Reg[14];
@@ -42,7 +40,6 @@ void switch_mode(arm_core_t *core, uint32_t mode) {
             core->Reg_firq[1] = core->Reg[14];
             core->Spsr[FIQBANK] = core->Spsr_copy;
             break;
-
         }
 
         switch (mode) {
@@ -81,11 +78,15 @@ void switch_mode(arm_core_t *core, uint32_t mode) {
             core->Spsr_copy = core->Spsr[FIQBANK];
             core->Bank = FIQBANK;
             break;
-
+        case SYSTEM32MODE: // Shares registers with user mode.
+            core->Reg[13] = core->Reg_usr[0];
+            core->Reg[14] = core->Reg_usr[1];
+            core->Bank = SYSTEMBANK;
+            break;
         }
+
+        // Set the mode bits in the APSR
+        core->Cpsr = (core->Cpsr & ~core->Mode) | mode;
         core->Mode = mode;
-    } else {
-        LOG_CRITICAL(Core_ARM11, "user mode");
-        exit(-2);
     }
 }

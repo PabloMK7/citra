@@ -56,11 +56,10 @@ void Stop() {
 
 /// Initialize the core
 int Init() {
-    LOG_DEBUG(Core, "initialized OK");
+    g_sys_core = new ARM_DynCom(USER32MODE);
+    g_app_core = new ARM_DynCom(USER32MODE);
 
-    g_sys_core = new ARM_DynCom();
-    g_app_core = new ARM_DynCom();
-
+    LOG_DEBUG(Core, "Initialized OK");
     return 0;
 }
 
@@ -68,7 +67,7 @@ void Shutdown() {
     delete g_app_core;
     delete g_sys_core;
 
-    LOG_DEBUG(Core, "shutdown OK");
+    LOG_DEBUG(Core, "Shutdown OK");
 }
 
 } // namespace

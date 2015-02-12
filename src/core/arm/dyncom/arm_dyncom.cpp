@@ -7,6 +7,7 @@
 
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
+#include "core/arm/dyncom/arm_dyncom_run.h"
 
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -15,7 +16,7 @@ const static cpu_config_t s_arm11_cpu_info = {
     "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
 };
 
-ARM_DynCom::ARM_DynCom() {
+ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = std::unique_ptr<ARMul_State>(new ARMul_State);
 
     ARMul_NewState(state.get());
@@ -32,6 +33,9 @@ ARM_DynCom::ARM_DynCom() {
     ARMul_Reset(state.get());
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = RUN;
+
+    // Switch to the desired privilege mode.
+    switch_mode(state.get(), initial_mode);
 
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
     state->Reg[15] = 0x00000000;
