@@ -18,10 +18,7 @@ const static cpu_config_t s_arm11_cpu_info = {
 ARM_DynCom::ARM_DynCom() {
     state = std::unique_ptr<ARMul_State>(new ARMul_State);
 
-    ARMul_EmulateInit();
-    memset(state.get(), 0, sizeof(ARMul_State));
-
-    ARMul_NewState((ARMul_State*)state.get());
+    ARMul_NewState(state.get());
 
     state->abort_model = ABORT_BASE_RESTORED;
     state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
@@ -41,8 +38,6 @@ ARM_DynCom::ARM_DynCom() {
     state->NirqSig = HIGH;
 
     VFPInit(state.get()); // Initialize the VFP
-
-    ARMul_EmulateInit();
 }
 
 ARM_DynCom::~ARM_DynCom() {
