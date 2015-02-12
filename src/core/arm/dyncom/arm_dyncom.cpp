@@ -19,25 +19,22 @@ ARM_DynCom::ARM_DynCom() {
     state = std::unique_ptr<ARMul_State>(new ARMul_State);
 
     ARMul_NewState(state.get());
+    ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
 
     state->abort_model = ABORT_BASE_RESTORED;
     state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
-    state->bigendSig = LOW;
 
-    ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
+    state->bigendSig = LOW;
     state->lateabtSig = LOW;
+    state->NirqSig = HIGH;
 
     // Reset the core to initial state
-    ARMul_CoProInit(state.get());
     ARMul_Reset(state.get());
     state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = RUN;
 
-    state->Reg[15] = 0x00000000;
     state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
-    state->NirqSig = HIGH;
-
-    VFPInit(state.get()); // Initialize the VFP
+    state->Reg[15] = 0x00000000;
 }
 
 ARM_DynCom::~ARM_DynCom() {
