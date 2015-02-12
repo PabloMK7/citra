@@ -19,46 +19,6 @@
 #include "core/arm/skyeye_common/armemu.h"
 
 /***************************************************************************\
-*                 Definitions for the emulator architecture                 *
-\***************************************************************************/
-
-void ARMul_EmulateInit();
-ARMul_State* ARMul_NewState(ARMul_State* state);
-void ARMul_Reset (ARMul_State* state);
-
-unsigned ARMul_MultTable[32] = {
-    1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9,
-    10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16
-};
-ARMword ARMul_ImmedTable[4096]; // immediate DP LHS values
-char ARMul_BitList[256];        // number of bits in a byte table
-
-/***************************************************************************\
-*         Call this routine once to set up the emulator's tables.           *
-\***************************************************************************/
-void ARMul_EmulateInit()
-{
-    unsigned int i, j;
-
-    // the values of 12 bit dp rhs's
-    for (i = 0; i < 4096; i++) {
-        ARMul_ImmedTable[i] = ROTATER (i & 0xffL, (i >> 7L) & 0x1eL);
-    }
-
-    // how many bits in LSM
-    for (i = 0; i < 256; ARMul_BitList[i++] = 0);
-    for (j = 1; j < 256; j <<= 1)
-        for (i = 0; i < 256; i++)
-            if ((i & j) > 0)
-                ARMul_BitList[i]++;
-
-    // you always need 4 times these values
-    for (i = 0; i < 256; i++)
-        ARMul_BitList[i] *= 4;
-
-}
-
-/***************************************************************************\
 *            Returns a new instantiation of the ARMulator's state           *
 \***************************************************************************/
 ARMul_State* ARMul_NewState(ARMul_State* state)

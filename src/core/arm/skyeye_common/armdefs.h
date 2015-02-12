@@ -294,7 +294,6 @@ enum {
 /***************************************************************************\
 *                  Definitons of things in the emulator                     *
 \***************************************************************************/
-extern void ARMul_EmulateInit();
 extern void ARMul_Reset(ARMul_State* state);
 extern ARMul_State* ARMul_NewState(ARMul_State* state);
 

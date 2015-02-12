@@ -95,14 +95,6 @@ enum {
 
 #define FLUSHPIPE state->NextInstr |= PRIMEPIPE
 
-// Macro to rotate n right by b bits.
-#define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))
-
-// Stuff that is shared across modes.
-extern unsigned ARMul_MultTable[]; // Number of I cycles for a mult.
-extern ARMword ARMul_ImmedTable[]; // Immediate DP LHS values.
-extern char ARMul_BitList[];       // Number of bits in a byte table.
-
 // Coprocessor support functions.
 extern void ARMul_CoProInit(ARMul_State*);
 extern void ARMul_CoProExit(ARMul_State*);
