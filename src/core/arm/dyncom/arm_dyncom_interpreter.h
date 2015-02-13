@@ -4,4 +4,6 @@
 
 #pragma once
 
+#include "core/arm/skyeye_common/armdefs.h"
+
 unsigned InterpreterMainLoop(ARMul_State* state);

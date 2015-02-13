@@ -34,7 +34,7 @@ void SignalInterrupt() {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : (inaddr << 1) + 0x1FF40000 (where 0x1FF00000 is the DSP RAM address)
  */
-void ConvertProcessAddressFromDspDram(Service::Interface* self) {
+static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 addr = cmd_buff[1];
@@ -57,7 +57,7 @@ void ConvertProcessAddressFromDspDram(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Component loaded, 0 on not loaded, 1 on loaded
  */
-void LoadComponent(Service::Interface* self) {
+static void LoadComponent(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
@@ -74,7 +74,7 @@ void LoadComponent(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      3 : Semaphore event handle
  */
-void GetSemaphoreEventHandle(Service::Interface* self) {
+static void GetSemaphoreEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -92,7 +92,7 @@ void GetSemaphoreEventHandle(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void RegisterInterruptEvents(Service::Interface* self) {
+static void RegisterInterruptEvents(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     auto evt = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
@@ -116,7 +116,7 @@ void RegisterInterruptEvents(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void WriteReg0x10(Service::Interface* self) {
+static void WriteReg0x10(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     SignalInterrupt();
@@ -137,7 +137,7 @@ void WriteReg0x10(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void WriteProcessPipe(Service::Interface* self) {
+static void WriteProcessPipe(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 number   = cmd_buff[1];
@@ -162,7 +162,7 @@ void WriteProcessPipe(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Number of bytes read from pipe
  */
-void ReadPipeIfPossible(Service::Interface* self) {
+static void ReadPipeIfPossible(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size = cmd_buff[3] & 0xFFFF;// Lower 16 bits are size
@@ -200,7 +200,7 @@ void ReadPipeIfPossible(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void SetSemaphoreMask(Service::Interface* self) {
+static void SetSemaphoreMask(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 mask = cmd_buff[1];
@@ -219,7 +219,7 @@ void SetSemaphoreMask(Service::Interface* self) {
  *      2 : The headphone status response, 0 = Not using headphones?,
  *          1 = using headphones?
  */
-void GetHeadphoneStatus(Service::Interface* self) {
+static void GetHeadphoneStatus(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error

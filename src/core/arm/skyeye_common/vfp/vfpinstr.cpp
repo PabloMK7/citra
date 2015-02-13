@@ -19,7 +19,7 @@ typedef struct _vmla_inst {
 } vmla_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmla_inst));
     vmla_inst *inst_cream = (vmla_inst *)inst_base->component;
@@ -69,7 +69,7 @@ typedef struct _vmls_inst {
 } vmls_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmls_inst));
     vmls_inst *inst_cream = (vmls_inst *)inst_base->component;
@@ -119,7 +119,7 @@ typedef struct _vnmla_inst {
 } vnmla_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmla_inst));
     vnmla_inst *inst_cream = (vnmla_inst *)inst_base->component;
@@ -170,7 +170,7 @@ typedef struct _vnmls_inst {
 } vnmls_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmls_inst));
     vnmls_inst *inst_cream = (vnmls_inst *)inst_base->component;
@@ -220,7 +220,7 @@ typedef struct _vnmul_inst {
 } vnmul_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vnmul_inst));
     vnmul_inst *inst_cream = (vnmul_inst *)inst_base->component;
@@ -270,7 +270,7 @@ typedef struct _vmul_inst {
 } vmul_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmul_inst));
     vmul_inst *inst_cream = (vmul_inst *)inst_base->component;
@@ -320,7 +320,7 @@ typedef struct _vadd_inst {
 } vadd_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vadd_inst));
     vadd_inst *inst_cream = (vadd_inst *)inst_base->component;
@@ -370,7 +370,7 @@ typedef struct _vsub_inst {
 } vsub_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vsub_inst));
     vsub_inst *inst_cream = (vsub_inst *)inst_base->component;
@@ -420,7 +420,7 @@ typedef struct _vdiv_inst {
 } vdiv_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vdiv_inst));
     vdiv_inst *inst_cream = (vdiv_inst *)inst_base->component;
@@ -472,7 +472,7 @@ typedef struct _vmovi_inst {
 } vmovi_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovi_inst));
     vmovi_inst *inst_cream = (vmovi_inst *)inst_base->component;
@@ -521,7 +521,7 @@ typedef struct _vmovr_inst {
 } vmovr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovr_inst));
     vmovr_inst *inst_cream = (vmovr_inst *)inst_base->component;
@@ -564,7 +564,7 @@ typedef struct _vabs_inst {
 } vabs_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vabs_inst));
     vabs_inst *inst_cream = (vabs_inst *)inst_base->component;
@@ -615,7 +615,7 @@ typedef struct _vneg_inst {
 } vneg_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vneg_inst));
     vneg_inst *inst_cream = (vneg_inst *)inst_base->component;
@@ -665,7 +665,7 @@ typedef struct _vsqrt_inst {
 } vsqrt_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vsqrt_inst));
     vsqrt_inst *inst_cream = (vsqrt_inst *)inst_base->component;
@@ -715,7 +715,7 @@ typedef struct _vcmp_inst {
 } vcmp_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcmp_inst));
     vcmp_inst *inst_cream = (vcmp_inst *)inst_base->component;
@@ -765,7 +765,7 @@ typedef struct _vcmp2_inst {
 } vcmp2_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcmp2_inst));
     vcmp2_inst *inst_cream = (vcmp2_inst *)inst_base->component;
@@ -815,7 +815,7 @@ typedef struct _vcvtbds_inst {
 } vcvtbds_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcvtbds_inst));
     vcvtbds_inst *inst_cream = (vcvtbds_inst *)inst_base->component;
@@ -865,7 +865,7 @@ typedef struct _vcvtbff_inst {
 } vcvtbff_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
 {
     VFP_DEBUG_UNTESTED(VCVTBFF);
 
@@ -917,7 +917,7 @@ typedef struct _vcvtbfi_inst {
 } vcvtbfi_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vcvtbfi_inst));
     vcvtbfi_inst *inst_cream = (vcvtbfi_inst *)inst_base->component;
@@ -974,7 +974,7 @@ typedef struct _vmovbrs_inst {
 } vmovbrs_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrs_inst));
     vmovbrs_inst *inst_cream = (vmovbrs_inst *)inst_base->component;
@@ -1019,7 +1019,7 @@ typedef struct _vmsr_inst {
 } vmsr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmsr_inst));
     vmsr_inst *inst_cream = (vmsr_inst *)inst_base->component;
@@ -1068,7 +1068,7 @@ typedef struct _vmovbrc_inst {
 } vmovbrc_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrc_inst));
     vmovbrc_inst *inst_cream = (vmovbrc_inst *)inst_base->component;
@@ -1115,7 +1115,7 @@ typedef struct _vmrs_inst {
 } vmrs_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmrs_inst));
     vmrs_inst *inst_cream = (vmrs_inst *)inst_base->component;
@@ -1199,7 +1199,7 @@ typedef struct _vmovbcr_inst {
 } vmovbcr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbcr_inst));
     vmovbcr_inst *inst_cream = (vmovbcr_inst *)inst_base->component;
@@ -1253,7 +1253,7 @@ typedef struct _vmovbrrss_inst {
 } vmovbrrss_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrrss_inst));
     vmovbrrss_inst *inst_cream = (vmovbrrss_inst *)inst_base->component;
@@ -1302,7 +1302,7 @@ typedef struct _vmovbrrd_inst {
 } vmovbrrd_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vmovbrrd_inst));
     vmovbrrd_inst *inst_cream = (vmovbrrd_inst *)inst_base->component;
@@ -1356,7 +1356,7 @@ typedef struct _vstr_inst {
 } vstr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vstr_inst));
     vstr_inst *inst_cream = (vstr_inst *)inst_base->component;
@@ -1415,7 +1415,7 @@ typedef struct _vpush_inst {
 } vpush_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vpush_inst));
     vpush_inst *inst_cream = (vpush_inst *)inst_base->component;
@@ -1481,7 +1481,7 @@ typedef struct _vstm_inst {
 } vstm_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vstm_inst));
     vstm_inst *inst_cream = (vstm_inst *)inst_base->component;
@@ -1551,7 +1551,7 @@ typedef struct _vpop_inst {
 } vpop_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vpop_inst));
     vpop_inst *inst_cream = (vpop_inst *)inst_base->component;
@@ -1621,7 +1621,7 @@ typedef struct _vldr_inst {
 } vldr_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vldr_inst));
     vldr_inst *inst_cream = (vldr_inst *)inst_base->component;
@@ -1687,7 +1687,7 @@ typedef struct _vldm_inst {
 } vldm_inst;
 #endif
 #ifdef VFP_INTERPRETER_TRANS
-ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
+static ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(vldm_inst));
     vldm_inst *inst_cream = (vldm_inst *)inst_base->component;
