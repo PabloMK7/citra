@@ -22,7 +22,7 @@ static std::vector<ModuleDef> g_module_db;
 
 bool g_reschedule = false;  ///< If true, immediately reschedules the CPU to a new thread
 
-const FunctionDef* GetSVCInfo(u32 opcode) {
+static const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
     if (func_num > 0xFF) {
         LOG_ERROR(Kernel_SVC,"unknown svc=0x%02X", func_num);
@@ -63,7 +63,7 @@ void RegisterModule(std::string name, int num_functions, const FunctionDef* func
     g_module_db.push_back(module);
 }
 
-void RegisterAllModules() {
+static void RegisterAllModules() {
     SVC::Register();
 }
 

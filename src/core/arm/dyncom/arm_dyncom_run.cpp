@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/skyeye_common/armdefs.h"
 
 void switch_mode(ARMul_State* core, uint32_t mode) {

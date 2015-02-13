@@ -69,7 +69,7 @@ using AdvanceCallback = void(int cycles_executed);
 static AdvanceCallback* advance_callback = nullptr;
 static std::vector<MHzChangeCallback> mhz_change_callbacks;
 
-void FireMhzChange() {
+static void FireMhzChange() {
     for (auto callback : mhz_change_callbacks)
         callback();
 }
@@ -97,7 +97,7 @@ u64 GetGlobalTimeUs() {
     return last_global_time_us + us_since_last;
 }
 
-Event* GetNewEvent() {
+static Event* GetNewEvent() {
     if (!event_pool)
         return new Event;
 
@@ -106,7 +106,7 @@ Event* GetNewEvent() {
     return event;
 }
 
-Event* GetNewTsEvent() {
+static Event* GetNewTsEvent() {
     allocated_ts_events++;
 
     if (!event_ts_pool)
@@ -117,12 +117,12 @@ Event* GetNewTsEvent() {
     return event;
 }
 
-void FreeEvent(Event* event) {
+static void FreeEvent(Event* event) {
     event->next = event_pool;
     event_pool = event;
 }
 
-void FreeTsEvent(Event* event) {
+static void FreeTsEvent(Event* event) {
     event->next = event_ts_pool;
     event_ts_pool = event;
     allocated_ts_events--;
@@ -133,7 +133,7 @@ int RegisterEvent(const char* name, TimedCallback callback) {
     return (int)event_types.size() - 1;
 }
 
-void AntiCrashCallback(u64 userdata, int cycles_late) {
+static void AntiCrashCallback(u64 userdata, int cycles_late) {
     LOG_CRITICAL(Core_Timing, "Savestate broken: an unregistered event was called.");
     Core::Halt("invalid timing events");
 }
@@ -228,7 +228,7 @@ void ClearPendingEvents() {
     }
 }
 
-void AddEventToQueue(Event* new_event) {
+static void AddEventToQueue(Event* new_event) {
     Event* prev_event = nullptr;
     Event** next_event = &first;
     for (;;) {

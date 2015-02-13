@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "core/arm/skyeye_common/armdefs.h"
+
 void switch_mode(ARMul_State* core, uint32_t mode);
 
 /* FIXME, we temporarily think thumb instruction is always 16 bit */

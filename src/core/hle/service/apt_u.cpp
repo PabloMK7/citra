@@ -160,7 +160,7 @@ void GetAppletManInfo(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Output, 0 = not registered, 1 = registered. 
  */
-void IsRegistered(Service::Interface* self) {
+static void IsRegistered(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -191,7 +191,7 @@ void InquireNotification(Service::Interface* self) {
  *     0 : Return Header
  *     1 : Result of function, 0 on success, otherwise error code
 */
-void SendParameter(Service::Interface* self) {
+static void SendParameter(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 src_app_id          = cmd_buff[1];
     u32 dst_app_id          = cmd_buff[2];
@@ -291,7 +291,7 @@ void GlanceParameter(Service::Interface* self) {
  *      2 : Status flag, 0 = failure due to no parameter data being available, or the above enabled
  *          fields don't match the fields in NS state. 1 = success.
  */
-void CancelParameter(Service::Interface* self) {
+static void CancelParameter(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flag1  = cmd_buff[1];
     u32 unk    = cmd_buff[2];
@@ -367,7 +367,7 @@ void GetSharedFont(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-void SetAppCpuTimeLimit(Service::Interface* self) {
+static void SetAppCpuTimeLimit(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 value = cmd_buff[1];
     u32 percent = cmd_buff[2];
@@ -390,7 +390,7 @@ void SetAppCpuTimeLimit(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : System core CPU time percentage
  */
-void GetAppCpuTimeLimit(Service::Interface* self) {
+static void GetAppCpuTimeLimit(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 value = cmd_buff[1];
 
