@@ -32,11 +32,7 @@
 
 #pragma once
 
-/* Custom edit */
-
-#include <stdint.h>
-#include <stdio.h>
-
+#include <cstdio>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/armdefs.h"
 

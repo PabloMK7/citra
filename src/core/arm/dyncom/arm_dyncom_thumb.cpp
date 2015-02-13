@@ -5,27 +5,17 @@
 // We can provide simple Thumb simulation by decoding the Thumb instruction into its corresponding
 // ARM instruction, and using the existing ARM simulator.
 
-#include "core/arm/skyeye_common/skyeye_defs.h"
-
-#ifndef MODET // Required for the Thumb instruction support
-#if 1
-#error "MODET needs to be defined for the Thumb world to work"
-#else
-#define MODET (1)
-#endif
-#endif
-
-#include "core/arm/skyeye_common/armos.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
+#include "core/arm/skyeye_common/armos.h"
+#include "core/arm/skyeye_common/skyeye_defs.h"
 
 // Decode a 16bit Thumb instruction.  The instruction is in the low 16-bits of the tinstr field,
 // with the following Thumb instruction held in the high 16-bits.  Passing in two Thumb instructions
 // allows easier simulation of the special dual BL instruction.
 
-tdstate thumb_translate (addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size) {
+tdstate thumb_translate(addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size) {
     tdstate valid = t_uninitialized;
-    ARMword tinstr;
-    tinstr = instr;
+    ARMword tinstr = instr;
 
     // The endian should be judge here
     if((addr & 0x3) != 0)

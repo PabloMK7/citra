@@ -15,6 +15,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
+#include <cstring>
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armemu.h"
 
@@ -23,7 +24,7 @@
 \***************************************************************************/
 ARMul_State* ARMul_NewState(ARMul_State* state)
 {
-    memset (state, 0, sizeof (ARMul_State));
+    memset(state, 0, sizeof(ARMul_State));
 
     state->Emulate = RUN;
     for (unsigned int i = 0; i < 16; i++) {

@@ -5,23 +5,19 @@
 #define CITRA_IGNORE_EXIT(x)
 
 #include <algorithm>
-#include <unordered_map>
-#include <stdio.h>
-#include <assert.h>
 #include <cstdio>
-#include <vector>
+#include <unordered_map>
 
-using namespace std;
-
-#include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/armmmu.h"
-#include "arm_dyncom_thumb.h"
-#include "arm_dyncom_run.h"
-#include "core/arm/skyeye_common/vfp/vfp.h"
-#include "core/arm/disassembler/arm_disasm.h"
+#include "common/logging/log.h"
 
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
+#include "core/arm/disassembler/arm_disasm.h"
+#include "core/arm/dyncom/arm_dyncom_thumb.h"
+#include "core/arm/dyncom/arm_dyncom_run.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armmmu.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 
 enum {
     COND            = (1 << 0),
@@ -44,8 +40,7 @@ enum {
 #define ROTATE_RIGHT_32(n, i) ROTATE_RIGHT(n, i, 32)
 #define ROTATE_LEFT_32(n, i)  ROTATE_LEFT(n, i, 32)
 
-typedef arm_core_t arm_processor;
-typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
+typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
 // Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
 // This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
@@ -53,7 +48,7 @@ typedef unsigned int (*shtop_fp_t)(arm_processor *cpu, unsigned int sht_oper);
 static const ARMword RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
 
 // Exclusive memory access
-static int exclusive_detect(ARMul_State* state, ARMword addr){
+static int exclusive_detect(ARMul_State* state, ARMword addr) {
     if(state->exclusive_tag == (addr & RESERVATION_GRANULE_MASK))
         return 0;
     else
@@ -69,7 +64,7 @@ static void remove_exclusive(ARMul_State* state, ARMword addr){
     state->exclusive_tag = 0xFFFFFFFF;
 }
 
-unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(Immediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int immed_8 = BITS(sht_oper, 0, 7);
     unsigned int rotate_imm = BITS(sht_oper, 8, 11);
     unsigned int shifter_operand = ROTATE_RIGHT_32(immed_8, rotate_imm * 2);
@@ -80,14 +75,14 @@ unsigned int DPO(Immediate)(arm_processor *cpu, unsigned int sht_oper) {
     return shifter_operand;
 }
 
-unsigned int DPO(Register)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(Register)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand = rm;
     cpu->shifter_carry_out = cpu->CFlag;
     return shifter_operand;
 }
 
-unsigned int DPO(LogicalShiftLeftByImmediate)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(LogicalShiftLeftByImmediate)(ARMul_State* cpu, unsigned int sht_oper) {
     int shift_imm = BITS(sht_oper, 7, 11);
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand;
@@ -101,7 +96,7 @@ unsigned int DPO(LogicalShiftLeftByImmediate)(arm_processor *cpu, unsigned int s
     return shifter_operand;
 }
 
-unsigned int DPO(LogicalShiftLeftByRegister)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(LogicalShiftLeftByRegister)(ARMul_State* cpu, unsigned int sht_oper) {
     int shifter_operand;
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int rs = CHECK_READ_REG15(cpu, RS);
@@ -121,7 +116,7 @@ unsigned int DPO(LogicalShiftLeftByRegister)(arm_processor *cpu, unsigned int sh
     return shifter_operand;
 }
 
-unsigned int DPO(LogicalShiftRightByImmediate)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(LogicalShiftRightByImmediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand;
     int shift_imm = BITS(sht_oper, 7, 11);
@@ -135,7 +130,7 @@ unsigned int DPO(LogicalShiftRightByImmediate)(arm_processor *cpu, unsigned int 
     return shifter_operand;
 }
 
-unsigned int DPO(LogicalShiftRightByRegister)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(LogicalShiftRightByRegister)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rs = CHECK_READ_REG15(cpu, RS);
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand;
@@ -155,7 +150,7 @@ unsigned int DPO(LogicalShiftRightByRegister)(arm_processor *cpu, unsigned int s
     return shifter_operand;
 }
 
-unsigned int DPO(ArithmeticShiftRightByImmediate)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(ArithmeticShiftRightByImmediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand;
     int shift_imm = BITS(sht_oper, 7, 11);
@@ -172,7 +167,7 @@ unsigned int DPO(ArithmeticShiftRightByImmediate)(arm_processor *cpu, unsigned i
     return shifter_operand;
 }
 
-unsigned int DPO(ArithmeticShiftRightByRegister)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(ArithmeticShiftRightByRegister)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rs = CHECK_READ_REG15(cpu, RS);
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int shifter_operand;
@@ -192,7 +187,7 @@ unsigned int DPO(ArithmeticShiftRightByRegister)(arm_processor *cpu, unsigned in
     return shifter_operand;
 }
 
-unsigned int DPO(RotateRightByImmediate)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(RotateRightByImmediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int shifter_operand;
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     int shift_imm = BITS(sht_oper, 7, 11);
@@ -206,7 +201,7 @@ unsigned int DPO(RotateRightByImmediate)(arm_processor *cpu, unsigned int sht_op
     return shifter_operand;
 }
 
-unsigned int DPO(RotateRightByRegister)(arm_processor *cpu, unsigned int sht_oper) {
+unsigned int DPO(RotateRightByRegister)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int rm = CHECK_READ_REG15(cpu, RM);
     unsigned int rs = CHECK_READ_REG15(cpu, RS);
     unsigned int shifter_operand;
@@ -223,7 +218,7 @@ unsigned int DPO(RotateRightByRegister)(arm_processor *cpu, unsigned int sht_ope
     return shifter_operand;
 }
 
-typedef void (*get_addr_fp_t)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw);
+typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw);
 
 typedef struct _ldst_inst {
     unsigned int inst;
@@ -231,7 +226,7 @@ typedef struct _ldst_inst {
 } ldst_inst;
 #define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
-int CondPassed(arm_processor *cpu, unsigned int cond);
+int CondPassed(ARMul_State* cpu, unsigned int cond);
 
 #define LnSWoUB(s)   glue(LnSWoUB, s)
 #define MLnS(s)      glue(MLnS, s)
@@ -243,7 +238,7 @@ int CondPassed(arm_processor *cpu, unsigned int cond);
 #define P_BIT        BIT(inst, 24)
 #define OFFSET_12    BITS(inst, 0, 11)
 
-void LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ImmediateOffset)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr;
 
@@ -255,7 +250,7 @@ void LnSWoUB(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned in
     virt_addr = addr;
 }
 
-void LnSWoUB(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(RegisterOffset)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
@@ -270,7 +265,7 @@ void LnSWoUB(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int
     virt_addr = addr;
 }
 
-void LnSWoUB(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ImmediatePostIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr = CHECK_READ_REG15_WA(cpu, Rn);
 
@@ -282,7 +277,7 @@ void LnSWoUB(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsign
     virt_addr = addr;
 }
 
-void LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ImmediatePreIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int addr;
 
@@ -297,7 +292,7 @@ void LnSWoUB(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigne
         cpu->Reg[Rn] = addr;
 }
 
-void MLnS(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(RegisterPreIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int addr;
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
@@ -315,7 +310,7 @@ void MLnS(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned in
         cpu->Reg[Rn] = addr;
 }
 
-void LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(RegisterPreIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
@@ -334,7 +329,7 @@ void LnSWoUB(RegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned
     }
 }
 
-void LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ScaledRegisterPreIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
@@ -385,7 +380,7 @@ void LnSWoUB(ScaledRegisterPreIndexed)(arm_processor *cpu, unsigned int inst, un
         cpu->Reg[Rn] = addr;
 }
 
-void LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ScaledRegisterPostIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
@@ -434,7 +429,7 @@ void LnSWoUB(ScaledRegisterPostIndexed)(arm_processor *cpu, unsigned int inst, u
     }
 }
 
-void LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(RegisterPostIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
@@ -450,7 +445,7 @@ void LnSWoUB(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigne
     }
 }
 
-void MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(ImmediateOffset)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int immedL = BITS(inst, 0, 3);
     unsigned int immedH = BITS(inst, 8, 11);
     unsigned int Rn     = BITS(inst, 16, 19);
@@ -466,7 +461,7 @@ void MLnS(ImmediateOffset)(arm_processor *cpu, unsigned int inst, unsigned int &
     virt_addr = addr;
 }
 
-void MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(RegisterOffset)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int addr;
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
@@ -481,7 +476,7 @@ void MLnS(RegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &v
     virt_addr = addr;
 }
 
-void MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(ImmediatePreIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn     = BITS(inst, 16, 19);
     unsigned int immedH = BITS(inst,  8, 11);
     unsigned int immedL = BITS(inst,  0,  3);
@@ -500,7 +495,7 @@ void MLnS(ImmediatePreIndexed)(arm_processor *cpu, unsigned int inst, unsigned i
         cpu->Reg[Rn] = addr;
 }
 
-void MLnS(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(ImmediatePostIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn     = BITS(inst, 16, 19);
     unsigned int immedH = BITS(inst,  8, 11);
     unsigned int immedL = BITS(inst,  0,  3);
@@ -519,7 +514,7 @@ void MLnS(ImmediatePostIndexed)(arm_processor *cpu, unsigned int inst, unsigned 
     }
 }
 
-void MLnS(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void MLnS(RegisterPostIndexed)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst,  0,  3);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
@@ -534,7 +529,7 @@ void MLnS(RegisterPostIndexed)(arm_processor *cpu, unsigned int inst, unsigned i
     }
 }
 
-void LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LdnStM(DecrementBefore)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
@@ -550,7 +545,7 @@ void LdnStM(DecrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int
         cpu->Reg[Rn] -= count * 4;
 }
 
-void LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LdnStM(IncrementBefore)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
@@ -566,7 +561,7 @@ void LdnStM(IncrementBefore)(arm_processor *cpu, unsigned int inst, unsigned int
         cpu->Reg[Rn] += count * 4;
 }
 
-void LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LdnStM(IncrementAfter)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
@@ -582,7 +577,7 @@ void LdnStM(IncrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int 
         cpu->Reg[Rn] += count * 4;
 }
 
-void LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LdnStM(DecrementAfter)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int i = BITS(inst, 0, 15);
     int count = 0;
@@ -600,7 +595,7 @@ void LdnStM(DecrementAfter)(arm_processor *cpu, unsigned int inst, unsigned int 
     }
 }
 
-void LnSWoUB(ScaledRegisterOffset)(arm_processor *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw) {
+void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr, unsigned int rw) {
     unsigned int shift = BITS(inst, 5, 6);
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
@@ -1115,7 +1110,7 @@ inline void *AllocBuffer(unsigned int size) {
     return (void *)&inst_buf[start];
 }
 
-int CondPassed(arm_processor *cpu, unsigned int cond) {
+int CondPassed(ARMul_State* cpu, unsigned int cond) {
     #define NFLAG        cpu->NFlag
     #define ZFLAG        cpu->ZFlag
     #define CFLAG        cpu->CFlag
@@ -3469,13 +3464,13 @@ const transop_fp_t arm_instruction_trans[] = {
 };
 
 typedef std::unordered_map<u32, int> bb_map;
-bb_map CreamCache;
+static bb_map CreamCache;
 
-void insert_bb(unsigned int addr, int start) {
+static void insert_bb(unsigned int addr, int start) {
     CreamCache[addr] = start;
 }
 
-int find_bb(unsigned int addr, int &start) {
+static int find_bb(unsigned int addr, int& start) {
     int ret = -1;
     bb_map::const_iterator it = CreamCache.find(addr);
     if (it != CreamCache.end()) {
@@ -3492,7 +3487,7 @@ enum {
     FETCH_FAILURE
 };
 
-static tdstate decode_thumb_instr(arm_processor *cpu, uint32_t inst, addr_t addr, uint32_t *arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
+static tdstate decode_thumb_instr(ARMul_State* cpu, uint32_t inst, addr_t addr, uint32_t* arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
     // Check if in Thumb mode
     tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
     if(ret == t_branch){
@@ -3555,24 +3550,7 @@ typedef struct instruction_set_encoding_item ISEITEM;
 
 extern const ISEITEM arm_instruction[];
 
-vector<uint64_t> code_page_set;
-
-void flush_bb(uint32_t addr) {
-    bb_map::iterator it;
-    uint32_t start;
-
-    addr  &= 0xfffff000;
-    for (it = CreamCache.begin(); it != CreamCache.end(); ) {
-        start = static_cast<uint32_t>(it->first);
-        start &= 0xfffff000;
-        if (start == addr) {
-            CreamCache.erase(it++);
-        } else
-            ++it;
-    }
-}
-
-int InterpreterTranslate(arm_processor *cpu, int &bb_start, addr_t addr) {
+int InterpreterTranslate(ARMul_State* cpu, int& bb_start, addr_t addr) {
     // Decode instruction, get index
     // Allocate memory and init InsCream
     // Go on next, until terminal instruction
@@ -3628,8 +3606,6 @@ translated:
     return KEEP_GOING;
 }
 
-#define LOG_IN_CLR    skyeye_printf_in_color
-
 int clz(unsigned int x) {
     int n;
     if (x == 0) return (32);
@@ -3642,9 +3618,7 @@ int clz(unsigned int x) {
     return n;
 }
 
-unsigned arm_dyncom_SWI (ARMul_State * state, ARMword number);
-
-static bool InAPrivilegedMode(arm_core_t *core) {
+static bool InAPrivilegedMode(ARMul_State* core) {
     return (core->Mode != USER32MODE);
 }
 
@@ -3904,7 +3878,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #define PC (cpu->Reg[15])
     #define CHECK_EXT_INT if (!cpu->NirqSig && !(cpu->Cpsr & 0x80)) goto END;
 
-    arm_processor *cpu = state;
+    ARMul_State* cpu = state;
 
     // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback
     // to a clunky switch statement.

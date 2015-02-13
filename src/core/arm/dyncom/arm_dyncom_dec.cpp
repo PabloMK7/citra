@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 

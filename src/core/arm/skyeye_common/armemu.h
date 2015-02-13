@@ -19,61 +19,24 @@
 
 #include "core/arm/skyeye_common/armdefs.h"
 
-/* Macros to twiddle the status flags and mode.  */
-#define NBIT ((unsigned)1L << 31)
-#define ZBIT (1L << 30)
-#define CBIT (1L << 29)
-#define VBIT (1L << 28)
-#define QBIT (1L << 27)
-#define IBIT (1L << 7)
-#define FBIT (1L << 6)
-#define IFBITS (3L << 6)
-#define R15IBIT (1L << 27)
-#define R15FBIT (1L << 26)
-#define R15IFBITS (3L << 26)
+// Flags for use with the APSR.
+enum : u32 {
+    NBIT = (1U << 31U),
+    ZBIT = (1 << 30),
+    CBIT = (1 << 29),
+    VBIT = (1 << 28),
+    QBIT = (1 << 27),
+    JBIT = (1 << 24),
+    EBIT = (1 << 9),
+    ABIT = (1 << 8),
+    IBIT = (1 << 7),
+    FBIT = (1 << 6),
+    TBIT = (1 << 5),
 
-#if defined MODE32 || defined MODET
-#define CCBITS (0xf8000000L)
-#else
-#define CCBITS (0xf0000000L)
-#endif
-
-#define INTBITS (0xc0L)
-
-#if defined MODET && defined MODE32
-#define PCBITS (0xffffffffL)
-#else
-#define PCBITS (0xfffffffcL)
-#endif
-
-#define MODEBITS (0x1fL)
-#define R15INTBITS (3L << 26)
-
-#if defined MODET && defined MODE32
-#define R15PCBITS (0x03ffffffL)
-#else
-#define R15PCBITS (0x03fffffcL)
-#endif
-
-#define R15MODEBITS (0x3L)
-
-#ifdef MODE32
-#define PCMASK PCBITS
-#define PCWRAP(pc) (pc)
-#else
-#define PCMASK R15PCBITS
-#define PCWRAP(pc) ((pc) & R15PCBITS)
-#endif
-
-#define PC (state->Reg[15] & PCMASK)
-#define R15CCINTMODE (state->Reg[15] & (CCBITS | R15INTBITS | R15MODEBITS))
-#define R15INT (state->Reg[15] & R15INTBITS)
-#define R15INTPC (state->Reg[15] & (R15INTBITS | R15PCBITS))
-#define R15INTPCMODE (state->Reg[15] & (R15INTBITS | R15PCBITS | R15MODEBITS))
-#define R15INTMODE (state->Reg[15] & (R15INTBITS | R15MODEBITS))
-#define R15PC (state->Reg[15] & R15PCBITS)
-#define R15PCMODE (state->Reg[15] & (R15PCBITS | R15MODEBITS))
-#define R15MODE (state->Reg[15] & R15MODEBITS)
+    // Masks for groups of bits in the APSR.
+    MODEBITS = 0x1F,
+    INTBITS  = 0xC0,
+};
 
 // Different ways to start the next instruction.
 enum {
