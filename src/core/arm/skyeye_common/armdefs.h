@@ -17,19 +17,9 @@
 
 #pragma once
 
-#include <cerrno>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "arm_regformat.h"
 #include "common/common_types.h"
-#include "common/platform.h"
 #include "core/arm/skyeye_common/armmmu.h"
+#include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/skyeye_defs.h"
 
 #define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
@@ -118,9 +108,7 @@ struct ARMul_State
     // Add armv6 flags dyf:2010-08-09
     ARMword GEFlag, EFlag, AFlag, QFlag;
 
-#ifdef MODET
     ARMword TFlag; // Thumb state
-#endif
 
     unsigned long long NumInstrs; // The number of instructions executed
     unsigned NumInstrsToExecute;
@@ -217,8 +205,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
     u32 WritePc[17];
     u32 CurrWrite;
 };
-
-typedef ARMul_State arm_core_t;
 
 /***************************************************************************\
 *                        Types of ARM we know about                         *

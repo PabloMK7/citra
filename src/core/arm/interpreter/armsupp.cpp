@@ -16,9 +16,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
 #include "core/arm/skyeye_common/armdefs.h"
-#include "core/arm/skyeye_common/armemu.h"
-#include "core/arm/disassembler/arm_disasm.h"
-#include "core/mem_map.h"
 
 // Unsigned sum of absolute difference
 u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right)
