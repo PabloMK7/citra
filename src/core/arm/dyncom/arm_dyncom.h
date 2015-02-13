@@ -13,7 +13,7 @@
 
 class ARM_DynCom final : virtual public ARM_Interface {
 public:
-    ARM_DynCom();
+    ARM_DynCom(PrivilegeMode initial_mode);
     ~ARM_DynCom();
 
     void SetPC(u32 pc) override;

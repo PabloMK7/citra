@@ -270,7 +270,7 @@ enum {
 *                          Mode and Bank Constants                          *
 \***************************************************************************/
 
-enum {
+enum PrivilegeMode {
     USER32MODE   = 16,
     FIQ32MODE    = 17,
     IRQ32MODE    = 18,
@@ -288,7 +288,7 @@ enum {
     ABORTBANK  = 4,
     UNDEFBANK  = 5,
     DUMMYBANK  = 6,
-    SYSTEMBANK = USERBANK
+    SYSTEMBANK = 7
 };
 
 /***************************************************************************\

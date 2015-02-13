@@ -64,10 +64,9 @@ void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
     state->is_pxa27x = (properties & ARM_PXA27X_Prop) != 0;
     state->is_v7     = (properties & ARM_v7_Prop) != 0;
 
-    /* Only initialse the coprocessor support once we
-       know what kind of chip we are dealing with.  */
-    //ARMul_CoProInit (state);
-
+    // Only initialse the coprocessor support once we
+    // know what kind of chip we are dealing with.
+    ARMul_CoProInit(state);
 }
 
 /***************************************************************************\

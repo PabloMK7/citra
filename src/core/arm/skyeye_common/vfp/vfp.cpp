@@ -26,17 +26,12 @@
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
-//ARMul_State* persistent_state; /* function calls from SoftFloat lib don't have an access to ARMul_state. */
-
 unsigned VFPInit(ARMul_State* state)
 {
     state->VFP[VFP_OFFSET(VFP_FPSID)] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 |
                                         VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
     state->VFP[VFP_OFFSET(VFP_FPEXC)] = 0;
     state->VFP[VFP_OFFSET(VFP_FPSCR)] = 0;
-
-    //persistent_state = state;
-    /* Reset only specify VFP_FPEXC_EN = '0' */
 
     return 0;
 }
