@@ -2905,7 +2905,6 @@ ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb16)(unsigned int inst, int index)
 }
 
 ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index){
-    LOG_WARNING(Core_ARM11, "SXTAH untested");
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtah_inst));
     sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
 
