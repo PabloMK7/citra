@@ -63,7 +63,7 @@ void Timer::Clear() {
 
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
-    SharedPtr<Timer> timer = timer_callback_handle_table.Get<Timer>(timer_handle);
+    SharedPtr<Timer> timer = timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
 
     if (timer == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer %08X", timer_handle);

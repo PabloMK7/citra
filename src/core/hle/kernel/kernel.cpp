@@ -96,7 +96,7 @@ ResultCode HandleTable::Close(Handle handle) {
     if (!IsValid(handle))
         return ERR_INVALID_HANDLE;
 
-    size_t slot = GetSlot(handle);
+    u16 slot = GetSlot(handle);
 
     objects[slot] = nullptr;
 
@@ -127,7 +127,7 @@ SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
 }
 
 void HandleTable::Clear() {
-    for (size_t i = 0; i < MAX_COUNT; ++i) {
+    for (u16 i = 0; i < MAX_COUNT; ++i) {
         generations[i] = i + 1;
         objects[i] = nullptr;
     }

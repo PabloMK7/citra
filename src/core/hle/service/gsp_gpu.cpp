@@ -199,15 +199,22 @@ static void ReadHWRegs(Service::Interface* self) {
 static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address = 0x400000;
     if (info.active_fb == 0) {
-        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left1), 4, &info.address_left);
-        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right1), 4, &info.address_right);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)), 4, 
+                &info.address_left);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)), 4, 
+                &info.address_right);
     } else {
-        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_left2), 4, &info.address_left);
-        WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].address_right2), 4, &info.address_right);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)), 4, 
+                &info.address_left);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)), 4, 
+                &info.address_right);
     }
-    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].stride), 4, &info.stride);
-    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].color_format), 4, &info.format);
-    WriteHWRegs(base_address + 4 * GPU_REG_INDEX(framebuffer_config[screen_id].active_fb), 4, &info.shown_fb);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)), 4, 
+            &info.stride);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)), 4, 
+            &info.format);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)), 4, 
+            &info.shown_fb);
 }
 
 /**
@@ -346,11 +353,12 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     {
         auto& params = command.set_command_list_last;
 
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.address), Memory::VirtualToPhysicalAddress(params.address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.size), params.size);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)), 
+                Memory::VirtualToPhysicalAddress(params.address) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.size)), params.size);
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
-        WriteGPURegister(GPU_REG_INDEX(command_processor_config.trigger), 1);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.trigger)), 1);
 
         break;
     }
@@ -360,27 +368,33 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_MEMORY_FILL:
     {
         auto& params = command.memory_fill;
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_start), Memory::VirtualToPhysicalAddress(params.start1) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].address_end), Memory::VirtualToPhysicalAddress(params.end1) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].size), params.end1 - params.start1);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[0].value), params.value1);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].address_start)), 
+                Memory::VirtualToPhysicalAddress(params.start1) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].address_end)), 
+                Memory::VirtualToPhysicalAddress(params.end1) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].size)), params.end1 - params.start1);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].value)), params.value1);
 
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_start), Memory::VirtualToPhysicalAddress(params.start2) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].address_end), Memory::VirtualToPhysicalAddress(params.end2) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].size), params.end2 - params.start2);
-        WriteGPURegister(GPU_REG_INDEX(memory_fill_config[1].value), params.value2);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].address_start)), 
+                Memory::VirtualToPhysicalAddress(params.start2) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].address_end)), 
+                Memory::VirtualToPhysicalAddress(params.end2) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].size)), params.end2 - params.start2);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].value)), params.value2);
         break;
     }
 
     case CommandId::SET_DISPLAY_TRANSFER:
     {
         auto& params = command.image_copy;
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)), 
+                Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_address)), 
+                Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_size)), params.in_buffer_size);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_size)), params.out_buffer_size);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.flags)), params.flags);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.trigger)), 1);
         break;
     }
 
@@ -388,14 +402,16 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.image_copy;
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_address), Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_address), Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.input_size), params.in_buffer_size);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.output_size), params.out_buffer_size);
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.flags), params.flags);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)), 
+                Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_address)), 
+                Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_size)), params.in_buffer_size);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_size)), params.out_buffer_size);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.flags)), params.flags);
 
         // TODO: Should this register be set to 1 or should instead its value be OR-ed with 1?
-        WriteGPURegister(GPU_REG_INDEX(display_transfer_config.trigger), 1);
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.trigger)), 1);
         break;
     }
 
