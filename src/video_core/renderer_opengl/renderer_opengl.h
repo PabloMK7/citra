@@ -43,9 +43,14 @@ private:
         GLuint handle;
         GLsizei width;
         GLsizei height;
+        GPU::Regs::PixelFormat format;
+        GLenum gl_format;
+        GLenum gl_type;
     };
 
     void InitOpenGLObjects();
+    static void ConfigureFramebufferTexture(TextureInfo& texture,
+                                            const GPU::Regs::FramebufferConfig& framebuffer);
     void DrawScreens();
     void DrawSingleScreenRotated(const TextureInfo& texture, float x, float y, float w, float h);
     void UpdateFramerate();

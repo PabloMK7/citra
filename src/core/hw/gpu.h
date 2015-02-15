@@ -53,6 +53,7 @@ struct Regs {
                   "Structure size and register block length don't match")
 #endif
 
+    // All of those formats are described in reverse byte order, since the 3DS is little-endian.
     enum class PixelFormat : u32 {
         RGBA8  = 0,
         RGB8   = 1,
@@ -60,6 +61,24 @@ struct Regs {
         RGB5A1 = 3,
         RGBA4  = 4,
     };
+
+    /**
+     * Returns the number of bytes per pixel.
+     */
+    static int BytesPerPixel(PixelFormat format) {
+        switch (format) {
+        case PixelFormat::RGBA8:
+            return 4;
+        case PixelFormat::RGB8:
+            return 3;
+        case PixelFormat::RGB565:
+        case PixelFormat::RGB5A1:
+        case PixelFormat::RGBA4:
+            return 2;
+        default:
+            UNIMPLEMENTED();
+        }
+    }
 
     INSERT_PADDING_WORDS(0x4);
 
