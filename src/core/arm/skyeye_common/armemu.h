@@ -35,7 +35,7 @@ enum : u32 {
 
     // Masks for groups of bits in the APSR.
     MODEBITS = 0x1F,
-    INTBITS  = 0xC0,
+    INTBITS  = 0x1C0,
 };
 
 // Different ways to start the next instruction.
