@@ -381,7 +381,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
     s64 d, m;
     u32 ret = 0;
 
-    LOG_TRACE(Core_ARM11, "In %s, state=0x%x, fpscr=0x%x\n", __FUNCTION__, state, fpscr);
+    LOG_TRACE(Core_ARM11, "In %s, state=0x%p, fpscr=0x%x\n", __FUNCTION__, state, fpscr);
     m = vfp_get_double(state, dm);
     if (vfp_double_packed_exponent(m) == 2047 && vfp_double_packed_mantissa(m)) {
         ret |= FPSCR_CFLAG | FPSCR_VFLAG;
@@ -436,7 +436,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
             ret |= FPSCR_CFLAG;
         }
     }
-    LOG_TRACE(Core_ARM11, "In %s, state=0x%x, ret=0x%x\n", __FUNCTION__, state, ret);
+    LOG_TRACE(Core_ARM11, "In %s, state=0x%p, ret=0x%x\n", __FUNCTION__, state, ret);
 
     return ret;
 }
