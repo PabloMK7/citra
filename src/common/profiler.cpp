@@ -6,11 +6,34 @@
 #include "common/profiler_reporting.h"
 #include "common/assert.h"
 
+#if defined(_MSC_VER) && _MSC_VER <= 1800 // MSVC 2013.
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h> // For QueryPerformanceCounter/Frequency
+#endif
+
 namespace Common {
 namespace Profiling {
 
 #if ENABLE_PROFILING
 thread_local Timer* Timer::current_timer = nullptr;
+#endif
+
+#if defined(_MSC_VER) && _MSC_VER <= 1800 // MSVC 2013
+QPCClock::time_point QPCClock::now() {
+    static LARGE_INTEGER freq;
+    // Use this dummy local static to ensure this gets initialized once.
+    static BOOL dummy = QueryPerformanceFrequency(&freq);
+
+    LARGE_INTEGER ticks;
+    QueryPerformanceCounter(&ticks);
+
+    // This is prone to overflow when multiplying, which is why I'm using micro instead of nano. The
+    // correct way to approach this would be to just return ticks as a time_point and then subtract
+    // and do this conversion when creating a duration from two time_points, however, as far as I
+    // could tell the C++ requirements for these types are incompatible with this approach.
+    return time_point(duration(ticks.QuadPart * std::micro::den / freq.QuadPart));
+}
 #endif
 
 TimingCategory::TimingCategory(const char* name, TimingCategory* parent)

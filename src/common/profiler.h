@@ -18,8 +18,26 @@ namespace Profiling {
 #define ENABLE_PROFILING 1
 #endif
 
-using Duration = std::chrono::nanoseconds;
+#if defined(_MSC_VER) && _MSC_VER <= 1800 // MSVC 2013
+// MSVC up to 2013 doesn't use QueryPerformanceCounter for high_resolution_clock, so it has bad
+// precision. We manually implement a clock based on QPC to get good results.
+
+struct QPCClock {
+    using duration = std::chrono::microseconds;
+    using time_point = std::chrono::time_point<QPCClock>;
+    using rep = duration::rep;
+    using period = duration::period;
+    static const bool is_steady = false;
+
+    static time_point now();
+};
+
+using Clock = QPCClock;
+#else
 using Clock = std::chrono::high_resolution_clock;
+#endif
+
+using Duration = Clock::duration;
 
 /**
  * Represents a timing category that measured time can be accounted towards. Should be declared as a
