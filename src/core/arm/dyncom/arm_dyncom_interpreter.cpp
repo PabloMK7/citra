@@ -3211,6 +3211,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)
 
     inst_cream->op1 = BITS(inst, 20, 24);
     inst_cream->op2 = BITS(inst, 5, 7);
+    inst_cream->Rd  = BITS(inst, 16, 19);
     inst_cream->Rm  = BITS(inst, 8, 11);
     inst_cream->Rn  = BITS(inst, 0, 3);
     inst_cream->Ra  = BITS(inst, 12, 15);
