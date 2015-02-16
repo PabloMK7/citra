@@ -25,7 +25,7 @@
     #ifdef USER_DIR
         #define EMU_DATA_DIR USER_DIR
     #else
-        #define EMU_DATA_DIR ".citra-emu"
+        #define EMU_DATA_DIR "citra-emu"
     #endif
 #endif
 
