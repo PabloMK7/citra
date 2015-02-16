@@ -631,7 +631,7 @@ static inline Vec4<T> MakeVec(const Vec3<T>& xyz, const T& w)
 }
 
 template<typename T>
-static inline Vec4<T> MakeVec(const T& x, const Vec2<T>& yzw)
+static inline Vec4<T> MakeVec(const T& x, const Vec3<T>& yzw)
 {
     return MakeVec(x, yzw[0], yzw[1], yzw[2]);
 }
