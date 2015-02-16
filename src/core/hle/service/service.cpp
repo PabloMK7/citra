@@ -71,6 +71,7 @@ static void AddService(Interface* interface) {
 /// Initialize ServiceManager
 void Init() {
     AddNamedPort(new SRV::Interface);
+    AddNamedPort(new ERR_F::Interface);
 
     AddService(new AC_U::Interface);
     AddService(new ACT_U::Interface);
@@ -90,7 +91,6 @@ void Init() {
     AddService(new CFG_U::Interface);
     AddService(new CSND_SND::Interface);
     AddService(new DSP_DSP::Interface);
-    AddService(new ERR_F::Interface);
     AddService(new FRD_A::Interface);
     AddService(new FRD_U::Interface);
     AddService(new FS::FSUserInterface);
