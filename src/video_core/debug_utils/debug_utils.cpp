@@ -189,7 +189,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                                         );
 
                     if (it == output_info_table.end()) {
-                        output_info_table.push_back({});
+                        output_info_table.emplace_back();
                         output_info_table.back().type = type;
                         output_info_table.back().component_mask = component_mask;
                         output_info_table.back().id = i;
@@ -285,7 +285,7 @@ void OnPicaRegWrite(u32 id, u32 value)
     if (!is_pica_tracing)
         return;
 
-    pica_trace->writes.push_back({id, value});
+    pica_trace->writes.emplace_back(id, value);
 }
 
 std::unique_ptr<PicaTrace> FinishPicaTracing()

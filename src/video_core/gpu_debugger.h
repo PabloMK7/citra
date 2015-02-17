@@ -58,8 +58,8 @@ public:
         if (observers.empty())
             return;
 
-        gx_command_history.push_back(GSP_GPU::Command());
-        GSP_GPU::Command& cmd = gx_command_history[gx_command_history.size()-1];
+        gx_command_history.emplace_back();
+        GSP_GPU::Command& cmd = gx_command_history.back();
 
         memcpy(&cmd, command_data, sizeof(GSP_GPU::Command));
 
