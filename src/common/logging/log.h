@@ -53,6 +53,7 @@ enum class Class : ClassType {
                                 ///  should have its own subclass.
     Service_SRV,                ///< The SRV (Service Directory) implementation
     Service_FS,                 ///< The FS (Filesystem) service implementation
+    Service_ERR,                ///< The ERR (Error) port implementation
     Service_APT,                ///< The APT (Applets) service
     Service_GSP,                ///< The GSP (GPU control) service
     Service_AC,                 ///< The AC (WiFi status) service

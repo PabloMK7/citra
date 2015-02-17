@@ -33,6 +33,7 @@ static std::shared_ptr<Logger> global_logger;
         CLS(Service) \
         SUB(Service, SRV) \
         SUB(Service, FS) \
+        SUB(Service, ERR) \
         SUB(Service, APT) \
         SUB(Service, GSP) \
         SUB(Service, AC) \
