@@ -1443,7 +1443,7 @@ VPUSH_INST:
 
         addr = cpu->Reg[R13] - inst_cream->imm32;
 
-        for (int i = 0; i < inst_cream->regs; i++)
+        for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -1512,7 +1512,7 @@ VSTM_INST: /* encoding 1 */
 
         addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 
-        for (int i = 0; i < inst_cream->regs; i++)
+        for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -1581,7 +1581,7 @@ VPOP_INST:
 
         addr = cpu->Reg[R13];
 
-        for (int i = 0; i < inst_cream->regs; i++)
+        for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
@@ -1718,7 +1718,7 @@ VLDM_INST:
 
         addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
 
-        for (int i = 0; i < inst_cream->regs; i++)
+        for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
