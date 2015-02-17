@@ -792,6 +792,7 @@ typedef struct _stm_inst {
 } stm_inst;
 
 struct bkpt_inst {
+    u32 imm;
 };
 
 struct blx1_inst {
@@ -1371,7 +1372,22 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(unsigned int inst, int index)
         inst_base->br = INDIRECT_BRANCH;
     return inst_base;
 }
-static ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("BKPT"); }
+
+static ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(bkpt_inst));
+    bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->imm = BITS(inst, 8, 19) | BITS(inst, 0, 3);
+
+    return inst_base;
+}
+
 static ARM_INST_PTR INTERPRETER_TRANSLATE(blx)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(blx_inst));
@@ -4081,6 +4097,16 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         GOTO_NEXT_INST;
     }
     BKPT_INST:
+    {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
+            LOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: 0x%08X", inst_cream->imm);
+        }
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(bkpt_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
     BLX_INST:
     {
         blx_inst *inst_cream = (blx_inst *)inst_base->component;
