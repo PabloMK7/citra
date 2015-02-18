@@ -15,30 +15,18 @@ namespace Clipper {
 
 struct ClippingEdge {
 public:
-    enum Type {
-        POS_X = 0,
-        NEG_X = 1,
-        POS_Y = 2,
-        NEG_Y = 3,
-        POS_Z = 4,
-        NEG_Z = 5,
-    };
-
-    ClippingEdge(Type type, float24 position) : type(type), pos(position) {}
+    ClippingEdge(Math::Vec4<float24> coeffs,
+                 Math::Vec4<float24> bias = Math::Vec4<float24>(float24::FromFloat32(0),
+                                                                float24::FromFloat32(0),
+                                                                float24::FromFloat32(0),
+                                                                float24::FromFloat32(0)))
+        : coeffs(coeffs),
+          bias(bias)
+    {
+    }
 
     bool IsInside(const OutputVertex& vertex) const {
-        switch (type) {
-        case POS_X: return vertex.pos.x <= pos * vertex.pos.w;
-        case NEG_X: return vertex.pos.x >= pos * vertex.pos.w;
-        case POS_Y: return vertex.pos.y <= pos * vertex.pos.w;
-        case NEG_Y: return vertex.pos.y >= pos * vertex.pos.w;
-
-        // TODO: Check z compares ... should be 0..1 instead?
-        case POS_Z: return vertex.pos.z <= pos * vertex.pos.w;
-
-        default:
-        case NEG_Z: return vertex.pos.z >= pos * vertex.pos.w;
-        }
+        return Math::Dot(vertex.pos + bias, coeffs) <= float24::FromFloat32(0);
     }
 
     bool IsOutSide(const OutputVertex& vertex) const {
@@ -46,31 +34,17 @@ public:
     }
 
     OutputVertex GetIntersection(const OutputVertex& v0, const OutputVertex& v1) const {
-        auto dotpr = [this](const OutputVertex& vtx) {
-            switch (type) {
-            case POS_X: return vtx.pos.x - vtx.pos.w;
-            case NEG_X: return -vtx.pos.x - vtx.pos.w;
-            case POS_Y: return vtx.pos.y - vtx.pos.w;
-            case NEG_Y: return -vtx.pos.y - vtx.pos.w;
-
-            // TODO: Verify z clipping
-            case POS_Z: return vtx.pos.z - vtx.pos.w;
-
-            default:
-            case NEG_Z: return -vtx.pos.w;
-            }
-        };
-
-        float24 dp = dotpr(v0);
-        float24 dp_prev = dotpr(v1);
+        float24 dp = Math::Dot(v0.pos + bias, coeffs);
+        float24 dp_prev = Math::Dot(v1.pos + bias, coeffs);
         float24 factor = dp_prev / (dp_prev - dp);
 
         return OutputVertex::Lerp(factor, v0, v1);
     }
 
 private:
-    Type type;
     float24 pos;
+    Math::Vec4<float24> coeffs;
+    Math::Vec4<float24> bias;
 };
 
 static void InitScreenCoordinates(OutputVertex& vtx)
@@ -98,10 +72,9 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     vtx.tc2 *= inv_w;
     vtx.pos.w = inv_w;
 
-    // TODO: Not sure why the viewport width needs to be divided by 2 but the viewport height does not
     vtx.screenpos[0] = (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
     vtx.screenpos[1] = (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
-    vtx.screenpos[2] = viewport.offset_z - vtx.pos.z * inv_w * viewport.zscale;
+    vtx.screenpos[2] = viewport.offset_z + vtx.pos.z * inv_w * viewport.zscale;
 }
 
 void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
@@ -117,14 +90,29 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
     auto* output_list = &buffer_a;
     auto* input_list  = &buffer_b;
 
+    // NOTE: We clip against a w=epsilon plane to guarantee that the output has a positive w value.
+    // TODO: Not sure if this is a valid approach. Also should probably instead use the smallest
+    //       epsilon possible within float24 accuracy.
+    static const float24 EPSILON = float24::FromFloat32(0.00001);
+    static const float24 f0 = float24::FromFloat32(0.0);
+    static const float24 f1 = float24::FromFloat32(1.0);
+    static const std::array<ClippingEdge, 7> clipping_edges = {{
+        { Math::MakeVec( f1,  f0,  f0, -f1) },  // x = +w
+        { Math::MakeVec(-f1,  f0,  f0, -f1) },  // x = -w
+        { Math::MakeVec( f0,  f1,  f0, -f1) },  // y = +w
+        { Math::MakeVec( f0, -f1,  f0, -f1) },  // y = -w
+        { Math::MakeVec( f0,  f0,  f1,  f0) },  // z =  0
+        { Math::MakeVec( f0,  f0, -f1, -f1) },  // z = -w
+        { Math::MakeVec( f0,  f0,  f0, -f1), Math::Vec4<float24>(f0, f0, f0, EPSILON) }, // w = EPSILON
+    }};
+
+    // TODO: If one vertex lies outside one of the depth clipping planes, some platforms (e.g. Wii)
+    //       drop the whole primitive instead of clipping the primitive properly. We should test if
+    //       this happens on the 3DS, too.
+
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.
     // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
-    for (auto edge : { ClippingEdge(ClippingEdge::POS_X, float24::FromFloat32(+1.0)),
-                       ClippingEdge(ClippingEdge::NEG_X, float24::FromFloat32(-1.0)),
-                       ClippingEdge(ClippingEdge::POS_Y, float24::FromFloat32(+1.0)),
-                       ClippingEdge(ClippingEdge::NEG_Y, float24::FromFloat32(-1.0)),
-                       ClippingEdge(ClippingEdge::POS_Z, float24::FromFloat32(+1.0)),
-                       ClippingEdge(ClippingEdge::NEG_Z, float24::FromFloat32(-1.0)) }) {
+    for (auto edge : clipping_edges) {
 
         std::swap(input_list, output_list);
         output_list->clear();

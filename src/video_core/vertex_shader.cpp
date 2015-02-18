@@ -85,8 +85,11 @@ struct VertexShaderState {
     };
 
     struct CallStackElement {
-        u32 final_address;
-        u32 return_address;
+        u32 final_address;  // Address upon which we jump to return_address
+        u32 return_address; // Where to jump when leaving scope
+        u8 repeat_counter;  // How often to repeat until this call stack element is removed
+        u8 loop_increment;  // Which value to add to the loop counter after an iteration
+                            // TODO: Should this be a signed value? Does it even matter?
     };
 
     // TODO: Is there a maximal size for this?
@@ -105,9 +108,14 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
     while (true) {
         if (!state.call_stack.empty()) {
-            if (state.program_counter - shader_memory.data() == state.call_stack.top().final_address) {
-                state.program_counter = &shader_memory[state.call_stack.top().return_address];
-                state.call_stack.pop();
+            auto& top = state.call_stack.top();
+            if (state.program_counter - shader_memory.data() == top.final_address) {
+                state.address_registers[2] += top.loop_increment;
+
+                if (top.repeat_counter-- == 0) {
+                    state.program_counter = &shader_memory[top.return_address];
+                    state.call_stack.pop();
+                }
 
                 // TODO: Is "trying again" accurate to hardware?
                 continue;
@@ -118,9 +126,10 @@ static void ProcessShaderCode(VertexShaderState& state) {
         const Instruction& instr = *(const Instruction*)state.program_counter;
         const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.common.operand_desc_id];
 
-        auto call = [&](VertexShaderState& state, u32 offset, u32 num_instructions, u32 return_offset) {
+        static auto call = [](VertexShaderState& state, u32 offset, u32 num_instructions,
+                              u32 return_offset, u8 repeat_count, u8 loop_increment) {
             state.program_counter = &shader_memory[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
-            state.call_stack.push({ offset + num_instructions, return_offset });
+            state.call_stack.push({ offset + num_instructions, return_offset, repeat_count, loop_increment });
         };
         u32 binary_offset = state.program_counter - shader_memory.data();
 
@@ -457,7 +466,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 call(state,
                      instr.flow_control.dest_offset,
                      instr.flow_control.num_instructions,
-                     binary_offset + 1);
+                     binary_offset + 1, 0, 0);
                 break;
 
             case Instruction::OpCode::CALLU:
@@ -465,7 +474,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     call(state,
                         instr.flow_control.dest_offset,
                         instr.flow_control.num_instructions,
-                        binary_offset + 1);
+                        binary_offset + 1, 0, 0);
                 }
                 break;
 
@@ -474,7 +483,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     call(state,
                         instr.flow_control.dest_offset,
                         instr.flow_control.num_instructions,
-                        binary_offset + 1);
+                        binary_offset + 1, 0, 0);
                 }
                 break;
 
@@ -486,12 +495,12 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     call(state,
                          binary_offset + 1,
                          instr.flow_control.dest_offset - binary_offset - 1,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 } else {
                     call(state,
                          instr.flow_control.dest_offset,
                          instr.flow_control.num_instructions,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 }
 
                 break;
@@ -504,14 +513,27 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     call(state,
                          binary_offset + 1,
                          instr.flow_control.dest_offset - binary_offset - 1,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 } else {
                     call(state,
                          instr.flow_control.dest_offset,
                          instr.flow_control.num_instructions,
-                         instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+                         instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 }
 
+                break;
+            }
+
+            case Instruction::OpCode::LOOP:
+            {
+                state.address_registers[2] = shader_uniforms.i[instr.flow_control.int_uniform_id].y;
+
+                call(state,
+                     binary_offset + 1,
+                     instr.flow_control.dest_offset - binary_offset + 1,
+                     instr.flow_control.dest_offset + 1,
+                     shader_uniforms.i[instr.flow_control.int_uniform_id].x,
+                     shader_uniforms.i[instr.flow_control.int_uniform_id].z);
                 break;
             }
 

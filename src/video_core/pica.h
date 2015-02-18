@@ -118,8 +118,9 @@ struct Regs {
 
     struct TextureConfig {
         enum WrapMode : u32 {
-            ClampToEdge = 0,
-            Repeat      = 2,
+            ClampToEdge    = 0,
+            Repeat         = 2,
+            MirroredRepeat = 3,
         };
 
         INSERT_PADDING_WORDS(0x1);
@@ -131,7 +132,7 @@ struct Regs {
 
         union {
             BitField< 8, 2, WrapMode> wrap_s;
-            BitField<11, 2, WrapMode> wrap_t;
+            BitField<12, 2, WrapMode> wrap_t;
         };
 
         INSERT_PADDING_WORDS(0x1);
@@ -223,6 +224,8 @@ struct Regs {
     struct TevStageConfig {
         enum class Source : u32 {
             PrimaryColor           = 0x0,
+            PrimaryFragmentColor   = 0x1,
+
             Texture0               = 0x3,
             Texture1               = 0x4,
             Texture2               = 0x5,
@@ -265,6 +268,9 @@ struct Regs {
             AddSigned       = 3,
             Lerp            = 4,
             Subtract        = 5,
+
+            MultiplyThenAdd = 8,
+            AddThenMultiply = 9,
         };
 
         union {
@@ -337,7 +343,7 @@ struct Regs {
         };
 
         union {
-            enum BlendEquation : u32 {
+            enum class BlendEquation : u32 {
                 Add             = 0,
                 Subtract        = 1,
                 ReverseSubtract = 2,
@@ -421,7 +427,7 @@ struct Regs {
         INSERT_PADDING_WORDS(0x6);
 
         u32 depth_format;
-        u32 color_format;
+        BitField<16, 3, u32> color_format;
 
         INSERT_PADDING_WORDS(0x4);
 
@@ -678,7 +684,9 @@ struct Regs {
     INSERT_PADDING_WORDS(0x2);
 
     struct {
-        u32 begin_load;
+        // Offset of the next instruction to write code to.
+        // Incremented with each instruction write.
+        u32 offset;
 
         // Writing to these registers sets the "current" word in the shader program.
         // TODO: It's not clear how the hardware stores what the "current" word is.
@@ -690,7 +698,9 @@ struct Regs {
     // This register group is used to load an internal table of swizzling patterns,
     // which are indexed by each shader instruction to specify vector component swizzling.
     struct {
-        u32 begin_load;
+        // Offset of the next swizzle pattern to write code to.
+        // Incremented with each instruction write.
+        u32 offset;
 
         // Writing to these registers sets the "current" swizzle pattern in the table.
         // TODO: It's not clear how the hardware stores what the "current" swizzle pattern is.

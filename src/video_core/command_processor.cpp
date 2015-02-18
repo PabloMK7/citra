@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/range/algorithm/fill.hpp>
+
 #include "clipper.h"
 #include "command_processor.h"
 #include "math.h"
@@ -22,10 +24,6 @@ namespace CommandProcessor {
 static int float_regs_counter = 0;
 
 static u32 uniform_write_buffer[4];
-
-// Used for VSLoadProgramData and VSLoadSwizzleData
-static u32 vs_binary_write_offset = 0;
-static u32 vs_swizzle_write_offset = 0;
 
 static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
@@ -65,10 +63,14 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             // Information about internal vertex attributes
             u32 vertex_attribute_sources[16];
-            std::fill(vertex_attribute_sources, &vertex_attribute_sources[16], 0xdeadbeef);
+            boost::fill(vertex_attribute_sources, 0xdeadbeef);
             u32 vertex_attribute_strides[16];
             u32 vertex_attribute_formats[16];
-            u32 vertex_attribute_elements[16];
+
+            // HACK: Initialize vertex_attribute_elements to zero to prevent infinite loops below.
+            // This is one of the hacks required to deal with uninitalized vertex attributes.
+            // TODO: Fix this properly.
+            u32 vertex_attribute_elements[16] = {};
             u32 vertex_attribute_element_size[16];
 
             // Setup attribute data from loaders
@@ -252,11 +254,6 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
         }
 
-        // Seems to be used to reset the write pointer for VSLoadProgramData
-        case PICA_REG_INDEX(vs_program.begin_load):
-            vs_binary_write_offset = 0;
-            break;
-
         // Load shader program code
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[0], 0x2cc):
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[1], 0x2cd):
@@ -267,15 +264,10 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[6], 0x2d2):
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[7], 0x2d3):
         {
-            VertexShader::SubmitShaderMemoryChange(vs_binary_write_offset, value);
-            vs_binary_write_offset++;
+            VertexShader::SubmitShaderMemoryChange(registers.vs_program.offset, value);
+            registers.vs_program.offset++;
             break;
         }
-
-        // Seems to be used to reset the write pointer for VSLoadSwizzleData
-        case PICA_REG_INDEX(vs_swizzle_patterns.begin_load):
-            vs_swizzle_write_offset = 0;
-            break;
 
         // Load swizzle pattern data
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[0], 0x2d6):
@@ -287,8 +279,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[6], 0x2dc):
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[7], 0x2dd):
         {
-            VertexShader::SubmitSwizzleDataChange(vs_swizzle_write_offset, value);
-            vs_swizzle_write_offset++;
+            VertexShader::SubmitSwizzleDataChange(registers.vs_swizzle_patterns.offset, value);
+            registers.vs_swizzle_patterns.offset++;
             break;
         }
 

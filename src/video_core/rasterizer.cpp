@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "common/common_types.h"
+#include "common/math_util.h"
 
 #include "math.h"
 #include "pica.h"
@@ -20,15 +21,30 @@ namespace Rasterizer {
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
     u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
-    u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
 
-    // Assuming RGBA8 format until actual framebuffer format handling is implemented
-    *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
+    // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
+    // NOTE: The framebuffer height register contains the actual FB height minus one.
+    y = (registers.framebuffer.height - y);
+
+    switch (registers.framebuffer.color_format) {
+    case registers.framebuffer.RGBA8:
+    {
+        u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
+        *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
+        break;
+    }
+
+    default:
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
+        UNIMPLEMENTED();
+    }
 }
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
     u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
+
+    y = (registers.framebuffer.height - y);
 
     u32 value = *(color_buffer_u32 + x + y * registers.framebuffer.GetWidth());
     Math::Vec4<u8> ret;
@@ -43,6 +59,8 @@ static u32 GetDepth(int x, int y) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
     u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
 
+    y = (registers.framebuffer.height - y);
+
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     return *(depth_buffer + x + y * registers.framebuffer.GetWidth());
 }
@@ -50,6 +68,8 @@ static u32 GetDepth(int x, int y) {
 static void SetDepth(int x, int y, u16 value) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
     u16* depth_buffer = reinterpret_cast<u16*>(Memory::GetPointer(PAddrToVAddr(addr)));
+
+    y = (registers.framebuffer.height - y);
 
     // Assuming 16-bit depth buffer format until actual format handling is implemented
     *(depth_buffer + x + y * registers.framebuffer.GetWidth()) = value;
@@ -90,30 +110,43 @@ static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
     return Math::Cross(vec1, vec2).z;
 };
 
-void ProcessTriangle(const VertexShader::OutputVertex& v0,
-                     const VertexShader::OutputVertex& v1,
-                     const VertexShader::OutputVertex& v2)
+/**
+ * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
+ * culling via recursion.
+ */
+static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
+                                    const VertexShader::OutputVertex& v1,
+                                    const VertexShader::OutputVertex& v2,
+                                    bool reversed = false)
 {
     // vertex positions in rasterizer coordinates
-    auto FloatToFix = [](float24 flt) {
-                          return Fix12P4(static_cast<unsigned short>(flt.ToFloat32() * 16.0f));
-                      };
-    auto ScreenToRasterizerCoordinates = [FloatToFix](const Math::Vec3<float24> vec) {
-                                             return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
-                                         };
+    static auto FloatToFix = [](float24 flt) {
+        // TODO: Rounding here is necessary to prevent garbage pixels at
+        //       triangle borders. Is it that the correct solution, though?
+        return Fix12P4(static_cast<unsigned short>(round(flt.ToFloat32() * 16.0f)));
+    };
+    static auto ScreenToRasterizerCoordinates = [](const Math::Vec3<float24>& vec) {
+        return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
+    };
 
     Math::Vec3<Fix12P4> vtxpos[3]{ ScreenToRasterizerCoordinates(v0.screenpos),
                                    ScreenToRasterizerCoordinates(v1.screenpos),
                                    ScreenToRasterizerCoordinates(v2.screenpos) };
 
-    if (registers.cull_mode == Regs::CullMode::KeepClockWise) {
-        // Reverse vertex order and use the CCW code path.
-        std::swap(vtxpos[1], vtxpos[2]);
-    }
+    if (registers.cull_mode == Regs::CullMode::KeepAll) {
+        // Make sure we always end up with a triangle wound counter-clockwise
+        if (!reversed && SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0) {
+            ProcessTriangleInternal(v0, v2, v1, true);
+            return;
+        }
+    } else {
+        if (!reversed && registers.cull_mode == Regs::CullMode::KeepClockWise) {
+            // Reverse vertex order and use the CCW code path.
+            ProcessTriangleInternal(v0, v2, v1, true);
+            return;
+        }
 
-    if (registers.cull_mode != Regs::CullMode::KeepAll) {
         // Cull away triangles which are wound clockwise.
-        // TODO: A check for degenerate triangles ("== 0") should be considered for CullMode::KeepAll
         if (SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
             return;
     }
@@ -155,9 +188,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
     auto textures = registers.GetTextures();
     auto tev_stages = registers.GetTevStages();
 
+    // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
-    for (u16 y = min_y; y < max_y; y += 0x10) {
-        for (u16 x = min_x; x < max_x; x += 0x10) {
+    for (u16 y = min_y + 8; y < max_y; y += 0x10) {
+        for (u16 x = min_x + 8; x < max_x; x += 0x10) {
 
             // Calculate the barycentric coordinates w0, w1 and w2
             int w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});
@@ -220,7 +254,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                 int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
                 int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
-                auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
+                static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
                     switch (mode) {
                         case Regs::TextureConfig::ClampToEdge:
                             val = std::max(val, 0);
@@ -228,7 +262,15 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                             return val;
 
                         case Regs::TextureConfig::Repeat:
-                            return (int)(((unsigned)val) % size);
+                            return (int)((unsigned)val % size);
+
+                        case Regs::TextureConfig::MirroredRepeat:
+                        {
+                            int val = (int)((unsigned)val % (2 * size));
+                            if (val >= size)
+                                val = 2 * size - 1 - val;
+                            return val;
+                        }
 
                         default:
                             LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x\n", (int)mode);
@@ -236,6 +278,10 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                             return 0;
                     }
                 };
+
+                // Textures are laid out from bottom to top, hence we invert the t coordinate.
+                // NOTE: This may not be the right place for the inversion.
+                // TODO: Check if this applies to ETC textures, too.
                 s = GetWrappedTexCoord(texture.config.wrap_s, s, texture.config.width);
                 t = texture.config.height - 1 - GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
 
@@ -262,7 +308,9 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
+                    // TODO: What's the difference between these two?
                     case Source::PrimaryColor:
+                    case Source::PrimaryFragmentColor:
                         return primary_color;
 
                     case Source::Texture0:
@@ -378,6 +426,25 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
+                    case Operation::MultiplyThenAdd:
+                    {
+                        auto result = (input[0] * input[1] + 255 * input[2].Cast<int>()) / 255;
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        return result.Cast<u8>();
+                    }
+
+                    case Operation::AddThenMultiply:
+                    {
+                        auto result = input[0] + input[1];
+                        result.r() = std::min(255, result.r());
+                        result.g() = std::min(255, result.g());
+                        result.b() = std::min(255, result.b());
+                        result = (result * input[2].Cast<int>()) / 255;
+                        return result.Cast<u8>();
+                    }
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         UNIMPLEMENTED();
@@ -401,6 +468,12 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     case Operation::Subtract:
                         return std::max(0, (int)input[0] - (int)input[1]);
+
+                    case Operation::MultiplyThenAdd:
+                        return std::min(255, (input[0] * input[1] + 255 * input[2]) / 255);
+
+                    case Operation::AddThenMultiply:
+                        return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
@@ -475,7 +548,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
-                u16 z = (u16)(-(v0.screenpos[2].ToFloat32() * w0 +
+                u16 z = (u16)((v0.screenpos[2].ToFloat32() * w0 +
                             v1.screenpos[2].ToFloat32() * w1 +
                             v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
                 u16 ref_z = GetDepth(x >> 4, y >> 4);
@@ -524,6 +597,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             }
 
             auto dest = GetPixel(x >> 4, y >> 4);
+            Math::Vec4<u8> blend_output = combiner_output;
 
             if (registers.output_merger.alphablend_enable) {
                 auto params = registers.output_merger.alpha_blending;
@@ -574,7 +648,7 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
-                        exit(0);
+                        UNIMPLEMENTED();
                         break;
                     }
                 };
@@ -607,91 +681,89 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);
-                        exit(0);
+                        UNIMPLEMENTED();
                         break;
                     }
+                };
+
+                using BlendEquation = decltype(params)::BlendEquation;
+                static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
+                                                       const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
+                                                       BlendEquation equation) {
+                    Math::Vec4<int> result;
+
+                    auto src_result = (src  *  srcfactor).Cast<int>();
+                    auto dst_result = (dest * destfactor).Cast<int>();
+
+                    switch (equation) {
+                    case BlendEquation::Add:
+                        result = (src_result + dst_result) / 255;
+                        break;
+
+                    case BlendEquation::Subtract:
+                        result = (src_result - dst_result) / 255;
+                        break;
+
+                    case BlendEquation::ReverseSubtract:
+                        result = (dst_result - src_result) / 255;
+                        break;
+
+                    // TODO: How do these two actually work?
+                    //       OpenGL doesn't include the blend factors in the min/max computations,
+                    //       but is this what the 3DS actually does?
+                    case BlendEquation::Min:
+                        result.r() = std::min(src.r(), dest.r());
+                        result.g() = std::min(src.g(), dest.g());
+                        result.b() = std::min(src.b(), dest.b());
+                        result.a() = std::min(src.a(), dest.a());
+                        break;
+
+                    case BlendEquation::Max:
+                        result.r() = std::max(src.r(), dest.r());
+                        result.g() = std::max(src.g(), dest.g());
+                        result.b() = std::max(src.b(), dest.b());
+                        result.a() = std::max(src.a(), dest.a());
+                        break;
+
+                    default:
+                        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
+                        UNIMPLEMENTED();
+                    }
+
+                    return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255),
+                                    MathUtil::Clamp(result.g(), 0, 255),
+                                    MathUtil::Clamp(result.b(), 0, 255),
+                                    MathUtil::Clamp(result.a(), 0, 255));
                 };
 
                 auto srcfactor = Math::MakeVec(LookupFactorRGB(params.factor_source_rgb),
                                                LookupFactorA(params.factor_source_a));
                 auto dstfactor = Math::MakeVec(LookupFactorRGB(params.factor_dest_rgb),
                                                LookupFactorA(params.factor_dest_a));
-                                               
-                auto src_result = (combiner_output * srcfactor).Cast<int>();
-                auto dst_result = (dest * dstfactor).Cast<int>();
 
-                switch (params.blend_equation_rgb) {
-                case params.Add:
-                {
-                    auto result = (src_result + dst_result) / 255;
-                    result.r() = std::min(255, result.r());
-                    result.g() = std::min(255, result.g());
-                    result.b() = std::min(255, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Subtract:
-                {
-                    auto result = (src_result - dst_result) / 255;
-                    result.r() = std::max(0, result.r());
-                    result.g() = std::max(0, result.g());
-                    result.b() = std::max(0, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.ReverseSubtract:
-                {
-                    auto result = (dst_result - src_result) / 255;
-                    result.r() = std::max(0, result.r());
-                    result.g() = std::max(0, result.g());
-                    result.b() = std::max(0, result.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Min:
-                {
-                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
-                    Math::Vec4<int> result;
-                    result.r() = std::min(combiner_output.r(),dest.r());
-                    result.g() = std::min(combiner_output.g(),dest.g());
-                    result.b() = std::min(combiner_output.b(),dest.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-                
-                case params.Max:
-                {
-                    // TODO: GL spec says to do it without the factors, but is this what the 3DS does?
-                    Math::Vec4<int> result;
-                    result.r() = std::max(combiner_output.r(),dest.r());
-                    result.g() = std::max(combiner_output.g(),dest.g());
-                    result.b() = std::max(combiner_output.b(),dest.b());
-                    combiner_output = result.Cast<u8>();
-                    break;
-                }
-
-                default:
-                    LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", params.blend_equation_rgb.Value());
-                    exit(0);
-                }
+                blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
+                blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
             } else {
                 LOG_CRITICAL(HW_GPU, "logic op: %x", registers.output_merger.logic_op);
-                exit(0);
+                UNIMPLEMENTED();
             }
 
             const Math::Vec4<u8> result = {
-                registers.output_merger.red_enable   ? combiner_output.r() : dest.r(),
-                registers.output_merger.green_enable ? combiner_output.g() : dest.g(),
-                registers.output_merger.blue_enable  ? combiner_output.b() : dest.b(),
-                registers.output_merger.alpha_enable ? combiner_output.a() : dest.a()
+                registers.output_merger.red_enable   ? blend_output.r() : dest.r(),
+                registers.output_merger.green_enable ? blend_output.g() : dest.g(),
+                registers.output_merger.blue_enable  ? blend_output.b() : dest.b(),
+                registers.output_merger.alpha_enable ? blend_output.a() : dest.a()
             };
 
             DrawPixel(x >> 4, y >> 4, result);
         }
     }
+}
+
+void ProcessTriangle(const VertexShader::OutputVertex& v0,
+                     const VertexShader::OutputVertex& v1,
+                     const VertexShader::OutputVertex& v2) {
+    ProcessTriangleInternal(v0, v1, v2);
 }
 
 } // namespace Rasterizer
