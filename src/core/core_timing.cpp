@@ -129,7 +129,7 @@ static void FreeTsEvent(Event* event) {
 }
 
 int RegisterEvent(const char* name, TimedCallback callback) {
-    event_types.push_back(EventType(callback, name));
+    event_types.emplace_back(callback, name);
     return (int)event_types.size() - 1;
 }
 
