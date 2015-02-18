@@ -36,7 +36,7 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
-        exit(1);
+        UNIMPLEMENTED();
     }
 }
 
@@ -648,7 +648,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
-                        exit(0);
+                        UNIMPLEMENTED();
                         break;
                     }
                 };
@@ -681,7 +681,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);
-                        exit(0);
+                        UNIMPLEMENTED();
                         break;
                     }
                 };
@@ -727,7 +727,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
-                        exit(0);
+                        UNIMPLEMENTED();
                     }
 
                     return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255),
@@ -745,7 +745,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
             } else {
                 LOG_CRITICAL(HW_GPU, "logic op: %x", registers.output_merger.logic_op);
-                exit(0);
+                UNIMPLEMENTED();
             }
 
             const Math::Vec4<u8> result = {
