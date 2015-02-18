@@ -120,14 +120,14 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                                     bool reversed = false)
 {
     // vertex positions in rasterizer coordinates
-    auto FloatToFix = [](float24 flt) {
-                          // TODO: Rounding here is necessary to prevent garbage pixels at
-                          //       triangle borders. Is it that the correct solution, though?
-                          return Fix12P4(static_cast<unsigned short>(round(flt.ToFloat32() * 16.0f)));
-                      };
-    auto ScreenToRasterizerCoordinates = [FloatToFix](const Math::Vec3<float24> vec) {
-                                             return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
-                                         };
+    static auto FloatToFix = [](float24 flt) {
+        // TODO: Rounding here is necessary to prevent garbage pixels at
+        //       triangle borders. Is it that the correct solution, though?
+        return Fix12P4(static_cast<unsigned short>(round(flt.ToFloat32() * 16.0f)));
+    };
+    static auto ScreenToRasterizerCoordinates = [](const Math::Vec3<float24>& vec) {
+        return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
+    };
 
     Math::Vec3<Fix12P4> vtxpos[3]{ ScreenToRasterizerCoordinates(v0.screenpos),
                                    ScreenToRasterizerCoordinates(v1.screenpos),
