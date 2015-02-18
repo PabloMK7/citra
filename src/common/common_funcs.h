@@ -35,6 +35,13 @@ template<> struct CompileTimeAssert<true> {};
 #define CONCAT2(x, y) DO_CONCAT2(x, y)
 #define DO_CONCAT2(x, y) x ## y
 
+// helper macro to properly align structure members.
+// Calling INSERT_PADDING_BYTES will add a new member variable with a name like "pad121",
+// depending on the current source line to make sure variable names are unique.
+#define INSERT_PADDING_BYTES_HELPER1(x, y) x ## y
+#define INSERT_PADDING_BYTES_HELPER2(x, y) INSERT_PADDING_BYTES_HELPER1(x, y)
+#define INSERT_PADDING_BYTES(num_words) u8 INSERT_PADDING_BYTES_HELPER2(pad, __LINE__)[(num_words)]
+
 #ifndef _MSC_VER
 
 #include <errno.h>

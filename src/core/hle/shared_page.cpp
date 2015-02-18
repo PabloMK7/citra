@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/common_types.h"
+#include "common/common_funcs.h"
 
 #include "core/core.h"
 #include "core/mem_map.h"
@@ -12,13 +13,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace SharedPage {
-
-// helper macro to properly align structure members.
-// Calling INSERT_PADDING_BYTES will add a new member variable with a name like "pad121",
-// depending on the current source line to make sure variable names are unique.
-#define INSERT_PADDING_BYTES_HELPER1(x, y) x ## y
-#define INSERT_PADDING_BYTES_HELPER2(x, y) INSERT_PADDING_BYTES_HELPER1(x, y)
-#define INSERT_PADDING_BYTES(num_words) u8 INSERT_PADDING_BYTES_HELPER2(pad, __LINE__)[(num_words)]
 
 // see http://3dbrew.org/wiki/Configuration_Memory#Shared_Memory_Page_For_ARM11_Processes
 

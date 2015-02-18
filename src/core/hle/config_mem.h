@@ -18,4 +18,6 @@ namespace ConfigMem {
 template <typename T>
 void Read(T &var, const u32 addr);
 
+void Init();
+
 } // namespace
