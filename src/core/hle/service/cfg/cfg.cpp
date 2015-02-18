@@ -43,13 +43,18 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
 
     auto itr = std::find_if(std::begin(config->block_entries), std::end(config->block_entries),
-            [&](const SaveConfigBlockEntry& entry) {
-                return entry.block_id == block_id && entry.size == size && (entry.flags & flag);
-            });
+        [&](const SaveConfigBlockEntry& entry) {
+            return entry.block_id == block_id && (entry.flags & flag);
+        });
 
     if (itr == std::end(config->block_entries)) {
-        LOG_ERROR(Service_CFG, "Config block %u with size %u and flags %u not found", block_id, size, flag);
-        return ResultCode(-1); // TODO(Subv): Find the correct error code
+        LOG_ERROR(Service_CFG, "Config block %u with flags %u was not found", block_id, flag);
+        return ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+    }
+
+    if (itr->size != size) {
+        LOG_ERROR(Service_CFG, "Invalid size %u for config block %u with flags %u", size, block_id, flag);
+        return ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     // The data is located in the block header itself if the size is less than 4 bytes
