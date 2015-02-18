@@ -90,9 +90,14 @@ static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
     return Math::Cross(vec1, vec2).z;
 };
 
-void ProcessTriangle(const VertexShader::OutputVertex& v0,
-                     const VertexShader::OutputVertex& v1,
-                     const VertexShader::OutputVertex& v2)
+/**
+ * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
+ * culling via recursion.
+ */
+static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
+                                    const VertexShader::OutputVertex& v1,
+                                    const VertexShader::OutputVertex& v2,
+                                    bool reversed = false)
 {
     // vertex positions in rasterizer coordinates
     auto FloatToFix = [](float24 flt) {
@@ -106,17 +111,22 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
                                    ScreenToRasterizerCoordinates(v1.screenpos),
                                    ScreenToRasterizerCoordinates(v2.screenpos) };
 
-    if (registers.cull_mode == Regs::CullMode::KeepCounterClockWise) {
-        // Reverse vertex order and use the CW code path.
-        std::swap(vtxpos[1], vtxpos[2]);
-    }
+    if (registers.cull_mode == Regs::CullMode::KeepAll) {
+        // Make sure we always end up with a triangle wound counter-clockwise
+        if (!reversed && SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0) {
+            ProcessTriangleInternal(v0, v2, v1, true);
+            return;
+        }
+    } else {
+        if (!reversed && registers.cull_mode == Regs::CullMode::KeepClockWise) {
+            // Reverse vertex order and use the CCW code path.
+            ProcessTriangleInternal(v0, v2, v1, true);
+            return;
+        }
 
-    if (registers.cull_mode != Regs::CullMode::KeepAll) {
-        // Cull away triangles which are wound counter-clockwise.
+        // Cull away triangles which are wound clockwise.
         if (SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0)
             return;
-    } else {
-        // TODO: Consider A check for degenerate triangles ("SignedArea == 0")
     }
 
     // TODO: Proper scissor rect test!
@@ -693,6 +703,12 @@ void ProcessTriangle(const VertexShader::OutputVertex& v0,
             DrawPixel(x >> 4, y >> 4, result);
         }
     }
+}
+
+void ProcessTriangle(const VertexShader::OutputVertex& v0,
+                     const VertexShader::OutputVertex& v1,
+                     const VertexShader::OutputVertex& v2) {
+    ProcessTriangleInternal(v0, v1, v2);
 }
 
 } // namespace Rasterizer
