@@ -4,7 +4,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 set(SRCS
             break_points.cpp
             emu_window.cpp
-            extended_trace.cpp
             file_search.cpp
             file_util.cpp
             hash.cpp
@@ -37,7 +36,6 @@ set(HEADERS
             cpu_detect.h
             debug_interface.h
             emu_window.h
-            extended_trace.h
             fifo_queue.h
             file_search.h
             file_util.h
