@@ -20,7 +20,6 @@ set(SRCS
             symbols.cpp
             thread.cpp
             timer.cpp
-            utf8.cpp
             )
 
 set(HEADERS
@@ -60,7 +59,6 @@ set(HEADERS
             thread_queue_list.h
             thunk.h
             timer.h
-            utf8.h
             )
 
 create_directory_groups(${SRCS} ${HEADERS})
