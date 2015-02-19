@@ -24,11 +24,6 @@ template<> struct CompileTimeAssert<true> {};
 #define b32(x)  (b16(x) | (b16(x) >>16) )
 #define ROUND_UP_POW2(x)    (b32(x - 1) + 1)
 
-#define MIN(a, b)   ((a)<(b)?(a):(b))
-#define MAX(a, b)   ((a)>(b)?(a):(b))
-
-#define CLAMP(x, min, max)  (((x) > max) ? max : (((x) < min) ? min : (x)))
-
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 /// Textually concatenates two tokens. The double-expansion is required by the C preprocessor.
@@ -147,15 +142,6 @@ inline u64 _rotr64(u64 x, unsigned int shift){
     #define Crash() {DebugBreak();}
 #endif // _MSC_VER ndef
 
-// Dolphin's min and max functions
-#undef min
-#undef max
-
-template<class T>
-inline T min(const T& a, const T& b) {return a > b ? b : a;}
-template<class T>
-inline T max(const T& a, const T& b) {return a > b ? a : b;}
-
 // Generic function to get last error message.
 // Call directly after the command or use the error num.
 // This function might change the error code.
@@ -230,15 +216,6 @@ template <>
 inline void swap<8>(u8* data)
 {
     *reinterpret_cast<u64*>(data) = swap64(data);
-}
-
-template <typename T>
-inline T FromBigEndian(T data)
-{
-    //static_assert(std::is_arithmetic<T>::value, "function only makes sense with arithmetic types");
-
-    swap<sizeof(data)>(reinterpret_cast<u8*>(&data));
-    return data;
 }
 
 }  // Namespace Common

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "common/common.h"
+#include "common/math_util.h"
 #include "common/thread_queue_list.h"
 
 #include "core/arm/arm_interface.h"
@@ -339,7 +340,7 @@ static void DebugThreadQueue() {
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, s32 priority,
         u32 arg, s32 processor_id, VAddr stack_top) {
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
-        s32 new_priority = CLAMP(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
+        s32 new_priority = MathUtil::Clamp<s32>(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
         LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
             name.c_str(), priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
@@ -387,7 +388,7 @@ static void ClampPriority(const Thread* thread, s32* priority) {
     if (*priority < THREADPRIO_HIGHEST || *priority > THREADPRIO_LOWEST) {
         DEBUG_ASSERT_MSG(false, "Application passed an out of range priority. An error should be returned.");
 
-        s32 new_priority = CLAMP(*priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
+        s32 new_priority = MathUtil::Clamp<s32>(*priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
         LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
                     thread->name.c_str(), *priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
