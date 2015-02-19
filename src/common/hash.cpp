@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 
 #include "common/hash.h"
 #if _M_SSE >= 0x402

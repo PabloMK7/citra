@@ -34,13 +34,6 @@ namespace GPU {
 // MMIO region 0x1EFxxxxx
 struct Regs {
 
-// helper macro to properly align structure members.
-// Calling INSERT_PADDING_WORDS will add a new member variable with a name like "pad121",
-// depending on the current source line to make sure variable names are unique.
-#define INSERT_PADDING_WORDS_HELPER1(x, y) x ## y
-#define INSERT_PADDING_WORDS_HELPER2(x, y) INSERT_PADDING_WORDS_HELPER1(x, y)
-#define INSERT_PADDING_WORDS(num_words) u32 INSERT_PADDING_WORDS_HELPER2(pad, __LINE__)[(num_words)]
-
 // helper macro to make sure the defined structures are of the expected size.
 #if defined(_MSC_VER)
 // TODO: MSVC does not support using sizeof() on non-static data members even though this
@@ -237,10 +230,6 @@ struct Regs {
     ASSERT_MEMBER_SIZE(command_processor_config, 0x14);
 
     INSERT_PADDING_WORDS(0x9c3);
-
-#undef INSERT_PADDING_WORDS_HELPER1
-#undef INSERT_PADDING_WORDS_HELPER2
-#undef INSERT_PADDING_WORDS
 
     static inline size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);

@@ -38,9 +38,8 @@ template<> struct CompileTimeAssert<true> {};
 // helper macro to properly align structure members.
 // Calling INSERT_PADDING_BYTES will add a new member variable with a name like "pad121",
 // depending on the current source line to make sure variable names are unique.
-#define INSERT_PADDING_BYTES_HELPER1(x, y) x ## y
-#define INSERT_PADDING_BYTES_HELPER2(x, y) INSERT_PADDING_BYTES_HELPER1(x, y)
-#define INSERT_PADDING_BYTES(num_words) u8 INSERT_PADDING_BYTES_HELPER2(pad, __LINE__)[(num_words)]
+#define INSERT_PADDING_BYTES(num_bytes) u8 CONCAT2(pad, __LINE__)[(num_bytes)]
+#define INSERT_PADDING_WORDS(num_words) u32 CONCAT2(pad, __LINE__)[(num_words)]
 
 #ifndef _MSC_VER
 

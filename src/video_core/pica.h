@@ -39,13 +39,6 @@ namespace Pica {
 
 struct Regs {
 
-// helper macro to properly align structure members.
-// Calling INSERT_PADDING_WORDS will add a new member variable with a name like "pad121",
-// depending on the current source line to make sure variable names are unique.
-#define INSERT_PADDING_WORDS_HELPER1(x, y) x ## y
-#define INSERT_PADDING_WORDS_HELPER2(x, y) INSERT_PADDING_WORDS_HELPER1(x, y)
-#define INSERT_PADDING_WORDS(num_words) u32 INSERT_PADDING_WORDS_HELPER2(pad, __LINE__)[(num_words)];
-
     INSERT_PADDING_WORDS(0x10);
 
     u32 trigger_irq;
@@ -708,10 +701,6 @@ struct Regs {
     } vs_swizzle_patterns;
 
     INSERT_PADDING_WORDS(0x22);
-
-#undef INSERT_PADDING_WORDS_HELPER1
-#undef INSERT_PADDING_WORDS_HELPER2
-#undef INSERT_PADDING_WORDS
 
     // Map register indices to names readable by humans
     // Used for debugging purposes, so performance is not an issue here
