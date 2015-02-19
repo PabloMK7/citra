@@ -28,7 +28,6 @@ private:
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/common_types.h"
-#include "common/msg_handler.h"
 #include "common/common_funcs.h"
 #include "common/common_paths.h"
 #include "common/platform.h"

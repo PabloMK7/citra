@@ -16,7 +16,6 @@ set(SRCS
             mem_arena.cpp
             memory_util.cpp
             misc.cpp
-            msg_handler.cpp
             scm_rev.cpp
             string_util.cpp
             symbols.cpp
@@ -53,7 +52,6 @@ set(HEADERS
             math_util.h
             mem_arena.h
             memory_util.h
-            msg_handler.h
             platform.h
             scm_rev.h
             scope_exit.h
