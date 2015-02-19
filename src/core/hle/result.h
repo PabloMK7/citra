@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <type_traits>
 #include <utility>
@@ -267,7 +266,7 @@ public:
     ResultVal(ResultCode error_code = ResultCode(-1))
         : result_code(error_code)
     {
-        assert(error_code.IsError());
+        ASSERT(error_code.IsError());
         UpdateDebugPtr();
     }
 
@@ -330,7 +329,7 @@ public:
      */
     template <typename... Args>
     void emplace(ResultCode success_code, Args&&... args) {
-        assert(success_code.IsSuccess());
+        ASSERT(success_code.IsSuccess());
         if (!empty()) {
             GetPointer()->~T();
         }
@@ -362,7 +361,6 @@ public:
 
     /// Asserts that the result succeeded and returns a reference to it.
     T& Unwrap() {
-        // TODO(yuriks): Should be a release assert
         ASSERT_MSG(Succeeded(), "Tried to Unwrap empty ResultVal");
         return **this;
     }
@@ -389,12 +387,12 @@ private:
     }
 
     const T* GetPointer() const {
-        assert(!empty());
+        ASSERT(!empty());
         return static_cast<const T*>(static_cast<const void*>(&storage));
     }
 
     T* GetPointer() {
-        assert(!empty());
+        ASSERT(!empty());
         return static_cast<T*>(static_cast<void*>(&storage));
     }
 };
