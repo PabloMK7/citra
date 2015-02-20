@@ -147,7 +147,7 @@ void RestoreRegisterEvent(int event_type, const char* name, TimedCallback callba
 
 void UnregisterAllEvents() {
     if (first)
-        PanicAlert("Cannot unregister events with events pending");
+        LOG_ERROR(Core_Timing, "Cannot unregister events with events pending");
     event_types.clear();
 }
 
@@ -535,7 +535,7 @@ std::string GetScheduledEventsSummary() {
     while (event) {
         unsigned int t = event->type;
         if (t >= event_types.size())
-            PanicAlert("Invalid event type"); // %i", t);
+            LOG_ERROR(Core_Timing, "Invalid event type"); // %i", t);
         const char* name = event_types[event->type].name;
         if (!name)
             name = "[unknown]";

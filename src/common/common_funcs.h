@@ -24,11 +24,6 @@ template<> struct CompileTimeAssert<true> {};
 #define b32(x)  (b16(x) | (b16(x) >>16) )
 #define ROUND_UP_POW2(x)    (b32(x - 1) + 1)
 
-#define MIN(a, b)   ((a)<(b)?(a):(b))
-#define MAX(a, b)   ((a)>(b)?(a):(b))
-
-#define CLAMP(x, min, max)  (((x) > max) ? max : (((x) < min) ? min : (x)))
-
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 /// Textually concatenates two tokens. The double-expansion is required by the C preprocessor.
@@ -38,9 +33,8 @@ template<> struct CompileTimeAssert<true> {};
 // helper macro to properly align structure members.
 // Calling INSERT_PADDING_BYTES will add a new member variable with a name like "pad121",
 // depending on the current source line to make sure variable names are unique.
-#define INSERT_PADDING_BYTES_HELPER1(x, y) x ## y
-#define INSERT_PADDING_BYTES_HELPER2(x, y) INSERT_PADDING_BYTES_HELPER1(x, y)
-#define INSERT_PADDING_BYTES(num_words) u8 INSERT_PADDING_BYTES_HELPER2(pad, __LINE__)[(num_words)]
+#define INSERT_PADDING_BYTES(num_bytes) u8 CONCAT2(pad, __LINE__)[(num_bytes)]
+#define INSERT_PADDING_WORDS(num_words) u32 CONCAT2(pad, __LINE__)[(num_words)]
 
 #ifndef _MSC_VER
 
@@ -148,15 +142,6 @@ inline u64 _rotr64(u64 x, unsigned int shift){
     #define Crash() {DebugBreak();}
 #endif // _MSC_VER ndef
 
-// Dolphin's min and max functions
-#undef min
-#undef max
-
-template<class T>
-inline T min(const T& a, const T& b) {return a > b ? b : a;}
-template<class T>
-inline T max(const T& a, const T& b) {return a > b ? a : b;}
-
 // Generic function to get last error message.
 // Call directly after the command or use the error num.
 // This function might change the error code.
@@ -231,15 +216,6 @@ template <>
 inline void swap<8>(u8* data)
 {
     *reinterpret_cast<u64*>(data) = swap64(data);
-}
-
-template <typename T>
-inline T FromBigEndian(T data)
-{
-    //static_assert(std::is_arithmetic<T>::value, "function only makes sense with arithmetic types");
-
-    swap<sizeof(data)>(reinterpret_cast<u8*>(&data));
-    return data;
 }
 
 }  // Namespace Common

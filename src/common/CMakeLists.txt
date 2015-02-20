@@ -4,8 +4,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 set(SRCS
             break_points.cpp
             emu_window.cpp
-            extended_trace.cpp
-            file_search.cpp
             file_util.cpp
             hash.cpp
             key_map.cpp
@@ -16,13 +14,11 @@ set(SRCS
             mem_arena.cpp
             memory_util.cpp
             misc.cpp
-            msg_handler.cpp
             scm_rev.cpp
             string_util.cpp
             symbols.cpp
             thread.cpp
             timer.cpp
-            utf8.cpp
             )
 
 set(HEADERS
@@ -38,9 +34,7 @@ set(HEADERS
             cpu_detect.h
             debug_interface.h
             emu_window.h
-            extended_trace.h
             fifo_queue.h
-            file_search.h
             file_util.h
             hash.h
             key_map.h
@@ -53,7 +47,6 @@ set(HEADERS
             math_util.h
             mem_arena.h
             memory_util.h
-            msg_handler.h
             platform.h
             scm_rev.h
             scope_exit.h
@@ -64,7 +57,6 @@ set(HEADERS
             thread_queue_list.h
             thunk.h
             timer.h
-            utf8.h
             )
 
 create_directory_groups(${SRCS} ${HEADERS})

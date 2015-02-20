@@ -56,7 +56,7 @@ void* AllocateExecutableMemory(size_t size, bool low)
     {
         ptr = nullptr;
 #endif
-        PanicAlert("Failed to allocate executable memory");
+        LOG_ERROR(Common_Memory, "Failed to allocate executable memory");
     }
 #if !defined(_WIN32) && defined(__x86_64__) && !defined(MAP_32BIT)
     else
@@ -72,7 +72,7 @@ void* AllocateExecutableMemory(size_t size, bool low)
 
 #if defined(_M_X64)
     if ((u64)ptr >= 0x80000000 && low == true)
-        PanicAlert("Executable memory ended up above 2GB!");
+        LOG_ERROR(Common_Memory, "Executable memory ended up above 2GB!");
 #endif
 
     return ptr;
@@ -94,7 +94,7 @@ void* AllocateMemoryPages(size_t size)
     //    (unsigned long)size);
 
     if (ptr == nullptr)
-        PanicAlert("Failed to allocate raw memory");
+        LOG_ERROR(Common_Memory, "Failed to allocate raw memory");
 
     return ptr;
 }
@@ -117,7 +117,7 @@ void* AllocateAlignedMemory(size_t size,size_t alignment)
     //    (unsigned long)size);
 
     if (ptr == nullptr)
-        PanicAlert("Failed to allocate aligned memory");
+        LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 
     return ptr;
 }
@@ -129,7 +129,7 @@ void FreeMemoryPages(void* ptr, size_t size)
 #ifdef _WIN32
 
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
-            PanicAlert("FreeMemoryPages failed!\n%s", GetLastErrorMsg());
+            LOG_ERROR(Common_Memory, "FreeMemoryPages failed!\n%s", GetLastErrorMsg());
         ptr = nullptr; // Is this our responsibility?
 
 #else
@@ -155,7 +155,7 @@ void WriteProtectMemory(void* ptr, size_t size, bool allowExecute)
 #ifdef _WIN32
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READ : PAGE_READONLY, &oldValue))
-        PanicAlert("WriteProtectMemory failed!\n%s", GetLastErrorMsg());
+        LOG_ERROR(Common_Memory, "WriteProtectMemory failed!\n%s", GetLastErrorMsg());
 #else
     mprotect(ptr, size, allowExecute ? (PROT_READ | PROT_EXEC) : PROT_READ);
 #endif
@@ -166,7 +166,7 @@ void UnWriteProtectMemory(void* ptr, size_t size, bool allowExecute)
 #ifdef _WIN32
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE, &oldValue))
-        PanicAlert("UnWriteProtectMemory failed!\n%s", GetLastErrorMsg());
+        LOG_ERROR(Common_Memory, "UnWriteProtectMemory failed!\n%s", GetLastErrorMsg());
 #else
     mprotect(ptr, size, allowExecute ? (PROT_READ | PROT_WRITE | PROT_EXEC) : PROT_WRITE | PROT_READ);
 #endif

@@ -218,7 +218,7 @@ u8* MemArena::Find4GBBase()
     void* base = mmap(0, 0x10000000, PROT_READ | PROT_WRITE,
         MAP_ANON | MAP_SHARED, -1, 0);
     if (base == MAP_FAILED) {
-        PanicAlert("Failed to map 256 MB of memory space: %s", strerror(errno));
+        LOG_ERROR(Common_Memory, "Failed to map 256 MB of memory space: %s", strerror(errno));
         return 0;
     }
     munmap(base, 0x10000000);
@@ -338,7 +338,7 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
     // address space.
     if (!Memory_TryBase(base, views, num_views, flags, arena))
     {
-        PanicAlert("MemoryMap_Setup: Failed finding a memory base.");
+        LOG_ERROR(Common_Memory, "MemoryMap_Setup: Failed finding a memory base.");
         return 0;
     }
 #elif defined(_WIN32)
@@ -363,12 +363,11 @@ u8 *MemoryMap_Setup(const MemoryView *views, int num_views, u32 flags, MemArena 
     if (!Memory_TryBase(base, views, num_views, flags, arena))
     {
         LOG_ERROR(Common_Memory, "MemoryMap_Setup: Failed finding a memory base.");
-        PanicAlert("MemoryMap_Setup: Failed finding a memory base.");
         return 0;
     }
 #endif
     if (base_attempts)
-        PanicAlert("No possible memory base pointer found!");
+        LOG_ERROR(Common_Memory, "No possible memory base pointer found!");
     return base;
 }
 

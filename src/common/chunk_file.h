@@ -637,7 +637,7 @@ public:
         Do(cookie);
         if(mode == PointerWrap::MODE_READ && cookie != arbitraryNumber)
         {
-            PanicAlertT("Error: After \"%s\", found %d (0x%X) instead of save marker %d (0x%X). Aborting savestate load...", prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
+            LOG_ERROR(Common, "After \"%s\", found %d (0x%X) instead of save marker %d (0x%X). Aborting savestate load...", prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
             SetError(ERROR_FAILURE);
         }
     }
