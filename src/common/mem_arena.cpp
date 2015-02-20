@@ -116,7 +116,7 @@ void MemArena::GrabLowMemSpace(size_t size)
     GetSystemInfo(&sysInfo);
 #elif defined(ANDROID)
     // Use ashmem so we don't have to allocate a file on disk!
-    fd = ashmem_create_region("PPSSPP_RAM", size);
+    fd = ashmem_create_region("Citra_RAM", size);
     // Note that it appears that ashmem is pinned by default, so no need to pin.
     if (fd < 0)
     {
