@@ -23,12 +23,14 @@ Config::Config() {
 
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
-    Settings::values.pad_a_key = qt_config->value("pad_a", Qt::Key_A).toInt();
-    Settings::values.pad_b_key = qt_config->value("pad_b", Qt::Key_S).toInt();
-    Settings::values.pad_x_key = qt_config->value("pad_x", Qt::Key_Z).toInt();
-    Settings::values.pad_y_key = qt_config->value("pad_y", Qt::Key_X).toInt();
-    Settings::values.pad_l_key = qt_config->value("pad_l", Qt::Key_Q).toInt();
-    Settings::values.pad_r_key = qt_config->value("pad_r", Qt::Key_W).toInt();
+    Settings::values.pad_a_key      = qt_config->value("pad_a",      Qt::Key_A).toInt();
+    Settings::values.pad_b_key      = qt_config->value("pad_b",      Qt::Key_S).toInt();
+    Settings::values.pad_x_key      = qt_config->value("pad_x",      Qt::Key_Z).toInt();
+    Settings::values.pad_y_key      = qt_config->value("pad_y",      Qt::Key_X).toInt();
+    Settings::values.pad_l_key      = qt_config->value("pad_l",      Qt::Key_Q).toInt();
+    Settings::values.pad_r_key      = qt_config->value("pad_r",      Qt::Key_W).toInt();
+    Settings::values.pad_zl_key     = qt_config->value("pad_zl",     Qt::Key_1).toInt();
+    Settings::values.pad_zr_key     = qt_config->value("pad_zr",     Qt::Key_2).toInt();
     Settings::values.pad_start_key  = qt_config->value("pad_start",  Qt::Key_M).toInt();
     Settings::values.pad_select_key = qt_config->value("pad_select", Qt::Key_N).toInt();
     Settings::values.pad_home_key   = qt_config->value("pad_home",   Qt::Key_B).toInt();
@@ -40,6 +42,10 @@ void Config::ReadValues() {
     Settings::values.pad_sdown_key  = qt_config->value("pad_sdown",  Qt::Key_Down).toInt();
     Settings::values.pad_sleft_key  = qt_config->value("pad_sleft",  Qt::Key_Left).toInt();
     Settings::values.pad_sright_key = qt_config->value("pad_sright", Qt::Key_Right).toInt();
+    Settings::values.pad_cup_key    = qt_config->value("pad_cup",    Qt::Key_I).toInt();
+    Settings::values.pad_cdown_key  = qt_config->value("pad_cdown",  Qt::Key_K).toInt();
+    Settings::values.pad_cleft_key  = qt_config->value("pad_cleft",  Qt::Key_J).toInt();
+    Settings::values.pad_cright_key = qt_config->value("pad_cright", Qt::Key_L).toInt();
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -62,12 +68,14 @@ void Config::ReadValues() {
 
 void Config::SaveValues() {
     qt_config->beginGroup("Controls");
-    qt_config->setValue("pad_a", Settings::values.pad_a_key);
-    qt_config->setValue("pad_b", Settings::values.pad_b_key);
-    qt_config->setValue("pad_x", Settings::values.pad_x_key);
-    qt_config->setValue("pad_y", Settings::values.pad_y_key);
-    qt_config->setValue("pad_l", Settings::values.pad_l_key);
-    qt_config->setValue("pad_r", Settings::values.pad_r_key);
+    qt_config->setValue("pad_a",      Settings::values.pad_a_key);
+    qt_config->setValue("pad_b",      Settings::values.pad_b_key);
+    qt_config->setValue("pad_x",      Settings::values.pad_x_key);
+    qt_config->setValue("pad_y",      Settings::values.pad_y_key);
+    qt_config->setValue("pad_l",      Settings::values.pad_l_key);
+    qt_config->setValue("pad_r",      Settings::values.pad_r_key);
+    qt_config->setValue("pad_zl",     Settings::values.pad_zl_key);
+    qt_config->setValue("pad_zr",     Settings::values.pad_zr_key);
     qt_config->setValue("pad_start",  Settings::values.pad_start_key);
     qt_config->setValue("pad_select", Settings::values.pad_select_key);
     qt_config->setValue("pad_home",   Settings::values.pad_home_key);
@@ -79,6 +87,10 @@ void Config::SaveValues() {
     qt_config->setValue("pad_sdown",  Settings::values.pad_sdown_key);
     qt_config->setValue("pad_sleft",  Settings::values.pad_sleft_key);
     qt_config->setValue("pad_sright", Settings::values.pad_sright_key);
+    qt_config->setValue("pad_cup",    Settings::values.pad_cup_key);
+    qt_config->setValue("pad_cdown",  Settings::values.pad_cdown_key);
+    qt_config->setValue("pad_cleft",  Settings::values.pad_cleft_key);
+    qt_config->setValue("pad_cright", Settings::values.pad_cright_key);
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
