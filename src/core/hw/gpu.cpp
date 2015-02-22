@@ -19,6 +19,7 @@
 
 #include "video_core/command_processor.h"
 #include "video_core/video_core.h"
+#include <video_core/color.h>
 
 
 namespace GPU {
@@ -140,6 +141,26 @@ inline void Write(u32 addr, const T data) {
                         break;
                     }
 
+                    case Regs::PixelFormat::RGB5A1:
+                    {
+                        u16 srcval = *(u16*)(source_pointer + x * 4 * pixel_skip + y * config.input_width * 4 * pixel_skip);
+                        source_color.r = Color::Convert5To8((srcval >> 11) & 0x1F); // red
+                        source_color.g = Color::Convert5To8((srcval >>  6) & 0x1F); // green
+                        source_color.b = Color::Convert5To8((srcval >>  1) & 0x1F); // blue
+                        source_color.a = Color::Convert1To8(srcval & 0x1);          // alpha
+                        break;
+                    }
+
+                    case Regs::PixelFormat::RGBA4:
+                    {
+                        u16 srcval = *(u16*)(source_pointer + x * 4 * pixel_skip + y * config.input_width * 4 * pixel_skip);
+                        source_color.r = Color::Convert4To8((srcval >> 12) & 0xF); // red
+                        source_color.g = Color::Convert4To8((srcval >>  8) & 0xF); // green
+                        source_color.b = Color::Convert4To8((srcval >>  4) & 0xF); // blue
+                        source_color.a = Color::Convert4To8( srcval        & 0xF); // alpha
+                        break;
+                    }
+
                     default:
                         LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", config.input_format.Value());
                         break;
@@ -163,6 +184,22 @@ inline void Write(u32 addr, const T data) {
                         dstptr[2] = source_color.r; // red
                         dstptr[1] = source_color.g; // green
                         dstptr[0] = source_color.b; // blue
+                        break;
+                    }
+
+                    case Regs::PixelFormat::RGB5A1:
+                    {
+                        u16* dstptr = (u16*)(dest_pointer + x * 2 + y * config.output_width * 2);
+                        *dstptr = ((source_color.r >> 3) << 11) | ((source_color.g >> 3) << 6)
+                                | ((source_color.b >> 3) <<  1) | ( source_color.a >> 7);
+                        break;
+                    }
+
+                    case Regs::PixelFormat::RGBA4:
+                    {
+                        u16* dstptr = (u16*)(dest_pointer + x * 2 + y * config.output_width * 2);
+                        *dstptr = ((source_color.r >> 4) << 12) | ((source_color.g >> 4) << 8)
+                                | ((source_color.b >> 4) <<  4) | ( source_color.a >> 4);
                         break;
                     }
 
