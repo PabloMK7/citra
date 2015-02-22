@@ -20,7 +20,7 @@ namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
-    u32* color_buffer = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
+    u8* color_buffer = Memory::GetPointer(PAddrToVAddr(addr));
 
     // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
     // NOTE: The framebuffer height register contains the actual FB height minus one.
@@ -29,8 +29,11 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
     {
-        u32 value = (color.a() << 24) | (color.r() << 16) | (color.g() << 8) | color.b();
-        *(color_buffer + x + y * registers.framebuffer.GetWidth()) = value;
+        u8* pixel = color_buffer + (x + y * registers.framebuffer.GetWidth()) * 4;
+        pixel[3] = color.r();
+        pixel[2] = color.g();
+        pixel[1] = color.b();
+        pixel[0] = color.a();
         break;
     }
 
@@ -42,17 +45,27 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
-    u32* color_buffer_u32 = reinterpret_cast<u32*>(Memory::GetPointer(PAddrToVAddr(addr)));
+    u8* color_buffer = Memory::GetPointer(PAddrToVAddr(addr));
 
     y = (registers.framebuffer.height - y);
 
-    u32 value = *(color_buffer_u32 + x + y * registers.framebuffer.GetWidth());
-    Math::Vec4<u8> ret;
-    ret.a() = value >> 24;
-    ret.r() = (value >> 16) & 0xFF;
-    ret.g() = (value >> 8) & 0xFF;
-    ret.b() = value & 0xFF;
-    return ret;
+    switch (registers.framebuffer.color_format) {
+    case registers.framebuffer.RGBA8:
+    {
+        Math::Vec4<u8> ret;
+        u8* pixel = color_buffer + (x + y * registers.framebuffer.GetWidth()) * 4;
+        ret.r() = pixel[3];
+        ret.g() = pixel[2];
+        ret.b() = pixel[1];
+        ret.a() = pixel[0];
+        return ret;
+    }
+    default:
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
+        UNIMPLEMENTED();
+    }
+
+    return {};
  }
 
 static u32 GetDepth(int x, int y) {
