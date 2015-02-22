@@ -90,6 +90,7 @@ struct VertexShaderState {
         u8 repeat_counter;  // How often to repeat until this call stack element is removed
         u8 loop_increment;  // Which value to add to the loop counter after an iteration
                             // TODO: Should this be a signed value? Does it even matter?
+        u32 loop_address;   // The address where we'll return to after each loop iteration
     };
 
     // TODO: Is there a maximal size for this?
@@ -115,6 +116,8 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 if (top.repeat_counter-- == 0) {
                     state.program_counter = &shader_memory[top.return_address];
                     state.call_stack.pop();
+                } else {
+                    state.program_counter = &shader_memory[top.loop_address];
                 }
 
                 // TODO: Is "trying again" accurate to hardware?
@@ -129,7 +132,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
         static auto call = [](VertexShaderState& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
             state.program_counter = &shader_memory[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
-            state.call_stack.push({ offset + num_instructions, return_offset, repeat_count, loop_increment });
+            state.call_stack.push({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
         };
         u32 binary_offset = state.program_counter - shader_memory.data();
 
