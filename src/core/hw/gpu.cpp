@@ -132,12 +132,11 @@ inline void Write(u32 addr, const T data) {
                     switch (config.input_format) {
                     case Regs::PixelFormat::RGBA8:
                     {
-                        // TODO: Most likely got the component order messed up.
                         u8* srcptr = source_pointer + (x * pixel_skip + y * config.input_width) * 4;
-                        source_color.r = srcptr[0]; // blue
-                        source_color.g = srcptr[1]; // green
-                        source_color.b = srcptr[2]; // red
-                        source_color.a = srcptr[3]; // alpha
+                        source_color.r = srcptr[3]; // red
+                        source_color.g = srcptr[2]; // green
+                        source_color.b = srcptr[1]; // blue
+                        source_color.a = srcptr[0]; // alpha
                         break;
                     }
 
@@ -160,11 +159,10 @@ inline void Write(u32 addr, const T data) {
 
                     case Regs::PixelFormat::RGB8:
                     {
-                        // TODO: Most likely got the component order messed up.
                         u8* dstptr = dest_pointer + (x + y * output_width) * 3;
-                        dstptr[0] = source_color.r; // blue
+                        dstptr[2] = source_color.r; // red
                         dstptr[1] = source_color.g; // green
-                        dstptr[2] = source_color.b; // red
+                        dstptr[0] = source_color.b; // blue
                         break;
                     }
 
