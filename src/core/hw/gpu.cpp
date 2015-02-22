@@ -167,16 +167,15 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     switch (config.output_format) {
-                    /*case Regs::PixelFormat::RGBA8:
+                    case Regs::PixelFormat::RGBA8:
                     {
-                        // TODO: Untested
-                        u8* dstptr = (u32*)(dest_pointer + x * 4 + y * config.output_width * 4);
-                        dstptr[0] = source_color.r;
-                        dstptr[1] = source_color.g;
-                        dstptr[2] = source_color.b;
-                        dstptr[3] = source_color.a;
+                        u8* dstptr = dest_pointer + (x * pixel_skip + y * config.output_width) * 4;
+                        dstptr[3] = source_color.r;
+                        dstptr[2] = source_color.g;
+                        dstptr[1] = source_color.b;
+                        dstptr[0] = source_color.a;
                         break;
-                    }*/
+                    }
 
                     case Regs::PixelFormat::RGB8:
                     {
