@@ -4422,12 +4422,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
 
             unsigned int value = Memory::Read32(addr);
-            if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            else {
-                value = ROTATE_RIGHT_32(value,(8*(addr&0x3)));
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            }
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 // For armv5t, should enter thumb when bits[0] is non-zero.
@@ -4450,12 +4445,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             inst_cream->get_addr(cpu, inst_cream->inst, addr, 1);
 
             unsigned int value = Memory::Read32(addr);
-            if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            else {
-                value = ROTATE_RIGHT_32(value,(8*(addr&0x3)));
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            }
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
 
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 // For armv5t, should enter thumb when bits[0] is non-zero.
@@ -4698,11 +4688,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
             unsigned int value = Memory::Read32(addr);
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-
-            if (BIT(CP15_REG(CP15_CONTROL), 22) == 1)
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            else
-                cpu->Reg[BITS(inst_cream->inst, 12, 15)] = ROTATE_RIGHT_32(value,(8*(addr&0x3))) ;
 
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));

@@ -236,30 +236,12 @@ u8 Read8(const VAddr addr) {
 u16 Read16(const VAddr addr) {
     u16_le data = 0;
     Read<u16_le>(data, addr);
-
-    // Check for 16-bit unaligned memory reads...
-    if (addr & 1) {
-        // TODO(bunnei): Implement 16-bit unaligned memory reads
-        LOG_ERROR(HW_Memory, "16-bit unaligned memory reads are not implemented!");
-    }
-
     return (u16)data;
 }
 
 u32 Read32(const VAddr addr) {
     u32_le data = 0;
     Read<u32_le>(data, addr);
-
-    // Check for 32-bit unaligned memory reads...
-    if (addr & 3) {
-        // ARM allows for unaligned memory reads, however older ARM architectures read out memory
-        // from unaligned addresses in a shifted way. Our ARM CPU core (SkyEye) corrects for this,
-        // so therefore expects the memory to be read out in this manner.
-        // TODO(bunnei): Determine if this is necessary - perhaps it is OK to remove this from both
-        // SkyEye and here?
-        int shift = (addr & 3) * 8;
-        data = (data << shift) | (data >> (32 - shift));
-    }
     return (u32)data;
 }
 
