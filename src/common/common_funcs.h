@@ -14,8 +14,6 @@
 #define SLEEP(x) usleep(x*1000)
 #endif
 
-template <bool> struct CompileTimeAssert;
-template<> struct CompileTimeAssert<true> {};
 
 #define b2(x)   (   (x) | (   (x) >> 1) )
 #define b4(x)   ( b2(x) | ( b2(x) >> 2) )
