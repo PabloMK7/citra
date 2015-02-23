@@ -192,12 +192,13 @@ struct Regs {
             u32 flags;
 
             BitField< 0, 1, u32> flip_data;        // flips input data horizontally (TODO) if true
+            BitField< 1, 1, u32> output_tiled;     // Converts from linear to tiled format
+            BitField< 3, 1, u32> raw_copy;         // Copies the data without performing any processing
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
-            BitField<16, 1, u32> output_tiled;     // stores output in a tiled format
 
-            // TODO: Not really sure if this actually scales, or even resizes at all.
             BitField<24, 1, u32> scale_horizontally;
+            BitField<25, 1, u32> scale_vertically;
         };
 
         INSERT_PADDING_WORDS(0x1);
