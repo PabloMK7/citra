@@ -11,6 +11,8 @@
 
 namespace Y2R_U {
 
+static Kernel::SharedPtr<Kernel::Event> completion_event = 0;
+
 /**
  * Y2R_U::IsBusyConversion service function
  *  Outputs:
@@ -26,13 +28,26 @@ static void IsBusyConversion(Service::Interface* self) {
     LOG_WARNING(Service, "(STUBBED) called");
 }
 
+/**
+ * Y2R_U::GetTransferEndEvent service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      3 : The handle of the completion event
+ */
+static void GetTransferEndEvent(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).MoveFrom();
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, nullptr,                 "SetInputFormat"},
     {0x00030040, nullptr,                 "SetOutputFormat"},
     {0x00050040, nullptr,                 "SetRotation"},
     {0x00070040, nullptr,                 "SetBlockAlignment"},
     {0x000D0040, nullptr,                 "SetTransferEndInterrupt"},
-    {0x000F0000, nullptr,                 "GetTransferEndEvent"},
+    {0x000F0000, GetTransferEndEvent,     "GetTransferEndEvent"},
     {0x00100102, nullptr,                 "SetSendingY"},
     {0x00110102, nullptr,                 "SetSendingU"},
     {0x00120102, nullptr,                 "SetSendingV"},
@@ -53,6 +68,8 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
+    completion_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "Y2R:Completed");
+
     Register(FunctionTable);
 }
     
