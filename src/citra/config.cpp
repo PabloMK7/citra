@@ -44,6 +44,8 @@ void Config::ReadValues() {
     Settings::values.pad_y_key = glfw_config->GetInteger("Controls", "pad_y", GLFW_KEY_X);
     Settings::values.pad_l_key = glfw_config->GetInteger("Controls", "pad_l", GLFW_KEY_Q);
     Settings::values.pad_r_key = glfw_config->GetInteger("Controls", "pad_r", GLFW_KEY_W);
+    Settings::values.pad_zl_key = glfw_config->GetInteger("Controls", "pad_zl", GLFW_KEY_1);
+    Settings::values.pad_zr_key = glfw_config->GetInteger("Controls", "pad_zr", GLFW_KEY_2);
     Settings::values.pad_start_key  = glfw_config->GetInteger("Controls", "pad_start",  GLFW_KEY_M);
     Settings::values.pad_select_key = glfw_config->GetInteger("Controls", "pad_select", GLFW_KEY_N);
     Settings::values.pad_home_key   = glfw_config->GetInteger("Controls", "pad_home",   GLFW_KEY_B);
@@ -55,6 +57,10 @@ void Config::ReadValues() {
     Settings::values.pad_sdown_key  = glfw_config->GetInteger("Controls", "pad_sdown",  GLFW_KEY_DOWN);
     Settings::values.pad_sleft_key  = glfw_config->GetInteger("Controls", "pad_sleft",  GLFW_KEY_LEFT);
     Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
+    Settings::values.pad_cup_key    = glfw_config->GetInteger("Controls", "pad_cup",    GLFW_KEY_I);
+    Settings::values.pad_cdown_key  = glfw_config->GetInteger("Controls", "pad_cdown",  GLFW_KEY_K);
+    Settings::values.pad_cleft_key  = glfw_config->GetInteger("Controls", "pad_cleft",  GLFW_KEY_J);
+    Settings::values.pad_cright_key = glfw_config->GetInteger("Controls", "pad_cright", GLFW_KEY_L);
 
     // Core
     Settings::values.gpu_refresh_rate = glfw_config->GetInteger("Core", "gpu_refresh_rate", 30);

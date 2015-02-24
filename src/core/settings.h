@@ -16,6 +16,8 @@ struct Values {
     int pad_y_key;
     int pad_l_key;
     int pad_r_key;
+    int pad_zl_key;
+    int pad_zr_key;
     int pad_start_key;
     int pad_select_key;
     int pad_home_key;
@@ -27,6 +29,10 @@ struct Values {
     int pad_sdown_key;
     int pad_sleft_key;
     int pad_sright_key;
+    int pad_cup_key;
+    int pad_cdown_key;
+    int pad_cleft_key;
+    int pad_cright_key;
 
     // Core
     int gpu_refresh_rate;

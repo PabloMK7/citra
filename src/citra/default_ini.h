@@ -19,12 +19,18 @@ pad_a =
 pad_b =
 pad_x =
 pad_y =
-pad_r =
 pad_l =
+pad_r =
+pad_zl =
+pad_zr =
 pad_sup =
 pad_sdown =
 pad_sleft =
 pad_sright =
+pad_cup =
+pad_cdown =
+pad_cleft =
+pad_cright =
 
 [Core]
 gpu_refresh_rate = ## 30 (default)
