@@ -18,6 +18,7 @@
 #include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/archive_sdmc.h"
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/result.h"
@@ -449,6 +450,9 @@ void ArchiveInit() {
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = Common::make_unique<FileSys::ArchiveFactory_SaveDataCheck>(nand_directory);
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::SaveDataCheck);
+
+    auto systemsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory);
+    RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
 }
 
 /// Shutdown archives

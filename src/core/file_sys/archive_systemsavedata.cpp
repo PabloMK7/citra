@@ -6,9 +6,9 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/make_unique.h"
 
 #include "core/file_sys/archive_systemsavedata.h"
-#include "core/file_sys/disk_archive.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/settings.h"
 
@@ -17,9 +17,11 @@
 
 namespace FileSys {
 
-static std::string GetSystemSaveDataPath(const std::string& mount_point, u64 save_id) {
-    u32 save_high = static_cast<u32>((save_id >> 32) & 0xFFFFFFFF);
-    u32 save_low = static_cast<u32>(save_id & 0xFFFFFFFF);
+static std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& path) {
+    std::vector<u8> vec_data = path.AsBinary();
+    const u32* data = reinterpret_cast<const u32*>(vec_data.data());
+    u32 save_low = data[1];
+    u32 save_high = data[0];
     return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_low, save_high);
 }
 
@@ -27,18 +29,25 @@ static std::string GetSystemSaveDataContainerPath(const std::string& mount_point
     return Common::StringFromFormat("%sdata/%s/sysdata/", mount_point.c_str(), SYSTEM_ID.c_str());
 }
 
-Archive_SystemSaveData::Archive_SystemSaveData(const std::string& mount_point, u64 save_id)
-        : DiskArchive(GetSystemSaveDataPath(GetSystemSaveDataContainerPath(mount_point), save_id)) {
-    LOG_INFO(Service_FS, "Directory %s set as SystemSaveData.", this->mount_point.c_str());
+ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& nand_path)
+        : base_path(GetSystemSaveDataContainerPath(nand_path)) {
 }
 
-bool Archive_SystemSaveData::Initialize() {
-    if (!FileUtil::CreateFullPath(mount_point)) {
-        LOG_ERROR(Service_FS, "Unable to create SystemSaveData path.");
-        return false;
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path) {
+    std::string fullpath = GetSystemSaveDataPath(base_path, path);
+    if (!FileUtil::Exists(fullpath)) {
+        // TODO(Subv): Check error code, this one is probably wrong
+        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
+            ErrorSummary::InvalidState, ErrorLevel::Status);
     }
+    auto archive = Common::make_unique<DiskArchive>(fullpath);
+    return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
+}
 
-    return true;
+ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path) {
+    std::string fullpath = GetSystemSaveDataPath(base_path, path);
+    FileUtil::CreateFullPath(fullpath);
+    return RESULT_SUCCESS;
 }
 
 } // namespace FileSys
