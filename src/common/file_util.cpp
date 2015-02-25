@@ -16,7 +16,10 @@
 #include <tchar.h>
 #else
 #include <sys/param.h>
+#include <sys/types.h>
 #include <dirent.h>
+#include <pwd.h>
+#include <unistd.h>
 #endif
 
 #if defined(__APPLE__)
@@ -632,6 +635,55 @@ std::string& GetExeDirectory()
     }
     return exe_path;
 }
+#else
+/**
+ * @return The user’s home directory on POSIX systems
+ */
+static const std::string& GetHomeDirectory() {
+    static std::string home_path;
+    if (home_path.empty()) {
+        const char* envvar = getenv("HOME");
+        if (envvar) {
+            home_path = envvar;
+        } else {
+            auto pw = getpwuid(getuid());
+            ASSERT_MSG(pw, "$HOME isn’t defined, and the current user can’t be found in /etc/passwd.");
+            home_path = pw->pw_dir;
+        }
+    }
+    return home_path;
+}
+
+/**
+ * Follows the XDG Base Directory Specification to get a directory path
+ * @param envvar The XDG environment variable to get the value from
+ * @return The directory path
+ * @sa http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ */
+static const std::string GetUserDirectory(const std::string& envvar) {
+    const char* directory = getenv(envvar.c_str());
+
+    std::string user_dir;
+    if (directory) {
+        user_dir = directory;
+    } else {
+        std::string subdirectory;
+        if (envvar == "XDG_DATA_HOME")
+            subdirectory = DIR_SEP ".local" DIR_SEP "share";
+        else if (envvar == "XDG_CONFIG_HOME")
+            subdirectory = DIR_SEP ".config";
+        else if (envvar == "XDG_CACHE_HOME")
+            subdirectory = DIR_SEP ".cache";
+        else
+            ASSERT_MSG(false, "Unknown XDG variable %s.", envvar.c_str());
+        user_dir = GetHomeDirectory() + subdirectory;
+    }
+
+    ASSERT_MSG(!user_dir.empty(), "User directory %s musn’t be empty.", envvar.c_str());
+    ASSERT_MSG(user_dir[0] == '/', "User directory %s must be absolute.", envvar.c_str());
+
+    return user_dir;
+}
 #endif
 
 std::string GetSysDirectory()
@@ -661,20 +713,27 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string &new
     if (paths[D_USER_IDX].empty())
     {
 #ifdef _WIN32
-        paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
+        paths[D_USER_IDX]   = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
+        paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
+        paths[D_CACHE_IDX]  = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
 #else
-        if (FileUtil::Exists(ROOT_DIR DIR_SEP USERDATA_DIR))
-            paths[D_USER_IDX] = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
-        else
-            paths[D_USER_IDX] = std::string(getenv("HOME") ?
-                getenv("HOME") : getenv("PWD") ?
-                getenv("PWD") : "") + DIR_SEP EMU_DATA_DIR DIR_SEP;
+        if (FileUtil::Exists(ROOT_DIR DIR_SEP USERDATA_DIR)) {
+            paths[D_USER_IDX]   = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
+            paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
+            paths[D_CACHE_IDX]  = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
+        } else {
+            std::string data_dir   = GetUserDirectory("XDG_DATA_HOME");
+            std::string config_dir = GetUserDirectory("XDG_CONFIG_HOME");
+            std::string cache_dir  = GetUserDirectory("XDG_CACHE_HOME");
+
+            paths[D_USER_IDX]   = data_dir   + DIR_SEP EMU_DATA_DIR DIR_SEP;
+            paths[D_CONFIG_IDX] = config_dir + DIR_SEP EMU_DATA_DIR DIR_SEP;
+            paths[D_CACHE_IDX]  = cache_dir  + DIR_SEP EMU_DATA_DIR DIR_SEP;
+        }
 #endif
 
-        paths[D_CONFIG_IDX]         = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
         paths[D_GAMECONFIG_IDX]     = paths[D_USER_IDX] + GAMECONFIG_DIR DIR_SEP;
         paths[D_MAPS_IDX]           = paths[D_USER_IDX] + MAPS_DIR DIR_SEP;
-        paths[D_CACHE_IDX]          = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
         paths[D_SDMC_IDX]           = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_NAND_IDX]           = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
         paths[D_SYSDATA_IDX]        = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
