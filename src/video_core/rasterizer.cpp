@@ -8,6 +8,7 @@
 #include "common/math_util.h"
 
 #include "math.h"
+#include "color.h"
 #include "pica.h"
 #include "rasterizer.h"
 #include "vertex_shader.h"
@@ -37,6 +38,14 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
         break;
     }
 
+    case registers.framebuffer.RGBA4:
+    {
+        u8* pixel = color_buffer + (x + y * registers.framebuffer.GetWidth()) * 2;
+        pixel[1] = (color.r() & 0xF0) | (color.g() >> 4);
+        pixel[0] = (color.b() & 0xF0) | (color.a() >> 4);
+        break;
+    }
+
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
         UNIMPLEMENTED();
@@ -60,6 +69,18 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
         ret.a() = pixel[0];
         return ret;
     }
+
+    case registers.framebuffer.RGBA4:
+    {
+        Math::Vec4<u8> ret;
+        u8* pixel = color_buffer + (x + y * registers.framebuffer.GetWidth()) * 2;
+        ret.r() = Color::Convert4To8(pixel[1] >> 4);
+        ret.g() = Color::Convert4To8(pixel[1] & 0x0F);
+        ret.b() = Color::Convert4To8(pixel[0] >> 4);
+        ret.a() = Color::Convert4To8(pixel[0] & 0x0F);
+        return ret;
+    }
+
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format);
         UNIMPLEMENTED();
