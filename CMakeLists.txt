@@ -18,19 +18,25 @@ else()
     # changes intact, so we'll just clobber everything and say sorry.
     message(STATUS "Cache compiler flags ignored, please edit CMakeLists.txt to change the flags.")
     # /MP - Multi-threaded compilation
-    # /MD - Multi-threaded runtime
     # /Ox - Full optimization
     # /Oy- - Don't omit frame pointer
     # /GR- - Disable RTTI
     # /GS- - No stack buffer overflow checks
     # /EHsc - C++-only exception handling semantics
-    set(optimization_flags "/MP /MD /Ox /Oy- /GR- /GS- /EHsc")
+    set(optimization_flags "/MP /Ox /Oy- /GR- /GS- /EHsc")
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
-    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /Zi" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /Zi" CACHE STRING "" FORCE)
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /Zi /Zo" CACHE STRING "" FORCE)
+    # /MDd - Multi-threaded Debug Runtime DLL
+    set(CMAKE_C_FLAGS_DEBUG   "${optimization_flags} /MDd /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "${optimization_flags} /MDd /Zi /Zo" CACHE STRING "" FORCE)
+    # /MD - Multi-threaded runtime DLL
+    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /MD /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /MD /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
+    
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/DEBUG" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "/DEBUG" CACHE STRING "" FORCE)
 endif()
 
 add_definitions(-DSINGLETHREADED)
@@ -100,7 +106,7 @@ if (ENABLE_GLFW)
         set(GLFW_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/glfw-3.0.4.bin")
         set(GLFW_INCLUDE_DIRS "${GLFW_PREFIX}/include" CACHE PATH "Path to GLFW3 headers")
         set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib-${TMP_TOOLSET}" CACHE PATH "Path to GLFW3 libraries")
-
+        
         # Clean up after ourselves
         unset(TMP_TOOLSET)
         unset(TMP_ARCH)
