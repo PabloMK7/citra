@@ -185,10 +185,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
     bool is_v5e;    // Are we emulating a v5e architecture?
     bool is_v6;     // Are we emulating a v6 architecture?
     bool is_v7;     // Are we emulating a v7 architecture?
-    bool is_XScale; // Are we emulating an XScale architecture?
-    bool is_iWMMXt; // Are we emulating an iWMMXt co-processor?
-    bool is_ep9312; // Are we emulating a Cirrus Maverick co-processor?
-    bool is_pxa27x; // Are we emulating a Intel PXA27x co-processor?
 
     // ARM_ARM A2-18
     // 0 Base Restored Abort Model, 1 the Early Abort Model, 2 Base Updated Abort Model
@@ -211,20 +207,11 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 \***************************************************************************/
 
 enum {
-    ARM_Nexec_Prop  = 0x02,
-    ARM_Debug_Prop  = 0x10,
-    ARM_Isync_Prop  = ARM_Debug_Prop,
-    ARM_Lock_Prop   = 0x20,
-    ARM_v4_Prop     = 0x40,
-    ARM_v5_Prop     = 0x80,
-    ARM_v6_Prop     = 0xc0,
-
-    ARM_v5e_Prop    = 0x100,
-    ARM_XScale_Prop = 0x200,
-    ARM_ep9312_Prop = 0x400,
-    ARM_iWMMXt_Prop = 0x800,
-    ARM_PXA27X_Prop = 0x1000,
-    ARM_v7_Prop     = 0x2000,
+    ARM_v4_Prop  = 0x01,
+    ARM_v5_Prop  = 0x02,
+    ARM_v5e_Prop = 0x04,
+    ARM_v6_Prop  = 0x08,
+    ARM_v7_Prop  = 0x10,
 };
 
 /***************************************************************************\

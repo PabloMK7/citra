@@ -58,11 +58,7 @@ void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
     state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
     state->is_v5     = (properties & ARM_v5_Prop) != 0;
     state->is_v5e    = (properties & ARM_v5e_Prop) != 0;
-    state->is_XScale = (properties & ARM_XScale_Prop) != 0;
-    state->is_iWMMXt = (properties & ARM_iWMMXt_Prop) != 0;
     state->is_v6     = (properties & ARM_v6_Prop) != 0;
-    state->is_ep9312 = (properties & ARM_ep9312_Prop) != 0;
-    state->is_pxa27x = (properties & ARM_PXA27X_Prop) != 0;
     state->is_v7     = (properties & ARM_v7_Prop) != 0;
 
     // Only initialse the coprocessor support once we
