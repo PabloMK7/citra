@@ -4709,9 +4709,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 DEBUG_MSG;
             } else {
                 if (inst_cream->cp_num == 15) {
-                    if(CRn == 0 && OPCODE_2 == 0 && CRm == 0) {
-                        CP15_REG(CP15_MAIN_ID) = RD;
-                    } else if(CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
+                    if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
                         CP15_REG(CP15_CONTROL) = RD;
                     } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
                         CP15_REG(CP15_AUXILIARY_CONTROL) = RD;
