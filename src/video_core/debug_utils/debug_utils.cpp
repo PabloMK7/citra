@@ -436,9 +436,9 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::A4:
     {
-        const u8* source_ptr = source + offset / 2 + i / 2;
+        const u8* source_ptr = source + (offset + i) / 2;
 
-        u8 a = (coarse_x % 2) ? ((*source_ptr)&0xF) : (((*source_ptr) & 0xF0) >> 4);
+        u8 a = (i % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
         a = Color::Convert4To8(a);
 
         if (disable_alpha) {
