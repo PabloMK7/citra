@@ -22,7 +22,6 @@ namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
-    u8* color_buffer = Memory::GetPointer(PAddrToVAddr(addr));
 
     // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
     // NOTE: The framebuffer height register contains the actual FB height minus one.
@@ -31,35 +30,28 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
+    u8* dst_pixel = Memory::GetPointer(PAddrToVAddr(addr)) + dst_offset;
 
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
-    {
-        u8* pixel = color_buffer + dst_offset;
-        pixel[3] = color.r();
-        pixel[2] = color.g();
-        pixel[1] = color.b();
-        pixel[0] = color.a();
+        Color::EncodeRGBA8(color, dst_pixel);
         break;
-    }
+
+    case registers.framebuffer.RGB8:
+        Color::EncodeRGB8(color, dst_pixel);
+        break;
+
+    case registers.framebuffer.RGB5A1:
+        Color::EncodeRGB5A1(color, dst_pixel);
+        break;
+
+    case registers.framebuffer.RGB565:
+        Color::EncodeRGB565(color, dst_pixel);
+        break;
 
     case registers.framebuffer.RGBA4:
-    {
-        u8* pixel = color_buffer + dst_offset;
-        pixel[1] = (color.r() & 0xF0) | (color.g() >> 4);
-        pixel[0] = (color.b() & 0xF0) | (color.a() >> 4);
+        Color::EncodeRGBA4(color, dst_pixel);
         break;
-    }
-
-    case registers.framebuffer.RGBA5551:
-    {
-        u16_le* pixel = (u16_le*)(color_buffer + dst_offset);
-        *pixel = (Color::Convert8To5(color.r()) << 11) |
-                 (Color::Convert8To5(color.g()) << 6)  |
-                 (Color::Convert8To5(color.b()) << 1)  |
-                 Color::Convert8To1(color.a());
-        break;
-    }
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format.Value());
@@ -69,45 +61,29 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
     const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
-    u8* color_buffer = Memory::GetPointer(PAddrToVAddr(addr));
 
     y = (registers.framebuffer.height - y);
 
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
-    Math::Vec4<u8> ret;
+    u8* src_pixel = Memory::GetPointer(PAddrToVAddr(addr)) + src_offset;
 
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
-    {
-        u8* pixel = color_buffer + src_offset;
-        ret.r() = pixel[3];
-        ret.g() = pixel[2];
-        ret.b() = pixel[1];
-        ret.a() = pixel[0];
-        return ret;
-    }
+        return Color::DecodeRGBA8(src_pixel);
+
+    case registers.framebuffer.RGB8:
+        return Color::DecodeRGB8(src_pixel);
+
+    case registers.framebuffer.RGB5A1:
+        return Color::DecodeRGB5A1(src_pixel);
+
+    case registers.framebuffer.RGB565:
+        return Color::DecodeRGB565(src_pixel);
 
     case registers.framebuffer.RGBA4:
-    {
-        u8* pixel = color_buffer + src_offset;
-        ret.r() = Color::Convert4To8(pixel[1] >> 4);
-        ret.g() = Color::Convert4To8(pixel[1] & 0x0F);
-        ret.b() = Color::Convert4To8(pixel[0] >> 4);
-        ret.a() = Color::Convert4To8(pixel[0] & 0x0F);
-        return ret;
-    }
-
-    case registers.framebuffer.RGBA5551:
-    {
-        u16_le pixel = *(u16_le*)(color_buffer + src_offset);
-        ret.r() = Color::Convert5To8((pixel >> 11) & 0x1F);
-        ret.g() = Color::Convert5To8((pixel >>  6) & 0x1F);
-        ret.b() = Color::Convert5To8((pixel >>  1) & 0x1F);
-        ret.a() = Color::Convert1To8(pixel & 0x1);
-        return ret;
-    }
+        return Color::DecodeRGBA4(src_pixel);
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format.Value());

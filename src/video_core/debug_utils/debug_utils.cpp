@@ -321,44 +321,32 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     switch (info.format) {
     case Regs::TextureFormat::RGBA8:
     {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 4);
-        return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
+        auto res = Color::DecodeRGBA8(source + VideoCore::GetMortonOffset(x, y, 4));
+        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
     }
 
     case Regs::TextureFormat::RGB8:
     {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 3);
-        return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
+        auto res = Color::DecodeRGB8(source + VideoCore::GetMortonOffset(x, y, 3));
+        return { res.r(), res.g(), res.b(), 255 };
     }
 
-    case Regs::TextureFormat::RGBA5551:
+    case Regs::TextureFormat::RGB5A1:
     {
-        const u16 source_ptr = *(const u16*)(source + VideoCore::GetMortonOffset(x, y, 2));
-        u8 r = (source_ptr >> 11) & 0x1F;
-        u8 g = ((source_ptr) >> 6) & 0x1F;
-        u8 b = (source_ptr >> 1) & 0x1F;
-        u8 a = source_ptr & 1;
-        return Math::MakeVec<u8>(Color::Convert5To8(r), Color::Convert5To8(g),
-                                 Color::Convert5To8(b), disable_alpha ? 255 : Color::Convert1To8(a));
+        auto res = Color::DecodeRGB5A1(source + VideoCore::GetMortonOffset(x, y, 2));
+        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
     }
 
     case Regs::TextureFormat::RGB565:
     {
-        const u16 source_ptr = *(const u16*)(source + VideoCore::GetMortonOffset(x, y, 2));
-        u8 r = Color::Convert5To8((source_ptr >> 11) & 0x1F);
-        u8 g = Color::Convert6To8(((source_ptr) >> 5) & 0x3F);
-        u8 b = Color::Convert5To8((source_ptr) & 0x1F);
-        return Math::MakeVec<u8>(r, g, b, 255);
+        auto res = Color::DecodeRGB565(source + VideoCore::GetMortonOffset(x, y, 2));
+        return { res.r(), res.g(), res.b(), 255 };
     }
 
     case Regs::TextureFormat::RGBA4:
     {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 2);
-        u8 r = Color::Convert4To8(source_ptr[1] >> 4);
-        u8 g = Color::Convert4To8(source_ptr[1] & 0xF);
-        u8 b = Color::Convert4To8(source_ptr[0] >> 4);
-        u8 a = Color::Convert4To8(source_ptr[0] & 0xF);
-        return { r, g, b, disable_alpha ? (u8)255 : a };
+        auto res = Color::DecodeRGBA4(source + VideoCore::GetMortonOffset(x, y, 2));
+        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
     }
 
     case Regs::TextureFormat::IA8:
@@ -369,7 +357,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
             // Show intensity as red, alpha as green
             return { source_ptr[1], source_ptr[0], 0, 255 };
         } else {
-            return { source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0]};
+            return { source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0] };
         }
     }
 

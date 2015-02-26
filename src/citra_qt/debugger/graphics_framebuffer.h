@@ -29,7 +29,7 @@ class GraphicsFramebufferWidget : public BreakPointObserverDock {
     enum class Format {
         RGBA8    = 0,
         RGB8     = 1,
-        RGBA5551 = 2,
+        RGB5A1   = 2,
         RGB565   = 3,
         RGBA4    = 4,
     };

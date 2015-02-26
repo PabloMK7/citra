@@ -66,7 +66,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     QComboBox* format_choice = new QComboBox;
     format_choice->addItem(tr("RGBA8"));
     format_choice->addItem(tr("RGB8"));
-    format_choice->addItem(tr("RGBA5551"));
+    format_choice->addItem(tr("RGB5A1"));
     format_choice->addItem(tr("RGB565"));
     format_choice->addItem(tr("RGBA4"));
     format_choice->addItem(tr("IA8"));
