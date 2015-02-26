@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include "common/make_unique.h"
-#include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/fs/archive.h"
 
 namespace Service {
 namespace CFG {
@@ -36,7 +36,8 @@ const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
 
-static std::unique_ptr<FileSys::Archive_SystemSaveData> cfg_system_save_data;
+static Service::FS::ArchiveHandle cfg_system_save_data_archive;
+static const std::vector<u8> cfg_system_savedata_id = { 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00 };
 
 ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     // Read the header
@@ -97,19 +98,22 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const u8* data
 
 ResultCode DeleteConfigNANDSaveFile() {
     FileSys::Path path("config");
-    if (cfg_system_save_data->DeleteFile(path))
-        return RESULT_SUCCESS;
-    return ResultCode(-1); // TODO(Subv): Find the right error code
+    return Service::FS::DeleteFileFromArchive(cfg_system_save_data_archive, path);
 }
 
 ResultCode UpdateConfigNANDSavegame() {
     FileSys::Mode mode = {};
     mode.write_flag = 1;
     mode.create_flag = 1;
+
     FileSys::Path path("config");
-    auto file = cfg_system_save_data->OpenFile(path, mode);
-    ASSERT_MSG(file != nullptr, "could not open file");
-    file->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
+
+    auto config_result = Service::FS::OpenFileFromArchive(cfg_system_save_data_archive, path, mode);
+    ASSERT_MSG(config_result.Succeeded(), "could not open file");
+
+    auto config = config_result.MoveFrom();
+    config->backend->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
+
     return RESULT_SUCCESS;
 }
 
@@ -158,27 +162,33 @@ ResultCode FormatConfig() {
 }
 
 void CFGInit() {
-    // TODO(Subv): In the future we should use the FS service to query this archive, 
-    // currently it is not possible because you can only have one open archive of the same type at any time
-    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    cfg_system_save_data = Common::make_unique<FileSys::Archive_SystemSaveData>(
-                           nand_directory, CFG_SAVE_ID);
-    if (!cfg_system_save_data->Initialize()) {
-        LOG_CRITICAL(Service_CFG, "Could not initialize SystemSaveData archive for the CFG:U service");
-        return;
+    // Open the SystemSaveData archive 0x00010017
+    FileSys::Path archive_path(cfg_system_savedata_id);
+    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+    
+    // If the archive didn't exist, create the files inside
+    if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
+        // Format the archive to create the directories
+        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+
+        // Open it again to get a valid archive now that the folder exists
+        archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
     }
 
-    // TODO(Subv): All this code should be moved to cfg:i, 
-    // it's only here because we do not currently emulate the lower level code that uses that service
-    // Try to open the file in read-only mode to check its existence
-    FileSys::Mode mode = {};
-    mode.read_flag = 1;
-    FileSys::Path path("config");
-    auto file = cfg_system_save_data->OpenFile(path, mode);
+    ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
 
-    // Load the config if it already exists
-    if (file != nullptr) {
-        file->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
+    cfg_system_save_data_archive = *archive_result;
+
+    FileSys::Path config_path("config");
+    FileSys::Mode open_mode = {};
+    open_mode.read_flag = 1;
+
+    auto config_result = Service::FS::OpenFileFromArchive(*archive_result, config_path, open_mode);
+
+    // Read the file if it already exists
+    if (config_result.Succeeded()) {
+        auto config = config_result.MoveFrom();
+        config->backend->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return;
     }
 
@@ -186,10 +196,12 @@ void CFGInit() {
     // TODO(Subv): Initialize this directly in the variable when MSVC supports char16_t string literals
     CONSOLE_USERNAME_BLOCK.ng_word = 0;
     CONSOLE_USERNAME_BLOCK.zero = 0;
+
     // Copy string to buffer and pad with zeros at the end
     auto size = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
     std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + size,
               std::end(CONSOLE_USERNAME_BLOCK.username), 0);
+
     FormatConfig();
 }
 
