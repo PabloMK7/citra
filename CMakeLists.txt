@@ -12,7 +12,7 @@ else()
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
+    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE TYPE INTERNAL FORCE)
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
@@ -106,7 +106,7 @@ if (ENABLE_GLFW)
         set(GLFW_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/glfw-3.0.4.bin")
         set(GLFW_INCLUDE_DIRS "${GLFW_PREFIX}/include" CACHE PATH "Path to GLFW3 headers")
         set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib-${TMP_TOOLSET}" CACHE PATH "Path to GLFW3 libraries")
-        
+
         # Clean up after ourselves
         unset(TMP_TOOLSET)
         unset(TMP_ARCH)
