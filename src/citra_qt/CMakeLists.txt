@@ -75,9 +75,7 @@ target_link_libraries(citra-qt ${PLATFORM_LIBRARIES})
 
 #install(TARGETS citra-qt RUNTIME DESTINATION ${bindir})
 
-# setup a post build to copy the Qt Dlls to the right place on Windows MSVC
-# I only have Qt 5 so if someone wants to add this for Qt 4 as well that would be great
-if (Qt5_FOUND)
+if (Qt5_FOUND AND MSVC)
     set(Qt5_DLL_DIR "${Qt5_DIR}/../../../bin")
     file(GLOB Qt5_DEBUG_DLLS
         "${Qt5_DLL_DIR}/icudt*.dll"
@@ -88,15 +86,6 @@ if (Qt5_FOUND)
         "${Qt5_DLL_DIR}/Qt5OpenGLd.*"
         "${Qt5_DLL_DIR}/Qt5Widgetsd.*"
     )
-    foreach(Dll ${Qt5_DEBUG_DLLS})
-        # the if not exist skips this copy if the build directory doesn't exist so it doesn't error out
-        add_custom_command(TARGET citra-qt POST_BUILD
-                           COMMAND if not exist "${CMAKE_BINARY_DIR}/bin/Debug/" goto :cmEnd
-                           COMMAND ${CMAKE_COMMAND} -E
-                             copy ${Dll} "${CMAKE_BINARY_DIR}/bin/Debug/")
-    endforeach()
-    # sooo here's a fun struggle. I can't set a custom command for a single build target,
-    # so instead I have to add all these to every configuration in VS anyway.
     file(GLOB Qt5_RELEASE_DLLS
         "${Qt5_DLL_DIR}/icudt*.dll"
         "${Qt5_DLL_DIR}/icuin*.dll"
@@ -106,15 +95,16 @@ if (Qt5_FOUND)
         "${Qt5_DLL_DIR}/Qt5OpenGL.*"
         "${Qt5_DLL_DIR}/Qt5Widgets.*"
     )
-    foreach(Dll ${Qt5_RELEASE_DLLS})
-        add_custom_command(TARGET citra-qt POST_BUILD
-                           COMMAND if not exist "${CMAKE_BINARY_DIR}/bin/Release/" goto :cmEnd
-                           COMMAND ${CMAKE_COMMAND} -E
-                             copy ${Dll} "${CMAKE_BINARY_DIR}/bin/Release/")
-        add_custom_command(TARGET citra-qt POST_BUILD
-                           COMMAND if not exist "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/" goto :cmEnd
-                           COMMAND ${CMAKE_COMMAND} -E
-                             copy ${Dll} "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/")
-    endforeach()
+    # make the output directories ahead of the time and copy in the needed Dlls now
+    file(MAKE_DIRECTORY
+        ${CMAKE_BINARY_DIR}/bin/Debug/
+        ${CMAKE_BINARY_DIR}/bin/Release/
+        ${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/
+    )
+    file(COPY ${Qt5_DEBUG_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/)
+    file(COPY ${Qt5_RELEASE_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/Release/)
+    file(COPY ${Qt5_RELEASE_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/)
+    unset(Qt5_RELEASE_DLLS)
+    unset(Qt5_DEBUG_DLLS)
     unset(Qt5_DLL_DIR)
 endif()

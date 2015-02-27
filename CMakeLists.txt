@@ -12,7 +12,8 @@ else()
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE TYPE INTERNAL FORCE)
+    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE TYPE INTERNAL)
+
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
@@ -27,11 +28,11 @@ else()
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     # /MDd - Multi-threaded Debug Runtime DLL
-    set(CMAKE_C_FLAGS_DEBUG   "${optimization_flags} /MDd /Zi /Zo" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "${optimization_flags} /MDd /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_DEBUG   "/MP /MDd /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_DEBUG "/MP /MDd /Zi" CACHE STRING "" FORCE)
     # /MD - Multi-threaded runtime DLL
-    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /MD /Zi" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /MD /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /MD" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /MD" CACHE STRING "" FORCE)
     set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
     
