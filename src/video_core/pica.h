@@ -409,6 +409,7 @@ struct Regs {
     } output_merger;
 
     struct {
+        // Components are laid out in reverse byte order, most significant bits first.
         enum ColorFormat : u32 {
             RGBA8    = 0,
             RGB8     = 1,

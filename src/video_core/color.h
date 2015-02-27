@@ -28,5 +28,24 @@ static inline u8 Convert6To8(u8 value) {
     return (value << 2) | (value >> 4);
 }
 
+/// Convert a 8-bit color component to 1 bit
+static inline u8 Convert8To1(u8 value) {
+    return value >> 7;
+}
+
+/// Convert a 8-bit color component to 4 bit
+static inline u8 Convert8To4(u8 value) {
+    return value >> 4;
+}
+
+/// Convert a 8-bit color component to 5 bit
+static inline u8 Convert8To5(u8 value) {
+    return value >> 3;
+}
+
+/// Convert a 8-bit color component to 6 bit
+static inline u8 Convert8To6(u8 value) {
+    return value >> 2;
+}
 
 } // namespace

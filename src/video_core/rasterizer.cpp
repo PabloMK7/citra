@@ -51,6 +51,16 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
         break;
     }
 
+    case registers.framebuffer.RGBA5551:
+    {
+        u16_le* pixel = (u16_le*)(color_buffer + dst_offset);
+        *pixel = (Color::Convert8To5(color.r()) << 11) |
+                 (Color::Convert8To5(color.g()) << 6)  |
+                 (Color::Convert8To5(color.b()) << 1)  |
+                 Color::Convert8To1(color.a());
+        break;
+    }
+
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format.Value());
         UNIMPLEMENTED();
@@ -66,11 +76,11 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
+    Math::Vec4<u8> ret;
 
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
     {
-        Math::Vec4<u8> ret;
         u8* pixel = color_buffer + src_offset;
         ret.r() = pixel[3];
         ret.g() = pixel[2];
@@ -81,12 +91,21 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
 
     case registers.framebuffer.RGBA4:
     {
-        Math::Vec4<u8> ret;
         u8* pixel = color_buffer + src_offset;
         ret.r() = Color::Convert4To8(pixel[1] >> 4);
         ret.g() = Color::Convert4To8(pixel[1] & 0x0F);
         ret.b() = Color::Convert4To8(pixel[0] >> 4);
         ret.a() = Color::Convert4To8(pixel[0] & 0x0F);
+        return ret;
+    }
+
+    case registers.framebuffer.RGBA5551:
+    {
+        u16_le pixel = *(u16_le*)(color_buffer + src_offset);
+        ret.r() = Color::Convert5To8((pixel >> 11) & 0x1F);
+        ret.g() = Color::Convert5To8((pixel >>  6) & 0x1F);
+        ret.b() = Color::Convert5To8((pixel >>  1) & 0x1F);
+        ret.a() = Color::Convert1To8(pixel & 0x1);
         return ret;
     }
 
