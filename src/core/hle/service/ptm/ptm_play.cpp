@@ -3,12 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/hle.h"
-#include "core/hle/service/ptm_play.h"
+#include "core/hle/service/ptm/ptm_play.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace PTM_PLAY
-
-namespace PTM_PLAY {
+namespace Service {
+namespace PTM {
 
 const Interface::FunctionInfo FunctionTable[] = {
     { 0x08070082, nullptr,               "GetPlayHistory" },
@@ -17,11 +15,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     { 0x080B0080, nullptr,               "CalcPlayHistoryStart" },
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+PTM_Play_Interface::PTM_Play_Interface() {
     Register(FunctionTable);
 }
     
-} // namespace
+} // namespace PTM
+} // namespace Service

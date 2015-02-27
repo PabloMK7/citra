@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_SPVR
+namespace Service {
+namespace HID {
 
-namespace HID_SPVR {
-
-class Interface : public Service::Interface {
+class HID_SPVR_Interface : public Service::Interface {
 public:
-    Interface();
+    HID_SPVR_Interface();
 
     std::string GetPortName() const override {
         return "hid:SPVR";
     }
 };
 
-} // namespace
+} // namespace HID
+} // namespace Service

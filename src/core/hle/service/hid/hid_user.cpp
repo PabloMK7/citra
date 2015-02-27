@@ -6,54 +6,10 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"
-#include "hid_user.h"
+#include "core/hle/service/hid/hid_user.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_User
-
-namespace HID_User {
-
-
-// TODO(peachum):
-// Add a method for setting analog input from joystick device for the circle Pad.
-//
-// This method should:
-//     * Be called after both PadButton<Press, Release>().
-//     * Be called before PadUpdateComplete()
-//     * Set current PadEntry.circle_pad_<axis> using analog data
-//     * Set PadData.raw_circle_pad_data
-//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_x >= 41
-//     * Set PadData.current_state.circle_up = 1 if current PadEntry.circle_pad_y >= 41
-//     * Set PadData.current_state.circle_left = 1 if current PadEntry.circle_pad_x <= -41
-//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
-
-
-/**
- * HID_User::GetIPCHandles service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Unused
- *      3 : Handle to HID_User shared memory
- *      4 : Event signaled by HID_User
- *      5 : Event signaled by HID_User
- *      6 : Event signaled by HID_User
- *      7 : Gyroscope event
- *      8 : Event signaled by HID_User
- */
-void GetIPCHandles(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = 0; // No error
-    // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
-    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::g_shared_mem).MoveFrom();
-    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_1).MoveFrom();
-    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_2).MoveFrom();
-    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::g_event_accelerometer).MoveFrom();
-    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::g_event_gyroscope).MoveFrom();
-    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::g_event_debug_pad).MoveFrom();
-}
+namespace Service {
+namespace HID {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0000, GetIPCHandles, "GetIPCHandles"},
@@ -66,11 +22,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00170000, nullptr,       "GetSoundVolume"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+HID_U_Interface::HID_U_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace HID
+} // namespace Service

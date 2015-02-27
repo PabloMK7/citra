@@ -120,4 +120,7 @@ extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_na
 /// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
 extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
+/// Adds a service to the services table
+void AddService(Interface* interface_);
+
 } // namespace

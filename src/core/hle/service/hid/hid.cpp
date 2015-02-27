@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/service.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/hle/service/hid/hid_spvr.h"
+#include "core/hle/service/hid/hid_user.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/hle/kernel/event.h"
@@ -34,6 +37,19 @@ static inline PadData* GetPadData() {
         return nullptr;
     return reinterpret_cast<PadData*>(g_shared_mem->GetPointer().ValueOr(nullptr));
 }
+
+// TODO(peachum):
+// Add a method for setting analog input from joystick device for the circle Pad.
+//
+// This method should:
+//     * Be called after both PadButton<Press, Release>().
+//     * Be called before PadUpdateComplete()
+//     * Set current PadEntry.circle_pad_<axis> using analog data
+//     * Set PadData.raw_circle_pad_data
+//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_x >= 41
+//     * Set PadData.current_state.circle_up = 1 if current PadEntry.circle_pad_y >= 41
+//     * Set PadData.current_state.circle_left = 1 if current PadEntry.circle_pad_x <= -41
+//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
 
 /**
  * Circle Pad from keys.
@@ -121,8 +137,24 @@ void PadUpdateComplete() {
     g_event_pad_or_touch_2->Signal();
 }
 
+void GetIPCHandles(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = 0; // No error
+    // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
+    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::g_shared_mem).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_1).MoveFrom();
+    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_2).MoveFrom();
+    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::g_event_accelerometer).MoveFrom();
+    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::g_event_gyroscope).MoveFrom();
+    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::g_event_debug_pad).MoveFrom();
+}
+
 void HIDInit() {
     using namespace Kernel;
+
+    AddService(new HID_U_Interface);
+    AddService(new HID_SPVR_Interface);
 
     g_shared_mem = SharedMemory::Create("HID:SharedMem");
 

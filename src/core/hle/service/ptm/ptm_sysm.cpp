@@ -5,12 +5,10 @@
 #include "common/make_unique.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/hle/hle.h"
-#include "core/hle/service/ptm_sysm.h"
+#include "core/hle/service/ptm/ptm_sysm.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace PTM_SYSM
-
-namespace PTM_SYSM {
+namespace Service {
+namespace PTM {
 
 /**
  * Returns whether the system is powering off (?)
@@ -57,11 +55,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08140000, nullptr, "GetLegacyJumpProhibitedFlag"}
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+PTM_Sysm_Interface::PTM_Sysm_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace PTM
+} // namespace Service

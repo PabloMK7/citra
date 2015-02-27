@@ -11,9 +11,6 @@
 #include "core/hle/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
-#include "core/hle/service/fs/archive.h"
-#include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/hid/hid.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,9 +67,6 @@ static void RegisterAllModules() {
 
 void Init() {
     Service::Init();
-    Service::FS::ArchiveInit();
-    Service::CFG::CFGInit();
-    Service::HID::HIDInit();
 
     RegisterAllModules();
 
@@ -83,9 +77,6 @@ void Init() {
 }
 
 void Shutdown() {
-    Service::HID::HIDShutdown();
-    Service::CFG::CFGShutdown();
-    Service::FS::ArchiveShutdown();
     Service::Shutdown();
 
     g_module_db.clear();

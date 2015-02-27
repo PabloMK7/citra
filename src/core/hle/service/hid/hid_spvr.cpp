@@ -3,19 +3,14 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/hle.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/hle/service/hid/hid_spvr.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_SPVR
-
-namespace HID_User {
-    extern void GetIPCHandles(Service::Interface* self);
-}
-
-namespace HID_SPVR {
+namespace Service {
+namespace HID {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000A0000, HID_User::GetIPCHandles,    "GetIPCHandles"},
+    {0x000A0000, GetIPCHandles,              "GetIPCHandles"},
     {0x000B0000, nullptr,                    "StartAnalogStickCalibration"},
     {0x000E0000, nullptr,                    "GetAnalogStickCalibrateParam"},
     {0x00110000, nullptr,                    "EnableAccelerometer"},
@@ -27,11 +22,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00170000, nullptr,                    "GetSoundVolume"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+HID_SPVR_Interface::HID_SPVR_Interface() {
     Register(FunctionTable);
 }
     
-} // namespace
+} // namespace HID
+} // namespace Service

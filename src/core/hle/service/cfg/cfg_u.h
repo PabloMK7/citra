@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CFG_U
+namespace Service {
+namespace CFG {
 
-namespace CFG_U {
-
-class Interface : public Service::Interface {
+class CFG_U_Interface : public Service::Interface {
 public:
-    Interface();
+    CFG_U_Interface();
 
     std::string GetPortName() const override {
         return "cfg:u";
     }
 };
 
-} // namespace
+} // namespace CFG
+} // namespace Service

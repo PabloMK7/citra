@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace PTM_PLAY
+namespace Service {
+namespace PTM {
 
-namespace PTM_PLAY {
-
-class Interface : public Service::Interface {
+class PTM_Play_Interface : public Service::Interface {
 public:
-    Interface();
+    PTM_Play_Interface();
 
 std::string GetPortName() const override {
     return "ptm:play";
 }
 };
 
-} // namespace
+} // namespace PTM
+} // namespace Service

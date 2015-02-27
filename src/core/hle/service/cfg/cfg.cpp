@@ -3,9 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include "common/make_unique.h"
-#include "core/hle/service/cfg/cfg.h"
+
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/service.h"
+#include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_i.h"
+#include "core/hle/service/cfg/cfg_s.h"
+#include "core/hle/service/cfg/cfg_u.h"
 
 namespace Service {
 namespace CFG {
@@ -162,6 +166,10 @@ ResultCode FormatConfig() {
 }
 
 void CFGInit() {
+    AddService(new CFG_I_Interface);
+    AddService(new CFG_S_Interface);
+    AddService(new CFG_U_Interface);
+    
     // Open the SystemSaveData archive 0x00010017
     FileSys::Path archive_path(cfg_system_savedata_id);
     auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);

@@ -6,10 +6,8 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CFG_I
-
-namespace CFG_I {
+namespace Service {
+namespace CFG {
     
 /**
  * CFG_I::GetConfigInfoBlk8 service function
@@ -99,11 +97,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08180042, nullptr,                              "SecureInfoGetSerialNo"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+CFG_I_Interface::CFG_I_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace CFG
+} // namespace Service

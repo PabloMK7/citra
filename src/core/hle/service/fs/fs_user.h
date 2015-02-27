@@ -6,16 +6,13 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace FS_User
-
 namespace Service {
 namespace FS {
 
 /// Interface to "fs:USER" service
-class FSUserInterface : public Service::Interface {
+class Interface : public Service::Interface {
 public:
-    FSUserInterface();
+    Interface();
 
     std::string GetPortName() const override {
         return "fs:USER";
