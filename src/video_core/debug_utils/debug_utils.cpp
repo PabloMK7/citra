@@ -23,6 +23,7 @@
 #include "video_core/color.h"
 #include "video_core/math.h"
 #include "video_core/pica.h"
+#include "video_core/utils.h"
 
 #include "debug_utils.h"
 
@@ -306,63 +307,33 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
-    // Images are split into 8x8 tiles. Each tile is composed of four 4x4 subtiles each
-    // of which is composed of four 2x2 subtiles each of which is composed of four texels.
-    // Each structure is embedded into the next-bigger one in a diagonal pattern, e.g.
-    // texels are laid out in a 2x2 subtile like this:
-    // 2 3
-    // 0 1
-    //
-    // The full 8x8 tile has the texels arranged like this:
-    //
-    // 42 43 46 47 58 59 62 63
-    // 40 41 44 45 56 57 60 61
-    // 34 35 38 39 50 51 54 55
-    // 32 33 36 37 48 49 52 53
-    // 10 11 14 15 26 27 30 31
-    // 08 09 12 13 24 25 28 29
-    // 02 03 06 07 18 19 22 23
-    // 00 01 04 05 16 17 20 21
-
-    const unsigned int block_width = 8;
-    const unsigned int block_height = 8;
-
     const unsigned int coarse_x = x & ~7;
     const unsigned int coarse_y = y & ~7;
-
-    // Interleave the lower 3 bits of each coordinate to get the intra-block offsets, which are
-    // arranged in a Z-order curve. More details on the bit manipulation at:
-    // https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
-    unsigned int i = (x & 7) | ((y & 7) << 8); // ---- -210
-    i = (i ^ (i << 2)) & 0x1313;               // ---2 --10
-    i = (i ^ (i << 1)) & 0x1515;               // ---2 -1-0
-    i = (i | (i >> 7)) & 0x3F;
 
     if (info.format != Regs::TextureFormat::ETC1 &&
         info.format != Regs::TextureFormat::ETC1A4) {
         // TODO(neobrain): Fix code design to unify vertical block offsets!
         source += coarse_y * info.stride;
     }
-    const unsigned int offset = coarse_x * block_height;
-
+    
     // TODO: Assert that width/height are multiples of block dimensions
 
     switch (info.format) {
     case Regs::TextureFormat::RGBA8:
     {
-        const u8* source_ptr = source + offset * 4 + i * 4;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 4);
         return { source_ptr[3], source_ptr[2], source_ptr[1], disable_alpha ? (u8)255 : source_ptr[0] };
     }
 
     case Regs::TextureFormat::RGB8:
     {
-        const u8* source_ptr = source + offset * 3 + i * 3;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 3);
         return { source_ptr[2], source_ptr[1], source_ptr[0], 255 };
     }
 
     case Regs::TextureFormat::RGBA5551:
     {
-        const u16 source_ptr = *(const u16*)(source + offset * 2 + i * 2);
+        const u16 source_ptr = *(const u16*)(source + VideoCore::GetMortonOffset(x, y, 2));
         u8 r = (source_ptr >> 11) & 0x1F;
         u8 g = ((source_ptr) >> 6) & 0x1F;
         u8 b = (source_ptr >> 1) & 0x1F;
@@ -373,7 +344,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGB565:
     {
-        const u16 source_ptr = *(const u16*)(source + offset * 2 + i * 2);
+        const u16 source_ptr = *(const u16*)(source + VideoCore::GetMortonOffset(x, y, 2));
         u8 r = Color::Convert5To8((source_ptr >> 11) & 0x1F);
         u8 g = Color::Convert6To8(((source_ptr) >> 5) & 0x3F);
         u8 b = Color::Convert5To8((source_ptr) & 0x1F);
@@ -382,7 +353,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::RGBA4:
     {
-        const u8* source_ptr = source + offset * 2 + i * 2;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 2);
         u8 r = Color::Convert4To8(source_ptr[1] >> 4);
         u8 g = Color::Convert4To8(source_ptr[1] & 0xF);
         u8 b = Color::Convert4To8(source_ptr[0] >> 4);
@@ -392,7 +363,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA8:
     {
-        const u8* source_ptr = source + offset * 2 + i * 2;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 2);
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
@@ -404,13 +375,13 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::I8:
     {
-        const u8* source_ptr = source + offset + i;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
         return { *source_ptr, *source_ptr, *source_ptr, 255 };
     }
 
     case Regs::TextureFormat::A8:
     {
-        const u8* source_ptr = source + offset + i;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
 
         if (disable_alpha) {
             return { *source_ptr, *source_ptr, *source_ptr, 255 };
@@ -421,7 +392,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::IA4:
     {
-        const u8* source_ptr = source + offset + i;
+        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
 
         u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
         u8 a = Color::Convert4To8((*source_ptr) & 0xF);
@@ -436,9 +407,10 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
     case Regs::TextureFormat::A4:
     {
-        const u8* source_ptr = source + (offset + i) / 2;
+        u32 morton_offset = VideoCore::GetMortonOffset(x, y, 1);
+        const u8* source_ptr = source + morton_offset / 2;
 
-        u8 a = (i % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
+        u8 a = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
         a = Color::Convert4To8(a);
 
         if (disable_alpha) {
