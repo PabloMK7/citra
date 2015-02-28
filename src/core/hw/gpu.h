@@ -46,7 +46,7 @@ struct Regs {
                   "Structure size and register block length don't match")
 #endif
 
-    // All of those formats are described in reverse byte order, since the 3DS is little-endian.
+    // Components are laid out in reverse byte order, most significant bits first.
     enum class PixelFormat : u32 {
         RGBA8  = 0,
         RGB8   = 1,
