@@ -208,11 +208,11 @@ union ResultCode {
     }
 };
 
-inline bool operator==(const ResultCode a, const ResultCode b) {
+inline bool operator==(const ResultCode& a, const ResultCode& b) {
     return a.raw == b.raw;
 }
 
-inline bool operator!=(const ResultCode a, const ResultCode b) {
+inline bool operator!=(const ResultCode& a, const ResultCode& b) {
     return a.raw != b.raw;
 }
 
