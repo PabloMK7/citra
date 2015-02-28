@@ -24,7 +24,7 @@ static const char *cond_names[] = {
     "RESERVED"
 };
 
-const char *opcode_names[] = {
+static const char *opcode_names[] = {
     "invalid",
     "undefined",
     "adc",
@@ -351,7 +351,6 @@ std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
 
 std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
 {
-    std::string tmp_reg;
     std::string tmp_list;
 
     uint8_t cond = (insn >> 28) & 0xf;
