@@ -131,7 +131,7 @@ static const char *shift_names[] = {
     "ROR"
 };
 
-static const char* cond_to_str(int cond) {
+static const char* cond_to_str(uint32_t cond) {
     return cond_names[cond];
 }
 
@@ -337,8 +337,9 @@ std::string ARM_Disasm::DisassembleBX(uint32_t insn)
 
 std::string ARM_Disasm::DisassembleBKPT(uint32_t insn)
 {
+    uint8_t cond = (insn >> 28) & 0xf;
     uint32_t immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
-    return Common::StringFromFormat("bkpt\t#%d", immed);
+    return Common::StringFromFormat("bkpt%s\t#%d", cond_to_str(cond), immed);
 }
 
 std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
