@@ -12,6 +12,18 @@
 
 namespace PTM_SYSM {
 
+/**
+ * Returns whether the system is powering off (?)
+ *   Outputs:
+ *     1: Result code, 0 on success, otherwise error code
+ *     2: Whether the system is going through a power off
+ */
+void IsLegacyPowerOff(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 0;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x040100C0, nullptr, "SetRtcAlarmEx"},
     {0x04020042, nullptr, "ReplySleepQuery"},
@@ -37,7 +49,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080C0080, nullptr, "SetUserTime"},
     {0x080D0000, nullptr, "InvalidateSystemTime"},
     {0x080E0140, nullptr, "NotifyPlayEvent"},
-    {0x080F0000, nullptr, "IsLegacyPowerOff"},
+    {0x080F0000, IsLegacyPowerOff, "IsLegacyPowerOff"},
     {0x08100000, nullptr, "ClearLegacyPowerOff"},
     {0x08110000, nullptr, "GetShellStatus"},
     {0x08120000, nullptr, "IsShutdownByBatteryEmpty"},
