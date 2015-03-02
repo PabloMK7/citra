@@ -487,6 +487,15 @@ static void FormatThisUserSaveData(Service::Interface* self) {
     cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
 }
 
+/**
+ * FS_User::CreateExtSaveData service function
+ *  Inputs:
+ *      0: 0x08510242
+ *      1: High word of the saveid to create
+ *      2: Low word of the saveid to create
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
 static void CreateExtSaveData(Service::Interface* self) {
     // TODO(Subv): Figure out the other parameters.
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -494,6 +503,21 @@ static void CreateExtSaveData(Service::Interface* self) {
     u32 save_low = cmd_buff[2];
     // TODO(Subv): For now it is assumed that only SharedExtSaveData can be created like this
     cmd_buff[1] = CreateExtSaveData(save_high, save_low).raw;
+}
+
+/**
+ * FS_User::CardSlotIsInserted service function.
+ *  Inputs:
+ *      0: 0x08210000
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Whether there is a game card inserted into the slot or not.
+ */
+static void CardSlotIsInserted(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 0;
+    LOG_WARNING(Service_FS, "(STUBBED) called");
 }
 
 const FSUserInterface::FunctionInfo FunctionTable[] = {
@@ -531,7 +555,7 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
     {0x081E0042, nullptr,               "GetNandLog"},
     {0x081F0000, nullptr,               "ClearSdmcLog"},
     {0x08200000, nullptr,               "ClearNandLog"},
-    {0x08210000, nullptr,               "CardSlotIsInserted"},
+    {0x08210000, CardSlotIsInserted,    "CardSlotIsInserted"},
     {0x08220000, nullptr,               "CardSlotPowerOn"},
     {0x08230000, nullptr,               "CardSlotPowerOff"},
     {0x08240000, nullptr,               "CardSlotGetCardIFPowerStatus"},
