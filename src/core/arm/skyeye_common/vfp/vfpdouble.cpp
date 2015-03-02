@@ -661,8 +661,8 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
 
         if ((rem + incr) < rem && d < 0xffffffff)
             d += 1;
-        if (d > (0x7fffffff + (vdm.sign != 0))) {
-            d = (0x7fffffff + (vdm.sign != 0));
+        if (d > (0x7fffffffU + (vdm.sign != 0))) {
+            d = (0x7fffffffU + (vdm.sign != 0));
             exceptions |= FPSCR_IOC;
         } else if (rem)
             exceptions |= FPSCR_IXC;
