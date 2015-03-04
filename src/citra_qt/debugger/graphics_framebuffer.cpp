@@ -46,7 +46,7 @@ GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::Debug
     framebuffer_format_control = new QComboBox;
     framebuffer_format_control->addItem(tr("RGBA8"));
     framebuffer_format_control->addItem(tr("RGB8"));
-    framebuffer_format_control->addItem(tr("RGBA5551"));
+    framebuffer_format_control->addItem(tr("RGB5A1"));
     framebuffer_format_control->addItem(tr("RGB565"));
     framebuffer_format_control->addItem(tr("RGBA4"));
 
@@ -199,66 +199,40 @@ void GraphicsFramebufferWidget::OnUpdate()
     // TODO: Unify this decoding code with the texture decoder
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer_format));
 
-    switch (framebuffer_format) {
-    case Format::RGBA8:
-    {
-        QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
-        u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned int y = 0; y < framebuffer_height; ++y) {
-            for (unsigned int x = 0; x < framebuffer_width; ++x) {
-                const u32 coarse_y = y & ~7;
-                u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer_width * bytes_per_pixel;
-                u8* value = color_buffer + offset;
+    QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
+    u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
+    for (unsigned int y = 0; y < framebuffer_height; ++y) {
+        for (unsigned int x = 0; x < framebuffer_width; ++x) {
+            const u32 coarse_y = y & ~7;
+            u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer_width * bytes_per_pixel;
+            const u8* pixel = color_buffer + offset;
+            Math::Vec4<u8> color = { 0, 0, 0, 0 };
 
-                decoded_image.setPixel(x, y, qRgba(value[3], value[2], value[1], 255/*value >> 24*/));
+            switch (framebuffer_format) {
+            case Format::RGBA8:
+                color = Color::DecodeRGBA8(pixel);
+                break;
+            case Format::RGB8:
+                color = Color::DecodeRGB8(pixel);
+                break;
+            case Format::RGB5A1:
+                color = Color::DecodeRGB5A1(pixel);
+                break;
+            case Format::RGB565:
+                color = Color::DecodeRGB565(pixel);
+                break;
+            case Format::RGBA4:
+                color = Color::DecodeRGBA4(pixel);
+                break;
+            default:
+                qDebug() << "Unknown fb color format " << static_cast<int>(framebuffer_format);
+                break;
             }
+
+            decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), 255));
         }
-        pixmap = QPixmap::fromImage(decoded_image);
-        break;
     }
-
-    case Format::RGB8:
-    {
-        QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
-        u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned int y = 0; y < framebuffer_height; ++y) {
-            for (unsigned int x = 0; x < framebuffer_width; ++x) {
-                const u32 coarse_y = y & ~7;
-                u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer_width * bytes_per_pixel;
-                u8* pixel_pointer = color_buffer + offset;
-
-                decoded_image.setPixel(x, y, qRgba(pixel_pointer[0], pixel_pointer[1], pixel_pointer[2], 255/*value >> 24*/));
-            }
-        }
-        pixmap = QPixmap::fromImage(decoded_image);
-        break;
-    }
-
-    case Format::RGBA5551:
-    {
-        QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
-        u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
-        for (unsigned int y = 0; y < framebuffer_height; ++y) {
-            for (unsigned int x = 0; x < framebuffer_width; ++x) {
-                const u32 coarse_y = y & ~7;
-                u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer_width * bytes_per_pixel;
-                u16 value = *(u16*)(color_buffer + offset);
-                u8 r = Color::Convert5To8((value >> 11) & 0x1F);
-                u8 g = Color::Convert5To8((value >> 6) & 0x1F);
-                u8 b = Color::Convert5To8((value >> 1) & 0x1F);
-                u8 a = Color::Convert1To8(value & 1);
-
-                decoded_image.setPixel(x, y, qRgba(r, g, b, 255/*a*/));
-            }
-        }
-        pixmap = QPixmap::fromImage(decoded_image);
-        break;
-    }
-
-    default:
-        qDebug() << "Unknown fb color format " << static_cast<int>(framebuffer_format);
-        break;
-    }
+    pixmap = QPixmap::fromImage(decoded_image);
 
     framebuffer_address_control->SetValue(framebuffer_address);
     framebuffer_width_control->setValue(framebuffer_width);

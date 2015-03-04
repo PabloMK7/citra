@@ -19,6 +19,7 @@ set(HEADERS
             renderer_opengl/gl_shaders.h
             renderer_opengl/renderer_opengl.h
             clipper.h
+            color.h
             command_processor.h
             gpu_debugger.h
             math.h

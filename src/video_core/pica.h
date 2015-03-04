@@ -145,7 +145,7 @@ struct Regs {
     enum class TextureFormat : u32 {
         RGBA8        =  0,
         RGB8         =  1,
-        RGBA5551     =  2,
+        RGB5A1       =  2,
         RGB565       =  3,
         RGBA4        =  4,
         IA8          =  5,
@@ -167,7 +167,7 @@ struct Regs {
         case TextureFormat::RGB8:
             return 6;
 
-        case TextureFormat::RGBA5551:
+        case TextureFormat::RGB5A1:
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
         case TextureFormat::IA8:
@@ -413,7 +413,7 @@ struct Regs {
         enum ColorFormat : u32 {
             RGBA8    = 0,
             RGB8     = 1,
-            RGBA5551 = 2,
+            RGB5A1   = 2,
             RGB565   = 3,
             RGBA4    = 4,
         };

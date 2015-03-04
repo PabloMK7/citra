@@ -113,8 +113,8 @@ inline void Write(u32 addr, const T data) {
     {
         const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
-            u8* source_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
-            u8* dest_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
+            u8* src_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
+            u8* dst_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
             unsigned horizontal_scale = (config.scale_horizontally != 0) ? 2 : 1;
             unsigned vertical_scale = (config.scale_vertically != 0) ? 2 : 1;
@@ -125,7 +125,7 @@ inline void Write(u32 addr, const T data) {
             if (config.raw_copy) {
                 // Raw copies do not perform color conversion nor tiled->linear / linear->tiled conversions
                 // TODO(Subv): Verify if raw copies perform scaling
-                memcpy(dest_pointer, source_pointer, config.output_width * config.output_height * 
+                memcpy(dst_pointer, src_pointer, config.output_width * config.output_height * 
                         GPU::Regs::BytesPerPixel(config.output_format));
                 
                 LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), flags 0x%08X, Raw copy",
@@ -142,9 +142,7 @@ inline void Write(u32 addr, const T data) {
             // right now we're just skipping the extra pixels.
             for (u32 y = 0; y < output_height; ++y) {
                 for (u32 x = 0; x < output_width; ++x) {
-                    struct {
-                        int r, g, b, a;
-                    } source_color = { 0, 0, 0, 0 };
+                    Math::Vec4<u8> src_color = { 0, 0, 0, 0 };
 
                     u32 scaled_x = x * horizontal_scale;
                     u32 scaled_y = y * vertical_scale;
@@ -170,77 +168,54 @@ inline void Write(u32 addr, const T data) {
                         dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
                     }
 
+                    const u8* src_pixel = src_pointer + src_offset;
                     switch (config.input_format) {
                     case Regs::PixelFormat::RGBA8:
-                    {
-                        u8* srcptr = source_pointer + src_offset;
-                        source_color.r = srcptr[3]; // red
-                        source_color.g = srcptr[2]; // green
-                        source_color.b = srcptr[1]; // blue
-                        source_color.a = srcptr[0]; // alpha
+                        src_color = Color::DecodeRGBA8(src_pixel);
                         break;
-                    }
+
+                    case Regs::PixelFormat::RGB8:
+                        src_color = Color::DecodeRGB8(src_pixel);
+                        break;
+
+                    case Regs::PixelFormat::RGB565:
+                        src_color = Color::DecodeRGB565(src_pixel);
+                        break;
 
                     case Regs::PixelFormat::RGB5A1:
-                    {
-                        u16 srcval = *(u16*)(source_pointer + src_offset);
-                        source_color.r = Color::Convert5To8((srcval >> 11) & 0x1F); // red
-                        source_color.g = Color::Convert5To8((srcval >>  6) & 0x1F); // green
-                        source_color.b = Color::Convert5To8((srcval >>  1) & 0x1F); // blue
-                        source_color.a = Color::Convert1To8(srcval & 0x1);          // alpha
+                        src_color = Color::DecodeRGB5A1(src_pixel);
                         break;
-                    }
 
                     case Regs::PixelFormat::RGBA4:
-                    {
-                        u16 srcval = *(u16*)(source_pointer + src_offset);
-                        source_color.r = Color::Convert4To8((srcval >> 12) & 0xF); // red
-                        source_color.g = Color::Convert4To8((srcval >>  8) & 0xF); // green
-                        source_color.b = Color::Convert4To8((srcval >>  4) & 0xF); // blue
-                        source_color.a = Color::Convert4To8( srcval        & 0xF); // alpha
+                        src_color = Color::DecodeRGBA4(src_pixel);
                         break;
-                    }
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", config.input_format.Value());
                         break;
                     }
 
+                    u8* dst_pixel = dst_pointer + dst_offset;
                     switch (config.output_format) {
                     case Regs::PixelFormat::RGBA8:
-                    {
-                        u8* dstptr = dest_pointer + dst_offset;
-                        dstptr[3] = source_color.r;
-                        dstptr[2] = source_color.g;
-                        dstptr[1] = source_color.b;
-                        dstptr[0] = source_color.a;
+                        Color::EncodeRGBA8(src_color, dst_pixel);
                         break;
-                    }
 
                     case Regs::PixelFormat::RGB8:
-                    {
-                        u8* dstptr = dest_pointer + dst_offset;
-                        dstptr[2] = source_color.r; // red
-                        dstptr[1] = source_color.g; // green
-                        dstptr[0] = source_color.b; // blue
+                        Color::EncodeRGB8(src_color, dst_pixel);
                         break;
-                    }
+
+                    case Regs::PixelFormat::RGB565:
+                        Color::EncodeRGB565(src_color, dst_pixel);
+                        break;
 
                     case Regs::PixelFormat::RGB5A1:
-                    {
-                        u16* dstptr = (u16*)(dest_pointer + dst_offset);
-                        *dstptr = ((source_color.r >> 3) << 11) | ((source_color.g >> 3) << 6)
-                                | ((source_color.b >> 3) <<  1) | ( source_color.a >> 7);
+                        Color::EncodeRGB5A1(src_color, dst_pixel);
                         break;
-                    }
 
                     case Regs::PixelFormat::RGBA4:
-                    {
-                        u16* dstptr = (u16*)(dest_pointer + dst_offset);
-                        *dstptr = ((source_color.r >> 4) << 12) | ((source_color.g >> 4) << 8)
-                                | ((source_color.b >> 4) <<  4) | ( source_color.a >> 4);
+                        Color::EncodeRGBA4(src_color, dst_pixel);
                         break;
-                    }
 
                     default:
                         LOG_ERROR(HW_GPU, "Unknown destination framebuffer format %x", config.output_format.Value());
