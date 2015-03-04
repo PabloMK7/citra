@@ -144,8 +144,8 @@ static inline void mul64to128(u64* resh, u64* resl, u64 n, u64 m)
     u32 nh, nl, mh, ml;
     u64 rh, rma, rmb, rl;
 
-    nl = n;
-    ml = m;
+    nl = static_cast<u32>(n);
+    ml = static_cast<u32>(m);
     rl = (u64)nl * ml;
 
     nh = n >> 32;
