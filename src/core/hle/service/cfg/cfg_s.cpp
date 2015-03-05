@@ -6,10 +6,8 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_s.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CFG_S
-
-namespace CFG_S {
+namespace Service {
+namespace CFG {
     
 /**
  * CFG_S::GetConfigInfoBlk2 service function
@@ -87,11 +85,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x04090000, nullptr,                              "UpdateConfigBlk00040003"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+CFG_S_Interface::CFG_S_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace CFG
+} // namespace Service

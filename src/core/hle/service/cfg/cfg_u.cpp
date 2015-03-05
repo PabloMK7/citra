@@ -10,10 +10,8 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CFG_U
-
-namespace CFG_U {
+namespace Service {
+namespace CFG {
 
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) ((code)[0] | ((code)[1] << 8))
@@ -241,11 +239,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0040, GetCountryCodeID,      "GetCountryCodeID"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+CFG_U_Interface::CFG_U_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace CFG
+} // namespace Service

@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace APT_A
+namespace Service {
+namespace APT {
 
-namespace APT_A {
-
-class Interface : public Service::Interface {
+class APT_A_Interface : public Service::Interface {
 public:
-    Interface();
+    APT_A_Interface();
 
     std::string GetPortName() const override {
         return "APT:A";
     }
 };
 
-} // namespace
+} // namespace APT
+} // namespace Service

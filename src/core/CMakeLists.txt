@@ -35,9 +35,10 @@ set(SRCS
             hle/service/am_app.cpp
             hle/service/am_net.cpp
             hle/service/am_sys.cpp
-            hle/service/apt_a.cpp
-            hle/service/apt_s.cpp
-            hle/service/apt_u.cpp
+            hle/service/apt/apt.cpp
+            hle/service/apt/apt_a.cpp
+            hle/service/apt/apt_s.cpp
+            hle/service/apt/apt_u.cpp
             hle/service/boss_p.cpp
             hle/service/boss_u.cpp
             hle/service/cam_u.cpp
@@ -71,9 +72,10 @@ set(SRCS
             hle/service/ns_s.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
-            hle/service/ptm_play.cpp
-            hle/service/ptm_u.cpp
-            hle/service/ptm_sysm.cpp
+            hle/service/ptm/ptm.cpp
+            hle/service/ptm/ptm_play.cpp
+            hle/service/ptm/ptm_u.cpp
+            hle/service/ptm/ptm_sysm.cpp
             hle/service/service.cpp
             hle/service/soc_u.cpp
             hle/service/srv.cpp
@@ -140,9 +142,10 @@ set(HEADERS
             hle/service/am_app.h
             hle/service/am_net.h
             hle/service/am_sys.h
-            hle/service/apt_a.h
-            hle/service/apt_s.h
-            hle/service/apt_u.h
+            hle/service/apt/apt.h
+            hle/service/apt/apt_a.h
+            hle/service/apt/apt_s.h
+            hle/service/apt/apt_u.h
             hle/service/boss_p.h
             hle/service/boss_u.h
             hle/service/cam_u.h
@@ -176,9 +179,10 @@ set(HEADERS
             hle/service/ns_s.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h
-            hle/service/ptm_play.h
-            hle/service/ptm_u.h
-            hle/service/ptm_sysm.h
+            hle/service/ptm/ptm.h
+            hle/service/ptm/ptm_play.h
+            hle/service/ptm/ptm_u.h
+            hle/service/ptm/ptm_sysm.h
             hle/service/service.h
             hle/service/soc_u.h
             hle/service/srv.h

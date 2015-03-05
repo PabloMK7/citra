@@ -520,7 +520,7 @@ static void CardSlotIsInserted(Service::Interface* self) {
     LOG_WARNING(Service_FS, "(STUBBED) called");
 }
 
-const FSUserInterface::FunctionInfo FunctionTable[] = {
+const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,               "Dummy1"},
     {0x040100C4, nullptr,               "Control"},
     {0x08010002, Initialize,            "Initialize"},
@@ -614,7 +614,7 @@ const FSUserInterface::FunctionInfo FunctionTable[] = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
-FSUserInterface::FSUserInterface() {
+Interface::Interface() {
     Register(FunctionTable);
 }
 

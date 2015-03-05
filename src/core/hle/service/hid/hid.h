@@ -7,6 +7,7 @@
 #include <array>
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 #include "common/bit_field.h"
 
 namespace Kernel {
@@ -122,6 +123,22 @@ const PadState PAD_CIRCLE_RIGHT = {{1u << 28}};
 const PadState PAD_CIRCLE_LEFT  = {{1u << 29}};
 const PadState PAD_CIRCLE_UP    = {{1u << 30}};
 const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
+
+/**
+ * HID::GetIPCHandles service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Unused
+ *      3 : Handle to HID_User shared memory
+ *      4 : Event signaled by HID_User
+ *      5 : Event signaled by HID_User
+ *      6 : Event signaled by HID_User
+ *      7 : Gyroscope event
+ *      8 : Event signaled by HID_User
+ */
+void GetIPCHandles(Interface* self);
 
 // Methods for updating the HID module's state
 void PadButtonPress(const PadState& pad_state);

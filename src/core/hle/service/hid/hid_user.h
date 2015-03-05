@@ -6,24 +6,23 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HID_User
-
 // This service is used for interfacing to physical user controls.
 // Uses include game pad controls, touchscreen, accelerometers, gyroscopes, and debug pad.
 
-namespace HID_User {
-
+namespace Service {
+namespace HID {
+    
 /**
  * HID service interface.
  */
-class Interface : public Service::Interface {
+class HID_U_Interface : public Service::Interface {
 public:
-    Interface();
+    HID_U_Interface();
 
     std::string GetPortName() const override {
         return "hid:USER";
     }
 };
 
-} // namespace
+} // namespace HID
+} // namespace Service

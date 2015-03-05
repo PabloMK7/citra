@@ -20,7 +20,9 @@
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
+#include "core/hle/service/service.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/hle/result.h"
 
 // Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
@@ -418,6 +420,8 @@ ResultCode CreateExtSaveData(u32 high, u32 low) {
 /// Initialize archives
 void ArchiveInit() {
     next_handle = 1;
+
+    AddService(new FS::Interface);
 
     // TODO(Subv): Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
