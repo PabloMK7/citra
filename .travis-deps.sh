@@ -4,7 +4,7 @@ set -e
 set -x
 
 #if OS is linux or is not set
-if [ "$TRAVIS_OS_NAME" = linux -o -z "$TRAVIS_OS_NAME" ]; then
+if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
     sudo apt-get -qq update
     sudo apt-get -qq install g++-4.9 xorg-dev libglu1-mesa-dev libxcursor-dev
@@ -23,7 +23,7 @@ if [ "$TRAVIS_OS_NAME" = linux -o -z "$TRAVIS_OS_NAME" ]; then
     sudo mkdir -p /usr/local
     curl http://www.cmake.org/files/v2.8/cmake-2.8.11-Linux-i386.tar.gz \
         | sudo tar -xz -C /usr/local --strip-components=1
-elif [ "$TRAVIS_OS_NAME" = osx ]; then
+elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew tap homebrew/versions
     brew install qt5 glfw3 pkgconfig
 fi
