@@ -22,7 +22,8 @@
 int __cdecl main(int argc, char **argv) {
     std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
     Log::Filter log_filter(Log::Level::Debug);
-    std::thread logging_thread(Log::TextLoggingLoop, logger, &log_filter);
+    Log::SetFilter(&log_filter);
+    std::thread logging_thread(Log::TextLoggingLoop, logger);
     SCOPE_EXIT({
         logger->Close();
         logging_thread.join();

@@ -11,7 +11,6 @@
 #endif
 
 #include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 
@@ -116,7 +115,7 @@ void PrintColoredMessage(const Entry& entry) {
 #endif
 }
 
-void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter) {
+void TextLoggingLoop(std::shared_ptr<Logger> logger) {
     std::array<Entry, 256> entry_buffer;
 
     while (true) {
@@ -126,9 +125,7 @@ void TextLoggingLoop(std::shared_ptr<Logger> logger, const Filter* filter) {
         }
         for (size_t i = 0; i < num_entries; ++i) {
             const Entry& entry = entry_buffer[i];
-            if (filter->CheckMessage(entry.log_class, entry.log_level)) {
-                PrintColoredMessage(entry);
-            }
+            PrintColoredMessage(entry);
         }
     }
 }
