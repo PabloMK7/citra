@@ -17,18 +17,14 @@
 
 #pragma once
 
-// Android
-#if defined(ANDROID)
+#if defined(__linux__)
+#include <byteswap.h>
+#elif defined(__FreeBSD__)
 #include <sys/endian.h>
-
-#if _BYTE_ORDER == _LITTLE_ENDIAN && !defined(COMMON_LITTLE_ENDIAN)
-#define COMMON_LITTLE_ENDIAN 1
-#elif _BYTE_ORDER == _BIG_ENDIAN && !defined(COMMON_BIG_ENDIAN)
-#define COMMON_BIG_ENDIAN 1
 #endif
 
 // GCC 4.6+
-#elif __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#if __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
 
 #if __BYTE_ORDER__ && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) && !defined(COMMON_LITTLE_ENDIAN)
 #define COMMON_LITTLE_ENDIAN 1
@@ -49,13 +45,99 @@
 #elif defined(_MSC_VER) && !defined(COMMON_BIG_ENDIAN) && !defined(COMMON_LITTLE_ENDIAN)
 
 #define COMMON_LITTLE_ENDIAN 1
-
 #endif
 
 // Worst case, default to little endian.
 #if !COMMON_BIG_ENDIAN && !COMMON_LITTLE_ENDIAN
 #define COMMON_LITTLE_ENDIAN 1
 #endif
+
+namespace Common {
+
+inline u8 swap8(u8 _data) {return _data;}
+inline u32 swap24(const u8* _data) {return (_data[0] << 16) | (_data[1] << 8) | _data[2];}
+
+#ifdef _MSC_VER
+inline u16 swap16(u16 _data) {return _byteswap_ushort(_data);}
+inline u32 swap32(u32 _data) {return _byteswap_ulong (_data);}
+inline u64 swap64(u64 _data) {return _byteswap_uint64(_data);}
+#elif _M_ARM
+inline u16 swap16 (u16 _data) { u32 data = _data; __asm__ ("rev16 %0, %1\n" : "=l" (data) : "l" (data)); return (u16)data;}
+inline u32 swap32 (u32 _data) {__asm__ ("rev %0, %1\n" : "=l" (_data) : "l" (_data)); return _data;}
+inline u64 swap64(u64 _data) {return ((u64)swap32(_data) << 32) | swap32(_data >> 32);}
+#elif __linux__
+inline u16 swap16(u16 _data) {return bswap_16(_data);}
+inline u32 swap32(u32 _data) {return bswap_32(_data);}
+inline u64 swap64(u64 _data) {return bswap_64(_data);}
+#elif __APPLE__
+inline __attribute__((always_inline)) u16 swap16(u16 _data)
+{return (_data >> 8) | (_data << 8);}
+inline __attribute__((always_inline)) u32 swap32(u32 _data)
+{return __builtin_bswap32(_data);}
+inline __attribute__((always_inline)) u64 swap64(u64 _data)
+{return __builtin_bswap64(_data);}
+#elif __FreeBSD__
+inline u16 swap16(u16 _data) {return bswap16(_data);}
+inline u32 swap32(u32 _data) {return bswap32(_data);}
+inline u64 swap64(u64 _data) {return bswap64(_data);}
+#else
+// Slow generic implementation.
+inline u16 swap16(u16 data) {return (data >> 8) | (data << 8);}
+inline u32 swap32(u32 data) {return (swap16(data) << 16) | swap16(data >> 16);}
+inline u64 swap64(u64 data) {return ((u64)swap32(data) << 32) | swap32(data >> 32);}
+#endif
+
+inline float swapf(float f) {
+    union {
+        float f;
+        unsigned int u32;
+    } dat1, dat2;
+
+    dat1.f = f;
+    dat2.u32 = swap32(dat1.u32);
+
+    return dat2.f;
+}
+
+inline double swapd(double f) {
+    union  {
+        double f;
+        unsigned long long u64;
+    } dat1, dat2;
+
+    dat1.f = f;
+    dat2.u64 = swap64(dat1.u64);
+
+    return dat2.f;
+}
+
+inline u16 swap16(const u8* _pData) {return swap16(*(const u16*)_pData);}
+inline u32 swap32(const u8* _pData) {return swap32(*(const u32*)_pData);}
+inline u64 swap64(const u8* _pData) {return swap64(*(const u64*)_pData);}
+
+template <int count>
+void swap(u8*);
+
+template <>
+inline void swap<1>(u8* data) { }
+
+template <>
+inline void swap<2>(u8* data) {
+    *reinterpret_cast<u16*>(data) = swap16(data);
+}
+
+template <>
+inline void swap<4>(u8* data) {
+    *reinterpret_cast<u32*>(data) = swap32(data);
+}
+
+template <>
+inline void swap<8>(u8* data) {
+    *reinterpret_cast<u64*>(data) = swap64(data);
+}
+    
+}  // Namespace Common
+
 
 template <typename T, typename F>
 struct swap_struct_t {
@@ -448,35 +530,35 @@ bool operator==(const S &p, const swap_struct_t<T, F> v) {
 template <typename T>
 struct swap_64_t {
     static T swap(T x) {
-        return (T)bswap64(*(u64 *)&x);
+        return (T)Common::swap64(*(u64 *)&x);
     }
 };
 
 template <typename T>
 struct swap_32_t {
     static T swap(T x) {
-        return (T)bswap32(*(u32 *)&x);
+        return (T)Common::swap32(*(u32 *)&x);
     }
 };
 
 template <typename T>
 struct swap_16_t {
     static T swap(T x) {
-        return (T)bswap16(*(u16 *)&x);
+        return (T)Common::swap16(*(u16 *)&x);
     }
 };
 
 template <typename T>
 struct swap_float_t {
     static T swap(T x) {
-        return (T)bswapf(*(float *)&x);
+        return (T)Common::swapf(*(float *)&x);
     }
 };
 
 template <typename T>
 struct swap_double_t {
     static T swap(T x) {
-        return (T)bswapd(*(double *)&x);
+        return (T)Common::swapd(*(double *)&x);
     }
 };
 
@@ -527,4 +609,5 @@ typedef s64 s64_be;
 
 typedef float float_be;
 typedef double double_be;
+
 #endif
