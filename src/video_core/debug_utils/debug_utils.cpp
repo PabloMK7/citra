@@ -505,7 +505,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
                 }
 
                 // Add modifier
-                unsigned table_index = (x < 2) ? table_index_2.Value() : table_index_1.Value();
+                unsigned table_index = (x < 2) ? table_index_1.Value() : table_index_2.Value();
 
                 static const auto etc1_modifier_table = std::array<std::array<u8, 2>, 8>{{
                     {  2,  8 }, {  5, 17 }, {  9,  29 }, { 13,  42 },
