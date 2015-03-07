@@ -4,6 +4,8 @@
 
 #include <boost/range/algorithm/fill.hpp>
 
+#include "common/profiler.h"
+
 #include "clipper.h"
 #include "command_processor.h"
 #include "math.h"
@@ -24,6 +26,8 @@ namespace CommandProcessor {
 static int float_regs_counter = 0;
 
 static u32 uniform_write_buffer[4];
+
+Common::Profiling::TimingCategory category_drawing("Drawing");
 
 static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
@@ -53,6 +57,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
+            Common::Profiling::ScopeTimer scope_timer(category_drawing);
+
             DebugUtils::DumpTevStageConfig(registers.GetTevStages());
 
             if (g_debug_context)

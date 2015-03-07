@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "common/logging/log.h"
+#include "common/profiler.h"
 
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
@@ -19,6 +20,9 @@
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armmmu.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
+
+Common::Profiling::TimingCategory profile_execute("DynCom::Execute");
+Common::Profiling::TimingCategory profile_decode("DynCom::Decode");
 
 enum {
     COND            = (1 << 0),
@@ -3569,6 +3573,8 @@ typedef struct instruction_set_encoding_item ISEITEM;
 extern const ISEITEM arm_instruction[];
 
 static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, addr_t addr) {
+    Common::Profiling::ScopeTimer timer_decode(profile_decode);
+
     // Decode instruction, get index
     // Allocate memory and init InsCream
     // Go on next, until terminal instruction
@@ -3641,6 +3647,8 @@ static bool InAPrivilegedMode(ARMul_State* core) {
 }
 
 unsigned InterpreterMainLoop(ARMul_State* state) {
+    Common::Profiling::ScopeTimer timer_execute(profile_execute);
+
     #undef RM
     #undef RS
 

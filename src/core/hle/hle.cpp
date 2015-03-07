@@ -4,6 +4,8 @@
 
 #include <vector>
 
+#include "common/profiler.h"
+
 #include "core/arm/arm_interface.h"
 #include "core/mem_map.h"
 #include "core/hle/hle.h"
@@ -15,6 +17,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace HLE {
+
+Common::Profiling::TimingCategory profiler_svc("SVC Calls");
 
 static std::vector<ModuleDef> g_module_db;
 
@@ -30,6 +34,8 @@ static const FunctionDef* GetSVCInfo(u32 opcode) {
 }
 
 void CallSVC(u32 opcode) {
+    Common::Profiling::ScopeTimer timer_svc(profiler_svc);
+
     const FunctionDef *info = GetSVCInfo(opcode);
 
     if (!info) {
