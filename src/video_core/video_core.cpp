@@ -18,7 +18,6 @@ namespace VideoCore {
 
 EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
 RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
-int             g_current_frame = 0;
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {
@@ -26,8 +25,6 @@ void Init(EmuWindow* emu_window) {
     g_renderer = new RendererOpenGL();
     g_renderer->SetWindow(g_emu_window);
     g_renderer->Init();
-
-    g_current_frame = 0;
 
     LOG_DEBUG(Render, "initialized OK");
 }

@@ -36,20 +36,13 @@ const bool EmuWindow_GLFW::IsOpen() {
 }
 
 void EmuWindow_GLFW::OnFramebufferResizeEvent(GLFWwindow* win, int width, int height) {
-    ASSERT(width > 0);
-    ASSERT(height > 0);
-
-    GetEmuWindow(win)->NotifyFramebufferSizeChanged(std::pair<unsigned,unsigned>(width, height));
+    GetEmuWindow(win)->NotifyFramebufferLayoutChanged(EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
 }
 
 void EmuWindow_GLFW::OnClientAreaResizeEvent(GLFWwindow* win, int width, int height) {
-    ASSERT(width > 0);
-    ASSERT(height > 0);
-
     // NOTE: GLFW provides no proper way to set a minimal window size.
     //       Hence, we just ignore the corresponding EmuWindow hint.
-
-    GetEmuWindow(win)->NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(width, height));
+    OnFramebufferResizeEvent(win, width, height);
 }
 
 /// EmuWindow_GLFW constructor

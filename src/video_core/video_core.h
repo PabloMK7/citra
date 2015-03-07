@@ -30,7 +30,6 @@ static const int kScreenBottomHeight    = 240;  ///< 3DS bottom screen height
 // ---------------------
 
 extern RendererBase*   g_renderer;              ///< Renderer plugin
-extern int             g_current_frame;         ///< Current frame
 extern EmuWindow*      g_emu_window;            ///< Emu window
 
 /// Start the video core
