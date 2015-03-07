@@ -254,28 +254,26 @@ void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x
  * Draws the emulated screens to the emulator window.
  */
 void RendererOpenGL::DrawScreens() {
-    auto viewport_extent = GetViewportExtent();
-    glViewport(viewport_extent.left, viewport_extent.top, viewport_extent.GetWidth(), viewport_extent.GetHeight()); // TODO: Or bottom?
+    auto layout = render_window->GetFramebufferLayout();
+
+    glViewport(0, 0, layout.width, layout.height);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(program_id);
 
     // Set projection matrix
-    std::array<GLfloat, 3*2> ortho_matrix = MakeOrthographicMatrix((float)resolution_width, (float)resolution_height);
+    std::array<GLfloat, 3 * 2> ortho_matrix = MakeOrthographicMatrix((float)layout.width,
+        (float)layout.height);
     glUniformMatrix3x2fv(uniform_modelview_matrix, 1, GL_FALSE, ortho_matrix.data());
 
     // Bind texture in Texture Unit 0
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
 
-    const float max_width = std::max((float)VideoCore::kScreenTopWidth, (float)VideoCore::kScreenBottomWidth);
-    const float top_x = 0.5f * (max_width - VideoCore::kScreenTopWidth);
-    const float bottom_x = 0.5f * (max_width - VideoCore::kScreenBottomWidth);
-
-    DrawSingleScreenRotated(textures[0], top_x, 0,
-        (float)VideoCore::kScreenTopWidth, (float)VideoCore::kScreenTopHeight);
-    DrawSingleScreenRotated(textures[1], bottom_x, (float)VideoCore::kScreenTopHeight,
-        (float)VideoCore::kScreenBottomWidth, (float)VideoCore::kScreenBottomHeight);
+    DrawSingleScreenRotated(textures[0], (float)layout.top_screen.left, (float)layout.top_screen.top,
+        (float)layout.top_screen.GetWidth(), (float)layout.top_screen.GetHeight());
+    DrawSingleScreenRotated(textures[1], (float)layout.bottom_screen.left,(float)layout.bottom_screen.top,
+        (float)layout.bottom_screen.GetWidth(), (float)layout.bottom_screen.GetHeight());
 
     m_current_frame++;
 }
@@ -290,34 +288,6 @@ void RendererOpenGL::UpdateFramerate() {
  */
 void RendererOpenGL::SetWindow(EmuWindow* window) {
     render_window = window;
-}
-
-MathUtil::Rectangle<unsigned> RendererOpenGL::GetViewportExtent() {
-    unsigned framebuffer_width;
-    unsigned framebuffer_height;
-    std::tie(framebuffer_width, framebuffer_height) = render_window->GetFramebufferSize();
-
-    float window_aspect_ratio = static_cast<float>(framebuffer_height) / framebuffer_width;
-    float emulation_aspect_ratio = static_cast<float>(resolution_height) / resolution_width;
-
-    MathUtil::Rectangle<unsigned> viewport_extent;
-    if (window_aspect_ratio > emulation_aspect_ratio) {
-        // Window is narrower than the emulation content => apply borders to the top and bottom
-        unsigned viewport_height = static_cast<unsigned>(std::round(emulation_aspect_ratio * framebuffer_width));
-        viewport_extent.left = 0;
-        viewport_extent.top = (framebuffer_height - viewport_height) / 2;
-        viewport_extent.right = viewport_extent.left + framebuffer_width;
-        viewport_extent.bottom = viewport_extent.top + viewport_height;
-    } else {
-        // Otherwise, apply borders to the left and right sides of the window.
-        unsigned viewport_width = static_cast<unsigned>(std::round(framebuffer_height / emulation_aspect_ratio));
-        viewport_extent.left = (framebuffer_width - viewport_width) / 2;
-        viewport_extent.top = 0;
-        viewport_extent.right = viewport_extent.left + viewport_width;
-        viewport_extent.bottom = viewport_extent.top + framebuffer_height;
-    }
-
-    return viewport_extent;
 }
 
 /// Initialize the renderer

@@ -8,6 +8,7 @@
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "common/key_map.h"
+#include "common/math_util.h"
 
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend
@@ -36,6 +37,23 @@ public:
         int     res_width;
         int     res_height;
         std::pair<unsigned,unsigned> min_client_area_size;
+    };
+
+    /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
+    struct FramebufferLayout {
+
+        /**
+         * Factory method for constructing a default FramebufferLayout
+         * @param width Window framebuffer width in pixels
+         * @param height Window framebuffer height in pixels
+         * @return Newly created FramebufferLayout object with default screen regions initialized
+         */
+        static FramebufferLayout DefaultScreenLayout(int width, int height);
+
+        unsigned width;
+        unsigned height;
+        MathUtil::Rectangle<unsigned> top_screen;
+        MathUtil::Rectangle<unsigned> bottom_screen;
     };
 
     /// Swap buffers to display the next frame
@@ -75,11 +93,11 @@ public:
     }
 
     /**
-      * Gets the framebuffer size in pixels.
+      * Gets the framebuffer layout (width, height, and screen regions)
       * @note This method is thread-safe
       */
-    const std::pair<unsigned,unsigned> GetFramebufferSize() const {
-        return framebuffer_size;
+    const FramebufferLayout& GetFramebufferLayout() const {
+        return framebuffer_layout;
     }
 
     /**
@@ -118,11 +136,11 @@ protected:
     }
 
     /**
-     * Update internal framebuffer size with the given parameter.
+     * Update framebuffer layout with the given parameter.
      * @note EmuWindow implementations will usually use this in window resize event handlers.
      */
-    void NotifyFramebufferSizeChanged(const std::pair<unsigned,unsigned>& size) {
-        framebuffer_size = size;
+    void NotifyFramebufferLayoutChanged(const FramebufferLayout& layout) {
+        framebuffer_layout = layout;
     }
 
     /**
@@ -143,7 +161,7 @@ private:
         // By default, ignore this request and do nothing.
     }
 
-    std::pair<unsigned,unsigned> framebuffer_size;
+    FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 
     unsigned client_area_width;    ///< Current client width, should be set by window impl.
     unsigned client_area_height;   ///< Current client height, should be set by window impl.

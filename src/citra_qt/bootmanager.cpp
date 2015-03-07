@@ -155,6 +155,7 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
 
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
+
     resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
@@ -234,7 +235,7 @@ void GRenderWindow::OnFramebufferSizeChanged()
     unsigned height = child->QPaintDevice::height();
 #endif
 
-    NotifyFramebufferSizeChanged(std::make_pair(width, height));
+    NotifyFramebufferLayoutChanged(EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
 }
 
 void GRenderWindow::BackupGeometry()
