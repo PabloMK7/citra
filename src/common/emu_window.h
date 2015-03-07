@@ -48,7 +48,7 @@ public:
          * @param height Window framebuffer height in pixels
          * @return Newly created FramebufferLayout object with default screen regions initialized
          */
-        static FramebufferLayout DefaultScreenLayout(int width, int height);
+        static FramebufferLayout DefaultScreenLayout(unsigned width, unsigned height);
 
         unsigned width;
         unsigned height;

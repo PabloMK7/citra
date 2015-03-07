@@ -17,7 +17,7 @@ void EmuWindow::KeyReleased(KeyMap::HostDeviceKey key) {
     Service::HID::PadButtonRelease(mapped_key);
 }
 
-EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(int width, int height) {
+EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width, unsigned height) {
     ASSERT(width > 0);
     ASSERT(height > 0);
 
