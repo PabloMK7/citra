@@ -16,6 +16,26 @@ EmuWindow_GLFW* EmuWindow_GLFW::GetEmuWindow(GLFWwindow* win) {
     return static_cast<EmuWindow_GLFW*>(glfwGetWindowUserPointer(win));
 }
 
+void EmuWindow_GLFW::OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        auto layout = GetEmuWindow(window)->GetFramebufferLayout();
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+
+        if (action == GLFW_PRESS) {
+            EmuWindow::TouchPressed(layout, static_cast<u16>(x), static_cast<u16>(y));
+        } else if (action == GLFW_RELEASE) {
+            EmuWindow::TouchReleased(layout, static_cast<u16>(x), static_cast<u16>(y));
+        }
+    }
+}
+
+void EmuWindow_GLFW::OnCursorPosEvent(GLFWwindow* window, double x, double y) {
+
+    auto layout = GetEmuWindow(window)->GetFramebufferLayout();
+    EmuWindow::TouchMoved(layout, static_cast<u16>(x), static_cast<u16>(y));
+}
+
 /// Called by GLFW when a key event occurs
 void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods) {
 
@@ -88,6 +108,8 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
 
     // Setup callbacks
     glfwSetKeyCallback(m_render_window, OnKeyEvent);
+    glfwSetMouseButtonCallback(m_render_window, OnMouseButtonEvent);
+    glfwSetCursorPosCallback(m_render_window, OnCursorPosEvent);
     glfwSetFramebufferSizeCallback(m_render_window, OnFramebufferResizeEvent);
     glfwSetWindowSizeCallback(m_render_window, OnClientAreaResizeEvent);
 
