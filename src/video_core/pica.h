@@ -418,6 +418,13 @@ struct Regs {
             RGBA4    = 4,
         };
 
+        enum DepthFormat : u32 {
+            D16     = 0,
+        
+            D24     = 2,
+            D24S8   = 3
+        };
+
         INSERT_PADDING_WORDS(0x6);
 
         u32 depth_format;

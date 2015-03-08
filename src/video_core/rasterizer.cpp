@@ -91,7 +91,7 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     }
 
     return {};
- }
+}
 
 static u32 GetDepth(int x, int y) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
@@ -100,23 +100,65 @@ static u32 GetDepth(int x, int y) {
     y = (registers.framebuffer.height - y);
     
     const u32 coarse_y = y & ~7;
-    u32 stride = registers.framebuffer.width * 2;
 
-    // Assuming 16-bit depth buffer format until actual format handling is implemented
-    return *(u16*)(depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride);
+    switch (registers.framebuffer.depth_format) {
+        case registers.framebuffer.D16:
+        {
+            u32 stride = registers.framebuffer.width * 2;
+            return Color::DecodeD16(depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride);
+        }
+        case registers.framebuffer.D24:
+        {
+            u32 stride = registers.framebuffer.width * 3;
+            u8* address = depth_buffer + VideoCore::GetMortonOffset(x, y, 3) + coarse_y * stride;
+            return Color::DecodeD24(address);
+        }
+        case registers.framebuffer.D24S8:
+        {
+            u32 stride = registers.framebuffer.width * 4;
+            return Color::DecodeD24S8(depth_buffer + VideoCore::GetMortonOffset(x, y, 4) + coarse_y * stride).x;
+        }
+        default:
+            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
+            UNIMPLEMENTED();
+            return 0;
+    }
 }
 
-static void SetDepth(int x, int y, u16 value) {
+static void SetDepth(int x, int y, u32 value) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPointer(PAddrToVAddr(addr));
 
     y = (registers.framebuffer.height - y);
 
     const u32 coarse_y = y & ~7;
-    u32 stride = registers.framebuffer.width * 2;
 
-    // Assuming 16-bit depth buffer format until actual format handling is implemented
-    *(u16*)(depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride) = value;
+    switch (registers.framebuffer.depth_format) {
+        case registers.framebuffer.D16:
+        {
+            u32 stride = registers.framebuffer.width * 2;
+            Color::EncodeD16(value, depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride);
+            break;
+        }
+        case registers.framebuffer.D24:
+        {
+            u32 stride = registers.framebuffer.width * 3;
+            u8* address = depth_buffer + VideoCore::GetMortonOffset(x, y, 3) + coarse_y * stride;
+            Color::EncodeD24(value, address);
+            break;
+        }
+        case registers.framebuffer.D24S8:
+        {
+            u32 stride = registers.framebuffer.width * 4;
+            // TODO(Subv): Implement the stencil buffer
+            Color::EncodeD24S8(value, 0, depth_buffer + VideoCore::GetMortonOffset(x, y, 4) + coarse_y * stride);
+            break;
+        }
+        default:
+            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
+            UNIMPLEMENTED();
+            break;
+    }
 }
 
 // NOTE: Assuming that rasterizer coordinates are 12.4 fixed-point values
@@ -595,7 +637,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 u16 z = (u16)((v0.screenpos[2].ToFloat32() * w0 +
                             v1.screenpos[2].ToFloat32() * w1 +
                             v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
-                u16 ref_z = GetDepth(x >> 4, y >> 4);
+                u32 ref_z = GetDepth(x >> 4, y >> 4);
 
                 bool pass = false;
 
