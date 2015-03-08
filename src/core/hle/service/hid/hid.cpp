@@ -32,7 +32,7 @@ static s16 next_pad_circle_y = 0;
 /**
  * Gets a pointer to the PadData structure inside HID shared memory
  */
-static inline SharedMem* GetPadData() {
+static inline SharedMem* GetSharedMem() {
     if (g_shared_mem == nullptr)
         return nullptr;
     return reinterpret_cast<SharedMem*>(g_shared_mem->GetPointer().ValueOr(nullptr));
@@ -66,28 +66,18 @@ static void UpdateNextCirclePadState() {
     next_pad_circle_y += next_state.circle_up ? max_value : 0x0;
 }
 
-/**
- * Sets a Pad state (button or button combo) as pressed
- */
 void PadButtonPress(const PadState& pad_state) {
     next_state.hex |= pad_state.hex;
     UpdateNextCirclePadState();
 }
 
-/**
- * Sets a Pad state (button or button combo) as released
- */
 void PadButtonRelease(const PadState& pad_state) {
     next_state.hex &= ~pad_state.hex;
     UpdateNextCirclePadState();
 }
 
-/**
- * Called after all Pad changes to be included in this update have been made,
- * including both Pad key changes and analog circle Pad changes.
- */
 void PadUpdateComplete() {
-    SharedMem* shared_mem = GetPadData();
+    SharedMem* shared_mem = GetSharedMem();
 
     if (shared_mem == nullptr)
         return;
@@ -130,17 +120,6 @@ void PadUpdateComplete() {
         shared_mem->pad.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
     }
 
-    // Signal both handles when there's an update to Pad or touch
-    g_event_pad_or_touch_1->Signal();
-    g_event_pad_or_touch_2->Signal();
-}
-
-    // If we just updated index 0, provide a new timestamp
-    if (pad_data->index == 0) {
-        pad_data->index_reset_ticks_previous = pad_data->index_reset_ticks;
-        pad_data->index_reset_ticks = (s64)Core::g_app_core->GetTicks();
-    }
-    
     // Signal both handles when there's an update to Pad or touch
     g_event_pad_or_touch_1->Signal();
     g_event_pad_or_touch_2->Signal();

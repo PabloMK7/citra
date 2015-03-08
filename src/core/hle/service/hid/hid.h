@@ -162,9 +162,22 @@ const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
  */
 void GetIPCHandles(Interface* self);
 
-// Methods for updating the HID module's state
+/**
+ * Sets a Pad state (button or button combo) as pressed
+ * @param pad_state PadState data indicating which buttons have been pressed
+ */
 void PadButtonPress(const PadState& pad_state);
+
+/**
+ * Sets a Pad state (button or button combo) as released
+ * @param pad_state PadState data indicating which buttons have been released
+ */
 void PadButtonRelease(const PadState& pad_state);
+
+/**
+ * Called after all Pad changes to be included in this update have been made, including both Pad
+ * key changes and analog circle Pad changes.
+ */
 void PadUpdateComplete();
 
 void HIDInit();
