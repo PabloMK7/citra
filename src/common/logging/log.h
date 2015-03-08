@@ -59,6 +59,8 @@ enum class Class : ClassType {
     Service_AC,                 ///< The AC (WiFi status) service
     Service_PTM,                ///< The PTM (Power status & misc.) service
     Service_LDR,                ///< The LDR (3ds dll loader) service
+    Service_NIM,                ///< The NIM (Network interface manager) service
+    Service_NWM,                ///< The NWM (Network manager) service
     Service_CFG,                ///< The CFG (Configuration) service
     Service_DSP,                ///< The DSP (DSP control) service
     Service_HID,                ///< The HID (User input) service

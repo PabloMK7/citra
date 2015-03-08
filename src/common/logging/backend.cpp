@@ -39,6 +39,8 @@ static std::shared_ptr<Logger> global_logger;
         SUB(Service, AC) \
         SUB(Service, PTM) \
         SUB(Service, LDR) \
+        SUB(Service, NIM) \
+        SUB(Service, NWM) \
         SUB(Service, CFG) \
         SUB(Service, DSP) \
         SUB(Service, HID) \

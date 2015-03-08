@@ -200,13 +200,13 @@ void EnableGyroscopeLow(Interface* self);
 void GetSoundVolume(Interface* self);
 
 /// Checks for user input updates
-void HIDUpdate();
+void Update();
 
 /// Initialize HID service
-void HIDInit();
+void Init();
 
 /// Shutdown HID service
-void HIDShutdown();
+void Shutdown();
 
 }
 }

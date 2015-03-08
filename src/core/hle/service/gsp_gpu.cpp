@@ -265,6 +265,9 @@ static void FlushDataCache(Service::Interface* self) {
     // TODO(purpasmart96): Verify return header on HW
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=0x%08X",
+              address, size, process);
 }
 
 /**

@@ -38,7 +38,7 @@ ChargeLevels GetBatteryLevel() {
     return ChargeLevels::CompletelyFull; // Set to a completely full battery
 }
 
-void PTMInit() {
+void Init() {
     AddService(new PTM_Play_Interface);
     AddService(new PTM_Sysm_Interface);
     AddService(new PTM_U_Interface);
@@ -68,7 +68,7 @@ void PTMInit() {
     }
 }
 
-void PTMShutdown() {
+void Shutdown() {
 
 }
 

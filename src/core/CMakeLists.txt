@@ -69,6 +69,7 @@ set(SRCS
             hle/service/news_s.cpp
             hle/service/news_u.cpp
             hle/service/nim_aoc.cpp
+            hle/service/nim_u.cpp
             hle/service/ns_s.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
@@ -177,6 +178,7 @@ set(HEADERS
             hle/service/news_s.h
             hle/service/news_u.h
             hle/service/nim_aoc.h
+            hle/service/nim_u.h
             hle/service/ns_s.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h

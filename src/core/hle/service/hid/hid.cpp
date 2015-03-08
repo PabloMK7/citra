@@ -45,7 +45,7 @@ static u32 next_touch_index = 0;
 //     * Set PadData.current_state.circle_left = 1 if current PadEntry.circle_pad_x <= -41
 //     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
 
-void HIDUpdate() {
+void Update() {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer().ValueOr(nullptr));
     const PadState state = VideoCore::g_emu_window->GetPadState();
 
@@ -155,7 +155,7 @@ void GetSoundVolume(Service::Interface* self) {
     LOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
-void HIDInit() {
+void Init() {
     using namespace Kernel;
 
     AddService(new HID_U_Interface);
@@ -174,7 +174,7 @@ void HIDInit() {
     event_debug_pad      = Event::Create(RESETTYPE_ONESHOT, "HID:EventDebugPad");
 }
 
-void HIDShutdown() {
+void Shutdown() {
 }
 
 } // namespace HID

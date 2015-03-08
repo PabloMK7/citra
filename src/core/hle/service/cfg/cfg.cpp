@@ -170,7 +170,7 @@ ResultCode FormatConfig() {
     return RESULT_SUCCESS;
 }
 
-void CFGInit() {
+void Init() {
     AddService(new CFG_I_Interface);
     AddService(new CFG_S_Interface);
     AddService(new CFG_U_Interface);
@@ -218,7 +218,7 @@ void CFGInit() {
     FormatConfig();
 }
 
-void CFGShutdown() {
+void Shutdown() {
 
 }
 

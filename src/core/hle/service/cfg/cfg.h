@@ -135,10 +135,10 @@ ResultCode UpdateConfigNANDSavegame();
 ResultCode FormatConfig();
 
 /// Initialize the config service
-void CFGInit();
+void Init();
 
 /// Shutdown the config service
-void CFGShutdown();
+void Shutdown();
 
 } // namespace CFG
 } // namespace Service

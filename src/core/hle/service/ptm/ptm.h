@@ -56,10 +56,10 @@ u32 GetShellState();
 ChargeLevels GetBatteryLevel();
 
 /// Initialize the PTM service
-void PTMInit();
+void Init();
 
 /// Shutdown the PTM service
-void PTMShutdown();
+void Shutdown();
 
 } // namespace PTM
 } // namespace Service
