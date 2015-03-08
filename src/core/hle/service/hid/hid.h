@@ -65,7 +65,7 @@ struct PadState {
 };
 
 /**
- * Structure of a single entry in the PadData's Pad state history array.
+ * Structure of a single entry of Pad state history within HID shared memory
  */
 struct PadDataEntry {
     PadState current_state;
@@ -77,22 +77,44 @@ struct PadDataEntry {
 };
 
 /**
- * Structure of all data related to the 3DS Pad.
+ * Structure of a single entry of touch state history within HID shared memory
  */
-struct PadData {
-    s64 index_reset_ticks;
-    s64 index_reset_ticks_previous;
-    u32 index; // the index of the last updated Pad state history element
+struct TouchDataEntry {
+    u16 x;
+    u16 y;
+    u32 data_valid;
+};
 
-    u32 pad1;
-    u32 pad2;
+/**
+ * Structure of data stored in HID shared memory
+ */
+struct SharedMem {
+    // Offset 0x0 : "PAD" data, this is used for buttons and the circle pad
+    struct {
+        s64 index_reset_ticks;
+        s64 index_reset_ticks_previous;
+        u32 index; // Index of the last updated pad state history element
 
-    PadState current_state; // same as entries[index].current_state
-    u32 raw_circle_pad_data;
+        INSERT_PADDING_BYTES(0x8);
 
-    u32 pad3;
+        PadState current_state; // Same as entries[index].current_state
+        u32 raw_circle_pad_data;
 
-    std::array<PadDataEntry, 8> entries; // Pad state history
+        INSERT_PADDING_BYTES(0x4);
+
+        std::array<PadDataEntry, 8> entries; // Pad state history
+    } pad;
+
+    // Offset 0xA8 : Touchpad data, this is used for touchpad input
+    struct {
+        s64 index_reset_ticks;
+        s64 index_reset_ticks_previous;
+        u32 index; // Index of the last updated touch state history element
+
+        INSERT_PADDING_BYTES(0xC);
+
+        std::array<TouchDataEntry, 8> entries;
+    } touch;
 };
 
 // Pre-defined PadStates for single button presses
