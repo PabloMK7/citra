@@ -278,6 +278,31 @@ void GRenderWindow::keyReleaseEvent(QKeyEvent* event)
     Service::HID::PadUpdateComplete();
 }
 
+void GRenderWindow::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)  {
+        auto pos = event->pos();
+        EmuWindow::TouchPressed(GetFramebufferLayout(), static_cast<u16>(pos.x()),
+            static_cast<u16>(pos.y()));
+    }
+}
+
+void GRenderWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    auto pos = event->pos();
+    EmuWindow::TouchMoved(GetFramebufferLayout(), static_cast<u16>(pos.x()),
+        static_cast<u16>(pos.y()));
+}
+
+void GRenderWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)  {
+        auto pos = event->pos();
+        EmuWindow::TouchReleased(GetFramebufferLayout(), static_cast<u16>(pos.x()),
+            static_cast<u16>(pos.y()));
+    }
+}
+
 void GRenderWindow::ReloadSetKeymaps()
 {
     KeyMap::SetKeyMapping({Settings::values.pad_a_key,      keyboard_id}, Service::HID::PAD_A);
