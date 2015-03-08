@@ -29,6 +29,10 @@ static u32 next_pad_index = 0;
 static s16 next_pad_circle_x = 0;
 static s16 next_pad_circle_y = 0;
 
+static u32 next_touch_index = 0;
+static u16 next_touch_x = 0;
+static u16 next_touch_y = 0;
+
 /**
  * Gets a pointer to the PadData structure inside HID shared memory
  */
@@ -120,6 +124,50 @@ void PadUpdateComplete() {
         shared_mem->pad.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
     }
 
+    // Signal both handles when there's an update to Pad or touch
+    g_event_pad_or_touch_1->Signal();
+    g_event_pad_or_touch_2->Signal();
+}
+
+void TouchPress(u16 x, u16 y) {
+    next_touch_x = x;
+    next_touch_y = y;
+}
+
+void TouchRelease() {
+    next_touch_x = 0;
+    next_touch_y = 0;
+}
+
+void TouchUpdateComplete() {
+    SharedMem* shared_mem = GetSharedMem();
+
+    if (shared_mem == nullptr)
+        return;
+
+    shared_mem->touch.index = next_touch_index;
+    next_touch_index = (next_touch_index + 1) % shared_mem->touch.entries.size();
+
+    // Get the current touch entry
+    TouchDataEntry* current_touch_entry = &shared_mem->touch.entries[shared_mem->touch.index];
+
+    // Set touchpad position
+    current_touch_entry->x = next_touch_x;
+    current_touch_entry->y = next_touch_y;
+
+    // TODO(bunnei): Verify this behavior on real hardware
+    current_touch_entry->data_valid = (next_touch_x || next_touch_y) ? 1 : 0;
+
+    // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
+    // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
+    // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
+
+    // If we just updated index 0, provide a new timestamp
+    if (shared_mem->touch.index == 0) {
+        shared_mem->touch.index_reset_ticks_previous = shared_mem->touch.index_reset_ticks;
+        shared_mem->touch.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
+    }
+    
     // Signal both handles when there's an update to Pad or touch
     g_event_pad_or_touch_1->Signal();
     g_event_pad_or_touch_2->Signal();

@@ -180,6 +180,19 @@ void PadButtonRelease(const PadState& pad_state);
  */
 void PadUpdateComplete();
 
+/**
+ * Signal that the touchpad has been pressed
+ * @param x Touchpad x-coordinate in bottom screen pixels (between 0 and 320)
+ * @param y Touchpad y-coordinate in bottom screen pixels (between 0 and 240)
+ */
+void TouchPress(u16 x, u16 y);
+
+/// Signal that touchpad has been released
+void TouchRelease();
+
+/// Signal that touchpad updates have been completed
+void TouchUpdateComplete();
+
 void HIDInit();
 void HIDShutdown();
 
