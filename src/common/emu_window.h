@@ -77,6 +77,33 @@ public:
     static void KeyReleased(KeyMap::HostDeviceKey key);
 
     /**
+     * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
+     * @param layout FramebufferLayout object describing the framebuffer size and screen positions
+     * @param framebuffer_x Framebuffer x-coordinate that was pressed
+     * @param framebuffer_y Framebuffer y-coordinate that was pressed
+     */
+    static void TouchPressed(const FramebufferLayout& layout, unsigned framebuffer_x,
+        unsigned framebuffer_y);
+
+    /**
+     * Signal that a touch released event has occurred (e.g. mouse click released)
+     * @param layout FramebufferLayout object describing the framebuffer size and screen positions
+     * @param framebuffer_x Framebuffer x-coordinate that was released
+     * @param framebuffer_y Framebuffer y-coordinate that was released
+     */
+    static void TouchReleased(const FramebufferLayout& layout, unsigned framebuffer_x,
+        unsigned framebuffer_y);
+
+    /**
+     * Signal that a touch movement event has occurred (e.g. mouse was moved over the emu window)
+     * @param layout FramebufferLayout object describing the framebuffer size and screen positions
+     * @param framebuffer_x Framebuffer x-coordinate
+     * @param framebuffer_y Framebuffer y-coordinate
+     */
+    static void TouchMoved(const FramebufferLayout& layout, unsigned framebuffer_x,
+        unsigned framebuffer_y);
+
+    /**
      * Returns currently active configuration.
      * @note Accesses to the returned object need not be consistent because it may be modified in another thread
      */
@@ -168,4 +195,6 @@ private:
 
     WindowConfig config;         ///< Internal configuration (changes pending for being applied in ProcessConfigurationChanges)
     WindowConfig active_config;  ///< Internal active configuration
+
+    static bool touch_pressed;   ///< True if touchpad area is currently pressed, otherwise false
 };
