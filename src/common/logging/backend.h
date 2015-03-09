@@ -10,6 +10,7 @@
 
 #include "common/concurrent_ring_buffer.h"
 
+#include "common/logging/filter.h"
 #include "common/logging/log.h"
 
 namespace Log {
@@ -130,5 +131,7 @@ Entry CreateEntry(Class log_class, Level log_level,
                         const char* format, va_list args);
 /// Initializes the default Logger.
 std::shared_ptr<Logger> InitGlobalLogger();
+
+void SetFilter(Filter* filter);
 
 }

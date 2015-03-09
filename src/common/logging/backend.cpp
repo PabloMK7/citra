@@ -135,9 +135,18 @@ Entry CreateEntry(Class log_class, Level log_level,
     return std::move(entry);
 }
 
+static Filter* filter;
+
+void SetFilter(Filter* new_filter) {
+    filter = new_filter;
+}
+
 void LogMessage(Class log_class, Level log_level,
                 const char* filename, unsigned int line_nr, const char* function,
                 const char* format, ...) {
+    if (!filter->CheckMessage(log_class, log_level))
+        return;
+
     va_list args;
     va_start(args, format);
     Entry entry = CreateEntry(log_class, log_level,
