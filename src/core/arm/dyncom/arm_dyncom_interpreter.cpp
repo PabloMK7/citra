@@ -5983,47 +5983,45 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             if (BIT(inst_cream->inst, 22) == 1) {
                 for (i = 0; i < 13; i++) {
-                    if(BIT(inst_cream->inst, i)) {
+                    if (BIT(inst_cream->inst, i)) {
                         Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
                     }
                 }
                 if (BIT(inst_cream->inst, 13)) {
-                    if (cpu->Mode == USER32MODE) {
+                    if (cpu->Mode == USER32MODE)
                         Memory::Write32(addr, cpu->Reg[i]);
-                        addr += 4;
-                    } else {
+                    else
                         Memory::Write32(addr, cpu->Reg_usr[0]);
-                        addr += 4;
-                    }
+
+                    addr += 4;
                 }
                 if (BIT(inst_cream->inst, 14)) {
-                    if (cpu->Mode == USER32MODE) {
+                    if (cpu->Mode == USER32MODE)
                         Memory::Write32(addr, cpu->Reg[i]);
-                        addr += 4;
-                    } else {
+                    else
                         Memory::Write32(addr, cpu->Reg_usr[1]);
-                        addr += 4;
-                    }
+
+                    addr += 4;
                 }
                 if (BIT(inst_cream->inst, 15)) {
                     Memory::Write32(addr, cpu->Reg_usr[1] + 8);
                 }
             } else {
-                for( i = 0; i < 15; i++ ) {
-                    if(BIT(inst_cream->inst, i)) {
-                        if(i == Rn)
+                for (i = 0; i < 15; i++) {
+                    if (BIT(inst_cream->inst, i)) {
+                        if (i == Rn)
                             Memory::Write32(addr, old_RN);
                         else
                             Memory::Write32(addr, cpu->Reg[i]);
+
                         addr += 4;
                     }
                 }
 
                 // Check PC reg
-                if(BIT(inst_cream->inst, i)) {
+                if (BIT(inst_cream->inst, 15))
                     Memory::Write32(addr, cpu->Reg_usr[1] + 8);
-                }
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
