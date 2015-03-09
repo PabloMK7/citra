@@ -88,7 +88,7 @@ void PadUpdateComplete() {
 
     shared_mem->pad.current_state.hex = next_state.hex;
     shared_mem->pad.index = next_pad_index;
-    next_pad_index = (next_pad_index + 1) % shared_mem->pad.entries.size();
+    ++next_touch_index %= shared_mem->pad.entries.size();
 
     // Get the previous Pad state
     u32 last_entry_index = (shared_mem->pad.index - 1) % shared_mem->pad.entries.size();
@@ -146,7 +146,7 @@ void TouchUpdateComplete() {
         return;
 
     shared_mem->touch.index = next_touch_index;
-    next_touch_index = (next_touch_index + 1) % shared_mem->touch.entries.size();
+    ++next_touch_index %= shared_mem->touch.entries.size();
 
     // Get the current touch entry
     TouchDataEntry* current_touch_entry = &shared_mem->touch.entries[shared_mem->touch.index];
