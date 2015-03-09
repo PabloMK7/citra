@@ -5,8 +5,6 @@
 #include "emu_window.h"
 #include "video_core/video_core.h"
 
-bool EmuWindow::touch_pressed = false;
-
 void EmuWindow::KeyPressed(KeyMap::HostDeviceKey key) {
     Service::HID::PadState mapped_key = KeyMap::GetPadKey(key);
 

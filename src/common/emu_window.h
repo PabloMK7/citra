@@ -71,10 +71,10 @@ public:
     virtual void ReloadSetKeymaps() = 0;
 
     /// Signals a key press action to the HID module
-    static void KeyPressed(KeyMap::HostDeviceKey key);
+    void KeyPressed(KeyMap::HostDeviceKey key);
 
     /// Signals a key release action to the HID module
-    static void KeyReleased(KeyMap::HostDeviceKey key);
+    void KeyReleased(KeyMap::HostDeviceKey key);
 
     /**
      * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
@@ -82,8 +82,7 @@ public:
      * @param framebuffer_x Framebuffer x-coordinate that was pressed
      * @param framebuffer_y Framebuffer y-coordinate that was pressed
      */
-    static void TouchPressed(const FramebufferLayout& layout, unsigned framebuffer_x,
-        unsigned framebuffer_y);
+    void TouchPressed(const FramebufferLayout& layout, unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
      * Signal that a touch released event has occurred (e.g. mouse click released)
@@ -91,8 +90,7 @@ public:
      * @param framebuffer_x Framebuffer x-coordinate that was released
      * @param framebuffer_y Framebuffer y-coordinate that was released
      */
-    static void TouchReleased(const FramebufferLayout& layout, unsigned framebuffer_x,
-        unsigned framebuffer_y);
+    void TouchReleased(const FramebufferLayout& layout, unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
      * Signal that a touch movement event has occurred (e.g. mouse was moved over the emu window)
@@ -100,8 +98,7 @@ public:
      * @param framebuffer_x Framebuffer x-coordinate
      * @param framebuffer_y Framebuffer y-coordinate
      */
-    static void TouchMoved(const FramebufferLayout& layout, unsigned framebuffer_x,
-        unsigned framebuffer_y);
+    void TouchMoved(const FramebufferLayout& layout, unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
      * Returns currently active configuration.
@@ -196,5 +193,5 @@ private:
     WindowConfig config;         ///< Internal configuration (changes pending for being applied in ProcessConfigurationChanges)
     WindowConfig active_config;  ///< Internal active configuration
 
-    static bool touch_pressed;   ///< True if touchpad area is currently pressed, otherwise false
+    bool touch_pressed;          ///< True if touchpad area is currently pressed, otherwise false
 };
