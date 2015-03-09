@@ -33,12 +33,9 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandl
 
         case Regs::TriangleTopology::Strip:
         case Regs::TriangleTopology::Fan:
-            if (strip_ready) {
-                // TODO: Should be "buffer[0], buffer[1], vtx" instead!
-                // Not quite sure why we need this order for things to show up properly.
-                // Maybe a bug in the rasterizer?
-                triangle_handler(buffer[1], buffer[0], vtx);
-            }
+            if (strip_ready)
+                triangle_handler(buffer[0], buffer[1], vtx);
+
             buffer[buffer_index] = vtx;
 
             if (topology == Regs::TriangleTopology::Strip) {
