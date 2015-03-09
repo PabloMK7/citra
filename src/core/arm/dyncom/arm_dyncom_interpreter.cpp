@@ -5976,13 +5976,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             unsigned int inst = inst_cream->inst;
 
-            int i;
             unsigned int Rn = BITS(inst, 16, 19);
             unsigned int old_RN = cpu->Reg[Rn];
 
             inst_cream->get_addr(cpu, inst_cream->inst, addr, 0);
             if (BIT(inst_cream->inst, 22) == 1) {
-                for (i = 0; i < 13; i++) {
+                for (int i = 0; i < 13; i++) {
                     if (BIT(inst_cream->inst, i)) {
                         Memory::Write32(addr, cpu->Reg[i]);
                         addr += 4;
@@ -5990,7 +5989,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 }
                 if (BIT(inst_cream->inst, 13)) {
                     if (cpu->Mode == USER32MODE)
-                        Memory::Write32(addr, cpu->Reg[i]);
+                        Memory::Write32(addr, cpu->Reg[13]);
                     else
                         Memory::Write32(addr, cpu->Reg_usr[0]);
 
@@ -5998,7 +5997,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 }
                 if (BIT(inst_cream->inst, 14)) {
                     if (cpu->Mode == USER32MODE)
-                        Memory::Write32(addr, cpu->Reg[i]);
+                        Memory::Write32(addr, cpu->Reg[14]);
                     else
                         Memory::Write32(addr, cpu->Reg_usr[1]);
 
@@ -6008,7 +6007,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                     Memory::Write32(addr, cpu->Reg_usr[1] + 8);
                 }
             } else {
-                for (i = 0; i < 15; i++) {
+                for (int i = 0; i < 15; i++) {
                     if (BIT(inst_cream->inst, i)) {
                         if (i == Rn)
                             Memory::Write32(addr, old_RN);
