@@ -98,7 +98,7 @@ struct Regs {
             BitField<0, 1, u32> trigger;
 
             // Set to 1 upon completion.
-            BitField<0, 1, u32> finished;
+            BitField<1, 1, u32> finished;
 
             // If both of these bits are unset, then it will fill the memory with a 16 bit value
             // 1: fill with 24-bit wide values
