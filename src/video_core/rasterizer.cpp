@@ -100,24 +100,19 @@ static u32 GetDepth(int x, int y) {
     y = (registers.framebuffer.height - y);
     
     const u32 coarse_y = y & ~7;
+    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(registers.framebuffer.depth_format);
+    u32 stride = registers.framebuffer.width * bytes_per_pixel;
+
+    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
+    u8* src_pixel = depth_buffer + src_offset;
 
     switch (registers.framebuffer.depth_format) {
-        case registers.framebuffer.D16:
-        {
-            u32 stride = registers.framebuffer.width * 2;
-            return Color::DecodeD16(depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride);
-        }
-        case registers.framebuffer.D24:
-        {
-            u32 stride = registers.framebuffer.width * 3;
-            u8* address = depth_buffer + VideoCore::GetMortonOffset(x, y, 3) + coarse_y * stride;
-            return Color::DecodeD24(address);
-        }
-        case registers.framebuffer.D24S8:
-        {
-            u32 stride = registers.framebuffer.width * 4;
-            return Color::DecodeD24S8(depth_buffer + VideoCore::GetMortonOffset(x, y, 4) + coarse_y * stride).x;
-        }
+        case Pica::Regs::DepthFormat::D16:
+            return Color::DecodeD16(src_pixel);
+        case Pica::Regs::DepthFormat::D24:
+            return Color::DecodeD24(src_pixel);
+        case Pica::Regs::DepthFormat::D24S8:
+            return Color::DecodeD24S8(src_pixel).x;
         default:
             LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
             UNIMPLEMENTED();
@@ -132,28 +127,23 @@ static void SetDepth(int x, int y, u32 value) {
     y = (registers.framebuffer.height - y);
 
     const u32 coarse_y = y & ~7;
+    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(registers.framebuffer.depth_format);
+    u32 stride = registers.framebuffer.width * bytes_per_pixel;
+
+    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
+    u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (registers.framebuffer.depth_format) {
-        case registers.framebuffer.D16:
-        {
-            u32 stride = registers.framebuffer.width * 2;
-            Color::EncodeD16(value, depth_buffer + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * stride);
+        case Pica::Regs::DepthFormat::D16:
+            Color::EncodeD16(value, dst_pixel);
             break;
-        }
-        case registers.framebuffer.D24:
-        {
-            u32 stride = registers.framebuffer.width * 3;
-            u8* address = depth_buffer + VideoCore::GetMortonOffset(x, y, 3) + coarse_y * stride;
-            Color::EncodeD24(value, address);
+        case Pica::Regs::DepthFormat::D24:
+            Color::EncodeD24(value, dst_pixel);
             break;
-        }
-        case registers.framebuffer.D24S8:
-        {
-            u32 stride = registers.framebuffer.width * 4;
+        case Pica::Regs::DepthFormat::D24S8:
             // TODO(Subv): Implement the stencil buffer
-            Color::EncodeD24S8(value, 0, depth_buffer + VideoCore::GetMortonOffset(x, y, 4) + coarse_y * stride);
+            Color::EncodeD24S8(value, 0, dst_pixel);
             break;
-        }
         default:
             LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
             UNIMPLEMENTED();

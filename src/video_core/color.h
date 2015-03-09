@@ -105,7 +105,7 @@ inline const Math::Vec4<u8> DecodeRGBA4(const u8* bytes) {
  * @param bytes Pointer to encoded source value
  * @return Depth value as an u32
  */
-inline const u32 DecodeD16(const u8* bytes) {
+inline u32 DecodeD16(const u8* bytes) {
     return *reinterpret_cast<const u16_le*>(bytes);
 }
 
@@ -114,7 +114,7 @@ inline const u32 DecodeD16(const u8* bytes) {
  * @param bytes Pointer to encoded source value
  * @return Depth value as an u32
  */
-inline const u32 DecodeD24(const u8* bytes) {
+inline u32 DecodeD24(const u8* bytes) {
     return (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
 }
 
@@ -181,8 +181,8 @@ inline void EncodeRGBA4(const Math::Vec4<u8>& color, u8* bytes) {
 }
 
 /**
- * Encode a depth value as D16 format
- * @param value Source depth value to encode
+ * Encode a 16 bit depth value as D16 format
+ * @param value 16 bit source depth value to encode
  * @param bytes Pointer where to store the encoded value
  */
 inline void EncodeD16(u32 value, u8* bytes) {
@@ -190,8 +190,8 @@ inline void EncodeD16(u32 value, u8* bytes) {
 }
 
 /**
- * Encode a depth value as D24 format
- * @param value Source depth value to encode
+ * Encode a 24 bit depth value as D24 format
+ * @param value 24 bit source depth value to encode
  * @param bytes Pointer where to store the encoded value
  */
 inline void EncodeD24(u32 value, u8* bytes) {
@@ -201,9 +201,9 @@ inline void EncodeD24(u32 value, u8* bytes) {
 }
 
 /**
- * Encode depth and stencil values as D24S8 format
- * @param depth Source depth values to encode
- * @param stencil Source stencil value to encode
+ * Encode a 24 bit depth and 8 bit stencil values as D24S8 format
+ * @param depth 24 bit source depth value to encode
+ * @param stencil 8 bit source stencil value to encode
  * @param bytes Pointer where to store the encoded value
  */
 inline void EncodeD24S8(u32 depth, u8 stencil, u8* bytes) {

@@ -20,9 +20,9 @@ class GraphicsFramebufferWidget : public BreakPointObserverDock {
     using Event = Pica::DebugContext::Event;
 
     enum class Source {
-        PicaTarget = 0,
-        DepthBuffer = 1,
-        Custom = 2,
+        PicaTarget   = 0,
+        DepthBuffer  = 1,
+        Custom       = 2,
 
         // TODO: Add GPU framebuffer sources!
     };

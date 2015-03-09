@@ -176,7 +176,7 @@ void GraphicsFramebufferWidget::OnUpdate()
     {
         // TODO: Store a reference to the registers in the debug context instead of accessing them directly...
 
-        auto framebuffer = Pica::registers.framebuffer;
+        const auto& framebuffer = Pica::registers.framebuffer;
 
         framebuffer_address = framebuffer.GetColorBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();
@@ -189,7 +189,7 @@ void GraphicsFramebufferWidget::OnUpdate()
 
     case Source::DepthBuffer:
     {
-        auto framebuffer = Pica::registers.framebuffer;
+        const auto& framebuffer = Pica::registers.framebuffer;
 
         framebuffer_address = framebuffer.GetDepthBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();

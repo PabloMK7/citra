@@ -100,10 +100,10 @@ struct Regs {
             // Set to 1 upon completion.
             BitField<0, 1, u32> finished;
 
-            // If both of these bits are unset, then it will fill the memory with a 16 bit value
-            // 1: fill with 24-bit wide values
+            // 0: fill with 16- or 32-bit wide values; 1: fill with 24-bit wide values
             BitField<8, 1, u32> fill_24bit;
-            // 1: fill with 32-bit wide values
+
+            // 0: fill with 16-bit wide values; 1: fill with 32-bit wide values
             BitField<9, 1, u32> fill_32bit;
         };
 
