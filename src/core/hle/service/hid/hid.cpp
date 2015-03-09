@@ -156,7 +156,7 @@ void TouchUpdateComplete() {
     current_touch_entry->y = next_touch_y;
 
     // TODO(bunnei): Verify this behavior on real hardware
-    current_touch_entry->data_valid = (next_touch_x || next_touch_y) ? 1 : 0;
+    current_touch_entry->valid = (next_touch_x || next_touch_y) ? 1 : 0;
 
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being

@@ -80,9 +80,9 @@ struct PadDataEntry {
  * Structure of a single entry of touch state history within HID shared memory
  */
 struct TouchDataEntry {
-    u16 x;
-    u16 y;
-    u32 data_valid;
+    u16 x;                   ///< Y-coordinate of a touchpad press on the lower screen
+    u16 y;                   ///< X-coordinate of a touchpad press on the lower screen
+    BitField<0,7,u32> valid; ///< Set to 1 when this entry contains actual X/Y data, otherwise 0
 };
 
 /**
