@@ -21,7 +21,8 @@ class GraphicsFramebufferWidget : public BreakPointObserverDock {
 
     enum class Source {
         PicaTarget = 0,
-        Custom = 1,
+        DepthBuffer = 1,
+        Custom = 2,
 
         // TODO: Add GPU framebuffer sources!
     };
@@ -32,7 +33,12 @@ class GraphicsFramebufferWidget : public BreakPointObserverDock {
         RGB5A1   = 2,
         RGB565   = 3,
         RGBA4    = 4,
+        D16      = 5,
+        D24      = 6,
+        D24S8    = 7
     };
+
+    static u32 BytesPerPixel(Format format);
 
 public:
     GraphicsFramebufferWidget(std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent = nullptr);
