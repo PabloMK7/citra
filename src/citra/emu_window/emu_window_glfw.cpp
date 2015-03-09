@@ -23,18 +23,15 @@ void EmuWindow_GLFW::OnMouseButtonEvent(GLFWwindow* win, int button, int action,
         double x, y;
         glfwGetCursorPos(win, &x, &y);
 
-        if (action == GLFW_PRESS) {
-            emu_window->TouchPressed(layout, static_cast<u16>(x), static_cast<u16>(y));
-        } else if (action == GLFW_RELEASE) {
-            emu_window->TouchReleased(layout, static_cast<u16>(x), static_cast<u16>(y));
-        }
+        if (action == GLFW_PRESS)
+            emu_window->TouchPressed(static_cast<unsigned>(x), static_cast<unsigned>(y));
+        else if (action == GLFW_RELEASE)
+            emu_window->TouchReleased();
     }
 }
 
 void EmuWindow_GLFW::OnCursorPosEvent(GLFWwindow* win, double x, double y) {
-    auto emu_window = GetEmuWindow(win);
-    auto layout = emu_window->GetFramebufferLayout();
-    emu_window->TouchMoved(layout, static_cast<u16>(x), static_cast<u16>(y));
+    GetEmuWindow(win)->TouchMoved(static_cast<unsigned>(x), static_cast<unsigned>(y));
 }
 
 /// Called by GLFW when a key event occurs
@@ -45,10 +42,8 @@ void EmuWindow_GLFW::OnKeyEvent(GLFWwindow* win, int key, int scancode, int acti
     if (action == GLFW_PRESS) {
         emu_window->KeyPressed({key, keyboard_id});
     } else if (action == GLFW_RELEASE) {
-        emu_window->KeyReleased({ key, keyboard_id });
+        emu_window->KeyReleased({key, keyboard_id});
     }
-
-    Service::HID::PadUpdateComplete();
 }
 
 /// Whether the window is still open, and a close request hasn't yet been sent

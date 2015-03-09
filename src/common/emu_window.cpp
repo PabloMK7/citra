@@ -6,15 +6,11 @@
 #include "video_core/video_core.h"
 
 void EmuWindow::KeyPressed(KeyMap::HostDeviceKey key) {
-    Service::HID::PadState mapped_key = KeyMap::GetPadKey(key);
-
-    Service::HID::PadButtonPress(mapped_key);
+    pad_state.hex |= KeyMap::GetPadKey(key).hex;
 }
 
 void EmuWindow::KeyReleased(KeyMap::HostDeviceKey key) {
-    Service::HID::PadState mapped_key = KeyMap::GetPadKey(key);
-
-    Service::HID::PadButtonRelease(mapped_key);
+    pad_state.hex &= ~KeyMap::GetPadKey(key).hex;
 }
 
 /**
@@ -25,55 +21,41 @@ void EmuWindow::KeyReleased(KeyMap::HostDeviceKey key) {
  * @return True if the coordinates are within the touchpad, otherwise false
  */
 static bool IsWithinTouchscreen(const EmuWindow::FramebufferLayout& layout, unsigned framebuffer_x,
-    unsigned framebuffer_y) {
-
-    return (framebuffer_y >= layout.bottom_screen.top &&
-        framebuffer_y < layout.bottom_screen.bottom &&
-        framebuffer_x >= layout.bottom_screen.left &&
-        framebuffer_x < layout.bottom_screen.right);
+                                unsigned framebuffer_y) {
+    return (framebuffer_y >= layout.bottom_screen.top    &&
+            framebuffer_y <  layout.bottom_screen.bottom &&
+            framebuffer_x >= layout.bottom_screen.left   &&
+            framebuffer_x <  layout.bottom_screen.right);
 }
 
-void EmuWindow::TouchPressed(const FramebufferLayout& layout, unsigned framebuffer_x,
-    unsigned framebuffer_y) {
+void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
+        return;
 
-    if (IsWithinTouchscreen(layout, framebuffer_x, framebuffer_y)) {
-        u16 touch_x = VideoCore::kScreenBottomWidth * (framebuffer_x - layout.bottom_screen.left) /
-            (layout.bottom_screen.right - layout.bottom_screen.left);
-        u16 touch_y = VideoCore::kScreenBottomHeight * (framebuffer_y - layout.bottom_screen.top) /
-            (layout.bottom_screen.bottom - layout.bottom_screen.top);
+    touch_x = VideoCore::kScreenBottomWidth * (framebuffer_x - framebuffer_layout.bottom_screen.left) /
+        (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
+    touch_y = VideoCore::kScreenBottomHeight * (framebuffer_y - framebuffer_layout.bottom_screen.top) /
+        (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
 
-        Service::HID::TouchPress(touch_x, touch_y);
-        Service::HID::TouchUpdateComplete();
-
-        touch_pressed = true;
-    }
+    touch_pressed = true;
+    pad_state.touch = 1;
 }
 
-void EmuWindow::TouchReleased(const FramebufferLayout& layout, unsigned framebuffer_x,
-    unsigned framebuffer_y) {
-
-    if (IsWithinTouchscreen(layout, framebuffer_x, framebuffer_y)) {
-
-        Service::HID::TouchRelease();
-        Service::HID::TouchUpdateComplete();
-
-        touch_pressed = false;
-    }
+void EmuWindow::TouchReleased() {
+    touch_pressed = false;
+    touch_x = 0;
+    touch_y = 0;
+    pad_state.touch = 0;
 }
 
-void EmuWindow::TouchMoved(const FramebufferLayout& layout, unsigned framebuffer_x,
-    unsigned framebuffer_y) {
+void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!touch_pressed)
+        return;
 
-    if (touch_pressed) {
-        if (IsWithinTouchscreen(layout, framebuffer_x, framebuffer_y)) {
-            EmuWindow::TouchPressed(layout, framebuffer_x, framebuffer_y);
-        } else {
-            Service::HID::TouchRelease();
-            Service::HID::TouchUpdateComplete();
-
-            touch_pressed = false;
-        }
-    }
+    if (IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
+        TouchPressed(framebuffer_x, framebuffer_y);
+    else
+        TouchReleased();
 }
 
 EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width,

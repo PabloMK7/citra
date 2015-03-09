@@ -14,6 +14,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/dsp_dsp.h"
+#include "core/hle/service/hid/hid.h"
 
 #include "core/hw/gpu.h"
 
@@ -293,6 +294,9 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     // until we can emulate DSP interrupts, this is probably the only reasonable place to do
     // this. Certain games expect this to be periodically signaled.
     DSP_DSP::SignalInterrupt();
+
+    // Check for user input updates
+    Service::HID::HIDUpdate();
 
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(frame_ticks - cycles_late, vblank_event);

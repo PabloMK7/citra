@@ -176,38 +176,13 @@ const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
  */
 void GetIPCHandles(Interface* self);
 
-/**
- * Sets a Pad state (button or button combo) as pressed
- * @param pad_state PadState data indicating which buttons have been pressed
- */
-void PadButtonPress(const PadState& pad_state);
+/// Checks for user input updates
+void HIDUpdate();
 
-/**
- * Sets a Pad state (button or button combo) as released
- * @param pad_state PadState data indicating which buttons have been released
- */
-void PadButtonRelease(const PadState& pad_state);
-
-/**
- * Called after all Pad changes to be included in this update have been made, including both Pad
- * key changes and analog circle Pad changes.
- */
-void PadUpdateComplete();
-
-/**
- * Signal that the touchpad has been pressed
- * @param x Touchpad x-coordinate in bottom screen pixels (between 0 and 320)
- * @param y Touchpad y-coordinate in bottom screen pixels (between 0 and 240)
- */
-void TouchPress(u16 x, u16 y);
-
-/// Signal that touchpad has been released
-void TouchRelease();
-
-/// Signal that touchpad updates have been completed
-void TouchUpdateComplete();
-
+/// Initialize HID service
 void HIDInit();
+
+/// Shutdown HID service
 void HIDShutdown();
 
 }
