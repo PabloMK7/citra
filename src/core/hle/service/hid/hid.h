@@ -89,7 +89,7 @@ struct TouchDataEntry {
  * Structure of data stored in HID shared memory
  */
 struct SharedMem {
-    // Offset 0x0 : "PAD" data, this is used for buttons and the circle pad
+    // "Pad data, this is used for buttons and the circle pad
     struct {
         s64 index_reset_ticks;
         s64 index_reset_ticks_previous;
@@ -105,7 +105,7 @@ struct SharedMem {
         std::array<PadDataEntry, 8> entries; // Pad state history
     } pad;
 
-    // Offset 0xA8 : Touchpad data, this is used for touchpad input
+    // Touchpad data, this is used for touchpad input
     struct {
         s64 index_reset_ticks;
         s64 index_reset_ticks_previous;
@@ -116,6 +116,20 @@ struct SharedMem {
         std::array<TouchDataEntry, 8> entries;
     } touch;
 };
+
+// TODO: MSVC does not support using offsetof() on non-static data members even though this
+//       is technically allowed since C++11. This macro should be enabled once MSVC adds
+//       support for that.
+#ifndef _MSC_VER
+#define ASSERT_REG_POSITION(field_name, position)                  \
+    static_assert(offsetof(SharedMem, field_name) == position * 4, \
+                  "Field "#field_name" has invalid position")
+
+ASSERT_REG_POSITION(pad.index_reset_ticks, 0x0);
+ASSERT_REG_POSITION(touch.index_reset_ticks, 0x2A);
+
+#undef ASSERT_REG_POSITION
+#endif // !defined(_MSC_VER)
 
 // Pre-defined PadStates for single button presses
 const PadState PAD_NONE         = {{0}};
