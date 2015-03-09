@@ -81,9 +81,9 @@ inline void Write(u32 addr, const T data) {
             if (config.fill_24bit) {
                 // fill with 24-bit values
                 for (u8* ptr = start; ptr < end; ptr += 3) {
-                    ptr[0] = config.value_24bit_b;
+                    ptr[0] = config.value_24bit_r;
                     ptr[1] = config.value_24bit_g;
-                    ptr[2] = config.value_24bit_r;
+                    ptr[2] = config.value_24bit_b;
                 }
             } else if (config.fill_32bit) {
                 // fill with 32-bit values
