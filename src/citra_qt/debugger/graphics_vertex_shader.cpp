@@ -12,6 +12,7 @@
 
 #include "graphics_vertex_shader.h"
 
+using nihstro::OpCode;
 using nihstro::Instruction;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
@@ -78,7 +79,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             const SwizzlePattern& swizzle = info.swizzle_info[instr.common.operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
-            output << std::setw(8) << std::left << instr.opcode.GetInfo().name;
+            output << std::setw(8) << std::left << instr.opcode.Value().GetInfo().name;
 
             // e.g. "-c92.xyzw"
             static auto print_input = [](std::stringstream& output, const SourceRegister& input,
@@ -109,16 +110,16 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     print_input_indexed(output, input, negate, swizzle_mask, address_register_name);
             };
 
-            switch (instr.opcode.GetInfo().type) {
-            case Instruction::OpCodeType::Trivial:
+            switch (instr.opcode.Value().GetInfo().type) {
+            case OpCode::Type::Trivial:
                 // Nothing to do here
                 break;
 
-            case Instruction::OpCodeType::Arithmetic:
+            case OpCode::Type::Arithmetic:
             {
                 // Use custom code for special instructions
-                switch (instr.opcode.EffectiveOpCode()) {
-                case Instruction::OpCode::CMP:
+                switch (instr.opcode.Value().EffectiveOpCode()) {
+                case OpCode::Id::CMP:
                 {
                     // NOTE: CMP always writes both cc components, so we do not consider the dest mask here.
                     output << std::setw(4) << std::right << "cc.";
@@ -142,13 +143,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
                 default:
                 {
-                    bool src_is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
+                    bool src_is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
 
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::Dest) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Dest) {
                         // e.g. "r12.xy__"
-                        output << std::setw(4) << std::right << instr.common.dest.GetName() + ".";
+                        output << std::setw(4) << std::right << instr.common.dest.Value().GetName() + ".";
                         output << swizzle.DestMaskToString();
-                    } else if (instr.opcode.GetInfo().subtype == Instruction::OpCodeInfo::MOVA) {
+                    } else if (instr.opcode.Value().GetInfo().subtype == OpCode::Info::MOVA) {
                         output << std::setw(4) << std::right << "a0.";
                         output << swizzle.DestMaskToString();
                     } else {
@@ -156,7 +157,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     }
                     output << "  ";
 
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::Src1) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src1) {
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
                         print_input_indexed(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), instr.common.AddressRegisterName());
                     } else {
@@ -164,7 +165,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     }
 
                     // TODO: In some cases, the Address Register is used as an index for SRC2 instead of SRC1
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::Src2) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(false));
                     }
@@ -175,17 +176,17 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 break;
             }
 
-            case Instruction::OpCodeType::Conditional:
+            case OpCode::Type::Conditional:
             {
-                switch (instr.opcode.EffectiveOpCode()) {
-                case Instruction::OpCode::LOOP:
+                switch (instr.opcode.Value().EffectiveOpCode()) {
+                case OpCode::Id::LOOP:
                     output << "(unknown instruction format)";
                     break;
 
                 default:
                     output << "if ";
 
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::HasCondition) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasCondition) {
                         const char* ops[] = {
                             " || ", " && ", "", ""
                         };
@@ -198,22 +199,22 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                             output << ((!instr.flow_control.refy) ? "!" : " ") << "cc.y";
 
                         output << " ";
-                    } else if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::HasUniformIndex) {
+                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasUniformIndex) {
                         output << "b" << instr.flow_control.bool_uniform_id << " ";
                     }
 
                     u32 target_addr = instr.flow_control.dest_offset;
                     u32 target_addr_else = instr.flow_control.dest_offset;
 
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::HasAlternative) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasAlternative) {
                         output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
-                    } else if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::HasExplicitDest) {
+                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasExplicitDest) {
                         output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
                     } else {
                         // TODO: Handle other cases
                     }
 
-                    if (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::HasFinishPoint) {
+                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasFinishPoint) {
                         output << "(return on " << std::setw(4) << std::right << std::setfill('0')
                                << 4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions << ")";
                     }

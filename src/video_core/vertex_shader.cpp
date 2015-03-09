@@ -17,6 +17,7 @@
 #include "vertex_shader.h"
 #include "debug_utils/debug_utils.h"
 
+using nihstro::OpCode;
 using nihstro::Instruction;
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
@@ -154,10 +155,10 @@ static void ProcessShaderCode(VertexShaderState& state) {
             }
         };
 
-        switch (instr.opcode.GetInfo().type) {
-        case Instruction::OpCodeType::Arithmetic:
+        switch (instr.opcode.Value().GetInfo().type) {
+        case OpCode::Type::Arithmetic:
         {
-            bool is_inverted = 0 != (instr.opcode.GetInfo().subtype & Instruction::OpCodeInfo::SrcInversed);
+            bool is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
             // TODO: We don't really support this properly: For instance, the address register
             //       offset needs to be applied to SRC2 instead, etc.
             //       For now, we just abort in this situation.
@@ -197,15 +198,15 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 src2[3] = src2[3] * float24::FromFloat32(-1);
             }
 
-            float24* dest = (instr.common.dest < 0x08) ? state.output_register_table[4*instr.common.dest.GetIndex()]
-                        : (instr.common.dest < 0x10) ? dummy_vec4_float24
-                        : (instr.common.dest < 0x20) ? &state.temporary_registers[instr.common.dest.GetIndex()][0]
+            float24* dest = (instr.common.dest.Value() < 0x08) ? state.output_register_table[4*instr.common.dest.Value().GetIndex()]
+                        : (instr.common.dest.Value() < 0x10) ? dummy_vec4_float24
+                        : (instr.common.dest.Value() < 0x20) ? &state.temporary_registers[instr.common.dest.Value().GetIndex()][0]
                         : dummy_vec4_float24;
 
             state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
 
-            switch (instr.opcode.EffectiveOpCode()) {
-            case Instruction::OpCode::ADD:
+            switch (instr.opcode.Value().EffectiveOpCode()) {
+            case OpCode::Id::ADD:
             {
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -217,7 +218,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::MUL:
+            case OpCode::Id::MUL:
             {
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -229,7 +230,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::MAX:
+            case OpCode::Id::MAX:
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
@@ -238,11 +239,11 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
                 break;
 
-            case Instruction::OpCode::DP3:
-            case Instruction::OpCode::DP4:
+            case OpCode::Id::DP3:
+            case OpCode::Id::DP4:
             {
                 float24 dot = float24::FromFloat32(0.f);
-                int num_components = (instr.opcode == Instruction::OpCode::DP3) ? 3 : 4;
+                int num_components = (instr.opcode.Value() == OpCode::Id::DP3) ? 3 : 4;
                 for (int i = 0; i < num_components; ++i)
                     dot = dot + src1[i] * src2[i];
 
@@ -256,7 +257,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             }
 
             // Reciprocal
-            case Instruction::OpCode::RCP:
+            case OpCode::Id::RCP:
             {
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -271,7 +272,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             }
 
             // Reciprocal Square Root
-            case Instruction::OpCode::RSQ:
+            case OpCode::Id::RSQ:
             {
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -285,7 +286,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::MOVA:
+            case OpCode::Id::MOVA:
             {
                 for (int i = 0; i < 2; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -298,7 +299,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::MOV:
+            case OpCode::Id::MOV:
             {
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
@@ -309,7 +310,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::CMP:
+            case OpCode::Id::CMP:
                 for (int i = 0; i < 2; ++i) {
                     // TODO: Can you restrict to one compare via dest masking?
 
@@ -350,7 +351,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             default:
                 LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x%02x (%s): 0x%08x",
-                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
+                          (int)instr.opcode.Value().EffectiveOpCode(), instr.opcode.Value().GetInfo().name, instr.hex);
                 DEBUG_ASSERT(false);
                 break;
             }
@@ -358,9 +359,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
             break;
         }
 
-        case Instruction::OpCodeType::MultiplyAdd:
+        case OpCode::Type::MultiplyAdd:
         {
-            if (instr.opcode.EffectiveOpCode() == Instruction::OpCode::MAD) {
+            if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) {
                 const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.mad.operand_desc_id];
 
                 const float24* src1_ = LookupSourceRegister(instr.mad.src1);
@@ -408,9 +409,9 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     src3[3] = src3[3] * float24::FromFloat32(-1);
                 }
 
-                float24* dest = (instr.mad.dest < 0x08) ? state.output_register_table[4*instr.mad.dest.GetIndex()]
-                            : (instr.mad.dest < 0x10) ? dummy_vec4_float24
-                            : (instr.mad.dest < 0x20) ? &state.temporary_registers[instr.mad.dest.GetIndex()][0]
+                float24* dest = (instr.mad.dest.Value() < 0x08) ? state.output_register_table[4*instr.mad.dest.Value().GetIndex()]
+                            : (instr.mad.dest.Value() < 0x10) ? dummy_vec4_float24
+                            : (instr.mad.dest.Value() < 0x20) ? &state.temporary_registers[instr.mad.dest.Value().GetIndex()][0]
                             : dummy_vec4_float24;
 
                 for (int i = 0; i < 4; ++i) {
@@ -421,7 +422,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
             } else {
                 LOG_ERROR(HW_GPU, "Unhandled multiply-add instruction: 0x%02x (%s): 0x%08x",
-                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
+                          (int)instr.opcode.Value().EffectiveOpCode(), instr.opcode.Value().GetInfo().name, instr.hex);
             }
             break;
         }
@@ -448,31 +449,31 @@ static void ProcessShaderCode(VertexShaderState& state) {
             };
 
             // Handle each instruction on its own
-            switch (instr.opcode) {
-            case Instruction::OpCode::END:
+            switch (instr.opcode.Value()) {
+            case OpCode::Id::END:
                 exit_loop = true;
                 break;
 
-            case Instruction::OpCode::JMPC:
+            case OpCode::Id::JMPC:
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
                     state.program_counter = &shader_memory[instr.flow_control.dest_offset] - 1;
                 }
                 break;
 
-            case Instruction::OpCode::JMPU:
+            case OpCode::Id::JMPU:
                 if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
                     state.program_counter = &shader_memory[instr.flow_control.dest_offset] - 1;
                 }
                 break;
 
-            case Instruction::OpCode::CALL:
+            case OpCode::Id::CALL:
                 call(state,
                      instr.flow_control.dest_offset,
                      instr.flow_control.num_instructions,
                      binary_offset + 1, 0, 0);
                 break;
 
-            case Instruction::OpCode::CALLU:
+            case OpCode::Id::CALLU:
                 if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
                     call(state,
                         instr.flow_control.dest_offset,
@@ -481,7 +482,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
                 break;
 
-            case Instruction::OpCode::CALLC:
+            case OpCode::Id::CALLC:
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
                     call(state,
                         instr.flow_control.dest_offset,
@@ -490,10 +491,10 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
                 break;
 
-            case Instruction::OpCode::NOP:
+            case OpCode::Id::NOP:
                 break;
 
-            case Instruction::OpCode::IFU:
+            case OpCode::Id::IFU:
                 if (shader_uniforms.b[instr.flow_control.bool_uniform_id]) {
                     call(state,
                          binary_offset + 1,
@@ -508,7 +509,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
                 break;
 
-            case Instruction::OpCode::IFC:
+            case OpCode::Id::IFC:
             {
                 // TODO: Do we need to consider swizzlers here?
 
@@ -527,7 +528,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 break;
             }
 
-            case Instruction::OpCode::LOOP:
+            case OpCode::Id::LOOP:
             {
                 state.address_registers[2] = shader_uniforms.i[instr.flow_control.int_uniform_id].y;
 
@@ -542,7 +543,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
             default:
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
-                          (int)instr.opcode.Value(), instr.opcode.GetInfo().name, instr.hex);
+                          (int)instr.opcode.Value().EffectiveOpCode(), instr.opcode.Value().GetInfo().name, instr.hex);
                 break;
             }
 
