@@ -4362,6 +4362,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                         cpu->Reg[14] = Memory::Read32(addr);
                     else
                         cpu->Reg_usr[1] = Memory::Read32(addr);
+
+                    addr += 4;
                 }
             } else if (!BIT(inst, 22)) {
                 for(int i = 0; i < 16; i++ ){
