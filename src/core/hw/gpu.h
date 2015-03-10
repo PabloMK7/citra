@@ -197,8 +197,8 @@ struct Regs {
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
 
-            BitField<24, 1, u32> scale_horizontally;
-            BitField<25, 1, u32> scale_vertically;
+            BitField<24, 1, u32> scale_x;  // Shrinks the image in half horizontally, blending the extra pixels
+            BitField<25, 1, u32> scale_xy; // Shrinks the image horizontally and vertically, blending the extra pixels
         };
 
         INSERT_PADDING_WORDS(0x1);

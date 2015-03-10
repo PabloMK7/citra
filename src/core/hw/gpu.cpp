@@ -116,9 +116,9 @@ inline void Write(u32 addr, const T data) {
             u8* src_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
             u8* dst_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
-            unsigned horizontal_scale = (config.scale_horizontally != 0) ? 2 : 1;
-            unsigned vertical_scale = (config.scale_vertically != 0) ? 2 : 1;
-
+            unsigned horizontal_scale = (config.scale_x != 0 || config.scale_xy != 0) ? 2 : 1;
+            unsigned vertical_scale = (config.scale_xy != 0) ? 2 : 1;
+            
             u32 output_width = config.output_width / horizontal_scale;
             u32 output_height = config.output_height / vertical_scale;
 
