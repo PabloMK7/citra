@@ -17,6 +17,8 @@
 namespace Service {
 namespace HID {
 
+static const int MAX_CIRCLEPAD_POS = 0x9C; ///< Max value for a circle pad position
+
 Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem = nullptr;
 
 Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
@@ -78,8 +80,10 @@ void HIDUpdate() {
     pad_entry->delta_removals.hex = changed.hex & old_state.hex;;
 
     // Set circle Pad
-    pad_entry->circle_pad_x = state.circle_left ? -0x9C : state.circle_right ? 0x9C : 0x0;
-    pad_entry->circle_pad_y = state.circle_down ? -0x9C : state.circle_up ? 0x9C : 0x0;
+    pad_entry->circle_pad_x = state.circle_left  ? -MAX_CIRCLEPAD_POS :
+                              state.circle_right ?  MAX_CIRCLEPAD_POS : 0x0;
+    pad_entry->circle_pad_y = state.circle_down  ? -MAX_CIRCLEPAD_POS :
+                              state.circle_up    ?  MAX_CIRCLEPAD_POS : 0x0;
 
     // If we just updated index 0, provide a new timestamp
     if (shared_mem->pad.index == 0) {

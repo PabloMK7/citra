@@ -80,40 +80,45 @@ struct PadDataEntry {
  * Structure of a single entry of touch state history within HID shared memory
  */
 struct TouchDataEntry {
-    u16 x;                   ///< Y-coordinate of a touchpad press on the lower screen
-    u16 y;                   ///< X-coordinate of a touchpad press on the lower screen
-    BitField<0,7,u32> valid; ///< Set to 1 when this entry contains actual X/Y data, otherwise 0
+    u16 x;                     ///< Y-coordinate of a touchpad press on the lower screen
+    u16 y;                     ///< X-coordinate of a touchpad press on the lower screen
+    BitField<0, 7, u32> valid; ///< Set to 1 when this entry contains actual X/Y data, otherwise 0
 };
 
 /**
  * Structure of data stored in HID shared memory
  */
 struct SharedMem {
-    // "Pad data, this is used for buttons and the circle pad
+    /// Pad data, this is used for buttons and the circle pad
     struct {
-        s64 index_reset_ticks;
-        s64 index_reset_ticks_previous;
-        u32 index; // Index of the last updated pad state history element
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated pad state entry
 
-        INSERT_PADDING_BYTES(0x8);
+        INSERT_PADDING_WORDS(0x2);
 
-        PadState current_state; // Same as entries[index].current_state
-        u32 raw_circle_pad_data;
+        PadState current_state; ///< Current state of the pad buttons
 
-        INSERT_PADDING_BYTES(0x4);
+        // TODO(bunnei): Implement `raw_circle_pad_data` field
+        u32 raw_circle_pad_data; ///< Raw (analog) circle pad data, before being converted
 
-        std::array<PadDataEntry, 8> entries; // Pad state history
+        INSERT_PADDING_WORDS(0x1);
+
+        std::array<PadDataEntry, 8> entries; ///< Last 8 pad entries
     } pad;
 
-    // Touchpad data, this is used for touchpad input
+    /// Touchpad data, this is used for touchpad input
     struct {
-        s64 index_reset_ticks;
-        s64 index_reset_ticks_previous;
-        u32 index; // Index of the last updated touch state history element
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated touch entry
 
-        INSERT_PADDING_BYTES(0xC);
+        INSERT_PADDING_WORDS(0x1);
 
-        std::array<TouchDataEntry, 8> entries;
+        // TODO(bunnei): Implement `raw_entry` field
+        TouchDataEntry raw_entry; ///< Raw (analog) touch data, before being converted
+
+        std::array<TouchDataEntry, 8> entries; ///< Last 8 touch entries, in pixel coordinates
     } touch;
 };
 
