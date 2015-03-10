@@ -4488,10 +4488,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xffff;
 
             RD = RN + operand2;
-            if (inst_cream->Rn == 15 || inst_cream->Rm == 15) {
-                LOG_ERROR(Core_ARM11, "invalid operands for UXTAH");
-                CITRA_IGNORE_EXIT(-1);
-            }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(uxtah_inst));
@@ -4822,10 +4818,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             uint64_t rm = RM;
             uint64_t rs = RS;
             uint64_t rn = RN;
-            if (inst_cream->Rm == 15 || inst_cream->Rs == 15 || inst_cream->Rn == 15) {
-                LOG_ERROR(Core_ARM11, "invalid operands for MLA");
-                CITRA_IGNORE_EXIT(-1);
-            }
+
             RD = static_cast<uint32_t>((rm * rs + rn) & 0xffffffff);
             if (inst_cream->S) {
                 UPDATE_NFLAG(RD);
@@ -5104,10 +5097,10 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
     PLD_INST:
     {
-        // Instruction not implemented
-        //LOG_CRITICAL(Core_ARM11, "unimplemented instruction");
+        // Not implemented. PLD is a hint instruction, so it's optional.
+
         cpu->Reg[15] += GET_INST_SIZE(cpu);
-        INC_PC(sizeof(stc_inst));
+        INC_PC(sizeof(pld_inst));
         FETCH_INST;
         GOTO_NEXT_INST;
     }
@@ -6033,15 +6026,12 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             sxtb_inst* inst_cream = (sxtb_inst*)inst_base->component;
 
-            if (inst_cream->Rm == 15) {
-                LOG_ERROR(Core_ARM11, "invalid operand for SXTB");
-                CITRA_IGNORE_EXIT(-1);
-            }
             unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate);
             if (BIT(operand2, 7)) {
                 operand2 |= 0xffffff00;
-            } else
+            } else {
                 operand2 &= 0xff;
+            }
             RD = operand2;
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -6299,8 +6289,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             swp_inst* inst_cream = (swp_inst*)inst_base->component;
 
             addr = RN;
-            unsigned int value;
-            value = Memory::Read32(addr);
+            unsigned int value = Memory::Read32(addr);
             Memory::Write32(addr, RM);
 
             RD = value;
@@ -6329,10 +6318,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             sxtab_inst* inst_cream = (sxtab_inst*)inst_base->component;
 
-            // R15 should be check
-            if(inst_cream->Rn == 15 || inst_cream->Rm == 15 || inst_cream->Rd ==15){
-                CITRA_IGNORE_EXIT(-1);
-            }
             unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xff;
 
             // Sign extend for byte
@@ -6383,10 +6368,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             sxtah_inst* inst_cream = (sxtah_inst*)inst_base->component;
 
-            // R15 should be check
-            if(inst_cream->Rn == 15 || inst_cream->Rm == 15 || inst_cream->Rd ==15) {
-                CITRA_IGNORE_EXIT(-1);
-            }
             unsigned int operand2 = ROTATE_RIGHT_32(RM, 8 * inst_cream->rotate) & 0xffff;
             // Sign extend for half
             operand2 = (0x8000 & operand2) ? (0xFFFF0000 | operand2) : operand2;
