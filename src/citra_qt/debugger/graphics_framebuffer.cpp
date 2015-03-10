@@ -27,6 +27,7 @@ GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::Debug
 
     framebuffer_source_list = new QComboBox;
     framebuffer_source_list->addItem(tr("Active Render Target"));
+    framebuffer_source_list->addItem(tr("Active Depth Buffer"));
     framebuffer_source_list->addItem(tr("Custom"));
     framebuffer_source_list->setCurrentIndex(static_cast<int>(framebuffer_source));
 
@@ -49,6 +50,9 @@ GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::Debug
     framebuffer_format_control->addItem(tr("RGB5A1"));
     framebuffer_format_control->addItem(tr("RGB565"));
     framebuffer_format_control->addItem(tr("RGBA4"));
+    framebuffer_format_control->addItem(tr("D16"));
+    framebuffer_format_control->addItem(tr("D24"));
+    framebuffer_format_control->addItem(tr("D24S8"));
 
     // TODO: This QLabel should shrink the image to the available space rather than just expanding...
     framebuffer_picture_label = new QLabel;
@@ -172,14 +176,25 @@ void GraphicsFramebufferWidget::OnUpdate()
     {
         // TODO: Store a reference to the registers in the debug context instead of accessing them directly...
 
-        auto framebuffer = Pica::registers.framebuffer;
-        using Framebuffer = decltype(framebuffer);
+        const auto& framebuffer = Pica::registers.framebuffer;
 
         framebuffer_address = framebuffer.GetColorBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();
         framebuffer_height = framebuffer.GetHeight();
         // TODO: It's unknown how this format is actually specified
         framebuffer_format = Format::RGBA8;
+
+        break;
+    }
+
+    case Source::DepthBuffer:
+    {
+        const auto& framebuffer = Pica::registers.framebuffer;
+
+        framebuffer_address = framebuffer.GetDepthBufferPhysicalAddress();
+        framebuffer_width = framebuffer.GetWidth();
+        framebuffer_height = framebuffer.GetHeight();
+        framebuffer_format = Format::D16;
 
         break;
     }
@@ -197,15 +212,16 @@ void GraphicsFramebufferWidget::OnUpdate()
 
     // TODO: Implement a good way to visualize alpha components!
     // TODO: Unify this decoding code with the texture decoder
-    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer_format));
+    u32 bytes_per_pixel = GraphicsFramebufferWidget::BytesPerPixel(framebuffer_format);
 
     QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
-    u8* color_buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
+    u8* buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
+
     for (unsigned int y = 0; y < framebuffer_height; ++y) {
         for (unsigned int x = 0; x < framebuffer_width; ++x) {
             const u32 coarse_y = y & ~7;
             u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer_width * bytes_per_pixel;
-            const u8* pixel = color_buffer + offset;
+            const u8* pixel = buffer + offset;
             Math::Vec4<u8> color = { 0, 0, 0, 0 };
 
             switch (framebuffer_format) {
@@ -224,6 +240,29 @@ void GraphicsFramebufferWidget::OnUpdate()
             case Format::RGBA4:
                 color = Color::DecodeRGBA4(pixel);
                 break;
+            case Format::D16:
+            {
+                u32 data = Color::DecodeD16(pixel);
+                color.r() = data & 0xFF;
+                color.g() = (data >> 8) & 0xFF;
+                break;
+            }
+            case Format::D24:
+            {
+                u32 data = Color::DecodeD24(pixel);
+                color.r() = data & 0xFF;
+                color.g() = (data >> 8) & 0xFF;
+                color.b() = (data >> 16) & 0xFF;
+                break;
+            }
+            case Format::D24S8:
+            {
+                Math::Vec2<u32> data = Color::DecodeD24S8(pixel);
+                color.r() = data.x & 0xFF;
+                color.g() = (data.x >> 8) & 0xFF;
+                color.b() = (data.x >> 16) & 0xFF;
+                break;
+            }
             default:
                 qDebug() << "Unknown fb color format " << static_cast<int>(framebuffer_format);
                 break;
@@ -239,4 +278,20 @@ void GraphicsFramebufferWidget::OnUpdate()
     framebuffer_height_control->setValue(framebuffer_height);
     framebuffer_format_control->setCurrentIndex(static_cast<int>(framebuffer_format));
     framebuffer_picture_label->setPixmap(pixmap);
+}
+
+u32 GraphicsFramebufferWidget::BytesPerPixel(GraphicsFramebufferWidget::Format format) {
+    switch (format) {
+        case Format::RGBA8:
+        case Format::D24S8:
+            return 4;
+        case Format::RGB8:
+        case Format::D24:
+            return 3;
+        case Format::RGB5A1:
+        case Format::RGB565:
+        case Format::RGBA4:
+        case Format::D16:
+            return 2;
+    }
 }

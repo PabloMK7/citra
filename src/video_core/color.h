@@ -101,6 +101,33 @@ inline const Math::Vec4<u8> DecodeRGBA4(const u8* bytes) {
 }
 
 /**
+ * Decode a depth value stored in D16 format
+ * @param bytes Pointer to encoded source value
+ * @return Depth value as an u32
+ */
+inline u32 DecodeD16(const u8* bytes) {
+    return *reinterpret_cast<const u16_le*>(bytes);
+}
+
+/**
+ * Decode a depth value stored in D24 format
+ * @param bytes Pointer to encoded source value
+ * @return Depth value as an u32
+ */
+inline u32 DecodeD24(const u8* bytes) {
+    return (bytes[2] << 16) | (bytes[1] << 8) | bytes[0];
+}
+
+/**
+ * Decode a depth value and a stencil value stored in D24S8 format
+ * @param bytes Pointer to encoded source values
+ * @return Resulting values stored as a Math::Vec2
+ */
+inline const Math::Vec2<u32> DecodeD24S8(const u8* bytes) {
+    return { (bytes[2] << 16) | (bytes[1] << 8) | bytes[0], bytes[3] };
+}
+
+/**
  * Encode a color as RGBA8 format
  * @param color Source color to encode
  * @param bytes Destination pointer to store encoded color
@@ -151,6 +178,36 @@ inline void EncodeRGB5A1(const Math::Vec4<u8>& color, u8* bytes) {
 inline void EncodeRGBA4(const Math::Vec4<u8>& color, u8* bytes) {
     *reinterpret_cast<u16_le*>(bytes) = (Convert8To4(color.r()) << 12) |
         (Convert8To4(color.g()) << 8) | (Convert8To4(color.b()) << 4) | Convert8To4(color.a());
+}
+
+/**
+ * Encode a 16 bit depth value as D16 format
+ * @param value 16 bit source depth value to encode
+ * @param bytes Pointer where to store the encoded value
+ */
+inline void EncodeD16(u32 value, u8* bytes) {
+    *reinterpret_cast<u16_le*>(bytes) = value & 0xFFFF;
+}
+
+/**
+ * Encode a 24 bit depth value as D24 format
+ * @param value 24 bit source depth value to encode
+ * @param bytes Pointer where to store the encoded value
+ */
+inline void EncodeD24(u32 value, u8* bytes) {
+    bytes[0] = value & 0xFF;
+    bytes[1] = (value >> 8) & 0xFF;
+    bytes[2] = (value >> 16) & 0xFF;
+}
+
+/**
+ * Encode a 24 bit depth and 8 bit stencil values as D24S8 format
+ * @param depth 24 bit source depth value to encode
+ * @param stencil 8 bit source stencil value to encode
+ * @param bytes Pointer where to store the encoded value
+ */
+inline void EncodeD24S8(u32 depth, u8 stencil, u8* bytes) {
+    *reinterpret_cast<u32_le*>(bytes) = (stencil << 24) | depth;
 }
 
 } // namespace

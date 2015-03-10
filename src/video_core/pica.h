@@ -393,7 +393,15 @@ struct Regs {
             BitField< 8, 8, u32> ref;
         } alpha_test;
 
-        INSERT_PADDING_WORDS(0x2);
+        union {
+            BitField< 0, 1, u32> stencil_test_enable;
+            BitField< 4, 3, CompareFunc> stencil_test_func;
+            BitField< 8, 8, u32> stencil_replacement_value;
+            BitField<16, 8, u32> stencil_reference_value;
+            BitField<24, 8, u32> stencil_mask;
+        } stencil_test;
+
+        INSERT_PADDING_WORDS(0x1);
 
         union {
             BitField< 0, 1, u32> depth_test_enable;
@@ -408,6 +416,30 @@ struct Regs {
         INSERT_PADDING_WORDS(0x8);
     } output_merger;
 
+    enum DepthFormat : u32 {
+        D16    = 0,
+
+        D24    = 2,
+        D24S8  = 3
+    };
+
+    /*
+     * Returns the number of bytes in the specified depth format
+     */
+    static u32 BytesPerDepthPixel(DepthFormat format) {
+        switch (format) {
+        case DepthFormat::D16:
+            return 2;
+        case DepthFormat::D24:
+            return 3;
+        case DepthFormat::D24S8:
+            return 4;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
+
     struct {
         // Components are laid out in reverse byte order, most significant bits first.
         enum ColorFormat : u32 {
@@ -420,7 +452,7 @@ struct Regs {
 
         INSERT_PADDING_WORDS(0x6);
 
-        u32 depth_format;
+        DepthFormat depth_format;
         BitField<16, 3, u32> color_format;
 
         INSERT_PADDING_WORDS(0x4);
