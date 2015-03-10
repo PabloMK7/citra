@@ -58,6 +58,9 @@ private:
     // Loads framebuffer from emulated memory into the active OpenGL texture.
     static void LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
                                         const TextureInfo& texture);
+    // Fills active OpenGL texture with the given RGB color.
+    static void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
+                                           const TextureInfo& texture);
 
     /// Computes the viewport rectangle
     MathUtil::Rectangle<unsigned> GetViewportExtent();
@@ -72,7 +75,7 @@ private:
     GLuint vertex_array_handle;
     GLuint vertex_buffer_handle;
     GLuint program_id;
-    std::array<TextureInfo, 2> textures;
+    std::array<TextureInfo, 2> textures;          ///< Textures for top and bottom screens respectively
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;

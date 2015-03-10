@@ -246,6 +246,8 @@ struct Regs {
         return content[index];
     }
 
+#undef ASSERT_MEMBER_SIZE
+
 private:
     /*
      * Most physical addresses which GPU registers refer to are 8-byte aligned.

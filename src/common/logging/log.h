@@ -65,6 +65,7 @@ enum class Class : ClassType {
     Service_SOC,                ///< The SOC (Socket) service
     HW,                         ///< Low-level hardware emulation
     HW_Memory,                  ///< Memory-map and address translation
+    HW_LCD,                     ///< LCD register emulation
     HW_GPU,                     ///< GPU control emulation
     Frontend,                   ///< Emulator UI
     Render,                     ///< Emulator video output and hardware acceleration

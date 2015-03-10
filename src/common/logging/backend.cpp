@@ -45,6 +45,7 @@ static std::shared_ptr<Logger> global_logger;
         SUB(Service, SOC) \
         CLS(HW) \
         SUB(HW, Memory) \
+        SUB(HW, LCD) \
         SUB(HW, GPU) \
         CLS(Frontend) \
         CLS(Render) \

@@ -7,13 +7,19 @@
 #include "core/mem_map.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/result.h"
 #include "gsp_gpu.h"
+#include "core/hw/hw.h"
 #include "core/hw/gpu.h"
+#include "core/hw/lcd.h"
 
 #include "video_core/gpu_debugger.h"
 
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;
+
+// Beginning address of HW regs
+const static u32 REGS_BEGIN = 0x1EB00000;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace GSP_GPU
@@ -85,7 +91,7 @@ static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
         return;
 
     while (size_in_bytes > 0) {
-        GPU::Write<u32>(base_address + 0x1EB00000, *data);
+        HW::Write<u32>(base_address + REGS_BEGIN, *data);
 
         size_in_bytes -= 4;
         ++data;
@@ -128,15 +134,15 @@ static void WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* 
         return;
 
     while (size_in_bytes > 0) {
-        const u32 reg_address = base_address + 0x1EB00000;
+        const u32 reg_address = base_address + REGS_BEGIN;
 
         u32 reg_value;
-        GPU::Read<u32>(reg_value, reg_address);
+        HW::Read<u32>(reg_value, reg_address);
 
         // Update the current value of the register only for set mask bits
         reg_value = (reg_value & ~*masks) | (*data | *masks);
 
-        GPU::Write<u32>(reg_address, reg_value);
+        HW::Write<u32>(reg_address, reg_value);
 
         size_in_bytes -= 4;
         ++data;
@@ -188,7 +194,7 @@ static void ReadHWRegs(Service::Interface* self) {
     u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
 
     while (size > 0) {
-        GPU::Read<u32>(*dst, reg_addr + 0x1EB00000);
+        HW::Read<u32>(*dst, reg_addr + REGS_BEGIN);
 
         size -= 4;
         ++dst;
@@ -427,6 +433,32 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     }
 }
 
+/**
+ * GSP_GPU::SetLcdForceBlack service function
+ *
+ * Enable or disable REG_LCDCOLORFILL with the color black.
+ *
+ *  Inputs:
+ *      1: Black color fill flag (0 = don't fill, !0 = fill)
+ *  Outputs:
+ *      1: Result code
+ */
+static void SetLcdForceBlack(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    bool enable_black = cmd_buff[1] != 0;
+    LCD::Regs::ColorFill data = {0};
+
+    // Since data is already zeroed, there is no need to explicitly set
+    // the color to black (all zero).
+    data.is_enabled = enable_black;
+
+    LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw); // Top LCD
+    LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
+    
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+}
+
 /// This triggers handling of the GX command written to the command buffer in shared memory.
 static void TriggerCmdReqQueue(Service::Interface* self) {
     // Iterate through each thread's command queue...
@@ -460,7 +492,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00080082, FlushDataCache,                "FlushDataCache"},
     {0x00090082, nullptr,                       "InvalidateDataCache"},
     {0x000A0044, nullptr,                       "RegisterInterruptEvents"},
-    {0x000B0040, nullptr,                       "SetLcdForceBlack"},
+    {0x000B0040, SetLcdForceBlack,              "SetLcdForceBlack"},
     {0x000C0000, TriggerCmdReqQueue,            "TriggerCmdReqQueue"},
     {0x000D0140, nullptr,                       "SetDisplayTransfer"},
     {0x000E0180, nullptr,                       "SetTextureCopy"},

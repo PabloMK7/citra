@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "core/hw/gpu.h"
+#include "core/hw/hw.h"
+#include "core/hw/lcd.h"
 #include "core/mem_map.h"
 
 #include "common/emu_window.h"
@@ -64,16 +66,33 @@ void RendererOpenGL::SwapBuffers() {
     for(int i : {0, 1}) {
         const auto& framebuffer = GPU::g_regs.framebuffer_config[i];
 
-        if (textures[i].width != (GLsizei)framebuffer.width ||
-            textures[i].height != (GLsizei)framebuffer.height ||
-            textures[i].format != framebuffer.color_format) {
-            // Reallocate texture if the framebuffer size has changed.
-            // This is expected to not happen very often and hence should not be a
-            // performance problem.
-            ConfigureFramebufferTexture(textures[i], framebuffer);
-        }
+        // Main LCD (0): 0x1ED02204, Sub LCD (1): 0x1ED02A04
+        u32 lcd_color_addr = (i == 0) ? LCD_REG_INDEX(color_fill_top) : LCD_REG_INDEX(color_fill_bottom);
+        lcd_color_addr = HW::VADDR_LCD + 4 * lcd_color_addr;
+        LCD::Regs::ColorFill color_fill = {0};
+        LCD::Read(color_fill.raw, lcd_color_addr);
 
-        LoadFBToActiveGLTexture(GPU::g_regs.framebuffer_config[i], textures[i]);
+        if (color_fill.is_enabled) {
+            LoadColorToActiveGLTexture(color_fill.color_r, color_fill.color_g, color_fill.color_b, textures[i]);
+
+            // Resize the texture in case the framebuffer size has changed
+            textures[i].width = 1;
+            textures[i].height = 1;
+        } else {
+            if (textures[i].width != (GLsizei)framebuffer.width ||
+                textures[i].height != (GLsizei)framebuffer.height ||
+                textures[i].format != framebuffer.color_format) {
+                // Reallocate texture if the framebuffer size has changed.
+                // This is expected to not happen very often and hence should not be a
+                // performance problem.
+                ConfigureFramebufferTexture(textures[i], framebuffer);
+            }
+            LoadFBToActiveGLTexture(framebuffer, textures[i]);
+
+            // Resize the texture in case the framebuffer size has changed
+            textures[i].width = framebuffer.width;
+            textures[i].height = framebuffer.height;
+        }
     }
 
     DrawScreens();
@@ -127,10 +146,25 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     // TODO: Applications could theoretically crash Citra here by specifying too large
     //       framebuffer sizes. We should make sure that this cannot happen.
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
-        texture.gl_format, texture.gl_type, framebuffer_data);
+                    texture.gl_format, texture.gl_type, framebuffer_data);
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
+/**
+ * Fills active OpenGL texture with the given RGB color.
+ * Since the color is solid, the texture can be 1x1 but will stretch across whatever it's rendered on.
+ * This has the added benefit of being *really fast*.
+ */
+void RendererOpenGL::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
+                                                const TextureInfo& texture) {
+    glBindTexture(GL_TEXTURE_2D, texture.handle);
+
+    u8 framebuffer_data[3] = { color_r, color_g, color_b };
+
+    // Update existing texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, framebuffer_data);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 

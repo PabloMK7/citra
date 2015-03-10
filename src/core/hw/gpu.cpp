@@ -15,12 +15,13 @@
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/dsp_dsp.h"
 
+#include "core/hw/hw.h"
 #include "core/hw/gpu.h"
 
 #include "video_core/command_processor.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
-#include <video_core/color.h>
+#include "video_core/color.h"
 
 namespace GPU {
 
@@ -40,7 +41,7 @@ static bool last_skip_frame = false;
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
-    u32 addr = raw_addr - 0x1EF00000;
+    u32 addr = raw_addr - HW::VADDR_GPU;
     u32 index = addr / 4;
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
@@ -54,7 +55,7 @@ inline void Read(T &var, const u32 raw_addr) {
 
 template <typename T>
 inline void Write(u32 addr, const T data) {
-    addr -= 0x1EF00000;
+    addr -= HW::VADDR_GPU;
     u32 index = addr / 4;
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
@@ -313,8 +314,6 @@ void Init() {
     framebuffer_top.address_right2 = 0x182B9800;
     framebuffer_sub.address_left1  = 0x1848F000;
     framebuffer_sub.address_left2  = 0x184C7800;
-    //framebuffer_sub.address_right1 = unknown;
-    //framebuffer_sub.address_right2 = unknown;
 
     framebuffer_top.width = 240;
     framebuffer_top.height = 400;
