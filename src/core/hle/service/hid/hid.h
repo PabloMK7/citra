@@ -18,16 +18,6 @@ namespace Kernel {
 namespace Service {
 namespace HID {
 
-// Handle to shared memory region designated to HID_User service
-extern Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem;
-
-// Event handles
-extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
-extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_2;
-extern Kernel::SharedPtr<Kernel::Event> g_event_accelerometer;
-extern Kernel::SharedPtr<Kernel::Event> g_event_gyroscope;
-extern Kernel::SharedPtr<Kernel::Event> g_event_debug_pad;
-
 /**
  * Structure of a Pad controller state.
  */

@@ -19,25 +19,18 @@ namespace HID {
 
 static const int MAX_CIRCLEPAD_POS = 0x9C; ///< Max value for a circle pad position
 
-Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem = nullptr;
+// Handle to shared memory region designated to HID_User service
+static Kernel::SharedPtr<Kernel::SharedMemory> shared_mem = nullptr;
 
-Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
-Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_2;
-Kernel::SharedPtr<Kernel::Event> g_event_accelerometer;
-Kernel::SharedPtr<Kernel::Event> g_event_gyroscope;
-Kernel::SharedPtr<Kernel::Event> g_event_debug_pad;
+// Event handles
+static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1 = nullptr;
+static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2 = nullptr;
+static Kernel::SharedPtr<Kernel::Event> event_accelerometer = nullptr;
+static Kernel::SharedPtr<Kernel::Event> event_gyroscope = nullptr;
+static Kernel::SharedPtr<Kernel::Event> event_debug_pad = nullptr;
 
 static u32 next_pad_index = 0;
 static u32 next_touch_index = 0;
-
-/**
- * Gets a pointer to the PadData structure inside HID shared memory
- */
-static inline SharedMem* GetSharedMem() {
-    if (g_shared_mem == nullptr)
-        return nullptr;
-    return reinterpret_cast<SharedMem*>(g_shared_mem->GetPointer().ValueOr(nullptr));
-}
 
 // TODO(peachum):
 // Add a method for setting analog input from joystick device for the circle Pad.
@@ -53,26 +46,27 @@ static inline SharedMem* GetSharedMem() {
 //     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
 
 void HIDUpdate() {
-    SharedMem* shared_mem = GetSharedMem();
+    SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer().ValueOr(nullptr));
+    const PadState state = VideoCore::g_emu_window->GetPadState();
 
-    if (shared_mem == nullptr)
+    if (mem == nullptr) {
+        LOG_DEBUG(Service_HID, "Cannot update HID prior to mapping shared memory!");
         return;
+    }
 
-    const PadState& state = VideoCore::g_emu_window->GetPadState();
-
-    shared_mem->pad.current_state.hex = state.hex;
-    shared_mem->pad.index = next_pad_index;
-    ++next_touch_index %= shared_mem->pad.entries.size();
+    mem->pad.current_state.hex = state.hex;
+    mem->pad.index = next_pad_index;
+    ++next_touch_index %= mem->pad.entries.size();
 
     // Get the previous Pad state
-    u32 last_entry_index = (shared_mem->pad.index - 1) % shared_mem->pad.entries.size();
-    PadState old_state = shared_mem->pad.entries[last_entry_index].current_state;
+    u32 last_entry_index = (mem->pad.index - 1) % mem->pad.entries.size();
+    PadState old_state = mem->pad.entries[last_entry_index].current_state;
 
     // Compute bitmask with 1s for bits different from the old state
     PadState changed = { { (state.hex ^ old_state.hex) } };
 
     // Get the current Pad entry
-    PadDataEntry* pad_entry = &shared_mem->pad.entries[shared_mem->pad.index];
+    PadDataEntry* pad_entry = &mem->pad.entries[mem->pad.index];
 
     // Update entry properties
     pad_entry->current_state.hex = state.hex;
@@ -86,16 +80,16 @@ void HIDUpdate() {
                               state.circle_up    ?  MAX_CIRCLEPAD_POS : 0x0;
 
     // If we just updated index 0, provide a new timestamp
-    if (shared_mem->pad.index == 0) {
-        shared_mem->pad.index_reset_ticks_previous = shared_mem->pad.index_reset_ticks;
-        shared_mem->pad.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
+    if (mem->pad.index == 0) {
+        mem->pad.index_reset_ticks_previous = mem->pad.index_reset_ticks;
+        mem->pad.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
     }
 
-    shared_mem->touch.index = next_touch_index;
-    ++next_touch_index %= shared_mem->touch.entries.size();
+    mem->touch.index = next_touch_index;
+    ++next_touch_index %= mem->touch.entries.size();
 
     // Get the current touch entry
-    TouchDataEntry* touch_entry = &shared_mem->touch.entries[shared_mem->touch.index];
+    TouchDataEntry* touch_entry = &mem->touch.entries[mem->touch.index];
     bool pressed = false;
 
     std::tie(touch_entry->x, touch_entry->y, pressed) = VideoCore::g_emu_window->GetTouchState();
@@ -106,14 +100,14 @@ void HIDUpdate() {
     // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
 
     // If we just updated index 0, provide a new timestamp
-    if (shared_mem->touch.index == 0) {
-        shared_mem->touch.index_reset_ticks_previous = shared_mem->touch.index_reset_ticks;
-        shared_mem->touch.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
+    if (mem->touch.index == 0) {
+        mem->touch.index_reset_ticks_previous = mem->touch.index_reset_ticks;
+        mem->touch.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
     }
     
     // Signal both handles when there's an update to Pad or touch
-    g_event_pad_or_touch_1->Signal();
-    g_event_pad_or_touch_2->Signal();
+    event_pad_or_touch_1->Signal();
+    event_pad_or_touch_2->Signal();
 }
 
 void GetIPCHandles(Service::Interface* self) {
@@ -121,12 +115,12 @@ void GetIPCHandles(Service::Interface* self) {
 
     cmd_buff[1] = 0; // No error
     // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
-    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::g_shared_mem).MoveFrom();
-    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_1).MoveFrom();
-    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::g_event_pad_or_touch_2).MoveFrom();
-    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::g_event_accelerometer).MoveFrom();
-    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::g_event_gyroscope).MoveFrom();
-    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::g_event_debug_pad).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_1).MoveFrom();
+    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_2).MoveFrom();
+    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::event_accelerometer).MoveFrom();
+    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::event_gyroscope).MoveFrom();
+    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::event_debug_pad).MoveFrom();
 }
 
 void HIDInit() {
@@ -135,17 +129,17 @@ void HIDInit() {
     AddService(new HID_U_Interface);
     AddService(new HID_SPVR_Interface);
 
-    g_shared_mem = SharedMemory::Create("HID:SharedMem");
+    shared_mem = SharedMemory::Create("HID:SharedMem");
 
     next_pad_index = 0;
     next_touch_index = 0;
 
     // Create event handles
-    g_event_pad_or_touch_1 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1");
-    g_event_pad_or_touch_2 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch2");
-    g_event_accelerometer  = Event::Create(RESETTYPE_ONESHOT, "HID:EventAccelerometer");
-    g_event_gyroscope      = Event::Create(RESETTYPE_ONESHOT, "HID:EventGyroscope");
-    g_event_debug_pad      = Event::Create(RESETTYPE_ONESHOT, "HID:EventDebugPad");
+    event_pad_or_touch_1 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1");
+    event_pad_or_touch_2 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch2");
+    event_accelerometer  = Event::Create(RESETTYPE_ONESHOT, "HID:EventAccelerometer");
+    event_gyroscope      = Event::Create(RESETTYPE_ONESHOT, "HID:EventGyroscope");
+    event_debug_pad      = Event::Create(RESETTYPE_ONESHOT, "HID:EventDebugPad");
 }
 
 void HIDShutdown() {
