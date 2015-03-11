@@ -1075,6 +1075,10 @@ typedef struct _swp_inst {
     unsigned int Rm;
 } swp_inst;
 
+typedef struct setend_inst {
+    unsigned int set_bigend;
+} setend_inst;
+
 typedef struct _b_2_thumb {
     unsigned int imm;
 }b_2_thumb;
@@ -2283,7 +2287,20 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)
     return inst_base;
 }
 
-static ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)    { UNIMPLEMENTED_INSTRUCTION("SETEND"); }
+static ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(setend_inst));
+    setend_inst* const inst_cream = (setend_inst*)inst_base->component;
+
+    inst_base->cond     = AL;
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->set_bigend = BIT(inst, 9);
+
+    return inst_base;
+}
 
 static ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)
 {
@@ -5521,6 +5538,23 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     SETEND_INST:
+    {
+        // SETEND is unconditional
+        setend_inst* const inst_cream = (setend_inst*)inst_base->component;
+        const bool big_endian = (inst_cream->set_bigend == 1);
+
+        if (big_endian)
+            cpu->Cpsr |= (1 << 9);
+        else
+            cpu->Cpsr &= ~(1 << 9);
+
+        LOG_WARNING(Core_ARM11, "SETEND %s executed", big_endian ? "BE" : "LE");
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(setend_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
 
     SHADD8_INST:
     SHADD16_INST:
