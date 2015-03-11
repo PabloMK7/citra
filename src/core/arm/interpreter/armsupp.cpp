@@ -201,3 +201,9 @@ u32 ARMul_UnsignedSatQ(s32 value, u8 shift, bool* saturation_occurred)
     *saturation_occurred = false;
     return (u32)value;
 }
+
+// Whether or not the given CPU is in big endian mode (E bit is set)
+bool InBigEndianMode(ARMul_State* cpu)
+{
+    return (cpu->Cpsr & (1 << 9)) != 0;
+}

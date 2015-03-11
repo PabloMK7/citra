@@ -147,6 +147,7 @@ inline void Write(VAddr addr, T data);
 u8 Read8(VAddr addr);
 u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
+u64 Read64(VAddr addr);
 
 u32 Read8_ZX(VAddr addr);
 u32 Read16_ZX(VAddr addr);

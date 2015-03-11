@@ -245,6 +245,12 @@ u32 Read32(const VAddr addr) {
     return (u32)data;
 }
 
+u64 Read64(const VAddr addr) {
+    u64_le data = 0;
+    Read<u64_le>(data, addr);
+    return (u64)data;
+}
+
 u32 Read8_ZX(const VAddr addr) {
     return (u32)Read8(addr);
 }
