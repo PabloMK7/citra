@@ -72,7 +72,7 @@ struct VertexShaderState {
     u32* program_counter;
 
     const float24* input_register_table[16];
-    float24* output_register_table[7*4];
+    Math::Vec4<float24> output_registers[16];
 
     Math::Vec4<float24> temporary_registers[16];
     bool conditional_code[2];
@@ -198,8 +198,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 src2[3] = src2[3] * float24::FromFloat32(-1);
             }
 
-            float24* dest = (instr.common.dest.Value() < 0x08) ? state.output_register_table[4*instr.common.dest.Value().GetIndex()]
-                        : (instr.common.dest.Value() < 0x10) ? dummy_vec4_float24
+            float24* dest = (instr.common.dest.Value() < 0x10) ? &state.output_registers[instr.common.dest.Value().GetIndex()][0]
                         : (instr.common.dest.Value() < 0x20) ? &state.temporary_registers[instr.common.dest.Value().GetIndex()][0]
                         : dummy_vec4_float24;
 
@@ -409,8 +408,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                     src3[3] = src3[3] * float24::FromFloat32(-1);
                 }
 
-                float24* dest = (instr.mad.dest.Value() < 0x08) ? state.output_register_table[4*instr.mad.dest.Value().GetIndex()]
-                            : (instr.mad.dest.Value() < 0x10) ? dummy_vec4_float24
+                float24* dest = (instr.mad.dest.Value() < 0x10) ? &state.output_registers[instr.mad.dest.Value().GetIndex()][0]
                             : (instr.mad.dest.Value() < 0x20) ? &state.temporary_registers[instr.mad.dest.Value().GetIndex()][0]
                             : dummy_vec4_float24;
 
@@ -587,12 +585,18 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes) {
     if(num_attributes > 14) state.input_register_table[attribute_register_map.attribute14_register] = &input.attr[14].x;
     if(num_attributes > 15) state.input_register_table[attribute_register_map.attribute15_register] = &input.attr[15].x;
 
-    // Setup output register table
-    OutputVertex ret;
-    // Zero output so that attributes which aren't output won't have denormals in them, which will
-    // slow us down later.
-    memset(&ret, 0, sizeof(ret));
+    state.conditional_code[0] = false;
+    state.conditional_code[1] = false;
 
+    ProcessShaderCode(state);
+    DebugUtils::DumpShader(shader_memory.data(), state.debug.max_offset, swizzle_data.data(),
+                           state.debug.max_opdesc_id, registers.vs_main_offset,
+                           registers.vs_output_attributes);
+
+    // Setup output data
+    OutputVertex ret;
+    // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
+    // figure out what those circumstances are and enable the remaining outputs then.
     for (int i = 0; i < 7; ++i) {
         const auto& output_register_map = registers.vs_output_attributes[i];
 
@@ -601,17 +605,17 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes) {
             output_register_map.map_z, output_register_map.map_w
         };
 
-        for (int comp = 0; comp < 4; ++comp)
-            state.output_register_table[4*i+comp] = ((float24*)&ret) + semantics[comp];
+        for (int comp = 0; comp < 4; ++comp) {
+            float24* out = ((float24*)&ret) + semantics[comp];
+            if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
+                *out = state.output_registers[i][comp];
+            } else {
+                // Zero output so that attributes which aren't output won't have denormals in them,
+                // which would slow us down later.
+                memset(out, 0, sizeof(*out));
+            }
+        }
     }
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
-    ProcessShaderCode(state);
-    DebugUtils::DumpShader(shader_memory.data(), state.debug.max_offset, swizzle_data.data(),
-                           state.debug.max_opdesc_id, registers.vs_main_offset,
-                           registers.vs_output_attributes);
 
     LOG_TRACE(Render_Software, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
         ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
