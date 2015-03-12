@@ -188,6 +188,12 @@ struct Regs {
             BitField<16, 16, u32> input_height;
         };
 
+        enum ScalingMode : u32 {
+            NoScale  = 0,  // Doesn't scale the image
+            ScaleX   = 1,  // Downscales the image in half in the X axis and applies a box filter
+            ScaleXY  = 2,  // Downscales the image in half in both the X and Y axes and applies a box filter
+        };
+
         union {
             u32 flags;
 
@@ -197,8 +203,7 @@ struct Regs {
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
 
-            BitField<24, 1, u32> scale_x;  // Shrinks the image in half horizontally, blending the extra pixels
-            BitField<25, 1, u32> scale_xy; // Shrinks the image horizontally and vertically, blending the extra pixels
+            BitField<24, 2, ScalingMode> scaling; // Determines the scaling mode of the transfer
         };
 
         INSERT_PADDING_WORDS(0x1);
