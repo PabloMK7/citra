@@ -27,6 +27,10 @@ public:
 
     static void OnKeyEvent(GLFWwindow* win, int key, int scancode, int action, int mods);
 
+    static void OnMouseButtonEvent(GLFWwindow* window, int button, int action, int mods);
+
+    static void OnCursorPosEvent(GLFWwindow* window, double x, double y);
+
     /// Whether the window is still open, and a close request hasn't yet been sent
     const bool IsOpen();
 

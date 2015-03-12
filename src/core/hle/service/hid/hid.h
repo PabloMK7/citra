@@ -18,16 +18,6 @@ namespace Kernel {
 namespace Service {
 namespace HID {
 
-// Handle to shared memory region designated to HID_User service
-extern Kernel::SharedPtr<Kernel::SharedMemory> g_shared_mem;
-
-// Event handles
-extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_1;
-extern Kernel::SharedPtr<Kernel::Event> g_event_pad_or_touch_2;
-extern Kernel::SharedPtr<Kernel::Event> g_event_accelerometer;
-extern Kernel::SharedPtr<Kernel::Event> g_event_gyroscope;
-extern Kernel::SharedPtr<Kernel::Event> g_event_debug_pad;
-
 /**
  * Structure of a Pad controller state.
  */
@@ -65,7 +55,7 @@ struct PadState {
 };
 
 /**
- * Structure of a single entry in the PadData's Pad state history array.
+ * Structure of a single entry of Pad state history within HID shared memory
  */
 struct PadDataEntry {
     PadState current_state;
@@ -77,23 +67,64 @@ struct PadDataEntry {
 };
 
 /**
- * Structure of all data related to the 3DS Pad.
+ * Structure of a single entry of touch state history within HID shared memory
  */
-struct PadData {
-    s64 index_reset_ticks;
-    s64 index_reset_ticks_previous;
-    u32 index; // the index of the last updated Pad state history element
-
-    u32 pad1;
-    u32 pad2;
-
-    PadState current_state; // same as entries[index].current_state
-    u32 raw_circle_pad_data;
-
-    u32 pad3;
-
-    std::array<PadDataEntry, 8> entries; // Pad state history
+struct TouchDataEntry {
+    u16 x;                     ///< Y-coordinate of a touchpad press on the lower screen
+    u16 y;                     ///< X-coordinate of a touchpad press on the lower screen
+    BitField<0, 7, u32> valid; ///< Set to 1 when this entry contains actual X/Y data, otherwise 0
 };
+
+/**
+ * Structure of data stored in HID shared memory
+ */
+struct SharedMem {
+    /// Pad data, this is used for buttons and the circle pad
+    struct {
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated pad state entry
+
+        INSERT_PADDING_WORDS(0x2);
+
+        PadState current_state; ///< Current state of the pad buttons
+
+        // TODO(bunnei): Implement `raw_circle_pad_data` field
+        u32 raw_circle_pad_data; ///< Raw (analog) circle pad data, before being converted
+
+        INSERT_PADDING_WORDS(0x1);
+
+        std::array<PadDataEntry, 8> entries; ///< Last 8 pad entries
+    } pad;
+
+    /// Touchpad data, this is used for touchpad input
+    struct {
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated touch entry
+
+        INSERT_PADDING_WORDS(0x1);
+
+        // TODO(bunnei): Implement `raw_entry` field
+        TouchDataEntry raw_entry; ///< Raw (analog) touch data, before being converted
+
+        std::array<TouchDataEntry, 8> entries; ///< Last 8 touch entries, in pixel coordinates
+    } touch;
+};
+
+// TODO: MSVC does not support using offsetof() on non-static data members even though this
+//       is technically allowed since C++11. This macro should be enabled once MSVC adds
+//       support for that.
+#ifndef _MSC_VER
+#define ASSERT_REG_POSITION(field_name, position)                  \
+    static_assert(offsetof(SharedMem, field_name) == position * 4, \
+                  "Field "#field_name" has invalid position")
+
+ASSERT_REG_POSITION(pad.index_reset_ticks, 0x0);
+ASSERT_REG_POSITION(touch.index_reset_ticks, 0x2A);
+
+#undef ASSERT_REG_POSITION
+#endif // !defined(_MSC_VER)
 
 // Pre-defined PadStates for single button presses
 const PadState PAD_NONE         = {{0}};
@@ -140,12 +171,13 @@ const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
  */
 void GetIPCHandles(Interface* self);
 
-// Methods for updating the HID module's state
-void PadButtonPress(const PadState& pad_state);
-void PadButtonRelease(const PadState& pad_state);
-void PadUpdateComplete();
+/// Checks for user input updates
+void HIDUpdate();
 
+/// Initialize HID service
 void HIDInit();
+
+/// Shutdown HID service
 void HIDShutdown();
 
 }

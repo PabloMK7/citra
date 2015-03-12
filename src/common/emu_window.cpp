@@ -6,18 +6,61 @@
 #include "video_core/video_core.h"
 
 void EmuWindow::KeyPressed(KeyMap::HostDeviceKey key) {
-    Service::HID::PadState mapped_key = KeyMap::GetPadKey(key);
-
-    Service::HID::PadButtonPress(mapped_key);
+    pad_state.hex |= KeyMap::GetPadKey(key).hex;
 }
 
 void EmuWindow::KeyReleased(KeyMap::HostDeviceKey key) {
-    Service::HID::PadState mapped_key = KeyMap::GetPadKey(key);
-
-    Service::HID::PadButtonRelease(mapped_key);
+    pad_state.hex &= ~KeyMap::GetPadKey(key).hex;
 }
 
-EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width, unsigned height) {
+/**
+ * Check if the given x/y coordinates are within the touchpad specified by the framebuffer layout
+ * @param layout FramebufferLayout object describing the framebuffer size and screen positions
+ * @param framebuffer_x Framebuffer x-coordinate to check
+ * @param framebuffer_y Framebuffer y-coordinate to check
+ * @return True if the coordinates are within the touchpad, otherwise false
+ */
+static bool IsWithinTouchscreen(const EmuWindow::FramebufferLayout& layout, unsigned framebuffer_x,
+                                unsigned framebuffer_y) {
+    return (framebuffer_y >= layout.bottom_screen.top    &&
+            framebuffer_y <  layout.bottom_screen.bottom &&
+            framebuffer_x >= layout.bottom_screen.left   &&
+            framebuffer_x <  layout.bottom_screen.right);
+}
+
+void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
+        return;
+
+    touch_x = VideoCore::kScreenBottomWidth * (framebuffer_x - framebuffer_layout.bottom_screen.left) /
+        (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
+    touch_y = VideoCore::kScreenBottomHeight * (framebuffer_y - framebuffer_layout.bottom_screen.top) /
+        (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
+
+    touch_pressed = true;
+    pad_state.touch = 1;
+}
+
+void EmuWindow::TouchReleased() {
+    touch_pressed = false;
+    touch_x = 0;
+    touch_y = 0;
+    pad_state.touch = 0;
+}
+
+void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
+    if (!touch_pressed)
+        return;
+
+    if (IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
+        TouchPressed(framebuffer_x, framebuffer_y);
+    else
+        TouchReleased();
+}
+
+EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width,
+    unsigned height) {
+
     ASSERT(width > 0);
     ASSERT(height > 0);
 
