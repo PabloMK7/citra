@@ -13,13 +13,13 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0000, GetIPCHandles,              "GetIPCHandles"},
     {0x000B0000, nullptr,                    "StartAnalogStickCalibration"},
     {0x000E0000, nullptr,                    "GetAnalogStickCalibrateParam"},
-    {0x00110000, nullptr,                    "EnableAccelerometer"},
+    {0x00110000, EnableAccelerometer,        "EnableAccelerometer"},
     {0x00120000, nullptr,                    "DisableAccelerometer"},
-    {0x00130000, nullptr,                    "EnableGyroscopeLow"},
+    {0x00130000, EnableGyroscopeLow,         "EnableGyroscopeLow"},
     {0x00140000, nullptr,                    "DisableGyroscopeLow"},
     {0x00150000, nullptr,                    "GetGyroscopeLowRawToDpsCoefficient"},
     {0x00160000, nullptr,                    "GetGyroscopeLowCalibrateParam"},
-    {0x00170000, nullptr,                    "GetSoundVolume"},
+    {0x00170000, GetSoundVolume,             "GetSoundVolume"},
 };
 
 HID_SPVR_Interface::HID_SPVR_Interface() {
