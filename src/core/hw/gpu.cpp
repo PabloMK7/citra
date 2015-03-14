@@ -146,8 +146,17 @@ inline void Write(u32 addr, const T data) {
                 for (u32 x = 0; x < output_width; ++x) {
                     Math::Vec4<u8> src_color = { 0, 0, 0, 0 };
 
-                    u32 scaled_x = x * horizontal_scale;
-                    u32 scaled_y = y * vertical_scale;
+                    // Calculate the [x,y] position of the input image 
+                    // based on the current output position and the scale
+                    u32 input_x = x * horizontal_scale;
+                    u32 input_y = y * vertical_scale;
+
+                    if (config.flip_vertically) {
+                        // Flip the y value of the output data, 
+                        // we do this after calculating the [x,y] position of the input image 
+                        // to account for the scaling options.
+                        y = output_height - y - 1;
+                    }
 
                     u32 dst_bytes_per_pixel = GPU::Regs::BytesPerPixel(config.output_format);
                     u32 src_bytes_per_pixel = GPU::Regs::BytesPerPixel(config.input_format);
@@ -159,14 +168,14 @@ inline void Write(u32 addr, const T data) {
                         u32 coarse_y = y & ~7;
                         u32 stride = output_width * dst_bytes_per_pixel;
 
-                        src_offset = (scaled_x + scaled_y * config.input_width) * src_bytes_per_pixel;
+                        src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
                         dst_offset = VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) + coarse_y * stride;
                     } else {
                         // Interpret the input as tiled and the output as linear
-                        u32 coarse_y = scaled_y & ~7;
+                        u32 coarse_y = input_y & ~7;
                         u32 stride = config.input_width * src_bytes_per_pixel;
 
-                        src_offset = VideoCore::GetMortonOffset(scaled_x, scaled_y, src_bytes_per_pixel) + coarse_y * stride;
+                        src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) + coarse_y * stride;
                         dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
                     }
 
