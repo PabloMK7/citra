@@ -58,4 +58,14 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
  */
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared);
 
+/**
+ * Constructs a FileSys::Path object that refers to the ExtData archive identified by
+ * the specified media type, high save id and low save id.
+ * @param media_type The media type where the archive is located (NAND / SDMC)
+ * @param high The high word of the save id for the archive
+ * @param low The low word of the save id for the archive
+ * @returns A FileSys::Path to the wanted archive
+ */
+Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low);
+
 } // namespace FileSys

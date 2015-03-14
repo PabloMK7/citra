@@ -34,6 +34,27 @@ std::string GetExtDataContainerPath(const std::string& mount_point, bool shared)
             SYSTEM_ID.c_str(), SDCARD_ID.c_str());
 }
 
+Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
+    std::vector<u8> binary_path;
+    binary_path.reserve(12);
+
+    // Append each word byte by byte
+
+    // The first word is the media type
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back((media_type >> (8 * i)) & 0xFF);
+
+    // Next is the low word
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back((low >> (8 * i)) & 0xFF);
+
+    // Next is the high word
+    for (unsigned i = 0; i < 4; ++i)
+        binary_path.push_back((high >> (8 * i)) & 0xFF);
+
+    return { binary_path };
+}
+
 ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location, bool shared)
         : mount_point(GetExtDataContainerPath(mount_location, shared)) {
     LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());

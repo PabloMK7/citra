@@ -35,6 +35,12 @@ enum class ArchiveIdCode : u32 {
     SaveDataCheck       = 0x2345678A,
 };
 
+/// Media types for the archives
+enum class MediaType : u32 {
+    NAND     = 0,
+    SDMC     = 1
+};
+
 typedef u64 ArchiveHandle;
 
 class File : public Kernel::Session {
@@ -172,11 +178,37 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = File
 
 /**
  * Creates a blank SharedExtSaveData archive for the specified extdata ID
+ * @param media_type The media type of the archive to create (NAND / SDMC)
  * @param high The high word of the extdata id to create
  * @param low The low word of the extdata id to create
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode CreateExtSaveData(u32 high, u32 low);
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low);
+
+/**
+ * Deletes the SharedExtSaveData archive for the specified extdata ID
+ * @param media_type The media type of the archive to delete (NAND / SDMC)
+ * @param high The high word of the extdata id to delete
+ * @param low The low word of the extdata id to delete
+ * @return ResultCode 0 on success or the corresponding code on error
+ */
+ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low);
+
+/**
+ * Deletes the SystemSaveData archive folder for the specified save data id
+ * @param high The high word of the SystemSaveData archive to delete
+ * @param low The low word of the SystemSaveData archive to delete
+ * @return ResultCode 0 on success or the corresponding code on error
+ */
+ResultCode DeleteSystemSaveData(u32 high, u32 low);
+
+/**
+ * Creates the SystemSaveData archive folder for the specified save data id
+ * @param high The high word of the SystemSaveData archive to create
+ * @param low The low word of the SystemSaveData archive to create
+ * @return ResultCode 0 on success or the corresponding code on error
+ */
+ResultCode CreateSystemSaveData(u32 high, u32 low);
 
 /// Initialize archives
 void ArchiveInit();
