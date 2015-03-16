@@ -68,11 +68,6 @@ void ARM_DynCom::SetCPSR(u32 cpsr) {
     state->Cpsr = cpsr;
 }
 
-u64 ARM_DynCom::GetTicks() const {
-    // TODO(Subv): Remove ARM_DynCom::GetTicks() and use CoreTiming::GetTicks() directly once ARMemu is gone
-    return CoreTiming::GetTicks();
-}
-
 void ARM_DynCom::AddTicks(u64 ticks) {
     down_count -= ticks;
     if (down_count < 0)

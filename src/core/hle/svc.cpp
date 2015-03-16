@@ -7,8 +7,9 @@
 #include "common/string_util.h"
 #include "common/symbols.h"
 
-#include "core/arm/arm_interface.h"
+#include "core/core_timing.h"
 #include "core/mem_map.h"
+#include "core/arm/arm_interface.h"
 
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
@@ -551,7 +552,7 @@ static void SleepThread(s64 nanoseconds) {
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
 static s64 GetSystemTick() {
-    return (s64)Core::g_app_core->GetTicks();
+    return (s64)CoreTiming::GetTicks();
 }
 
 /// Creates a memory block at the specified address with the specified permissions and size

@@ -23,7 +23,6 @@ public:
     u32 GetCPSR() const override;
     void SetCPSR(u32 cpsr) override;
 
-    u64 GetTicks() const override;
     void AddTicks(u64 ticks) override;
 
     void ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg);

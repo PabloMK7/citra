@@ -7,7 +7,7 @@
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
 
-#include "core/arm/arm_interface.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/hle.h"
@@ -82,7 +82,7 @@ void HIDUpdate() {
     // If we just updated index 0, provide a new timestamp
     if (mem->pad.index == 0) {
         mem->pad.index_reset_ticks_previous = mem->pad.index_reset_ticks;
-        mem->pad.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
+        mem->pad.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
 
     mem->touch.index = next_touch_index;
@@ -102,7 +102,7 @@ void HIDUpdate() {
     // If we just updated index 0, provide a new timestamp
     if (mem->touch.index == 0) {
         mem->touch.index_reset_ticks_previous = mem->touch.index_reset_ticks;
-        mem->touch.index_reset_ticks = (s64)Core::g_app_core->GetTicks();
+        mem->touch.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
     
     // Signal both handles when there's an update to Pad or touch
