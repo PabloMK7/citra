@@ -322,7 +322,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     case Regs::TextureFormat::RGBA8:
     {
         auto res = Color::DecodeRGBA8(source + VideoCore::GetMortonOffset(x, y, 4));
-        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
+        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
     }
 
     case Regs::TextureFormat::RGB8:
@@ -334,7 +334,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     case Regs::TextureFormat::RGB5A1:
     {
         auto res = Color::DecodeRGB5A1(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
+        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
     }
 
     case Regs::TextureFormat::RGB565:
@@ -346,7 +346,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     case Regs::TextureFormat::RGBA4:
     {
         auto res = Color::DecodeRGBA4(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), res.b(), disable_alpha ? 255 : res.a() };
+        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
     }
 
     case Regs::TextureFormat::IA8:
