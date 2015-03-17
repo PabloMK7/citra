@@ -118,8 +118,14 @@ inline void Write(u32 addr, const T data) {
             u8* src_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
             u8* dst_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
 
-            unsigned horizontal_scale = (config.scale_horizontally != 0) ? 2 : 1;
-            unsigned vertical_scale = (config.scale_vertically != 0) ? 2 : 1;
+            if (config.scaling > config.ScaleXY) {
+                LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode %u", config.scaling.Value());
+                UNIMPLEMENTED();
+                break;
+            }
+
+            unsigned horizontal_scale = (config.scaling != config.NoScale) ? 2 : 1;
+            unsigned vertical_scale = (config.scaling == config.ScaleXY) ? 2 : 1;
 
             u32 output_width = config.output_width / horizontal_scale;
             u32 output_height = config.output_height / vertical_scale;
@@ -140,7 +146,7 @@ inline void Write(u32 addr, const T data) {
                 break;
             }
 
-            // TODO(Subv): Blend the pixels when horizontal / vertical scaling is enabled, 
+            // TODO(Subv): Implement the box filter when scaling is enabled
             // right now we're just skipping the extra pixels.
             for (u32 y = 0; y < output_height; ++y) {
                 for (u32 x = 0; x < output_width; ++x) {
