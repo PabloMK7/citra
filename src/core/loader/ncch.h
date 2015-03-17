@@ -20,8 +20,8 @@ struct NCCH_Header {
     u16 version;
     u8 reserved_0[4];
     u8 program_id[8];
-    u8 temp_flag;
-    u8 reserved_1[0x2f];
+    u8 reserved_1[0x10];
+    u8 logo_region_hash[0x20];
     u8 product_code[0x10];
     u8 extended_header_hash[0x20];
     u32 extended_header_size;
@@ -29,15 +29,16 @@ struct NCCH_Header {
     u8 flags[8];
     u32 plain_region_offset;
     u32 plain_region_size;
-    u8 reserved_3[8];
+    u32 logo_region_offset;
+    u32 logo_region_size;
     u32 exefs_offset;
     u32 exefs_size;
     u32 exefs_hash_region_size;
-    u8 reserved_4[4];
+    u8 reserved_3[4];
     u32 romfs_offset;
     u32 romfs_size;
     u32 romfs_hash_region_size;
-    u8 reserved_5[4];
+    u8 reserved_4[4];
     u8 exefs_super_block_hash[0x20];
     u8 romfs_super_block_hash[0x20];
 };
@@ -88,8 +89,7 @@ struct ExHeader_DependencyList{
 };
 
 struct ExHeader_SystemInfo{
-    u32 save_data_size;
-    u8 reserved[4];
+    u64 save_data_size;
     u8 jump_id[8];
     u8 reserved_2[0x30];
 };
@@ -104,11 +104,14 @@ struct ExHeader_StorageInfo{
 
 struct ExHeader_ARM11_SystemLocalCaps{
     u8 program_id[8];
-    u8 flags[8];
-    u8 resource_limit_descriptor[0x10][2];
+    u32 core_version;
+    u8 flags[3];
+    u8 priority;
+    u8 resource_limit_descriptor[0x16][2];
     ExHeader_StorageInfo storage_info;
-    u8 service_access_control[0x20][8];
-    u8 reserved[0x1f];
+    u8 service_access_control[0x32][8];
+    u8 ex_service_access_control[0x2][8];
+    u8 reserved[0xf];
     u8 resource_limit_category;
 };
 
