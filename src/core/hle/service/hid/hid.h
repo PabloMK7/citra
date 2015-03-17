@@ -161,7 +161,7 @@ const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
  *      None
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Unused
+ *      2 : IPC Command Structure translate-header
  *      3 : Handle to HID_User shared memory
  *      4 : Event signaled by HID_User
  *      5 : Event signaled by HID_User
@@ -170,6 +170,34 @@ const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
  *      8 : Event signaled by HID_User
  */
 void GetIPCHandles(Interface* self);
+
+/**
+ * HID::EnableAccelerometer service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void EnableAccelerometer(Interface* self);
+
+/**
+ * HID::EnableGyroscopeLow service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void EnableGyroscopeLow(Interface* self);
+
+/**
+ * HID::GetSoundVolume service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : u8 output value
+ */
+void GetSoundVolume(Interface* self);
 
 /// Checks for user input updates
 void HIDUpdate();

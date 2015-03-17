@@ -114,6 +114,7 @@ void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = 0; // No error
+    cmd_buff[2] = 0x14000000; // IPC Command Structure translate-header
     // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
     cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_1).MoveFrom();
@@ -121,6 +122,37 @@ void GetIPCHandles(Service::Interface* self) {
     cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::event_accelerometer).MoveFrom();
     cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::event_gyroscope).MoveFrom();
     cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::event_debug_pad).MoveFrom();
+}
+
+void EnableAccelerometer(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    event_accelerometer->Signal();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_HID, "(STUBBED) called");
+}
+
+void EnableGyroscopeLow(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    event_gyroscope->Signal();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_HID, "(STUBBED) called");
+}
+
+void GetSoundVolume(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    const u8 volume = 0x3F; // TODO(purpasmart): Find out if this is the max value for the volume
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = volume;
+
+    LOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
 void HIDInit() {
