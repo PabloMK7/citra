@@ -83,7 +83,7 @@ inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 }
 #endif
 
-#else
+#else // EMU_PLATFORM != PLATFORM_WINDOWS
 
 #define EMU_FASTCALL __attribute__((fastcall))
 #define __stdcall
@@ -91,10 +91,6 @@ inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 
 #define BOOL bool
 #define DWORD u32
-
-#endif
-
-#if EMU_PLATFORM != PLATFORM_WINDOWS
 
 // TODO: Hacks..
 #include <limits.h>
