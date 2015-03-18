@@ -40,8 +40,8 @@ after_build:
         if (!"$env:APPVEYOR_PULL_REQUEST_TITLE" -and ("$env:APPVEYOR_REPO_BRANCH" -eq "master"))
           {
             $GITDATE = $(git show -s --date=short --format='%ad') -replace "-",""
-            $GITREV = git show -s --format='%h'
-            $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z"
+            $GITREV = $(git show -s --format='%h')
+            $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace "`n|`r",""
             # zip up the build folder
             7z a $BUILD_NAME .\build\bin\release\*
             
