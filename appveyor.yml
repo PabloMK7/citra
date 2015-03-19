@@ -41,15 +41,16 @@ after_build:
           {
             $GITDATE = $(git show -s --date=short --format='%ad') -replace "-",""
             $GITREV = $(git show -s --format='%h')
-            $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace "`n|`r",""
-            # zip up the build folder
+            # Where are these spaces coming from? Regardless, let's remove them
+            $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
+            # Zip up the build folder
             7z a $BUILD_NAME .\build\bin\release\*
             
-            # download winscp
+            # Download winscp
             Invoke-WebRequest "http://hivelocity.dl.sourceforge.net/project/winscp/WinSCP/5.7/winscp570.zip" -OutFile "winscp570.zip"
             7z e -y winscp570.zip
             
-            # upload to server
+            # Upload to server
             .\WinSCP.com /command `
                 "option batch abort" `
                 "option confirm off" `
