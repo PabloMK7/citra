@@ -20,6 +20,9 @@
 
 #pragma once
 
+#include "core/mem_map.h"
+#include "core/arm/skyeye_common/armdefs.h"
+
 // Register numbers in the MMU
 enum
 {
@@ -54,3 +57,55 @@ enum
 	XSCALE_CP15_AUX_CONTROL = 1,
 	XSCALE_CP15_COPRO_ACCESS = 15,
 };
+
+// Reads data in big/little endian format based on the
+// state of the E (endian) bit in the emulated CPU's APSR.
+inline u16 ReadMemory16(ARMul_State* cpu, u32 address) {
+    u16 data = Memory::Read16(address);
+
+    if (InBigEndianMode(cpu))
+        data = Common::swap16(data);
+
+    return data;
+}
+
+inline u32 ReadMemory32(ARMul_State* cpu, u32 address) {
+    u32 data = Memory::Read32(address);
+
+    if (InBigEndianMode(cpu))
+        data = Common::swap32(data);
+
+    return data;
+}
+
+inline u64 ReadMemory64(ARMul_State* cpu, u32 address) {
+    u64 data = Memory::Read64(address);
+
+    if (InBigEndianMode(cpu))
+        data = Common::swap64(data);
+
+    return data;
+}
+
+// Writes data in big/little endian format based on the
+// state of the E (endian) bit in the emulated CPU's APSR.
+inline void WriteMemory16(ARMul_State* cpu, u32 address, u16 data) {
+    if (InBigEndianMode(cpu))
+        data = Common::swap16(data);
+
+    Memory::Write16(address, data);
+}
+
+inline void WriteMemory32(ARMul_State* cpu, u32 address, u32 data) {
+    if (InBigEndianMode(cpu))
+        data = Common::swap32(data);
+
+    Memory::Write32(address, data);
+}
+
+inline void WriteMemory64(ARMul_State* cpu, u32 address, u64 data) {
+    if (InBigEndianMode(cpu))
+        data = Common::swap64(data);
+
+    Memory::Write64(address, data);
+}

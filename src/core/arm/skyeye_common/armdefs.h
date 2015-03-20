@@ -18,7 +18,6 @@
 #pragma once
 
 #include "common/common_types.h"
-#include "core/arm/skyeye_common/armmmu.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/skyeye_defs.h"
 
@@ -356,3 +355,5 @@ extern u16 ARMul_UnsignedSaturatedSub16(u16, u16);
 extern u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
 extern u32 ARMul_SignedSatQ(s32, u8, bool*);
 extern u32 ARMul_UnsignedSatQ(s32, u8, bool*);
+
+extern bool InBigEndianMode(ARMul_State*);
