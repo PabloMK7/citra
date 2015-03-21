@@ -546,20 +546,18 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
 static Common::Profiling::TimingCategory shader_category("Vertex Shader");
 
-OutputVertex RunShader(const InputVertex& input, int num_attributes) {
+OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup) {
     Common::Profiling::ScopeTimer timer(shader_category);
 
-    const auto& regs = g_state.regs;
-    const auto& vs = g_state.vs;
     VertexShaderState state;
 
-    const u32* main = &vs.program_code[regs.vs_main_offset];
+    const u32* main = &setup.program_code[config.main_offset];
     state.program_counter = (u32*)main;
     state.debug.max_offset = 0;
     state.debug.max_opdesc_id = 0;
 
     // Setup input register table
-    const auto& attribute_register_map = regs.vs_input_register_map;
+    const auto& attribute_register_map = config.input_register_map;
     float24 dummy_register;
     boost::fill(state.input_register_table, &dummy_register);
 
@@ -584,16 +582,16 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes) {
     state.conditional_code[1] = false;
 
     ProcessShaderCode(state);
-    DebugUtils::DumpShader(vs.program_code.data(), state.debug.max_offset, vs.swizzle_data.data(),
-                           state.debug.max_opdesc_id, regs.vs_main_offset,
-                           regs.vs_output_attributes);
+    DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),
+                           state.debug.max_opdesc_id, config.main_offset,
+                           g_state.regs.vs_output_attributes); // TODO: Don't hardcode VS here
 
     // Setup output data
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
     // figure out what those circumstances are and enable the remaining outputs then.
     for (int i = 0; i < 7; ++i) {
-        const auto& output_register_map = regs.vs_output_attributes[i];
+        const auto& output_register_map = g_state.regs.vs_output_attributes[i]; // TODO: Don't hardcode VS here
 
         u32 semantics[4] = {
             output_register_map.map_x, output_register_map.map_y,
