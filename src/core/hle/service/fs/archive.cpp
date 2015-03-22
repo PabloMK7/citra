@@ -395,24 +395,68 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path) {
     return archive_itr->second->Format(path);
 }
 
-ResultCode CreateExtSaveData(u32 high, u32 low) {
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low) {
     // Construct the binary path to the archive first
-    std::vector<u8> binary_path;
-    binary_path.reserve(12);
-    // The first word is all zero to specify a NAND archive
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back(0);
-    // Next is the low word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((low >> (8 * i)) & 0xFF);
-    // Next is the high word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((high >> i) & 0xFF);
-    FileSys::Path path(binary_path);
-    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    std::string base_path = FileSys::GetExtDataContainerPath(nand_directory, true);
+    FileSys::Path path = FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
+
+    std::string media_type_directory;
+    if (media_type == MediaType::NAND) {
+        media_type_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    } else if (media_type == MediaType::SDMC) {
+        media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX);
+    } else {
+        LOG_ERROR(Service_FS, "Unsupported media type %u", media_type);
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    }
+
+    std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
     std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
     if (!FileUtil::CreateFullPath(extsavedata_path))
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    return RESULT_SUCCESS;
+}
+
+ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
+    // Construct the binary path to the archive first
+    FileSys::Path path = FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
+
+    std::string media_type_directory;
+    if (media_type == MediaType::NAND) {
+        media_type_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    } else if (media_type == MediaType::SDMC) {
+        media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX);
+    } else {
+        LOG_ERROR(Service_FS, "Unsupported media type %u", media_type);
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    }
+
+    std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
+    std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
+    if (!FileUtil::DeleteDirRecursively(extsavedata_path))
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    return RESULT_SUCCESS;
+}
+
+ResultCode DeleteSystemSaveData(u32 high, u32 low) {
+    // Construct the binary path to the archive first
+    FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
+
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
+    std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
+    if (!FileUtil::DeleteDirRecursively(systemsavedata_path))
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+    return RESULT_SUCCESS;
+}
+
+ResultCode CreateSystemSaveData(u32 high, u32 low) {
+    // Construct the binary path to the archive first
+    FileSys::Path path = FileSys::ConstructSystemSaveDataBinaryPath(high, low);
+
+    std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
+    std::string base_path = FileSys::GetSystemSaveDataContainerPath(nand_directory);
+    std::string systemsavedata_path = FileSys::GetSystemSaveDataPath(base_path, path);
+    if (!FileUtil::CreateFullPath(systemsavedata_path))
         return ResultCode(-1); // TODO(Subv): Find the right error code
     return RESULT_SUCCESS;
 }
