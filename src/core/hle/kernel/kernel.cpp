@@ -154,7 +154,7 @@ void Shutdown() {
  */
 bool LoadExec(u32 entry_point) {
     // 0x30 is the typical main thread priority I've seen used so far
-    g_main_thread = Kernel::SetupMainThread(Kernel::DEFAULT_STACK_SIZE, entry_point, 0x30);
+    g_main_thread = Kernel::SetupMainThread(Kernel::DEFAULT_STACK_SIZE, entry_point, THREADPRIO_DEFAULT);
 
     return true;
 }

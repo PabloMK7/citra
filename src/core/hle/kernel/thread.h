@@ -18,10 +18,9 @@
 #include "core/hle/result.h"
 
 enum ThreadPriority {
-    THREADPRIO_HIGHEST      = 0,    ///< Highest thread priority
-    THREADPRIO_DEFAULT      = 16,   ///< Default thread priority for userland apps
-    THREADPRIO_LOW          = 31,   ///< Low range of thread priority for userland apps
-    THREADPRIO_LOWEST       = 63,   ///< Thread priority max checked by svcCreateThread
+    THREADPRIO_HIGHEST      = 0x0,  ///< Highest thread priority
+    THREADPRIO_DEFAULT      = 0x30, ///< Default thread priority for userland apps
+    THREADPRIO_LOWEST       = 0x3F, ///< Lowest thread priority
 };
 
 enum ThreadProcessorId {
