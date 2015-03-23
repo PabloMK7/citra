@@ -336,6 +336,8 @@ static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u
             "thread designated for system CPU core (UNIMPLEMENTED) will be run with app core scheduling");
     }
 
+    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 
