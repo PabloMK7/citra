@@ -2156,7 +2156,22 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(revsh)(unsigned int inst, int index)
      return INTERPRETER_TRANSLATE(rev)(inst, index);
 }
 
-static ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)   { UNIMPLEMENTED_INSTRUCTION("RFE"); }
+static ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
+    ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
+
+    inst_base->cond     = AL;
+    inst_base->idx      = index;
+    inst_base->br       = INDIRECT_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->inst = inst;
+    inst_cream->get_addr = get_calc_addr_op(inst);
+
+    return inst_base;
+}
+
 static ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rsb_inst));
@@ -5293,6 +5308,20 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     }
 
     RFE_INST:
+    {
+        // RFE is unconditional
+        ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
+
+        u32 address = 0;
+        inst_cream->get_addr(cpu, inst_cream->inst, address, 1);
+
+        cpu->Cpsr    = ReadMemory32(cpu, address);
+        cpu->Reg[15] = ReadMemory32(cpu, address + 4);
+
+        INC_PC(sizeof(ldst_inst));
+        goto DISPATCH;
+    }
+
     RSB_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
