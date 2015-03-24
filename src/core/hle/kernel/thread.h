@@ -17,16 +17,19 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 
-enum ThreadPriority {
-    THREADPRIO_HIGHEST      = 0x0,  ///< Highest thread priority
-    THREADPRIO_DEFAULT      = 0x30, ///< Default thread priority for userland apps
-    THREADPRIO_LOWEST       = 0x3F, ///< Lowest thread priority
+enum ThreadPriority : s32{
+    THREADPRIO_HIGHEST          = 0,  ///< Highest thread priority
+    THREADPRIO_USERLAND_MAX     = 24, ///< Highest thread priority for userland apps
+    THREADPRIO_DEFAULT          = 48, ///< Default thread priority for userland apps
+    THREADPRIO_LOWEST           = 63, ///< Lowest thread priority
 };
 
-enum ThreadProcessorId {
-    THREADPROCESSORID_0     = 0xFFFFFFFE,   ///< Enables core appcode
-    THREADPROCESSORID_1     = 0xFFFFFFFD,   ///< Enables core syscore
-    THREADPROCESSORID_ALL   = 0xFFFFFFFC,   ///< Enables both cores
+enum ThreadProcessorId : s32 {
+    THREADPROCESSORID_DEFAULT   = -2, ///< Run thread on default core specified by exheader
+    THREADPROCESSORID_ALL       = -1, ///< Run thread on either core
+    THREADPROCESSORID_0         =  0, ///< Run thread on core 0 (AppCore)
+    THREADPROCESSORID_1         =  1, ///< Run thread on core 1 (SysCore)
+    THREADPROCESSORID_MAX       =  2, ///< Processor ID must be less than this
 };
 
 enum ThreadStatus {
@@ -134,8 +137,10 @@ public:
     u32 entry_point;
     u32 stack_top;
 
-    s32 initial_priority;
-    s32 current_priority;
+    s32 nominal_priority;   ///< Nominal thread priority, as set by the emulated application
+    s32 current_priority;   ///< Current thread priority, can be temporarily changed
+
+    u64 last_running_ticks; ///< CPU tick when thread was last running
 
     s32 processor_id;
 

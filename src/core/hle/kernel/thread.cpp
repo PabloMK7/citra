@@ -140,6 +140,29 @@ void ArbitrateAllThreads(u32 address) {
     }
 }
 
+/// Boost low priority threads (temporarily) that have been starved
+static void PriorityBoostStarvedThreads() {
+    u64 current_ticks = CoreTiming::GetTicks();
+
+    for (auto& thread : thread_list) {
+        // TODO(bunnei): Threads that have been waiting to be scheduled for `boost_ticks` (or
+        // longer) will have their priority temporarily adjusted to 1 higher than the highest
+        // priority thread to prevent thread starvation. This general behavior has been verified
+        // on hardware. However, this is almost certainly not perfect, and the real CTR OS scheduler
+        // should probably be reversed to verify this.
+
+        const u64 boost_timeout = 2000000;  // Boost threads that have been ready for > this long
+
+        u64 delta = current_ticks - thread->last_running_ticks;
+
+        if (thread->status == THREADSTATUS_READY && delta > boost_timeout && !thread->idle) {
+            const s32 boost_priority = std::max(ready_queue.get_first()->current_priority - 1, 0);
+            ready_queue.move(thread, thread->current_priority, boost_priority);
+            thread->current_priority = boost_priority;
+        }
+    }
+}
+
 /** 
  * Switches the CPU's active thread context to that of the specified thread
  * @param new_thread The thread to switch to
@@ -151,6 +174,7 @@ static void SwitchContext(Thread* new_thread) {
 
     // Save context for previous thread
     if (previous_thread) {
+        previous_thread->last_running_ticks = CoreTiming::GetTicks();
         Core::g_app_core->SaveContext(previous_thread->context);
 
         if (previous_thread->status == THREADSTATUS_RUNNING) {
@@ -167,6 +191,9 @@ static void SwitchContext(Thread* new_thread) {
 
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = THREADSTATUS_RUNNING;
+
+        // Restores thread to its nominal priority if it has been temporarily changed
+        new_thread->current_priority = new_thread->nominal_priority;
 
         Core::g_app_core->LoadContext(new_thread->context);
     } else {
@@ -364,7 +391,8 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->status = THREADSTATUS_DORMANT;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
-    thread->initial_priority = thread->current_priority = priority;
+    thread->nominal_priority = thread->current_priority = priority;
+    thread->last_running_ticks = CoreTiming::GetTicks();
     thread->processor_id = processor_id;
     thread->wait_set_output = false;
     thread->wait_all = false;
@@ -400,18 +428,11 @@ static void ClampPriority(const Thread* thread, s32* priority) {
 void Thread::SetPriority(s32 priority) {
     ClampPriority(this, &priority);
 
-    if (current_priority == priority) {
-        return;
-    }
+    // If thread was ready, adjust queues
+    if (status == THREADSTATUS_READY)
+        ready_queue.move(this, current_priority, priority);
 
-    if (status == THREADSTATUS_READY) {
-        // If thread was ready, adjust queues
-        ready_queue.remove(current_priority, this);
-        ready_queue.prepare(priority);
-        ready_queue.push_back(priority, this);
-    }
-    
-    current_priority = priority;
+    nominal_priority = current_priority = priority;
 }
 
 SharedPtr<Thread> SetupIdleThread() {
@@ -440,6 +461,9 @@ SharedPtr<Thread> SetupMainThread(u32 stack_size, u32 entry_point, s32 priority)
 
 void Reschedule() {
     Thread* prev = GetCurrentThread();
+
+    PriorityBoostStarvedThreads();
+
     Thread* next = PopNextReadyThread();
     HLE::g_reschedule = false;
 
