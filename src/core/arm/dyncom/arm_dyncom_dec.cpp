@@ -413,7 +413,7 @@ int decode_arm_instr(uint32_t instr, int32_t *idx) {
                 if (instr != arm_instruction[i].content[base + 2]) {
                     break;
                 }
-            } else if (BITS(arm_instruction[i].content[base], arm_instruction[i].content[base + 1]) != arm_instruction[i].content[base + 2]) {
+            } else if (BITS(instr, arm_instruction[i].content[base], arm_instruction[i].content[base + 1]) != arm_instruction[i].content[base + 2]) {
                 break;
             }
             base += 3;
@@ -429,7 +429,7 @@ int decode_arm_instr(uint32_t instr, int32_t *idx) {
             if (n != 0) {
                 base = 0;
                 while (n) {
-                    if (BITS(arm_exclusion_code[i].content[base], arm_exclusion_code[i].content[base + 1]) != arm_exclusion_code[i].content[base + 2]) {
+                    if (BITS(instr, arm_exclusion_code[i].content[base], arm_exclusion_code[i].content[base + 1]) != arm_exclusion_code[i].content[base + 2]) {
                         break;
                     }
                     base += 3;
