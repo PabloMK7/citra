@@ -409,3 +409,232 @@ u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcod
     LOG_ERROR(Core_ARM11, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
     return 0;
 }
+
+// Write to the CP15 registers. Used with implementation of the MCR instruction.
+// Note that since the 3DS does not have the hypervisor extensions, these registers
+// are not implemented.
+void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2)
+{
+    if (InAPrivilegedMode(cpu))
+    {
+        if (crn == 1 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                cpu->CP15[CP15(CP15_CONTROL)] = value;
+            else if (opcode_2 == 1)
+                cpu->CP15[CP15(CP15_AUXILIARY_CONTROL)] = value;
+            else if (opcode_2 == 2)
+                cpu->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)] = value;
+        }
+        else if (crn == 2 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)] = value;
+            else if (opcode_2 == 1)
+                cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)] = value;
+            else if (opcode_2 == 2)
+                cpu->CP15[CP15(CP15_TRANSLATION_BASE_CONTROL)] = value;
+        }
+        else if (crn == 3 && opcode_1 == 0 && crm == 0 && opcode_2 == 0)
+        {
+            cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)] = value;
+        }
+        else if (crn == 5 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                cpu->CP15[CP15(CP15_FAULT_STATUS)] = value;
+            else if (opcode_2 == 1)
+                cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)] = value;
+        }
+        else if (crn == 6 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                cpu->CP15[CP15(CP15_FAULT_ADDRESS)] = value;
+            else if (opcode_2 == 1)
+                cpu->CP15[CP15(CP15_WFAR)] = value;
+        }
+        else if (crn == 7 && opcode_1 == 0)
+        {
+            LOG_WARNING(Core_ARM11, "Cache operations are not fully implemented.");
+
+            if (crm == 0 && opcode_2 == 4)
+            {
+                cpu->CP15[CP15(CP15_WAIT_FOR_INTERRUPT)] = value;
+            }
+            else if (crm == 4 && opcode_2 == 0)
+            {
+                // NOTE: Not entirely accurate. This should do permission checks.
+                cpu->CP15[CP15(CP15_PHYS_ADDRESS)] = Memory::VirtualToPhysicalAddress(value);
+            }
+            else if (crm == 5)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_INVALIDATE_INSTR_CACHE)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_INVALIDATE_INSTR_CACHE_USING_MVA)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_INVALIDATE_INSTR_CACHE_USING_INDEX)] = value;
+                else if (opcode_2 == 6)
+                    cpu->CP15[CP15(CP15_FLUSH_BRANCH_TARGET_CACHE)] = value;
+                else if (opcode_2 == 7)
+                    cpu->CP15[CP15(CP15_FLUSH_BRANCH_TARGET_CACHE_ENTRY)] = value;
+            }
+            else if (crm == 6)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DATA_CACHE)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DATA_CACHE_LINE_USING_MVA)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DATA_CACHE_LINE_USING_INDEX)] = value;
+            }
+            else if (crm == 7 && opcode_2 == 0)
+            {
+                cpu->CP15[CP15(CP15_INVALIDATE_DATA_AND_INSTR_CACHE)] = value;
+            }
+            else if (crm == 10)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_CLEAN_DATA_CACHE)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_CLEAN_DATA_CACHE_LINE_USING_MVA)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_CLEAN_DATA_CACHE_LINE_USING_INDEX)] = value;
+            }
+            else if (crm == 14)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_CLEAN_AND_INVALIDATE_DATA_CACHE)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_CLEAN_AND_INVALIDATE_DATA_CACHE_LINE_USING_MVA)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_CLEAN_AND_INVALIDATE_DATA_CACHE_LINE_USING_INDEX)] = value;
+            }
+        }
+        else if (crn == 8 && opcode_1 == 0)
+        {
+            LOG_WARNING(Core_ARM11, "TLB operations not fully implemented.");
+
+            if (crm == 5)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_INVALIDATE_ITLB)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_INVALIDATE_ITLB_SINGLE_ENTRY)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_INVALIDATE_ITLB_ENTRY_ON_ASID_MATCH)] = value;
+                else if (opcode_2 == 3)
+                    cpu->CP15[CP15(CP15_INVALIDATE_ITLB_ENTRY_ON_MVA)] = value;
+            }
+            else if (crm == 6)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DTLB)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DTLB_SINGLE_ENTRY)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DTLB_ENTRY_ON_ASID_MATCH)] = value;
+                else if (opcode_2 == 3)
+                    cpu->CP15[CP15(CP15_INVALIDATE_DTLB_ENTRY_ON_MVA)] = value;
+            }
+            else if (crm == 7)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_INVALIDATE_UTLB)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_INVALIDATE_UTLB_SINGLE_ENTRY)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_INVALIDATE_UTLB_ENTRY_ON_ASID_MATCH)] = value;
+                else if (opcode_2 == 3)
+                    cpu->CP15[CP15(CP15_INVALIDATE_UTLB_ENTRY_ON_MVA)] = value;
+            }
+        }
+        else if (crn == 9 && opcode_1 == 0 && crm == 0 && opcode_2 == 0)
+        {
+            cpu->CP15[CP15(CP15_DATA_CACHE_LOCKDOWN)] = value;
+        }
+        else if (crn == 10 && opcode_1 == 0)
+        {
+            if (crm == 0 && opcode_2 == 0)
+            {
+                cpu->CP15[CP15(CP15_TLB_LOCKDOWN)] = value;
+            }
+            else if (crm == 2)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_PRIMARY_REGION_REMAP)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_NORMAL_REGION_REMAP)] = value;
+            }
+        }
+        else if (crn == 13 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                cpu->CP15[CP15(CP15_PID)] = value;
+            else if (opcode_2 == 1)
+                cpu->CP15[CP15(CP15_CONTEXT_ID)] = value;
+            else if (opcode_2 == 3)
+                cpu->CP15[CP15(CP15_THREAD_URO)] = value;
+            else if (opcode_2 == 4)
+                cpu->CP15[CP15(CP15_THREAD_PRW)] = value;
+        }
+        else if (crn == 15)
+        {
+            if (opcode_1 == 0 && crm == 12)
+            {
+                if (opcode_2 == 0)
+                    cpu->CP15[CP15(CP15_PERFORMANCE_MONITOR_CONTROL)] = value;
+                else if (opcode_2 == 1)
+                    cpu->CP15[CP15(CP15_CYCLE_COUNTER)] = value;
+                else if (opcode_2 == 2)
+                    cpu->CP15[CP15(CP15_COUNT_0)] = value;
+                else if (opcode_2 == 3)
+                    cpu->CP15[CP15(CP15_COUNT_1)] = value;
+            }
+            else if (opcode_1 == 5)
+            {
+                if (crm == 4)
+                {
+                    if (opcode_2 == 2)
+                        cpu->CP15[CP15(CP15_READ_MAIN_TLB_LOCKDOWN_ENTRY)] = value;
+                    else if (opcode_2 == 4)
+                        cpu->CP15[CP15(CP15_WRITE_MAIN_TLB_LOCKDOWN_ENTRY)] = value;
+                }
+                else if (crm == 5 && opcode_2 == 2)
+                {
+                    cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_VIRT_ADDRESS)] = value;
+                }
+                else if (crm == 6 && opcode_2 == 2)
+                {
+                    cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_PHYS_ADDRESS)] = value;
+                }
+                else if (crm == 7 && opcode_2 == 2)
+                {
+                    cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_ATTRIBUTE)] = value;
+                }
+            }
+            else if (opcode_1 == 7 && crm == 1 && opcode_2 == 0)
+            {
+                cpu->CP15[CP15(CP15_TLB_DEBUG_CONTROL)] = value;
+            }
+        }
+    }
+
+    // Unprivileged registers
+    if (crn == 7 && opcode_1 == 0 && crm == 5 && opcode_2 == 4)
+    {
+        cpu->CP15[CP15(CP15_FLUSH_PREFETCH_BUFFER)] = value;
+    }
+    else if (crn == 7 && opcode_1 == 0 && crm == 10)
+    {
+       if (opcode_2 == 4)
+           cpu->CP15[CP15(CP15_DATA_SYNC_BARRIER)] = value;
+       else if (opcode_2 == 5)
+           cpu->CP15[CP15(CP15_DATA_MEMORY_BARRIER)] = value;
+           
+    }
+    else if (crn == 13 && opcode_1 == 0 && crm == 0 && opcode_2 == 2)
+    {
+        cpu->CP15[CP15(CP15_THREAD_UPRW)] = value;
+    }
+}
