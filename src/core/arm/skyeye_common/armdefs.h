@@ -358,3 +358,5 @@ extern u32 ARMul_UnsignedSatQ(s32, u8, bool*);
 
 extern bool InBigEndianMode(ARMul_State*);
 extern bool InAPrivilegedMode(ARMul_State*);
+
+extern u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);

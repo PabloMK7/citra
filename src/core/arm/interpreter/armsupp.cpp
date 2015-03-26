@@ -15,7 +15,9 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
+#include "core/mem_map.h"
 #include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/arm_regformat.h"
 
 // Unsigned sum of absolute difference
 u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right)
@@ -212,4 +214,198 @@ bool InBigEndianMode(ARMul_State* cpu)
 bool InAPrivilegedMode(ARMul_State* cpu)
 {
     return (cpu->Mode != USER32MODE);
+}
+
+// Reads from the CP15 registers. Used with implementation of the MRC instruction.
+// Note that since the 3DS does not have the hypervisor extensions, these registers
+// are not implemented.
+u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2)
+{
+    // Unprivileged registers
+    if (crn == 13 && opcode_1 == 0 && crm == 0)
+    {
+        if (opcode_2 == 2)
+            return cpu->CP15[CP15(CP15_THREAD_UPRW)];
+
+        // TODO: Whenever TLS is implemented, this should return
+        // "cpu->CP15[CP15(CP15_THREAD_URO)];"
+        // which contains the address of the 0x200-byte TLS
+        if (opcode_2 == 3)
+            return Memory::KERNEL_MEMORY_VADDR;
+    }
+
+    if (InAPrivilegedMode(cpu))
+    {
+        if (crn == 0 && opcode_1 == 0)
+        {
+            if (crm == 0)
+            {
+                if (opcode_2 == 0)
+                    return cpu->CP15[CP15(CP15_MAIN_ID)];
+
+                if (opcode_2 == 1)
+                    return cpu->CP15[CP15(CP15_CACHE_TYPE)];
+
+                if (opcode_2 == 3)
+                    return cpu->CP15[CP15(CP15_TLB_TYPE)];
+
+                if (opcode_2 == 5)
+                    return cpu->CP15[CP15(CP15_CPU_ID)];
+            }
+            else if (crm == 1)
+            {
+                if (opcode_2 == 0)
+                    return cpu->CP15[CP15(CP15_PROCESSOR_FEATURE_0)];
+
+                if (opcode_2 == 1)
+                    return cpu->CP15[CP15(CP15_PROCESSOR_FEATURE_1)];
+
+                if (opcode_2 == 2)
+                    return cpu->CP15[CP15(CP15_DEBUG_FEATURE_0)];
+
+                if (opcode_2 == 4)
+                    return cpu->CP15[CP15(CP15_MEMORY_MODEL_FEATURE_0)];
+
+                if (opcode_2 == 5)
+                    return cpu->CP15[CP15(CP15_MEMORY_MODEL_FEATURE_1)];
+
+                if (opcode_2 == 6)
+                    return cpu->CP15[CP15(CP15_MEMORY_MODEL_FEATURE_2)];
+
+                if (opcode_2 == 7)
+                    return cpu->CP15[CP15(CP15_MEMORY_MODEL_FEATURE_3)];
+            }
+            else if (crm == 2)
+            {
+                if (opcode_2 == 0)
+                    return cpu->CP15[CP15(CP15_ISA_FEATURE_0)];
+
+                if (opcode_2 == 1)
+                    return cpu->CP15[CP15(CP15_ISA_FEATURE_1)];
+
+                if (opcode_2 == 2)
+                    return cpu->CP15[CP15(CP15_ISA_FEATURE_2)];
+
+                if (opcode_2 == 3)
+                    return cpu->CP15[CP15(CP15_ISA_FEATURE_3)];
+
+                if (opcode_2 == 4)
+                    return cpu->CP15[CP15(CP15_ISA_FEATURE_4)];
+            }
+        }
+
+        if (crn == 1 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_CONTROL)];
+
+            if (opcode_2 == 1)
+                return cpu->CP15[CP15(CP15_AUXILIARY_CONTROL)];
+
+            if (opcode_2 == 2)
+                return cpu->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)];
+        }
+
+        if (crn == 2 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)];
+
+            if (opcode_2 == 1)
+                return cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)];
+
+            if (opcode_2 == 2)
+                return cpu->CP15[CP15(CP15_TRANSLATION_BASE_CONTROL)];
+        }
+
+        if (crn == 3 && opcode_1 == 0 && crm == 0 && opcode_2 == 0)
+            return cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
+
+        if (crn == 5 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_FAULT_STATUS)];
+
+            if (opcode_2 == 1)
+                return cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)];
+        }
+
+        if (crn == 6 && opcode_1 == 0 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_FAULT_ADDRESS)];
+
+            if (opcode_2 == 1)
+                return cpu->CP15[CP15(CP15_WFAR)];
+        }
+
+        if (crn == 7 && opcode_1 == 0 && crm == 4 && opcode_2 == 0)
+            return cpu->CP15[CP15(CP15_PHYS_ADDRESS)];
+
+        if (crn == 9 && opcode_1 == 0 && crm == 0 && opcode_2 == 0)
+            return cpu->CP15[CP15(CP15_DATA_CACHE_LOCKDOWN)];
+
+        if (crn == 10 && opcode_1 == 0)
+        {
+            if (crm == 0 && opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_TLB_LOCKDOWN)];
+
+            if (crm == 2)
+            {
+                if (opcode_2 == 0)
+                    return cpu->CP15[CP15(CP15_PRIMARY_REGION_REMAP)];
+
+                if (opcode_2 == 1)
+                    return cpu->CP15[CP15(CP15_NORMAL_REGION_REMAP)];
+            }
+        }
+
+        if (crn == 13 && crm == 0)
+        {
+            if (opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_PID)];
+
+            if (opcode_2 == 1)
+                return cpu->CP15[CP15(CP15_CONTEXT_ID)];
+
+            if (opcode_2 == 4)
+                return cpu->CP15[CP15(CP15_THREAD_PRW)];
+        }
+
+        if (crn == 15)
+        {
+            if (opcode_1 == 0 && crm == 12)
+            {
+                if (opcode_2 == 0)
+                    return cpu->CP15[CP15(CP15_PERFORMANCE_MONITOR_CONTROL)];
+
+                if (opcode_2 == 1)
+                    return cpu->CP15[CP15(CP15_CYCLE_COUNTER)];
+
+                if (opcode_2 == 2)
+                    return cpu->CP15[CP15(CP15_COUNT_0)];
+
+                if (opcode_2 == 3)
+                    return cpu->CP15[CP15(CP15_COUNT_1)];
+            }
+
+            if (opcode_1 == 5 && opcode_2 == 2)
+            {
+                if (crm == 5)
+                    return cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_VIRT_ADDRESS)];
+
+                if (crm == 6)
+                    return cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_PHYS_ADDRESS)];
+
+                if (crm == 7)
+                    return cpu->CP15[CP15(CP15_MAIN_TLB_LOCKDOWN_ATTRIBUTE)];
+            }
+
+            if (opcode_1 == 7 && crm == 1 && opcode_2 == 0)
+                return cpu->CP15[CP15(CP15_TLB_DEBUG_CONTROL)];
+        }
+    }
+
+    LOG_ERROR(Core_ARM11, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
+    return 0;
 }
