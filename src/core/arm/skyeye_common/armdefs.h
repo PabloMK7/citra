@@ -357,3 +357,4 @@ extern u32 ARMul_SignedSatQ(s32, u8, bool*);
 extern u32 ARMul_UnsignedSatQ(s32, u8, bool*);
 
 extern bool InBigEndianMode(ARMul_State*);
+extern bool InAPrivilegedMode(ARMul_State*);

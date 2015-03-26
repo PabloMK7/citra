@@ -207,3 +207,9 @@ bool InBigEndianMode(ARMul_State* cpu)
 {
     return (cpu->Cpsr & (1 << 9)) != 0;
 }
+
+// Whether or not the given CPU is in a mode other than user mode.
+bool InAPrivilegedMode(ARMul_State* cpu)
+{
+    return (cpu->Mode != USER32MODE);
+}

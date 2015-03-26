@@ -3690,10 +3690,6 @@ static int clz(unsigned int x) {
     return n;
 }
 
-static bool InAPrivilegedMode(ARMul_State* core) {
-    return (core->Mode != USER32MODE);
-}
-
 unsigned InterpreterMainLoop(ARMul_State* state) {
     Common::Profiling::ScopeTimer timer_execute(profile_execute);
 
