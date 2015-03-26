@@ -12,29 +12,29 @@ else()
     add_definitions(/D_CRT_SECURE_NO_WARNINGS)
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE TYPE INTERNAL)
+    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE STRING "" FORCE)
 
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
     # changes intact, so we'll just clobber everything and say sorry.
     message(STATUS "Cache compiler flags ignored, please edit CMakeLists.txt to change the flags.")
-    # /MP - Multi-threaded compilation
-    # /Ox - Full optimization
+    # /O2 - Optimization level 2
     # /Oy- - Don't omit frame pointer
     # /GR- - Disable RTTI
     # /GS- - No stack buffer overflow checks
     # /EHsc - C++-only exception handling semantics
-    set(optimization_flags "/MP /Ox /Oy- /GR- /GS- /EHsc")
+    set(optimization_flags "/O2 /Oy- /GR- /GS- /EHsc")
+    # /MP - Multi-threaded compilation
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     # /MDd - Multi-threaded Debug Runtime DLL
     set(CMAKE_C_FLAGS_DEBUG   "/MP /MDd /Zi" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "/MP /MDd /Zi" CACHE STRING "" FORCE)
     # /MD - Multi-threaded runtime DLL
-    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /MD" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /MD" CACHE STRING "" FORCE)
-    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /MD /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE   "${optimization_flags} /MP /MD" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "${optimization_flags} /MP /MD" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${optimization_flags} /MP /MD /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${optimization_flags} /MP /MD /Zi /Zo" CACHE STRING "" FORCE)
     
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "/DEBUG" CACHE STRING "" FORCE)
     set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "/DEBUG" CACHE STRING "" FORCE)

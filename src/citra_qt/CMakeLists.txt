@@ -77,34 +77,33 @@ target_link_libraries(citra-qt ${PLATFORM_LIBRARIES})
 
 if (Qt5_FOUND AND MSVC)
     set(Qt5_DLL_DIR "${Qt5_DIR}/../../../bin")
-    file(GLOB Qt5_DEBUG_DLLS
-        "${Qt5_DLL_DIR}/icudt*.dll"
-        "${Qt5_DLL_DIR}/icuin*.dll"
-        "${Qt5_DLL_DIR}/icuuc*.dll"
-        "${Qt5_DLL_DIR}/Qt5Cored.*"
-        "${Qt5_DLL_DIR}/Qt5Guid.*"
-        "${Qt5_DLL_DIR}/Qt5OpenGLd.*"
-        "${Qt5_DLL_DIR}/Qt5Widgetsd.*"
+    set(Qt5_PLATFORMS_DIR "${Qt5_DIR}/../../../plugins/platforms/")
+    set(Qt5_DLLS
+        icudt*.dll
+        icuin*.dll
+        icuuc*.dll
+        Qt5Core$<$<CONFIG:Debug>:d>.*
+        Qt5Gui$<$<CONFIG:Debug>:d>.*
+        Qt5OpenGL$<$<CONFIG:Debug>:d>.*
+        Qt5Widgets$<$<CONFIG:Debug>:d>.*
     )
-    file(GLOB Qt5_RELEASE_DLLS
-        "${Qt5_DLL_DIR}/icudt*.dll"
-        "${Qt5_DLL_DIR}/icuin*.dll"
-        "${Qt5_DLL_DIR}/icuuc*.dll"
-        "${Qt5_DLL_DIR}/Qt5Core.*"
-        "${Qt5_DLL_DIR}/Qt5Gui.*"
-        "${Qt5_DLL_DIR}/Qt5OpenGL.*"
-        "${Qt5_DLL_DIR}/Qt5Widgets.*"
+    set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
+    set(PLATFORMS ${DLL_DEST}platforms/)
+    
+    # windows commandline expects the / to be \ so switch them
+    string(REPLACE "/" "\\" Qt5_DLL_DIR ${Qt5_DLL_DIR})
+    string(REPLACE "/" "\\" Qt5_PLATFORMS_DIR ${Qt5_PLATFORMS_DIR})
+    string(REPLACE "/" "\\" DLL_DEST ${DLL_DEST})
+    string(REPLACE "/" "\\" PLATFORMS ${PLATFORMS})
+    
+    # /NJH /NJS /NDL /NFL /NC /NS /NP - Silence any output
+    # cmake adds an extra check for command success which doesn't work too well with robocopy 
+    # so trick it into thinking the command was successful with the || cmd /c "exit /b 0"
+    add_custom_command(TARGET citra-qt POST_BUILD
+        COMMAND robocopy ${Qt5_DLL_DIR} ${DLL_DEST} ${Qt5_DLLS} /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
+        COMMAND if not exist ${PLATFORMS} mkdir ${PLATFORMS} 2> nul
+        COMMAND robocopy ${Qt5_PLATFORMS_DIR} ${PLATFORMS} qwindows$<$<CONFIG:Debug>:d>.* /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
     )
-    # make the output directories ahead of the time and copy in the needed Dlls now
-    file(MAKE_DIRECTORY
-        ${CMAKE_BINARY_DIR}/bin/Debug/
-        ${CMAKE_BINARY_DIR}/bin/Release/
-        ${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/
-    )
-    file(COPY ${Qt5_DEBUG_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/Debug/)
-    file(COPY ${Qt5_RELEASE_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/Release/)
-    file(COPY ${Qt5_RELEASE_DLLS} DESTINATION ${CMAKE_BINARY_DIR}/bin/RelWithDebInfo/)
-    unset(Qt5_RELEASE_DLLS)
-    unset(Qt5_DEBUG_DLLS)
+    unset(Qt5_DLLS)
     unset(Qt5_DLL_DIR)
 endif()
