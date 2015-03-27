@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace IR_U
+namespace Service {
+namespace IR {
 
-namespace IR_U {
-
-class Interface : public Service::Interface {
+class IR_U_Interface : public Service::Interface {
 public:
-    Interface();
+    IR_U_Interface();
 
     std::string GetPortName() const override {
         return "ir:u";
     }
 };
 
-} // namespace
+} // namespace IR
+} // namespace Service

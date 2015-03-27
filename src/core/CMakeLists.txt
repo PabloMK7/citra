@@ -61,8 +61,10 @@ set(SRCS
             hle/service/hid/hid_spvr.cpp
             hle/service/gsp_lcd.cpp
             hle/service/http_c.cpp
-            hle/service/ir_rst.cpp
-            hle/service/ir_u.cpp
+            hle/service/ir/ir.cpp
+            hle/service/ir/ir_rst.cpp
+            hle/service/ir/ir_u.cpp
+            hle/service/ir/ir_user.cpp
             hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
             hle/service/ndm_u.cpp
@@ -170,8 +172,10 @@ set(HEADERS
             hle/service/hid/hid_user.h
             hle/service/gsp_lcd.h
             hle/service/http_c.h
-            hle/service/ir_rst.h
-            hle/service/ir_u.h
+            hle/service/ir/ir.h
+            hle/service/ir/ir_rst.h
+            hle/service/ir/ir_u.h
+            hle/service/ir/ir_user.h
             hle/service/ldr_ro.h
             hle/service/mic_u.h
             hle/service/ndm_u.h

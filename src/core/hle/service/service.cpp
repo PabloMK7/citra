@@ -24,8 +24,6 @@
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/gsp_lcd.h"
 #include "core/hle/service/http_c.h"
-#include "core/hle/service/ir_rst.h"
-#include "core/hle/service/ir_u.h"
 #include "core/hle/service/ldr_ro.h"
 #include "core/hle/service/mic_u.h"
 #include "core/hle/service/ndm_u.h"
@@ -45,6 +43,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ptm/ptm.h"
 
 namespace Service {
@@ -73,6 +72,7 @@ void Init() {
     Service::APT::Init();
     Service::PTM::Init();
     Service::HID::Init();
+    Service::IR::Init();
 
     AddService(new AC_U::Interface);
     AddService(new ACT_U::Interface);
@@ -91,8 +91,6 @@ void Init() {
     AddService(new GSP_GPU::Interface);
     AddService(new GSP_LCD::Interface);
     AddService(new HTTP_C::Interface);
-    AddService(new IR_RST::Interface);
-    AddService(new IR_U::Interface);
     AddService(new LDR_RO::Interface);
     AddService(new MIC_U::Interface);
     AddService(new NDM_U::Interface);
@@ -112,6 +110,7 @@ void Init() {
 
 /// Shutdown ServiceManager
 void Shutdown() {
+    Service::IR::Shutdown();
     Service::HID::Shutdown();
     Service::PTM::Shutdown();
     Service::APT::Shutdown();
