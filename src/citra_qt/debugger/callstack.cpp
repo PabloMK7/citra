@@ -27,7 +27,6 @@ CallstackWidget::CallstackWidget(QWidget* parent): QDockWidget(parent)
 
 void CallstackWidget::OnDebugModeEntered()
 {
-    ARM_Disasm* disasm = new ARM_Disasm();
     ARM_Interface* app_core = Core::g_app_core;
 
     u32 sp = app_core->GetReg(13); //stack pointer
@@ -46,7 +45,7 @@ void CallstackWidget::OnDebugModeEntered()
 
         /* TODO (mattvail) clean me, move to debugger interface */
         u32 insn = Memory::Read32(call_addr);
-        if (disasm->Decode(insn) == OP_BL)
+        if (ARM_Disasm::Decode(insn) == OP_BL)
         {
             std::string name;
             // ripped from disasm
