@@ -10,14 +10,14 @@
 #include <sstream>
 #include <algorithm>
 
-bool BreakPoints::IsAddressBreakPoint(u32 iAddress)
+bool BreakPoints::IsAddressBreakPoint(u32 iAddress) const
 {
     auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress; };
     auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
     return it != m_BreakPoints.end();
 }
 
-bool BreakPoints::IsTempBreakPoint(u32 iAddress)
+bool BreakPoints::IsTempBreakPoint(u32 iAddress) const
 {
     auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress && bp.bTemporary; };
     auto it   = std::find_if(m_BreakPoints.begin(), m_BreakPoints.end(), cond);
