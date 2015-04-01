@@ -232,11 +232,8 @@ void DisassemblerWidget::OnDebugModeEntered()
 {
     ARMword next_instr = Core::g_app_core->GetPC();
 
-    // TODO: Make BreakPoints less crappy (i.e. const-correct) so that this doesn't need a const_cast.
-    if (const_cast<BreakPoints&>(model->GetBreakPoints()).IsAddressBreakPoint(next_instr))
-    {
+    if (model->GetBreakPoints().IsAddressBreakPoint(next_instr))
         emu_thread.SetCpuRunning(false);
-    }
 
     model->SetNextInstruction(next_instr);
 
