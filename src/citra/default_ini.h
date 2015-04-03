@@ -41,6 +41,13 @@ gpu_refresh_rate =
 # 0 (default): No frameskip, 1: x2 frameskip, 2: x4 frameskip, 3: x8 frameskip, etc.
 frame_skip =
 
+[Renderer]
+# The clear color for the renderer. What shows up on the sides of the bottom screen.
+# Must be in range of 0.0-1.0. Defaults to 1.0 for all.
+bg_red =
+bg_blue =
+bg_green =
+
 [Data Storage]
 # Whether to create a virtual SD card.
 # 1 (default): Yes, 0: No

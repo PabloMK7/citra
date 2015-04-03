@@ -44,6 +44,11 @@ struct Values {
     // System Region
     int region_value;
 
+    // Renderer
+    float bg_red;
+    float bg_green;
+    float bg_blue;
+
     std::string log_filter;
 } extern values;
 
