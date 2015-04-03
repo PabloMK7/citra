@@ -3690,10 +3690,6 @@ static int clz(unsigned int x) {
     return n;
 }
 
-static bool InAPrivilegedMode(ARMul_State* core) {
-    return (core->Mode != USER32MODE);
-}
-
 unsigned InterpreterMainLoop(ARMul_State* state) {
     Common::Profiling::ScopeTimer timer_execute(profile_execute);
 
@@ -3701,6 +3697,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #undef RS
 
     #define CRn             inst_cream->crn
+    #define OPCODE_1        inst_cream->opcode_1
     #define OPCODE_2        inst_cream->opcode_2
     #define CRm             inst_cream->crm
     #define CP15_REG(n)     cpu->CP15[CP15(n)]
@@ -4764,94 +4761,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
             if (inst_cream->Rd == 15) {
                 DEBUG_MSG;
             } else {
-                if (inst_cream->cp_num == 15) {
-                    if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
-                        CP15_REG(CP15_CONTROL) = RD;
-                    } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
-                        CP15_REG(CP15_AUXILIARY_CONTROL) = RD;
-                    } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
-                        CP15_REG(CP15_COPROCESSOR_ACCESS_CONTROL) = RD;
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
-                        CP15_REG(CP15_TRANSLATION_BASE_TABLE_0) = RD;
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 1) {
-                        CP15_REG(CP15_TRANSLATION_BASE_TABLE_1) = RD;
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
-                        CP15_REG(CP15_TRANSLATION_BASE_CONTROL) = RD;
-                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
-                        CP15_REG(CP15_DOMAIN_ACCESS_CONTROL) = RD;
-                    } else if(CRn == MMU_CACHE_OPS){
-                        //LOG_WARNING(Core_ARM11, "cache operations have not implemented.");
-                    } else if(CRn == MMU_TLB_OPS){
-                        switch (CRm) {
-                        case 5: // ITLB
-                            switch(OPCODE_2) {
-                            case 0: // Invalidate all
-                                LOG_DEBUG(Core_ARM11, "{TLB} [INSN] invalidate all");
-                                break;
-                            case 1: // Invalidate by MVA
-                                LOG_DEBUG(Core_ARM11, "{TLB} [INSN] invalidate by mva");
-                                break;
-                            case 2: // Invalidate by asid
-                                LOG_DEBUG(Core_ARM11, "{TLB} [INSN] invalidate by asid");
-                                break;
-                            default:
-                                break;
-                            }
-
-                            break;
-                        case 6: // DTLB
-                            switch(OPCODE_2){
-                            case 0: // Invalidate all
-                                LOG_DEBUG(Core_ARM11, "{TLB} [DATA] invalidate all");
-                                break;
-                            case 1: // Invalidate by MVA
-                                LOG_DEBUG(Core_ARM11, "{TLB} [DATA] invalidate by mva");
-                                break;
-                            case 2: // Invalidate by asid
-                                LOG_DEBUG(Core_ARM11, "{TLB} [DATA] invalidate by asid");
-                                break;
-                            default:
-                                break;
-                            }
-                            break;
-                        case 7: // UNIFILED TLB
-                            switch(OPCODE_2){
-                            case 0: // invalidate all
-                                LOG_DEBUG(Core_ARM11, "{TLB} [UNIFILED] invalidate all");
-                                break;
-                            case 1: // Invalidate by MVA
-                                LOG_DEBUG(Core_ARM11, "{TLB} [UNIFILED] invalidate by mva");
-                                break;
-                            case 2: // Invalidate by asid
-                                LOG_DEBUG(Core_ARM11, "{TLB} [UNIFILED] invalidate by asid");
-                                break;
-                            default:
-                                break;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                    } else if(CRn == MMU_PID) {
-                        if(OPCODE_2 == 0) {
-                            CP15_REG(CP15_PID) = RD;
-                        } else if(OPCODE_2 == 1) {
-                            CP15_REG(CP15_CONTEXT_ID) = RD;
-                        } else if (OPCODE_2 == 2) {
-                            CP15_REG(CP15_THREAD_UPRW) = RD;
-                        } else if(OPCODE_2 == 3) {
-                            if (InAPrivilegedMode(cpu))
-                                CP15_REG(CP15_THREAD_URO) = RD;
-                        } else if (OPCODE_2 == 4) {
-                            if (InAPrivilegedMode(cpu))
-                                CP15_REG(CP15_THREAD_PRW) = RD;
-                        } else {
-                            LOG_ERROR(Core_ARM11, "mmu_mcr wrote UNKNOWN - reg %d", CRn);
-                        }
-                    } else {
-                        LOG_ERROR(Core_ARM11, "mcr CRn=%d, CRm=%d OP2=%d is not implemented", CRn, CRm, OPCODE_2);
-                    }
-                }
+                if (inst_cream->cp_num == 15)
+                    WriteCP15Register(cpu, RD, CRn, OPCODE_1, CRm, OPCODE_2);
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -4926,50 +4837,8 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 CITRA_IGNORE_EXIT(-1);
                 goto END;
             } else {
-                if (inst_cream->cp_num == 15) {
-                    if(CRn == 0 && OPCODE_2 == 0 && CRm == 0) {
-                        RD = cpu->CP15[CP15(CP15_MAIN_ID)];
-                    } else if (CRn == 0 && CRm == 0 && OPCODE_2 == 1) {
-                        RD = cpu->CP15[CP15(CP15_CACHE_TYPE)];
-                    } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_CONTROL)];
-                    } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 1) {
-                        RD = cpu->CP15[CP15(CP15_AUXILIARY_CONTROL)];
-                    } else if (CRn == 1 && CRm == 0 && OPCODE_2 == 2) {
-                        RD = cpu->CP15[CP15(CP15_COPROCESSOR_ACCESS_CONTROL)];
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_0)];
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 1) {
-                        RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_TABLE_1)];
-                    } else if (CRn == 2 && CRm == 0 && OPCODE_2 == 2) {
-                        RD = cpu->CP15[CP15(CP15_TRANSLATION_BASE_CONTROL)];
-                    } else if (CRn == 3 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_DOMAIN_ACCESS_CONTROL)];
-                    } else if (CRn == 5 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_FAULT_STATUS)];
-                    } else if (CRn == 5 && CRm == 0 && OPCODE_2 == 1) {
-                        RD = cpu->CP15[CP15(CP15_INSTR_FAULT_STATUS)];
-                    } else if (CRn == 6 && CRm == 0 && OPCODE_2 == 0) {
-                        RD = cpu->CP15[CP15(CP15_FAULT_ADDRESS)];
-                    } else if (CRn == 13) {
-                        if(OPCODE_2 == 0) {
-                            RD = CP15_REG(CP15_PID);
-                        } else if(OPCODE_2 == 1) {
-                            RD = CP15_REG(CP15_CONTEXT_ID);
-                        } else if (OPCODE_2 == 2) {
-                            RD = CP15_REG(CP15_THREAD_UPRW);
-                        } else if(OPCODE_2 == 3) {
-                            RD = Memory::KERNEL_MEMORY_VADDR;
-                        } else if (OPCODE_2 == 4) {
-                            if (InAPrivilegedMode(cpu))
-                                RD = CP15_REG(CP15_THREAD_PRW);
-                        } else {
-                            LOG_ERROR(Core_ARM11, "mmu_mrr wrote UNKNOWN - reg %d", CRn);
-                        }
-                    } else {
-                        LOG_ERROR(Core_ARM11, "mrc CRn=%d, CRm=%d, OP2=%d is not implemented", CRn, CRm, OPCODE_2);
-                    }
-                }
+                if (inst_cream->cp_num == 15)
+                     RD = ReadCP15Register(cpu, CRn, OPCODE_1, CRm, OPCODE_2);
             }
         }
         cpu->Reg[15] += GET_INST_SIZE(cpu);
