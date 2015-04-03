@@ -90,6 +90,12 @@ public:
     void SetPriority(s32 priority);
 
     /**
+     * Temporarily boosts the thread's priority until the next time it is scheduled
+     * @param priority The new priority
+     */
+    void BoostPriority(s32 priority);
+
+    /**
      * Gets the thread's thread ID
      * @return The thread's ID
      */

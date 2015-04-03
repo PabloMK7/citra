@@ -156,9 +156,8 @@ static void PriorityBoostStarvedThreads() {
         u64 delta = current_ticks - thread->last_running_ticks;
 
         if (thread->status == THREADSTATUS_READY && delta > boost_timeout && !thread->idle) {
-            const s32 boost_priority = std::max(ready_queue.get_first()->current_priority - 1, 0);
-            ready_queue.move(thread, thread->current_priority, boost_priority);
-            thread->current_priority = boost_priority;
+            const s32 priority = std::max(ready_queue.get_first()->current_priority - 1, 0);
+            thread->BoostPriority(priority);
         }
     }
 }
@@ -433,6 +432,11 @@ void Thread::SetPriority(s32 priority) {
         ready_queue.move(this, current_priority, priority);
 
     nominal_priority = current_priority = priority;
+}
+
+void Thread::BoostPriority(s32 priority) {
+    ready_queue.move(this, current_priority, priority);
+    current_priority = priority;
 }
 
 SharedPtr<Thread> SetupIdleThread() {
