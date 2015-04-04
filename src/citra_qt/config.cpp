@@ -53,6 +53,12 @@ void Config::ReadValues() {
     Settings::values.frame_skip = qt_config->value("frame_skip", 0).toInt();
     qt_config->endGroup();
 
+    qt_config->beginGroup("Renderer");
+    Settings::values.bg_red   = qt_config->value("bg_red",   1.0).toFloat();
+    Settings::values.bg_green = qt_config->value("bg_green", 1.0).toFloat();
+    Settings::values.bg_blue  = qt_config->value("bg_blue",  1.0).toFloat();
+    qt_config->endGroup();
+
     qt_config->beginGroup("Data Storage");
     Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
     qt_config->endGroup();
@@ -96,6 +102,13 @@ void Config::SaveValues() {
     qt_config->beginGroup("Core");
     qt_config->setValue("gpu_refresh_rate", Settings::values.gpu_refresh_rate);
     qt_config->setValue("frame_skip", Settings::values.frame_skip);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Renderer");
+    // Cast to double because Qt's written float values are not human-readable
+    qt_config->setValue("bg_red",   (double)Settings::values.bg_red);
+    qt_config->setValue("bg_green", (double)Settings::values.bg_green);
+    qt_config->setValue("bg_blue",  (double)Settings::values.bg_blue);
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");
