@@ -13,10 +13,13 @@ namespace APT {
 
 /// Signals used by APT functions
 enum class SignalType : u32 {
-    None            = 0x0,
-    AppJustStarted  = 0x1,
-    ReturningToApp  = 0xB,
-    ExitingApp      = 0xC,
+    None              = 0x0,
+    AppJustStarted    = 0x1,
+    LibAppJustStarted = 0x2,
+    LibAppFinished    = 0x3,
+    LibAppClosed      = 0xA,
+    ReturningToApp    = 0xB,
+    ExitingApp        = 0xC,
 };
 
 /// App Id's used by APT functions
@@ -179,6 +182,40 @@ void GlanceParameter(Service::Interface* self);
 void CancelParameter(Service::Interface* self);
 
 /**
+ * APT::PrepareToStartApplication service function. When the input title-info programID is zero,
+ * NS will load the actual program ID via AMNet:GetTitleIDList. After doing some checks with the
+ * programID, NS will then set a NS state flag to value 1, then set the programID for AppID
+ * 0x300(application) to the input program ID(or the one from GetTitleIDList). A media-type field
+ * in the NS state is also set to the input media-type value
+ * (other state fields are set at this point as well). With 8.0.0-18, NS will set an u8 NS state
+ * field to value 1 when input flags bit8 is set
+ *  Inputs:
+ *    1-4 : 0x10-byte title-info struct
+ *      4 : Flags
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void PrepareToStartApplication(Service::Interface* self);
+
+/**
+ * APT::StartApplication service function. Buf0 is copied to NS FIRMparams+0x0, then Buf1 is copied
+ * to the NS FIRMparams+0x480. Then the application is launched.
+ * Inputs:
+ *     1 : Buffer 0 size, max size is 0x300
+ *     2 : Buffer 1 size, max size is 0x20 (this can be zero)
+ *     3 : u8 flag
+ *     4 : (Size0<<14) | 2
+ *     5 : Buffer 0 pointer
+ *     6 : (Size1<<14) | 0x802
+ *     7 : Buffer 1 pointer
+ * Outputs:
+ *     0 : Return Header
+ *     1 : Result of function, 0 on success, otherwise error code
+*/
+void StartApplication(Service::Interface* self);
+
+/**
  * APT::AppletUtility service function
  *  Inputs:
  *      1 : Unknown, but clearly used for something
@@ -213,10 +250,10 @@ void SetAppCpuTimeLimit(Service::Interface* self);
 void GetAppCpuTimeLimit(Service::Interface* self);
 
 /// Initialize the APT service
-void APTInit();
+void Init();
 
 /// Shutdown the APT service
-void APTShutdown();
+void Shutdown();
 
 } // namespace APT
 } // namespace Service

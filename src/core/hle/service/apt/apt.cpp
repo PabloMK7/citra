@@ -28,16 +28,21 @@ namespace APT {
 static const VAddr SHARED_FONT_VADDR = 0x18000000;
 
 /// Handle to shared memory region designated to for shared system font
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
+static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem = nullptr;
 
-static Kernel::SharedPtr<Kernel::Mutex> lock;
-static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
-static Kernel::SharedPtr<Kernel::Event> pause_event = 0;    ///< APT pause event
+static Kernel::SharedPtr<Kernel::Mutex> lock = nullptr;
+static Kernel::SharedPtr<Kernel::Event> notification_event = nullptr; ///< APT notification event
+static Kernel::SharedPtr<Kernel::Event> pause_event = nullptr;        ///< APT pause event
 static std::vector<u8> shared_font;
+
+static u32 cpu_percent = 0; ///< CPU time available to the running application
 
 void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 app_id = cmd_buff[1];
+    u32 flags  = cmd_buff[2];
 
+    cmd_buff[2] = 0x04000000; // According to 3dbrew, this value should be 0x04000000
     cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(pause_event).MoveFrom();
 
@@ -49,6 +54,8 @@ void Initialize(Service::Interface* self) {
     lock->Release();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_TRACE(Service_APT, "called app_id=0x%08X, flags=0x%08X", app_id, flags);
 }
 
 void GetSharedFont(Service::Interface* self) {
@@ -190,7 +197,38 @@ void CancelParameter(Service::Interface* self) {
     cmd_buff[2] = 1; // Set to Success
 
     LOG_WARNING(Service_APT, "(STUBBED) called flag1=0x%08X, unk=0x%08X, flag2=0x%08X, app_id=0x%08X",
-               flag1, unk, flag2, app_id);
+                flag1, unk, flag2, app_id);
+}
+
+void PrepareToStartApplication(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 title_info1  = cmd_buff[1];
+    u32 title_info2  = cmd_buff[2];
+    u32 title_info3  = cmd_buff[3];
+    u32 title_info4  = cmd_buff[4];
+    u32 flags        = cmd_buff[5];
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_WARNING(Service_APT, "(STUBBED) called title_info1=0x%08X, title_info2=0x%08X, title_info3=0x%08X,"
+               "title_info4=0x%08X, flags=0x%08X", title_info1, title_info2, title_info3, title_info4, flags);
+}
+
+void StartApplication(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 buffer1_size = cmd_buff[1];
+    u32 buffer2_size = cmd_buff[2];
+    u32 flag         = cmd_buff[3];
+    u32 size1        = cmd_buff[4];
+    u32 buffer1_ptr  = cmd_buff[5];
+    u32 size2        = cmd_buff[6];
+    u32 buffer2_ptr  = cmd_buff[7];
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_WARNING(Service_APT, "(STUBBED) called buffer1_size=0x%08X, buffer2_size=0x%08X, flag=0x%08X,"
+               "size1=0x%08X, buffer1_ptr=0x%08X, size2=0x%08X, buffer2_ptr=0x%08X",
+               buffer1_size, buffer2_size, flag, size1, buffer1_ptr, size2, buffer2_ptr);
 }
 
 void AppletUtility(Service::Interface* self) {
@@ -205,15 +243,15 @@ void AppletUtility(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08x, buffer2_size=0x%08x, "
-             "buffer1_addr=0x%08x, buffer2_addr=0x%08x", unk, buffer1_size, buffer2_size,
+    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08X, buffer2_size=0x%08X, "
+             "buffer1_addr=0x%08X, buffer2_addr=0x%08X", unk, buffer1_size, buffer2_size,
              buffer1_addr, buffer2_addr);
 }
 
 void SetAppCpuTimeLimit(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 value = cmd_buff[1];
-    u32 percent = cmd_buff[2];
+    u32 value   = cmd_buff[1];
+    cpu_percent = cmd_buff[2];
 
     if (value != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
@@ -221,27 +259,26 @@ void SetAppCpuTimeLimit(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_APT, "(STUBBED) called percent=0x%08X, value=0x%08x", percent, value);
+    LOG_WARNING(Service_APT, "(STUBBED) called cpu_percent=%u, value=%u", cpu_percent, value);
 }
 
 void GetAppCpuTimeLimit(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 value = cmd_buff[1];
 
+    ASSERT(cpu_percent != 0);
+
     if (value != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
 
-    // TODO(purpasmart96): This is incorrect, I'm pretty sure the percentage should
-    // be set by the application.
-
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0x80; // Set to 80%
+    cmd_buff[2] = cpu_percent;
 
-    LOG_WARNING(Service_APT, "(STUBBED) called value=0x%08x", value);
+    LOG_WARNING(Service_APT, "(STUBBED) called value=%u", value);
 }
 
-void APTInit() {
+void Init() {
     AddService(new APT_A_Interface);
     AddService(new APT_S_Interface);
     AddService(new APT_U_Interface);
@@ -271,13 +308,14 @@ void APTInit() {
     }
 
     lock = Kernel::Mutex::Create(false, "APT_U:Lock");
-    
+    cpu_percent = 0;
+
     // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
     notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification");
     pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause");
 }
 
-void APTShutdown() {
+void Shutdown() {
 
 }
 

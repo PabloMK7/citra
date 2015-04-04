@@ -32,6 +32,7 @@
 #include "core/hle/service/news_s.h"
 #include "core/hle/service/news_u.h"
 #include "core/hle/service/nim_aoc.h"
+#include "core/hle/service/nim_u.h"
 #include "core/hle/service/ns_s.h"
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
@@ -68,10 +69,10 @@ void Init() {
     AddNamedPort(new ERR_F::Interface);
 
     Service::FS::ArchiveInit();
-    Service::CFG::CFGInit();
-    Service::APT::APTInit();
-    Service::PTM::PTMInit();
-    Service::HID::HIDInit();
+    Service::CFG::Init();
+    Service::APT::Init();
+    Service::PTM::Init();
+    Service::HID::Init();
 
     AddService(new AC_U::Interface);
     AddService(new ACT_U::Interface);
@@ -98,6 +99,7 @@ void Init() {
     AddService(new NEWS_S::Interface);
     AddService(new NEWS_U::Interface);
     AddService(new NIM_AOC::Interface);
+    AddService(new NIM_U::Interface);
     AddService(new NS_S::Interface);
     AddService(new NWM_UDS::Interface);
     AddService(new PM_APP::Interface);
@@ -110,10 +112,10 @@ void Init() {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    Service::HID::HIDShutdown();
-    Service::PTM::PTMShutdown();
-    Service::APT::APTShutdown();
-    Service::CFG::CFGShutdown();
+    Service::HID::Shutdown();
+    Service::PTM::Shutdown();
+    Service::APT::Shutdown();
+    Service::CFG::Shutdown();
     Service::FS::ArchiveShutdown();
 
     g_srv_services.clear();

@@ -84,6 +84,33 @@ static void GetSemaphoreEventHandle(Service::Interface* self) {
 }
 
 /**
+ * DSP_DSP::FlushDataCache service function
+ *
+ * This Function is a no-op, We aren't emulating the CPU cache any time soon.
+ *
+ *  Inputs:
+ *      1 : Address
+ *      2 : Size
+ *      3 : Value 0, some descriptor for the KProcess Handle
+ *      4 : KProcess handle
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void FlushDataCache(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 address = cmd_buff[1];
+    u32 size    = cmd_buff[2];
+    u32 process = cmd_buff[4];
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_DEBUG(Service_DSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=0x%08X",
+              address, size, process);
+}
+
+/**
  * DSP_DSP::RegisterInterruptEvents service function
  *  Inputs:
  *      1 : Parameter 0 (purpose unknown)
@@ -225,7 +252,7 @@ static void GetHeadphoneStatus(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 0; // Not using headphones?
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_DEBUG(Service_DSP, "(STUBBED) called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -242,7 +269,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001000C0, ReadPipeIfPossible,               "ReadPipeIfPossible"},
     {0x001100C2, LoadComponent,                    "LoadComponent"},
     {0x00120000, nullptr,                          "UnloadComponent"},
-    {0x00130082, nullptr,                          "FlushDataCache"},
+    {0x00130082, FlushDataCache,                   "FlushDataCache"},
     {0x00140082, nullptr,                          "InvalidateDCache"},
     {0x00150082, RegisterInterruptEvents,          "RegisterInterruptEvents"},
     {0x00160000, GetSemaphoreEventHandle,          "GetSemaphoreEventHandle"},

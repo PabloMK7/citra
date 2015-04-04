@@ -312,7 +312,7 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     DSP_DSP::SignalInterrupt();
 
     // Check for user input updates
-    Service::HID::HIDUpdate();
+    Service::HID::Update();
 
     // Reschedule recurrent event
     CoreTiming::ScheduleEvent(frame_ticks - cycles_late, vblank_event);
