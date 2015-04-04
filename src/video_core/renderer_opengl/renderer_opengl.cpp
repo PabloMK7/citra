@@ -22,6 +22,8 @@
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_shaders.h"
 
+#include "video_core/debug_utils/debug_utils.h"
+
 /**
  * Vertex structure that the drawn screen rectangles are composed of.
  */
@@ -128,6 +130,10 @@ void RendererOpenGL::SwapBuffers() {
         if (Settings::values.use_hw_renderer) {
             hw_rasterizer->Reset();
         }
+    }
+
+    if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
+        Pica::g_debug_context->recorder->FrameFinished();
     }
 }
 

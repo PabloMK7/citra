@@ -349,7 +349,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
 /// Executes the next GSP command
 static void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
-    auto WriteGPURegister = [](u32 id, u32 data) {
+    static auto WriteGPURegister = [](u32 id, u32 data) {
         GPU::Write<u32>(0x1EF00000 + 4 * id, data);
     };
 

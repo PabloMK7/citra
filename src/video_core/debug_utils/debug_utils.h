@@ -14,6 +14,8 @@
 
 #include "common/vector_math.h"
 
+#include "core/tracer/recorder.h"
+
 #include "video_core/pica.h"
 
 namespace Pica {
@@ -128,6 +130,8 @@ public:
     std::map<Event, BreakPoint> breakpoints;
     Event active_breakpoint;
     bool at_breakpoint = false;
+
+    std::shared_ptr<CiTrace::Recorder> recorder = nullptr;
 
 private:
     /**
