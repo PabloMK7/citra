@@ -597,7 +597,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
 
     png_init_io(png_ptr, fp.GetHandle());
 
-    // Write header (8 bit colour depth)
+    // Write header (8 bit color depth)
     png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height,
         8, PNG_COLOR_TYPE_RGB /*_ALPHA*/, PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);

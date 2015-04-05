@@ -13,10 +13,10 @@ namespace VideoCore {
 /// Structure for the TGA texture format (for dumping)
 struct TGAHeader {
     char  idlength;
-    char  colourmaptype;
+    char  colormaptype;
     char  datatypecode;
-    short int colourmaporigin;
-    short int colourmaplength;
+    short int colormaporigin;
+    short int colormaplength;
     short int x_origin;
     short int y_origin;
     short width;
