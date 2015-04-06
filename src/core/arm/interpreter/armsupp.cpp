@@ -227,11 +227,8 @@ u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcod
         if (opcode_2 == 2)
             return cpu->CP15[CP15(CP15_THREAD_UPRW)];
 
-        // TODO: Whenever TLS is implemented, this should return
-        // "cpu->CP15[CP15(CP15_THREAD_URO)];"
-        // which contains the address of the 0x200-byte TLS
         if (opcode_2 == 3)
-            return Memory::KERNEL_MEMORY_VADDR;
+            return cpu->CP15[CP15(CP15_THREAD_URO)];
     }
 
     if (InAPrivilegedMode(cpu))
