@@ -3700,7 +3700,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #define OPCODE_1        inst_cream->opcode_1
     #define OPCODE_2        inst_cream->opcode_2
     #define CRm             inst_cream->crm
-    #define CP15_REG(n)     cpu->CP15[CP15(n)]
     #define RD              cpu->Reg[inst_cream->Rd]
     #define RD2             cpu->Reg[inst_cream->Rd + 1]
     #define RN              cpu->Reg[inst_cream->Rn]
