@@ -51,13 +51,18 @@ enum {
     EXCLUSIVE_STATE,
     EXCLUSIVE_RESULT,
 
-    // VFP registers
-    VFP_BASE,
-    VFP_FPSID = VFP_BASE,
+    MAX_REG_NUM,
+};
+
+// VFP system registers
+enum {
+    VFP_FPSID,
     VFP_FPSCR,
     VFP_FPEXC,
 
-    MAX_REG_NUM,
+    // Not an actual register.
+    // All VFP system registers should be defined above this.
+    VFP_SYSTEM_REGISTER_COUNT
 };
 
 enum CP15Register {
@@ -176,5 +181,3 @@ enum CP15Register {
     // All registers should be defined above this.
     CP15_REGISTER_COUNT,
 };
-
-#define VFP_OFFSET(x)   (x - VFP_BASE)

@@ -29,10 +29,10 @@
 
 unsigned VFPInit(ARMul_State* state)
 {
-    state->VFP[VFP_OFFSET(VFP_FPSID)] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 |
-                                        VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
-    state->VFP[VFP_OFFSET(VFP_FPEXC)] = 0;
-    state->VFP[VFP_OFFSET(VFP_FPSCR)] = 0;
+    state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 |
+                            VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
+    state->VFP[VFP_FPEXC] = 0;
+    state->VFP[VFP_FPSCR] = 0;
 
     return 0;
 }
@@ -314,11 +314,11 @@ unsigned VFPCDP(ARMul_State* state, unsigned type, u32 instr)
 
         int exceptions = 0;
         if (CoProc == 10)
-            exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
+            exceptions = vfp_single_cpdo(state, instr, state->VFP[VFP_FPSCR]);
         else
-            exceptions = vfp_double_cpdo(state, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
+            exceptions = vfp_double_cpdo(state, instr, state->VFP[VFP_FPSCR]);
 
-        vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_OFFSET(VFP_FPSCR)]);
+        vfp_raise_exceptions(state, exceptions, instr, state->VFP[VFP_FPSCR]);
 
         return ARMul_DONE;
     }
@@ -344,11 +344,11 @@ void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value)
     {
         if (Rt != 15)
         {
-            *value = state->VFP[VFP_OFFSET(VFP_FPSCR)];
+            *value = state->VFP[VFP_FPSCR];
         }
         else
         {
-            *value = state->VFP[VFP_OFFSET(VFP_FPSCR)] ;
+            *value = state->VFP[VFP_FPSCR] ;
         }
     }
     else
@@ -356,7 +356,7 @@ void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value)
         switch (reg)
         {
             case 0:
-                *value = state->VFP[VFP_OFFSET(VFP_FPSID)];
+                *value = state->VFP[VFP_FPSID];
                 break;
             case 6:
                 /* MVFR1, VFPv3 only ? */
@@ -367,7 +367,7 @@ void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value)
                 LOG_TRACE(Core_ARM11, "\tr%d <= MVFR0 unimplemented\n", Rt);
                 break;
             case 8:
-                *value = state->VFP[VFP_OFFSET(VFP_FPEXC)];
+                *value = state->VFP[VFP_FPEXC];
                 break;
             default:
                 LOG_TRACE(Core_ARM11, "\tSUBARCHITECTURE DEFINED\n");
@@ -407,11 +407,11 @@ void VMSR(ARMul_State* state, ARMword reg, ARMword Rt)
 {
     if (reg == 1)
     {
-        state->VFP[VFP_OFFSET(VFP_FPSCR)] = state->Reg[Rt];
+        state->VFP[VFP_FPSCR] = state->Reg[Rt];
     }
     else if (reg == 8)
     {
-        state->VFP[VFP_OFFSET(VFP_FPEXC)] = state->Reg[Rt];
+        state->VFP[VFP_FPEXC] = state->Reg[Rt];
     }
 }
 
@@ -774,5 +774,5 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
 
     fpscr |= exceptions;
 
-    state->VFP[VFP_OFFSET(VFP_FPSCR)] = fpscr;
+    state->VFP[VFP_FPSCR] = fpscr;
 }
