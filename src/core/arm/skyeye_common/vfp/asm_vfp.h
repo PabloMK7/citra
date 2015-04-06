@@ -7,15 +7,15 @@
 
 #pragma once
 
-// FPSID Information
+// ARM11 MPCore FPSID Information
 // Note that these are used as values and not as flags.
 enum : u32 {
-    VFP_FPSID_IMPLMEN  = 0,   // Implementation code. Should be the same as cp15 0 c0 0
-    VFP_FPSID_SW       = 0,   // Software emulation bit value
-    VFP_FPSID_SUBARCH  = 0x2, // Subarchitecture version number
-    VFP_FPSID_PARTNUM  = 0x1, // Part number
-    VFP_FPSID_VARIANT  = 0x1, // Variant number
-    VFP_FPSID_REVISION = 0x1  // Revision number
+    VFP_FPSID_IMPLMEN  = 0x41, // Implementation code. Should be the same as cp15 0 c0 0
+    VFP_FPSID_SW       = 0,    // Software emulation bit value
+    VFP_FPSID_SUBARCH  = 0x1,  // Subarchitecture version number
+    VFP_FPSID_PARTNUM  = 0x20, // Part number
+    VFP_FPSID_VARIANT  = 0xB,  // Variant number
+    VFP_FPSID_REVISION = 0x4   // Revision number
 };
 
 // FPEXC bits
