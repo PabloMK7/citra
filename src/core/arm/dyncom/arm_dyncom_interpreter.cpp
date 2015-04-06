@@ -339,7 +339,7 @@ static void LnSWoUB(ScaledRegisterPreIndexed)(ARMul_State* cpu, unsigned int ins
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
-    unsigned int index;
+    unsigned int index = 0;
     unsigned int addr;
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
@@ -390,7 +390,7 @@ static void LnSWoUB(ScaledRegisterPostIndexed)(ARMul_State* cpu, unsigned int in
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
-    unsigned int index;
+    unsigned int index = 0;
     unsigned int addr = CHECK_READ_REG15_WA(cpu, Rn);
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
 
@@ -605,7 +605,7 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
     unsigned int shift_imm = BITS(inst, 7, 11);
     unsigned int Rn = BITS(inst, 16, 19);
     unsigned int Rm = BITS(inst, 0, 3);
-    unsigned int index;
+    unsigned int index = 0;
     unsigned int addr;
     unsigned int rm = CHECK_READ_REG15_WA(cpu, Rm);
     unsigned int rn = CHECK_READ_REG15_WA(cpu, Rn);
@@ -1126,7 +1126,7 @@ int CondPassed(ARMul_State* cpu, unsigned int cond) {
     #define CFLAG        cpu->CFlag
     #define VFLAG        cpu->VFlag
 
-    int temp;
+    int temp = 0;
 
     switch (cond) {
     case 0x0:
