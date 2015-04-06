@@ -6,6 +6,7 @@
 
 #include "common/common.h"
 #include "common/common_types.h"
+#include "core/arm/skyeye_common/arm_regformat.h"
 
 namespace Core {
     struct ThreadContext;
@@ -72,6 +73,20 @@ public:
      * @param cpsr Value to set CPSR to
      */
     virtual void SetCPSR(u32 cpsr) = 0;
+
+    /**
+     * Gets the value stored in a CP15 register.
+     * @param reg The CP15 register to retrieve the value from.
+     * @return the value stored in the given CP15 register.
+     */
+    virtual u32 GetCP15Register(CP15Register reg) = 0;
+
+    /**
+     * Stores the given value into the indicated CP15 register.
+     * @param reg   The CP15 register to store the value into.
+     * @param value The value to store into the CP15 register.
+     */
+    virtual void SetCP15Register(CP15Register reg, u32 value) = 0;
 
     /**
      * Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
