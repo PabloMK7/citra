@@ -139,15 +139,7 @@ void ARMul_Reset(ARMul_State* state)
     state->Bank = SVCBANK;
     FLUSHPIPE;
 
-    // Reset CP15
     ResetMPCoreCP15Registers(state);
-
-    // This is separate from the CP15 register reset function, as
-    // this isn't an ARM-defined reset value; it's set by the 3DS.
-    //
-    // TODO: Whenever TLS is implemented, this should contain
-    // the address of the 0x200-byte TLS
-    state->CP15[CP15_THREAD_URO] = Memory::KERNEL_MEMORY_VADDR;
 
     state->EndCondition = 0;
     state->ErrorCode = 0;
