@@ -25,7 +25,7 @@
 #define VFP_DEBUG_UNIMPLEMENTED(x) LOG_ERROR(Core_ARM11, "in func %s, " #x " unimplemented\n", __FUNCTION__); exit(-1);
 #define VFP_DEBUG_UNTESTED(x) LOG_TRACE(Core_ARM11, "in func %s, " #x " untested\n", __FUNCTION__);
 #define CHECK_VFP_ENABLED
-#define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_OFFSET(VFP_FPSCR)]); //if (ret == -1) {printf("VFP CDP FAILURE %x\n", inst_cream->instr); exit(-1);}
+#define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 unsigned VFPInit(ARMul_State* state);
 unsigned VFPMRC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
