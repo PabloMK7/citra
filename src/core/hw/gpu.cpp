@@ -136,7 +136,7 @@ inline void Write(u32 addr, const T data) {
                 memcpy(dst_pointer, src_pointer, config.output_width * config.output_height * 
                         GPU::Regs::BytesPerPixel(config.output_format));
                 
-                LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), flags 0x%08X, Raw copy",
+                LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), output format: %x, flags 0x%08X, Raw copy",
                     config.output_height * output_width * GPU::Regs::BytesPerPixel(config.output_format),
                     config.GetPhysicalInputAddress(), config.input_width.Value(), config.input_height.Value(),
                     config.GetPhysicalOutputAddress(), config.output_width.Value(), config.output_height.Value(),
