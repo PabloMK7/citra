@@ -3557,7 +3557,7 @@ enum {
     FETCH_FAILURE
 };
 
-static tdstate decode_thumb_instr(ARMul_State* cpu, uint32_t inst, addr_t addr, uint32_t* arm_inst, uint32_t* inst_size, ARM_INST_PTR* ptr_inst_base){
+static tdstate decode_thumb_instr(ARMul_State* cpu, u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
     // Check if in Thumb mode
     tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
     if(ret == t_branch){
@@ -3620,7 +3620,7 @@ typedef struct instruction_set_encoding_item ISEITEM;
 
 extern const ISEITEM arm_instruction[];
 
-static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, addr_t addr) {
+static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     Common::Profiling::ScopeTimer timer_decode(profile_decode);
 
     // Decode instruction, get index
@@ -3638,8 +3638,8 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, addr_t addr) {
     if (cpu->TFlag)
         thumb = THUMB;
 
-    addr_t phys_addr = addr;
-    addr_t pc_start = cpu->Reg[15];
+    u32 phys_addr = addr;
+    u32 pc_start = cpu->Reg[15];
 
     while(ret == NON_BRANCH) {
         inst = Memory::Read32(phys_addr & 0xFFFFFFFC);

@@ -35,9 +35,9 @@ enum tdstate {
     t_uninitialized,
 };
 
-tdstate thumb_translate(addr_t addr, u32 instr, u32* ainstr, u32* inst_size);
+tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size);
 
-static inline u32 get_thumb_instr(u32 instr, addr_t pc) {
+static inline u32 get_thumb_instr(u32 instr, u32 pc) {
     u32 tinstr;
     if ((pc & 0x3) != 0)
         tinstr = instr >> 16;

@@ -13,7 +13,7 @@
 // with the following Thumb instruction held in the high 16-bits.  Passing in two Thumb instructions
 // allows easier simulation of the special dual BL instruction.
 
-tdstate thumb_translate(addr_t addr, uint32_t instr, uint32_t* ainstr, uint32_t* inst_size) {
+tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     tdstate valid = t_uninitialized;
     ARMword tinstr = instr;
 
