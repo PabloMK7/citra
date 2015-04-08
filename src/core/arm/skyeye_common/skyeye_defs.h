@@ -11,28 +11,3 @@ struct cpu_config_t
     u32 cpu_mask;              // cpu_val's mask.
     u32 cachetype;             // CPU cache type
 };
-
-enum {
-    // No exception
-    No_exp = 0,
-    // Memory allocation exception
-    Malloc_exp,
-    // File open exception
-    File_open_exp,
-    // DLL open exception
-    Dll_open_exp,
-    // Invalid argument exception
-    Invarg_exp,
-    // Invalid module exception
-    Invmod_exp,
-    // wrong format exception for config file parsing
-    Conf_format_exp,
-    // some reference excess the predefiend range. Such as the index out of array range
-    Excess_range_exp,
-    // Can not find the desirable result
-    Not_found_exp,
-    // Unknown exception
-    Unknown_exp
-};
-
-typedef u32 addr_t;
