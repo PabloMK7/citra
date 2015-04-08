@@ -3,12 +3,11 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/hle.h"
-#include "core/hle/service/ir_u.h"
+#include "core/hle/service/ir/ir.h"
+#include "core/hle/service/ir/ir_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace IR_U
-
-namespace IR_U {
+namespace Service {
+namespace IR {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010000, nullptr,                 "Initialize"},
@@ -31,11 +30,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00120040, nullptr,                 "SetSleepModeState"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+IR_U_Interface::IR_U_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace IR
+} // namespace Service
