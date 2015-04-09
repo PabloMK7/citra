@@ -16,6 +16,7 @@ SharedPtr<SharedMemory> SharedMemory::Create(std::string name) {
     SharedPtr<SharedMemory> shared_memory(new SharedMemory);
 
     shared_memory->name = std::move(name);
+    shared_memory->base_address = 0x0;
 
     return shared_memory;
 }
