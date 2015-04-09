@@ -342,10 +342,10 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                         case Regs::TextureConfig::MirroredRepeat:
                         {
-                            int coord = (int)((unsigned)val % (2 * size));
+                            unsigned int coord = ((unsigned)val % (2 * size));
                             if (coord >= size)
                                 coord = 2 * size - 1 - coord;
-                            return coord;
+                            return (int)coord;
                         }
 
                         default:
