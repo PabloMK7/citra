@@ -338,9 +338,15 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);
     }
 
-    if (processor_id > THREADPROCESSORID_MAX) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+    switch (processor_id) {
+    case THREADPROCESSORID_DEFAULT:
+    case THREADPROCESSORID_0:
+    case THREADPROCESSORID_1:
+        break;
+    default:
+        // TODO(bunnei): Implement support for other processor IDs
+        ASSERT_MSG(false, "Unsupported thread processor ID: %d", processor_id);
+        break;
     }
 
     CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(
