@@ -283,8 +283,13 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
     if (arbiter == nullptr)
         return ERR_INVALID_HANDLE;
 
-    return arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type),
-            address, value, nanoseconds);
+    auto res = arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type),
+                                         address, value, nanoseconds);
+
+    if (res == RESULT_SUCCESS)
+        HLE::Reschedule(__func__);
+
+    return res;
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
@@ -312,7 +317,7 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_lim
 }
 
 /// Creates a new thread
-static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u32 arg, u32 stack_top, u32 processor_id) {
+static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point, u32 arg, u32 stack_top, s32 processor_id) {
     using Kernel::Thread;
 
     std::string name;
@@ -323,6 +328,27 @@ static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u
         name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
+    // TODO(bunnei): Implement resource limits to return an error code instead of the below assert.
+    // The error code should be: Description::NotAuthorized, Module::OS, Summary::WrongArgument,
+    // Level::Permanent
+    ASSERT_MSG(priority >= THREADPRIO_USERLAND_MAX, "Unexpected thread priority!");
+
+    if (priority > THREADPRIO_LOWEST) {
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    switch (processor_id) {
+    case THREADPROCESSORID_DEFAULT:
+    case THREADPROCESSORID_0:
+    case THREADPROCESSORID_1:
+        break;
+    default:
+        // TODO(bunnei): Implement support for other processor IDs
+        ASSERT_MSG(false, "Unsupported thread processor ID: %d", processor_id);
+        break;
+    }
+
     CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(
             name, entry_point, priority, arg, processor_id, stack_top));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
@@ -331,10 +357,7 @@ static ResultCode CreateThread(u32* out_handle, u32 priority, u32 entry_point, u
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
         name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
 
-    if (THREADPROCESSORID_1 == processor_id) {
-        LOG_WARNING(Kernel_SVC,
-            "thread designated for system CPU core (UNIMPLEMENTED) will be run with app core scheduling");
-    }
+    HLE::Reschedule(__func__);
 
     return RESULT_SUCCESS;
 }
@@ -374,8 +397,11 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
+    HLE::Reschedule(__func__);
+
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
         initial_locked ? "true" : "false", *out_handle);
+    
     return RESULT_SUCCESS;
 }
 
@@ -390,6 +416,9 @@ static ResultCode ReleaseMutex(Handle handle) {
         return ERR_INVALID_HANDLE;
 
     mutex->Release();
+
+    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 
@@ -428,6 +457,9 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
         return ERR_INVALID_HANDLE;
 
     CASCADE_RESULT(*count, semaphore->Release(release_count));
+
+    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 
@@ -520,6 +552,9 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
         return ERR_INVALID_HANDLE;
 
     timer->Set(initial, interval);
+
+    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 
@@ -534,6 +569,9 @@ static ResultCode CancelTimer(Handle handle) {
         return ERR_INVALID_HANDLE;
 
     timer->Cancel();
+
+    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 

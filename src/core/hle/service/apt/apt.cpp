@@ -32,7 +32,8 @@ static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem = nullptr;
 
 static Kernel::SharedPtr<Kernel::Mutex> lock = nullptr;
 static Kernel::SharedPtr<Kernel::Event> notification_event = nullptr; ///< APT notification event
-static Kernel::SharedPtr<Kernel::Event> pause_event = nullptr;        ///< APT pause event
+static Kernel::SharedPtr<Kernel::Event> start_event = nullptr;        ///< APT start event
+
 static std::vector<u8> shared_font;
 
 static u32 cpu_percent = 0; ///< CPU time available to the running application
@@ -44,11 +45,11 @@ void Initialize(Service::Interface* self) {
 
     cmd_buff[2] = 0x04000000; // According to 3dbrew, this value should be 0x04000000
     cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
-    cmd_buff[4] = Kernel::g_handle_table.Create(pause_event).MoveFrom();
+    cmd_buff[4] = Kernel::g_handle_table.Create(start_event).MoveFrom();
 
-    // TODO(bunnei): Check if these events are cleared/signaled every time Initialize is called.
+    // TODO(bunnei): Check if these events are cleared every time Initialize is called.
     notification_event->Clear();
-    pause_event->Signal(); // Fire start event
+    start_event->Clear();
 
     ASSERT_MSG((nullptr != lock), "Cannot initialize without lock");
     lock->Release();
@@ -81,7 +82,7 @@ void NotifyToWait(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     // TODO(Subv): Verify this, it seems to get SWKBD and Home Menu further.
-    pause_event->Signal();
+    start_event->Signal();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
@@ -312,7 +313,7 @@ void Init() {
 
     // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
     notification_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Notification");
-    pause_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Pause");
+    start_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "APT_U:Start");
 }
 
 void Shutdown() {
