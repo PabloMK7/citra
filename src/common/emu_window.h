@@ -206,5 +206,10 @@ private:
     u16 touch_x;    ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
     u16 touch_y;    ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
 
+   /**
+    * Clip the provided coordinates to be inside the touchscreen area.
+    */
+    std::tuple<unsigned,unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
+
     Service::HID::PadState pad_state;
 };
