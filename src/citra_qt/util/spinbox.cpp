@@ -29,6 +29,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <cstdlib>
 #include <QLineEdit>
 #include <QRegExpValidator>
 
@@ -206,7 +207,7 @@ QString CSpinBox::TextFromValue()
 {
     return prefix
            + QString(HasSign() ? ((value < 0) ? "-" : "+") : "")
-           + QString("%1").arg(abs(value), num_digits, base, QLatin1Char('0')).toUpper()
+           + QString("%1").arg(std::abs(value), num_digits, base, QLatin1Char('0')).toUpper()
            + suffix;
 }
 

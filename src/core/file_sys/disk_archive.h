@@ -24,7 +24,7 @@ class DiskArchive : public ArchiveBackend {
 public:
     DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
 
-    virtual std::string GetName() const { return "DiskArchive: " + mount_point; }
+    virtual std::string GetName() const override { return "DiskArchive: " + mount_point; }
 
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
     bool DeleteFile(const Path& path) const override;
