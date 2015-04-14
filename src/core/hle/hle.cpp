@@ -13,6 +13,7 @@
 #include "core/hle/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
+#include "core/hle/svc.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

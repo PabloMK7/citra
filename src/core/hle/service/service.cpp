@@ -51,6 +51,49 @@ namespace Service {
 std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
 std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
+/**
+ * Creates a function string for logging, complete with the name (or header code, depending 
+ * on what's passed in) the port name, and all the cmd_buff arguments.
+ */
+static std::string MakeFunctionString(const char* name, const char* port_name, const u32* cmd_buff) {
+    // Number of params == bits 0-5 + bits 6-11
+    int num_params = (cmd_buff[0] & 0x3F) + ((cmd_buff[0] >> 6) & 0x3F);
+
+    std::string function_string = Common::StringFromFormat("function '%s': port=%s", name, port_name);
+    for (int i = 1; i <= num_params; ++i) {
+        function_string += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
+    }
+    return function_string;
+}
+
+ResultVal<bool> Interface::SyncRequest() {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    auto itr = m_functions.find(cmd_buff[0]);
+
+    if (itr == m_functions.end() || itr->second.func == nullptr) {
+        std::string function_name = (itr == m_functions.end()) ? Common::StringFromFormat("0x%08X", cmd_buff[0]) : itr->second.name;
+        LOG_ERROR(Service, "unknown / unimplemented %s", MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff).c_str());
+
+        // TODO(bunnei): Hack - ignore error
+        cmd_buff[1] = 0;
+        return MakeResult<bool>(false);
+    } else {
+        LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
+    }
+
+    itr->second.func(this);
+
+    return MakeResult<bool>(false); // TODO: Implement return from actual function
+}
+
+void Interface::Register(const FunctionInfo* functions, size_t n) {
+    m_functions.reserve(n);
+    for (size_t i = 0; i < n; ++i) {
+        // Usually this array is sorted by id already, so hint to instead at the end
+        m_functions.emplace_hint(m_functions.cend(), functions[i].id, functions[i]);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
 
