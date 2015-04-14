@@ -36,9 +36,6 @@
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/armdefs.h"
 
-#define pr_info //printf
-#define pr_debug //printf
-
 #define do_div(n, base) {n/=base;}
 
 enum : u32 {
