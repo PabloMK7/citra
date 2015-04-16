@@ -14,6 +14,7 @@ class QScreen;
 class QKeyEvent;
 
 class GRenderWindow;
+class GMainWindow;
 
 class EmuThread : public QThread
 {
@@ -67,7 +68,7 @@ public slots:
     void Stop();
 
 private:
-    friend class GRenderWindow;
+    friend class GMainWindow;
 
     EmuThread(GRenderWindow* render_window);
 
@@ -100,10 +101,7 @@ class GRenderWindow : public QWidget, public EmuWindow
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent = NULL);
-    ~GRenderWindow();
-
-    void closeEvent(QCloseEvent*) override;
+    GRenderWindow(QWidget* parent, GMainWindow& main_window);
 
     // EmuWindow implementation
     void SwapBuffers() override;
@@ -115,8 +113,6 @@ public:
     void RestoreGeometry();
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();  // overridden
-
-    EmuThread& GetEmuThread();
 
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
@@ -139,9 +135,9 @@ private:
 
     QGLWidget* child;
 
-    EmuThread emu_thread;
-
     QByteArray geometry;
+
+    GMainWindow& main_window;
 
     /// Device id of keyboard for use with KeyMap
     int keyboard_id;

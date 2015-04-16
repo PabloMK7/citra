@@ -13,7 +13,7 @@
 #include "common/break_points.h"
 
 class QAction;
-class EmuThread;
+class GMainWindow;
 
 class DisassemblerModel : public QAbstractListModel
 {
@@ -51,7 +51,7 @@ class DisassemblerWidget : public QDockWidget
     Q_OBJECT
 
 public:
-    DisassemblerWidget(QWidget* parent, EmuThread& emu_thread);
+    DisassemblerWidget(QWidget* parent, GMainWindow& main_window);
 
     void Init();
 
@@ -75,5 +75,5 @@ private:
 
     u32 base_addr;
 
-    EmuThread& emu_thread;
+    GMainWindow& main_window;
 };

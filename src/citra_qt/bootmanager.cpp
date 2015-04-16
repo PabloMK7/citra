@@ -10,6 +10,7 @@
 
 #include "common/common.h"
 #include "bootmanager.h"
+#include "main.h"
 
 #include "core/core.h"
 #include "core/settings.h"
@@ -30,6 +31,7 @@ EmuThread::EmuThread(GRenderWindow* render_window) :
     filename(""), exec_cpu_step(false), cpu_running(false),
     stop_run(false), render_window(render_window)
 {
+    connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
 void EmuThread::SetFilename(std::string filename)
@@ -133,13 +135,9 @@ private:
     GRenderWindow* parent;
 };
 
-EmuThread& GRenderWindow::GetEmuThread()
-{
-    return emu_thread;
-}
+GRenderWindow::GRenderWindow(QWidget* parent, GMainWindow& main_window) :
+    QWidget(parent), main_window(main_window), keyboard_id(0) {
 
-GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this), keyboard_id(0)
-{
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
@@ -160,7 +158,6 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
-    connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
 
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
 
@@ -180,27 +177,15 @@ void GRenderWindow::moveContext()
     // We need to move GL context to the swapping thread in Qt5
 #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it back.
-    child->context()->moveToThread((QThread::currentThread() == qApp->thread()) ? &emu_thread : qApp->thread());
+    auto thread = QThread::currentThread() == qApp->thread() ? main_window.GetEmuThread() : qApp->thread();
+    child->context()->moveToThread(thread);
 #endif
-}
-
-GRenderWindow::~GRenderWindow()
-{
-    if (emu_thread.isRunning())
-        emu_thread.Stop();
 }
 
 void GRenderWindow::SwapBuffers()
 {
     // MakeCurrent is already called in renderer_opengl
     child->swapBuffers();
-}
-
-void GRenderWindow::closeEvent(QCloseEvent* event)
-{
-    if (emu_thread.isRunning())
-        emu_thread.Stop();
-    QWidget::closeEvent(event);
 }
 
 void GRenderWindow::MakeCurrent()

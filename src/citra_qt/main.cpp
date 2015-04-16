@@ -46,7 +46,7 @@
 
 #include "version.h"
 
-GMainWindow::GMainWindow()
+GMainWindow::GMainWindow() : emu_thread(nullptr)
 {
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
@@ -55,14 +55,15 @@ GMainWindow::GMainWindow()
     ui.setupUi(this);
     statusBar()->hide();
 
-    render_window = new GRenderWindow;
+    render_window = new GRenderWindow(this, *this);
     render_window->hide();
+    emu_thread = new EmuThread(render_window);
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
     profilerWidget->hide();
 
-    disasmWidget = new DisassemblerWidget(this, render_window->GetEmuThread());
+    disasmWidget = new DisassemblerWidget(this, *this);
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
     disasmWidget->hide();
 
@@ -139,13 +140,13 @@ GMainWindow::GMainWindow()
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread, SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread, SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread, SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+
+    connect(emu_thread, SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread, SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread, SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
@@ -210,8 +211,8 @@ void GMainWindow::BootGame(std::string filename)
     registersWidget->OnDebugModeEntered();
     callstackWidget->OnDebugModeEntered();
 
-    render_window->GetEmuThread().SetFilename(filename);
-    render_window->GetEmuThread().start();
+    emu_thread->SetFilename(filename);
+    emu_thread->start();
 
     render_window->show();
     OnStartGame();
@@ -232,7 +233,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
 
 void GMainWindow::OnStartGame()
 {
-    render_window->GetEmuThread().SetCpuRunning(true);
+    emu_thread->SetCpuRunning(true);
 
     ui.action_Start->setEnabled(false);
     ui.action_Pause->setEnabled(true);
@@ -241,7 +242,7 @@ void GMainWindow::OnStartGame()
 
 void GMainWindow::OnPauseGame()
 {
-    render_window->GetEmuThread().SetCpuRunning(false);
+    emu_thread->SetCpuRunning(false);
 
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
@@ -250,7 +251,7 @@ void GMainWindow::OnPauseGame()
 
 void GMainWindow::OnStopGame()
 {
-    render_window->GetEmuThread().SetCpuRunning(false);
+    emu_thread->SetCpuRunning(false);
     // TODO: Shutdown core
 
     ui.action_Start->setEnabled(true);
@@ -265,24 +266,22 @@ void GMainWindow::OnOpenHotkeysDialog()
 }
 
 
-void GMainWindow::ToggleWindowMode()
-{
-    bool enable = ui.action_Single_Window_Mode->isChecked();
-    if (!enable && render_window->parent() != nullptr)
-    {
-        ui.horizontalLayout->removeWidget(render_window);
-        render_window->setParent(nullptr);
-        render_window->setVisible(true);
-        render_window->RestoreGeometry();
-        render_window->setFocusPolicy(Qt::NoFocus);
-    }
-    else if (enable && render_window->parent() == nullptr)
-    {
+void GMainWindow::ToggleWindowMode() {
+    if (ui.action_Single_Window_Mode->isChecked()) {
+        // Render in the main window...
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
         render_window->setFocusPolicy(Qt::ClickFocus);
         render_window->setFocus();
+
+    } else {
+        // Render in a separate window...
+        ui.horizontalLayout->removeWidget(render_window);
+        render_window->setParent(nullptr);
+        render_window->setVisible(true);
+        render_window->RestoreGeometry();
+        render_window->setFocusPolicy(Qt::NoFocus);
     }
 }
 

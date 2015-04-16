@@ -11,6 +11,7 @@
 
 class GImageInfo;
 class GRenderWindow;
+class EmuThread;
 class ProfilerWidget;
 class DisassemblerWidget;
 class RegistersWidget;
@@ -34,6 +35,10 @@ public:
     GMainWindow();
     ~GMainWindow();
 
+    EmuThread* GetEmuThread() {
+        return emu_thread;
+    }
+
 private:
     void BootGame(std::string filename);
 
@@ -54,6 +59,7 @@ private:
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
+    EmuThread* emu_thread;
 
     ProfilerWidget* profilerWidget;
     DisassemblerWidget* disasmWidget;

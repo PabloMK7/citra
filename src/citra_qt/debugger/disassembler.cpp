@@ -4,6 +4,7 @@
 
 #include "disassembler.h"
 
+#include "../main.h"
 #include "../bootmanager.h"
 #include "../hotkeys.h"
 
@@ -158,8 +159,9 @@ void DisassemblerModel::SetNextInstruction(unsigned int address) {
     emit dataChanged(prev_index, prev_index);
 }
 
-DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread& emu_thread) : QDockWidget(parent), base_addr(0), emu_thread(emu_thread)
-{
+DisassemblerWidget::DisassemblerWidget(QWidget* parent, GMainWindow& main_window) :
+    QDockWidget(parent), main_window(main_window), base_addr(0) {
+
     disasm_ui.setupUi(this);
 
     model = new DisassemblerModel(this);
@@ -199,7 +201,7 @@ void DisassemblerWidget::Init()
 
 void DisassemblerWidget::OnContinue()
 {
-    emu_thread.SetCpuRunning(true);
+    main_window.GetEmuThread()->SetCpuRunning(true);
 }
 
 void DisassemblerWidget::OnStep()
@@ -209,13 +211,13 @@ void DisassemblerWidget::OnStep()
 
 void DisassemblerWidget::OnStepInto()
 {
-    emu_thread.SetCpuRunning(false);
-    emu_thread.ExecStep();
+    main_window.GetEmuThread()->SetCpuRunning(false);
+    main_window.GetEmuThread()->ExecStep();
 }
 
 void DisassemblerWidget::OnPause()
 {
-    emu_thread.SetCpuRunning(false);
+    main_window.GetEmuThread()->SetCpuRunning(false);
 
     // TODO: By now, the CPU might not have actually stopped...
     if (Core::g_app_core) {
@@ -225,7 +227,7 @@ void DisassemblerWidget::OnPause()
 
 void DisassemblerWidget::OnToggleStartStop()
 {
-    emu_thread.SetCpuRunning(!emu_thread.IsCpuRunning());
+    main_window.GetEmuThread()->SetCpuRunning(!main_window.GetEmuThread()->IsCpuRunning());
 }
 
 void DisassemblerWidget::OnDebugModeEntered()
@@ -233,7 +235,7 @@ void DisassemblerWidget::OnDebugModeEntered()
     ARMword next_instr = Core::g_app_core->GetPC();
 
     if (model->GetBreakPoints().IsAddressBreakPoint(next_instr))
-        emu_thread.SetCpuRunning(false);
+        main_window.GetEmuThread()->SetCpuRunning(false);
 
     model->SetNextInstruction(next_instr);
 
