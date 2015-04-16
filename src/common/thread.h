@@ -51,109 +51,60 @@ int CurrentThreadId();
 void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
 void SetCurrentThreadAffinity(u32 mask);
 
-class Event
-{
+class Event {
 public:
-    Event()
-        : is_set(false)
-    {}
+    Event() : is_set(false) {}
 
-    void Set()
-    {
+    void Set() {
         std::lock_guard<std::mutex> lk(m_mutex);
-        if (!is_set)
-        {
+        if (!is_set) {
             is_set = true;
             m_condvar.notify_one();
         }
     }
 
-    void Wait()
-    {
+    void Wait() {
         std::unique_lock<std::mutex> lk(m_mutex);
-        m_condvar.wait(lk, IsSet(this));
+        m_condvar.wait(lk, [&]{ return is_set; });
         is_set = false;
     }
 
-    void Reset()
-    {
+    void Reset() {
         std::unique_lock<std::mutex> lk(m_mutex);
         // no other action required, since wait loops on the predicate and any lingering signal will get cleared on the first iteration
         is_set = false;
     }
 
 private:
-    class IsSet
-    {
-    public:
-        IsSet(const Event* ev)
-            : m_event(ev)
-        {}
-
-        bool operator()()
-        {
-            return m_event->is_set;
-        }
-
-    private:
-        const Event* const m_event;
-    };
-
-    volatile bool is_set;
+    bool is_set;
     std::condition_variable m_condvar;
     std::mutex m_mutex;
 };
 
-// TODO: doesn't work on windows with (count > 2)
-class Barrier
-{
+class Barrier {
 public:
-    Barrier(size_t count)
-        : m_count(count), m_waiting(0)
-    {}
+    Barrier(size_t count) : m_count(count), m_waiting(0) {}
 
-    // block until "count" threads call Sync()
-    bool Sync()
-    {
+    /// Blocks until all "count" threads have called Sync()
+    void Sync() {
         std::unique_lock<std::mutex> lk(m_mutex);
 
         // TODO: broken when next round of Sync()s
         // is entered before all waiting threads return from the notify_all
 
-        if (m_count == ++m_waiting)
-        {
+        if (++m_waiting == m_count) {
             m_waiting = 0;
             m_condvar.notify_all();
-            return true;
-        }
-        else
-        {
-            m_condvar.wait(lk, IsDoneWating(this));
-            return false;
+        } else {
+            m_condvar.wait(lk, [&]{ return m_waiting == 0; });
         }
     }
 
 private:
-    class IsDoneWating
-    {
-    public:
-        IsDoneWating(const Barrier* bar)
-            : m_bar(bar)
-        {}
-
-        bool operator()()
-        {
-            return (0 == m_bar->m_waiting);
-        }
-
-    private:
-        const Barrier* const m_bar;
-    };
-
     std::condition_variable m_condvar;
     std::mutex m_mutex;
     const size_t m_count;
-    volatile size_t m_waiting;
+    size_t m_waiting;
 };
 
 void SleepCurrentThread(int ms);
