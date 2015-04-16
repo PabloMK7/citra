@@ -28,15 +28,9 @@
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window) :
-    filename(""), exec_cpu_step(false), cpu_running(false),
-    stop_run(false), render_window(render_window)
-{
-    connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
-}
+    exec_cpu_step(false), cpu_running(false), stop_run(false), render_window(render_window) {
 
-void EmuThread::SetFilename(std::string filename)
-{
-    this->filename = filename;
+    connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
 void EmuThread::run()

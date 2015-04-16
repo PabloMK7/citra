@@ -21,13 +21,6 @@ class EmuThread : public QThread
     Q_OBJECT
 
 public:
-    /**
-     * Set image filename
-     *
-     * @param filename
-     * @warning Only call when not running!
-     */
-    void SetFilename(std::string filename);
 
     /**
      * Start emulation (on new thread)
@@ -71,8 +64,6 @@ private:
     friend class GMainWindow;
 
     EmuThread(GRenderWindow* render_window);
-
-    std::string filename;
 
     bool exec_cpu_step;
     bool cpu_running;

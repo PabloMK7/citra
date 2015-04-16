@@ -211,7 +211,6 @@ void GMainWindow::BootGame(std::string filename)
     registersWidget->OnDebugModeEntered();
     callstackWidget->OnDebugModeEntered();
 
-    emu_thread->SetFilename(filename);
     emu_thread->start();
 
     render_window->show();
