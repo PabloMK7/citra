@@ -30,21 +30,19 @@
 EmuThread::EmuThread(GRenderWindow* render_window) :
     exec_cpu_step(false), cpu_running(false), stop_run(false), render_window(render_window) {
 
+    shutdown_event.Reset();
     connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
-void EmuThread::run()
-{
+void EmuThread::run() {
     stop_run = false;
 
     // holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step
     bool was_active = false;
-    while (!stop_run)
-    {
-        if (cpu_running)
-        {
+    while (!stop_run) {
+        if (cpu_running) {
             if (!was_active)
                 emit DebugModeLeft();
 
@@ -53,9 +51,7 @@ void EmuThread::run()
             was_active = cpu_running || exec_cpu_step;
             if (!was_active)
                 emit DebugModeEntered();
-        }
-        else if (exec_cpu_step)
-        {
+        } else if (exec_cpu_step) {
             if (!was_active)
                 emit DebugModeLeft();
 
@@ -67,15 +63,14 @@ void EmuThread::run()
             was_active = false;
         }
     }
+
     render_window->moveContext();
 
-    Core::Stop();
+    shutdown_event.Set();
 }
 
-void EmuThread::Stop()
-{
-    if (!isRunning())
-    {
+void EmuThread::Stop() {
+    if (!isRunning()) {
         LOG_WARNING(Frontend, "EmuThread::Stop called while emu thread wasn't running, returning...");
         return;
     }
@@ -88,23 +83,19 @@ void EmuThread::Stop()
 
     // TODO: Waiting here is just a bad workaround for retarded shutdown logic.
     wait(1000);
-    if (isRunning())
-    {
+    if (isRunning()) {
         LOG_WARNING(Frontend, "EmuThread still running, terminating...");
         quit();
 
         // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
         // queued... This should be fixed.
         wait(50000);
-        if (isRunning())
-        {
+        if (isRunning()) {
             LOG_CRITICAL(Frontend, "EmuThread STILL running, something is wrong here...");
             terminate();
         }
     }
     LOG_INFO(Frontend, "EmuThread stopped");
-
-    System::Shutdown();
 }
 
 

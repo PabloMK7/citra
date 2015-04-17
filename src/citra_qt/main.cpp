@@ -57,7 +57,6 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     render_window = new GRenderWindow(this, *this);
     render_window->hide();
-    emu_thread = new EmuThread(render_window);
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
@@ -197,9 +196,9 @@ void GMainWindow::OnDisplayTitleBars(bool show)
     }
 }
 
-void GMainWindow::BootGame(std::string filename)
-{
+void GMainWindow::BootGame(std::string filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
+
     System::Init(render_window);
 
     // Load a game or die...
@@ -211,6 +210,7 @@ void GMainWindow::BootGame(std::string filename)
     registersWidget->OnDebugModeEntered();
     callstackWidget->OnDebugModeEntered();
 
+    emu_thread = new EmuThread(render_window);
     emu_thread->start();
 
     render_window->show();
@@ -248,14 +248,22 @@ void GMainWindow::OnPauseGame()
     ui.action_Stop->setEnabled(true);
 }
 
-void GMainWindow::OnStopGame()
-{
+void GMainWindow::OnStopGame() {
     emu_thread->SetCpuRunning(false);
-    // TODO: Shutdown core
+
+    emu_thread->ShutdownCpu();
+    emu_thread->WaitForCpuShutdown();
+    emu_thread->Stop();
+
+    delete emu_thread;
+
+    System::Shutdown();
 
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
+
+    render_window->hide();
 }
 
 void GMainWindow::OnOpenHotkeysDialog()

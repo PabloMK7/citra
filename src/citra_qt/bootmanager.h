@@ -9,6 +9,7 @@
 
 #include "common/common.h"
 #include "common/emu_window.h"
+#include "common/thread.h"
 
 class QScreen;
 class QKeyEvent;
@@ -37,18 +38,29 @@ public:
     void ExecStep() { exec_cpu_step = true; }
 
     /**
-     * Allow the CPU to continue processing instructions without interruption
+     * Sets whether the CPU is running 
      *
      * @note This function is thread-safe
      */
     void SetCpuRunning(bool running) { cpu_running = running; }
 
     /**
-    * Allow the CPU to continue processing instructions without interruption
-    *
-    * @note This function is thread-safe
-    */
+     * Allow the CPU to continue processing instructions without interruption
+     *
+     * @note This function is thread-safe
+     */
     bool IsCpuRunning() { return cpu_running; }
+
+
+    /**
+     * Shutdown (permantently stops) the CPU
+     */
+    void ShutdownCpu() { stop_run = true; };
+
+    /**
+     * Waits for the CPU shutdown to complete
+     */
+    void WaitForCpuShutdown() { shutdown_event.Wait(); }
 
 
 public slots:
@@ -70,6 +82,8 @@ private:
     std::atomic<bool> stop_run;
 
     GRenderWindow* render_window;
+
+    Common::Event shutdown_event;
 
 signals:
     /**
