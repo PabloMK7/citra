@@ -181,6 +181,10 @@ public:
     template <typename T>
     size_t WriteArray(const T* data, size_t length)
     {
+        static_assert(std::is_standard_layout<T>::value, "Given array does not consist of standard layout objects");
+        // TODO: gcc 4.8 does not support is_trivially_copyable, but we really should check for it here.
+        //static_assert(std::is_trivially_copyable<T>::value, "Given array does not consist of trivially copyable objects");
+
         if (!IsOpen()) {
             m_good = false;
             return -1;
@@ -201,6 +205,12 @@ public:
     size_t WriteBytes(const void* data, size_t length)
     {
         return WriteArray(reinterpret_cast<const char*>(data), length);
+    }
+
+    template<typename T>
+    size_t WriteObject(const T& object) {
+        static_assert(!std::is_pointer<T>::value, "Given object is a pointer");
+        return WriteArray(&object, 1);
     }
 
     bool IsOpen() { return nullptr != m_file; }
