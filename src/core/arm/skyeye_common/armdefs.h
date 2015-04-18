@@ -55,18 +55,6 @@ typedef u16 ARMhword;  // must be 16 bits wide
 typedef u8 ARMbyte;    // must be 8 bits wide
 typedef struct ARMul_State ARMul_State;
 
-typedef unsigned ARMul_CPInits(ARMul_State* state);
-typedef unsigned ARMul_CPExits(ARMul_State* state);
-typedef unsigned ARMul_LDCs(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
-typedef unsigned ARMul_STCs(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
-typedef unsigned ARMul_MRCs(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
-typedef unsigned ARMul_MCRs(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
-typedef unsigned ARMul_MRRCs(ARMul_State* state, unsigned type, ARMword instr, ARMword* value1, ARMword* value2);
-typedef unsigned ARMul_MCRRs(ARMul_State* state, unsigned type, ARMword instr, ARMword value1, ARMword value2);
-typedef unsigned ARMul_CDPs(ARMul_State* state, unsigned type, ARMword instr);
-typedef unsigned ARMul_CPReads(ARMul_State* state, unsigned reg, ARMword* value);
-typedef unsigned ARMul_CPWrites(ARMul_State* state, unsigned reg, ARMword value);
-
 #define VFP_REG_NUM 64
 struct ARMul_State
 {
@@ -116,20 +104,6 @@ struct ARMul_State
 
     unsigned NextInstr;
     unsigned VectorCatch;                   // Caught exception mask
-
-    ARMul_CPInits* CPInit[16];              // Coprocessor initialisers
-    ARMul_CPExits* CPExit[16];              // Coprocessor finalisers
-    ARMul_LDCs* LDC[16];                    // LDC instruction
-    ARMul_STCs* STC[16];                    // STC instruction
-    ARMul_MRCs* MRC[16];                    // MRC instruction
-    ARMul_MCRs* MCR[16];                    // MCR instruction
-    ARMul_MRRCs* MRRC[16];                  // MRRC instruction
-    ARMul_MCRRs* MCRR[16];                  // MCRR instruction
-    ARMul_CDPs* CDP[16];                    // CDP instruction
-    ARMul_CPReads* CPRead[16];              // Read CP register
-    ARMul_CPWrites* CPWrite[16];            // Write CP register
-    unsigned char* CPData[16];              // Coprocessor data
-    unsigned char const* CPRegWords[16];    // Map of coprocessor register sizes
 
     unsigned NresetSig;                     // Reset the processor
     unsigned NfiqSig;
