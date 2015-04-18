@@ -101,39 +101,43 @@ inline void Write(u32 addr, const T data) {
         const bool is_second_filler = (index != GPU_REG_INDEX(memory_fill_config[0].trigger));
         auto& config = g_regs.memory_fill_config[is_second_filler];
 
-        if (config.address_start && config.trigger) {
-            u8* start = Memory::GetPhysicalPointer(config.GetStartAddress());
-            u8* end = Memory::GetPhysicalPointer(config.GetEndAddress());
+        if (config.trigger) {
+            if (config.address_start) { // Some games pass invalid values here
+                u8* start = Memory::GetPhysicalPointer(config.GetStartAddress());
+                u8* end = Memory::GetPhysicalPointer(config.GetEndAddress());
 
-            if (config.fill_24bit) {
-                // fill with 24-bit values
-                for (u8* ptr = start; ptr < end; ptr += 3) {
-                    ptr[0] = config.value_24bit_r;
-                    ptr[1] = config.value_24bit_g;
-                    ptr[2] = config.value_24bit_b;
+                if (config.fill_24bit) {
+                    // fill with 24-bit values
+                    for (u8* ptr = start; ptr < end; ptr += 3) {
+                        ptr[0] = config.value_24bit_r;
+                        ptr[1] = config.value_24bit_g;
+                        ptr[2] = config.value_24bit_b;
+                    }
+                } else if (config.fill_32bit) {
+                    // fill with 32-bit values
+                    for (u32* ptr = (u32*)start; ptr < (u32*)end; ++ptr)
+                        *ptr = config.value_32bit;
+                } else {
+                    // fill with 16-bit values
+                    for (u16* ptr = (u16*)start; ptr < (u16*)end; ++ptr)
+                        *ptr = config.value_16bit;
                 }
-            } else if (config.fill_32bit) {
-                // fill with 32-bit values
-                for (u32* ptr = (u32*)start; ptr < (u32*)end; ++ptr)
-                    *ptr = config.value_32bit;
-            } else {
-                // fill with 16-bit values
-                for (u16* ptr = (u16*)start; ptr < (u16*)end; ++ptr)
-                    *ptr = config.value_16bit;
+
+                LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
+
+                if (!is_second_filler) {
+                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
+                } else {
+                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+                }
+
+                VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetStartAddress(), config.GetEndAddress() - config.GetStartAddress());
             }
 
-            LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(), config.GetEndAddress());
-
+            // Reset "trigger" flag and set the "finish" flag
+            // NOTE: This was confirmed to happen on hardware even if "address_start" is zero.
             config.trigger = 0;
             config.finished = 1;
-
-            if (!is_second_filler) {
-                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
-            } else {
-                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
-            }
-
-            VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetStartAddress(), config.GetEndAddress() - config.GetStartAddress());
         }
         break;
     }
@@ -270,6 +274,7 @@ inline void Write(u32 addr, const T data) {
                       config.GetPhysicalOutputAddress(), output_width, output_height,
                       config.output_format.Value(), config.flags);
 
+            g_regs.display_transfer_config.trigger = 0;
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
 
             VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetPhysicalOutputAddress(), output_size);
@@ -285,6 +290,8 @@ inline void Write(u32 addr, const T data) {
         {
             u32* buffer = (u32*)Memory::GetPhysicalPointer(config.GetPhysicalAddress());
             Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
+
+            g_regs.command_processor_config.trigger = 0;
         }
         break;
     }
