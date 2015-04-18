@@ -26,7 +26,7 @@ static QVariant GetDataForColumn(int col, const AggregatedDuration& duration)
 static const TimingCategoryInfo* GetCategoryInfo(int id)
 {
     const auto& categories = GetProfilingManager().GetTimingCategoriesInfo();
-    if (id >= categories.size()) {
+    if ((size_t)id >= categories.size()) {
         return nullptr;
     } else {
         return &categories[id];
@@ -98,7 +98,7 @@ QVariant ProfilerModel::data(const QModelIndex& index, int role) const
                 const TimingCategoryInfo* info = GetCategoryInfo(index.row() - 2);
                 return info != nullptr ? QString(info->name) : QVariant();
             } else {
-                if (index.row() - 2 < results.time_per_category.size()) {
+                if (index.row() - 2 < (int)results.time_per_category.size()) {
                     return GetDataForColumn(index.column(), results.time_per_category[index.row() - 2]);
                 } else {
                     return QVariant();
