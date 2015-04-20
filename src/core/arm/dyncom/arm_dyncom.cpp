@@ -31,7 +31,6 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
 
     // Reset the core to initial state
     ARMul_Reset(state.get());
-    state->NextInstr = RESUME; // NOTE: This will be overwritten by LoadContext
     state->Emulate = RUN;
 
     // Switch to the desired privilege mode.
@@ -99,7 +98,6 @@ void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 e
     context.pc = entry_point;
     context.sp = stack_top;
     context.cpsr = 0x1F; // Usermode
-    context.mode = 8;    // Instructs dyncom CPU core to start execution as if it's "resuming" a thread.
 }
 
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
@@ -113,8 +111,6 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
 
     ctx.fpscr = state->VFP[1];
     ctx.fpexc = state->VFP[2];
-
-    ctx.mode = state->NextInstr;
 }
 
 void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
@@ -128,8 +124,6 @@ void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
 
     state->VFP[1] = ctx.fpscr;
     state->VFP[2] = ctx.fpexc;
-
-    state->NextInstr = ctx.mode;
 }
 
 void ARM_DynCom::PrepareReschedule() {

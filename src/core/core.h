@@ -21,9 +21,6 @@ struct ThreadContext {
     u32 fpu_registers[32];
     u32 fpscr;
     u32 fpexc;
-
-    // These are not part of native ThreadContext, but needed by emu
-    u32 mode;
 };
 
 extern ARM_Interface*   g_app_core;     ///< ARM11 application core

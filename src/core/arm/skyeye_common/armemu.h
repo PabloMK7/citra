@@ -38,16 +38,6 @@ enum : u32 {
     INTBITS  = 0x1C0,
 };
 
-// Different ways to start the next instruction.
-enum {
-    SEQ           = 0,
-    NONSEQ        = 1,
-    PCINCEDSEQ    = 2,
-    PCINCEDNONSEQ = 3,
-    PRIMEPIPE     = 4,
-    RESUME        = 8
-};
-
 // Values for Emulate.
 enum {
     STOP       = 0, // Stop
@@ -55,5 +45,3 @@ enum {
     ONCE       = 2, // Execute just one interation
     RUN        = 3  // Continuous execution
 };
-
-#define FLUSHPIPE state->NextInstr |= PRIMEPIPE
