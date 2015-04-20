@@ -6,7 +6,6 @@ set(SRCS
             arm/dyncom/arm_dyncom_interpreter.cpp
             arm/dyncom/arm_dyncom_run.cpp
             arm/dyncom/arm_dyncom_thumb.cpp
-            arm/interpreter/armcopro.cpp
             arm/interpreter/arminit.cpp
             arm/interpreter/armsupp.cpp
             arm/skyeye_common/vfp/vfp.cpp

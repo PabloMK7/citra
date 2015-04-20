@@ -28,13 +28,6 @@
 #define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
 unsigned VFPInit(ARMul_State* state);
-unsigned VFPMRC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
-unsigned VFPMCR(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
-unsigned VFPMRRC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value1, ARMword* value2);
-unsigned VFPMCRR(ARMul_State* state, unsigned type, ARMword instr, ARMword value1, ARMword value2);
-unsigned VFPSTC(ARMul_State* state, unsigned type, ARMword instr, ARMword* value);
-unsigned VFPLDC(ARMul_State* state, unsigned type, ARMword instr, ARMword value);
-unsigned VFPCDP(ARMul_State* state, unsigned type, ARMword instr);
 
 s32 vfp_get_float(ARMul_State* state, u32 reg);
 void vfp_put_float(ARMul_State* state, s32 val, u32 reg);
@@ -44,23 +37,10 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
 u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 
-// MRC
-void VMRS(ARMul_State* state, ARMword reg, ARMword Rt, ARMword* value);
+void VMSR(ARMul_State* state, ARMword reg, ARMword Rt);
 void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value);
 void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
 void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
 void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
 void VMOVR(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
 
-// MCR
-void VMSR(ARMul_State* state, ARMword reg, ARMword Rt);
-
-// STC
-int VSTM(ARMul_State* state, int type, ARMword instr, ARMword* value);
-int VPUSH(ARMul_State* state, int type, ARMword instr, ARMword* value);
-int VSTR(ARMul_State* state, int type, ARMword instr, ARMword* value);
-
-// LDC
-int VLDM(ARMul_State* state, int type, ARMword instr, ARMword value);
-int VPOP(ARMul_State* state, int type, ARMword instr, ARMword value);
-int VLDR(ARMul_State* state, int type, ARMword instr, ARMword value);

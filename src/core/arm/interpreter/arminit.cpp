@@ -19,6 +19,7 @@
 #include "core/mem_map.h"
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armemu.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 
 /***************************************************************************\
 *            Returns a new instantiation of the ARMulator's state           *
@@ -56,15 +57,11 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
 
 void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
 {
-    state->is_v4     = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
-    state->is_v5     = (properties & ARM_v5_Prop) != 0;
-    state->is_v5e    = (properties & ARM_v5e_Prop) != 0;
-    state->is_v6     = (properties & ARM_v6_Prop) != 0;
-    state->is_v7     = (properties & ARM_v7_Prop) != 0;
-
-    // Only initialse the coprocessor support once we
-    // know what kind of chip we are dealing with.
-    ARMul_CoProInit(state);
+    state->is_v4  = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
+    state->is_v5  = (properties & ARM_v5_Prop) != 0;
+    state->is_v5e = (properties & ARM_v5e_Prop) != 0;
+    state->is_v6  = (properties & ARM_v6_Prop) != 0;
+    state->is_v7  = (properties & ARM_v7_Prop) != 0;
 }
 
 // Resets certain MPCore CP15 values to their ARM-defined reset values.
@@ -130,6 +127,8 @@ static void ResetMPCoreCP15Registers(ARMul_State* cpu)
 \***************************************************************************/
 void ARMul_Reset(ARMul_State* state)
 {
+    VFPInit(state);
+
     state->NextInstr = 0;
 
     state->Reg[15] = 0;
