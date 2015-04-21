@@ -130,13 +130,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
                     print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(0,1), instr.common.AddressRegisterName());
                     output << " " << instr.common.compare_op.ToString(instr.common.compare_op.x) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(false).substr(0,1));
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(0,1));
 
                     output << ", ";
 
                     print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(1,1), instr.common.AddressRegisterName());
                     output << " " << instr.common.compare_op.ToString(instr.common.compare_op.y) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(false).substr(1,1));
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1));
 
                     break;
                 }
@@ -167,7 +167,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     // TODO: In some cases, the Address Register is used as an index for SRC2 instead of SRC1
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
-                        print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(false));
+                        print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true));
                     }
                     break;
                 }
