@@ -53,14 +53,11 @@ typedef u64 ARMdword;  // must be 64 bits wide
 typedef u32 ARMword;   // must be 32 bits wide
 typedef u16 ARMhword;  // must be 16 bits wide
 typedef u8 ARMbyte;    // must be 8 bits wide
-typedef struct ARMul_State ARMul_State;
 
 #define VFP_REG_NUM 64
 struct ARMul_State
 {
     ARMword Emulate;       // To start and stop emulation
-    unsigned EndCondition; // Reason for stopping
-    unsigned ErrorCode;    // Type of illegal instruction
 
     // Order of the following register should not be modified
     ARMword Reg[16];            // The current register file
@@ -89,8 +86,6 @@ struct ARMul_State
     ARMword ExtReg[VFP_REG_NUM];
     /* ---- End of the ordered registers ---- */
 
-    ARMword RegBank[7][16]; // all the registers
-
     ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;
 
@@ -102,10 +97,7 @@ struct ARMul_State
     unsigned long long NumInstrs; // The number of instructions executed
     unsigned NumInstrsToExecute;
 
-    unsigned NextInstr;
-    unsigned VectorCatch;                   // Caught exception mask
-
-    unsigned NresetSig;                     // Reset the processor
+    unsigned NresetSig; // Reset the processor
     unsigned NfiqSig;
     unsigned NirqSig;
 
@@ -147,13 +139,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 */
     unsigned lateabtSig;
 
-    bool Aborted;             // Sticky flag for aborts
-    bool Reseted;             // Sticky flag for Reset
-    ARMword Inted, LastInted; // Sticky flags for interrupts
-    ARMword Base;             // Extra hand for base writeback
-    ARMword AbortAddr;        // To keep track of Prefetch aborts
-    ARMword Vector;           // Synthesize aborts in cycle modes
-
     // For differentiating ARM core emulaiton.
     bool is_v4;     // Are we emulating a v4 architecture (or higher)?
     bool is_v5;     // Are we emulating a v5 architecture?
@@ -167,14 +152,6 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 
     // Added by ksh in 2005-10-1
     cpu_config_t* cpu;
-
-    u32 CurrInstr;
-    u32 last_pc;      // The last PC executed
-    u32 last_instr;   // The last instruction executed
-    u32 WriteAddr[17];
-    u32 WriteData[17];
-    u32 WritePc[17];
-    u32 CurrWrite;
 };
 
 /***************************************************************************\
@@ -258,34 +235,6 @@ enum {
     ARMul_DONE      = 0,
     ARMul_CANT      = 1,
     ARMul_INC       = 3
-};
-
-enum {
-    ARMul_CP13_R0_FIQ       = 0x1,
-    ARMul_CP13_R0_IRQ       = 0x2,
-    ARMul_CP13_R8_PMUS      = 0x1,
-
-    ARMul_CP14_R0_ENABLE    = 0x0001,
-    ARMul_CP14_R0_CLKRST    = 0x0004,
-    ARMul_CP14_R0_CCD       = 0x0008,
-    ARMul_CP14_R0_INTEN0    = 0x0010,
-    ARMul_CP14_R0_INTEN1    = 0x0020,
-    ARMul_CP14_R0_INTEN2    = 0x0040,
-    ARMul_CP14_R0_FLAG0     = 0x0100,
-    ARMul_CP14_R0_FLAG1     = 0x0200,
-    ARMul_CP14_R0_FLAG2     = 0x0400,
-    ARMul_CP14_R10_MOE_IB   = 0x0004,
-    ARMul_CP14_R10_MOE_DB   = 0x0008,
-    ARMul_CP14_R10_MOE_BT   = 0x000c,
-    ARMul_CP15_R1_ENDIAN    = 0x0080,
-    ARMul_CP15_R1_ALIGN     = 0x0002,
-    ARMul_CP15_R5_X         = 0x0400,
-    ARMul_CP15_R5_ST_ALIGN  = 0x0001,
-    ARMul_CP15_R5_IMPRE     = 0x0406,
-    ARMul_CP15_R5_MMU_EXCPT = 0x0400,
-    ARMul_CP15_DBCON_M      = 0x0100,
-    ARMul_CP15_DBCON_E1     = 0x000c,
-    ARMul_CP15_DBCON_E0     = 0x0003
 };
 
 /***************************************************************************\

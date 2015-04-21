@@ -29,21 +29,7 @@ ARMul_State* ARMul_NewState(ARMul_State* state)
     memset(state, 0, sizeof(ARMul_State));
 
     state->Emulate = RUN;
-    for (unsigned int i = 0; i < 16; i++) {
-        state->Reg[i] = 0;
-        for (unsigned int j = 0; j < 7; j++)
-            state->RegBank[j][i] = 0;
-    }
-    for (unsigned int i = 0; i < 7; i++)
-        state->Spsr[i] = 0;
-
     state->Mode = USER32MODE;
-
-    state->VectorCatch = 0;
-    state->Aborted = false;
-    state->Reseted = false;
-    state->Inted = 3;
-    state->LastInted = 3;
 
     state->lateabtSig = HIGH;
     state->bigendSig = LOW;
@@ -129,26 +115,18 @@ void ARMul_Reset(ARMul_State* state)
 {
     VFPInit(state);
 
-    state->NextInstr = 0;
-
     state->Reg[15] = 0;
     state->Cpsr = INTBITS | SVC32MODE;
     state->Mode = SVC32MODE;
-
     state->Bank = SVCBANK;
-    FLUSHPIPE;
 
     ResetMPCoreCP15Registers(state);
-
-    state->EndCondition = 0;
-    state->ErrorCode = 0;
 
     state->NresetSig = HIGH;
     state->NfiqSig = HIGH;
     state->NirqSig = HIGH;
     state->NtransSig = (state->Mode & 3) ? HIGH : LOW;
     state->abortSig = LOW;
-    state->AbortAddr = 1;
 
     state->NumInstrs = 0;
 }
