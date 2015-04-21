@@ -35,7 +35,8 @@ class GraphicsFramebufferWidget : public BreakPointObserverDock {
         RGBA4    = 4,
         D16      = 5,
         D24      = 6,
-        D24S8    = 7
+        D24S8    = 7,
+        Unknown  = 8
     };
 
     static u32 BytesPerPixel(Format format);

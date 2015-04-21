@@ -184,8 +184,32 @@ void GraphicsFramebufferWidget::OnUpdate()
         framebuffer_address = framebuffer.GetColorBufferPhysicalAddress();
         framebuffer_width = framebuffer.GetWidth();
         framebuffer_height = framebuffer.GetHeight();
-        // TODO: It's unknown how this format is actually specified
-        framebuffer_format = Format::RGBA8;
+
+        switch (framebuffer.color_format) {
+        case Pica::Regs::ColorFormat::RGBA8:
+            framebuffer_format = Format::RGBA8;
+            break;
+
+        case Pica::Regs::ColorFormat::RGB8:
+            framebuffer_format = Format::RGB8;
+            break;
+
+        case Pica::Regs::ColorFormat::RGB5A1:
+            framebuffer_format = Format::RGB5A1;
+            break;
+
+        case Pica::Regs::ColorFormat::RGB565:
+            framebuffer_format = Format::RGB565;
+            break;
+
+        case Pica::Regs::ColorFormat::RGBA4:
+            framebuffer_format = Format::RGBA4;
+            break;
+
+        default:
+            framebuffer_format = Format::Unknown;
+            break;
+        }
 
         break;
     }
