@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-ctr-3dsx">
+        <comment>3DS homebrew executable</comment>
+        <comment xml:lang="fr">Exécutable 3DS homebrew</comment>
+        <acronym>3DSX</acronym>
+        <icon name="citra"/>
+        <glob pattern="*.3dsx"/>
+        <magic><match value="3DSX" type="string" offset="0"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-ctr-cci">
+        <comment>3DS cartridge image</comment>
+        <comment xml:lang="fr">Image de cartouche 3DS</comment>
+        <acronym>CCI</acronym>
+        <expanded-acronym>CTR Cart Image</expanded-acronym>
+        <icon name="citra"/>
+        <glob pattern="*.cci"/>
+        <glob pattern="*.3ds"/>
+        <magic><match value="NCSD" type="string" offset="256"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-ctr-cxi">
+        <comment>3DS executable</comment>
+        <comment xml:lang="fr">Exécutable 3DS</comment>
+        <acronym>CXI</acronym>
+        <expanded-acronym>CTR eXecutable Image</expanded-acronym>
+        <icon name="citra"/>
+        <glob pattern="*.cxi"/>
+        <magic><match value="NCCH" type="string" offset="256"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-ctr-cia">
+        <comment>3DS importable archive</comment>
+        <comment xml:lang="fr">Archive importable 3DS</comment>
+        <acronym>CIA</acronym>
+        <expanded-acronym>CTR Importable Archive</expanded-acronym>
+        <icon name="citra"/>
+        <glob pattern="*.cia"/>
+    </mime-type>
+
+    <mime-type type="application/x-ctr-smdh">
+        <comment>3DS icon</comment>
+        <comment xml:lang="fr">Icône 3DS</comment>
+        <acronym>SMDH</acronym>
+        <expanded-acronym>System Menu Data Header</expanded-acronym>
+        <glob pattern="*.smdh"/>
+        <magic><match value="SMDH" type="string" offset="0"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-ctr-cbmd">
+        <comment>3DS banner</comment>
+        <comment xml:lang="fr">Bannière 3DS</comment>
+        <acronym>CBMD</acronym>
+        <expanded-acronym>CTR Banner Model Data</expanded-acronym>
+        <glob pattern="*.cbmd"/>
+        <magic><match value="CBMD" type="string" offset="0"/></magic>
+    </mime-type>
+</mime-info>
