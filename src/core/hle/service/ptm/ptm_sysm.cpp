@@ -16,7 +16,7 @@ namespace PTM {
  *     1: Result code, 0 on success, otherwise error code
  *     2: Whether the system is going through a power off
  */
-void IsLegacyPowerOff(Service::Interface* self) {
+static void IsLegacyPowerOff(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
