@@ -66,7 +66,6 @@ void Init() {
     config_mem.unit_info = 0x1; // Bit 0 set for Retail
     config_mem.prev_firm = 0;
     config_mem.app_mem_type = 0x2; // Default app mem type is 0
-    config_mem.unit_info = 0x1; // Bit 0 set for Retail
     config_mem.app_mem_alloc = 0x06000000; // Set to 96MB, since some games use more than the default (64MB)
     config_mem.base_mem_alloc = 0x01400000; // Default base memory is 20MB
     config_mem.sys_mem_alloc = Memory::FCRAM_SIZE - (config_mem.app_mem_alloc + config_mem.base_mem_alloc);
