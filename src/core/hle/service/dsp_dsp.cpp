@@ -11,7 +11,7 @@
 
 namespace DSP_DSP {
 
-static u32 read_pipe_count    = 0;
+static u32 read_pipe_count;
 static Kernel::SharedPtr<Kernel::Event> semaphore_event;
 static Kernel::SharedPtr<Kernel::Event> interrupt_event;
 

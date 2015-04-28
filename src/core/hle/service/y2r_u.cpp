@@ -11,7 +11,7 @@
 
 namespace Y2R_U {
 
-static Kernel::SharedPtr<Kernel::Event> completion_event = 0;
+static Kernel::SharedPtr<Kernel::Event> completion_event;
 
 /**
  * Y2R_U::IsBusyConversion service function
