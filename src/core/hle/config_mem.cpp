@@ -61,6 +61,8 @@ template void Read<u16>(u16 &var, const u32 addr);
 template void Read<u8>(u8 &var, const u32 addr);
 
 void Init() {
+    memset(&config_mem, 0, sizeof(config_mem));
+
     config_mem.update_flag = 0; // No update
     config_mem.sys_core_ver = 0x2;
     config_mem.unit_info = 0x1; // Bit 0 set for Retail
@@ -74,6 +76,9 @@ void Init() {
     config_mem.firm_version_min = 0x40;
     config_mem.firm_version_maj = 0x2;
     config_mem.firm_sys_core_ver = 0x2;
+}
+
+void Shutdown() {
 }
 
 } // namespace

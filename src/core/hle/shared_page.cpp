@@ -62,6 +62,8 @@ template void Read<u16>(u16 &var, const u32 addr);
 template void Read<u8>(u8 &var, const u32 addr);
 
 void Set3DSlider(float amount) {
+    memset(&shared_page, 0, sizeof(shared_page));
+
     shared_page.sliderstate_3d = amount;
     shared_page.ledstate_3d = (amount == 0.0f); // off when non-zero
 }
@@ -69,6 +71,9 @@ void Set3DSlider(float amount) {
 void Init() {
     shared_page.running_hw = 0x1; // product
     Set3DSlider(0.0f);
+}
+
+void Shutdown() {
 }
 
 } // namespace

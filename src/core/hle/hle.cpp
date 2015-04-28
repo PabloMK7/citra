@@ -23,7 +23,7 @@ Common::Profiling::TimingCategory profiler_svc("SVC Calls");
 
 static std::vector<ModuleDef> g_module_db;
 
-bool g_reschedule = false;  ///< If true, immediately reschedules the CPU to a new thread
+bool g_reschedule; ///< If true, immediately reschedules the CPU to a new thread
 
 static const FunctionDef* GetSVCInfo(u32 opcode) {
     u32 func_num = opcode & 0xFFFFFF; // 8 bits
@@ -73,17 +73,20 @@ static void RegisterAllModules() {
 }
 
 void Init() {
-    Service::Init();
-
     RegisterAllModules();
 
+    Service::Init();
     ConfigMem::Init();
     SharedPage::Init();
+
+    g_reschedule = false;
 
     LOG_DEBUG(Kernel, "initialized OK");
 }
 
 void Shutdown() {
+    ConfigMem::Shutdown();
+    SharedPage::Shutdown();
     Service::Shutdown();
 
     g_module_db.clear();
