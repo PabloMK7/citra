@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/make_unique.h"
+
 #include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
@@ -17,7 +19,7 @@ const static cpu_config_t s_arm11_cpu_info = {
 };
 
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
-    state = std::unique_ptr<ARMul_State>(new ARMul_State);
+    state = Common::make_unique<ARMul_State>();
 
     ARMul_NewState(state.get());
     ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);

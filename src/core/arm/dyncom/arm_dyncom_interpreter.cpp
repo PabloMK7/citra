@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <cstdio>
-#include <unordered_map>
 
 #include "common/logging/log.h"
 #include "common/profiler.h"
@@ -3533,25 +3532,6 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(blx_1_thumb)
 };
 
-typedef std::unordered_map<u32, int> bb_map;
-static bb_map CreamCache;
-
-static void insert_bb(unsigned int addr, int start) {
-    CreamCache[addr] = start;
-}
-
-static int find_bb(unsigned int addr, int& start) {
-    int ret = -1;
-    bb_map::const_iterator it = CreamCache.find(addr);
-    if (it != CreamCache.end()) {
-        start = static_cast<int>(it->second);
-        ret = 0;
-    } else {
-        ret = -1;
-    }
-    return ret;
-}
-
 enum {
     FETCH_SUCCESS,
     FETCH_FAILURE
@@ -3674,7 +3654,9 @@ translated:
         }
         ret = inst_base->br;
     };
-    insert_bb(pc_start, bb_start);
+
+    cpu->instruction_cache[pc_start] = bb_start;
+
     return KEEP_GOING;
 }
 
@@ -4001,9 +3983,14 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
 
         phys_addr = cpu->Reg[15];
 
-        if (find_bb(cpu->Reg[15], ptr) == -1)
+        // Find the cached instruction cream, otherwise translate it...
+        auto itr = cpu->instruction_cache.find(cpu->Reg[15]);
+        if (itr != cpu->instruction_cache.end()) {
+            ptr = itr->second;
+        } else {
             if (InterpreterTranslate(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
                 goto END;
+        }
 
         inst_base = (arm_inst *)&inst_buf[ptr];
         GOTO_NEXT_INST;
