@@ -11,30 +11,30 @@
 
 namespace Memory {
 
-u8* g_base                      = nullptr;   ///< The base pointer to the auto-mirrored arena.
+u8* g_base;                     ///< The base pointer to the auto-mirrored arena.
 
-static MemArena arena;                       ///< The MemArena class
+static MemArena arena;          ///< The MemArena class
 
-u8* g_exefs_code                = nullptr;   ///< ExeFS:/.code is loaded here
-u8* g_system_mem                = nullptr;   ///< System memory
-u8* g_heap                      = nullptr;   ///< Application heap (main memory)
-u8* g_heap_linear               = nullptr;   ///< Linear heap
-u8* g_vram                      = nullptr;   ///< Video memory (VRAM) pointer
-u8* g_shared_mem                = nullptr;   ///< Shared memory
-u8* g_dsp_mem                   = nullptr;   ///< DSP memory
-u8* g_kernel_mem;                              ///< Kernel memory
+u8* g_exefs_code;               ///< ExeFS:/.code is loaded here
+u8* g_system_mem;               ///< System memory
+u8* g_heap;                     ///< Application heap (main memory)
+u8* g_heap_linear;              ///< Linear heap
+u8* g_vram;                     ///< Video memory (VRAM) pointer
+u8* g_shared_mem;               ///< Shared memory
+u8* g_dsp_mem;                  ///< DSP memory
+u8* g_kernel_mem;               ///< Kernel memory
 
-static u8* physical_bootrom     = nullptr;   ///< Bootrom physical memory
-static u8* uncached_bootrom     = nullptr;
+static u8* physical_bootrom;    ///< Bootrom physical memory
+static u8* uncached_bootrom;
 
-static u8* physical_exefs_code  = nullptr;   ///< Phsical ExeFS:/.code is loaded here
-static u8* physical_system_mem  = nullptr;   ///< System physical memory
-static u8* physical_fcram       = nullptr;   ///< Main physical memory (FCRAM)
-static u8* physical_heap_gsp    = nullptr;   ///< GSP heap physical memory
-static u8* physical_vram        = nullptr;   ///< Video physical memory (VRAM)
-static u8* physical_shared_mem  = nullptr;   ///< Physical shared memory
-static u8* physical_dsp_mem     = nullptr;   ///< Physical DSP memory
-static u8* physical_kernel_mem;              ///< Kernel memory
+static u8* physical_exefs_code; ///< Phsical ExeFS:/.code is loaded here
+static u8* physical_system_mem; ///< System physical memory
+static u8* physical_fcram;      ///< Main physical memory (FCRAM)
+static u8* physical_heap_gsp;   ///< GSP heap physical memory
+static u8* physical_vram;       ///< Video physical memory (VRAM)
+static u8* physical_shared_mem; ///< Physical shared memory
+static u8* physical_dsp_mem;    ///< Physical DSP memory
+static u8* physical_kernel_mem; ///< Kernel memory
 
 // We don't declare the IO region in here since its handled by other means.
 static MemoryView g_views[] = {
@@ -73,6 +73,7 @@ void Init() {
     }
 
     g_base = MemoryMap_Setup(g_views, kNumMemViews, flags, &arena);
+    MemBlock_Init();
 
     LOG_DEBUG(HW_Memory, "initialized OK, RAM at %p (mirror at 0 @ %p)", g_heap,
         physical_fcram);
@@ -81,9 +82,29 @@ void Init() {
 void Shutdown() {
     u32 flags = 0;
     MemoryMap_Shutdown(g_views, kNumMemViews, flags, &arena);
-
     arena.ReleaseSpace();
+    MemBlock_Shutdown();
+
     g_base = nullptr;
+    g_exefs_code = nullptr;
+    g_system_mem = nullptr;
+    g_heap = nullptr;
+    g_heap_linear = nullptr;
+    g_vram = nullptr;
+    g_shared_mem = nullptr;
+    g_dsp_mem = nullptr;
+    g_kernel_mem = nullptr;
+
+    physical_bootrom = nullptr;
+    uncached_bootrom = nullptr;
+    physical_exefs_code = nullptr;
+    physical_system_mem = nullptr;
+    physical_fcram = nullptr;
+    physical_heap_gsp = nullptr;
+    physical_vram = nullptr;
+    physical_shared_mem = nullptr;
+    physical_dsp_mem = nullptr;
+    physical_kernel_mem = nullptr;
 
     LOG_DEBUG(HW_Memory, "shutdown OK");
 }

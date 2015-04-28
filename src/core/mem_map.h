@@ -171,6 +171,12 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
  */
 u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions);
 
+/// Initialize mapped memory blocks
+void MemBlock_Init();
+
+/// Shutdown mapped memory blocks
+void MemBlock_Shutdown();
+
 inline const char* GetCharPointer(const VAddr address) {
     return (const char *)GetPointer(address);
 }
