@@ -199,6 +199,10 @@ void GMainWindow::OnDisplayTitleBars(bool show)
 void GMainWindow::BootGame(std::string filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
 
+    // Shutdown previous session if the emu thread is still active...
+    if (emu_thread != nullptr)
+        ShutdownGame();
+
     System::Init(render_window);
 
     // Load a game or die...
@@ -215,6 +219,25 @@ void GMainWindow::BootGame(std::string filename) {
 
     render_window->show();
     OnStartGame();
+}
+
+void GMainWindow::ShutdownGame() {
+    emu_thread->SetCpuRunning(false);
+
+    emu_thread->ShutdownCpu();
+    emu_thread->WaitForCpuShutdown();
+    emu_thread->Stop();
+
+    delete emu_thread;
+    emu_thread = nullptr;
+
+    System::Shutdown();
+
+    ui.action_Start->setEnabled(true);
+    ui.action_Pause->setEnabled(false);
+    ui.action_Stop->setEnabled(false);
+
+    render_window->hide();
 }
 
 void GMainWindow::OnMenuLoadFile()
@@ -249,21 +272,7 @@ void GMainWindow::OnPauseGame()
 }
 
 void GMainWindow::OnStopGame() {
-    emu_thread->SetCpuRunning(false);
-
-    emu_thread->ShutdownCpu();
-    emu_thread->WaitForCpuShutdown();
-    emu_thread->Stop();
-
-    delete emu_thread;
-
-    System::Shutdown();
-
-    ui.action_Start->setEnabled(true);
-    ui.action_Pause->setEnabled(false);
-    ui.action_Stop->setEnabled(false);
-
-    render_window->hide();
+    ShutdownGame();
 }
 
 void GMainWindow::OnOpenHotkeysDialog()
