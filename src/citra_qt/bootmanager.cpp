@@ -28,9 +28,8 @@
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window) :
-    exec_cpu_step(false), cpu_running(false), stop_run(false), render_window(render_window) {
+    exec_step(false), running(false), stop_run(false), render_window(render_window) {
 
-    shutdown_event.Reset();
     connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
@@ -42,20 +41,20 @@ void EmuThread::run() {
     // next execution step
     bool was_active = false;
     while (!stop_run) {
-        if (cpu_running) {
+        if (running) {
             if (!was_active)
                 emit DebugModeLeft();
 
             Core::RunLoop();
 
-            was_active = cpu_running || exec_cpu_step;
+            was_active = running || exec_step;
             if (!was_active)
                 emit DebugModeEntered();
-        } else if (exec_cpu_step) {
+        } else if (exec_step) {
             if (!was_active)
                 emit DebugModeLeft();
 
-            exec_cpu_step = false;
+            exec_step = false;
             Core::SingleStep();
             emit DebugModeEntered();
             yieldCurrentThread();
@@ -65,39 +64,7 @@ void EmuThread::run() {
     }
 
     render_window->moveContext();
-
-    shutdown_event.Set();
 }
-
-void EmuThread::Stop() {
-    if (!isRunning()) {
-        LOG_WARNING(Frontend, "EmuThread::Stop called while emu thread wasn't running, returning...");
-        return;
-    }
-    stop_run = true;
-
-    // Release emu threads from any breakpoints, so that this doesn't hang forever.
-    Pica::g_debug_context->ClearBreakpoints();
-
-    //core::g_state = core::SYS_DIE;
-
-    // TODO: Waiting here is just a bad workaround for retarded shutdown logic.
-    wait(1000);
-    if (isRunning()) {
-        LOG_WARNING(Frontend, "EmuThread still running, terminating...");
-        quit();
-
-        // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
-        // queued... This should be fixed.
-        wait(50000);
-        if (isRunning()) {
-            LOG_CRITICAL(Frontend, "EmuThread STILL running, something is wrong here...");
-            terminate();
-        }
-    }
-    LOG_INFO(Frontend, "EmuThread stopped");
-}
-
 
 // This class overrides paintEvent and resizeEvent to prevent the GUI thread from stealing GL context.
 // The corresponding functionality is handled in EmuThread instead

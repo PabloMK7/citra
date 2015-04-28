@@ -199,10 +199,6 @@ void GMainWindow::OnDisplayTitleBars(bool show)
 void GMainWindow::BootGame(std::string filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
 
-    // Shutdown previous session if the emu thread is still active...
-    if (emu_thread != nullptr)
-        ShutdownGame();
-
     System::Init(render_window);
 
     // Load a game or die...
@@ -222,29 +218,36 @@ void GMainWindow::BootGame(std::string filename) {
 }
 
 void GMainWindow::ShutdownGame() {
-    emu_thread->SetCpuRunning(false);
-
-    emu_thread->ShutdownCpu();
-    emu_thread->WaitForCpuShutdown();
-    emu_thread->Stop();
-
+    // Shutdown the emulation thread and wait for it to complete
+    emu_thread->SetRunning(false);
+    emu_thread->Shutdown();
+    emu_thread->wait();
     delete emu_thread;
     emu_thread = nullptr;
 
+    // Release emu threads from any breakpoints
+    Pica::g_debug_context->ClearBreakpoints();
+
+    // Shutdown the core emulation
     System::Shutdown();
 
+    // Update the GUI
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
-
     render_window->hide();
 }
 
 void GMainWindow::OnMenuLoadFile()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
-    if (filename.size())
-       BootGame(filename.toLatin1().data());
+    if (filename.size()) {
+        // Shutdown previous session if the emu thread is still active...
+        if (emu_thread != nullptr)
+            ShutdownGame();
+
+        BootGame(filename.toLatin1().data());
+    }
 }
 
 void GMainWindow::OnMenuLoadSymbolMap() {
@@ -255,7 +258,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
 
 void GMainWindow::OnStartGame()
 {
-    emu_thread->SetCpuRunning(true);
+    emu_thread->SetRunning(true);
 
     ui.action_Start->setEnabled(false);
     ui.action_Pause->setEnabled(true);
@@ -264,7 +267,7 @@ void GMainWindow::OnStartGame()
 
 void GMainWindow::OnPauseGame()
 {
-    emu_thread->SetCpuRunning(false);
+    emu_thread->SetRunning(false);
 
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);

@@ -25,65 +25,45 @@ public:
 
     /**
      * Start emulation (on new thread)
-     *
      * @warning Only call when not running!
      */
     void run() override;
 
     /**
-     * Allow the CPU to process a single instruction (if cpu is not running)
-     *
+     * Steps the emulation thread by a single CPU instruction (if the CPU is not already running)
      * @note This function is thread-safe
      */
-    void ExecStep() { exec_cpu_step = true; }
+    void ExecStep() { exec_step = true; }
 
     /**
-     * Sets whether the CPU is running 
-     *
+     * Sets whether the emulation thread is running or not
+     * @param running Boolean value, set the emulation thread to running if true
      * @note This function is thread-safe
      */
-    void SetCpuRunning(bool running) { cpu_running = running; }
+    void SetRunning(bool running) { this->running = running; }
 
     /**
-     * Allow the CPU to continue processing instructions without interruption
-     *
+     * Check if the emulation thread is running or not
+     * @return True if the emulation thread is running, otherwise false
      * @note This function is thread-safe
      */
-    bool IsCpuRunning() { return cpu_running; }
-
-
-    /**
-     * Shutdown (permantently stops) the CPU
-     */
-    void ShutdownCpu() { stop_run = true; };
+    bool IsRunning() { return running; }
 
     /**
-     * Waits for the CPU shutdown to complete
+     * Shutdown (permanently stops) the emulation thread
      */
-    void WaitForCpuShutdown() { shutdown_event.Wait(); }
-
-
-public slots:
-    /**
-     * Stop emulation and wait for the thread to finish.
-     *
-     * @details: This function will wait a second for the thread to finish; if it hasn't finished until then, we'll terminate() it and wait another second, hoping that it will be terminated by then.
-     * @note: This function is thread-safe.
-     */
-    void Stop();
+    void Shutdown() { stop_run = true; };
 
 private:
     friend class GMainWindow;
 
     EmuThread(GRenderWindow* render_window);
 
-    bool exec_cpu_step;
-    bool cpu_running;
+    bool exec_step;
+    bool running;
     std::atomic<bool> stop_run;
 
     GRenderWindow* render_window;
-
-    Common::Event shutdown_event;
 
 signals:
     /**

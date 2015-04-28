@@ -201,7 +201,7 @@ void DisassemblerWidget::Init()
 
 void DisassemblerWidget::OnContinue()
 {
-    main_window.GetEmuThread()->SetCpuRunning(true);
+    main_window.GetEmuThread()->SetRunning(true);
 }
 
 void DisassemblerWidget::OnStep()
@@ -211,13 +211,13 @@ void DisassemblerWidget::OnStep()
 
 void DisassemblerWidget::OnStepInto()
 {
-    main_window.GetEmuThread()->SetCpuRunning(false);
+    main_window.GetEmuThread()->SetRunning(false);
     main_window.GetEmuThread()->ExecStep();
 }
 
 void DisassemblerWidget::OnPause()
 {
-    main_window.GetEmuThread()->SetCpuRunning(false);
+    main_window.GetEmuThread()->SetRunning(false);
 
     // TODO: By now, the CPU might not have actually stopped...
     if (Core::g_app_core) {
@@ -227,7 +227,7 @@ void DisassemblerWidget::OnPause()
 
 void DisassemblerWidget::OnToggleStartStop()
 {
-    main_window.GetEmuThread()->SetCpuRunning(!main_window.GetEmuThread()->IsCpuRunning());
+    main_window.GetEmuThread()->SetRunning(!main_window.GetEmuThread()->IsRunning());
 }
 
 void DisassemblerWidget::OnDebugModeEntered()
@@ -235,7 +235,7 @@ void DisassemblerWidget::OnDebugModeEntered()
     ARMword next_instr = Core::g_app_core->GetPC();
 
     if (model->GetBreakPoints().IsAddressBreakPoint(next_instr))
-        main_window.GetEmuThread()->SetCpuRunning(false);
+        main_window.GetEmuThread()->SetRunning(false);
 
     model->SetNextInstruction(next_instr);
 
