@@ -23,7 +23,7 @@
 namespace Kernel {
 
 /// Event type for the thread wake up event
-static int ThreadWakeupEventType = -1;
+static int ThreadWakeupEventType;
 
 bool Thread::ShouldWait() {
     return status != THREADSTATUS_DEAD;
@@ -42,7 +42,7 @@ static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST+1> ready_queue;
 static Thread* current_thread;
 
 // The first available thread id at startup
-static u32 next_thread_id = 1;
+static u32 next_thread_id;
 
 /**
  * Creates a new thread ID
@@ -496,6 +496,12 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 
 void ThreadingInit() {
     ThreadWakeupEventType = CoreTiming::RegisterEvent("ThreadWakeupCallback", ThreadWakeupCallback);
+
+    current_thread = nullptr;
+    next_thread_id = 1;
+
+    thread_list.clear();
+    ready_queue.clear();
 
     // Setup the idle thread
     SetupIdleThread();

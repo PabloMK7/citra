@@ -14,11 +14,10 @@
 
 namespace Kernel {
 
-unsigned int Object::next_object_id = 0;
-
-SharedPtr<Thread> g_main_thread = nullptr;
+unsigned int Object::next_object_id;
+SharedPtr<Thread> g_main_thread;
 HandleTable g_handle_table;
-u64 g_program_id = 0;
+u64 g_program_id;
 
 void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
@@ -138,6 +137,10 @@ void HandleTable::Clear() {
 void Init() {
     Kernel::ThreadingInit();
     Kernel::TimersInit();
+
+    Object::next_object_id = 0;
+    g_program_id = 0;
+    g_main_thread = nullptr;
 }
 
 /// Shutdown the kernel
