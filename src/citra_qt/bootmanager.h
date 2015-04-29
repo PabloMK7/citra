@@ -22,6 +22,7 @@ class EmuThread : public QThread
     Q_OBJECT
 
 public:
+    EmuThread(GRenderWindow* render_window);
 
     /**
      * Start emulation (on new thread)
@@ -50,15 +51,14 @@ public:
     bool IsRunning() { return running; }
 
     /**
-     * Shutdown (permanently stops) the emulation thread
+     * Requests for the emulation thread to stop running and shutdown emulation
      */
-    void Shutdown() { stop_run = true; };
+    void RequestShutdown() {
+        stop_run = true;
+        running = false;
+    };
 
 private:
-    friend class GMainWindow;
-
-    EmuThread(GRenderWindow* render_window);
-
     bool exec_step;
     bool running;
     std::atomic<bool> stop_run;
@@ -86,7 +86,7 @@ class GRenderWindow : public QWidget, public EmuWindow
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent, GMainWindow& main_window);
+    GRenderWindow(QWidget* parent, EmuThread* emu_thread);
 
     // EmuWindow implementation
     void SwapBuffers() override;
@@ -115,6 +115,9 @@ public:
 public slots:
     void moveContext();  // overridden
 
+    void OnEmulationStarted(EmuThread* emu_thread);
+    void OnEmulationStopped();
+
 private:
     void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;
 
@@ -122,8 +125,8 @@ private:
 
     QByteArray geometry;
 
-    GMainWindow& main_window;
-
     /// Device id of keyboard for use with KeyMap
     int keyboard_id;
+
+    EmuThread* emu_thread;
 };

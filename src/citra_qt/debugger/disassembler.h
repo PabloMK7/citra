@@ -13,7 +13,7 @@
 #include "common/break_points.h"
 
 class QAction;
-class GMainWindow;
+class EmuThread;
 
 class DisassemblerModel : public QAbstractListModel
 {
@@ -51,7 +51,7 @@ class DisassemblerWidget : public QDockWidget
     Q_OBJECT
 
 public:
-    DisassemblerWidget(QWidget* parent, GMainWindow& main_window);
+    DisassemblerWidget(QWidget* parent, EmuThread* emu_thread);
 
     void Init();
 
@@ -65,6 +65,9 @@ public slots:
     void OnDebugModeEntered();
     void OnDebugModeLeft();
 
+    void OnEmulationStarted(EmuThread* emu_thread);
+    void OnEmulationStopped();
+
 private:
     // returns -1 if no row is selected
     int SelectedRow();
@@ -75,5 +78,5 @@ private:
 
     u32 base_addr;
 
-    GMainWindow& main_window;
+    EmuThread* emu_thread;
 };

@@ -87,8 +87,8 @@ private:
     GRenderWindow* parent;
 };
 
-GRenderWindow::GRenderWindow(QWidget* parent, GMainWindow& main_window) :
-    QWidget(parent), main_window(main_window), keyboard_id(0) {
+GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
+    QWidget(parent), emu_thread(emu_thread), keyboard_id(0) {
 
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
@@ -129,7 +129,7 @@ void GRenderWindow::moveContext()
     // We need to move GL context to the swapping thread in Qt5
 #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it back.
-    auto thread = QThread::currentThread() == qApp->thread() ? main_window.GetEmuThread() : qApp->thread();
+    auto thread = (QThread::currentThread() == qApp->thread() && emu_thread != nullptr) ? emu_thread : qApp->thread();
     child->context()->moveToThread(thread);
 #endif
 }
@@ -271,4 +271,12 @@ void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
 
 void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
     setMinimumSize(minimal_size.first, minimal_size.second);
+}
+
+void GRenderWindow::OnEmulationStarted(EmuThread* emu_thread) {
+    this->emu_thread = emu_thread;
+}
+
+void GRenderWindow::OnEmulationStopped() {
+    emu_thread = nullptr;
 }

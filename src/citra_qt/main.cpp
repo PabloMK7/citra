@@ -15,6 +15,7 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
+#include "common/make_unique.h"
 #include "common/platform.h"
 #include "common/scope_exit.h"
 
@@ -55,14 +56,14 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     ui.setupUi(this);
     statusBar()->hide();
 
-    render_window = new GRenderWindow(this, *this);
+    render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
     profilerWidget->hide();
 
-    disasmWidget = new DisassemblerWidget(this, *this);
+    disasmWidget = new DisassemblerWidget(this, emu_thread.get());
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
     disasmWidget->hide();
 
@@ -138,14 +139,10 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
-    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(emu_thread, SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread, SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread, SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-
-    connect(emu_thread, SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(emu_thread, SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(emu_thread, SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(this, SIGNAL(EmulationStarted(EmuThread*)), disasmWidget, SLOT(OnEmulationStarted(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopped()), disasmWidget, SLOT(OnEmulationStopped()));
+    connect(this, SIGNAL(EmulationStarted(EmuThread*)), render_window, SLOT(OnEmulationStarted(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopped()), render_window, SLOT(OnEmulationStopped()));
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
@@ -199,34 +196,61 @@ void GMainWindow::OnDisplayTitleBars(bool show)
 void GMainWindow::BootGame(std::string filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
 
+    // Initialize the core emulation
     System::Init(render_window);
 
-    // Load a game or die...
+    // Load the game
     if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
+        System::Shutdown();
+        return;
     }
 
-    disasmWidget->Init();
-    registersWidget->OnDebugModeEntered();
-    callstackWidget->OnDebugModeEntered();
-
-    emu_thread = new EmuThread(render_window);
+    // Create and start the emulation thread
+    emu_thread = Common::make_unique<EmuThread>(render_window);
+    emit EmulationStarted(emu_thread.get());
     emu_thread->start();
 
+    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+
+    // Update the GUI
+    registersWidget->OnDebugModeEntered();
+    callstackWidget->OnDebugModeEntered();
     render_window->show();
+
     OnStartGame();
 }
 
 void GMainWindow::ShutdownGame() {
-    // Shutdown the emulation thread and wait for it to complete
-    emu_thread->SetRunning(false);
-    emu_thread->Shutdown();
-    emu_thread->wait();
-    delete emu_thread;
-    emu_thread = nullptr;
+    // Shutdown the emulation thread
+    emu_thread->RequestShutdown();
+
+    // Disconnect signals that are attached to the current emulation thread
+    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()));
+    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()));
+    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()));
+    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()));
+    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()));
+    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()));
 
     // Release emu threads from any breakpoints
+    // This belongs after RequestShutdown() and before wait() because if emulation stops on a GPU
+    // breakpoint after (or before) RequestShutdown() is called, the emulation would never be able
+    // to continue out to the main loop and terminate. Thus wait() would hang forever.
+    // TODO(bunnei): This function is not thread safe, but it's being used as if it were
     Pica::g_debug_context->ClearBreakpoints();
+
+    emit EmulationStopped();
+
+    // Wait for emulation thread to complete and delete it
+    emu_thread->wait();
+    emu_thread = nullptr;
 
     // Shutdown the core emulation
     System::Shutdown();
