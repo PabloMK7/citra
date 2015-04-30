@@ -241,7 +241,7 @@ int DisassemblerWidget::SelectedRow() {
     return disasm_ui.treeView->selectionModel()->currentIndex().row();
 }
 
-void DisassemblerWidget::OnEmulationStarted(EmuThread* emu_thread) {
+void DisassemblerWidget::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
 
     model = new DisassemblerModel(this);
@@ -256,7 +256,7 @@ void DisassemblerWidget::OnEmulationStarted(EmuThread* emu_thread) {
     setEnabled(true);
 }
 
-void DisassemblerWidget::OnEmulationStopped() {
+void DisassemblerWidget::OnEmulationStopping() {
     disasm_ui.treeView->setModel(nullptr);
     delete model;
     emu_thread = nullptr;

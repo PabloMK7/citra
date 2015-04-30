@@ -71,11 +71,11 @@ void RegistersWidget::OnDebugModeEntered() {
 void RegistersWidget::OnDebugModeLeft() {
 }
 
-void RegistersWidget::OnEmulationStarted(EmuThread* emu_thread) {
+void RegistersWidget::OnEmulationStarting(EmuThread* emu_thread) {
     setEnabled(true);
 }
 
-void RegistersWidget::OnEmulationStopped() {
+void RegistersWidget::OnEmulationStopping() {
     // Reset widget text
     for (int i = 0; i < 16; ++i)
         registers->child(i)->setText(1, QString(""));

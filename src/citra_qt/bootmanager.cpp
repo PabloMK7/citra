@@ -48,7 +48,7 @@ void EmuThread::run() {
             Core::RunLoop();
 
             was_active = running || exec_step;
-            if (!was_active)
+            if (!was_active && !stop_run)
                 emit DebugModeEntered();
         } else if (exec_step) {
             if (!was_active)
@@ -273,10 +273,10 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,un
     setMinimumSize(minimal_size.first, minimal_size.second);
 }
 
-void GRenderWindow::OnEmulationStarted(EmuThread* emu_thread) {
+void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
 }
 
-void GRenderWindow::OnEmulationStopped() {
+void GRenderWindow::OnEmulationStopping() {
     emu_thread = nullptr;
 }

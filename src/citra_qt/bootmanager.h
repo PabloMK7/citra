@@ -51,9 +51,9 @@ public:
     bool IsRunning() { return running; }
 
     /**
-     * Requests for the emulation thread to stop running and shutdown emulation
+     * Requests for the emulation thread to stop running
      */
-    void RequestShutdown() {
+    void RequestStop() {
         stop_run = true;
         running = false;
     };
@@ -115,8 +115,8 @@ public:
 public slots:
     void moveContext();  // overridden
 
-    void OnEmulationStarted(EmuThread* emu_thread);
-    void OnEmulationStopped();
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
 
 private:
     void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;

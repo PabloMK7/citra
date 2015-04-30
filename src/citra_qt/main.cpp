@@ -139,12 +139,12 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
-    connect(this, SIGNAL(EmulationStarted(EmuThread*)), disasmWidget, SLOT(OnEmulationStarted(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopped()), disasmWidget, SLOT(OnEmulationStopped()));
-    connect(this, SIGNAL(EmulationStarted(EmuThread*)), registersWidget, SLOT(OnEmulationStarted(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopped()), registersWidget, SLOT(OnEmulationStopped()));
-    connect(this, SIGNAL(EmulationStarted(EmuThread*)), render_window, SLOT(OnEmulationStarted(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopped()), render_window, SLOT(OnEmulationStopped()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), disasmWidget, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), registersWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
@@ -210,7 +210,7 @@ void GMainWindow::BootGame(std::string filename) {
 
     // Create and start the emulation thread
     emu_thread = Common::make_unique<EmuThread>(render_window);
-    emit EmulationStarted(emu_thread.get());
+    emit EmulationStarting(emu_thread.get());
     emu_thread->start();
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
@@ -230,25 +230,16 @@ void GMainWindow::BootGame(std::string filename) {
 }
 
 void GMainWindow::ShutdownGame() {
-    // Shutdown the emulation thread
-    emu_thread->RequestShutdown();
-
-    // Disconnect signals that are attached to the current emulation thread
-    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()));
-    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()));
-    disconnect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()));
-    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()));
-    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()));
-    disconnect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()));
+    emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
-    // This belongs after RequestShutdown() and before wait() because if emulation stops on a GPU
-    // breakpoint after (or before) RequestShutdown() is called, the emulation would never be able
+    // This belongs after RequestStop() and before wait() because if emulation stops on a GPU
+    // breakpoint after (or before) RequestStop() is called, the emulation would never be able
     // to continue out to the main loop and terminate. Thus wait() would hang forever.
     // TODO(bunnei): This function is not thread safe, but it's being used as if it were
     Pica::g_debug_context->ClearBreakpoints();
 
-    emit EmulationStopped();
+    emit EmulationStopping();
 
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();

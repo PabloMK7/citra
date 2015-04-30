@@ -21,8 +21,8 @@ public slots:
     void OnDebugModeEntered();
     void OnDebugModeLeft();
 
-    void OnEmulationStarted(EmuThread* emu_thread);
-    void OnEmulationStopped();
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
 
 private:
     Ui::ARMRegisters cpu_regs_ui;

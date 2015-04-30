@@ -65,8 +65,8 @@ public slots:
     void OnDebugModeEntered();
     void OnDebugModeLeft();
 
-    void OnEmulationStarted(EmuThread* emu_thread);
-    void OnEmulationStopped();
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
 
 private:
     // returns -1 if no row is selected
