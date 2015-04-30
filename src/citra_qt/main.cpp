@@ -249,7 +249,7 @@ void GMainWindow::ShutdownGame() {
     System::Shutdown();
 
     // Update the GUI
-    ui.action_Start->setEnabled(true);
+    ui.action_Start->setEnabled(false);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     render_window->hide();
