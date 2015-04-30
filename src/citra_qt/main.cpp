@@ -141,6 +141,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     connect(this, SIGNAL(EmulationStarted(EmuThread*)), disasmWidget, SLOT(OnEmulationStarted(EmuThread*)));
     connect(this, SIGNAL(EmulationStopped()), disasmWidget, SLOT(OnEmulationStopped()));
+    connect(this, SIGNAL(EmulationStarted(EmuThread*)), registersWidget, SLOT(OnEmulationStarted(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopped()), registersWidget, SLOT(OnEmulationStopped()));
     connect(this, SIGNAL(EmulationStarted(EmuThread*)), render_window, SLOT(OnEmulationStarted(EmuThread*)));
     connect(this, SIGNAL(EmulationStopped()), render_window, SLOT(OnEmulationStopped()));
 
