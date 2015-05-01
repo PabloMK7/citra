@@ -338,6 +338,8 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
 
+    ShutdownGame();
+
     render_window->close();
 
     QWidget::closeEvent(event);
