@@ -8,6 +8,7 @@
 #include <QTreeWidgetItem>
 
 class QTreeWidget;
+class EmuThread;
 
 class RegistersWidget : public QDockWidget
 {
@@ -19,6 +20,9 @@ public:
 public slots:
     void OnDebugModeEntered();
     void OnDebugModeLeft();
+
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
 
 private:
     Ui::ARMRegisters cpu_regs_ui;

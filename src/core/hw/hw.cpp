@@ -63,6 +63,8 @@ void Init() {
 
 /// Shutdown hardware
 void Shutdown() {
+    GPU::Shutdown();
+    LCD::Shutdown();
     LOG_DEBUG(HW, "shutdown OK");
 }
 

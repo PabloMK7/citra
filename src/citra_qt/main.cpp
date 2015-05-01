@@ -15,6 +15,7 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
+#include "common/make_unique.h"
 #include "common/platform.h"
 #include "common/scope_exit.h"
 
@@ -46,7 +47,7 @@
 
 #include "version.h"
 
-GMainWindow::GMainWindow()
+GMainWindow::GMainWindow() : emu_thread(nullptr)
 {
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
@@ -55,14 +56,14 @@ GMainWindow::GMainWindow()
     ui.setupUi(this);
     statusBar()->hide();
 
-    render_window = new GRenderWindow;
+    render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
     profilerWidget->hide();
 
-    disasmWidget = new DisassemblerWidget(this, render_window->GetEmuThread());
+    disasmWidget = new DisassemblerWidget(this, emu_thread.get());
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
     disasmWidget->hide();
 
@@ -138,14 +139,12 @@ GMainWindow::GMainWindow()
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
-    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(&render_window->GetEmuThread(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), disasmWidget, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), registersWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
@@ -196,32 +195,76 @@ void GMainWindow::OnDisplayTitleBars(bool show)
     }
 }
 
-void GMainWindow::BootGame(std::string filename)
-{
+void GMainWindow::BootGame(std::string filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
+
+    // Initialize the core emulation
     System::Init(render_window);
 
-    // Load a game or die...
+    // Load the game
     if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
+        System::Shutdown();
+        return;
     }
 
-    disasmWidget->Init();
+    // Create and start the emulation thread
+    emu_thread = Common::make_unique<EmuThread>(render_window);
+    emit EmulationStarting(emu_thread.get());
+    emu_thread->start();
+
+    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+
+    // Update the GUI
     registersWidget->OnDebugModeEntered();
     callstackWidget->OnDebugModeEntered();
-
-    render_window->GetEmuThread().SetFilename(filename);
-    render_window->GetEmuThread().start();
-
     render_window->show();
+
     OnStartGame();
+}
+
+void GMainWindow::ShutdownGame() {
+    emu_thread->RequestStop();
+
+    // Release emu threads from any breakpoints
+    // This belongs after RequestStop() and before wait() because if emulation stops on a GPU
+    // breakpoint after (or before) RequestStop() is called, the emulation would never be able
+    // to continue out to the main loop and terminate. Thus wait() would hang forever.
+    // TODO(bunnei): This function is not thread safe, but it's being used as if it were
+    Pica::g_debug_context->ClearBreakpoints();
+
+    emit EmulationStopping();
+
+    // Wait for emulation thread to complete and delete it
+    emu_thread->wait();
+    emu_thread = nullptr;
+
+    // Shutdown the core emulation
+    System::Shutdown();
+
+    // Update the GUI
+    ui.action_Start->setEnabled(false);
+    ui.action_Pause->setEnabled(false);
+    ui.action_Stop->setEnabled(false);
+    render_window->hide();
 }
 
 void GMainWindow::OnMenuLoadFile()
 {
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
-    if (filename.size())
-       BootGame(filename.toLatin1().data());
+    if (filename.size()) {
+        // Shutdown previous session if the emu thread is still active...
+        if (emu_thread != nullptr)
+            ShutdownGame();
+
+        BootGame(filename.toLatin1().data());
+    }
 }
 
 void GMainWindow::OnMenuLoadSymbolMap() {
@@ -232,7 +275,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
 
 void GMainWindow::OnStartGame()
 {
-    render_window->GetEmuThread().SetCpuRunning(true);
+    emu_thread->SetRunning(true);
 
     ui.action_Start->setEnabled(false);
     ui.action_Pause->setEnabled(true);
@@ -241,21 +284,15 @@ void GMainWindow::OnStartGame()
 
 void GMainWindow::OnPauseGame()
 {
-    render_window->GetEmuThread().SetCpuRunning(false);
+    emu_thread->SetRunning(false);
 
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(true);
 }
 
-void GMainWindow::OnStopGame()
-{
-    render_window->GetEmuThread().SetCpuRunning(false);
-    // TODO: Shutdown core
-
-    ui.action_Start->setEnabled(true);
-    ui.action_Pause->setEnabled(false);
-    ui.action_Stop->setEnabled(false);
+void GMainWindow::OnStopGame() {
+    ShutdownGame();
 }
 
 void GMainWindow::OnOpenHotkeysDialog()
@@ -265,24 +302,22 @@ void GMainWindow::OnOpenHotkeysDialog()
 }
 
 
-void GMainWindow::ToggleWindowMode()
-{
-    bool enable = ui.action_Single_Window_Mode->isChecked();
-    if (!enable && render_window->parent() != nullptr)
-    {
-        ui.horizontalLayout->removeWidget(render_window);
-        render_window->setParent(nullptr);
-        render_window->setVisible(true);
-        render_window->RestoreGeometry();
-        render_window->setFocusPolicy(Qt::NoFocus);
-    }
-    else if (enable && render_window->parent() == nullptr)
-    {
+void GMainWindow::ToggleWindowMode() {
+    if (ui.action_Single_Window_Mode->isChecked()) {
+        // Render in the main window...
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
         render_window->setVisible(true);
         render_window->setFocusPolicy(Qt::ClickFocus);
         render_window->setFocus();
+
+    } else {
+        // Render in a separate window...
+        ui.horizontalLayout->removeWidget(render_window);
+        render_window->setParent(nullptr);
+        render_window->setVisible(true);
+        render_window->RestoreGeometry();
+        render_window->setFocusPolicy(Qt::NoFocus);
     }
 }
 
@@ -302,6 +337,8 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("displayTitleBars", ui.actionDisplay_widget_title_bars->isChecked());
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
+
+    ShutdownGame();
 
     render_window->close();
 

@@ -160,6 +160,16 @@ void Init() {
     last_global_time_us = 0;
     has_ts_events = 0;
     mhz_change_callbacks.clear();
+
+    first = nullptr;
+    ts_first = nullptr;
+    ts_last = nullptr;
+
+    event_pool = nullptr;
+    event_ts_pool = nullptr;
+    allocated_ts_events = 0;
+
+    advance_callback = nullptr;
 }
 
 void Shutdown() {

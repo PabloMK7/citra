@@ -7,8 +7,7 @@
 #include "core/core.h"
 #include "core/arm/arm_interface.h"
 
-RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent)
-{
+RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
     cpu_regs_ui.setupUi(this);
 
     tree = cpu_regs_ui.treeWidget;
@@ -18,8 +17,7 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent)
     registers->setExpanded(true);
     CSPR->setExpanded(true);
 
-    for (int i = 0; i < 16; ++i)
-    {
+    for (int i = 0; i < 16; ++i) {
         QTreeWidgetItem* child = new QTreeWidgetItem(QStringList(QString("R[%1]").arg(i, 2, 10, QLatin1Char('0'))));
         registers->addChild(child);
     }
@@ -39,11 +37,15 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent)
     CSPR->addChild(new QTreeWidgetItem(QStringList("C")));
     CSPR->addChild(new QTreeWidgetItem(QStringList("Z")));
     CSPR->addChild(new QTreeWidgetItem(QStringList("N")));
+
+    setEnabled(false);
 }
 
-void RegistersWidget::OnDebugModeEntered()
-{
+void RegistersWidget::OnDebugModeEntered() {
     ARM_Interface* app_core = Core::g_app_core;
+
+    if (app_core == nullptr)
+        return;
 
     for (int i = 0; i < 16; ++i)
         registers->child(i)->setText(1, QString("0x%1").arg(app_core->GetReg(i), 8, 16, QLatin1Char('0')));
@@ -66,7 +68,22 @@ void RegistersWidget::OnDebugModeEntered()
     CSPR->child(14)->setText(1, QString("%1").arg((app_core->GetCPSR() >> 31) & 0x1));  // N - Negative/Less than
 }
 
-void RegistersWidget::OnDebugModeLeft()
-{
+void RegistersWidget::OnDebugModeLeft() {
+}
 
+void RegistersWidget::OnEmulationStarting(EmuThread* emu_thread) {
+    setEnabled(true);
+}
+
+void RegistersWidget::OnEmulationStopping() {
+    // Reset widget text
+    for (int i = 0; i < 16; ++i)
+        registers->child(i)->setText(1, QString(""));
+
+    for (int i = 0; i < 15; ++i)
+        CSPR->child(i)->setText(1, QString(""));
+
+    CSPR->setText(1, QString(""));
+
+    setEnabled(false);
 }

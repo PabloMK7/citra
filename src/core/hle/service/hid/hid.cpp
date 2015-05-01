@@ -20,17 +20,17 @@ namespace HID {
 static const int MAX_CIRCLEPAD_POS = 0x9C; ///< Max value for a circle pad position
 
 // Handle to shared memory region designated to HID_User service
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_mem = nullptr;
+static Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
 
 // Event handles
-static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1 = nullptr;
-static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2 = nullptr;
-static Kernel::SharedPtr<Kernel::Event> event_accelerometer = nullptr;
-static Kernel::SharedPtr<Kernel::Event> event_gyroscope = nullptr;
-static Kernel::SharedPtr<Kernel::Event> event_debug_pad = nullptr;
+static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1;
+static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2;
+static Kernel::SharedPtr<Kernel::Event> event_accelerometer;
+static Kernel::SharedPtr<Kernel::Event> event_gyroscope;
+static Kernel::SharedPtr<Kernel::Event> event_debug_pad;
 
-static u32 next_pad_index = 0;
-static u32 next_touch_index = 0;
+static u32 next_pad_index;
+static u32 next_touch_index;
 
 // TODO(peachum):
 // Add a method for setting analog input from joystick device for the circle Pad.
@@ -175,6 +175,12 @@ void Init() {
 }
 
 void Shutdown() {
+    shared_mem = nullptr;
+    event_pad_or_touch_1 = nullptr;
+    event_pad_or_touch_2 = nullptr;
+    event_accelerometer = nullptr;
+    event_gyroscope = nullptr;
+    event_debug_pad = nullptr;
 }
 
 } // namespace HID

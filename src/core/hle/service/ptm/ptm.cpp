@@ -18,9 +18,9 @@ static const GameCoin default_game_coin = { 0x4F00, 42, 0, 0, 0, 2014, 12, 29 };
 /// Id of the SharedExtData archive used by the PTM process
 static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
 
-static bool shell_open = true;
+static bool shell_open;
 
-static bool battery_is_charging = true;
+static bool battery_is_charging;
 
 u32 GetAdapterState() {
     // TODO(purpasmart96): This function is only a stub,
@@ -42,6 +42,9 @@ void Init() {
     AddService(new PTM_Play_Interface);
     AddService(new PTM_Sysm_Interface);
     AddService(new PTM_U_Interface);
+
+    shell_open = true;
+    battery_is_charging = true;
 
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't exist
     FileSys::Path archive_path(ptm_shared_extdata_id);

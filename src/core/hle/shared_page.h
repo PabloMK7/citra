@@ -23,4 +23,6 @@ void Set3DSlider(float amount);
 
 void Init();
 
+void Shutdown();
+
 } // namespace

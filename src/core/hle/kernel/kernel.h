@@ -95,11 +95,12 @@ public:
         return false;
     }
 
+public:
+    static unsigned int next_object_id;
+
 private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
-
-    static unsigned int next_object_id;
 
     unsigned int ref_count = 0;
     unsigned int object_id = next_object_id++;

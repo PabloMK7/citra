@@ -207,6 +207,7 @@ void Init() {
 
     // Initialize the Username block
     // TODO(Subv): Initialize this directly in the variable when MSVC supports char16_t string literals
+    memset(&CONSOLE_USERNAME_BLOCK, 0, sizeof(CONSOLE_USERNAME_BLOCK));
     CONSOLE_USERNAME_BLOCK.ng_word = 0;
     CONSOLE_USERNAME_BLOCK.zero = 0;
 
@@ -219,7 +220,6 @@ void Init() {
 }
 
 void Shutdown() {
-
 }
 
 } // namespace CFG

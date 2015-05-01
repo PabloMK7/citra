@@ -10,6 +10,7 @@
 
 #include "common/common.h"
 #include "bootmanager.h"
+#include "main.h"
 
 #include "core/core.h"
 #include "core/settings.h"
@@ -27,43 +28,33 @@
 #define COPYRIGHT       "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window) :
-    filename(""), exec_cpu_step(false), cpu_running(false),
-    stop_run(false), render_window(render_window)
-{
+    exec_step(false), running(false), stop_run(false), render_window(render_window) {
+
+    connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
-void EmuThread::SetFilename(std::string filename)
-{
-    this->filename = filename;
-}
-
-void EmuThread::run()
-{
+void EmuThread::run() {
     stop_run = false;
 
     // holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step
     bool was_active = false;
-    while (!stop_run)
-    {
-        if (cpu_running)
-        {
+    while (!stop_run) {
+        if (running) {
             if (!was_active)
                 emit DebugModeLeft();
 
             Core::RunLoop();
 
-            was_active = cpu_running || exec_cpu_step;
-            if (!was_active)
+            was_active = running || exec_step;
+            if (!was_active && !stop_run)
                 emit DebugModeEntered();
-        }
-        else if (exec_cpu_step)
-        {
+        } else if (exec_step) {
             if (!was_active)
                 emit DebugModeLeft();
 
-            exec_cpu_step = false;
+            exec_step = false;
             Core::SingleStep();
             emit DebugModeEntered();
             yieldCurrentThread();
@@ -71,46 +62,9 @@ void EmuThread::run()
             was_active = false;
         }
     }
+
     render_window->moveContext();
-
-    Core::Stop();
 }
-
-void EmuThread::Stop()
-{
-    if (!isRunning())
-    {
-        LOG_WARNING(Frontend, "EmuThread::Stop called while emu thread wasn't running, returning...");
-        return;
-    }
-    stop_run = true;
-
-    // Release emu threads from any breakpoints, so that this doesn't hang forever.
-    Pica::g_debug_context->ClearBreakpoints();
-
-    //core::g_state = core::SYS_DIE;
-
-    // TODO: Waiting here is just a bad workaround for retarded shutdown logic.
-    wait(1000);
-    if (isRunning())
-    {
-        LOG_WARNING(Frontend, "EmuThread still running, terminating...");
-        quit();
-
-        // TODO: Waiting 50 seconds can be necessary if the logging subsystem has a lot of spam
-        // queued... This should be fixed.
-        wait(50000);
-        if (isRunning())
-        {
-            LOG_CRITICAL(Frontend, "EmuThread STILL running, something is wrong here...");
-            terminate();
-        }
-    }
-    LOG_INFO(Frontend, "EmuThread stopped");
-
-    System::Shutdown();
-}
-
 
 // This class overrides paintEvent and resizeEvent to prevent the GUI thread from stealing GL context.
 // The corresponding functionality is handled in EmuThread instead
@@ -133,13 +87,9 @@ private:
     GRenderWindow* parent;
 };
 
-EmuThread& GRenderWindow::GetEmuThread()
-{
-    return emu_thread;
-}
+GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
+    QWidget(parent), emu_thread(emu_thread), keyboard_id(0) {
 
-GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this), keyboard_id(0)
-{
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
@@ -160,7 +110,6 @@ GRenderWindow::GRenderWindow(QWidget* parent) : QWidget(parent), emu_thread(this
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
-    connect(&emu_thread, SIGNAL(started()), this, SLOT(moveContext()));
 
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
 
@@ -180,27 +129,15 @@ void GRenderWindow::moveContext()
     // We need to move GL context to the swapping thread in Qt5
 #if QT_VERSION > QT_VERSION_CHECK(5, 0, 0)
     // If the thread started running, move the GL Context to the new thread. Otherwise, move it back.
-    child->context()->moveToThread((QThread::currentThread() == qApp->thread()) ? &emu_thread : qApp->thread());
+    auto thread = (QThread::currentThread() == qApp->thread() && emu_thread != nullptr) ? emu_thread : qApp->thread();
+    child->context()->moveToThread(thread);
 #endif
-}
-
-GRenderWindow::~GRenderWindow()
-{
-    if (emu_thread.isRunning())
-        emu_thread.Stop();
 }
 
 void GRenderWindow::SwapBuffers()
 {
     // MakeCurrent is already called in renderer_opengl
     child->swapBuffers();
-}
-
-void GRenderWindow::closeEvent(QCloseEvent* event)
-{
-    if (emu_thread.isRunning())
-        emu_thread.Stop();
-    QWidget::closeEvent(event);
 }
 
 void GRenderWindow::MakeCurrent()
@@ -334,4 +271,12 @@ void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
 
 void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
     setMinimumSize(minimal_size.first, minimal_size.second);
+}
+
+void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
+    this->emu_thread = emu_thread;
+}
+
+void GRenderWindow::OnEmulationStopping() {
+    emu_thread = nullptr;
 }

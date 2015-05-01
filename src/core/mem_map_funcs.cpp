@@ -15,7 +15,6 @@ namespace Memory {
 
 static std::map<u32, MemoryBlock> heap_map;
 static std::map<u32, MemoryBlock> heap_linear_map;
-static std::map<u32, MemoryBlock> shared_map;
 
 /// Convert a physical address to virtual address
 VAddr PhysicalToVirtualAddress(const PAddr addr) {
@@ -185,12 +184,6 @@ u8 *GetPointer(const VAddr vaddr) {
     }
 }
 
-/**
- * Maps a block of memory on the heap
- * @param size Size of block in bytes
- * @param operation Memory map operation type
- * @param flags Memory allocation flags
- */
 u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
 
@@ -208,12 +201,6 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
     return block.GetVirtualAddress();
 }
 
-/**
- * Maps a block of memory on the linear heap
- * @param size Size of block in bytes
- * @param operation Memory map operation type
- * @param flags Memory allocation flags
- */
 u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
     MemoryBlock block;
 
@@ -229,6 +216,14 @@ u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
     heap_linear_map[block.GetVirtualAddress()] = block;
 
     return block.GetVirtualAddress();
+}
+
+void MemBlock_Init() {
+}
+
+void MemBlock_Shutdown() {
+    heap_map.clear();
+    heap_linear_map.clear();
 }
 
 u8 Read8(const VAddr addr) {

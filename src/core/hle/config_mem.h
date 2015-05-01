@@ -20,4 +20,6 @@ void Read(T &var, const u32 addr);
 
 void Init();
 
+void Shutdown();
+
 } // namespace

@@ -9,72 +9,58 @@
 
 #include "common/common.h"
 #include "common/emu_window.h"
+#include "common/thread.h"
 
 class QScreen;
 class QKeyEvent;
 
 class GRenderWindow;
+class GMainWindow;
 
 class EmuThread : public QThread
 {
     Q_OBJECT
 
 public:
-    /**
-     * Set image filename
-     *
-     * @param filename
-     * @warning Only call when not running!
-     */
-    void SetFilename(std::string filename);
+    EmuThread(GRenderWindow* render_window);
 
     /**
      * Start emulation (on new thread)
-     *
      * @warning Only call when not running!
      */
     void run() override;
 
     /**
-     * Allow the CPU to process a single instruction (if cpu is not running)
-     *
+     * Steps the emulation thread by a single CPU instruction (if the CPU is not already running)
      * @note This function is thread-safe
      */
-    void ExecStep() { exec_cpu_step = true; }
+    void ExecStep() { exec_step = true; }
 
     /**
-     * Allow the CPU to continue processing instructions without interruption
-     *
+     * Sets whether the emulation thread is running or not
+     * @param running Boolean value, set the emulation thread to running if true
      * @note This function is thread-safe
      */
-    void SetCpuRunning(bool running) { cpu_running = running; }
+    void SetRunning(bool running) { this->running = running; }
 
     /**
-    * Allow the CPU to continue processing instructions without interruption
-    *
-    * @note This function is thread-safe
-    */
-    bool IsCpuRunning() { return cpu_running; }
-
-
-public slots:
-    /**
-     * Stop emulation and wait for the thread to finish.
-     *
-     * @details: This function will wait a second for the thread to finish; if it hasn't finished until then, we'll terminate() it and wait another second, hoping that it will be terminated by then.
-     * @note: This function is thread-safe.
+     * Check if the emulation thread is running or not
+     * @return True if the emulation thread is running, otherwise false
+     * @note This function is thread-safe
      */
-    void Stop();
+    bool IsRunning() { return running; }
+
+    /**
+     * Requests for the emulation thread to stop running
+     */
+    void RequestStop() {
+        stop_run = true;
+        running = false;
+    };
 
 private:
-    friend class GRenderWindow;
-
-    EmuThread(GRenderWindow* render_window);
-
-    std::string filename;
-
-    bool exec_cpu_step;
-    bool cpu_running;
+    bool exec_step;
+    bool running;
     std::atomic<bool> stop_run;
 
     GRenderWindow* render_window;
@@ -100,10 +86,7 @@ class GRenderWindow : public QWidget, public EmuWindow
     Q_OBJECT
 
 public:
-    GRenderWindow(QWidget* parent = NULL);
-    ~GRenderWindow();
-
-    void closeEvent(QCloseEvent*) override;
+    GRenderWindow(QWidget* parent, EmuThread* emu_thread);
 
     // EmuWindow implementation
     void SwapBuffers() override;
@@ -115,8 +98,6 @@ public:
     void RestoreGeometry();
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();  // overridden
-
-    EmuThread& GetEmuThread();
 
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
@@ -134,15 +115,18 @@ public:
 public slots:
     void moveContext();  // overridden
 
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
+
 private:
     void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;
 
     QGLWidget* child;
 
-    EmuThread emu_thread;
-
     QByteArray geometry;
 
     /// Device id of keyboard for use with KeyMap
     int keyboard_id;
+
+    EmuThread* emu_thread;
 };

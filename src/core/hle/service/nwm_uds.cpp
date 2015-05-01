@@ -11,7 +11,7 @@
 
 namespace NWM_UDS {
 
-static Kernel::SharedPtr<Kernel::Event> handle_event = nullptr;
+static Kernel::SharedPtr<Kernel::Event> handle_event;
 
 /**
  * NWM_UDS::Shutdown service function

@@ -29,8 +29,7 @@ namespace GPU {
 Regs g_regs;
 
 /// True if the current frame was skipped
-bool g_skip_frame = false;
-
+bool g_skip_frame;
 /// 268MHz / gpu_refresh_rate frames per second
 static u64 frame_ticks;
 /// Event id for CoreTiming
@@ -38,7 +37,7 @@ static int vblank_event;
 /// Total number of frames drawn
 static u64 frame_count;
 /// True if the last frame was skipped
-static bool last_skip_frame = false;
+static bool last_skip_frame;
 
 template <typename T>
 inline void Read(T &var, const u32 raw_addr) {
@@ -320,6 +319,8 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
 
 /// Initialize hardware
 void Init() {
+    memset(&g_regs, 0, sizeof(g_regs));
+
     auto& framebuffer_top = g_regs.framebuffer_config[0];
     auto& framebuffer_sub = g_regs.framebuffer_config[1];
 
@@ -349,6 +350,7 @@ void Init() {
     frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
     last_skip_frame = false;
     g_skip_frame = false;
+    frame_count = 0;
 
     vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
     CoreTiming::ScheduleEvent(frame_ticks, vblank_event);

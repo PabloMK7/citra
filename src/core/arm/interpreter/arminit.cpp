@@ -26,8 +26,6 @@
 \***************************************************************************/
 ARMul_State* ARMul_NewState(ARMul_State* state)
 {
-    memset(state, 0, sizeof(ARMul_State));
-
     state->Emulate = RUN;
     state->Mode = USER32MODE;
 

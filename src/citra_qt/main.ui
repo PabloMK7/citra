@@ -90,6 +90,9 @@
    </property>
   </action>
   <action name="action_Start">
+   <property name="enabled">
+     <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Start</string>
    </property>

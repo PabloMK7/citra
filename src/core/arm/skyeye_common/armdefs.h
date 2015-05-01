@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/skyeye_defs.h"
@@ -152,6 +154,10 @@ So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
 
     // Added by ksh in 2005-10-1
     cpu_config_t* cpu;
+
+    // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
+    // process for our purposes), not per ARMul_State (which tracks CPU core state).
+    std::unordered_map<u32, int> instruction_cache;
 };
 
 /***************************************************************************\
