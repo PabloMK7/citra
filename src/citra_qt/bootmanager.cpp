@@ -225,7 +225,7 @@ void GRenderWindow::mousePressEvent(QMouseEvent *event)
 void GRenderWindow::mouseMoveEvent(QMouseEvent *event)
 {
     auto pos = event->pos();
-    this->TouchMoved(static_cast<unsigned>(pos.x()), static_cast<unsigned>(pos.y()));
+    this->TouchMoved(static_cast<unsigned>(std::max(pos.x(), 0)), static_cast<unsigned>(std::max(pos.y(), 0)));
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent *event)
