@@ -45,6 +45,8 @@ struct Values {
     int region_value;
 
     // Renderer
+    bool use_hw_renderer;
+
     float bg_red;
     float bg_green;
     float bg_blue;
