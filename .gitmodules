@@ -1,9 +1,9 @@
-[submodule "externals/inih/inih"]
+[submodule "inih"]
 	path = externals/inih/inih
 	url = https://github.com/svn2github/inih
-[submodule "externals/boost"]
+[submodule "boost"]
 	path = externals/boost
 	url = https://github.com/citra-emu/ext-boost.git
-[submodule "externals/nihstro"]
+[submodule "nihstro"]
 	path = externals/nihstro
 	url = https://github.com/neobrain/nihstro.git
