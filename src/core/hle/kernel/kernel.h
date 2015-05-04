@@ -7,6 +7,7 @@
 #include <boost/intrusive_ptr.hpp>
 
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,8 @@
 
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
+
+struct ApplicationInfo;
 
 namespace Kernel {
 
@@ -281,12 +284,5 @@ void Init();
 
 /// Shutdown the kernel
 void Shutdown();
-
-/**
- * Loads executable stored at specified address
- * @entry_point Entry point in memory of loaded executable
- * @return True on success, otherwise false
- */
-bool LoadExec(u32 entry_point);
 
 } // namespace

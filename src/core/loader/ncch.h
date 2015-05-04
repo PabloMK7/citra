@@ -6,7 +6,9 @@
 
 #include <memory>
 
+#include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/swap.h"
 
 #include "core/loader/loader.h"
 
@@ -109,7 +111,13 @@ struct ExHeader_StorageInfo{
 struct ExHeader_ARM11_SystemLocalCaps{
     u8 program_id[8];
     u32 core_version;
-    u8 flags[3];
+    u8 reserved_flags[2];
+    union {
+        u8 flags0;
+        BitField<0, 2, u8> ideal_processor;
+        BitField<2, 2, u8> affinity_mask;
+        BitField<4, 4, u8> system_mode;
+    };
     u8 priority;
     u8 resource_limit_descriptor[0x10][2];
     ExHeader_StorageInfo storage_info;
@@ -120,7 +128,7 @@ struct ExHeader_ARM11_SystemLocalCaps{
 };
 
 struct ExHeader_ARM11_KernelCaps{
-    u8 descriptors[28][4];
+    u32_le descriptors[28];
     u8 reserved[0x10];
 };
 
