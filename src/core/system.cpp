@@ -14,11 +14,6 @@
 
 namespace System {
 
-volatile State g_state;
-
-void UpdateState(State state) {
-}
-
 void Init(EmuWindow* emu_window) {
     Core::Init();
     CoreTiming::Init();
@@ -27,13 +22,6 @@ void Init(EmuWindow* emu_window) {
     Kernel::Init();
     HLE::Init();
     VideoCore::Init(emu_window);
-}
-
-void RunLoopFor(int cycles) {
-    RunLoopUntil(CoreTiming::GetTicks() + cycles);
-}
-
-void RunLoopUntil(u64 global_cycles) {
 }
 
 void Shutdown() {
