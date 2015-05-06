@@ -78,6 +78,11 @@ enum class DirectoryCommand : u32 {
     Close           = 0x08020000,
 };
 
+File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path & path)
+    : path(path), priority(0), backend(std::move(backend)) {}
+
+File::~File() {}
+
 ResultVal<bool> File::SyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
@@ -171,6 +176,11 @@ ResultVal<bool> File::SyncRequest() {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     return MakeResult<bool>(false);
 }
+
+Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path & path)
+    : path(path), backend(std::move(backend)) {}
+
+Directory::~Directory() {}
 
 ResultVal<bool> Directory::SyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();

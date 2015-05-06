@@ -5,21 +5,24 @@
 #pragma once
 
 #include <memory>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include "common/common_types.h"
-#include "common/string_util.h"
 #include "common/bit_field.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
+#include "common/string_util.h"
 
-#include "core/file_sys/file_backend.h"
-#include "core/file_sys/directory_backend.h"
-
+#include "core/hle/result.h"
 #include "core/mem_map.h"
-#include "core/hle/kernel/kernel.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// FileSys namespace
 
 namespace FileSys {
+
+class FileBackend;
+class DirectoryBackend;
 
 // Path string type
 enum LowPathType : u32 {

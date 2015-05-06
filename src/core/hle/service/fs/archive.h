@@ -45,31 +45,27 @@ typedef u64 ArchiveHandle;
 
 class File : public Kernel::Session {
 public:
-    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-        : path(path), priority(0), backend(std::move(backend)) {
-    }
+    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
+    ~File();
 
     std::string GetName() const override { return "Path: " + path.DebugStr(); }
+    ResultVal<bool> SyncRequest() override;
 
     FileSys::Path path; ///< Path of the file
     u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
-
-    ResultVal<bool> SyncRequest() override;
 };
 
 class Directory : public Kernel::Session {
 public:
-    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path)
-        : path(path), backend(std::move(backend)) {
-    }
+    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
+    ~Directory();
 
     std::string GetName() const override { return "Directory: " + path.DebugStr(); }
+    ResultVal<bool> SyncRequest() override;
 
     FileSys::Path path; ///< Path of the directory
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
-
-    ResultVal<bool> SyncRequest() override;
 };
 
 /**
