@@ -4,6 +4,8 @@
 
 #include <algorithm>
 
+#include "common/string_util.h"
+
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"

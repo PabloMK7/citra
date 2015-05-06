@@ -12,6 +12,7 @@ set(SRCS
             arm/skyeye_common/vfp/vfpdouble.cpp
             arm/skyeye_common/vfp/vfpinstr.cpp
             arm/skyeye_common/vfp/vfpsingle.cpp
+            file_sys/archive_backend.cpp
             file_sys/archive_extsavedata.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_savedata.cpp
