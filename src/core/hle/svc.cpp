@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include "common/profiler.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
 
@@ -606,7 +607,17 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     return RESULT_SUCCESS;
 }
 
-const HLE::FunctionDef SVC_Table[] = {
+namespace {
+    struct FunctionDef {
+        using Func = void();
+
+        u32         id;
+        Func*       func;
+        const char* name;
+    };
+}
+
+static const FunctionDef SVC_Table[] = {
     {0x00, nullptr,                         "Unknown"},
     {0x01, HLE::Wrap<ControlMemory>,        "ControlMemory"},
     {0x02, HLE::Wrap<QueryMemory>,          "QueryMemory"},
@@ -735,8 +746,28 @@ const HLE::FunctionDef SVC_Table[] = {
     {0x7D, nullptr,                         "QueryProcessMemory"},
 };
 
-void Register() {
-    HLE::RegisterModule("SVC_Table", ARRAY_SIZE(SVC_Table), SVC_Table);
+Common::Profiling::TimingCategory profiler_svc("SVC Calls");
+
+static const FunctionDef* GetSVCInfo(u32 opcode) {
+    u32 func_num = opcode & 0xFFFFFF; // 8 bits
+    if (func_num >= ARRAY_SIZE(SVC_Table)) {
+        LOG_ERROR(Kernel_SVC, "unknown svc=0x%02X", func_num);
+        return nullptr;
+    }
+    return &SVC_Table[func_num];
+}
+
+void CallSVC(u32 opcode) {
+    Common::Profiling::ScopeTimer timer_svc(profiler_svc);
+
+    const FunctionDef *info = GetSVCInfo(opcode);
+    if (info) {
+        if (info->func) {
+            info->func();
+        } else {
+            LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);
+        }
+    }
 }
 
 } // namespace

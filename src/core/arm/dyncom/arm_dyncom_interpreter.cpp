@@ -11,7 +11,7 @@
 #include "common/profiler.h"
 
 #include "core/mem_map.h"
-#include "core/hle/hle.h"
+#include "core/hle/svc.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
@@ -6234,7 +6234,7 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     SWI_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
-            HLE::CallSVC(Memory::Read32(cpu->Reg[15]));
+            SVC::CallSVC(Memory::Read32(cpu->Reg[15]));
         }
 
         cpu->Reg[15] += GET_INST_SIZE(cpu);
