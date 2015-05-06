@@ -366,12 +366,15 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
         case OpCode::Type::MultiplyAdd:
         {
-            if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) {
+            if ((instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) || 
+                (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI)) {
                 const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.mad.operand_desc_id];
 
-                const float24* src1_ = LookupSourceRegister(instr.mad.src1);
-                const float24* src2_ = LookupSourceRegister(instr.mad.src2);
-                const float24* src3_ = LookupSourceRegister(instr.mad.src3);
+                bool is_inverted = (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI);
+
+                const float24* src1_ = LookupSourceRegister(instr.mad.GetSrc1(is_inverted));
+                const float24* src2_ = LookupSourceRegister(instr.mad.GetSrc2(is_inverted));
+                const float24* src3_ = LookupSourceRegister(instr.mad.GetSrc3(is_inverted));
 
                 const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
                 const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
