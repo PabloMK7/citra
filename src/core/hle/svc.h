@@ -41,6 +41,6 @@ enum ArbitrationType {
 
 namespace SVC {
 
-void Register();
+void CallSVC(u32 opcode);
 
 } // namespace
