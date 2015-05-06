@@ -11,17 +11,8 @@
 #include <vector>
 
 #include "common/common.h"
+#include "core/hle/hle.h"
 #include "core/hle/result.h"
-
-typedef u32 Handle;
-typedef s32 Result;
-
-// TODO: It would be nice to eventually replace these with strong types that prevent accidental
-// conversion between each other.
-typedef u32 VAddr; ///< Represents a pointer in the userspace virtual address space.
-typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space.
-
-const Handle INVALID_HANDLE = 0;
 
 namespace Kernel {
 
