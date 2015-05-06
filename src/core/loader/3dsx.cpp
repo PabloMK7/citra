@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "common/logging/log.h"
+
 #include "core/file_sys/archive_romfs.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"

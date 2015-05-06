@@ -8,6 +8,8 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
+#include "common/assert.h"
+
 #include "graphics_breakpoints.h"
 #include "graphics_breakpoints_p.h"
 

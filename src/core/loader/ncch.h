@@ -4,7 +4,9 @@
 
 #pragma once
 
-#include "common/common.h"
+#include <memory>
+
+#include "common/common_types.h"
 
 #include "core/loader/loader.h"
 

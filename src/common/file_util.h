@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "common/common.h"
+#include "common/common_types.h"
 #include "common/string_util.h"
 
 // User directory indices for GetUserPath

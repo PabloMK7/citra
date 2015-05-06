@@ -4,7 +4,9 @@
 
 #include <boost/range/algorithm.hpp>
 
-#include "common/common.h"
+#include "common/common_funcs.h"
+#include "common/common_paths.h"
+#include "common/logging/log.h"
 #include "common/string_util.h"
 
 #ifdef _MSC_VER

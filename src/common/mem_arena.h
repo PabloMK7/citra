@@ -21,7 +21,7 @@
 #include <windows.h>
 #endif
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 // This class lets you create a block of anonymous RAM, and then arbitrarily map views into it.
 // Multiple views can mirror the same section of the block, which makes it very convient for emulating

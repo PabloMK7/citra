@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include "common/logging/log.h"
 #include "common/string_util.h"
 
 #include "core/file_sys/file_backend.h"

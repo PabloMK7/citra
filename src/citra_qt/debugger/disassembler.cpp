@@ -7,7 +7,6 @@
 #include "../bootmanager.h"
 #include "../hotkeys.h"
 
-#include "common/common.h"
 #include "core/mem_map.h"
 
 #include "core/core.h"

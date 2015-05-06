@@ -3,9 +3,6 @@
 // Refer to the license.txt file included.
 
 
-#include "common/common.h"
-#include "common/file_util.h"
-
 #include "core/hle/hle.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_s.h"

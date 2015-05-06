@@ -2,7 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common.h"
+#include "common/assert.h"
+#include "common/logging/log.h"
 
 #include "core/core_timing.h"
 #include "core/hle/kernel/kernel.h"

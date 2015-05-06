@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "common/common.h"
-#include "common/scm_rev.h"
-#include "common/string_util.h"
+#include "common/common_types.h"
 #include "common/key_map.h"
 #include "common/math_util.h"
+#include "common/scm_rev.h"
+#include "common/string_util.h"
 
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend

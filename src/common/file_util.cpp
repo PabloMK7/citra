@@ -2,9 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-#include "common/common.h"
+#include "common/assert.h"
+#include "common/common_funcs.h"
+#include "common/common_paths.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 
 #ifdef _WIN32
     #include <windows.h>

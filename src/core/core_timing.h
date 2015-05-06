@@ -21,7 +21,7 @@
 
 #include <functional>
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 extern int g_clock_rate_arm11;
 

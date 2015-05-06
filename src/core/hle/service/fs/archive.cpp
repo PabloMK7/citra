@@ -9,6 +9,7 @@
 
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/make_unique.h"
 #include "common/math_util.h"
 

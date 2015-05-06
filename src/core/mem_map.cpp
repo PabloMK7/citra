@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common.h"
+#include "common/common_funcs.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
 #include "common/mem_arena.h"
 
 #include "core/mem_map.h"

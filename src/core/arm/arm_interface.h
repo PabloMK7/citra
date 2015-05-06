@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "common/common.h"
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 

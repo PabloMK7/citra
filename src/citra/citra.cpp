@@ -4,7 +4,7 @@
 
 #include <thread>
 
-#include "common/common.h"
+#include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"

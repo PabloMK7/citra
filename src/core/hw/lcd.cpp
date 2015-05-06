@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+
 #include "common/common_types.h"
+#include "common/logging/log.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/hle/hle.h"

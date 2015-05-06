@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "common/common.h"
+#include "common/assert.h"
 
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/event.h"

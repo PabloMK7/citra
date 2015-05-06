@@ -4,7 +4,6 @@
 
 #pragma once
 
-// Don't include common.h here as it will break LogManager
 #include "common/common_types.h"
 #include <cstdio>
 #include <cstring>

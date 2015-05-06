@@ -10,7 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "common/common.h"
+#include "common/common_types.h"
+
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
 

@@ -8,7 +8,6 @@
 #include <QWindow>
 #endif
 
-#include "common/common.h"
 #include "bootmanager.h"
 #include "main.h"
 

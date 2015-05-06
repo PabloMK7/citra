@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include "common/common_funcs.h" // For rotl
 #include "common/hash.h"
 #include "common/platform.h"
 

@@ -10,7 +10,6 @@
 #include "qhexedit.h"
 #include "main.h"
 
-#include "common/common.h"
 #include "common/logging/text_formatter.h"
 #include "common/logging/log.h"
 #include "common/logging/backend.h"

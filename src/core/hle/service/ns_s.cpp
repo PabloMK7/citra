@@ -3,8 +3,6 @@
 // Refer to the license.txt file included.
 
 
-#include "common/common.h"
-
 #include "core/hle/hle.h"
 #include "core/hle/service/ns_s.h"
 

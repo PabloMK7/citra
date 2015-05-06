@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include "common/logging/log.h"
 #include "common/profiler.h"
 #include "common/string_util.h"
 #include "common/symbols.h"

@@ -4,7 +4,8 @@
 
 #include <algorithm>
 
-#include "common/common.h"
+#include "common/assert.h"
+#include "common/logging/log.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/core.h"

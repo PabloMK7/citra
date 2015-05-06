@@ -34,8 +34,9 @@
 #include <set>
 #include <type_traits>
 
-#include "common/common.h"
+#include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 
 template <class T>
 struct LinkedListItem : public T

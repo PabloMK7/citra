@@ -20,7 +20,6 @@
 
 /* Note: this file handles interface with arm core and vfp registers */
 
-#include "common/common.h"
 #include "common/logging/log.h"
 
 #include "core/arm/skyeye_common/armdefs.h"

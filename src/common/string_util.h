@@ -10,7 +10,7 @@
 #include <sstream>
 #include <vector>
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 namespace Common {
 

@@ -5,7 +5,10 @@
 #include <GLFW/glfw3.h>
 
 #include "citra/default_ini.h"
+
 #include "common/file_util.h"
+#include "common/logging/log.h"
+
 #include "core/settings.h"
 #include "core/core.h"
 

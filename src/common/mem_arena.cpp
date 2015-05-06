@@ -17,12 +17,16 @@
 
 #include <string>
 
-#include "common/memory_util.h"
+#include "common/logging/log.h"
 #include "common/mem_arena.h"
+#include "common/memory_util.h"
 #include "common/string_util.h"
 
 #ifndef _WIN32
 #include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+
 #ifdef ANDROID
 #include <sys/ioctl.h>
 #include <linux/ashmem.h>

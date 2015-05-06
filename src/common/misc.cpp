@@ -2,10 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common.h"
+#include "common/common_funcs.h"
 
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <string.h>
 #endif
 
 // Neither Android nor OS X support TLS

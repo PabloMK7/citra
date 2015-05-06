@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 u32 HashFletcher(const u8* data_u8, size_t length);  // FAST. Length & 1 == 0.
 u32 HashAdler32(const u8* data, size_t len);         // Fairly accurate, slightly slower

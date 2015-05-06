@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-#include "common/common.h"
-#include "common/math_util.h"
-
+#include <cstring>
 #include <numeric> // Necessary on OS X, but not Linux
+
+#include "common/common_types.h"
+#include "common/math_util.h"
 
 namespace MathUtil
 {
