@@ -4,9 +4,8 @@
 
 #pragma once
 
+#include "common/common.h"
 #include "common/common_types.h"
-
-#include "core/hle/kernel/kernel.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
