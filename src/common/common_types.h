@@ -73,6 +73,16 @@ union t64 {
     u8  _u8[8];             ///< 8-bit unsigned char(s)
 };
 
+// An inheritable class to disallow the copy constructor and operator= functions
+class NonCopyable {
+protected:
+    NonCopyable() = default;
+    ~NonCopyable() = default;
+
+    NonCopyable(NonCopyable&) = delete;
+    NonCopyable& operator=(NonCopyable&) = delete;
+};
+
 namespace Common {
 /// Rectangle data structure
 class Rect {

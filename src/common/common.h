@@ -13,16 +13,6 @@
 
 #define STACKALIGN
 
-// An inheritable class to disallow the copy constructor and operator= functions
-class NonCopyable {
-protected:
-    NonCopyable() = default;
-    ~NonCopyable() = default;
-
-    NonCopyable(NonCopyable&) = delete;
-    NonCopyable& operator=(NonCopyable&) = delete;
-};
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/common_types.h"
