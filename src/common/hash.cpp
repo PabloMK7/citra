@@ -5,6 +5,8 @@
 #include <algorithm>
 
 #include "common/hash.h"
+#include "common/platform.h"
+
 #if _M_SSE >= 0x402
 #include "common/cpu_detect.h"
 #include <nmmintrin.h>
