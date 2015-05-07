@@ -57,10 +57,10 @@
 
 #endif
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__alpha__) || defined(__ia64__)
-#define EMU_ARCHITECTURE_X64
-#else
-#define EMU_ARCHITECTURE_X86
+#if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__)
+    #define EMU_ARCH_BITS 64
+#elif defined(__i386) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM)
+    #define EMU_ARCH_BITS 32
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
