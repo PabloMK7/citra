@@ -117,14 +117,6 @@ inline u64 _rotr64(u64 x, unsigned int shift){
         return old_locale;
     }
 
-// 64 bit offsets for windows
-    #define fseeko _fseeki64
-    #define ftello _ftelli64
-    #define atoll _atoi64
-    #define stat64 _stat64
-    #define fstat64 _fstat64
-    #define fileno _fileno
-
     extern "C" {
         __declspec(dllimport) void __stdcall DebugBreak(void);
     }

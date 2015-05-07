@@ -7,37 +7,45 @@
 #include "common/file_util.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <shlobj.h>        // for SHGetFolderPath
-#include <shellapi.h>
-#include <commdlg.h>    // for GetSaveFileName
-#include <io.h>
-#include <direct.h>        // getcwd
-#include <tchar.h>
+    #include <windows.h>
+    #include <shlobj.h> // for SHGetFolderPath
+    #include <shellapi.h>
+    #include <commdlg.h> // for GetSaveFileName
+    #include <io.h>
+    #include <direct.h> // getcwd
+    #include <tchar.h>
+    
+    // 64 bit offsets for windows
+    #define fseeko _fseeki64
+    #define ftello _ftelli64
+    #define atoll _atoi64
+    #define stat64 _stat64
+    #define fstat64 _fstat64
+    #define fileno _fileno
 #else
-#include <sys/param.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <pwd.h>
-#include <unistd.h>
+    #include <sys/param.h>
+    #include <sys/types.h>
+    #include <dirent.h>
+    #include <pwd.h>
+    #include <unistd.h>
 #endif
 
 #if defined(__APPLE__)
-#include <CoreFoundation/CFString.h>
-#include <CoreFoundation/CFURL.h>
-#include <CoreFoundation/CFBundle.h>
+    #include <CoreFoundation/CFString.h>
+    #include <CoreFoundation/CFURL.h>
+    #include <CoreFoundation/CFBundle.h>
 #endif
 
 #include <algorithm>
 #include <sys/stat.h>
 
 #ifndef S_ISDIR
-#define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)
+    #define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)
 #endif
 
 #ifdef BSD4_4
-#define stat64 stat
-#define fstat64 fstat
+    #define stat64 stat
+    #define fstat64 fstat
 #endif
 
 // This namespace has various generic functions related to files and paths.
