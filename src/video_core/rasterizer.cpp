@@ -90,7 +90,7 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
         UNIMPLEMENTED();
     }
 
-    return {};
+    return {0, 0, 0, 0};
 }
 
 static u32 GetDepth(int x, int y) {
@@ -407,7 +407,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
                         UNIMPLEMENTED();
-                        return {};
+                        return {0, 0, 0, 0};
                     }
                 };
 
@@ -524,7 +524,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         UNIMPLEMENTED();
-                        return {};
+                        return {0, 0, 0};
                     }
                 };
 
