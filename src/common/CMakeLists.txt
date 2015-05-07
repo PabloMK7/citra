@@ -10,7 +10,6 @@ set(SRCS
             logging/text_formatter.cpp
             logging/backend.cpp
             math_util.cpp
-            mem_arena.cpp
             memory_util.cpp
             misc.cpp
             profiler.cpp
@@ -43,7 +42,6 @@ set(HEADERS
             logging/backend.h
             make_unique.h
             math_util.h
-            mem_arena.h
             memory_util.h
             platform.h
             profiler.h
