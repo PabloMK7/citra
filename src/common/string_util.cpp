@@ -477,4 +477,12 @@ std::string SHIFTJISToUTF8(const std::string& input)
 
 #endif
 
+std::string StringFromFixedZeroTerminatedBuffer(const char * buffer, size_t max_len) {
+    size_t len = 0;
+    while (len < max_len && buffer[len] != '\0')
+        ++len;
+
+    return std::string(buffer, len);
+}
+
 }

@@ -128,4 +128,10 @@ bool ComparePartialString(InIt begin, InIt end, const char* other) {
     return (begin == end) == (*other == '\0');
 }
 
+/**
+ * Creates a std::string from a fixed-size NUL-terminated char buffer. If the buffer isn't
+ * NUL-terminated then the string ends at max_len characters.
+ */
+std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, size_t max_len);
+
 }
