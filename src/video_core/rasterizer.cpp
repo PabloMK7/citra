@@ -643,9 +643,10 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
-                u16 z = (u16)((v0.screenpos[2].ToFloat32() * w0 +
-                            v1.screenpos[2].ToFloat32() * w1 +
-                            v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
+                unsigned num_bits = Pica::Regs::DepthBitsPerPixel(registers.framebuffer.depth_format);
+                u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
+                               v1.screenpos[2].ToFloat32() * w1 +
+                               v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
                 u32 ref_z = GetDepth(x >> 4, y >> 4);
 
                 bool pass = false;

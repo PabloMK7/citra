@@ -452,9 +452,7 @@ struct Regs {
         D24S8  = 3
     };
 
-    /*
-     * Returns the number of bytes in the specified depth format
-     */
+    // Returns the number of bytes in the specified depth format
     static u32 BytesPerDepthPixel(DepthFormat format) {
         switch (format) {
         case DepthFormat::D16:
@@ -463,6 +461,20 @@ struct Regs {
             return 3;
         case DepthFormat::D24S8:
             return 4;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
+
+    // Returns the number of bits per depth component of the specified depth format
+    static u32 DepthBitsPerPixel(DepthFormat format) {
+        switch (format) {
+        case DepthFormat::D16:
+            return 16;
+        case DepthFormat::D24:
+        case DepthFormat::D24S8:
+            return 24;
         default:
             LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
             UNIMPLEMENTED();
