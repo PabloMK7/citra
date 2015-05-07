@@ -597,7 +597,10 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 };
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
-                combiner_output = Math::MakeVec(color_output, alpha_output);
+                combiner_output[0] = std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());
+                combiner_output[1] = std::min((unsigned)255, color_output.g() * tev_stage.GetColorMultiplier());
+                combiner_output[2] = std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
+                combiner_output[3] = std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
 
                 if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
                     combiner_buffer.r() = combiner_output.r();

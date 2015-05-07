@@ -300,7 +300,18 @@ struct Regs {
             BitField<24, 8, u32> const_a;
         };
 
-        INSERT_PADDING_WORDS(0x1);
+        union {
+            BitField< 0, 2, u32> color_scale;
+            BitField<16, 2, u32> alpha_scale;
+        };
+
+        inline unsigned GetColorMultiplier() const {
+            return (color_scale < 3) ? (1 << color_scale) : 1;
+        }
+
+        inline unsigned GetAlphaMultiplier() const {
+            return (alpha_scale < 3) ? (1 << alpha_scale) : 1;
+        }
     };
 
     TevStageConfig tev_stage0;
