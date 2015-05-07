@@ -11,6 +11,7 @@
 
 #include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/disk_archive.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/settings.h"
 
@@ -36,7 +37,7 @@ ArchiveFactory_SaveData::ArchiveFactory_SaveData(const std::string& sdmc_directo
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const Path& path) {
-    std::string concrete_mount_point = GetSaveDataPath(mount_point, Kernel::g_program_id);
+    std::string concrete_mount_point = GetSaveDataPath(mount_point, Kernel::g_current_process->program_id);
     if (!FileUtil::Exists(concrete_mount_point)) {
         // When a SaveData archive is created for the first time, it is not yet formatted
         // and the save file/directory structure expected by the game has not yet been initialized.
@@ -51,7 +52,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const P
 }
 
 ResultCode ArchiveFactory_SaveData::Format(const Path& path) {
-    std::string concrete_mount_point = GetSaveDataPath(mount_point, Kernel::g_program_id);
+    std::string concrete_mount_point = GetSaveDataPath(mount_point, Kernel::g_current_process->program_id);
     FileUtil::DeleteDirRecursively(concrete_mount_point);
     FileUtil::CreateFullPath(concrete_mount_point);
     return RESULT_SUCCESS;
