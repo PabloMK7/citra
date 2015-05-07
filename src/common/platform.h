@@ -66,45 +66,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Compiler-Specific Definitions
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-
-#include <time.h>
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#define EMU_FASTCALL __fastcall
-
-#ifdef _MSC_VER
-inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
-    if (localtime_s(result, clock) == 0)
-        return result;
-    return nullptr;
-}
-#endif
-
-#else // EMU_PLATFORM != PLATFORM_WINDOWS
-
-#define EMU_FASTCALL __attribute__((fastcall))
-#define __stdcall
-#define __cdecl
-
-#define BOOL bool
-#define DWORD u32
-
-// TODO: Hacks..
-#include <limits.h>
-
-#include <strings.h>
-#define stricmp(str1, str2) strcasecmp(str1, str2)
-#define _stricmp(str1, str2) strcasecmp(str1, str2)
-#define _snprintf snprintf
-#define _getcwd getcwd
-#define _tzset tzset
-
-typedef void EXCEPTION_POINTERS;
-
-#endif
-
 #define GCC_VERSION_AVAILABLE(major, minor) (defined(__GNUC__) &&  (__GNUC__ > (major) || \
     (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor))))

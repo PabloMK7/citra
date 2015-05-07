@@ -73,16 +73,12 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // _MSC_VER
-#include <locale.h>
+    #include <locale.h>
 
-// Function Cross-Compatibility
-    #define strcasecmp _stricmp
-    #define strncasecmp _strnicmp
-    #define unlink _unlink
+    // Function Cross-Compatibility
     #define snprintf _snprintf
-    #define vscprintf _vscprintf
 
-// Locale Cross-Compatibility
+    // Locale Cross-Compatibility
     #define locale_t _locale_t
     #define freelocale _free_locale
     #define newlocale(mask, locale, base) _create_locale(mask, locale)

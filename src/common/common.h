@@ -11,8 +11,6 @@
 #include <cstdio>
 #include <cstring>
 
-#define STACKALIGN
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/common_types.h"
@@ -20,56 +18,25 @@
 #include "common/common_paths.h"
 #include "common/platform.h"
 
-#ifdef __APPLE__
-// The Darwin ABI requires that stack frames be aligned to 16-byte boundaries.
-// This is only needed on i386 gcc - x86_64 already aligns to 16 bytes.
-    #if defined __i386__ && defined __GNUC__
-        #undef STACKALIGN
-        #define STACKALIGN __attribute__((__force_align_arg_pointer__))
-    #endif
-#elif defined _WIN32
-// Check MSC ver
-    #if defined _MSC_VER && _MSC_VER <= 1000
-        #error needs at least version 1000 of MSC
-    #endif
-
-    #ifndef NOMINMAX
-    #define NOMINMAX
-    #endif
-
-// Alignment
+#ifdef _WIN32
+    // Alignment
     #define MEMORY_ALIGNED16(x) __declspec(align(16)) x
     #define MEMORY_ALIGNED32(x) __declspec(align(32)) x
     #define MEMORY_ALIGNED64(x) __declspec(align(64)) x
     #define MEMORY_ALIGNED128(x) __declspec(align(128)) x
-    #define MEMORY_ALIGNED16_DECL(x) __declspec(align(16)) x
-    #define MEMORY_ALIGNED64_DECL(x) __declspec(align(64)) x
-#endif
-
-// Windows compatibility
-#ifndef _WIN32
+#else
+    // Windows compatibility
     #ifdef _LP64
         #define _M_X64 1
     #else
         #define _M_IX86 1
     #endif
+
     #define __forceinline inline __attribute__((always_inline))
     #define MEMORY_ALIGNED16(x) __attribute__((aligned(16))) x
     #define MEMORY_ALIGNED32(x) __attribute__((aligned(32))) x
     #define MEMORY_ALIGNED64(x) __attribute__((aligned(64))) x
     #define MEMORY_ALIGNED128(x) __attribute__((aligned(128))) x
-    #define MEMORY_ALIGNED16_DECL(x) __attribute__((aligned(16))) x
-    #define MEMORY_ALIGNED64_DECL(x) __attribute__((aligned(64))) x
-#endif
-
-#ifdef _MSC_VER
-    #define __strdup _strdup
-    #define __getcwd _getcwd
-    #define __chdir _chdir
-#else
-    #define __strdup strdup
-    #define __getcwd getcwd
-    #define __chdir chdir
 #endif
 
 #if defined _M_GENERIC

@@ -349,7 +349,7 @@ void GMainWindow::closeEvent(QCloseEvent* event)
 #undef main
 #endif
 
-int __cdecl main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     std::shared_ptr<Log::Logger> logger = Log::InitGlobalLogger();
     Log::Filter log_filter(Log::Level::Info);

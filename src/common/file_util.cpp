@@ -589,7 +589,7 @@ std::string GetCurrentDir()
 {
     char *dir;
     // Get the current working directory (getcwd uses malloc)
-    if (!(dir = __getcwd(nullptr, 0))) {
+    if (!(dir = getcwd(nullptr, 0))) {
 
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: %s",
                 GetLastErrorMsg());
@@ -603,7 +603,7 @@ std::string GetCurrentDir()
 // Sets the current directory to the given directory
 bool SetCurrentDir(const std::string &directory)
 {
-    return __chdir(directory.c_str()) == 0;
+    return chdir(directory.c_str()) == 0;
 }
 
 #if defined(__APPLE__)
