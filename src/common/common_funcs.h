@@ -27,6 +27,27 @@
 #define INSERT_PADDING_BYTES(num_bytes) u8 CONCAT2(pad, __LINE__)[(num_bytes)]
 #define INSERT_PADDING_WORDS(num_words) u32 CONCAT2(pad, __LINE__)[(num_words)]
 
+#ifdef _WIN32
+    // Alignment
+    #define MEMORY_ALIGNED16(x) __declspec(align(16)) x
+    #define MEMORY_ALIGNED32(x) __declspec(align(32)) x
+    #define MEMORY_ALIGNED64(x) __declspec(align(64)) x
+    #define MEMORY_ALIGNED128(x) __declspec(align(128)) x
+#else
+    // Windows compatibility
+    #ifdef _LP64
+        #define _M_X64 1
+    #else
+        #define _M_IX86 1
+    #endif
+
+    #define __forceinline inline __attribute__((always_inline))
+    #define MEMORY_ALIGNED16(x) __attribute__((aligned(16))) x
+    #define MEMORY_ALIGNED32(x) __attribute__((aligned(32))) x
+    #define MEMORY_ALIGNED64(x) __attribute__((aligned(64))) x
+    #define MEMORY_ALIGNED128(x) __attribute__((aligned(128))) x
+#endif
+
 #ifndef _MSC_VER
 
 #include <errno.h>
