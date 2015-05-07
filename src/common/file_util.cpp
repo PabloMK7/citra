@@ -2,42 +2,52 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-#include "common/common.h"
+#include "common/assert.h"
+#include "common/common_funcs.h"
+#include "common/common_paths.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <shlobj.h>        // for SHGetFolderPath
-#include <shellapi.h>
-#include <commdlg.h>    // for GetSaveFileName
-#include <io.h>
-#include <direct.h>        // getcwd
-#include <tchar.h>
+    #include <windows.h>
+    #include <shlobj.h> // for SHGetFolderPath
+    #include <shellapi.h>
+    #include <commdlg.h> // for GetSaveFileName
+    #include <io.h>
+    #include <direct.h> // getcwd
+    #include <tchar.h>
+    
+    // 64 bit offsets for windows
+    #define fseeko _fseeki64
+    #define ftello _ftelli64
+    #define atoll _atoi64
+    #define stat64 _stat64
+    #define fstat64 _fstat64
+    #define fileno _fileno
 #else
-#include <sys/param.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <pwd.h>
-#include <unistd.h>
+    #include <sys/param.h>
+    #include <sys/types.h>
+    #include <dirent.h>
+    #include <pwd.h>
+    #include <unistd.h>
 #endif
 
 #if defined(__APPLE__)
-#include <CoreFoundation/CFString.h>
-#include <CoreFoundation/CFURL.h>
-#include <CoreFoundation/CFBundle.h>
+    #include <CoreFoundation/CFString.h>
+    #include <CoreFoundation/CFURL.h>
+    #include <CoreFoundation/CFBundle.h>
 #endif
 
 #include <algorithm>
 #include <sys/stat.h>
 
 #ifndef S_ISDIR
-#define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)
+    #define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)
 #endif
 
 #ifdef BSD4_4
-#define stat64 stat
-#define fstat64 fstat
+    #define stat64 stat
+    #define fstat64 fstat
 #endif
 
 // This namespace has various generic functions related to files and paths.
@@ -589,7 +599,7 @@ std::string GetCurrentDir()
 {
     char *dir;
     // Get the current working directory (getcwd uses malloc)
-    if (!(dir = __getcwd(nullptr, 0))) {
+    if (!(dir = getcwd(nullptr, 0))) {
 
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: %s",
                 GetLastErrorMsg());
@@ -603,7 +613,7 @@ std::string GetCurrentDir()
 // Sets the current directory to the given directory
 bool SetCurrentDir(const std::string &directory)
 {
-    return __chdir(directory.c_str()) == 0;
+    return chdir(directory.c_str()) == 0;
 }
 
 #if defined(__APPLE__)

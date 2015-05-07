@@ -4,11 +4,10 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 
 #include "common/common_types.h"
-
-#include "core/hle/kernel/kernel.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

@@ -9,7 +9,7 @@
 
 #include <boost/container/flat_map.hpp>
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/session.h"

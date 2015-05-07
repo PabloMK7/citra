@@ -6,7 +6,9 @@
 #include <list>
 #include <vector>
 
-#include "common/common.h"
+#include "common/assert.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/thread_queue_list.h"
 

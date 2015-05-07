@@ -4,9 +4,6 @@
 
 #pragma once
 
-// Make sure we pick up USER_DIR if set in config.h
-#include "common/common.h"
-
 // Directory separators, do we need this?
 #define DIR_SEP "/"
 #define DIR_SEP_CHR '/'

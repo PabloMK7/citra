@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "common/swap.h"
+
 #include "core/mem_map.h"
 #include "core/arm/skyeye_common/armdefs.h"
 

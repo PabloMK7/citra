@@ -10,7 +10,7 @@
 #include <mutex>
 #include <thread>
 
-#include "common/common.h" // for NonCopyable
+#include "common/common_types.h" // for NonCopyable
 
 namespace Common {
 

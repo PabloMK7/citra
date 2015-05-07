@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+
 #include "common/make_unique.h"
 
 #include "core/arm/skyeye_common/armemu.h"

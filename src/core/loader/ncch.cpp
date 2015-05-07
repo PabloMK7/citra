@@ -4,6 +4,8 @@
 
 #include <memory>
 
+#include "common/logging/log.h"
+
 #include "core/loader/ncch.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/mem_map.h"

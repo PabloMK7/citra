@@ -7,13 +7,6 @@
 #include "common_types.h"
 #include <cstdlib>
 
-#ifdef _WIN32
-#define SLEEP(x) Sleep(x)
-#else
-#include <unistd.h>
-#define SLEEP(x) usleep(x*1000)
-#endif
-
 
 #define b2(x)   (   (x) | (   (x) >> 1) )
 #define b4(x)   ( b2(x) | ( b2(x) >> 2) )
@@ -33,6 +26,27 @@
 // depending on the current source line to make sure variable names are unique.
 #define INSERT_PADDING_BYTES(num_bytes) u8 CONCAT2(pad, __LINE__)[(num_bytes)]
 #define INSERT_PADDING_WORDS(num_words) u32 CONCAT2(pad, __LINE__)[(num_words)]
+
+#ifdef _WIN32
+    // Alignment
+    #define MEMORY_ALIGNED16(x) __declspec(align(16)) x
+    #define MEMORY_ALIGNED32(x) __declspec(align(32)) x
+    #define MEMORY_ALIGNED64(x) __declspec(align(64)) x
+    #define MEMORY_ALIGNED128(x) __declspec(align(128)) x
+#else
+    // Windows compatibility
+    #ifdef _LP64
+        #define _M_X64 1
+    #else
+        #define _M_IX86 1
+    #endif
+
+    #define __forceinline inline __attribute__((always_inline))
+    #define MEMORY_ALIGNED16(x) __attribute__((aligned(16))) x
+    #define MEMORY_ALIGNED32(x) __attribute__((aligned(32))) x
+    #define MEMORY_ALIGNED64(x) __attribute__((aligned(64))) x
+    #define MEMORY_ALIGNED128(x) __attribute__((aligned(128))) x
+#endif
 
 #ifndef _MSC_VER
 
@@ -73,61 +87,11 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // _MSC_VER
-#include <locale.h>
-
-// Function Cross-Compatibility
-    #define strcasecmp _stricmp
-    #define strncasecmp _strnicmp
-    #define unlink _unlink
+    // Function Cross-Compatibility
     #define snprintf _snprintf
-    #define vscprintf _vscprintf
 
-// Locale Cross-Compatibility
+    // Locale Cross-Compatibility
     #define locale_t _locale_t
-    #define freelocale _free_locale
-    #define newlocale(mask, locale, base) _create_locale(mask, locale)
-
-    #define LC_GLOBAL_LOCALE    ((locale_t)-1)
-    #define LC_ALL_MASK            LC_ALL
-    #define LC_COLLATE_MASK        LC_COLLATE
-    #define LC_CTYPE_MASK          LC_CTYPE
-    #define LC_MONETARY_MASK       LC_MONETARY
-    #define LC_NUMERIC_MASK        LC_NUMERIC
-    #define LC_TIME_MASK           LC_TIME
-
-    inline locale_t uselocale(locale_t new_locale)
-    {
-        // Retrieve the current per thread locale setting
-        bool bIsPerThread = (_configthreadlocale(0) == _ENABLE_PER_THREAD_LOCALE);
-
-        // Retrieve the current thread-specific locale
-        locale_t old_locale = bIsPerThread ? _get_current_locale() : LC_GLOBAL_LOCALE;
-
-        if(new_locale == LC_GLOBAL_LOCALE)
-        {
-            // Restore the global locale
-            _configthreadlocale(_DISABLE_PER_THREAD_LOCALE);
-        }
-        else if(new_locale != nullptr)
-        {
-            // Configure the thread to set the locale only for this thread
-            _configthreadlocale(_ENABLE_PER_THREAD_LOCALE);
-
-            // Set all locale categories
-            for(int i = LC_MIN; i <= LC_MAX; i++)
-                setlocale(i, new_locale->locinfo->lc_category[i].locale);
-        }
-
-        return old_locale;
-    }
-
-// 64 bit offsets for windows
-    #define fseeko _fseeki64
-    #define ftello _ftelli64
-    #define atoll _atoi64
-    #define stat64 _stat64
-    #define fstat64 _fstat64
-    #define fileno _fileno
 
     extern "C" {
         __declspec(dllimport) void __stdcall DebugBreak(void);

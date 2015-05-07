@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/make_unique.h"
 
 #include "core/file_sys/archive_savedatacheck.h"

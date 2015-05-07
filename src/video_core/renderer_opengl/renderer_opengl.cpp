@@ -9,6 +9,7 @@
 #include "core/settings.h"
 
 #include "common/emu_window.h"
+#include "common/logging/log.h"
 #include "common/profiler_reporting.h"
 
 #include "video_core/video_core.h"

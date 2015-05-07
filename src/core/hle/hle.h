@@ -4,6 +4,13 @@
 
 #pragma once
 
+#include "common/common_types.h"
+
+typedef u32 Handle;
+typedef s32 Result;
+
+const Handle INVALID_HANDLE = 0;
+
 namespace HLE {
 
 extern bool g_reschedule;   ///< If true, immediately reschedules the CPU to a new thread

@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common.h"
 #include "common/debug_interface.h"
 #include "common/break_points.h"
 #include "common/logging/log.h"

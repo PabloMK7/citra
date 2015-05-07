@@ -10,8 +10,11 @@
 #include <map>
 #include <vector>
 
+#include "common/assert.h"
 #include "common/bit_field.h"
+#include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/logging/log.h"
 
 #include "core/mem_map.h"
 

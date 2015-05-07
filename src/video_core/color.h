@@ -5,6 +5,8 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "common/swap.h"
+
 #include "video_core/math.h"
 
 namespace Color {

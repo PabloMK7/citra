@@ -5,8 +5,10 @@
 #pragma once
 
 #include <map>
+#include <string>
+#include <utility>
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 struct TSymbol
 {

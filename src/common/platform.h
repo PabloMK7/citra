@@ -64,47 +64,26 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// Feature detection
+
+#if defined _M_GENERIC
+#  define _M_SSE 0x0
+#elif defined __GNUC__
+# if defined __SSE4_2__
+#  define _M_SSE 0x402
+# elif defined __SSE4_1__
+#  define _M_SSE 0x401
+# elif defined __SSSE3__
+#  define _M_SSE 0x301
+# elif defined __SSE3__
+#  define _M_SSE 0x300
+# endif
+#elif (_MSC_VER >= 1500) || __INTEL_COMPILER // Visual Studio 2008
+#  define _M_SSE 0x402
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // Compiler-Specific Definitions
-
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-
-#include <time.h>
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#define EMU_FASTCALL __fastcall
-
-#ifdef _MSC_VER
-inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
-    if (localtime_s(result, clock) == 0)
-        return result;
-    return nullptr;
-}
-#endif
-
-#else // EMU_PLATFORM != PLATFORM_WINDOWS
-
-#define EMU_FASTCALL __attribute__((fastcall))
-#define __stdcall
-#define __cdecl
-
-#define BOOL bool
-#define DWORD u32
-
-// TODO: Hacks..
-#include <limits.h>
-
-#include <strings.h>
-#define stricmp(str1, str2) strcasecmp(str1, str2)
-#define _stricmp(str1, str2) strcasecmp(str1, str2)
-#define _snprintf snprintf
-#define _getcwd getcwd
-#define _tzset tzset
-
-typedef void EXCEPTION_POINTERS;
-
-#endif
 
 #define GCC_VERSION_AVAILABLE(major, minor) (defined(__GNUC__) &&  (__GNUC__ > (major) || \
     (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor))))

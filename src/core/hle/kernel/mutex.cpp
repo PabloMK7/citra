@@ -7,7 +7,7 @@
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
-#include "common/common.h"
+#include "common/assert.h"
 
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"

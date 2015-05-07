@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common.h"
+#include "common/logging/log.h"
 
 #include "core/mem_map.h"
 #include "core/hle/kernel/shared_memory.h"

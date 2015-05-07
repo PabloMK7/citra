@@ -4,7 +4,9 @@
 
 #include <map>
 
-#include "common/common.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
+#include "common/swap.h"
 
 #include "core/mem_map.h"
 #include "core/hw/hw.h"

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 #include <algorithm>
 #include <type_traits>

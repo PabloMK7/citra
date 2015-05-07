@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include "common/logging/log.h"
 #include "common/profiler.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
@@ -311,7 +312,7 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process) {
 /// Get resource limit current values
 static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_limit, void* names,
     s32 name_count) {
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%s, name_count=%d",
+    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%p, name_count=%d",
         resource_limit, names, name_count);
     Memory::Write32(Core::g_app_core->GetReg(0), 0); // Normmatt: Set used memory to 0 for now
     return RESULT_SUCCESS;

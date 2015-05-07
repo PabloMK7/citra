@@ -4,7 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "common/common.h"
+#include "common/logging/log.h"
 
 #include "video_core/video_core.h"
 

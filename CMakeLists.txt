@@ -8,8 +8,11 @@ if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes -pthread")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 else()
-    # Silence deprecation warnings
-    add_definitions(/D_CRT_SECURE_NO_WARNINGS)
+    # Silence "deprecation" warnings
+    add_definitions(/D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE)
+    # Avoid windows.h junk
+    add_definitions(/DNOMINMAX)
+
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 

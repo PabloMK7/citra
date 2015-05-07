@@ -6,7 +6,7 @@
 
 #include <map>
 
-#include "common/common.h"
+#include "common/common_types.h"
 
 // This simple class creates a wrapper around a C/C++ function that saves all fp state
 // before entering it, and restores it upon exit. This is required to be able to selectively

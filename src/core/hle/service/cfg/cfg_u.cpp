@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/string_util.h"
+
 #include "core/settings.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/hle/hle.h"

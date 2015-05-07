@@ -5,8 +5,9 @@
 #include <string>
 #include <memory>
 
-#include "common/common.h"
+#include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/symbols.h"
 
 #include "core/mem_map.h"

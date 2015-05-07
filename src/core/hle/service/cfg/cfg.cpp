@@ -4,12 +4,16 @@
 
 #include <algorithm>
 
-#include "core/hle/service/fs/archive.h"
-#include "core/hle/service/service.h"
+#include "common/logging/log.h"
+#include "common/string_util.h"
+
+#include "core/file_sys/file_backend.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
+#include "core/hle/service/fs/archive.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace CFG {

@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/common_funcs.h"
 
@@ -61,7 +64,7 @@ template void Read<u16>(u16 &var, const u32 addr);
 template void Read<u8>(u8 &var, const u32 addr);
 
 void Init() {
-    memset(&config_mem, 0, sizeof(config_mem));
+    std::memset(&config_mem, 0, sizeof(config_mem));
 
     config_mem.update_flag = 0; // No update
     config_mem.sys_core_ver = 0x2;

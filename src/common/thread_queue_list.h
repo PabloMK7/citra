@@ -9,8 +9,6 @@
 
 #include <boost/range/algorithm_ext/erase.hpp>
 
-#include "common/common.h"
-
 namespace Common {
 
 template<class T, unsigned int N>

@@ -7,7 +7,6 @@
 #include <QThread>
 #include <QGLWidget>
 
-#include "common/common.h"
 #include "common/emu_window.h"
 #include "common/thread.h"
 

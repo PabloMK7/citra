@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "common/common.h"
+#include "common/common_types.h"
 #include <fstream>
 
 // defined in Version.cpp

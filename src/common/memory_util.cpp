@@ -3,7 +3,8 @@
 // Refer to the license.txt file included.
 
 
-#include "common/common.h"
+#include "common/common_funcs.h"
+#include "common/logging/log.h"
 #include "common/memory_util.h"
 #include "common/string_util.h"
 
