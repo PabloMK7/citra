@@ -376,7 +376,13 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             // with some basic arithmetic. Alpha combiners can be configured separately but work
             // analogously.
             Math::Vec4<u8> combiner_output;
-            for (const auto& tev_stage : tev_stages) {
+            Math::Vec4<u8> combiner_buffer = {
+                registers.tev_combiner_buffer_color.r, registers.tev_combiner_buffer_color.g,
+                registers.tev_combiner_buffer_color.b, registers.tev_combiner_buffer_color.a
+            };
+
+            for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
+                const auto& tev_stage = tev_stages[tev_stage_index];
                 using Source = Regs::TevStageConfig::Source;
                 using ColorModifier = Regs::TevStageConfig::ColorModifier;
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
@@ -397,6 +403,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     case Source::Texture2:
                         return texture_color[2];
+
+                    case Source::PreviousBuffer:
+                        return combiner_buffer;
 
                     case Source::Constant:
                         return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b, tev_stage.const_a};
@@ -579,6 +588,16 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
                 combiner_output = Math::MakeVec(color_output, alpha_output);
+
+                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
+                    combiner_buffer.r() = combiner_output.r();
+                    combiner_buffer.g() = combiner_output.g();
+                    combiner_buffer.b() = combiner_output.b();
+                }
+
+                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
+                    combiner_buffer.a() = combiner_output.a();
+                }
             }
 
             if (registers.output_merger.alpha_test.enable) {
