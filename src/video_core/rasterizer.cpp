@@ -499,6 +499,16 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
+                    case Operation::AddSigned:
+                    {
+                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
+                        auto result = input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
+                        result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
+                        result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
+                        result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
+                        return result.Cast<u8>();
+                    }
+
                     case Operation::Lerp:
                         return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
 
