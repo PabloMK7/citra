@@ -3672,7 +3672,7 @@ static int clz(unsigned int x) {
     return n;
 }
 
-unsigned InterpreterMainLoop(ARMul_State* state) {
+unsigned InterpreterMainLoop(ARMul_State* cpu) {
     Common::Profiling::ScopeTimer timer_execute(profile_execute);
 
     #undef RM
@@ -3929,8 +3929,6 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
     #define CurrentModeHasSPSR (cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
     #define PC (cpu->Reg[15])
     #define CHECK_EXT_INT if (!cpu->NirqSig && !(cpu->Cpsr & 0x80)) goto END;
-
-    ARMul_State* cpu = state;
 
     // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback
     // to a clunky switch statement.
@@ -6492,24 +6490,24 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 s16 sum4 = ((rn_val >> 24) & 0xFF) + ((rm_val >> 24) & 0xFF);
 
                 if (sum1 >= 0x100)
-                    state->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 16);
                 else
-                    state->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 16);
 
                 if (sum2 >= 0x100)
-                    state->Cpsr |= (1 << 17);
+                    cpu->Cpsr |= (1 << 17);
                 else
-                    state->Cpsr &= ~(1 << 17);
+                    cpu->Cpsr &= ~(1 << 17);
 
                 if (sum3 >= 0x100)
-                    state->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 18);
                 else
-                    state->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 18);
 
                 if (sum4 >= 0x100)
-                    state->Cpsr |= (1 << 19);
+                    cpu->Cpsr |= (1 << 19);
                 else
-                    state->Cpsr &= ~(1 << 19);
+                    cpu->Cpsr &= ~(1 << 19);
 
                 lo_result = ((sum1 & 0xFF) | (sum2 & 0xFF) << 8);
                 hi_result = ((sum3 & 0xFF) | (sum4 & 0xFF) << 8);
@@ -6522,24 +6520,24 @@ unsigned InterpreterMainLoop(ARMul_State* state) {
                 s16 diff4 = ((rn_val >> 24) & 0xFF) - ((rm_val >> 24) & 0xFF);
 
                 if (diff1 >= 0)
-                    state->Cpsr |= (1 << 16);
+                    cpu->Cpsr |= (1 << 16);
                 else
-                    state->Cpsr &= ~(1 << 16);
+                    cpu->Cpsr &= ~(1 << 16);
 
                 if (diff2 >= 0)
-                    state->Cpsr |= (1 << 17);
+                    cpu->Cpsr |= (1 << 17);
                 else
-                    state->Cpsr &= ~(1 << 17);
+                    cpu->Cpsr &= ~(1 << 17);
 
                 if (diff3 >= 0)
-                    state->Cpsr |= (1 << 18);
+                    cpu->Cpsr |= (1 << 18);
                 else
-                    state->Cpsr &= ~(1 << 18);
+                    cpu->Cpsr &= ~(1 << 18);
 
                 if (diff4 >= 0)
-                    state->Cpsr |= (1 << 19);
+                    cpu->Cpsr |= (1 << 19);
                 else
-                    state->Cpsr &= ~(1 << 19);
+                    cpu->Cpsr &= ~(1 << 19);
 
                 lo_result = (diff1 & 0xFF) | ((diff2 & 0xFF) << 8);
                 hi_result = (diff3 & 0xFF) | ((diff4 & 0xFF) << 8);
