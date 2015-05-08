@@ -19,7 +19,7 @@
 
 namespace Loader {
 
-const std::initializer_list<Kernel::StaticAddressMapping> default_address_mappings = {
+const std::initializer_list<Kernel::AddressMapping> default_address_mappings = {
     { 0x1FF50000,   0x8000, true  }, // part of DSP RAM
     { 0x1FF70000,   0x8000, true  }, // part of DSP RAM
     { 0x1F000000, 0x600000, false }, // entire VRAM
@@ -142,7 +142,7 @@ ResultStatus LoadFile(const std::string& filename) {
     {
         Kernel::g_current_process = Kernel::Process::Create(filename_filename, 0);
         Kernel::g_current_process->svc_access_mask.set();
-        Kernel::g_current_process->static_address_mappings = default_address_mappings;
+        Kernel::g_current_process->address_mappings = default_address_mappings;
 
         size_t size = (size_t)file->GetSize();
         if (file->ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), size) != size)

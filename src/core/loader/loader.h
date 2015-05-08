@@ -110,7 +110,7 @@ protected:
  * Common address mappings found in most games, used for binary formats that don't have this
  * information.
  */
-extern const std::initializer_list<Kernel::StaticAddressMapping> default_address_mappings;
+extern const std::initializer_list<Kernel::AddressMapping> default_address_mappings;
 
 /**
  * Identifies and loads a bootable file

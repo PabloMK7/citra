@@ -59,16 +59,16 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             u32 end_desc = kernel_caps[i+1];
             ++i; // Skip over the second descriptor on the next iteration
 
-            StaticAddressMapping mapping;
+            AddressMapping mapping;
             mapping.address = descriptor << 12;
             mapping.size = (end_desc << 12) - mapping.address;
             mapping.writable = descriptor & BIT(20);
             mapping.unk_flag = end_desc & BIT(20);
 
-            static_address_mappings.push_back(mapping);
+            address_mappings.push_back(mapping);
         } else if ((type & 0xFFF) == 0xFFE) { // 0x000F
             // Mapped memory page
-            StaticAddressMapping mapping;
+            AddressMapping mapping;
             mapping.address = descriptor << 12;
             mapping.size = Memory::PAGE_SIZE;
             mapping.writable = true; // TODO: Not sure if correct

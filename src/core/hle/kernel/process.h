@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-struct StaticAddressMapping {
+struct AddressMapping {
     // Address and size must be page-aligned
     VAddr address;
     u32 size;
@@ -66,7 +66,7 @@ public:
     unsigned int handle_table_size = 0x200;
     /// Special memory ranges mapped into this processes address space. This is used to give
     /// processes access to specific I/O regions and device memory.
-    boost::container::static_vector<StaticAddressMapping, 8> static_address_mappings;
+    boost::container::static_vector<AddressMapping, 8> address_mappings;
     ProcessFlags flags;
 
     /**
