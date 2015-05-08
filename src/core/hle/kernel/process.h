@@ -55,15 +55,29 @@ public:
     static const HandleType HANDLE_TYPE = HandleType::Process;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
-    std::string name; ///< Name of the process
+    /// Name of the process
+    std::string name;
+    /// Title ID corresponding to the process
     u64 program_id;
 
+    /// The process may only call SVCs which have the corresponding bit set.
     std::bitset<0x80> svc_access_mask;
+    /// Maximum size of the handle table for the process.
     unsigned int handle_table_size = 0x200;
-    boost::container::static_vector<StaticAddressMapping, 8> static_address_mappings; // TODO: Determine a good upper limit
+    /// Special memory ranges mapped into this processes address space. This is used to give
+    /// processes access to specific I/O regions and device memory.
+    boost::container::static_vector<StaticAddressMapping, 8> static_address_mappings;
     ProcessFlags flags;
 
+    /**
+     * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
+     * to this process.
+     */
     void ParseKernelCaps(const u32* kernel_caps, size_t len);
+
+    /**
+     * Applies address space changes and launches the process main thread.
+     */
     void Run(VAddr entry_point, s32 main_thread_priority, u32 stack_size);
 
 private:
