@@ -18,6 +18,9 @@ SharedPtr<Process> Process::Create(std::string name, u64 program_id) {
     process->name = std::move(name);
     process->program_id = program_id;
 
+    process->flags.raw = 0;
+    process->flags.memory_region = MemoryRegion::APPLICATION;
+
     return process;
 }
 
@@ -46,16 +49,7 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             handle_table_size = descriptor & 0x3FF;
         } else if ((type & 0xFF8) == 0xFF0) { // 0x007F
             // Misc. flags
-            bool allow_debug       = descriptor & BIT(0);
-            bool force_debug       = descriptor & BIT(1);
-            bool allow_nonalphanum = descriptor & BIT(2);
-            shared_page_writable   = descriptor & BIT(3);
-            privileged_priority    = descriptor & BIT(4);
-            bool allow_main_args   = descriptor & BIT(5);
-            bool shared_device_mem = descriptor & BIT(6);
-            bool runnable_on_sleep = descriptor & BIT(7);
-            loaded_high            = descriptor & BIT(12);
-            memory_region = MemoryRegion((descriptor >> 8) & 0xF);
+            flags.raw = descriptor & 0xFFFF;
         } else if ((type & 0xFFE) == 0xFF8) { // 0x001F
             // Mapped memory range
             if (i+1 >= len || ((kernel_caps[i+1] >> 20) & 0xFFE) != 0xFF8) {
