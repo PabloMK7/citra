@@ -141,6 +141,7 @@ ResultStatus LoadFile(const std::string& filename) {
     case FileType::BIN:
     {
         Kernel::g_current_process = Kernel::Process::Create(filename_filename, 0);
+        Kernel::g_current_process->svc_access_mask.set();
         Kernel::g_current_process->static_address_mappings = default_address_mappings;
 
         size_t size = (size_t)file->GetSize();

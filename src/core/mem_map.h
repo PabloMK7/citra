@@ -10,6 +10,8 @@ namespace Memory {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const u32 PAGE_SIZE = 0x1000;
+
 enum : u32 {
     BOOTROM_SIZE                = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
     BOOTROM_PADDR               = 0x00000000,   ///< Bootrom physical address

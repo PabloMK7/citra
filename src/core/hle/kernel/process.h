@@ -14,10 +14,11 @@
 namespace Kernel {
 
 struct StaticAddressMapping {
-    // Address and size must be 4K-aligned
+    // Address and size must be page-aligned
     VAddr address;
     u32 size;
     bool writable;
+    bool unk_flag;
 };
 
 enum class MemoryRegion {
