@@ -6,8 +6,6 @@
 // ARM instruction, and using the existing ARM simulator.
 
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
-#include "core/arm/skyeye_common/armos.h"
-#include "core/arm/skyeye_common/skyeye_defs.h"
 
 // Decode a 16bit Thumb instruction.  The instruction is in the low 16-bits of the tinstr field,
 // with the following Thumb instruction held in the high 16-bits.  Passing in two Thumb instructions
@@ -288,7 +286,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                    : 0xE28DDF00)            // ADD
                 |(tinstr & 0x007F);         // off7
         } else if ((tinstr & 0x0F00) == 0x0e00)
-            *ainstr = 0xEF000000 | SWI_Breakpoint;
+            *ainstr = 0xEF000000 | 0x180000; // base | BKPT mask
         else {
             static const ARMword subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
@@ -320,7 +318,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                 *ainstr |= ((tinstr & 0x00FF) << 16);
             // New breakpoint value.  See gdb/arm-tdep.c
             else if ((tinstr & 0x00FF) == 0xFE)
-                *ainstr |= SWI_Breakpoint;
+                *ainstr |= 0x180000; // base |= BKPT mask
             else
                 *ainstr |= (tinstr & 0x00FF);
         } else if ((tinstr & 0x0F00) != 0x0E00)

@@ -16,10 +16,6 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
-const static cpu_config_t s_arm11_cpu_info = {
-    "armv6", "arm11", 0x0007b000, 0x0007f000, NONCACHE
-};
-
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = Common::make_unique<ARMul_State>();
 
@@ -27,7 +23,6 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
 
     state->abort_model = ABORT_BASE_RESTORED;
-    state->cpu = (cpu_config_t*)&s_arm11_cpu_info;
 
     state->bigendSig = LOW;
     state->lateabtSig = LOW;
