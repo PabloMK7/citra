@@ -85,7 +85,7 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 }
 
 void Process::Run(VAddr entry_point, s32 main_thread_priority, u32 stack_size) {
-    g_main_thread = Kernel::SetupMainThread(stack_size, entry_point, main_thread_priority);
+    Kernel::SetupMainThread(stack_size, entry_point, main_thread_priority);
 }
 
 Kernel::Process::Process() {}

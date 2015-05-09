@@ -17,7 +17,6 @@
 namespace Kernel {
 
 unsigned int Object::next_object_id;
-SharedPtr<Thread> g_main_thread;
 HandleTable g_handle_table;
 
 void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
@@ -140,7 +139,6 @@ void Init() {
     Kernel::TimersInit();
 
     Object::next_object_id = 0;
-    g_main_thread = nullptr;
 }
 
 /// Shutdown the kernel
