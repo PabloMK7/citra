@@ -181,10 +181,15 @@ inline const char* GetCharPointer(const VAddr address) {
     return (const char *)GetPointer(address);
 }
 
-/// Converts a physical address to virtual address
-VAddr PhysicalToVirtualAddress(PAddr addr);
-
-/// Converts a virtual address to physical address
+/**
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ */
 PAddr VirtualToPhysicalAddress(VAddr addr);
+
+/**
+ * Undoes a mapping performed by VirtualToPhysicalAddress().
+ */
+VAddr PhysicalToVirtualAddress(PAddr addr);
 
 } // namespace

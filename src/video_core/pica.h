@@ -998,15 +998,4 @@ union CommandHeader {
     BitField<31,  1, u32> group_commands;
 };
 
-// TODO: Ugly, should fix PhysicalToVirtualAddress instead
-inline static u32 PAddrToVAddr(u32 addr) {
-    if (addr >= Memory::VRAM_PADDR && addr < Memory::VRAM_PADDR + Memory::VRAM_SIZE) {
-        return addr - Memory::VRAM_PADDR + Memory::VRAM_VADDR;
-    } else if (addr >= Memory::FCRAM_PADDR && addr < Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        return addr - Memory::FCRAM_PADDR + Memory::LINEAR_HEAP_VADDR;
-    } else {
-        return 0;
-    }
-}
-
 } // namespace
