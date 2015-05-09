@@ -24,7 +24,6 @@ enum class FileType {
     CXI,
     CIA,
     ELF,
-    BIN,
     THREEDSX, //3DSX
 };
 
