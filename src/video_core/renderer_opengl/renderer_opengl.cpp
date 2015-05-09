@@ -119,15 +119,15 @@ void RendererOpenGL::SwapBuffers() {
 void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig& framebuffer,
                                              const TextureInfo& texture) {
 
-    const VAddr framebuffer_vaddr = Memory::PhysicalToVirtualAddress(
-        framebuffer.active_fb == 0 ? framebuffer.address_left1 : framebuffer.address_left2);
+    const PAddr framebuffer_addr = framebuffer.active_fb == 0 ?
+            framebuffer.address_left1 : framebuffer.address_left2;
 
     LOG_TRACE(Render_OpenGL, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
         framebuffer.stride * framebuffer.height,
-        framebuffer_vaddr, (int)framebuffer.width,
+        framebuffer_addr, (int)framebuffer.width,
         (int)framebuffer.height, (int)framebuffer.format);
 
-    const u8* framebuffer_data = Memory::GetPointer(framebuffer_vaddr);
+    const u8* framebuffer_data = Memory::GetPhysicalPointer(framebuffer_addr);
 
     int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
     size_t pixel_stride = framebuffer.stride / bpp;

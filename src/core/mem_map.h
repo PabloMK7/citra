@@ -192,4 +192,13 @@ PAddr VirtualToPhysicalAddress(VAddr addr);
  */
 VAddr PhysicalToVirtualAddress(PAddr addr);
 
+/**
+ * Gets a pointer to the memory region beginning at the specified physical address.
+ *
+ * @note This is currently implemented using PhysicalToVirtualAddress().
+ */
+inline u8* GetPhysicalPointer(PAddr address) {
+    return GetPointer(PhysicalToVirtualAddress(address));
+}
+
 } // namespace

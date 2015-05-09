@@ -102,7 +102,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
             const auto& index_info = registers.index_array;
-            const u8* index_address_8 = Memory::GetPointer(Memory::PhysicalToVirtualAddress(base_address + index_info.offset));
+            const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = index_info.format != 0;
 
@@ -135,7 +135,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                   input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
                     } else {
                         for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                            const u8* srcdata = Memory::GetPointer(Memory::PhysicalToVirtualAddress(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]));
+                            const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
 
                             const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
                                 (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :

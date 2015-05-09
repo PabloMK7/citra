@@ -30,7 +30,7 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
-    u8* dst_pixel = Memory::GetPointer(Memory::PhysicalToVirtualAddress(addr)) + dst_offset;
+    u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
 
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
@@ -67,7 +67,7 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
-    u8* src_pixel = Memory::GetPointer(Memory::PhysicalToVirtualAddress(addr)) + src_offset;
+    u8* src_pixel = Memory::GetPhysicalPointer(addr) + src_offset;
 
     switch (registers.framebuffer.color_format) {
     case registers.framebuffer.RGBA8:
@@ -95,7 +95,7 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
 
 static u32 GetDepth(int x, int y) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
-    u8* depth_buffer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(addr));
+    u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = (registers.framebuffer.height - y);
     
@@ -122,7 +122,7 @@ static u32 GetDepth(int x, int y) {
 
 static void SetDepth(int x, int y, u32 value) {
     const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
-    u8* depth_buffer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(addr));
+    u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = (registers.framebuffer.height - y);
 
@@ -361,7 +361,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 s = GetWrappedTexCoord(texture.config.wrap_s, s, texture.config.width);
                 t = texture.config.height - 1 - GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
 
-                u8* texture_data = Memory::GetPointer(Memory::PhysicalToVirtualAddress(texture.config.GetPhysicalAddress()));
+                u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
                 auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
                 texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
