@@ -121,13 +121,13 @@ struct MemoryBlock {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern u8* g_heap_linear;   ///< Linear heap (main memory)
-extern u8* g_heap;          ///< Application heap (main memory)
-extern u8* g_vram;          ///< Video memory (VRAM)
-extern u8* g_shared_mem;    ///< Shared memory
-extern u8* g_tls_mem;       ///< TLS memory
-extern u8* g_dsp_mem;       ///< DSP memory
-extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
+extern u8* g_exefs_code;  ///< ExeFS:/.code is loaded here
+extern u8* g_heap;        ///< Application heap (main memory)
+extern u8* g_shared_mem;  ///< Shared memory
+extern u8* g_heap_linear; ///< Linear heap (main memory)
+extern u8* g_vram;        ///< Video memory (VRAM)
+extern u8* g_dsp_mem;     ///< DSP memory
+extern u8* g_tls_mem;     ///< TLS memory
 
 void Init();
 void Shutdown();
