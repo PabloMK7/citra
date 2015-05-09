@@ -256,7 +256,7 @@ void GMainWindow::ShutdownGame() {
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.bin *.cci *.cxi)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
     if (filename.size()) {
         // Shutdown previous session if the emu thread is still active...
         if (emu_thread != nullptr)

@@ -63,8 +63,6 @@ static FileType GuessFromExtension(const std::string& extension_) {
         return FileType::CXI;
     else if (extension == ".cci")
         return FileType::CCI;
-    else if (extension == ".bin")
-        return FileType::BIN;
     else if (extension == ".3ds")
         return FileType::CCI;
     else if (extension == ".3dsx")
@@ -82,8 +80,6 @@ static const char* GetFileTypeString(FileType type) {
         return "ELF";
     case FileType::THREEDSX:
         return "3DSX";
-    case FileType::BIN:
-        return "raw";
     case FileType::Error:
     case FileType::Unknown:
         break;
@@ -135,21 +131,6 @@ ResultStatus LoadFile(const std::string& filename) {
             return ResultStatus::Success;
         }
         break;
-    }
-
-    // Raw BIN file format...
-    case FileType::BIN:
-    {
-        Kernel::g_current_process = Kernel::Process::Create(filename_filename, 0);
-        Kernel::g_current_process->svc_access_mask.set();
-        Kernel::g_current_process->address_mappings = default_address_mappings;
-
-        size_t size = (size_t)file->GetSize();
-        if (file->ReadBytes(Memory::GetPointer(Memory::EXEFS_CODE_VADDR), size) != size)
-            return ResultStatus::Error;
-
-        Kernel::g_current_process->Run(Memory::EXEFS_CODE_VADDR, 0x30, Kernel::DEFAULT_STACK_SIZE);
-        return ResultStatus::Success;
     }
 
     // Error occurred durring IdentifyFile...
