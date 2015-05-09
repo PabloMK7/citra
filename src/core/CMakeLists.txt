@@ -12,6 +12,8 @@ set(SRCS
             arm/skyeye_common/vfp/vfpdouble.cpp
             arm/skyeye_common/vfp/vfpinstr.cpp
             arm/skyeye_common/vfp/vfpsingle.cpp
+            core.cpp
+            core_timing.cpp
             file_sys/archive_backend.cpp
             file_sys/archive_extsavedata.cpp
             file_sys/archive_romfs.cpp
@@ -21,15 +23,18 @@ set(SRCS
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
+            hle/config_mem.cpp
+            hle/hle.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
+            hle/kernel/process.cpp
             hle/kernel/semaphore.cpp
             hle/kernel/session.cpp
             hle/kernel/shared_memory.cpp
-            hle/kernel/timer.cpp
             hle/kernel/thread.cpp
+            hle/kernel/timer.cpp
             hle/service/ac_u.cpp
             hle/service/act_u.cpp
             hle/service/am_app.cpp
@@ -56,10 +61,10 @@ set(SRCS
             hle/service/fs/archive.cpp
             hle/service/fs/fs_user.cpp
             hle/service/gsp_gpu.cpp
-            hle/service/hid/hid.cpp
-            hle/service/hid/hid_user.cpp
-            hle/service/hid/hid_spvr.cpp
             hle/service/gsp_lcd.cpp
+            hle/service/hid/hid.cpp
+            hle/service/hid/hid_spvr.cpp
+            hle/service/hid/hid_user.cpp
             hle/service/http_c.cpp
             hle/service/ir/ir.cpp
             hle/service/ir/ir_rst.cpp
@@ -77,26 +82,22 @@ set(SRCS
             hle/service/pm_app.cpp
             hle/service/ptm/ptm.cpp
             hle/service/ptm/ptm_play.cpp
-            hle/service/ptm/ptm_u.cpp
             hle/service/ptm/ptm_sysm.cpp
+            hle/service/ptm/ptm_u.cpp
             hle/service/service.cpp
             hle/service/soc_u.cpp
             hle/service/srv.cpp
             hle/service/ssl_c.cpp
             hle/service/y2r_u.cpp
-            hle/config_mem.cpp
-            hle/hle.cpp
             hle/shared_page.cpp
             hle/svc.cpp
             hw/gpu.cpp
             hw/hw.cpp
             hw/lcd.cpp
+            loader/3dsx.cpp
             loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
-            loader/3dsx.cpp
-            core.cpp
-            core_timing.cpp
             mem_map.cpp
             mem_map_funcs.cpp
             settings.cpp
@@ -104,6 +105,7 @@ set(SRCS
             )
 
 set(HEADERS
+            arm/arm_interface.h
             arm/disassembler/arm_disasm.h
             arm/disassembler/load_symbol_map.h
             arm/dyncom/arm_dyncom.h
@@ -118,7 +120,8 @@ set(HEADERS
             arm/skyeye_common/vfp/asm_vfp.h
             arm/skyeye_common/vfp/vfp.h
             arm/skyeye_common/vfp/vfp_helper.h
-            arm/arm_interface.h
+            core.h
+            core_timing.h
             file_sys/archive_backend.h
             file_sys/archive_extsavedata.h
             file_sys/archive_romfs.h
@@ -126,19 +129,24 @@ set(HEADERS
             file_sys/archive_savedatacheck.h
             file_sys/archive_sdmc.h
             file_sys/archive_systemsavedata.h
+            file_sys/directory_backend.h
             file_sys/disk_archive.h
             file_sys/file_backend.h
             file_sys/ivfc_archive.h
-            file_sys/directory_backend.h
+            hle/config_mem.h
+            hle/function_wrappers.h
+            hle/hle.h
             hle/kernel/address_arbiter.h
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/mutex.h
+            hle/kernel/process.h
             hle/kernel/semaphore.h
             hle/kernel/session.h
             hle/kernel/shared_memory.h
-            hle/kernel/timer.h
             hle/kernel/thread.h
+            hle/kernel/timer.h
+            hle/result.h
             hle/service/ac_u.h
             hle/service/act_u.h
             hle/service/am_app.h
@@ -165,10 +173,10 @@ set(HEADERS
             hle/service/fs/archive.h
             hle/service/fs/fs_user.h
             hle/service/gsp_gpu.h
+            hle/service/gsp_lcd.h
             hle/service/hid/hid.h
             hle/service/hid/hid_spvr.h
             hle/service/hid/hid_user.h
-            hle/service/gsp_lcd.h
             hle/service/http_c.h
             hle/service/ir/ir.h
             hle/service/ir/ir_rst.h
@@ -186,28 +194,22 @@ set(HEADERS
             hle/service/pm_app.h
             hle/service/ptm/ptm.h
             hle/service/ptm/ptm_play.h
-            hle/service/ptm/ptm_u.h
             hle/service/ptm/ptm_sysm.h
+            hle/service/ptm/ptm_u.h
             hle/service/service.h
             hle/service/soc_u.h
             hle/service/srv.h
             hle/service/ssl_c.h
             hle/service/y2r_u.h
-            hle/config_mem.h
-            hle/result.h
-            hle/function_wrappers.h
-            hle/hle.h
             hle/shared_page.h
             hle/svc.h
             hw/gpu.h
             hw/hw.h
             hw/lcd.h
+            loader/3dsx.h
             loader/elf.h
             loader/loader.h
             loader/ncch.h
-            loader/3dsx.h
-            core.h
-            core_timing.h
             mem_map.h
             settings.h
             system.h

@@ -171,8 +171,6 @@ private:
     Handle callback_handle;
 };
 
-extern SharedPtr<Thread> g_main_thread;
-
 /**
  * Sets up the primary application thread
  * @param stack_size The size of the thread's stack

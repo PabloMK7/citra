@@ -8,9 +8,10 @@
 #include "common/logging/log.h"
 
 #include "core/file_sys/archive_romfs.h"
+#include "core/hle/kernel/process.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/hle/service/fs/archive.h"
 #include "core/mem_map.h"
 
 #include "3dsx.h"
@@ -229,8 +230,13 @@ ResultStatus AppLoader_THREEDSX::Load() {
     if (!file->IsOpen())
         return ResultStatus::Error;
 
-    Load3DSXFile(*file, 0x00100000);
-    Kernel::LoadExec(0x00100000);
+    Kernel::g_current_process = Kernel::Process::Create(filename, 0);
+    Kernel::g_current_process->svc_access_mask.set();
+    Kernel::g_current_process->address_mappings = default_address_mappings;
+
+    Load3DSXFile(*file, Memory::EXEFS_CODE_VADDR);
+
+    Kernel::g_current_process->Run(Memory::EXEFS_CODE_VADDR, 48, Kernel::DEFAULT_STACK_SIZE);
 
     is_loaded = true;
     return ResultStatus::Success;

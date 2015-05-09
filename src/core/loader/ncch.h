@@ -6,7 +6,9 @@
 
 #include <memory>
 
+#include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/swap.h"
 
 #include "core/loader/loader.h"
 
@@ -65,13 +67,13 @@ struct ExeFs_Header {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ExHeader (executable file system header) headers
 
-struct ExHeader_SystemInfoFlags{
+struct ExHeader_SystemInfoFlags {
     u8 reserved[5];
     u8 flag;
     u8 remaster_version[2];
 };
 
-struct ExHeader_CodeSegmentInfo{
+struct ExHeader_CodeSegmentInfo {
     u32 address;
     u32 num_max_pages;
     u32 code_size;
@@ -88,17 +90,17 @@ struct ExHeader_CodeSetInfo {
     u32 bss_size;
 };
 
-struct ExHeader_DependencyList{
+struct ExHeader_DependencyList {
     u8 program_id[0x30][8];
 };
 
-struct ExHeader_SystemInfo{
+struct ExHeader_SystemInfo {
     u64 save_data_size;
     u8 jump_id[8];
     u8 reserved_2[0x30];
 };
 
-struct ExHeader_StorageInfo{
+struct ExHeader_StorageInfo {
     u8 ext_save_data_id[8];
     u8 system_save_data_id[8];
     u8 reserved[8];
@@ -106,10 +108,16 @@ struct ExHeader_StorageInfo{
     u8 other_attributes;
 };
 
-struct ExHeader_ARM11_SystemLocalCaps{
+struct ExHeader_ARM11_SystemLocalCaps {
     u8 program_id[8];
     u32 core_version;
-    u8 flags[3];
+    u8 reserved_flags[2];
+    union {
+        u8 flags0;
+        BitField<0, 2, u8> ideal_processor;
+        BitField<2, 2, u8> affinity_mask;
+        BitField<4, 4, u8> system_mode;
+    };
     u8 priority;
     u8 resource_limit_descriptor[0x10][2];
     ExHeader_StorageInfo storage_info;
@@ -119,17 +127,17 @@ struct ExHeader_ARM11_SystemLocalCaps{
     u8 resource_limit_category;
 };
 
-struct ExHeader_ARM11_KernelCaps{
-    u8 descriptors[28][4];
+struct ExHeader_ARM11_KernelCaps {
+    u32_le descriptors[28];
     u8 reserved[0x10];
 };
 
-struct ExHeader_ARM9_AccessControl{
+struct ExHeader_ARM9_AccessControl {
     u8 descriptors[15];
     u8 descversion;
 };
 
-struct ExHeader_Header{
+struct ExHeader_Header {
     ExHeader_CodeSetInfo codeset_info;
     ExHeader_DependencyList dependency_list;
     ExHeader_SystemInfo system_info;
@@ -204,12 +212,6 @@ public:
      * @return ResultStatus result of function
      */
     ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
-
-    /*
-     * Gets the program id from the NCCH header
-     * @return u64 Program id
-     */
-    u64 GetProgramId() const;
 
 private:
 

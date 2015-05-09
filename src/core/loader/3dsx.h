@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "common/common_types.h"
 #include "core/loader/loader.h"
 
@@ -15,7 +17,8 @@ namespace Loader {
 /// Loads an 3DSX file
 class AppLoader_THREEDSX final : public AppLoader {
 public:
-    AppLoader_THREEDSX(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
+    AppLoader_THREEDSX(std::unique_ptr<FileUtil::IOFile>&& file, std::string filename)
+        : AppLoader(std::move(file)), filename(std::move(filename)) {}
 
     /**
      * Returns the type of the file
@@ -29,6 +32,9 @@ public:
      * @return ResultStatus result of function
      */
     ResultStatus Load() override;
+
+private:
+    std::string filename;
 };
 
 } // namespace Loader
