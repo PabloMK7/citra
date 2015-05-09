@@ -17,7 +17,7 @@ static const int kCommandHeaderOffset = 0x80; ///< Offset into command buffer of
  * @return Pointer to command buffer
  */
 inline static u32* GetCommandBuffer(const int offset=0) {
-    return (u32*)Memory::GetPointer(Memory::KERNEL_MEMORY_VADDR + kCommandHeaderOffset + offset);
+    return (u32*)Memory::GetPointer(Memory::TLS_AREA_VADDR + kCommandHeaderOffset + offset);
 }
 
 /**

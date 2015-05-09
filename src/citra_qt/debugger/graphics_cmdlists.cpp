@@ -159,7 +159,7 @@ void TextureInfoDockWidget::OnStrideChanged(int value) {
 }
 
 QPixmap TextureInfoDockWidget::ReloadPixmap() const {
-    u8* src = Memory::GetPointer(Pica::PAddrToVAddr(info.physical_address));
+    u8* src = Memory::GetPhysicalPointer(info.physical_address);
     return QPixmap::fromImage(LoadTexture(src, info));
 }
 
@@ -274,7 +274,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         auto format = Pica::registers.GetTextures()[index].format;
 
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
-        u8* src = Memory::GetPointer(Pica::PAddrToVAddr(config.GetPhysicalAddress()));
+        u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     } else {
         new_info_widget = new QWidget;

@@ -76,8 +76,8 @@ inline void Write(u32 addr, const T data) {
         auto& config = g_regs.memory_fill_config[is_second_filler];
 
         if (config.address_start && config.trigger) {
-            u8* start = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetStartAddress()));
-            u8* end = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetEndAddress()));
+            u8* start = Memory::GetPhysicalPointer(config.GetStartAddress());
+            u8* end = Memory::GetPhysicalPointer(config.GetEndAddress());
 
             if (config.fill_24bit) {
                 // fill with 24-bit values
@@ -114,8 +114,8 @@ inline void Write(u32 addr, const T data) {
     {
         const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
-            u8* src_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalInputAddress()));
-            u8* dst_pointer = Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalOutputAddress()));
+            u8* src_pointer = Memory::GetPhysicalPointer(config.GetPhysicalInputAddress());
+            u8* dst_pointer = Memory::GetPhysicalPointer(config.GetPhysicalOutputAddress());
 
             if (config.scaling > config.ScaleXY) {
                 LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode %u", config.scaling.Value());
@@ -257,7 +257,7 @@ inline void Write(u32 addr, const T data) {
         const auto& config = g_regs.command_processor_config;
         if (config.trigger & 1)
         {
-            u32* buffer = (u32*)Memory::GetPointer(Memory::PhysicalToVirtualAddress(config.GetPhysicalAddress()));
+            u32* buffer = (u32*)Memory::GetPhysicalPointer(config.GetPhysicalAddress());
             Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
         }
         break;

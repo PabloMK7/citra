@@ -443,7 +443,8 @@ void Thread::BoostPriority(s32 priority) {
 
 SharedPtr<Thread> SetupIdleThread() {
     // We need to pass a few valid values to get around parameter checking in Thread::Create.
-    auto thread = Thread::Create("idle", Memory::KERNEL_MEMORY_VADDR, THREADPRIO_LOWEST, 0,
+    // TODO(yuriks): Figure out a way to avoid passing the bogus VAddr parameter
+    auto thread = Thread::Create("idle", Memory::TLS_AREA_VADDR, THREADPRIO_LOWEST, 0,
             THREADPROCESSORID_0, 0).MoveFrom();
 
     thread->idle = true;
@@ -455,7 +456,7 @@ SharedPtr<Thread> SetupMainThread(u32 stack_size, u32 entry_point, s32 priority)
 
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0,
-            THREADPROCESSORID_0, Memory::SCRATCHPAD_VADDR_END);
+            THREADPROCESSORID_0, Memory::HEAP_VADDR_END - stack_size);
 
     SharedPtr<Thread> thread = thread_res.MoveFrom();
 

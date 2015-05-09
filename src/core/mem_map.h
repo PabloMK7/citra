@@ -12,79 +12,93 @@ namespace Memory {
 
 const u32 PAGE_SIZE = 0x1000;
 
-enum : u32 {
-    BOOTROM_SIZE                = 0x00010000,   ///< Bootrom (super secret code/data @ 0x8000) size
-    BOOTROM_PADDR               = 0x00000000,   ///< Bootrom physical address
-    BOOTROM_PADDR_END           = (BOOTROM_PADDR + BOOTROM_SIZE),
+/// Physical memory regions as seen from the ARM11
+enum : PAddr {
+    /// IO register area
+    IO_AREA_PADDR     = 0x10100000,
+    IO_AREA_SIZE      = 0x01000000, ///< IO area size (16MB)
+    IO_AREA_PADDR_END = IO_AREA_PADDR + IO_AREA_SIZE,
 
-    BOOTROM_MIRROR_SIZE         = 0x00010000,   ///< Bootrom Mirror size
-    BOOTROM_MIRROR_PADDR        = 0x00010000,   ///< Bootrom Mirror physical address
-    BOOTROM_MIRROR_PADDR_END    = (BOOTROM_MIRROR_PADDR + BOOTROM_MIRROR_SIZE),
-    
-    MPCORE_PRIV_SIZE            = 0x00002000,   ///< MPCore private memory region size
-    MPCORE_PRIV_PADDR           = 0x17E00000,   ///< MPCore private memory region physical address
-    MPCORE_PRIV_PADDR_END       = (MPCORE_PRIV_PADDR + MPCORE_PRIV_SIZE),
+    /// MPCore internal memory region
+    MPCORE_RAM_PADDR     = 0x17E00000,
+    MPCORE_RAM_SIZE      = 0x00002000, ///< MPCore internal memory size (8KB)
+    MPCORE_RAM_PADDR_END = MPCORE_RAM_PADDR + MPCORE_RAM_SIZE,
 
-    FCRAM_SIZE                  = 0x08000000,   ///< FCRAM size
-    FCRAM_PADDR                 = 0x20000000,   ///< FCRAM physical address
-    FCRAM_PADDR_END             = (FCRAM_PADDR + FCRAM_SIZE),
+    /// Video memory
+    VRAM_PADDR     = 0x18000000,
+    VRAM_SIZE      = 0x00600000, ///< VRAM size (6MB)
+    VRAM_PADDR_END = VRAM_PADDR + VRAM_SIZE,
 
-    HEAP_SIZE                   = FCRAM_SIZE,   ///< Application heap size
-    HEAP_VADDR                  = 0x08000000,
-    HEAP_VADDR_END              = (HEAP_VADDR + HEAP_SIZE),
+    /// DSP memory
+    DSP_RAM_PADDR     = 0x1FF00000,
+    DSP_RAM_SIZE      = 0x00080000, ///< DSP memory size (512KB)
+    DSP_RAM_PADDR_END = DSP_RAM_PADDR + DSP_RAM_SIZE,
 
-    HEAP_LINEAR_SIZE            = FCRAM_SIZE,
-    HEAP_LINEAR_VADDR           = 0x14000000,
-    HEAP_LINEAR_VADDR_END       = (HEAP_LINEAR_VADDR + HEAP_LINEAR_SIZE),
-    
-    AXI_WRAM_SIZE               = 0x00080000,   ///< AXI WRAM size
-    AXI_WRAM_PADDR              = 0x1FF80000,   ///< AXI WRAM physical address
-    AXI_WRAM_PADDR_END          = (AXI_WRAM_PADDR + AXI_WRAM_SIZE),
+    /// AXI WRAM
+    AXI_WRAM_PADDR     = 0x1FF80000,
+    AXI_WRAM_SIZE      = 0x00080000, ///< AXI WRAM size (512KB)
+    AXI_WRAM_PADDR_END = AXI_WRAM_PADDR + AXI_WRAM_SIZE,
 
-    SHARED_MEMORY_SIZE          = 0x04000000,   ///< Shared memory size
-    SHARED_MEMORY_VADDR         = 0x10000000,   ///< Shared memory
-    SHARED_MEMORY_VADDR_END     = (SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE),
+    /// Main FCRAM
+    FCRAM_PADDR     = 0x20000000,
+    FCRAM_SIZE      = 0x08000000, ///< FCRAM size (128MB)
+    FCRAM_PADDR_END = FCRAM_PADDR + FCRAM_SIZE,
+};
 
-    DSP_MEMORY_SIZE             = 0x00080000,   ///< DSP memory size
-    DSP_MEMORY_VADDR            = 0x1FF00000,   ///< DSP memory virtual address
-    DSP_MEMORY_VADDR_END        = (DSP_MEMORY_VADDR + DSP_MEMORY_SIZE),
+/// Virtual user-space memory regions
+enum : VAddr {
+    /// Where the application text, data and bss reside.
+    PROCESS_IMAGE_VADDR     = 0x00100000,
+    PROCESS_IMAGE_MAX_SIZE  = 0x03F00000,
+    PROCESS_IMAGE_VADDR_END = PROCESS_IMAGE_VADDR + PROCESS_IMAGE_MAX_SIZE,
 
-    CONFIG_MEMORY_SIZE          = 0x00001000,   ///< Configuration memory size
-    CONFIG_MEMORY_VADDR         = 0x1FF80000,   ///< Configuration memory virtual address
-    CONFIG_MEMORY_VADDR_END     = (CONFIG_MEMORY_VADDR + CONFIG_MEMORY_SIZE),
+    /// Area where IPC buffers are mapped onto.
+    IPC_MAPPING_VADDR     = 0x04000000,
+    IPC_MAPPING_SIZE      = 0x04000000,
+    IPC_MAPPING_VADDR_END = IPC_MAPPING_VADDR + IPC_MAPPING_SIZE,
 
-    SHARED_PAGE_SIZE            = 0x00001000,   ///< Shared page size
-    SHARED_PAGE_VADDR           = 0x1FF81000,   ///< Shared page virtual address
-    SHARED_PAGE_VADDR_END       = (SHARED_PAGE_VADDR + SHARED_PAGE_SIZE),
+    /// Application heap (includes stack).
+    HEAP_VADDR     = 0x08000000,
+    HEAP_SIZE      = 0x08000000,
+    HEAP_VADDR_END = HEAP_VADDR + HEAP_SIZE,
 
-    KERNEL_MEMORY_SIZE          = 0x00001000,   ///< Kernel memory size
-    KERNEL_MEMORY_VADDR         = 0xFFFF0000,   ///< Kernel memory where the kthread objects etc are
-    KERNEL_MEMORY_VADDR_END     = (KERNEL_MEMORY_VADDR + KERNEL_MEMORY_SIZE),
+    /// Area where shared memory buffers are mapped onto.
+    SHARED_MEMORY_VADDR     = 0x10000000,
+    SHARED_MEMORY_SIZE      = 0x04000000,
+    SHARED_MEMORY_VADDR_END = SHARED_MEMORY_VADDR + SHARED_MEMORY_SIZE,
 
-    EXEFS_CODE_SIZE             = 0x03F00000,
-    EXEFS_CODE_VADDR            = 0x00100000,   ///< ExeFS:/.code is loaded here
-    EXEFS_CODE_VADDR_END        = (EXEFS_CODE_VADDR + EXEFS_CODE_SIZE),
+    /// Maps 1:1 to an offset in FCRAM. Used for HW allocations that need to be linear in physical memory.
+    LINEAR_HEAP_VADDR     = 0x14000000,
+    LINEAR_HEAP_SIZE      = 0x08000000,
+    LINEAR_HEAP_VADDR_END = LINEAR_HEAP_VADDR + LINEAR_HEAP_SIZE,
 
-    // Region of FCRAM used by system
-    SYSTEM_MEMORY_SIZE          = 0x02C00000,   ///< 44MB
-    SYSTEM_MEMORY_VADDR         = 0x04000000,
-    SYSTEM_MEMORY_VADDR_END     = (SYSTEM_MEMORY_VADDR + SYSTEM_MEMORY_SIZE),
+    /// Maps 1:1 to the IO register area.
+    IO_AREA_VADDR     = 0x1EC00000,
+    IO_AREA_VADDR_END = IO_AREA_VADDR + IO_AREA_SIZE,
 
-    HARDWARE_IO_SIZE            = 0x01000000,
-    HARDWARE_IO_PADDR           = 0x10000000,                       ///< IO physical address start
-    HARDWARE_IO_VADDR           = 0x1EC00000,                       ///< IO virtual address start
-    HARDWARE_IO_PADDR_END       = (HARDWARE_IO_PADDR + HARDWARE_IO_SIZE),
-    HARDWARE_IO_VADDR_END       = (HARDWARE_IO_VADDR + HARDWARE_IO_SIZE),
+    /// Maps 1:1 to VRAM.
+    VRAM_VADDR     = 0x1F000000,
+    VRAM_VADDR_END = VRAM_VADDR + VRAM_SIZE,
 
-    VRAM_SIZE                   = 0x00600000,
-    VRAM_PADDR                  = 0x18000000,
-    VRAM_VADDR                  = 0x1F000000,
-    VRAM_PADDR_END              = (VRAM_PADDR + VRAM_SIZE),
-    VRAM_VADDR_END              = (VRAM_VADDR + VRAM_SIZE),
+    /// Maps 1:1 to DSP memory.
+    DSP_RAM_VADDR     = 0x1FF00000,
+    DSP_RAM_VADDR_END = DSP_RAM_VADDR + DSP_RAM_SIZE,
 
-    SCRATCHPAD_SIZE             = 0x00004000,   ///< Typical stack size - TODO: Read from exheader
-    SCRATCHPAD_VADDR_END        = 0x10000000,
-    SCRATCHPAD_VADDR            = (SCRATCHPAD_VADDR_END - SCRATCHPAD_SIZE), ///< Stack space
+    /// Read-only page containing kernel and system configuration values.
+    CONFIG_MEMORY_VADDR     = 0x1FF80000,
+    CONFIG_MEMORY_SIZE      = 0x00001000,
+    CONFIG_MEMORY_VADDR_END = CONFIG_MEMORY_VADDR + CONFIG_MEMORY_SIZE,
+
+    /// Usually read-only page containing mostly values read from hardware.
+    SHARED_PAGE_VADDR     = 0x1FF81000,
+    SHARED_PAGE_SIZE      = 0x00001000,
+    SHARED_PAGE_VADDR_END = SHARED_PAGE_VADDR + SHARED_PAGE_SIZE,
+
+    // TODO(yuriks): The exact location and size of this area is uncomfirmed.
+    /// Area where TLS (Thread-Local Storage) buffers are allocated.
+    TLS_AREA_VADDR     = 0x1FFA0000,
+    TLS_AREA_SIZE      = 0x00002000, // Each TLS buffer is 0x200 bytes, allows for 16 threads
+    TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,14 +121,13 @@ struct MemoryBlock {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern u8* g_heap_linear;   ///< Linear heap (main memory)
-extern u8* g_heap;          ///< Application heap (main memory)
-extern u8* g_vram;          ///< Video memory (VRAM)
-extern u8* g_shared_mem;    ///< Shared memory
-extern u8* g_kernel_mem;    ///< Kernel memory
-extern u8* g_dsp_mem;       ///< DSP memory
-extern u8* g_system_mem;    ///< System memory
-extern u8* g_exefs_code;    ///< ExeFS:/.code is loaded here
+extern u8* g_exefs_code;  ///< ExeFS:/.code is loaded here
+extern u8* g_heap;        ///< Application heap (main memory)
+extern u8* g_shared_mem;  ///< Shared memory
+extern u8* g_heap_linear; ///< Linear heap (main memory)
+extern u8* g_vram;        ///< Video memory (VRAM)
+extern u8* g_dsp_mem;     ///< DSP memory
+extern u8* g_tls_mem;     ///< TLS memory
 
 void Init();
 void Shutdown();
@@ -168,10 +181,24 @@ inline const char* GetCharPointer(const VAddr address) {
     return (const char *)GetPointer(address);
 }
 
-/// Converts a physical address to virtual address
+/**
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ */
+PAddr VirtualToPhysicalAddress(VAddr addr);
+
+/**
+ * Undoes a mapping performed by VirtualToPhysicalAddress().
+ */
 VAddr PhysicalToVirtualAddress(PAddr addr);
 
-/// Converts a virtual address to physical address
-PAddr VirtualToPhysicalAddress(VAddr addr);
+/**
+ * Gets a pointer to the memory region beginning at the specified physical address.
+ *
+ * @note This is currently implemented using PhysicalToVirtualAddress().
+ */
+inline u8* GetPhysicalPointer(PAddr address) {
+    return GetPointer(PhysicalToVirtualAddress(address));
+}
 
 } // namespace

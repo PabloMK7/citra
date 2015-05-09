@@ -215,7 +215,7 @@ void GraphicsFramebufferWidget::OnUpdate()
     u32 bytes_per_pixel = GraphicsFramebufferWidget::BytesPerPixel(framebuffer_format);
 
     QImage decoded_image(framebuffer_width, framebuffer_height, QImage::Format_ARGB32);
-    u8* buffer = Memory::GetPointer(Pica::PAddrToVAddr(framebuffer_address));
+    u8* buffer = Memory::GetPhysicalPointer(framebuffer_address);
 
     for (unsigned int y = 0; y < framebuffer_height; ++y) {
         for (unsigned int x = 0; x < framebuffer_width; ++x) {

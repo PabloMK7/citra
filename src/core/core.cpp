@@ -63,7 +63,7 @@ int Init() {
 
     // TODO: Whenever TLS is implemented, this should contain
     // the address of the 0x200-byte TLS
-    g_app_core->SetCP15Register(CP15_THREAD_URO, Memory::KERNEL_MEMORY_VADDR);
+    g_app_core->SetCP15Register(CP15_THREAD_URO, Memory::TLS_AREA_VADDR);
 
     LOG_DEBUG(Core, "Initialized OK");
     return 0;

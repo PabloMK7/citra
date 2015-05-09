@@ -355,7 +355,7 @@ ResultStatus AppLoader_ELF::Load() {
     Kernel::g_current_process->address_mappings = default_address_mappings;
 
     ElfReader elf_reader(&buffer[0]);
-    elf_reader.LoadInto(Memory::EXEFS_CODE_VADDR);
+    elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
     // TODO: Fill application title
 
     Kernel::g_current_process->Run(elf_reader.GetEntryPoint(), 48, Kernel::DEFAULT_STACK_SIZE);

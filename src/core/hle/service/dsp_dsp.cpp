@@ -42,7 +42,7 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
     u32 addr = cmd_buff[1];
 
     cmd_buff[1] = 0; // No error
-    cmd_buff[2] = (addr << 1) + (Memory::DSP_MEMORY_VADDR + 0x40000);
+    cmd_buff[2] = (addr << 1) + (Memory::DSP_RAM_VADDR + 0x40000);
 
     LOG_WARNING(Service_DSP, "(STUBBED) called with address 0x%08X", addr);
 }
