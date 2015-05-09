@@ -62,8 +62,8 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             AddressMapping mapping;
             mapping.address = descriptor << 12;
             mapping.size = (end_desc << 12) - mapping.address;
-            mapping.writable = descriptor & BIT(20);
-            mapping.unk_flag = end_desc & BIT(20);
+            mapping.writable = descriptor & (1 << 20);
+            mapping.unk_flag = end_desc & (1 << 20);
 
             address_mappings.push_back(mapping);
         } else if ((type & 0xFFF) == 0xFFE) { // 0x000F
