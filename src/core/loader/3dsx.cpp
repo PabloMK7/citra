@@ -234,9 +234,9 @@ ResultStatus AppLoader_THREEDSX::Load() {
     Kernel::g_current_process->svc_access_mask.set();
     Kernel::g_current_process->address_mappings = default_address_mappings;
 
-    Load3DSXFile(*file, Memory::EXEFS_CODE_VADDR);
+    Load3DSXFile(*file, Memory::PROCESS_IMAGE_VADDR);
 
-    Kernel::g_current_process->Run(Memory::EXEFS_CODE_VADDR, 48, Kernel::DEFAULT_STACK_SIZE);
+    Kernel::g_current_process->Run(Memory::PROCESS_IMAGE_VADDR, 48, Kernel::DEFAULT_STACK_SIZE);
 
     is_loaded = true;
     return ResultStatus::Success;
