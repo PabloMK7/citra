@@ -90,7 +90,7 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
         UNIMPLEMENTED();
     }
 
-    return {};
+    return {0, 0, 0, 0};
 }
 
 static u32 GetDepth(int x, int y) {
@@ -376,7 +376,13 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             // with some basic arithmetic. Alpha combiners can be configured separately but work
             // analogously.
             Math::Vec4<u8> combiner_output;
-            for (const auto& tev_stage : tev_stages) {
+            Math::Vec4<u8> combiner_buffer = {
+                registers.tev_combiner_buffer_color.r, registers.tev_combiner_buffer_color.g,
+                registers.tev_combiner_buffer_color.b, registers.tev_combiner_buffer_color.a
+            };
+
+            for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
+                const auto& tev_stage = tev_stages[tev_stage_index];
                 using Source = Regs::TevStageConfig::Source;
                 using ColorModifier = Regs::TevStageConfig::ColorModifier;
                 using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
@@ -398,6 +404,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     case Source::Texture2:
                         return texture_color[2];
 
+                    case Source::PreviousBuffer:
+                        return combiner_buffer;
+
                     case Source::Constant:
                         return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b, tev_stage.const_a};
 
@@ -407,7 +416,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
                         UNIMPLEMENTED();
-                        return {};
+                        return {0, 0, 0, 0};
                     }
                 };
 
@@ -490,6 +499,16 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
+                    case Operation::AddSigned:
+                    {
+                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
+                        auto result = input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
+                        result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
+                        result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
+                        result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
+                        return result.Cast<u8>();
+                    }
+
                     case Operation::Lerp:
                         return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
 
@@ -524,7 +543,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         UNIMPLEMENTED();
-                        return {};
+                        return {0, 0, 0};
                     }
                 };
 
@@ -578,7 +597,20 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 };
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
-                combiner_output = Math::MakeVec(color_output, alpha_output);
+                combiner_output[0] = std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());
+                combiner_output[1] = std::min((unsigned)255, color_output.g() * tev_stage.GetColorMultiplier());
+                combiner_output[2] = std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
+                combiner_output[3] = std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
+
+                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
+                    combiner_buffer.r() = combiner_output.r();
+                    combiner_buffer.g() = combiner_output.g();
+                    combiner_buffer.b() = combiner_output.b();
+                }
+
+                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
+                    combiner_buffer.a() = combiner_output.a();
+                }
             }
 
             if (registers.output_merger.alpha_test.enable) {
@@ -624,9 +656,10 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
             if (registers.output_merger.depth_test_enable) {
-                u16 z = (u16)((v0.screenpos[2].ToFloat32() * w0 +
-                            v1.screenpos[2].ToFloat32() * w1 +
-                            v2.screenpos[2].ToFloat32() * w2) * 65535.f / wsum);
+                unsigned num_bits = Pica::Regs::DepthBitsPerPixel(registers.framebuffer.depth_format);
+                u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
+                               v1.screenpos[2].ToFloat32() * w1 +
+                               v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
                 u32 ref_z = GetDepth(x >> 4, y >> 4);
 
                 bool pass = false;

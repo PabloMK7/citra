@@ -226,7 +226,8 @@ struct Regs {
             Texture1               = 0x4,
             Texture2               = 0x5,
             Texture3               = 0x6,
-            // 0x7-0xc = primary color??
+
+            PreviousBuffer         = 0xd,
             Constant               = 0xe,
             Previous               = 0xf,
         };
@@ -299,7 +300,18 @@ struct Regs {
             BitField<24, 8, u32> const_a;
         };
 
-        INSERT_PADDING_WORDS(0x1);
+        union {
+            BitField< 0, 2, u32> color_scale;
+            BitField<16, 2, u32> alpha_scale;
+        };
+
+        inline unsigned GetColorMultiplier() const {
+            return (color_scale < 3) ? (1 << color_scale) : 1;
+        }
+
+        inline unsigned GetAlphaMultiplier() const {
+            return (alpha_scale < 3) ? (1 << alpha_scale) : 1;
+        }
     };
 
     TevStageConfig tev_stage0;
@@ -309,11 +321,36 @@ struct Regs {
     TevStageConfig tev_stage2;
     INSERT_PADDING_WORDS(0x3);
     TevStageConfig tev_stage3;
-    INSERT_PADDING_WORDS(0x13);
+    INSERT_PADDING_WORDS(0x3);
+
+    union {
+        // Tev stages 0-3 write their output to the combiner buffer if the corresponding bit in
+        // these masks are set
+        BitField< 8, 4, u32> update_mask_rgb;
+        BitField<12, 4, u32> update_mask_a;
+
+        bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
+            return (stage_index < 4) && (update_mask_rgb & (1 << stage_index));
+        }
+
+        bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
+            return (stage_index < 4) && (update_mask_a & (1 << stage_index));
+        }
+    } tev_combiner_buffer_input;
+    
+    INSERT_PADDING_WORDS(0xf);
     TevStageConfig tev_stage4;
     INSERT_PADDING_WORDS(0x3);
     TevStageConfig tev_stage5;
-    INSERT_PADDING_WORDS(0x3);
+
+    union {
+        BitField< 0, 8, u32> r;
+        BitField< 8, 8, u32> g;
+        BitField<16, 8, u32> b;
+        BitField<24, 8, u32> a;
+    } tev_combiner_buffer_color;
+
+    INSERT_PADDING_WORDS(0x2);
 
     const std::array<Regs::TevStageConfig,6> GetTevStages() const {
         return { tev_stage0, tev_stage1,
@@ -426,9 +463,7 @@ struct Regs {
         D24S8  = 3
     };
 
-    /*
-     * Returns the number of bytes in the specified depth format
-     */
+    // Returns the number of bytes in the specified depth format
     static u32 BytesPerDepthPixel(DepthFormat format) {
         switch (format) {
         case DepthFormat::D16:
@@ -437,6 +472,20 @@ struct Regs {
             return 3;
         case DepthFormat::D24S8:
             return 4;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
+
+    // Returns the number of bits per depth component of the specified depth format
+    static u32 DepthBitsPerPixel(DepthFormat format) {
+        switch (format) {
+        case DepthFormat::D16:
+            return 16;
+        case DepthFormat::D24:
+        case DepthFormat::D24S8:
+            return 24;
         default:
             LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
             UNIMPLEMENTED();
@@ -784,8 +833,10 @@ struct Regs {
         ADD_FIELD(tev_stage1);
         ADD_FIELD(tev_stage2);
         ADD_FIELD(tev_stage3);
+        ADD_FIELD(tev_combiner_buffer_input);
         ADD_FIELD(tev_stage4);
         ADD_FIELD(tev_stage5);
+        ADD_FIELD(tev_combiner_buffer_color);
         ADD_FIELD(output_merger);
         ADD_FIELD(framebuffer);
         ADD_FIELD(vertex_attributes);
@@ -859,8 +910,10 @@ ASSERT_REG_POSITION(tev_stage0, 0xc0);
 ASSERT_REG_POSITION(tev_stage1, 0xc8);
 ASSERT_REG_POSITION(tev_stage2, 0xd0);
 ASSERT_REG_POSITION(tev_stage3, 0xd8);
+ASSERT_REG_POSITION(tev_combiner_buffer_input, 0xe0);
 ASSERT_REG_POSITION(tev_stage4, 0xf0);
 ASSERT_REG_POSITION(tev_stage5, 0xf8);
+ASSERT_REG_POSITION(tev_combiner_buffer_color, 0xfd);
 ASSERT_REG_POSITION(output_merger, 0x100);
 ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
