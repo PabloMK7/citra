@@ -15,8 +15,6 @@
 #define b32(x)  (b16(x) | (b16(x) >>16) )
 #define ROUND_UP_POW2(x)    (b32(x - 1) + 1)
 
-#define BIT(x) (1U << (x))
-
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 /// Textually concatenates two tokens. The double-expansion is required by the C preprocessor.
