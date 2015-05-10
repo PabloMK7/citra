@@ -30,7 +30,7 @@ namespace GSP_GPU {
 Kernel::SharedPtr<Kernel::Event> g_interrupt_event;
 /// GSP shared memoryings
 Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
-/// Thread index into interrupt relay queue, 1 is arbitrary
+/// Thread index into interrupt relay queue
 u32 g_thread_id = 0;
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
