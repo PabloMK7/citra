@@ -35,8 +35,7 @@ u32 g_thread_id = 1;
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
-    ResultVal<u8*> ptr = g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
-    return ptr.ValueOr(nullptr);
+    return g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
 static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
@@ -44,14 +43,14 @@ static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_in
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
-    ResultVal<u8*> ptr = g_shared_memory->GetPointer(offset);
-    return reinterpret_cast<FrameBufferUpdate*>(ptr.ValueOr(nullptr));
+    u8* ptr = g_shared_memory->GetPointer(offset);
+    return reinterpret_cast<FrameBufferUpdate*>(ptr);
 }
 
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
-    ResultVal<u8*> ptr = g_shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
-    return reinterpret_cast<InterruptRelayQueue*>(ptr.ValueOr(nullptr));
+    u8* ptr = g_shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
+    return reinterpret_cast<InterruptRelayQueue*>(ptr);
 }
 
 /**
@@ -288,7 +287,10 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
 
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
     ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
-    g_shared_memory = Kernel::SharedMemory::Create("GSPSharedMem");
+
+    using Kernel::MemoryPermission;
+    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
+            MemoryPermission::ReadWrite, "GSPSharedMem");
 
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 
