@@ -31,7 +31,7 @@ Kernel::SharedPtr<Kernel::Event> g_interrupt_event;
 /// GSP shared memoryings
 Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
 /// Thread index into interrupt relay queue, 1 is arbitrary
-u32 g_thread_id = 1;
+u32 g_thread_id = 0;
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
@@ -277,7 +277,7 @@ static void FlushDataCache(Service::Interface* self) {
  *      1 : "Flags" field, purpose is unknown
  *      3 : Handle to GSP synchronization event
  *  Outputs:
- *      0 : Result of function, 0 on success, otherwise error code
+ *      1 : Result of function, 0x2A07 on success, otherwise error code
  *      2 : Thread index into GSP command buffer
  *      4 : Handle to GSP shared memory
  */
@@ -288,13 +288,11 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
     ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
 
-    using Kernel::MemoryPermission;
-    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
-            MemoryPermission::ReadWrite, "GSPSharedMem");
-
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 
-    cmd_buff[1] = 0x2A07; // Value verified by 3dmoo team, purpose unknown, but needed for GSP init
+    // This specific code is required for a successful initialization, rather than 0
+    cmd_buff[1] = ResultCode((ErrorDescription)519, ErrorModule::GX,
+                             ErrorSummary::Success, ErrorLevel::Success).raw;
     cmd_buff[2] = g_thread_id++; // Thread ID
     cmd_buff[4] = shmem_handle; // GSP shared memory
 
@@ -529,8 +527,12 @@ Interface::Interface() {
     Register(FunctionTable);
 
     g_interrupt_event = 0;
-    g_shared_memory = 0;
-    g_thread_id = 1;
+
+    using Kernel::MemoryPermission;
+    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
+            MemoryPermission::ReadWrite, "GSPSharedMem");
+
+    g_thread_id = 0;
 }
 
 } // namespace
