@@ -90,13 +90,14 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     AddTicks(ticks_executed);
 }
 
-void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
+void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg, u32 tls_address) {
     memset(&context, 0, sizeof(Core::ThreadContext));
 
     context.cpu_registers[0] = arg;
     context.pc = entry_point;
     context.sp = stack_top;
     context.cpsr = 0x1F; // Usermode
+    context.tls = tls_address;
 }
 
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
@@ -123,6 +124,8 @@ void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
 
     state->VFP[1] = ctx.fpscr;
     state->VFP[2] = ctx.fpexc;
+
+    SetCP15Register(CP15_THREAD_URO, ctx.tls);
 }
 
 void ARM_DynCom::PrepareReschedule() {

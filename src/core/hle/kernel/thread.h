@@ -135,6 +135,12 @@ public:
      */
     void Stop();
 
+    /*
+     * Returns the Thread Local Storage address of the current thread
+     * @returns VAddr of the thread's TLS
+     */
+    VAddr GetTLSAddress() const;
+
     Core::ThreadContext context;
 
     u32 thread_id;

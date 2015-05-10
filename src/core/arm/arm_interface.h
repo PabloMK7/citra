@@ -99,8 +99,9 @@ public:
      * @param stack_top Pointer to the top of the stack
      * @param entry_point Entry point for execution
      * @param arg User argument for thread
+     * @param tls_address Address of the Thread Local Storage for the thread
      */
-    virtual void ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) = 0;
+    virtual void ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg, u32 tls_address) = 0;
 
     /**
      * Saves the current CPU context

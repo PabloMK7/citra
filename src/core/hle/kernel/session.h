@@ -5,6 +5,7 @@
 #pragma once
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/thread.h"
 #include "core/mem_map.h"
 
 namespace Kernel {
@@ -12,12 +13,15 @@ namespace Kernel {
 static const int kCommandHeaderOffset = 0x80; ///< Offset into command buffer of header
 
 /**
- * Returns a pointer to the command buffer in kernel memory
+ * Returns a pointer to the command buffer in the current thread's TLS
+ * TODO(Subv): This is not entirely correct, the command buffer should be copied from
+ * the thread's TLS to an intermediate buffer in kernel memory, and then copied again to
+ * the service handler process' memory.
  * @param offset Optional offset into command buffer
  * @return Pointer to command buffer
  */
-inline static u32* GetCommandBuffer(const int offset=0) {
-    return (u32*)Memory::GetPointer(Memory::TLS_AREA_VADDR + kCommandHeaderOffset + offset);
+inline static u32* GetCommandBuffer(const int offset = 0) {
+    return (u32*)Memory::GetPointer(GetCurrentThread()->GetTLSAddress() + kCommandHeaderOffset + offset);
 }
 
 /**
