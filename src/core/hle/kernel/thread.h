@@ -156,6 +156,8 @@ public:
 
     s32 processor_id;
 
+    VAddr tls_address; ///< Address of the Thread Local Storage of the thread
+
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 

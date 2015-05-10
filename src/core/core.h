@@ -21,8 +21,6 @@ struct ThreadContext {
     u32 fpu_registers[32];
     u32 fpscr;
     u32 fpexc;
-
-    u32 tls;
 };
 
 extern ARM_Interface*   g_app_core;     ///< ARM11 application core
