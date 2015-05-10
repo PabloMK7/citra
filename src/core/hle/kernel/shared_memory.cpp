@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+
 #include "common/logging/log.h"
 
 #include "core/mem_map.h"
@@ -37,6 +39,12 @@ ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,
     }
 
     // TODO: Test permissions
+
+    // HACK: Since there's no way to write to the memory block without mapping it onto the game
+    // process yet, at least initialize memory the first time it's mapped.
+    if (address != this->base_address) {
+        std::memset(Memory::GetPointer(address), 0, size);
+    }
 
     this->base_address = address;
 
