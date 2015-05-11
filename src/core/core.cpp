@@ -24,9 +24,9 @@ ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
-    // If the current thread is an idle thread, then don't execute instructions,
+    // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
-    if (Kernel::GetCurrentThread()->IsIdle()) {
+    if (Kernel::GetCurrentThread() == nullptr) {
         LOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();

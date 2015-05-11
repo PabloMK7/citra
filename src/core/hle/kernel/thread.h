@@ -72,12 +72,6 @@ public:
     void Acquire() override;
 
     /**
-     * Checks if the thread is an idle (stub) thread
-     * @return True if the thread is an idle (stub) thread, false otherwise
-     */
-    inline bool IsIdle() const { return idle; }
-
-    /**
      * Gets the thread's current priority
      * @return The current thread's priority
      */
@@ -168,9 +162,6 @@ public:
 
     std::string name;
 
-    /// Whether this thread is intended to never actually be executed, i.e. always idle
-    bool idle = false;
-
 private:
     Thread();
     ~Thread() override;
@@ -227,14 +218,6 @@ void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wa
  * @param wait_address Arbitration address used to resume from wait
  */
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
-
-/**
- * Sets up the idle thread, this is a thread that is intended to never execute instructions,
- * only to advance the timing. It is scheduled when there are no other ready threads in the thread queue
- * and will try to yield on every call.
- * @return The handle of the idle thread
- */
-SharedPtr<Thread> SetupIdleThread();
 
 /**
  * Initialize threading
