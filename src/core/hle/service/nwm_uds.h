@@ -18,7 +18,7 @@ public:
     Interface();
 
     std::string GetPortName() const override {
-        return "nwm:UDS";
+        return "nwm::UDS";
     }
 };
 
