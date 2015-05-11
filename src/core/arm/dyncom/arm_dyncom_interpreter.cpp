@@ -992,6 +992,14 @@ typedef struct _mcr_inst {
     unsigned int inst;
 } mcr_inst;
 
+typedef struct mcrr_inst {
+    unsigned int opcode_1;
+    unsigned int cp_num;
+    unsigned int crm;
+    unsigned int rt;
+    unsigned int rt2;
+} mcrr_inst;
+
 typedef struct _mrs_inst {
     unsigned int R;
     unsigned int Rd;
@@ -1260,11 +1268,6 @@ static get_addr_fp_t get_calc_addr_op(unsigned int inst) {
 #define CHECK_RN            (inst_cream->Rn == 15)
 #define CHECK_RM            (inst_cream->Rm == 15)
 #define CHECK_RS            (inst_cream->Rs == 15)
-
-#define UNIMPLEMENTED_INSTRUCTION(mnemonic) \
-    LOG_ERROR(Core_ARM11, "unimplemented instruction: %s", mnemonic); \
-    CITRA_IGNORE_EXIT(-1); \
-    return nullptr;
 
 static ARM_INST_PTR INTERPRETER_TRANSLATE(adc)(unsigned int inst, int index)
 {
@@ -1871,7 +1874,26 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mcr)(unsigned int inst, int index)
     inst_cream->inst     = inst;
     return inst_base;
 }
-static ARM_INST_PTR INTERPRETER_TRANSLATE(mcrr)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("MCRR"); }
+
+static ARM_INST_PTR INTERPRETER_TRANSLATE(mcrr)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(mcrr_inst));
+    mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    inst_cream->crm      = BITS(inst, 0, 3);
+    inst_cream->opcode_1 = BITS(inst, 4, 7);
+    inst_cream->cp_num   = BITS(inst, 8, 11);
+    inst_cream->rt       = BITS(inst, 12, 15);
+    inst_cream->rt2      = BITS(inst, 16, 19);
+
+    return inst_base;
+}
+
 static ARM_INST_PTR INTERPRETER_TRANSLATE(mla)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mla_inst));
@@ -1930,7 +1952,12 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mrc)(unsigned int inst, int index)
     inst_cream->inst     = inst;
     return inst_base;
 }
-static ARM_INST_PTR INTERPRETER_TRANSLATE(mrrc)(unsigned int inst, int index) { UNIMPLEMENTED_INSTRUCTION("MRRC"); }
+
+static ARM_INST_PTR INTERPRETER_TRANSLATE(mrrc)(unsigned int inst, int index)
+{
+    return INTERPRETER_TRANSLATE(mcrr)(inst, index);
+}
+
 static ARM_INST_PTR INTERPRETER_TRANSLATE(mrs)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mrs_inst));
@@ -4754,7 +4781,24 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     MCRR_INST:
+    {
+        // Stubbed, as the MPCore doesn't have any registers that are accessible
+        // through this instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
+
+            LOG_ERROR(Core_ARM11, "MCRR executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
+                      inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt, inst_cream->rt2);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(mcrr_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     MLA_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
@@ -4830,7 +4874,24 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         FETCH_INST;
         GOTO_NEXT_INST;
     }
+
     MRRC_INST:
+    {
+        // Stubbed, as the MPCore doesn't have any registers that are accessible
+        // through this instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
+
+            LOG_ERROR(Core_ARM11, "MRRC executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
+                      inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt, inst_cream->rt2);
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC(sizeof(mcrr_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     MRS_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
