@@ -458,12 +458,12 @@ SharedPtr<Thread> SetupIdleThread() {
     return thread;
 }
 
-SharedPtr<Thread> SetupMainThread(u32 stack_size, u32 entry_point, s32 priority) {
+SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     DEBUG_ASSERT(!GetCurrentThread());
 
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0,
-            THREADPROCESSORID_0, Memory::HEAP_VADDR_END - stack_size);
+            THREADPROCESSORID_0, Memory::HEAP_VADDR_END);
 
     SharedPtr<Thread> thread = thread_res.MoveFrom();
 
