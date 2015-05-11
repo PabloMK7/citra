@@ -197,6 +197,7 @@ static void SwitchContext(Thread* new_thread) {
         new_thread->current_priority = new_thread->nominal_priority;
 
         Core::g_app_core->LoadContext(new_thread->context);
+        Core::g_app_core->SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else {
         current_thread = nullptr;
     }
@@ -402,6 +403,12 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->name = std::move(name);
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
 
+    VAddr tls_address = Memory::TLS_AREA_VADDR + (thread->thread_id - 1) * 0x200;
+
+    ASSERT_MSG(tls_address < Memory::TLS_AREA_VADDR_END, "Too many threads");
+
+    thread->tls_address = tls_address;
+
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
     Core::g_app_core->ResetContext(thread->context, stack_top, entry_point, arg);
@@ -493,6 +500,10 @@ void Thread::SetWaitSynchronizationResult(ResultCode result) {
 
 void Thread::SetWaitSynchronizationOutput(s32 output) {
     context.cpu_registers[1] = output;
+}
+
+VAddr Thread::GetTLSAddress() const {
+    return tls_address;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

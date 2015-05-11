@@ -135,6 +135,12 @@ public:
      */
     void Stop();
 
+    /*
+     * Returns the Thread Local Storage address of the current thread
+     * @returns VAddr of the thread's TLS
+     */
+    VAddr GetTLSAddress() const;
+
     Core::ThreadContext context;
 
     u32 thread_id;
@@ -149,6 +155,8 @@ public:
     u64 last_running_ticks; ///< CPU tick when thread was last running
 
     s32 processor_id;
+
+    VAddr tls_address; ///< Address of the Thread Local Storage of the thread
 
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
