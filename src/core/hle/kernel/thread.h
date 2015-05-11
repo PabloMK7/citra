@@ -181,12 +181,11 @@ private:
 
 /**
  * Sets up the primary application thread
- * @param stack_size The size of the thread's stack
  * @param entry_point The address at which the thread should start execution
  * @param priority The priority to give the main thread
  * @return A shared pointer to the main thread
  */
-SharedPtr<Thread> SetupMainThread(u32 stack_size, u32 entry_point, s32 priority);
+SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority);
 
 /**
  * Reschedules to the next available thread (call after current thread is suspended)
