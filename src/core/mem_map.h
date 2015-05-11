@@ -94,10 +94,12 @@ enum : VAddr {
     SHARED_PAGE_SIZE      = 0x00001000,
     SHARED_PAGE_VADDR_END = SHARED_PAGE_VADDR + SHARED_PAGE_SIZE,
 
-    // TODO(yuriks): The exact location and size of this area is uncomfirmed.
+    // TODO(yuriks): The size of this area is dynamic, the kernel grows
+    // it as more and more threads are created. For now we'll just use a 
+    // hardcoded value.
     /// Area where TLS (Thread-Local Storage) buffers are allocated.
-    TLS_AREA_VADDR     = 0x1FFA0000,
-    TLS_AREA_SIZE      = 0x00002000, // Each TLS buffer is 0x200 bytes, allows for 16 threads
+    TLS_AREA_VADDR     = 0x1FF82000,
+    TLS_AREA_SIZE      = 0x00030000, // Each TLS buffer is 0x200 bytes, allows for 300 threads
     TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
 };
 
