@@ -16,6 +16,7 @@
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
@@ -424,6 +425,34 @@ static ResultCode ReleaseMutex(Handle handle) {
     return RESULT_SUCCESS;
 }
 
+/// Get the ID of the specified process
+static ResultCode GetProcessId(u32* process_id, Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X", handle);
+
+    const SharedPtr<Kernel::Process> process = Kernel::g_handle_table.Get<Kernel::Process>(handle);
+    if (process == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    *process_id = process->GetProcessId();
+    return RESULT_SUCCESS;
+}
+
+/// Get the ID of the process that owns the specified thread
+static ResultCode GetProcessIdOfThread(u32* process_id, Handle handle) {
+    LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
+
+    const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    if (thread == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    const SharedPtr<Kernel::Process> process = thread->owner_process;
+    if (process == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    *process_id = process->process_id;
+    return RESULT_SUCCESS;
+}
+
 /// Get the ID for the specified thread.
 static ResultCode GetThreadId(u32* thread_id, Handle handle) {
     LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
@@ -674,8 +703,8 @@ static const FunctionDef SVC_Table[] = {
     {0x32, HLE::Wrap<SendSyncRequest>,      "SendSyncRequest"},
     {0x33, nullptr,                         "OpenProcess"},
     {0x34, nullptr,                         "OpenThread"},
-    {0x35, nullptr,                         "GetProcessId"},
-    {0x36, nullptr,                         "GetProcessIdOfThread"},
+    {0x35, HLE::Wrap<GetProcessId>,         "GetProcessId"},
+    {0x36, HLE::Wrap<GetProcessIdOfThread>, "GetProcessIdOfThread"},
     {0x37, HLE::Wrap<GetThreadId>,          "GetThreadId"},
     {0x38, HLE::Wrap<GetResourceLimit>,     "GetResourceLimit"},
     {0x39, nullptr,                         "GetResourceLimitLimitValues"},
