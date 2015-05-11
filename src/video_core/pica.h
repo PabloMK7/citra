@@ -156,7 +156,7 @@ struct Regs {
         I8           =  7,
         A8           =  8,
         IA4          =  9,
-
+        I4           = 10,
         A4           = 11,
         ETC1         = 12,  // compressed
         ETC1A4       = 13,  // compressed
