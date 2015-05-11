@@ -304,7 +304,9 @@ void Init() {
         file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
 
         // Create shared font memory object
-        shared_font_mem = Kernel::SharedMemory::Create("APT_U:shared_font_mem");
+        using Kernel::MemoryPermission;
+        shared_font_mem = Kernel::SharedMemory::Create(3 * 1024 * 1024, // 3MB
+                MemoryPermission::ReadWrite, MemoryPermission::Read, "APT_U:shared_font_mem");
     } else {
         LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
         shared_font_mem = nullptr;

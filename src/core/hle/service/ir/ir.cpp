@@ -34,7 +34,9 @@ void Init() {
     AddService(new IR_U_Interface);
     AddService(new IR_User_Interface);
 
-    shared_memory = SharedMemory::Create("IR:SharedMemory");
+    using Kernel::MemoryPermission;
+    shared_memory = SharedMemory::Create(0x1000, Kernel::MemoryPermission::ReadWrite,
+            Kernel::MemoryPermission::ReadWrite, "IR:SharedMemory");
 
     // Create event handle(s)
     handle_event  = Event::Create(RESETTYPE_ONESHOT, "IR:HandleEvent");

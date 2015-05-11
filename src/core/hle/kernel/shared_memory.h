@@ -27,11 +27,16 @@ class SharedMemory final : public Object {
 public:
     /**
      * Creates a shared memory object
-     * @param name Optional object name, used only for debugging purposes.
+     * @param size Size of the memory block. Must be page-aligned.
+     * @param permissions Permission restrictions applied to the process which created the block.
+     * @param other_permissions Permission restrictions applied to other processes mapping the block.
+     * @param name Optional object name, used for debugging purposes.
      */
-    static SharedPtr<SharedMemory> Create(std::string name = "Unknown");
+    static SharedPtr<SharedMemory> Create(u32 size, MemoryPermission permissions,
+            MemoryPermission other_permissions, std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "SharedMemory"; }
+    std::string GetName() const override { return name; }
 
     static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
@@ -49,12 +54,18 @@ public:
     * @param offset Offset from the start of the shared memory block to get pointer
     * @return Pointer to the shared memory block from the specified offset
     */
-    ResultVal<u8*> GetPointer(u32 offset = 0);
+    u8* GetPointer(u32 offset = 0);
 
-    VAddr base_address;                 ///< Address of shared memory block in RAM
-    MemoryPermission permissions;       ///< Permissions of shared memory block (SVC field)
-    MemoryPermission other_permissions; ///< Other permissions of shared memory block (SVC field)
-    std::string name;                   ///< Name of shared memory object (optional)
+    /// Address of shared memory block in the process.
+    VAddr base_address;
+    /// Size of the memory block. Page-aligned.
+    u32 size;
+    /// Permission restrictions applied to the process which created the block.
+    MemoryPermission permissions;
+    /// Permission restrictions applied to other processes mapping the block.
+    MemoryPermission other_permissions;
+    /// Name of shared memory object.
+    std::string name;
 
 private:
     SharedMemory();
