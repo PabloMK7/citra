@@ -137,8 +137,10 @@ void Init() {
     Kernel::ThreadingInit();
     Kernel::TimersInit();
 
-    Process::next_process_id = 0;
     Object::next_object_id = 0;
+    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
+    // reserved for low-level services
+    Process::next_process_id = 10;
 }
 
 /// Shutdown the kernel

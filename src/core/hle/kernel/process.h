@@ -57,12 +57,6 @@ public:
 
     static u32 next_process_id;
 
-    /*
-     * Gets the process' id
-     * @returns The process' id
-     */
-    u32 GetProcessId() const { return process_id; }
-
     /// Name of the process
     std::string name;
     /// Title ID corresponding to the process

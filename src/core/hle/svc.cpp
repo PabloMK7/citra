@@ -426,28 +426,28 @@ static ResultCode ReleaseMutex(Handle handle) {
 }
 
 /// Get the ID of the specified process
-static ResultCode GetProcessId(u32* process_id, Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called process=0x%08X", handle);
+static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
 
-    const SharedPtr<Kernel::Process> process = Kernel::g_handle_table.Get<Kernel::Process>(handle);
+    const SharedPtr<Kernel::Process> process = Kernel::g_handle_table.Get<Kernel::Process>(process_handle);
     if (process == nullptr)
         return ERR_INVALID_HANDLE;
 
-    *process_id = process->GetProcessId();
+    *process_id = process->process_id;
     return RESULT_SUCCESS;
 }
 
 /// Get the ID of the process that owns the specified thread
-static ResultCode GetProcessIdOfThread(u32* process_id, Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
+static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
+    LOG_TRACE(Kernel_SVC, "called thread=0x%08X", thread_handle);
 
-    const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
+    const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(thread_handle);
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
 
     const SharedPtr<Kernel::Process> process = thread->owner_process;
-    if (process == nullptr)
-        return ERR_INVALID_HANDLE;
+    
+    ASSERT_MSG(process != nullptr, "Invalid parent process for thread=0x%08X", thread_handle);
 
     *process_id = process->process_id;
     return RESULT_SUCCESS;
