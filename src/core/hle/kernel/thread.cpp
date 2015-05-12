@@ -441,6 +441,8 @@ void Thread::SetPriority(s32 priority) {
     // If thread was ready, adjust queues
     if (status == THREADSTATUS_READY)
         ready_queue.move(this, current_priority, priority);
+    else
+        ready_queue.prepare(priority);
 
     nominal_priority = current_priority = priority;
 }
