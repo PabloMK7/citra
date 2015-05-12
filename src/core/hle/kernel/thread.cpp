@@ -17,6 +17,7 @@
 #include "core/core_timing.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
@@ -402,6 +403,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->wait_address = 0;
     thread->name = std::move(name);
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
+    thread->owner_process = g_current_process;
 
     VAddr tls_address = Memory::TLS_AREA_VADDR + (thread->thread_id - 1) * 0x200;
 

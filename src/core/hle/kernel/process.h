@@ -55,6 +55,8 @@ public:
     static const HandleType HANDLE_TYPE = HandleType::Process;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
+    static u32 next_process_id;
+
     /// Name of the process
     std::string name;
     /// Title ID corresponding to the process
@@ -68,6 +70,9 @@ public:
     /// processes access to specific I/O regions and device memory.
     boost::container::static_vector<AddressMapping, 8> address_mappings;
     ProcessFlags flags;
+
+    /// The id of this process
+    u32 process_id = next_process_id++;
 
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them

@@ -45,6 +45,7 @@ enum ThreadStatus {
 namespace Kernel {
 
 class Mutex;
+class Process;
 
 class Thread final : public WaitObject {
 public:
@@ -161,6 +162,7 @@ public:
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
+    SharedPtr<Process> owner_process; ///< Process that owns this thread
     std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
     VAddr wait_address;     ///< If waiting on an AddressArbiter, this is the arbitration address
     bool wait_all;          ///< True if the thread is waiting on all objects before resuming

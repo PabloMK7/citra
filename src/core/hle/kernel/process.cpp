@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+u32 Process::next_process_id;
+
 SharedPtr<Process> Process::Create(std::string name, u64 program_id) {
     SharedPtr<Process> process(new Process);
 

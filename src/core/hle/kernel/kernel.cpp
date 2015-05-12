@@ -115,8 +115,7 @@ SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
         return GetCurrentThread();
     } else if (handle == CurrentProcess) {
-        LOG_ERROR(Kernel, "Current process (%08X) pseudo-handle not supported", CurrentProcess);
-        return nullptr;
+        return g_current_process;
     }
 
     if (!IsValid(handle)) {
@@ -139,6 +138,9 @@ void Init() {
     Kernel::TimersInit();
 
     Object::next_object_id = 0;
+    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
+    // reserved for low-level services
+    Process::next_process_id = 10;
 }
 
 /// Shutdown the kernel
