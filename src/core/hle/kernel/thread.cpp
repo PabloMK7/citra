@@ -158,7 +158,7 @@ static void PriorityBoostStarvedThreads() {
 
         u64 delta = current_ticks - thread->last_running_ticks;
 
-        if (thread->status == THREADSTATUS_READY && delta > boost_timeout && !thread->idle) {
+        if (thread->status == THREADSTATUS_READY && delta > boost_timeout) {
             const s32 priority = std::max(ready_queue.get_first()->current_priority - 1, 0);
             thread->BoostPriority(priority);
         }
@@ -170,8 +170,6 @@ static void PriorityBoostStarvedThreads() {
  * @param new_thread The thread to switch to
  */
 static void SwitchContext(Thread* new_thread) {
-    DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
-
     Thread* previous_thread = GetCurrentThread();
 
     // Save context for previous thread
@@ -189,6 +187,8 @@ static void SwitchContext(Thread* new_thread) {
 
     // Load context of new thread
     if (new_thread) {
+        DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
+
         current_thread = new_thread;
 
         ready_queue.remove(new_thread->current_priority, new_thread);
@@ -216,6 +216,10 @@ static Thread* PopNextReadyThread() {
         // We have to do better than the current thread.
         // This call returns null when that's not possible.
         next = ready_queue.pop_first_better(thread->current_priority);
+        if (!next) {
+            // Otherwise just keep going with the current thread
+            next = thread;
+        }
     } else  {
         next = ready_queue.pop_first();
     }
@@ -452,16 +456,6 @@ void Thread::BoostPriority(s32 priority) {
     current_priority = priority;
 }
 
-SharedPtr<Thread> SetupIdleThread() {
-    // We need to pass a few valid values to get around parameter checking in Thread::Create.
-    // TODO(yuriks): Figure out a way to avoid passing the bogus VAddr parameter
-    auto thread = Thread::Create("idle", Memory::TLS_AREA_VADDR, THREADPRIO_LOWEST, 0,
-            THREADPROCESSORID_0, 0).MoveFrom();
-
-    thread->idle = true;
-    return thread;
-}
-
 SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     DEBUG_ASSERT(!GetCurrentThread());
 
@@ -478,24 +472,25 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
 }
 
 void Reschedule() {
-    Thread* prev = GetCurrentThread();
-
     PriorityBoostStarvedThreads();
 
+    Thread* cur = GetCurrentThread();
     Thread* next = PopNextReadyThread();
     HLE::g_reschedule = false;
 
-    if (next != nullptr) {
-        LOG_TRACE(Kernel, "context switch %u -> %u", prev->GetObjectId(), next->GetObjectId());
-        SwitchContext(next);
-    } else {
-        LOG_TRACE(Kernel, "cannot context switch from %u, no higher priority thread!", prev->GetObjectId());
+    // Don't bother switching to the same thread
+    if (next == cur)
+        return;
 
-        for (auto& thread : thread_list) {
-            LOG_TRACE(Kernel, "\tid=%u prio=0x%02X, status=0x%08X", thread->GetObjectId(), 
-                      thread->current_priority, thread->status);
-        }
+    if (cur && next) {
+        LOG_TRACE(Kernel, "context switch %u -> %u", cur->GetObjectId(), next->GetObjectId());
+    } else if (cur) {
+        LOG_TRACE(Kernel, "context switch %u -> idle", cur->GetObjectId());
+    } else {
+        LOG_TRACE(Kernel, "context switch idle -> %u", next->GetObjectId());
     }
+    
+    SwitchContext(next);
 }
 
 void Thread::SetWaitSynchronizationResult(ResultCode result) {
@@ -520,9 +515,6 @@ void ThreadingInit() {
 
     thread_list.clear();
     ready_queue.clear();
-
-    // Setup the idle thread
-    SetupIdleThread();
 }
 
 void ThreadingShutdown() {
