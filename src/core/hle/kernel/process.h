@@ -74,6 +74,9 @@ public:
     /// The id of this process
     u32 process_id = next_process_id++;
 
+    /// Bitmask of the used TLS slots
+    std::bitset<300> used_tls_slots;
+
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
      * to this process.

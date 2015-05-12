@@ -107,6 +107,8 @@ void Thread::Stop() {
     for (auto& wait_object : wait_objects) {
         wait_object->RemoveWaitingThread(this);
     }
+
+    Kernel::g_current_process->used_tls_slots[tls_index] = false;
 }
 
 Thread* ArbitrateHighestPriorityThread(u32 address) {
@@ -408,12 +410,19 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->name = std::move(name);
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
     thread->owner_process = g_current_process;
+    thread->tls_index = -1;
 
-    VAddr tls_address = Memory::TLS_AREA_VADDR + (thread->thread_id - 1) * 0x200;
+    // Find the next available TLS index, and mark it as used
+    auto& used_tls_slots = Kernel::g_current_process->used_tls_slots;
+    for (unsigned int i = 0; i < used_tls_slots.size(); ++i) {
+        if (used_tls_slots[i] == false) {
+            thread->tls_index = i;
+            used_tls_slots[i] = true;
+            break;
+        }
+    }
 
-    ASSERT_MSG(tls_address < Memory::TLS_AREA_VADDR_END, "Too many threads");
-
-    thread->tls_address = tls_address;
+    ASSERT_MSG(thread->tls_index != -1, "Out of TLS space");
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
@@ -502,7 +511,7 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 }
 
 VAddr Thread::GetTLSAddress() const {
-    return tls_address;
+    return Memory::TLS_AREA_VADDR + tls_index * 0x200;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
