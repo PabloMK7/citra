@@ -134,19 +134,10 @@ extern u8* g_tls_mem;     ///< TLS memory
 void Init();
 void Shutdown();
 
-template <typename T>
-inline void Read(T &var, VAddr addr);
-
-template <typename T>
-inline void Write(VAddr addr, T data);
-
 u8 Read8(VAddr addr);
 u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
 u64 Read64(VAddr addr);
-
-u32 Read8_ZX(VAddr addr);
-u32 Read16_ZX(VAddr addr);
 
 void Write8(VAddr addr, u8 data);
 void Write16(VAddr addr, u16 data);

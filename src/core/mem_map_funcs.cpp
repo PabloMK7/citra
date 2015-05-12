@@ -225,27 +225,19 @@ u8 Read8(const VAddr addr) {
 u16 Read16(const VAddr addr) {
     u16_le data = 0;
     Read<u16_le>(data, addr);
-    return (u16)data;
+    return data;
 }
 
 u32 Read32(const VAddr addr) {
     u32_le data = 0;
     Read<u32_le>(data, addr);
-    return (u32)data;
+    return data;
 }
 
 u64 Read64(const VAddr addr) {
     u64_le data = 0;
     Read<u64_le>(data, addr);
-    return (u64)data;
-}
-
-u32 Read8_ZX(const VAddr addr) {
-    return (u32)Read8(addr);
-}
-
-u32 Read16_ZX(const VAddr addr) {
-    return (u32)Read16(addr);
+    return data;
 }
 
 void Write8(const VAddr addr, const u8 data) {
