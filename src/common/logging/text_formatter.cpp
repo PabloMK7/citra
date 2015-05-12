@@ -46,8 +46,8 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
     unsigned int time_seconds    = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
     unsigned int time_fractional = static_cast<unsigned int>(entry.timestamp.count() % 1000000);
 
-    const char* class_name = Logger::GetLogClassName(entry.log_class);
-    const char* level_name = Logger::GetLevelName(entry.log_level);
+    const char* class_name = GetLogClassName(entry.log_class);
+    const char* level_name = GetLevelName(entry.log_level);
 
     snprintf(out_text, text_len, "[%4u.%06u] %s <%s> %s: %s",
         time_seconds, time_fractional, class_name, level_name,
@@ -114,21 +114,6 @@ void PrintColoredMessage(const Entry& entry) {
     fputs(ESC "[0m", stderr);
 #   undef ESC
 #endif
-}
-
-void TextLoggingLoop(std::shared_ptr<Logger> logger) {
-    std::array<Entry, 256> entry_buffer;
-
-    while (true) {
-        size_t num_entries = logger->GetEntries(entry_buffer.data(), entry_buffer.size());
-        if (num_entries == Logger::QUEUE_CLOSED) {
-            break;
-        }
-        for (size_t i = 0; i < num_entries; ++i) {
-            const Entry& entry = entry_buffer[i];
-            PrintColoredMessage(entry);
-        }
-    }
 }
 
 }

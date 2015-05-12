@@ -78,11 +78,7 @@ enum class Class : ClassType {
     Count ///< Total number of logging classes
 };
 
-/**
- * Logs a message to the global logger. This proxy exists to avoid exposing the details of the
- * Logger class, including the ConcurrentRingBuffer template, to all files that desire to log
- * messages, reducing unecessary recompilations.
- */
+/// Logs a message to the global logger.
 void LogMessage(Class log_class, Level log_level,
     const char* filename, unsigned int line_nr, const char* function,
 #ifdef _MSC_VER

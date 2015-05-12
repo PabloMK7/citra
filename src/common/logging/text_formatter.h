@@ -5,11 +5,9 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
 
 namespace Log {
 
-class Logger;
 struct Entry;
 
 /**
@@ -30,11 +28,5 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len);
 void PrintMessage(const Entry& entry);
 /// Prints the same message as `PrintMessage`, but colored acoording to the severity level.
 void PrintColoredMessage(const Entry& entry);
-
-/**
- * Logging loop that repeatedly reads messages from the provided logger and prints them to the
- * console. It is the baseline barebones log outputter.
- */
-void TextLoggingLoop(std::shared_ptr<Logger> logger);
 
 }
