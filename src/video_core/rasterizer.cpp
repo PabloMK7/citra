@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "common/profiler.h"
 
 #include "core/hw/gpu.h"
 #include "debug_utils/debug_utils.h"
@@ -186,6 +187,8 @@ static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
     return Math::Cross(vec1, vec2).z;
 };
 
+static Common::Profiling::TimingCategory rasterization_category("Rasterization");
+
 /**
  * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
  * culling via recursion.
@@ -195,6 +198,8 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                                     const VertexShader::OutputVertex& v2,
                                     bool reversed = false)
 {
+    Common::Profiling::ScopeTimer timer(rasterization_category);
+
     // vertex positions in rasterizer coordinates
     static auto FloatToFix = [](float24 flt) {
         // TODO: Rounding here is necessary to prevent garbage pixels at

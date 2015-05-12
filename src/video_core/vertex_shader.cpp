@@ -12,6 +12,7 @@
 
 #include <nihstro/shader_bytecode.h>
 
+#include "common/profiler.h"
 
 #include "pica.h"
 #include "vertex_shader.h"
@@ -574,7 +575,11 @@ static void ProcessShaderCode(VertexShaderState& state) {
     }
 }
 
+static Common::Profiling::TimingCategory shader_category("Vertex Shader");
+
 OutputVertex RunShader(const InputVertex& input, int num_attributes) {
+    Common::Profiling::ScopeTimer timer(shader_category);
+
     VertexShaderState state;
 
     const u32* main = &shader_memory[registers.vs_main_offset];
