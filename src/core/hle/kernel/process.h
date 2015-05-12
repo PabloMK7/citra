@@ -45,6 +45,8 @@ union ProcessFlags {
     BitField<12, 1, u16> loaded_high; ///< Application loaded high (not at 0x00100000).
 };
 
+class ResourceLimit;
+
 class Process final : public Object {
 public:
     static SharedPtr<Process> Create(std::string name, u64 program_id);
@@ -61,6 +63,8 @@ public:
     std::string name;
     /// Title ID corresponding to the process
     u64 program_id;
+    /// Resource limit descriptor for this process
+    SharedPtr<ResourceLimit> resource_limit;
 
     /// The process may only call SVCs which have the corresponding bit set.
     std::bitset<0x80> svc_access_mask;

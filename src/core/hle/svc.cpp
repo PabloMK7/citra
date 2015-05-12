@@ -17,6 +17,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
@@ -301,21 +302,47 @@ static void OutputDebugString(const char* string) {
 }
 
 /// Get resource limit
-static ResultCode GetResourceLimit(Handle* resource_limit, Handle process) {
-    // With regards to proceess values:
-    // 0xFFFF8001 is a handle alias for the current KProcess, and 0xFFFF8000 is a handle alias for
-    // the current KThread.
-    *resource_limit = 0xDEADBEEF;
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called process=0x%08X", process);
+static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle) {
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
+
+    SharedPtr<Kernel::Process> process = Kernel::g_handle_table.Get<Kernel::Process>(process_handle);
+    if (process == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    CASCADE_RESULT(*resource_limit, Kernel::g_handle_table.Create(process->resource_limit));
+
     return RESULT_SUCCESS;
 }
 
 /// Get resource limit current values
-static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_limit, void* names,
+static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_limit_handle, u32* names,
     s32 name_count) {
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%p, name_count=%d",
-        resource_limit, names, name_count);
-    values[0] = 0; // Normmatt: Set used memory to 0 for now
+    LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
+        resource_limit_handle, names, name_count);
+
+    SharedPtr<Kernel::ResourceLimit> resource_limit = Kernel::g_handle_table.Get<Kernel::ResourceLimit>(resource_limit_handle);
+    if (resource_limit == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    for (unsigned int i = 0; i < name_count; ++i)
+        values[i] = resource_limit->GetCurrentResourceValue(names[i]);
+
+    return RESULT_SUCCESS;
+}
+
+/// Get resource limit max values
+static ResultCode GetResourceLimitLimitValues(s64* values, Handle resource_limit_handle, u32* names,
+    s32 name_count) {
+    LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
+        resource_limit_handle, names, name_count);
+
+    SharedPtr<Kernel::ResourceLimit> resource_limit = Kernel::g_handle_table.Get<Kernel::ResourceLimit>(resource_limit_handle);
+    if (resource_limit == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    for (unsigned int i = 0; i < name_count; ++i)
+        values[i] = resource_limit->GetMaxResourceValue(names[i]);
+
     return RESULT_SUCCESS;
 }
 
@@ -707,7 +734,7 @@ static const FunctionDef SVC_Table[] = {
     {0x36, HLE::Wrap<GetProcessIdOfThread>, "GetProcessIdOfThread"},
     {0x37, HLE::Wrap<GetThreadId>,          "GetThreadId"},
     {0x38, HLE::Wrap<GetResourceLimit>,     "GetResourceLimit"},
-    {0x39, nullptr,                         "GetResourceLimitLimitValues"},
+    {0x39, HLE::Wrap<GetResourceLimitLimitValues>, "GetResourceLimitLimitValues"},
     {0x3A, HLE::Wrap<GetResourceLimitCurrentValues>, "GetResourceLimitCurrentValues"},
     {0x3B, nullptr,                         "GetThreadContext"},
     {0x3C, nullptr,                         "Break"},

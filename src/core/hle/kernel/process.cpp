@@ -7,6 +7,7 @@
 #include "common/logging/log.h"
 
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
 

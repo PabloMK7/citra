@@ -10,6 +10,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
@@ -134,6 +135,7 @@ void HandleTable::Clear() {
 
 /// Initialize the kernel
 void Init() {
+    Kernel::ResourceLimitsInit();
     Kernel::ThreadingInit();
     Kernel::TimersInit();
 
@@ -147,6 +149,7 @@ void Init() {
 void Shutdown() {
     Kernel::ThreadingShutdown();
     Kernel::TimersShutdown();
+    Kernel::ResourceLimitsShutdown();
     g_handle_table.Clear(); // Free all kernel objects
     g_current_process = nullptr;
 }

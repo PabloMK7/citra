@@ -11,6 +11,7 @@
 #include "common/swap.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/loader/ncch.h"
 #include "core/memory.h"
 
@@ -125,6 +126,10 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
                 (const char*)exheader_header.codeset_info.name, 8);
         u64 program_id = *reinterpret_cast<u64_le const*>(&ncch_header.program_id[0]);
         Kernel::g_current_process = Kernel::Process::Create(process_name, program_id);
+
+        // Attach a resource limit to the process based on the resource limit category
+        Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(
+            static_cast<Kernel::ResourceLimitCategory>(exheader_header.arm11_system_local_caps.resource_limit_category));
 
         // Copy data while converting endianess
         std::array<u32, ARRAY_SIZE(exheader_header.arm11_kernel_caps.descriptors)> kernel_caps;
