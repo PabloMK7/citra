@@ -8,6 +8,7 @@
 #include <cstdlib>
 
 #include "common/common_funcs.h"
+#include "common/logging/log.h"
 
 // For asserts we'd like to keep all the junk executed when an assert happens away from the
 // important code in the function. One way of doing this is to put all the relevant code inside a
@@ -28,19 +29,14 @@ static void assert_noinline_call(const Fn& fn) {
     exit(1); // Keeps GCC's mouth shut about this actually returning
 }
 
-// TODO (yuriks) allow synchronous logging so we don't need printf
 #define ASSERT(_a_) \
     do if (!(_a_)) { assert_noinline_call([] { \
-        fprintf(stderr, "Assertion Failed!\n\n  Line: %d\n  File: %s\n  Time: %s\n", \
-                     __LINE__, __FILE__, __TIME__); \
+        LOG_CRITICAL(Debug, "Assertion Failed!"); \
     }); } while (0)
 
 #define ASSERT_MSG(_a_, ...) \
     do if (!(_a_)) { assert_noinline_call([&] { \
-        fprintf(stderr, "Assertion Failed!\n\n  Line: %d\n  File: %s\n  Time: %s\n", \
-                     __LINE__, __FILE__, __TIME__); \
-        fprintf(stderr, __VA_ARGS__); \
-        fprintf(stderr, "\n"); \
+        LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); \
     }); } while (0)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
