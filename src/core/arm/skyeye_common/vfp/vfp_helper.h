@@ -35,6 +35,7 @@
 #include <cstdio>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
 #define do_div(n, base) {n/=base;}
 
@@ -236,33 +237,6 @@ struct vfp_single {
 #define vfp_single_packed_exponent(v) (((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
 #define vfp_single_packed_mantissa(v) ((v) & ((1 << VFP_SINGLE_MANTISSA_BITS) - 1))
 
-// Unpack a single-precision float.  Note that this returns the magnitude
-// of the single-precision float mantissa with the 1. if necessary,
-// aligned to bit 30.
-static inline void vfp_single_unpack(vfp_single* s, s32 val)
-{
-    u32 significand;
-
-    s->sign = vfp_single_packed_sign(val) >> 16,
-    s->exponent = vfp_single_packed_exponent(val);
-
-    significand = (u32) val;
-    significand = (significand << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
-    if (s->exponent && s->exponent != 255)
-        significand |= 0x40000000;
-    s->significand = significand;
-}
-
-// Re-pack a single-precision float.  This assumes that the float is
-// already normalised such that the MSB is bit 30, _not_ bit 31.
-static inline s32 vfp_single_pack(vfp_single* s)
-{
-    u32 val = (s->sign << 16) +
-              (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
-              (s->significand >> VFP_SINGLE_LOW_BITS);
-    return (s32)val;
-}
-
 enum : u32 {
     VFP_NUMBER     = (1 << 0),
     VFP_ZERO       = (1 << 1),
@@ -292,6 +266,39 @@ static inline int vfp_single_type(vfp_single* s)
             type |= VFP_DENORMAL;
     }
     return type;
+}
+
+// Unpack a single-precision float.  Note that this returns the magnitude
+// of the single-precision float mantissa with the 1. if necessary,
+// aligned to bit 30.
+static inline void vfp_single_unpack(vfp_single* s, s32 val, u32* fpscr)
+{
+    s->sign = vfp_single_packed_sign(val) >> 16,
+    s->exponent = vfp_single_packed_exponent(val);
+
+    u32 significand = ((u32)val << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
+    if (s->exponent && s->exponent != 255)
+        significand |= 0x40000000;
+    s->significand = significand;
+
+    // If flush-to-zero mode is enabled, turn the denormal into zero.
+    // On a VFPv2 architecture, the sign of the zero is always positive.
+    if ((*fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_single_type(s) & VFP_DENORMAL) != 0) {
+        s->sign = 0;
+        s->exponent = 0;
+        s->significand = 0;
+        *fpscr |= FPSCR_IDC;
+    }
+}
+
+// Re-pack a single-precision float. This assumes that the float is
+// already normalised such that the MSB is bit 30, _not_ bit 31.
+static inline s32 vfp_single_pack(vfp_single* s)
+{
+    u32 val = (s->sign << 16) +
+              (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
+              (s->significand >> VFP_SINGLE_LOW_BITS);
+    return (s32)val;
 }
 
 
@@ -328,33 +335,6 @@ struct vfp_double {
 #define vfp_double_packed_exponent(v) (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
 #define vfp_double_packed_mantissa(v) ((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
 
-// Unpack a double-precision float.  Note that this returns the magnitude
-// of the double-precision float mantissa with the 1. if necessary,
-// aligned to bit 62.
-static inline void vfp_double_unpack(vfp_double* s, s64 val)
-{
-    u64 significand;
-
-    s->sign = vfp_double_packed_sign(val) >> 48;
-    s->exponent = vfp_double_packed_exponent(val);
-
-    significand = (u64) val;
-    significand = (significand << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
-    if (s->exponent && s->exponent != 2047)
-        significand |= (1ULL << 62);
-    s->significand = significand;
-}
-
-// Re-pack a double-precision float.  This assumes that the float is
-// already normalised such that the MSB is bit 30, _not_ bit 31.
-static inline s64 vfp_double_pack(vfp_double* s)
-{
-    u64 val = ((u64)s->sign << 48) +
-              ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
-              (s->significand >> VFP_DOUBLE_LOW_BITS);
-    return (s64)val;
-}
-
 static inline int vfp_double_type(vfp_double* s)
 {
     int type = VFP_NUMBER;
@@ -372,6 +352,39 @@ static inline int vfp_double_type(vfp_double* s)
             type |= VFP_DENORMAL;
     }
     return type;
+}
+
+// Unpack a double-precision float.  Note that this returns the magnitude
+// of the double-precision float mantissa with the 1. if necessary,
+// aligned to bit 62.
+static inline void vfp_double_unpack(vfp_double* s, s64 val, u32* fpscr)
+{
+    s->sign = vfp_double_packed_sign(val) >> 48;
+    s->exponent = vfp_double_packed_exponent(val);
+
+    u64 significand = ((u64)val << (64 - VFP_DOUBLE_MANTISSA_BITS)) >> 2;
+    if (s->exponent && s->exponent != 2047)
+        significand |= (1ULL << 62);
+    s->significand = significand;
+
+    // If flush-to-zero mode is enabled, turn the denormal into zero.
+    // On a VFPv2 architecture, the sign of the zero is always positive.
+    if ((*fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_double_type(s) & VFP_DENORMAL) != 0) {
+        s->sign = 0;
+        s->exponent = 0;
+        s->significand = 0;
+        *fpscr |= FPSCR_IDC;
+    }
+}
+
+// Re-pack a double-precision float. This assumes that the float is
+// already normalised such that the MSB is bit 30, _not_ bit 31.
+static inline s64 vfp_double_pack(vfp_double* s)
+{
+    u64 val = ((u64)s->sign << 48) +
+              ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
+              (s->significand >> VFP_DOUBLE_LOW_BITS);
+    return (s64)val;
 }
 
 u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
