@@ -16,7 +16,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
 #include <cstring>
-#include "core/mem_map.h"
 #include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armemu.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"

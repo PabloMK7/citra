@@ -12,7 +12,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 #include "3dsx.h"
 

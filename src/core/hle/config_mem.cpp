@@ -9,7 +9,7 @@
 #include "common/common_funcs.h"
 
 #include "core/core.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/hle/config_mem.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

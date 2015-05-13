@@ -315,7 +315,7 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_lim
     s32 name_count) {
     LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called resource_limit=%08X, names=%p, name_count=%d",
         resource_limit, names, name_count);
-    Memory::Write32(Core::g_app_core->GetReg(0), 0); // Normmatt: Set used memory to 0 for now
+    values[0] = 0; // Normmatt: Set used memory to 0 for now
     return RESULT_SUCCESS;
 }
 

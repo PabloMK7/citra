@@ -22,7 +22,7 @@
 
 #include "common/swap.h"
 
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/arm/skyeye_common/armdefs.h"
 
 // Register numbers in the MMU

@@ -2,57 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <map>
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
 
-#include "core/mem_map.h"
+#include "core/hle/config_mem.h"
+#include "core/hle/shared_page.h"
 #include "core/hw/hw.h"
-#include "hle/config_mem.h"
-#include "hle/shared_page.h"
+#include "core/mem_map.h"
+#include "core/memory.h"
 
 namespace Memory {
-
-static std::map<u32, MemoryBlock> heap_map;
-static std::map<u32, MemoryBlock> heap_linear_map;
-
-PAddr VirtualToPhysicalAddress(const VAddr addr) {
-    if (addr == 0) {
-        return 0;
-    } else if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-        return addr - VRAM_VADDR + VRAM_PADDR;
-    } else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-        return addr - LINEAR_HEAP_VADDR + FCRAM_PADDR;
-    } else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END) {
-        return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
-    } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
-        return addr - IO_AREA_VADDR + IO_AREA_PADDR;
-    }
-
-    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08x", addr);
-    // To help with debugging, set bit on address so that it's obviously invalid.
-    return addr | 0x80000000;
-}
-
-VAddr PhysicalToVirtualAddress(const PAddr addr) {
-    if (addr == 0) {
-        return 0;
-    } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
-        return addr - VRAM_PADDR + VRAM_VADDR;
-    } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return addr - FCRAM_PADDR + LINEAR_HEAP_VADDR;
-    } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
-        return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
-    } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {
-        return addr - IO_AREA_PADDR + IO_AREA_VADDR;
-    }
-
-    LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08x", addr);
-    // To help with debugging, set bit on address so that it's obviously invalid.
-    return addr | 0x80000000;
-}
 
 template <typename T>
 inline void Read(T &var, const VAddr vaddr) {
@@ -174,46 +134,8 @@ u8 *GetPointer(const VAddr vaddr) {
     }
 }
 
-u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
-    MemoryBlock block;
-
-    block.base_address  = HEAP_VADDR;
-    block.size          = size;
-    block.operation     = operation;
-    block.permissions   = permissions;
-
-    if (heap_map.size() > 0) {
-        const MemoryBlock last_block = heap_map.rbegin()->second;
-        block.address = last_block.address + last_block.size;
-    }
-    heap_map[block.GetVirtualAddress()] = block;
-
-    return block.GetVirtualAddress();
-}
-
-u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
-    MemoryBlock block;
-
-    block.base_address  = LINEAR_HEAP_VADDR;
-    block.size          = size;
-    block.operation     = operation;
-    block.permissions   = permissions;
-
-    if (heap_linear_map.size() > 0) {
-        const MemoryBlock last_block = heap_linear_map.rbegin()->second;
-        block.address = last_block.address + last_block.size;
-    }
-    heap_linear_map[block.GetVirtualAddress()] = block;
-
-    return block.GetVirtualAddress();
-}
-
-void MemBlock_Init() {
-}
-
-void MemBlock_Shutdown() {
-    heap_map.clear();
-    heap_linear_map.clear();
+u8* GetPhysicalPointer(PAddr address) {
+    return GetPointer(PhysicalToVirtualAddress(address));
 }
 
 u8 Read8(const VAddr addr) {

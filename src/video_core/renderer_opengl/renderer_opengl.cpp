@@ -5,7 +5,7 @@
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/settings.h"
 
 #include "common/emu_window.h"

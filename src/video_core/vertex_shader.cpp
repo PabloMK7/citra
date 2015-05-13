@@ -8,8 +8,6 @@
 
 #include <common/file_util.h>
 
-#include <core/mem_map.h>
-
 #include <nihstro/shader_bytecode.h>
 
 #include "common/profiler.h"

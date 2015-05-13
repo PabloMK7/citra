@@ -4,8 +4,6 @@
 
 #include "ramview.h"
 
-#include "core/mem_map.h"
-
 
 GRamView::GRamView(QWidget* parent) : QHexEdit(parent)
 {

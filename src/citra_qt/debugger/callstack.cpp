@@ -8,7 +8,7 @@
 
 #include "core/core.h"
 #include "core/arm/arm_interface.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "common/symbols.h"
 #include "core/arm/disassembler/arm_disasm.h"
 

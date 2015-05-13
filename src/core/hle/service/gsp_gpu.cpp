@@ -5,6 +5,7 @@
 #include "common/bit_field.h"
 
 #include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
