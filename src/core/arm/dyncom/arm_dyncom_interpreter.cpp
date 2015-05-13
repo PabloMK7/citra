@@ -1393,7 +1393,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index)
     inst_base->br       = NON_BRANCH;
     inst_base->load_r15 = 0;
 
-    inst_cream->imm = BITS(inst, 8, 19) | BITS(inst, 0, 3);
+    inst_cream->imm = (BITS(inst, 8, 19) << 4) | BITS(inst, 0, 3);
 
     return inst_base;
 }
