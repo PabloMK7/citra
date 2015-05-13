@@ -337,7 +337,9 @@ void GMainWindow::closeEvent(QCloseEvent* event)
     settings.setValue("firstStart", false);
     SaveHotkeys(settings);
 
-    ShutdownGame();
+    // Shutdown session if the emu thread is active...
+    if (emu_thread != nullptr)
+        ShutdownGame();
 
     render_window->close();
 
