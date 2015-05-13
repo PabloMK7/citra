@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2014 Citra Emulator Project
+    Licensed under GPLv2 or any later version
+    Refer to the license.txt file included.
+-->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 341.071 338.846">
+    <radialGradient id="a" cx="170.5356" cy="167.271" r="170.5332" gradientTransform="matrix(1 0 0 0.9935 0 3.2396)" gradientUnits="userSpaceOnUse">
+        <stop offset="0.5193" stop-color="#FFFFFF" stop-opacity="0.1"/>
+        <stop offset="0.9415" stop-color="#000000" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#1A1818" stop-opacity="0"/>
+    </radialGradient>
+    <ellipse fill="url(#a)" cx="170.535" cy="169.423" rx="170.535" ry="169.423"/>
+    <circle fill="#D16F17" cx="170.536" cy="167.885" r="161.557"/>
+    <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="234.4458" y1="33.5771" x2="97.5655" y2="321.2358">
+        <stop offset="0" stop-color="#FFF8BD"/>
+        <stop offset="1" stop-color="#F6DCAE"/>
+    </linearGradient>
+    <circle fill="url(#b)" cx="170.536" cy="167.885" r="155.295"/>
+    <g>
+        <linearGradient id="c" gradientUnits="userSpaceOnUse" x1="332.436" y1="91.7446" x2="111.1593" y2="342.0988">
+            <stop offset="0" stop-color="#F7A076"/>
+            <stop offset="0.4455" stop-color="#F3816C"/>
+            <stop offset="1" stop-color="#F06878"/>
+        </linearGradient>
+        <path fill="url(#c)" stroke="#F06564" stroke-miterlimit="10" d="M309.704,123.138
+            c-5.9-7.802-128.517,44.681-128.517,44.681S303.803,221.01,309.704,212.5C322.434,194.142,323.182,140.957,309.704,123.138z"/>
+        <linearGradient id="d" gradientUnits="userSpaceOnUse" x1="285.5845" y1="50.3345" x2="64.3074" y2="300.6891">
+            <stop offset="0" stop-color="#9DC63B"/>
+            <stop offset="1" stop-color="#9BC183"/>
+        </linearGradient>
+        <path fill="url(#d)" stroke="#72AA42" stroke-miterlimit="10" d="M300.518,100.96c-3.98-21.983-41.059-60.12-63.189-63.188
+            c-9.688-1.345-59.28,122.469-59.28,122.469S302.364,111.149,300.518,100.96z"/>
+        <linearGradient id="e" gradientUnits="userSpaceOnUse" x1="229.4995" y1="0.7637" x2="8.2231" y2="251.1176">
+            <stop offset="0" stop-color="#D5DE26"/>
+            <stop offset="1" stop-color="#C5D94B"/>
+        </linearGradient>
+        <path fill="url(#e)" stroke="#BECD30" stroke-miterlimit="10" d="M215.151,28.584c-18.357-12.73-71.543-13.478-89.362,0.001
+            c-7.801,5.899,44.682,128.516,44.682,128.516S223.663,34.484,215.151,28.584z"/>
+        <linearGradient id="f" gradientUnits="userSpaceOnUse" x1="219.3823" y1="-8.1782" x2="-1.8941" y2="242.1756">
+            <stop offset="0" stop-color="#F2D200"/>
+            <stop offset="1" stop-color="#FDEF52"/>
+        </linearGradient>
+        <path fill="url(#f)" stroke="#E1BE29" stroke-miterlimit="10" d="M162.893,160.239c0,0-49.092-124.315-59.281-122.469
+            c-21.982,3.979-60.12,41.058-63.188,63.189C39.078,110.646,162.893,160.239,162.893,160.239z"/>
+        <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="226.0718" y1="-2.2656" x2="4.7951" y2="248.0886">
+            <stop offset="0" stop-color="#FFCD10"/>
+            <stop offset="1" stop-color="#F29634"/>
+        </linearGradient>
+        <path fill="url(#g)" stroke="#F79421" stroke-miterlimit="10" d="M31.236,123.136c-12.73,18.357-13.479,71.543,0,89.362
+            c5.898,7.801,128.516-44.682,128.516-44.682S37.135,114.625,31.236,123.136z"/>
+        <linearGradient id="h" gradientUnits="userSpaceOnUse" x1="272.9214" y1="39.144" x2="51.6446" y2="289.4984">
+            <stop offset="0" stop-color="#F79F1C"/>
+            <stop offset="0.4455" stop-color="#F08021"/>
+            <stop offset="1" stop-color="#ED693C"/>
+        </linearGradient>
+        <path fill="url(#h)" stroke="#F16622" stroke-miterlimit="10" d="M40.422,234.676c3.979,21.982,41.057,60.12,63.188,63.188
+            c9.687,1.346,59.279-122.468,59.279-122.468S38.574,224.487,40.422,234.676z"/>
+        <linearGradient id="i" gradientUnits="userSpaceOnUse" x1="329.0083" y1="88.7129" x2="107.7311" y2="339.0677">
+            <stop offset="0" stop-color="#E47C26"/>
+            <stop offset="0.4455" stop-color="#DF5B27"/>
+            <stop offset="1" stop-color="#DD3A3A"/>
+        </linearGradient>
+        <path fill="url(#i)" stroke="#E03827" stroke-miterlimit="10" d="M125.787,307.051c18.357,12.73,71.543,13.48,89.362,0
+            c7.801-5.898-44.681-128.515-44.681-128.515S117.275,301.153,125.787,307.051z"/>
+        <linearGradient id="j" gradientUnits="userSpaceOnUse" x1="339.1245" y1="97.6562" x2="117.8478" y2="348.0104">
+            <stop offset="0" stop-color="#F3783C"/>
+            <stop offset="0.4455" stop-color="#EF5339"/>
+            <stop offset="1" stop-color="#ED294A"/>
+        </linearGradient>
+        <path fill="url(#j)" stroke="#ED2836" stroke-miterlimit="10" d="M178.047,175.398c0,0,49.09,124.315,59.28,122.467
+            c21.982-3.979,60.121-41.057,63.189-63.188C301.86,224.991,178.047,175.398,178.047,175.398z"/>
+    </g>
+    <linearGradient id="k" gradientUnits="userSpaceOnUse" x1="170.5352" y1="6.3281" x2="170.5351" y2="329.4424">
+        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.2"/>
+        <stop offset="0.4504" stop-color="#908E8E" stop-opacity="0.05"/>
+        <stop offset="1" stop-color="#030003" stop-opacity="0.2"/>
+    </linearGradient>
+    <circle fill="url(#k)" cx="170.536" cy="167.885" r="161.557"/>
+</svg>

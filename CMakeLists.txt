@@ -193,3 +193,16 @@ if(ENABLE_QT)
     add_subdirectory(externals/qhexedit)
 endif()
 add_subdirectory(src)
+
+# Install freedesktop.org metadata files, following those specifications:
+# http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
+# http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+# http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
+    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.desktop"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
+    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.svg"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps")
+    install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.xml"
+            DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
+endif()
