@@ -1,7 +1,10 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2015 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
+
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
@@ -14,126 +17,134 @@
 
 namespace Memory {
 
-template <typename T>
-inline void Read(T &var, const VAddr vaddr) {
-    // TODO: Figure out the fastest order of tests for both read and write (they are probably different).
-    // TODO: Make sure this represents the mirrors in a correct way.
-    // Could just do a base-relative read, too.... TODO
+const u32 PAGE_MASK = PAGE_SIZE - 1;
+const int PAGE_BITS = 12;
 
-    // Kernel memory command buffer
-    if (vaddr >= TLS_AREA_VADDR && vaddr < TLS_AREA_VADDR_END) {
-        var = *((const T*)&g_tls_mem[vaddr - TLS_AREA_VADDR]);
+enum class PageType {
+    /// Page is unmapped and should cause an access error.
+    Unmapped,
+    /// Page is mapped to regular memory. This is the only type you can get pointers to.
+    Memory,
+    /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
+    Special,
+};
 
-    // ExeFS:/.code is loaded here
-    } else if ((vaddr >= PROCESS_IMAGE_VADDR)  && (vaddr < PROCESS_IMAGE_VADDR_END)) {
-        var = *((const T*)&g_exefs_code[vaddr - PROCESS_IMAGE_VADDR]);
+/**
+ * A (reasonably) fast way of allowing switchable and remmapable process address spaces. It loosely
+ * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
+ * fetching requirements when acessing. In the usual case of an access to regular memory, it only
+ * requires an indexed fetch and a check for NULL.
+ */
+struct PageTable {
+    static const size_t NUM_ENTRIES = 1 << (32 - PAGE_BITS);
 
-    // FCRAM - linear heap
-    } else if ((vaddr >= LINEAR_HEAP_VADDR) && (vaddr < LINEAR_HEAP_VADDR_END)) {
-        var = *((const T*)&g_heap_linear[vaddr - LINEAR_HEAP_VADDR]);
+    /**
+     * Array of memory pointers backing each page. An entry can only be non-null if the
+     * corresponding entry in the `attributes` array is of type `Memory`.
+     */
+    std::array<u8*, NUM_ENTRIES> pointers;
 
-    // FCRAM - application heap
-    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        var = *((const T*)&g_heap[vaddr - HEAP_VADDR]);
+    /**
+     * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
+     * the corresponding entry in `pointer` MUST be set to null.
+     */
+    std::array<PageType, NUM_ENTRIES> attributes;
+};
 
-    // Shared memory
-    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        var = *((const T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR]);
+/// Singular page table used for the singleton process
+static PageTable main_page_table;
+/// Currently active page table
+static PageTable* current_page_table = &main_page_table;
 
-    // Config memory
-    } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
-        const u8* raw_memory = (const u8*)&ConfigMem::config_mem;
-        var = *((const T*)&raw_memory[vaddr - CONFIG_MEMORY_VADDR]);
+static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
+    LOG_DEBUG(HW_Memory, "Mapping %p onto %08X-%08X", memory, base * PAGE_SIZE, (base + size) * PAGE_SIZE);
 
-    // Shared page
-    } else if ((vaddr >= SHARED_PAGE_VADDR)  && (vaddr < SHARED_PAGE_VADDR_END)) {
-        const u8* raw_memory = (const u8*)&SharedPage::shared_page;
-        var = *((const T*)&raw_memory[vaddr - SHARED_PAGE_VADDR]);
+    u32 end = base + size;
 
-    // DSP memory
-    } else if ((vaddr >= DSP_RAM_VADDR)  && (vaddr < DSP_RAM_VADDR_END)) {
-        var = *((const T*)&g_dsp_mem[vaddr - DSP_RAM_VADDR]);
+    while (base != end) {
+        ASSERT_MSG(base < PageTable::NUM_ENTRIES, "out of range mapping at %08X", base);
 
-    // VRAM
-    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        var = *((const T*)&g_vram[vaddr - VRAM_VADDR]);
+        if (current_page_table->attributes[base] != PageType::Unmapped) {
+            LOG_ERROR(HW_Memory, "overlapping memory ranges at %08X", base * PAGE_SIZE);
+        }
+        current_page_table->attributes[base] = type;
+        current_page_table->pointers[base] = memory;
 
-    } else {
-        LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, vaddr);
+        base += 1;
+        memory += PAGE_SIZE;
     }
 }
 
-template <typename T>
-inline void Write(const VAddr vaddr, const T data) {
-
-    // Kernel memory command buffer
-    if (vaddr >= TLS_AREA_VADDR && vaddr < TLS_AREA_VADDR_END) {
-        *(T*)&g_tls_mem[vaddr - TLS_AREA_VADDR] = data;
-
-    // ExeFS:/.code is loaded here
-    } else if ((vaddr >= PROCESS_IMAGE_VADDR)  && (vaddr < PROCESS_IMAGE_VADDR_END)) {
-        *(T*)&g_exefs_code[vaddr - PROCESS_IMAGE_VADDR] = data;
-
-    // FCRAM - linear heap
-    } else if ((vaddr >= LINEAR_HEAP_VADDR)  && (vaddr < LINEAR_HEAP_VADDR_END)) {
-        *(T*)&g_heap_linear[vaddr - LINEAR_HEAP_VADDR] = data;
-
-    // FCRAM - application heap
-    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        *(T*)&g_heap[vaddr - HEAP_VADDR] = data;
-
-    // Shared memory
-    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        *(T*)&g_shared_mem[vaddr - SHARED_MEMORY_VADDR] = data;
-
-    // VRAM
-    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        *(T*)&g_vram[vaddr - VRAM_VADDR] = data;
-
-    // DSP memory
-    } else if ((vaddr >= DSP_RAM_VADDR)  && (vaddr < DSP_RAM_VADDR_END)) {
-        *(T*)&g_dsp_mem[vaddr - DSP_RAM_VADDR] = data;
-
-    //} else if ((vaddr & 0xFFFF0000) == 0x1FF80000) {
-    //    ASSERT_MSG(MEMMAP, false, "umimplemented write to Configuration Memory");
-    //} else if ((vaddr & 0xFFFFF000) == 0x1FF81000) {
-    //    ASSERT_MSG(MEMMAP, false, "umimplemented write to shared page");
-
-    // Error out...
-    } else {
-        LOG_ERROR(HW_Memory, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, vaddr);
-    }
+void InitMemoryMap() {
+    main_page_table.pointers.fill(nullptr);
+    main_page_table.attributes.fill(PageType::Unmapped);
 }
 
-u8 *GetPointer(const VAddr vaddr) {
-    // Kernel memory command buffer
-    if (vaddr >= TLS_AREA_VADDR && vaddr < TLS_AREA_VADDR_END) {
-        return g_tls_mem + (vaddr - TLS_AREA_VADDR);
+void MapMemoryRegion(VAddr base, u32 size, u8* target) {
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
+}
 
-    // ExeFS:/.code is loaded here
-    } else if ((vaddr >= PROCESS_IMAGE_VADDR)  && (vaddr < PROCESS_IMAGE_VADDR_END)) {
-        return g_exefs_code + (vaddr - PROCESS_IMAGE_VADDR);
+void MapIoRegion(VAddr base, u32 size) {
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
+}
 
-    // FCRAM - linear heap
-    } else if ((vaddr >= LINEAR_HEAP_VADDR)  && (vaddr < LINEAR_HEAP_VADDR_END)) {
-        return g_heap_linear + (vaddr - LINEAR_HEAP_VADDR);
+template <typename T>
+T Read(const VAddr vaddr) {
+    const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    if (page_pointer) {
+        return *reinterpret_cast<const T*>(page_pointer + (vaddr & PAGE_MASK));
+    }
 
-    // FCRAM - application heap
-    } else if ((vaddr >= HEAP_VADDR)  && (vaddr < HEAP_VADDR_END)) {
-        return g_heap + (vaddr - HEAP_VADDR);
-
-    // Shared memory
-    } else if ((vaddr >= SHARED_MEMORY_VADDR)  && (vaddr < SHARED_MEMORY_VADDR_END)) {
-        return g_shared_mem + (vaddr - SHARED_MEMORY_VADDR);
-
-    // VRAM
-    } else if ((vaddr >= VRAM_VADDR)  && (vaddr < VRAM_VADDR_END)) {
-        return g_vram + (vaddr - VRAM_VADDR);
-
-    } else {
-        LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x%08x", vaddr);
+    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    switch (type) {
+    case PageType::Unmapped:
+        LOG_ERROR(HW_Memory, "unmapped Read%lu @ 0x%08X", sizeof(T) * 8, vaddr);
         return 0;
+    case PageType::Memory:
+        ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+    case PageType::Special:
+        LOG_ERROR(HW_Memory, "I/O reads aren't implemented yet @ %08X", vaddr);
+        return 0;
+    default:
+        UNREACHABLE();
     }
+}
+
+template <typename T>
+void Write(const VAddr vaddr, const T data) {
+    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    if (page_pointer) {
+        *reinterpret_cast<T*>(page_pointer + (vaddr & PAGE_MASK)) = data;
+        return;
+    }
+
+    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    switch (type) {
+    case PageType::Unmapped:
+        LOG_ERROR(HW_Memory, "unmapped Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32) data, vaddr);
+        return;
+    case PageType::Memory:
+        ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+    case PageType::Special:
+        LOG_ERROR(HW_Memory, "I/O writes aren't implemented yet @ %08X", vaddr);
+        return;
+    default:
+        UNREACHABLE();
+    }
+}
+
+u8* GetPointer(const VAddr vaddr) {
+    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    if (page_pointer) {
+        return page_pointer + (vaddr & PAGE_MASK);
+    }
+
+    LOG_ERROR(HW_Memory, "unknown GetPointer @ 0x%08x", vaddr);
+    return nullptr;
 }
 
 u8* GetPhysicalPointer(PAddr address) {
@@ -141,27 +152,19 @@ u8* GetPhysicalPointer(PAddr address) {
 }
 
 u8 Read8(const VAddr addr) {
-    u8 data = 0;
-    Read<u8>(data, addr);
-    return data;
+    return Read<u8>(addr);
 }
 
 u16 Read16(const VAddr addr) {
-    u16_le data = 0;
-    Read<u16_le>(data, addr);
-    return data;
+    return Read<u16_le>(addr);
 }
 
 u32 Read32(const VAddr addr) {
-    u32_le data = 0;
-    Read<u32_le>(data, addr);
-    return data;
+    return Read<u32_le>(addr);
 }
 
 u64 Read64(const VAddr addr) {
-    u64_le data = 0;
-    Read<u64_le>(data, addr);
-    return data;
+    return Read<u64_le>(addr);
 }
 
 void Write8(const VAddr addr, const u8 data) {

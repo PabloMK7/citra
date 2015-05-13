@@ -8,6 +8,10 @@
 
 namespace Memory {
 
+/**
+ * Page size used by the ARM architecture. This is the smallest granularity with which memory can
+ * be mapped.
+ */
 const u32 PAGE_SIZE = 0x1000;
 
 /// Physical memory regions as seen from the ARM11

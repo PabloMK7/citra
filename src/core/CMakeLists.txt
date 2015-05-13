@@ -212,6 +212,7 @@ set(HEADERS
             loader/ncch.h
             mem_map.h
             memory.h
+            memory_setup.h
             settings.h
             system.h
             )

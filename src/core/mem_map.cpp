@@ -7,8 +7,11 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
+#include "core/hle/config_mem.h"
+#include "core/hle/shared_page.h"
 #include "core/mem_map.h"
 #include "core/memory.h"
+#include "core/memory_setup.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,18 +29,19 @@ namespace {
 
 struct MemoryArea {
     u8** ptr;
-    size_t size;
+    u32 base;
+    u32 size;
 };
 
 // We don't declare the IO regions in here since its handled by other means.
 static MemoryArea memory_areas[] = {
-    {&g_exefs_code,  PROCESS_IMAGE_MAX_SIZE},
-    {&g_heap,        HEAP_SIZE             },
-    {&g_shared_mem,  SHARED_MEMORY_SIZE    },
-    {&g_heap_linear, LINEAR_HEAP_SIZE      },
-    {&g_vram,        VRAM_SIZE             },
-    {&g_dsp_mem,     DSP_RAM_SIZE          },
-    {&g_tls_mem,     TLS_AREA_SIZE         },
+    {&g_exefs_code,  PROCESS_IMAGE_VADDR, PROCESS_IMAGE_MAX_SIZE},
+    {&g_heap,        HEAP_VADDR,          HEAP_SIZE             },
+    {&g_shared_mem,  SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE    },
+    {&g_heap_linear, LINEAR_HEAP_VADDR,   LINEAR_HEAP_SIZE      },
+    {&g_vram,        VRAM_VADDR,          VRAM_SIZE             },
+    {&g_dsp_mem,     DSP_RAM_VADDR,       DSP_RAM_SIZE          },
+    {&g_tls_mem,     TLS_AREA_VADDR,      TLS_AREA_SIZE         },
 };
 
 /// Represents a block of memory mapped by ControlMemory/MapMemoryBlock
@@ -132,9 +136,14 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
 }
 
 void Init() {
+    InitMemoryMap();
+
     for (MemoryArea& area : memory_areas) {
         *area.ptr = new u8[area.size];
+        MapMemoryRegion(area.base, area.size, *area.ptr);
     }
+    MapMemoryRegion(CONFIG_MEMORY_VADDR, CONFIG_MEMORY_SIZE, (u8*)&ConfigMem::config_mem);
+    MapMemoryRegion(SHARED_PAGE_VADDR, SHARED_PAGE_SIZE, (u8*)&SharedPage::shared_page);
 
     LOG_DEBUG(HW_Memory, "initialized OK, RAM at %p", g_heap);
 }
