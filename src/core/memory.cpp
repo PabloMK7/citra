@@ -42,7 +42,8 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // Config memory
     } else if ((vaddr >= CONFIG_MEMORY_VADDR)  && (vaddr < CONFIG_MEMORY_VADDR_END)) {
-        ConfigMem::Read<T>(var, vaddr);
+        const u8* raw_memory = (const u8*)&ConfigMem::config_mem;
+        var = *((const T*)&raw_memory[vaddr - CONFIG_MEMORY_VADDR]);
 
     // Shared page
     } else if ((vaddr >= SHARED_PAGE_VADDR)  && (vaddr < SHARED_PAGE_VADDR_END)) {
