@@ -190,12 +190,12 @@ const ISEITEM arm_instruction[] = {
     { "cdp", 2, 0, 24, 27, 0x0000000e, 4, 4, 0x00000000 },
     { "stc", 2, 0, 25, 27, 0x00000006, 20, 20, 0x00000000 },
     { "ldc", 2, 0, 25, 27, 0x00000006, 20, 20, 0x00000001 },
-    { "swi", 1, 0, 24, 27, 0x0000000f },
-    { "bbl", 1, 0, 25, 27, 0x00000005 },
     { "ldrexd", 2, ARMV6K, 20, 27, 0x0000001B, 4, 7, 0x00000009 },
     { "strexd", 2, ARMV6K, 20, 27, 0x0000001A, 4, 7, 0x00000009 },
     { "ldrexh", 2, ARMV6K, 20, 27, 0x0000001F, 4, 7, 0x00000009 },
     { "strexh", 2, ARMV6K, 20, 27, 0x0000001E, 4, 7, 0x00000009 },
+    { "swi", 1, 0, 24, 27, 0x0000000f },
+    { "bbl", 1, 0, 25, 27, 0x00000005 },
 };
 
 const ISEITEM arm_exclusion_code[] = {
@@ -383,12 +383,12 @@ const ISEITEM arm_exclusion_code[] = {
     { "cdp", 0, 0, 0 },
     { "stc", 0, 0, 0 },
     { "ldc", 0, 0, 0 },
-    { "swi", 0, 0, 0 },
-    { "bbl", 0, 0, 0 },
     { "ldrexd", 0, ARMV6K, 0 },
     { "strexd", 0, ARMV6K, 0 },
     { "ldrexh", 0, ARMV6K, 0 },
     { "strexh", 0, ARMV6K, 0 },
+    { "swi", 0, 0, 0 },
+    { "bbl", 0, 0, 0 },
 
     { "bl_1_thumb", 0, INVALID, 0 },    // Should be table[-4]
     { "bl_2_thumb", 0, INVALID, 0 },    // Should be located at the end of the table[-3]
