@@ -47,7 +47,8 @@ inline void Read(T &var, const VAddr vaddr) {
 
     // Shared page
     } else if ((vaddr >= SHARED_PAGE_VADDR)  && (vaddr < SHARED_PAGE_VADDR_END)) {
-        SharedPage::Read<T>(var, vaddr);
+        const u8* raw_memory = (const u8*)&SharedPage::shared_page;
+        var = *((const T*)&raw_memory[vaddr - SHARED_PAGE_VADDR]);
 
     // DSP memory
     } else if ((vaddr >= DSP_RAM_VADDR)  && (vaddr < DSP_RAM_VADDR_END)) {

@@ -11,18 +11,46 @@
  */
 
 #include "common/common_types.h"
+#include "common/swap.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace SharedPage {
 
-template <typename T>
-void Read(T &var, const u32 addr);
+// See http://3dbrew.org/wiki/Configuration_Memory#Shared_Memory_Page_For_ARM11_Processes
 
-void Set3DSlider(float amount);
+struct DateTime {
+    u64_le date_time;                  // 0
+    u64_le update_tick;                // 8
+    INSERT_PADDING_BYTES(0x20 - 0x10); // 10
+};
+static_assert(sizeof(DateTime) == 0x20, "Datetime size is wrong");
+
+struct SharedPageDef {
+    // Most of these names are taken from the 3dbrew page linked above.
+    u32_le   date_time_selector;         // 0
+    u8       running_hw;                 // 4
+    /// "Microcontroller hardware info"
+    u8       mcu_hw_info;                // 5
+    INSERT_PADDING_BYTES(0x20 - 0x6);    // 6
+    DateTime date_time_0;                // 20
+    DateTime date_time_1;                // 40
+    u8       wifi_macaddr[6];            // 60
+    u8       wifi_unknown1;              // 66
+    u8       wifi_unknown2;              // 67
+    INSERT_PADDING_BYTES(0x80 - 0x68);   // 68
+    float_le sliderstate_3d;             // 80
+    u8       ledstate_3d;                // 84
+    INSERT_PADDING_BYTES(0xA0 - 0x85);   // 85
+    u64_le   menu_title_id;              // A0
+    u64_le   active_menu_title_id;       // A8
+    INSERT_PADDING_BYTES(0x1000 - 0xB0); // B0
+};
+static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE, "Shared page structure size is wrong");
+
+extern SharedPageDef shared_page;
 
 void Init();
-
 void Shutdown();
 
 } // namespace
