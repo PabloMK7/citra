@@ -495,7 +495,7 @@ void Reschedule() {
         LOG_TRACE(Kernel, "context switch %u -> %u", cur->GetObjectId(), next->GetObjectId());
     } else if (cur) {
         LOG_TRACE(Kernel, "context switch %u -> idle", cur->GetObjectId());
-    } else {
+    } else if (next) {
         LOG_TRACE(Kernel, "context switch idle -> %u", next->GetObjectId());
     }
     
