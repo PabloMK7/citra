@@ -224,10 +224,10 @@ static unsigned int DPO(RotateRightByRegister)(ARMul_State* cpu, unsigned int sh
 
 typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr, unsigned int rw);
 
-typedef struct _ldst_inst {
+struct ldst_inst {
     unsigned int inst;
     get_addr_fp_t get_addr;
-} ldst_inst;
+};
 #define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
 int CondPassed(ARMul_State* cpu, unsigned int cond);
@@ -647,247 +647,248 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
     virt_addr = addr;
 }
 
-typedef struct _arm_inst {
+struct arm_inst {
     unsigned int idx;
     unsigned int cond;
     int br;
     int load_r15;
     char component[0];
-} arm_inst;
+};
 
-typedef struct generic_arm_inst {
+struct generic_arm_inst {
     u32 Ra;
     u32 Rm;
     u32 Rn;
     u32 Rd;
     u8 op1;
     u8 op2;
-} generic_arm_inst;
+};
 
-typedef struct _adc_inst {
+struct adc_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} adc_inst;
+};
 
-typedef struct _add_inst {
+struct add_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} add_inst;
+};
 
-typedef struct _orr_inst {
+struct orr_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} orr_inst;
+};
 
-typedef struct _and_inst {
+struct and_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} and_inst;
+};
 
-typedef struct _eor_inst {
+struct eor_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} eor_inst;
+};
 
-typedef struct _bbl_inst {
+struct bbl_inst {
     unsigned int L;
     int signed_immed_24;
     unsigned int next_addr;
     unsigned int jmp_addr;
-} bbl_inst;
+};
 
-typedef struct _bx_inst {
+struct bx_inst {
     unsigned int Rm;
-} bx_inst;
+};
 
-typedef struct _blx_inst {
+struct blx_inst {
     union {
         int32_t signed_immed_24;
         uint32_t Rm;
     } val;
     unsigned int inst;
-} blx_inst;
+};
 
-typedef struct _clz_inst {
+struct clz_inst {
     unsigned int Rm;
     unsigned int Rd;
-} clz_inst;
+};
 
-typedef struct _cps_inst {
+struct cps_inst {
     unsigned int imod0;
     unsigned int imod1;
     unsigned int mmod;
     unsigned int A, I, F;
     unsigned int mode;
-} cps_inst;
+};
 
-typedef struct _clrex_inst {
-} clrex_inst;
+struct clrex_inst {
+};
 
-typedef struct _cpy_inst {
+struct cpy_inst {
     unsigned int Rm;
     unsigned int Rd;
-} cpy_inst;
+};
 
-typedef struct _bic_inst {
+struct bic_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} bic_inst;
+};
 
-typedef struct _sub_inst {
+struct sub_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} sub_inst;
+};
 
-typedef struct _tst_inst {
+struct tst_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} tst_inst;
+};
 
-typedef struct _cmn_inst {
+struct cmn_inst {
     unsigned int I;
     unsigned int Rn;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} cmn_inst;
+};
 
-typedef struct _teq_inst {
+struct teq_inst {
     unsigned int I;
     unsigned int Rn;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} teq_inst;
+};
 
-typedef struct _stm_inst {
+struct stm_inst {
     unsigned int inst;
-} stm_inst;
+};
 
 struct bkpt_inst {
     u32 imm;
 };
 
-typedef struct _stc_inst {
-} stc_inst;
+struct stc_inst {
+};
 
-typedef struct _ldc_inst {
-} ldc_inst;
+struct ldc_inst {
+};
 
-typedef struct _swi_inst {
+struct swi_inst {
     unsigned int num;
-} swi_inst;
+};
 
-typedef struct _cmp_inst {
+struct cmp_inst {
     unsigned int I;
     unsigned int Rn;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} cmp_inst;
+};
 
-typedef struct _mov_inst {
+struct mov_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} mov_inst;
+};
 
-typedef struct _mvn_inst {
+struct mvn_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} mvn_inst;
+};
 
-typedef struct _rev_inst {
+struct rev_inst {
     unsigned int Rd;
     unsigned int Rm;
     unsigned int op1;
     unsigned int op2;
-} rev_inst;
+};
 
-typedef struct _rsb_inst {
+struct rsb_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} rsb_inst;
+};
 
-typedef struct _rsc_inst {
+struct rsc_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} rsc_inst;
+};
 
-typedef struct _sbc_inst {
+struct sbc_inst {
     unsigned int I;
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int shifter_operand;
     shtop_fp_t shtop_func;
-} sbc_inst;
+};
 
-typedef struct _mul_inst {
+struct mul_inst {
     unsigned int S;
     unsigned int Rd;
     unsigned int Rs;
     unsigned int Rm;
-} mul_inst;
+};
 
-typedef struct _smul_inst {
+struct smul_inst {
     unsigned int Rd;
     unsigned int Rs;
     unsigned int Rm;
     unsigned int x;
     unsigned int y;
-} smul_inst;
+};
 
-typedef struct _umull_inst {
+struct umull_inst {
     unsigned int S;
     unsigned int RdHi;
     unsigned int RdLo;
     unsigned int Rs;
     unsigned int Rm;
-} umull_inst;
-typedef struct _smlad_inst {
+};
+
+struct smlad_inst {
     unsigned int m;
     unsigned int Rm;
     unsigned int Rd;
@@ -895,58 +896,58 @@ typedef struct _smlad_inst {
     unsigned int Rn;
     unsigned int op1;
     unsigned int op2;
-} smlad_inst;
+};
 
-typedef struct _smla_inst {
+struct smla_inst {
     unsigned int x;
     unsigned int y;
     unsigned int Rm;
     unsigned int Rd;
     unsigned int Rs;
     unsigned int Rn;
-} smla_inst;
+};
 
-typedef struct smlalxy_inst {
+struct smlalxy_inst {
     unsigned int x;
     unsigned int y;
     unsigned int RdLo;
     unsigned int RdHi;
     unsigned int Rm;
     unsigned int Rn;
-} smlalxy_inst;
+};
 
-typedef struct ssat_inst {
+struct ssat_inst {
     unsigned int Rn;
     unsigned int Rd;
     unsigned int imm5;
     unsigned int sat_imm;
     unsigned int shift_type;
-} ssat_inst;
+};
 
-typedef struct umaal_inst {
+struct umaal_inst {
     unsigned int Rn;
     unsigned int Rm;
     unsigned int RdHi;
     unsigned int RdLo;
-} umaal_inst;
+};
 
-typedef struct _umlal_inst {
+struct umlal_inst {
     unsigned int S;
     unsigned int Rm;
     unsigned int Rs;
     unsigned int RdHi;
     unsigned int RdLo;
-} umlal_inst;
+};
 
-typedef struct _smlal_inst {
+struct smlal_inst {
     unsigned int S;
     unsigned int Rm;
     unsigned int Rs;
     unsigned int RdHi;
     unsigned int RdLo;
-} smlal_inst;
+};
 
-typedef struct smlald_inst {
+struct smlald_inst {
     unsigned int RdLo;
     unsigned int RdHi;
     unsigned int Rm;
@@ -954,17 +955,17 @@ typedef struct smlald_inst {
     unsigned int swap;
     unsigned int op1;
     unsigned int op2;
-} smlald_inst;
+};
 
-typedef struct _mla_inst {
+struct mla_inst {
     unsigned int S;
     unsigned int Rn;
     unsigned int Rd;
     unsigned int Rs;
     unsigned int Rm;
-} mla_inst;
+};
 
-typedef struct _mrc_inst {
+struct mrc_inst {
     unsigned int opcode_1;
     unsigned int opcode_2;
     unsigned int cp_num;
@@ -972,9 +973,9 @@ typedef struct _mrc_inst {
     unsigned int crm;
     unsigned int Rd;
     unsigned int inst;
-} mrc_inst;
+};
 
-typedef struct _mcr_inst {
+struct mcr_inst {
     unsigned int opcode_1;
     unsigned int opcode_2;
     unsigned int cp_num;
@@ -982,77 +983,77 @@ typedef struct _mcr_inst {
     unsigned int crm;
     unsigned int Rd;
     unsigned int inst;
-} mcr_inst;
+};
 
-typedef struct mcrr_inst {
+struct mcrr_inst {
     unsigned int opcode_1;
     unsigned int cp_num;
     unsigned int crm;
     unsigned int rt;
     unsigned int rt2;
-} mcrr_inst;
+};
 
-typedef struct _mrs_inst {
+struct mrs_inst {
     unsigned int R;
     unsigned int Rd;
-} mrs_inst;
+};
 
-typedef struct _msr_inst {
+struct msr_inst {
     unsigned int field_mask;
     unsigned int R;
     unsigned int inst;
-} msr_inst;
+};
 
-typedef struct _pld_inst {
-} pld_inst;
+struct pld_inst {
+};
 
-typedef struct _sxtb_inst {
+struct sxtb_inst {
     unsigned int Rd;
     unsigned int Rm;
     unsigned int rotate;
-} sxtb_inst;
+};
 
-typedef struct _sxtab_inst {
+struct sxtab_inst {
     unsigned int Rd;
     unsigned int Rn;
     unsigned int Rm;
     unsigned rotate;
-} sxtab_inst;
+};
 
-typedef struct _sxtah_inst {
+struct sxtah_inst {
     unsigned int Rd;
     unsigned int Rn;
     unsigned int Rm;
     unsigned int rotate;
-} sxtah_inst;
+};
 
-typedef struct _sxth_inst {
+struct sxth_inst {
     unsigned int Rd;
     unsigned int Rm;
     unsigned int rotate;
-} sxth_inst;
+};
 
-typedef struct _uxtab_inst {
+struct uxtab_inst {
     unsigned int Rn;
     unsigned int Rd;
     unsigned int rotate;
     unsigned int Rm;
-} uxtab_inst;
+};
 
-typedef struct _uxtah_inst {
+struct uxtah_inst {
     unsigned int Rn;
     unsigned int Rd;
     unsigned int rotate;
     unsigned int Rm;
-} uxtah_inst;
+};
 
-typedef struct _uxth_inst {
+struct uxth_inst {
     unsigned int Rd;
     unsigned int Rm;
     unsigned int rotate;
-} uxth_inst;
+};
 
-typedef struct _cdp_inst {
+struct cdp_inst {
     unsigned int opcode_1;
     unsigned int CRn;
     unsigned int CRd;
@@ -1060,49 +1061,49 @@ typedef struct _cdp_inst {
     unsigned int opcode_2;
     unsigned int CRm;
     unsigned int inst;
-}cdp_inst;
+};
 
-typedef struct _uxtb_inst {
+struct uxtb_inst {
     unsigned int Rd;
     unsigned int Rm;
     unsigned int rotate;
-} uxtb_inst;
+};
 
-typedef struct _swp_inst {
+struct swp_inst {
     unsigned int Rn;
     unsigned int Rd;
     unsigned int Rm;
-} swp_inst;
+};
 
-typedef struct setend_inst {
+struct setend_inst {
     unsigned int set_bigend;
-} setend_inst;
+};
 
-typedef struct _b_2_thumb {
+struct b_2_thumb {
     unsigned int imm;
-}b_2_thumb;
-typedef struct _b_cond_thumb {
+};
+struct b_cond_thumb {
     unsigned int imm;
     unsigned int cond;
-}b_cond_thumb;
+};
 
-typedef struct _bl_1_thumb {
+struct bl_1_thumb {
     unsigned int imm;
-}bl_1_thumb;
-typedef struct _bl_2_thumb {
+};
+struct bl_2_thumb {
     unsigned int imm;
-}bl_2_thumb;
-typedef struct _blx_1_thumb {
+};
+struct blx_1_thumb {
     unsigned int imm;
     unsigned int instr;
-}blx_1_thumb;
+};
 
-typedef struct _pkh_inst {
+struct pkh_inst {
     unsigned int Rm;
     unsigned int Rn;
     unsigned int Rd;
     unsigned char imm;
-} pkh_inst;
+};
 
 typedef arm_inst * ARM_INST_PTR;
 
