@@ -68,6 +68,67 @@ static void remove_exclusive(ARMul_State* state, ARMword addr){
     state->exclusive_tag = 0xFFFFFFFF;
 }
 
+static int CondPassed(ARMul_State* cpu, unsigned int cond) {
+    #define NFLAG        cpu->NFlag
+    #define ZFLAG        cpu->ZFlag
+    #define CFLAG        cpu->CFlag
+    #define VFLAG        cpu->VFlag
+
+    int temp = 0;
+
+    switch (cond) {
+    case 0x0:
+        temp = ZFLAG;
+        break;
+    case 0x1: // NE
+        temp = !ZFLAG;
+        break;
+    case 0x2: // CS
+        temp = CFLAG;
+        break;
+    case 0x3: // CC
+        temp = !CFLAG;
+        break;
+    case 0x4: // MI
+        temp = NFLAG;
+        break;
+    case 0x5: // PL
+        temp = !NFLAG;
+        break;
+    case 0x6: // VS
+        temp = VFLAG;
+        break;
+    case 0x7: // VC
+        temp = !VFLAG;
+        break;
+    case 0x8: // HI
+        temp = (CFLAG && !ZFLAG);
+        break;
+    case 0x9: // LS
+        temp = (!CFLAG || ZFLAG);
+        break;
+    case 0xa: // GE
+        temp = ((!NFLAG && !VFLAG) || (NFLAG && VFLAG));
+        break;
+    case 0xb: // LT
+        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG));
+        break;
+    case 0xc: // GT
+        temp = ((!NFLAG && !VFLAG && !ZFLAG) || (NFLAG && VFLAG && !ZFLAG));
+        break;
+    case 0xd: // LE
+        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG)) || ZFLAG;
+        break;
+    case 0xe: // AL
+        temp = 1;
+        break;
+    case 0xf:
+        temp = 1;
+        break;
+    }
+    return temp;
+}
+
 static unsigned int DPO(Immediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int immed_8 = BITS(sht_oper, 0, 7);
     unsigned int rotate_imm = BITS(sht_oper, 8, 11);
@@ -229,8 +290,6 @@ struct ldst_inst {
     get_addr_fp_t get_addr;
 };
 #define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
-
-int CondPassed(ARMul_State* cpu, unsigned int cond);
 
 #define LnSWoUB(s)   glue(LnSWoUB, s)
 #define MLnS(s)      glue(MLnS, s)
@@ -1108,9 +1167,9 @@ struct pkh_inst {
 typedef arm_inst * ARM_INST_PTR;
 
 #define CACHE_BUFFER_SIZE    (64 * 1024 * 2000)
-char inst_buf[CACHE_BUFFER_SIZE];
-int top = 0;
-inline void *AllocBuffer(unsigned int size) {
+static char inst_buf[CACHE_BUFFER_SIZE];
+static int top = 0;
+static inline void *AllocBuffer(unsigned int size) {
     int start = top;
     top += size;
     if (top > CACHE_BUFFER_SIZE) {
@@ -1118,67 +1177,6 @@ inline void *AllocBuffer(unsigned int size) {
         CITRA_IGNORE_EXIT(-1);
     }
     return (void *)&inst_buf[start];
-}
-
-int CondPassed(ARMul_State* cpu, unsigned int cond) {
-    #define NFLAG        cpu->NFlag
-    #define ZFLAG        cpu->ZFlag
-    #define CFLAG        cpu->CFlag
-    #define VFLAG        cpu->VFlag
-
-    int temp = 0;
-
-    switch (cond) {
-    case 0x0:
-        temp = ZFLAG;
-        break;
-    case 0x1: // NE
-        temp = !ZFLAG;
-        break;
-    case 0x6: // VS
-        temp = VFLAG;
-        break;
-    case 0x7: // VC
-        temp = !VFLAG;
-        break;
-    case 0x4: // MI
-        temp = NFLAG;
-        break;
-    case 0x5: // PL
-        temp = !NFLAG;
-        break;
-    case 0x2: // CS
-        temp = CFLAG;
-        break;
-    case 0x3: // CC
-        temp = !CFLAG;
-        break;
-    case 0x8: // HI
-        temp = (CFLAG && !ZFLAG);
-        break;
-    case 0x9: // LS
-        temp = (!CFLAG || ZFLAG);
-        break;
-    case 0xa: // GE
-        temp = ((!NFLAG && !VFLAG) || (NFLAG && VFLAG));
-        break;
-    case 0xb: // LT
-        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG));
-        break;
-    case 0xc: // GT
-        temp = ((!NFLAG && !VFLAG && !ZFLAG) || (NFLAG && VFLAG && !ZFLAG));
-        break;
-    case 0xd: // LE
-        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG)) || ZFLAG;
-        break;
-    case 0xe: // AL
-        temp = 1;
-        break;
-    case 0xf:
-        temp = 1;
-        break;
-    }
-    return temp;
 }
 
 enum DECODE_STATUS {
