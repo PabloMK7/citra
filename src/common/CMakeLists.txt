@@ -9,7 +9,6 @@ set(SRCS
             logging/filter.cpp
             logging/text_formatter.cpp
             logging/backend.cpp
-            math_util.cpp
             memory_util.cpp
             misc.cpp
             profiler.cpp
