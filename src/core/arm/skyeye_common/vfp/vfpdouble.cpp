@@ -531,7 +531,7 @@ static u32 vfp_double_fsito(ARMul_State* state, int dd, int unused, int dm, u32 
     LOG_TRACE(Core_ARM11, "In %s\n", __FUNCTION__);
     vdm.sign = (m & 0x80000000) >> 16;
     vdm.exponent = 1023 + 63 - 1;
-    vdm.significand = vdm.sign ? -m : m;
+    vdm.significand = vdm.sign ? (~m + 1) : m;
 
     return vfp_double_normaliseround(state, dd, &vdm, fpscr, 0, "fsito");
 }
@@ -669,7 +669,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
             exceptions |= FPSCR_IXC;
 
         if (vdm.sign)
-            d = -d;
+            d = (~d + 1);
     } else {
         d = 0;
         if (vdm.exponent | vdm.significand) {
@@ -817,7 +817,7 @@ u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn,struct vfp_dou
         m_sig = vdn->significand - m_sig;
         if ((s64)m_sig < 0) {
             vdd->sign = vfp_sign_negate(vdd->sign);
-            m_sig = -m_sig;
+            m_sig = (~m_sig + 1);
         } else if (m_sig == 0) {
             vdd->sign = (fpscr & FPSCR_RMODE_MASK) ==
                         FPSCR_ROUND_MINUSINF ? 0x8000 : 0;

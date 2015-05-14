@@ -388,7 +388,7 @@ sqrt_invalid:
         } else {
             u64 term;
             s64 rem;
-            vsm.significand <<= !(vsm.exponent & 1);
+            vsm.significand <<= static_cast<u32>((vsm.exponent & 1) == 0);
             term = (u64)vsd.significand * vsd.significand;
             rem = ((u64)vsm.significand << 32) - term;
 
@@ -691,7 +691,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
             exceptions |= FPSCR_IXC;
 
         if (vsm.sign)
-            d = 0-d;
+            d = (~d + 1);
     } else {
         d = 0;
         if (vsm.exponent | vsm.significand) {
@@ -843,7 +843,7 @@ vfp_single_add(struct vfp_single *vsd, struct vfp_single *vsn,
         m_sig = vsn->significand - m_sig;
         if ((s32)m_sig < 0) {
             vsd->sign = vfp_sign_negate(vsd->sign);
-            m_sig = 0-m_sig;
+            m_sig = (~m_sig + 1);
         } else if (m_sig == 0) {
             vsd->sign = (fpscr & FPSCR_RMODE_MASK) ==
                         FPSCR_ROUND_MINUSINF ? 0x8000 : 0;
