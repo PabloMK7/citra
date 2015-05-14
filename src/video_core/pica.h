@@ -163,7 +163,7 @@ struct Regs {
         RGB565       =  3,
         RGBA4        =  4,
         IA8          =  5,
-
+        RG8          =  6,  ///< @note Also called HILO8 in 3DBrew.
         I8           =  7,
         A8           =  8,
         IA4          =  9,
@@ -204,6 +204,7 @@ struct Regs {
         case TextureFormat::RGB565:
         case TextureFormat::RGBA4:
         case TextureFormat::IA8:
+        case TextureFormat::RG8:
             return 4;
 
         case TextureFormat::I4:
