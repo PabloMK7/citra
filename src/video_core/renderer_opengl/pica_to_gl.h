@@ -41,7 +41,7 @@ inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     return gl_mode;
 }
 
-inline GLenum BlendFunc(u32 factor) {
+inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     static const GLenum blend_func_table[] = {
         GL_ZERO,                     // BlendFactor::Zero
         GL_ONE,                      // BlendFactor::One
@@ -61,17 +61,17 @@ inline GLenum BlendFunc(u32 factor) {
     };
 
     // Range check table for input
-    if (factor >= ARRAY_SIZE(blend_func_table)) {
+    if ((unsigned)factor >= ARRAY_SIZE(blend_func_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown blend factor %d", factor);
         UNREACHABLE();
 
         return GL_ONE;
     }
 
-    return blend_func_table[factor];
+    return blend_func_table[(unsigned)factor];
 }
 
-inline GLenum CompareFunc(u32 func) {
+inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     static const GLenum compare_func_table[] = {
         GL_NEVER,    // CompareFunc::Never
         GL_ALWAYS,   // CompareFunc::Always
@@ -84,14 +84,14 @@ inline GLenum CompareFunc(u32 func) {
     };
 
     // Range check table for input
-    if (func >= ARRAY_SIZE(compare_func_table)) {
+    if ((unsigned)func >= ARRAY_SIZE(compare_func_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown compare function %d", func);
         UNREACHABLE();
 
         return GL_ALWAYS;
     }
 
-    return compare_func_table[func];
+    return compare_func_table[(unsigned)func];
 }
 
 inline std::array<GLfloat, 4> ColorRGBA8(const u8* bytes) {

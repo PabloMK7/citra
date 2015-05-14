@@ -24,72 +24,74 @@ namespace Pica {
 namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
-    const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
     // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
     // NOTE: The framebuffer height register contains the actual FB height minus one.
-    y = (registers.framebuffer.height - y);
+    y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
-    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer.width * bytes_per_pixel;
     u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
 
-    switch (registers.framebuffer.color_format) {
-    case Pica::Regs::ColorFormat::RGBA8:
+    switch (framebuffer.color_format) {
+    case Regs::ColorFormat::RGBA8:
         Color::EncodeRGBA8(color, dst_pixel);
         break;
 
-    case Pica::Regs::ColorFormat::RGB8:
+    case Regs::ColorFormat::RGB8:
         Color::EncodeRGB8(color, dst_pixel);
         break;
 
-    case Pica::Regs::ColorFormat::RGB5A1:
+    case Regs::ColorFormat::RGB5A1:
         Color::EncodeRGB5A1(color, dst_pixel);
         break;
 
-    case Pica::Regs::ColorFormat::RGB565:
+    case Regs::ColorFormat::RGB565:
         Color::EncodeRGB565(color, dst_pixel);
         break;
 
-    case Pica::Regs::ColorFormat::RGBA4:
+    case Regs::ColorFormat::RGBA4:
         Color::EncodeRGBA4(color, dst_pixel);
         break;
 
     default:
-        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format.Value());
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", framebuffer.color_format.Value());
         UNIMPLEMENTED();
     }
 }
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
-    const PAddr addr = registers.framebuffer.GetColorBufferPhysicalAddress();
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
-    y = (registers.framebuffer.height - y);
+    y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(registers.framebuffer.color_format.Value()));
-    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * registers.framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer.width * bytes_per_pixel;
     u8* src_pixel = Memory::GetPhysicalPointer(addr) + src_offset;
 
-    switch (registers.framebuffer.color_format) {
-    case Pica::Regs::ColorFormat::RGBA8:
+    switch (framebuffer.color_format) {
+    case Regs::ColorFormat::RGBA8:
         return Color::DecodeRGBA8(src_pixel);
 
-    case Pica::Regs::ColorFormat::RGB8:
+    case Regs::ColorFormat::RGB8:
         return Color::DecodeRGB8(src_pixel);
 
-    case Pica::Regs::ColorFormat::RGB5A1:
+    case Regs::ColorFormat::RGB5A1:
         return Color::DecodeRGB5A1(src_pixel);
 
-    case Pica::Regs::ColorFormat::RGB565:
+    case Regs::ColorFormat::RGB565:
         return Color::DecodeRGB565(src_pixel);
 
-    case Pica::Regs::ColorFormat::RGBA4:
+    case Regs::ColorFormat::RGBA4:
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", registers.framebuffer.color_format.Value());
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", framebuffer.color_format.Value());
         UNIMPLEMENTED();
     }
 
@@ -97,58 +99,60 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
 }
 
 static u32 GetDepth(int x, int y) {
-    const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
-    y = (registers.framebuffer.height - y);
+    y = framebuffer.height - y;
     
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(registers.framebuffer.depth_format);
-    u32 stride = registers.framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel = Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* src_pixel = depth_buffer + src_offset;
 
-    switch (registers.framebuffer.depth_format) {
-        case Pica::Regs::DepthFormat::D16:
+    switch (framebuffer.depth_format) {
+        case Regs::DepthFormat::D16:
             return Color::DecodeD16(src_pixel);
-        case Pica::Regs::DepthFormat::D24:
+        case Regs::DepthFormat::D24:
             return Color::DecodeD24(src_pixel);
-        case Pica::Regs::DepthFormat::D24S8:
+        case Regs::DepthFormat::D24S8:
             return Color::DecodeD24S8(src_pixel).x;
         default:
-            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
+            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
             UNIMPLEMENTED();
             return 0;
     }
 }
 
 static void SetDepth(int x, int y, u32 value) {
-    const PAddr addr = registers.framebuffer.GetDepthBufferPhysicalAddress();
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
-    y = (registers.framebuffer.height - y);
+    y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(registers.framebuffer.depth_format);
-    u32 stride = registers.framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel = Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* dst_pixel = depth_buffer + dst_offset;
 
-    switch (registers.framebuffer.depth_format) {
-        case Pica::Regs::DepthFormat::D16:
+    switch (framebuffer.depth_format) {
+        case Regs::DepthFormat::D16:
             Color::EncodeD16(value, dst_pixel);
             break;
-        case Pica::Regs::DepthFormat::D24:
+        case Regs::DepthFormat::D24:
             Color::EncodeD24(value, dst_pixel);
             break;
-        case Pica::Regs::DepthFormat::D24S8:
+        case Regs::DepthFormat::D24S8:
             // TODO(Subv): Implement the stencil buffer
             Color::EncodeD24S8(value, 0, dst_pixel);
             break;
         default:
-            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", registers.framebuffer.depth_format);
+            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
             UNIMPLEMENTED();
             break;
     }
@@ -200,6 +204,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                                     const VertexShader::OutputVertex& v2,
                                     bool reversed = false)
 {
+    const auto& regs = g_state.regs;
     Common::Profiling::ScopeTimer timer(rasterization_category);
 
     // vertex positions in rasterizer coordinates
@@ -216,14 +221,14 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                                    ScreenToRasterizerCoordinates(v1.screenpos),
                                    ScreenToRasterizerCoordinates(v2.screenpos) };
 
-    if (registers.cull_mode == Regs::CullMode::KeepAll) {
+    if (regs.cull_mode == Regs::CullMode::KeepAll) {
         // Make sure we always end up with a triangle wound counter-clockwise
         if (!reversed && SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0) {
             ProcessTriangleInternal(v0, v2, v1, true);
             return;
         }
     } else {
-        if (!reversed && registers.cull_mode == Regs::CullMode::KeepClockWise) {
+        if (!reversed && regs.cull_mode == Regs::CullMode::KeepClockWise) {
             // Reverse vertex order and use the CCW code path.
             ProcessTriangleInternal(v0, v2, v1, true);
             return;
@@ -268,8 +273,8 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
     auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
-    auto textures = registers.GetTextures();
-    auto tev_stages = registers.GetTevStages();
+    auto textures = regs.GetTextures();
+    auto tev_stages = regs.GetTevStages();
 
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
@@ -384,8 +389,8 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             // analogously.
             Math::Vec4<u8> combiner_output;
             Math::Vec4<u8> combiner_buffer = {
-                registers.tev_combiner_buffer_color.r, registers.tev_combiner_buffer_color.g,
-                registers.tev_combiner_buffer_color.b, registers.tev_combiner_buffer_color.a
+                regs.tev_combiner_buffer_color.r, regs.tev_combiner_buffer_color.g,
+                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a
             };
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
@@ -609,51 +614,52 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 combiner_output[2] = std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
                 combiner_output[3] = std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
 
-                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
+                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
                     combiner_buffer.r() = combiner_output.r();
                     combiner_buffer.g() = combiner_output.g();
                     combiner_buffer.b() = combiner_output.b();
                 }
 
-                if (registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
+                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
                     combiner_buffer.a() = combiner_output.a();
                 }
             }
 
-            if (registers.output_merger.alpha_test.enable) {
+            const auto& output_merger = regs.output_merger;
+            if (output_merger.alpha_test.enable) {
                 bool pass = false;
 
-                switch (registers.output_merger.alpha_test.func) {
-                case registers.output_merger.Never:
+                switch (output_merger.alpha_test.func) {
+                case Regs::CompareFunc::Never:
                     pass = false;
                     break;
 
-                case registers.output_merger.Always:
+                case Regs::CompareFunc::Always:
                     pass = true;
                     break;
 
-                case registers.output_merger.Equal:
-                    pass = combiner_output.a() == registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::Equal:
+                    pass = combiner_output.a() == output_merger.alpha_test.ref;
                     break;
 
-                case registers.output_merger.NotEqual:
-                    pass = combiner_output.a() != registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::NotEqual:
+                    pass = combiner_output.a() != output_merger.alpha_test.ref;
                     break;
 
-                case registers.output_merger.LessThan:
-                    pass = combiner_output.a() < registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::LessThan:
+                    pass = combiner_output.a() < output_merger.alpha_test.ref;
                     break;
 
-                case registers.output_merger.LessThanOrEqual:
-                    pass = combiner_output.a() <= registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::LessThanOrEqual:
+                    pass = combiner_output.a() <= output_merger.alpha_test.ref;
                     break;
 
-                case registers.output_merger.GreaterThan:
-                    pass = combiner_output.a() > registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::GreaterThan:
+                    pass = combiner_output.a() > output_merger.alpha_test.ref;
                     break;
 
-                case registers.output_merger.GreaterThanOrEqual:
-                    pass = combiner_output.a() >= registers.output_merger.alpha_test.ref;
+                case Regs::CompareFunc::GreaterThanOrEqual:
+                    pass = combiner_output.a() >= output_merger.alpha_test.ref;
                     break;
                 }
 
@@ -662,8 +668,8 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             }
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
-            if (registers.output_merger.depth_test_enable) {
-                unsigned num_bits = Pica::Regs::DepthBitsPerPixel(registers.framebuffer.depth_format);
+            if (output_merger.depth_test_enable) {
+                unsigned num_bits = Regs::DepthBitsPerPixel(regs.framebuffer.depth_format);
                 u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
                                v1.screenpos[2].ToFloat32() * w1 +
                                v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
@@ -671,36 +677,36 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                 bool pass = false;
 
-                switch (registers.output_merger.depth_test_func) {
-                case registers.output_merger.Never:
+                switch (output_merger.depth_test_func) {
+                case Regs::CompareFunc::Never:
                     pass = false;
                     break;
 
-                case registers.output_merger.Always:
+                case Regs::CompareFunc::Always:
                     pass = true;
                     break;
 
-                case registers.output_merger.Equal:
+                case Regs::CompareFunc::Equal:
                     pass = z == ref_z;
                     break;
 
-                case registers.output_merger.NotEqual:
+                case Regs::CompareFunc::NotEqual:
                     pass = z != ref_z;
                     break;
 
-                case registers.output_merger.LessThan:
+                case Regs::CompareFunc::LessThan:
                     pass = z < ref_z;
                     break;
 
-                case registers.output_merger.LessThanOrEqual:
+                case Regs::CompareFunc::LessThanOrEqual:
                     pass = z <= ref_z;
                     break;
 
-                case registers.output_merger.GreaterThan:
+                case Regs::CompareFunc::GreaterThan:
                     pass = z > ref_z;
                     break;
 
-                case registers.output_merger.GreaterThanOrEqual:
+                case Regs::CompareFunc::GreaterThanOrEqual:
                     pass = z >= ref_z;
                     break;
                 }
@@ -708,59 +714,59 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 if (!pass)
                     continue;
 
-                if (registers.output_merger.depth_write_enable)
+                if (output_merger.depth_write_enable)
                     SetDepth(x >> 4, y >> 4, z);
             }
 
             auto dest = GetPixel(x >> 4, y >> 4);
             Math::Vec4<u8> blend_output = combiner_output;
 
-            if (registers.output_merger.alphablend_enable) {
-                auto params = registers.output_merger.alpha_blending;
+            if (output_merger.alphablend_enable) {
+                auto params = output_merger.alpha_blending;
 
-                auto LookupFactorRGB = [&](decltype(params)::BlendFactor factor) -> Math::Vec3<u8> {
+                auto LookupFactorRGB = [&](Regs::BlendFactor factor) -> Math::Vec3<u8> {
                     switch (factor) {
-                    case params.Zero:
+                    case Regs::BlendFactor::Zero :
                         return Math::Vec3<u8>(0, 0, 0);
 
-                    case params.One:
+                    case Regs::BlendFactor::One :
                         return Math::Vec3<u8>(255, 255, 255);
 
-                    case params.SourceColor:
+                    case Regs::BlendFactor::SourceColor:
                         return combiner_output.rgb();
 
-                    case params.OneMinusSourceColor:
+                    case Regs::BlendFactor::OneMinusSourceColor:
                         return Math::Vec3<u8>(255 - combiner_output.r(), 255 - combiner_output.g(), 255 - combiner_output.b());
 
-                    case params.DestColor:
+                    case Regs::BlendFactor::DestColor:
                         return dest.rgb();
 
-                    case params.OneMinusDestColor:
+                    case Regs::BlendFactor::OneMinusDestColor:
                         return Math::Vec3<u8>(255 - dest.r(), 255 - dest.g(), 255 - dest.b());
 
-                    case params.SourceAlpha:
+                    case Regs::BlendFactor::SourceAlpha:
                         return Math::Vec3<u8>(combiner_output.a(), combiner_output.a(), combiner_output.a());
 
-                    case params.OneMinusSourceAlpha:
+                    case Regs::BlendFactor::OneMinusSourceAlpha:
                         return Math::Vec3<u8>(255 - combiner_output.a(), 255 - combiner_output.a(), 255 - combiner_output.a());
 
-                    case params.DestAlpha:
+                    case Regs::BlendFactor::DestAlpha:
                         return Math::Vec3<u8>(dest.a(), dest.a(), dest.a());
 
-                    case params.OneMinusDestAlpha:
+                    case Regs::BlendFactor::OneMinusDestAlpha:
                         return Math::Vec3<u8>(255 - dest.a(), 255 - dest.a(), 255 - dest.a());
 
-                    case params.ConstantColor:
-                        return Math::Vec3<u8>(registers.output_merger.blend_const.r, registers.output_merger.blend_const.g, registers.output_merger.blend_const.b);
+                    case Regs::BlendFactor::ConstantColor:
+                        return Math::Vec3<u8>(output_merger.blend_const.r, output_merger.blend_const.g, output_merger.blend_const.b);
 
-                    case params.OneMinusConstantColor:
-                        return Math::Vec3<u8>(255 - registers.output_merger.blend_const.r, 255 - registers.output_merger.blend_const.g, 255 - registers.output_merger.blend_const.b);
+                    case Regs::BlendFactor::OneMinusConstantColor:
+                        return Math::Vec3<u8>(255 - output_merger.blend_const.r, 255 - output_merger.blend_const.g, 255 - output_merger.blend_const.b);
 
-                    case params.ConstantAlpha:
-                        return Math::Vec3<u8>(registers.output_merger.blend_const.a, registers.output_merger.blend_const.a, registers.output_merger.blend_const.a);
+                    case Regs::BlendFactor::ConstantAlpha:
+                        return Math::Vec3<u8>(output_merger.blend_const.a, output_merger.blend_const.a, output_merger.blend_const.a);
 
-                    case params.OneMinusConstantAlpha:
-                        return Math::Vec3<u8>(255 - registers.output_merger.blend_const.a, 255 - registers.output_merger.blend_const.a, 255 - registers.output_merger.blend_const.a);
+                    case Regs::BlendFactor::OneMinusConstantAlpha:
+                        return Math::Vec3<u8>(255 - output_merger.blend_const.a, 255 - output_merger.blend_const.a, 255 - output_merger.blend_const.a);
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
@@ -769,31 +775,31 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                auto LookupFactorA = [&](decltype(params)::BlendFactor factor) -> u8 {
+                auto LookupFactorA = [&](Regs::BlendFactor factor) -> u8 {
                     switch (factor) {
-                    case params.Zero:
+                    case Regs::BlendFactor::Zero:
                         return 0;
 
-                    case params.One:
+                    case Regs::BlendFactor::One:
                         return 255;
 
-                    case params.SourceAlpha:
+                    case Regs::BlendFactor::SourceAlpha:
                         return combiner_output.a();
 
-                    case params.OneMinusSourceAlpha:
+                    case Regs::BlendFactor::OneMinusSourceAlpha:
                         return 255 - combiner_output.a();
 
-                    case params.DestAlpha:
+                    case Regs::BlendFactor::DestAlpha:
                         return dest.a();
 
-                    case params.OneMinusDestAlpha:
+                    case Regs::BlendFactor::OneMinusDestAlpha:
                         return 255 - dest.a();
 
-                    case params.ConstantAlpha:
-                        return registers.output_merger.blend_const.a;
+                    case Regs::BlendFactor::ConstantAlpha:
+                        return output_merger.blend_const.a;
 
-                    case params.OneMinusConstantAlpha:
-                        return 255 - registers.output_merger.blend_const.a;
+                    case Regs::BlendFactor::OneMinusConstantAlpha:
+                        return 255 - output_merger.blend_const.a;
 
                     default:
                         LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);
@@ -802,7 +808,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                using BlendEquation = decltype(params)::BlendEquation;
+                using BlendEquation = Regs::BlendEquation;
                 static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
                                                        const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
                                                        BlendEquation equation) {
@@ -812,29 +818,29 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     auto dst_result = (dest * destfactor).Cast<int>();
 
                     switch (equation) {
-                    case BlendEquation::Add:
+                    case Regs::BlendEquation::Add:
                         result = (src_result + dst_result) / 255;
                         break;
 
-                    case BlendEquation::Subtract:
+                    case Regs::BlendEquation::Subtract:
                         result = (src_result - dst_result) / 255;
                         break;
 
-                    case BlendEquation::ReverseSubtract:
+                    case Regs::BlendEquation::ReverseSubtract:
                         result = (dst_result - src_result) / 255;
                         break;
 
                     // TODO: How do these two actually work?
                     //       OpenGL doesn't include the blend factors in the min/max computations,
                     //       but is this what the 3DS actually does?
-                    case BlendEquation::Min:
+                    case Regs::BlendEquation::Min:
                         result.r() = std::min(src.r(), dest.r());
                         result.g() = std::min(src.g(), dest.g());
                         result.b() = std::min(src.b(), dest.b());
                         result.a() = std::min(src.a(), dest.a());
                         break;
 
-                    case BlendEquation::Max:
+                    case Regs::BlendEquation::Max:
                         result.r() = std::max(src.r(), dest.r());
                         result.g() = std::max(src.g(), dest.g());
                         result.b() = std::max(src.b(), dest.b());
@@ -860,15 +866,15 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
                 blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
             } else {
-                LOG_CRITICAL(HW_GPU, "logic op: %x", registers.output_merger.logic_op);
+                LOG_CRITICAL(HW_GPU, "logic op: %x", output_merger.logic_op);
                 UNIMPLEMENTED();
             }
 
             const Math::Vec4<u8> result = {
-                registers.output_merger.red_enable   ? blend_output.r() : dest.r(),
-                registers.output_merger.green_enable ? blend_output.g() : dest.g(),
-                registers.output_merger.blue_enable  ? blend_output.b() : dest.b(),
-                registers.output_merger.alpha_enable ? blend_output.a() : dest.a()
+                output_merger.red_enable   ? blend_output.r() : dest.r(),
+                output_merger.green_enable ? blend_output.g() : dest.g(),
+                output_merger.blue_enable  ? blend_output.b() : dest.b(),
+                output_merger.alpha_enable ? blend_output.a() : dest.a()
             };
 
             DrawPixel(x >> 4, y >> 4, result);

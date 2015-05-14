@@ -46,7 +46,7 @@ void RasterizerOpenGL::InitObjects() {
 
     uniform_tev_combiner_buffer_color = glGetUniformLocation(shader.handle, "tev_combiner_buffer_color");
 
-    const auto tev_stages = Pica::registers.GetTevStages();
+    const auto tev_stages = Pica::g_state.regs.GetTevStages();
     for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
         auto& uniform_tev_cfg = uniform_tev_cfgs[tev_stage_index];
 
@@ -128,6 +128,8 @@ void RasterizerOpenGL::InitObjects() {
 }
 
 void RasterizerOpenGL::Reset() {
+    const auto& regs = Pica::g_state.regs;
+
     SyncCullMode();
     SyncBlendEnabled();
     SyncBlendFuncs();
@@ -137,46 +139,46 @@ void RasterizerOpenGL::Reset() {
     SyncDepthTest();
 
     // TEV stage 0
-    SyncTevSources(0, Pica::registers.tev_stage0);
-    SyncTevModifiers(0, Pica::registers.tev_stage0);
-    SyncTevOps(0, Pica::registers.tev_stage0);
-    SyncTevColor(0, Pica::registers.tev_stage0);
-    SyncTevMultipliers(0, Pica::registers.tev_stage0);
+    SyncTevSources(0, regs.tev_stage0);
+    SyncTevModifiers(0, regs.tev_stage0);
+    SyncTevOps(0, regs.tev_stage0);
+    SyncTevColor(0, regs.tev_stage0);
+    SyncTevMultipliers(0, regs.tev_stage0);
 
     // TEV stage 1
-    SyncTevSources(1, Pica::registers.tev_stage1);
-    SyncTevModifiers(1, Pica::registers.tev_stage1);
-    SyncTevOps(1, Pica::registers.tev_stage1);
-    SyncTevColor(1, Pica::registers.tev_stage1);
-    SyncTevMultipliers(1, Pica::registers.tev_stage1);
+    SyncTevSources(1, regs.tev_stage1);
+    SyncTevModifiers(1, regs.tev_stage1);
+    SyncTevOps(1, regs.tev_stage1);
+    SyncTevColor(1, regs.tev_stage1);
+    SyncTevMultipliers(1, regs.tev_stage1);
 
     // TEV stage 2
-    SyncTevSources(2, Pica::registers.tev_stage2);
-    SyncTevModifiers(2, Pica::registers.tev_stage2);
-    SyncTevOps(2, Pica::registers.tev_stage2);
-    SyncTevColor(2, Pica::registers.tev_stage2);
-    SyncTevMultipliers(2, Pica::registers.tev_stage2);
+    SyncTevSources(2, regs.tev_stage2);
+    SyncTevModifiers(2, regs.tev_stage2);
+    SyncTevOps(2, regs.tev_stage2);
+    SyncTevColor(2, regs.tev_stage2);
+    SyncTevMultipliers(2, regs.tev_stage2);
 
     // TEV stage 3
-    SyncTevSources(3, Pica::registers.tev_stage3);
-    SyncTevModifiers(3, Pica::registers.tev_stage3);
-    SyncTevOps(3, Pica::registers.tev_stage3);
-    SyncTevColor(3, Pica::registers.tev_stage3);
-    SyncTevMultipliers(3, Pica::registers.tev_stage3);
+    SyncTevSources(3, regs.tev_stage3);
+    SyncTevModifiers(3, regs.tev_stage3);
+    SyncTevOps(3, regs.tev_stage3);
+    SyncTevColor(3, regs.tev_stage3);
+    SyncTevMultipliers(3, regs.tev_stage3);
 
     // TEV stage 4
-    SyncTevSources(4, Pica::registers.tev_stage4);
-    SyncTevModifiers(4, Pica::registers.tev_stage4);
-    SyncTevOps(4, Pica::registers.tev_stage4);
-    SyncTevColor(4, Pica::registers.tev_stage4);
-    SyncTevMultipliers(4, Pica::registers.tev_stage4);
+    SyncTevSources(4, regs.tev_stage4);
+    SyncTevModifiers(4, regs.tev_stage4);
+    SyncTevOps(4, regs.tev_stage4);
+    SyncTevColor(4, regs.tev_stage4);
+    SyncTevMultipliers(4, regs.tev_stage4);
 
     // TEV stage 5
-    SyncTevSources(5, Pica::registers.tev_stage5);
-    SyncTevModifiers(5, Pica::registers.tev_stage5);
-    SyncTevOps(5, Pica::registers.tev_stage5);
-    SyncTevColor(5, Pica::registers.tev_stage5);
-    SyncTevMultipliers(5, Pica::registers.tev_stage5);
+    SyncTevSources(5, regs.tev_stage5);
+    SyncTevModifiers(5, regs.tev_stage5);
+    SyncTevOps(5, regs.tev_stage5);
+    SyncTevColor(5, regs.tev_stage5);
+    SyncTevMultipliers(5, regs.tev_stage5);
 
     SyncCombinerColor();
     SyncCombinerWriteFlags();
@@ -210,6 +212,8 @@ void RasterizerOpenGL::CommitFramebuffer() {
 }
 
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
+    const auto& regs = Pica::g_state.regs;
+
     if (!Settings::values.use_hw_renderer)
         return;
 
@@ -247,104 +251,104 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // TEV stage 0
     case PICA_REG_INDEX(tev_stage0.color_source1):
-        SyncTevSources(0, Pica::registers.tev_stage0);
+        SyncTevSources(0, regs.tev_stage0);
         break;
     case PICA_REG_INDEX(tev_stage0.color_modifier1):
-        SyncTevModifiers(0, Pica::registers.tev_stage0);
+        SyncTevModifiers(0, regs.tev_stage0);
         break;
     case PICA_REG_INDEX(tev_stage0.color_op):
-        SyncTevOps(0, Pica::registers.tev_stage0);
+        SyncTevOps(0, regs.tev_stage0);
         break;
     case PICA_REG_INDEX(tev_stage0.const_r):
-        SyncTevColor(0, Pica::registers.tev_stage0);
+        SyncTevColor(0, regs.tev_stage0);
         break;
     case PICA_REG_INDEX(tev_stage0.color_scale):
-        SyncTevMultipliers(0, Pica::registers.tev_stage0);
+        SyncTevMultipliers(0, regs.tev_stage0);
         break;
 
     // TEV stage 1
     case PICA_REG_INDEX(tev_stage1.color_source1):
-        SyncTevSources(1, Pica::registers.tev_stage1);
+        SyncTevSources(1, regs.tev_stage1);
         break;
     case PICA_REG_INDEX(tev_stage1.color_modifier1):
-        SyncTevModifiers(1, Pica::registers.tev_stage1);
+        SyncTevModifiers(1, regs.tev_stage1);
         break;
     case PICA_REG_INDEX(tev_stage1.color_op):
-        SyncTevOps(1, Pica::registers.tev_stage1);
+        SyncTevOps(1, regs.tev_stage1);
         break;
     case PICA_REG_INDEX(tev_stage1.const_r):
-        SyncTevColor(1, Pica::registers.tev_stage1);
+        SyncTevColor(1, regs.tev_stage1);
         break;
     case PICA_REG_INDEX(tev_stage1.color_scale):
-        SyncTevMultipliers(1, Pica::registers.tev_stage1);
+        SyncTevMultipliers(1, regs.tev_stage1);
         break;
 
     // TEV stage 2
     case PICA_REG_INDEX(tev_stage2.color_source1):
-        SyncTevSources(2, Pica::registers.tev_stage2);
+        SyncTevSources(2, regs.tev_stage2);
         break;
     case PICA_REG_INDEX(tev_stage2.color_modifier1):
-        SyncTevModifiers(2, Pica::registers.tev_stage2);
+        SyncTevModifiers(2, regs.tev_stage2);
         break;
     case PICA_REG_INDEX(tev_stage2.color_op):
-        SyncTevOps(2, Pica::registers.tev_stage2);
+        SyncTevOps(2, regs.tev_stage2);
         break;
     case PICA_REG_INDEX(tev_stage2.const_r):
-        SyncTevColor(2, Pica::registers.tev_stage2);
+        SyncTevColor(2, regs.tev_stage2);
         break;
     case PICA_REG_INDEX(tev_stage2.color_scale):
-        SyncTevMultipliers(2, Pica::registers.tev_stage2);
+        SyncTevMultipliers(2, regs.tev_stage2);
         break;
 
     // TEV stage 3
     case PICA_REG_INDEX(tev_stage3.color_source1):
-        SyncTevSources(3, Pica::registers.tev_stage3);
+        SyncTevSources(3, regs.tev_stage3);
         break;
     case PICA_REG_INDEX(tev_stage3.color_modifier1):
-        SyncTevModifiers(3, Pica::registers.tev_stage3);
+        SyncTevModifiers(3, regs.tev_stage3);
         break;
     case PICA_REG_INDEX(tev_stage3.color_op):
-        SyncTevOps(3, Pica::registers.tev_stage3);
+        SyncTevOps(3, regs.tev_stage3);
         break;
     case PICA_REG_INDEX(tev_stage3.const_r):
-        SyncTevColor(3, Pica::registers.tev_stage3);
+        SyncTevColor(3, regs.tev_stage3);
         break;
     case PICA_REG_INDEX(tev_stage3.color_scale):
-        SyncTevMultipliers(3, Pica::registers.tev_stage3);
+        SyncTevMultipliers(3, regs.tev_stage3);
         break;
 
     // TEV stage 4
     case PICA_REG_INDEX(tev_stage4.color_source1):
-        SyncTevSources(4, Pica::registers.tev_stage4);
+        SyncTevSources(4, regs.tev_stage4);
         break;
     case PICA_REG_INDEX(tev_stage4.color_modifier1):
-        SyncTevModifiers(4, Pica::registers.tev_stage4);
+        SyncTevModifiers(4, regs.tev_stage4);
         break;
     case PICA_REG_INDEX(tev_stage4.color_op):
-        SyncTevOps(4, Pica::registers.tev_stage4);
+        SyncTevOps(4, regs.tev_stage4);
         break;
     case PICA_REG_INDEX(tev_stage4.const_r):
-        SyncTevColor(4, Pica::registers.tev_stage4);
+        SyncTevColor(4, regs.tev_stage4);
         break;
     case PICA_REG_INDEX(tev_stage4.color_scale):
-        SyncTevMultipliers(4, Pica::registers.tev_stage4);
+        SyncTevMultipliers(4, regs.tev_stage4);
         break;
 
     // TEV stage 5
     case PICA_REG_INDEX(tev_stage5.color_source1):
-        SyncTevSources(5, Pica::registers.tev_stage5);
+        SyncTevSources(5, regs.tev_stage5);
         break;
     case PICA_REG_INDEX(tev_stage5.color_modifier1):
-        SyncTevModifiers(5, Pica::registers.tev_stage5);
+        SyncTevModifiers(5, regs.tev_stage5);
         break;
     case PICA_REG_INDEX(tev_stage5.color_op):
-        SyncTevOps(5, Pica::registers.tev_stage5);
+        SyncTevOps(5, regs.tev_stage5);
         break;
     case PICA_REG_INDEX(tev_stage5.const_r):
-        SyncTevColor(5, Pica::registers.tev_stage5);
+        SyncTevColor(5, regs.tev_stage5);
         break;
     case PICA_REG_INDEX(tev_stage5.color_scale):
-        SyncTevMultipliers(5, Pica::registers.tev_stage5);
+        SyncTevMultipliers(5, regs.tev_stage5);
         break;
     
     // TEV combiner buffer color
@@ -360,16 +364,18 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 }
 
 void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
+    const auto& regs = Pica::g_state.regs;
+
     if (!Settings::values.use_hw_renderer)
         return;
 
-    PAddr cur_fb_color_addr = Pica::registers.framebuffer.GetColorBufferPhysicalAddress();
-    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(Pica::registers.framebuffer.color_format)
-                            * Pica::registers.framebuffer.GetWidth() * Pica::registers.framebuffer.GetHeight();
+    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
-    PAddr cur_fb_depth_addr = Pica::registers.framebuffer.GetDepthBufferPhysicalAddress();
-    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(Pica::registers.framebuffer.depth_format)
-                            * Pica::registers.framebuffer.GetWidth() * Pica::registers.framebuffer.GetHeight();
+    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
     // If source memory region overlaps 3DS framebuffers, commit them before the copy happens
     if (MathUtil::IntervalsIntersect(addr, size, cur_fb_color_addr, cur_fb_color_size))
@@ -380,16 +386,18 @@ void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
 }
 
 void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
+    const auto& regs = Pica::g_state.regs;
+
     if (!Settings::values.use_hw_renderer)
         return;
 
-    PAddr cur_fb_color_addr = Pica::registers.framebuffer.GetColorBufferPhysicalAddress();
-    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(Pica::registers.framebuffer.color_format)
-                            * Pica::registers.framebuffer.GetWidth() * Pica::registers.framebuffer.GetHeight();
+    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
-    PAddr cur_fb_depth_addr = Pica::registers.framebuffer.GetDepthBufferPhysicalAddress();
-    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(Pica::registers.framebuffer.depth_format)
-                            * Pica::registers.framebuffer.GetWidth() * Pica::registers.framebuffer.GetHeight();
+    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
     // If modified memory region overlaps 3DS framebuffers, reload their contents into OpenGL
     if (MathUtil::IntervalsIntersect(addr, size, cur_fb_color_addr, cur_fb_color_size))
@@ -501,14 +509,16 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
 }
 
 void RasterizerOpenGL::SyncFramebuffer() {
-    PAddr cur_fb_color_addr = Pica::registers.framebuffer.GetColorBufferPhysicalAddress();
-    Pica::Regs::ColorFormat new_fb_color_format = Pica::registers.framebuffer.color_format;
+    const auto& regs = Pica::g_state.regs;
 
-    PAddr cur_fb_depth_addr = Pica::registers.framebuffer.GetDepthBufferPhysicalAddress();
-    Pica::Regs::DepthFormat new_fb_depth_format = Pica::registers.framebuffer.depth_format;
+    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    Pica::Regs::ColorFormat new_fb_color_format = regs.framebuffer.color_format;
 
-    bool fb_size_changed = fb_color_texture.width != Pica::registers.framebuffer.GetWidth() ||
-                           fb_color_texture.height != Pica::registers.framebuffer.GetHeight();
+    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    Pica::Regs::DepthFormat new_fb_depth_format = regs.framebuffer.depth_format;
+
+    bool fb_size_changed = fb_color_texture.width != regs.framebuffer.GetWidth() ||
+                           fb_color_texture.height != regs.framebuffer.GetHeight();
 
     bool color_fb_prop_changed = fb_color_texture.format != new_fb_color_format ||
                                  fb_size_changed;
@@ -532,12 +542,12 @@ void RasterizerOpenGL::SyncFramebuffer() {
     // Reconfigure framebuffer textures if any property has changed
     if (color_fb_prop_changed) {
         ReconfigureColorTexture(fb_color_texture, new_fb_color_format,
-                                Pica::registers.framebuffer.GetWidth(), Pica::registers.framebuffer.GetHeight());
+                                regs.framebuffer.GetWidth(), regs.framebuffer.GetHeight());
     }
 
     if (depth_fb_prop_changed) {
         ReconfigureDepthTexture(fb_depth_texture, new_fb_depth_format,
-                                Pica::registers.framebuffer.GetWidth(), Pica::registers.framebuffer.GetHeight());
+                                regs.framebuffer.GetWidth(), regs.framebuffer.GetHeight());
 
         // Only attach depth buffer as stencil if it supports stencil
         switch (new_fb_depth_format) {
@@ -572,7 +582,9 @@ void RasterizerOpenGL::SyncFramebuffer() {
 }
 
 void RasterizerOpenGL::SyncCullMode() {
-    switch (Pica::registers.cull_mode) {
+    const auto& regs = Pica::g_state.regs;
+
+    switch (regs.cull_mode) {
     case Pica::Regs::CullMode::KeepAll:
         state.cull.enabled = false;
         break;
@@ -588,25 +600,26 @@ void RasterizerOpenGL::SyncCullMode() {
         break;
 
     default:
-        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode %d", Pica::registers.cull_mode.Value());
+        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode %d", regs.cull_mode.Value());
         UNIMPLEMENTED();
         break;
     }
 }
 
 void RasterizerOpenGL::SyncBlendEnabled() {
-    state.blend.enabled = Pica::registers.output_merger.alphablend_enable;
+    state.blend.enabled = (Pica::g_state.regs.output_merger.alphablend_enable == 1);
 }
 
 void RasterizerOpenGL::SyncBlendFuncs() {
-    state.blend.src_rgb_func = PicaToGL::BlendFunc(Pica::registers.output_merger.alpha_blending.factor_source_rgb);
-    state.blend.dst_rgb_func = PicaToGL::BlendFunc(Pica::registers.output_merger.alpha_blending.factor_dest_rgb);
-    state.blend.src_a_func = PicaToGL::BlendFunc(Pica::registers.output_merger.alpha_blending.factor_source_a);
-    state.blend.dst_a_func = PicaToGL::BlendFunc(Pica::registers.output_merger.alpha_blending.factor_dest_a);
+    const auto& regs = Pica::g_state.regs;
+    state.blend.src_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_rgb);
+    state.blend.dst_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_rgb);
+    state.blend.src_a_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_a);
+    state.blend.dst_a_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_a);
 }
 
 void RasterizerOpenGL::SyncBlendColor() {
-    auto blend_color = PicaToGL::ColorRGBA8((u8*)&Pica::registers.output_merger.blend_const.r);
+    auto blend_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.output_merger.blend_const.r);
     state.blend.color.red = blend_color[0];
     state.blend.color.green = blend_color[1];
     state.blend.color.blue = blend_color[2];
@@ -614,9 +627,10 @@ void RasterizerOpenGL::SyncBlendColor() {
 }
 
 void RasterizerOpenGL::SyncAlphaTest() {
-    glUniform1i(uniform_alphatest_enabled, Pica::registers.output_merger.alpha_test.enable);
-    glUniform1i(uniform_alphatest_func, Pica::registers.output_merger.alpha_test.func);
-    glUniform1f(uniform_alphatest_ref, Pica::registers.output_merger.alpha_test.ref / 255.0f);
+    const auto& regs = Pica::g_state.regs;
+    glUniform1i(uniform_alphatest_enabled, regs.output_merger.alpha_test.enable);
+    glUniform1i(uniform_alphatest_func, (GLint)regs.output_merger.alpha_test.func.Value());
+    glUniform1f(uniform_alphatest_ref, regs.output_merger.alpha_test.ref / 255.0f);
 }
 
 void RasterizerOpenGL::SyncStencilTest() {
@@ -624,9 +638,10 @@ void RasterizerOpenGL::SyncStencilTest() {
 }
 
 void RasterizerOpenGL::SyncDepthTest() {
-    state.depth.test_enabled = Pica::registers.output_merger.depth_test_enable;
-    state.depth.test_func = PicaToGL::CompareFunc(Pica::registers.output_merger.depth_test_func);
-    state.depth.write_mask = Pica::registers.output_merger.depth_write_enable ? GL_TRUE : GL_FALSE;
+    const auto& regs = Pica::g_state.regs;
+    state.depth.test_enabled = (regs.output_merger.depth_test_enable == 1);
+    state.depth.test_func = PicaToGL::CompareFunc(regs.output_merger.depth_test_func);
+    state.depth.write_mask = regs.output_merger.depth_write_enable ? GL_TRUE : GL_FALSE;
 }
 
 void RasterizerOpenGL::SyncTevSources(unsigned stage_index, const Pica::Regs::TevStageConfig& config) {
@@ -667,34 +682,37 @@ void RasterizerOpenGL::SyncTevMultipliers(unsigned stage_index, const Pica::Regs
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
-    auto combiner_color = PicaToGL::ColorRGBA8((u8*)&Pica::registers.tev_combiner_buffer_color.r);
+    auto combiner_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.tev_combiner_buffer_color.r);
     glUniform4fv(uniform_tev_combiner_buffer_color, 1, combiner_color.data());
 }
 
 void RasterizerOpenGL::SyncCombinerWriteFlags() {
-    const auto tev_stages = Pica::registers.GetTevStages();
+    const auto& regs = Pica::g_state.regs;
+    const auto tev_stages = regs.GetTevStages();
     for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
         glUniform2i(uniform_tev_cfgs[tev_stage_index].updates_combiner_buffer_color_alpha,
-                    Pica::registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index),
-                    Pica::registers.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index));
+                    regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index),
+                    regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index));
     }
 }
 
 void RasterizerOpenGL::SyncDrawState() {
+    const auto& regs = Pica::g_state.regs;
+
     // Sync the viewport
-    GLsizei viewport_width = (GLsizei)Pica::float24::FromRawFloat24(Pica::registers.viewport_size_x).ToFloat32() * 2;
-    GLsizei viewport_height = (GLsizei)Pica::float24::FromRawFloat24(Pica::registers.viewport_size_y).ToFloat32() * 2;
+    GLsizei viewport_width = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_x).ToFloat32() * 2;
+    GLsizei viewport_height = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_y).ToFloat32() * 2;
 
     // OpenGL uses different y coordinates, so negate corner offset and flip origin
     // TODO: Ensure viewport_corner.x should not be negated or origin flipped
     // TODO: Use floating-point viewports for accuracy if supported
-    glViewport((GLsizei)static_cast<float>(Pica::registers.viewport_corner.x),
-                -(GLsizei)static_cast<float>(Pica::registers.viewport_corner.y)
-                    + Pica::registers.framebuffer.GetHeight() - viewport_height,
+    glViewport((GLsizei)static_cast<float>(regs.viewport_corner.x),
+                -(GLsizei)static_cast<float>(regs.viewport_corner.y)
+                    + regs.framebuffer.GetHeight() - viewport_height,
                 viewport_width, viewport_height);
 
     // Sync bound texture(s), upload if not cached
-    const auto pica_textures = Pica::registers.GetTextures();
+    const auto pica_textures = regs.GetTextures();
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
         const auto& texture = pica_textures[texture_index];
 
@@ -707,7 +725,7 @@ void RasterizerOpenGL::SyncDrawState() {
     }
 
     // Skip processing TEV stages that simply pass the previous stage results through
-    const auto tev_stages = Pica::registers.GetTevStages();
+    const auto tev_stages = regs.GetTevStages();
     for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
         glUniform1i(uniform_tev_cfgs[tev_stage_index].enabled, !IsPassThroughTevStage(tev_stages[tev_stage_index]));
     }
@@ -716,7 +734,7 @@ void RasterizerOpenGL::SyncDrawState() {
 }
 
 void RasterizerOpenGL::ReloadColorBuffer() {
-    u8* color_buffer = Memory::GetPhysicalPointer(Pica::registers.framebuffer.GetColorBufferPhysicalAddress());
+    u8* color_buffer = Memory::GetPhysicalPointer(Pica::g_state.regs.framebuffer.GetColorBufferPhysicalAddress());
 
     if (color_buffer == nullptr)
         return;
@@ -748,7 +766,7 @@ void RasterizerOpenGL::ReloadColorBuffer() {
 
 void RasterizerOpenGL::ReloadDepthBuffer() {
     // TODO: Appears to work, but double-check endianness of depth values and order of depth-stencil
-    u8* depth_buffer = Memory::GetPhysicalPointer(Pica::registers.framebuffer.GetDepthBufferPhysicalAddress());
+    u8* depth_buffer = Memory::GetPhysicalPointer(Pica::g_state.regs.framebuffer.GetDepthBufferPhysicalAddress());
 
     if (depth_buffer == nullptr) {
         return;

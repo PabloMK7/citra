@@ -228,7 +228,7 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
 
 #define COMMAND_IN_RANGE(cmd_id, reg_name)   \
     (cmd_id >= PICA_REG_INDEX(reg_name) &&   \
-     cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::registers.reg_name)) / 4)
+     cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::g_state.regs.reg_name)) / 4)
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
@@ -244,8 +244,8 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
         } else {
             index = 2;
         }
-        auto config = Pica::registers.GetTextures()[index].config;
-        auto format = Pica::registers.GetTextures()[index].format;
+        auto config = Pica::g_state.regs.GetTextures()[index].config;
+        auto format = Pica::g_state.regs.GetTextures()[index].format;
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
 
         // TODO: Instead, emit a signal here to be caught by the main window widget.
@@ -270,8 +270,8 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         } else {
             index = 2;
         }
-        auto config = Pica::registers.GetTextures()[index].config;
-        auto format = Pica::registers.GetTextures()[index].format;
+        auto config = Pica::g_state.regs.GetTextures()[index].config;
+        auto format = Pica::g_state.regs.GetTextures()[index].format;
 
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
         u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
