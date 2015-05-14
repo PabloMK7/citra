@@ -6,8 +6,11 @@
 
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/file_util.h"
 
+#include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/file_backend.h"
+#include "core/settings.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"
@@ -23,7 +26,7 @@ const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
 const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 const char CONSOLE_USERNAME[0x14] = "CITRA";
-/// This will be initialized in CFGInit, and will be used when creating the block
+/// This will be initialized in Init, and will be used when creating the block
 UsernameBlock CONSOLE_USERNAME_BLOCK;
 /// TODO(Subv): Find out what this actually is
 const u8 SOUND_OUTPUT_MODE = 2;
@@ -46,6 +49,140 @@ static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
 
 static Service::FS::ArchiveHandle cfg_system_save_data_archive;
 static const std::vector<u8> cfg_system_savedata_id = { 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00 };
+
+void GetCountryCodeString(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 country_code_id = cmd_buff[1];
+
+    if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
+        LOG_ERROR(Service_CFG, "requested country code id=%d is invalid", country_code_id);
+        cmd_buff[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+        return;
+    }
+
+    cmd_buff[1] = 0;
+    cmd_buff[2] = country_codes[country_code_id];
+}
+
+void GetCountryCodeID(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u16 country_code = cmd_buff[1];
+    u16 country_code_id = 0;
+
+    // The following algorithm will fail if the first country code isn't 0.
+    DEBUG_ASSERT(country_codes[0] == 0);
+
+    for (u16 id = 0; id < country_codes.size(); ++id) {
+        if (country_codes[id] == country_code) {
+            country_code_id = id;
+            break;
+        }
+    }
+
+    if (0 == country_code_id) {
+        LOG_ERROR(Service_CFG, "requested country code name=%c%c is invalid", country_code & 0xff, country_code >> 8);
+        cmd_buff[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+        cmd_buff[2] = 0xFFFF;
+        return;
+    }
+
+    cmd_buff[1] = 0;
+    cmd_buff[2] = country_code_id;
+}
+
+void SecureInfoGetRegion(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = Settings::values.region_value;
+}
+
+void GenHashConsoleUnique(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 app_id_salt = cmd_buff[1];
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 0x33646D6F ^ (app_id_salt & 0xFFFFF); // 3dmoo hash
+    cmd_buff[3] = 0x6F534841 ^ (app_id_salt & 0xFFFFF);
+
+    LOG_WARNING(Service_CFG, "(STUBBED) called app_id_salt=0x%X", app_id_salt);
+}
+
+void GetRegionCanadaUSA(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    u8 canada_or_usa = 1;
+    if (canada_or_usa == Settings::values.region_value) {
+        cmd_buff[2] = 1;
+    } else {
+        cmd_buff[2] = 0;
+    }
+}
+
+void GetSystemModel(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 data;
+
+    // TODO(Subv): Find out the correct error codes
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(0x000F0004, 4, 0x8,
+                                                   reinterpret_cast<u8*>(&data)).raw;
+    cmd_buff[2] = data & 0xFF;
+}
+
+void GetModelNintendo2DS(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 data;
+
+    // TODO(Subv): Find out the correct error codes
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(0x000F0004, 4, 0x8,
+                                                   reinterpret_cast<u8*>(&data)).raw;
+
+    u8 model = data & 0xFF;
+    if (model == Service::CFG::NINTENDO_2DS)
+        cmd_buff[2] = 0;
+    else
+        cmd_buff[2] = 1;
+}
+
+void GetConfigInfoBlk2(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 size = cmd_buff[1];
+    u32 block_id = cmd_buff[2];
+    u8* data_pointer = Memory::GetPointer(cmd_buff[4]);
+
+    if (data_pointer == nullptr) {
+        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
+        return;
+    }
+
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x2, data_pointer).raw;
+}
+
+void GetConfigInfoBlk8(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 size = cmd_buff[1];
+    u32 block_id = cmd_buff[2];
+    u8* data_pointer = Memory::GetPointer(cmd_buff[4]);
+
+    if (data_pointer == nullptr) {
+        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
+        return;
+    }
+
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x8, data_pointer).raw;
+}
+
+void UpdateConfigNANDSavegame(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    cmd_buff[1] = Service::CFG::UpdateConfigNANDSavegame().raw;
+}
+
+void FormatConfig(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    cmd_buff[1] = Service::CFG::FormatConfig().raw;
+}
 
 ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     // Read the header
