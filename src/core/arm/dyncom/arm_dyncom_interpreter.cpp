@@ -3536,6 +3536,10 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(mrc),
     INTERPRETER_TRANSLATE(mcr),
     INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
     INTERPRETER_TRANSLATE(ldrb),
     INTERPRETER_TRANSLATE(strb),
     INTERPRETER_TRANSLATE(ldr),
@@ -3912,28 +3916,32 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     case 172: goto MRC_INST; \
     case 173: goto MCR_INST; \
     case 174: goto MSR_INST; \
-    case 175: goto LDRB_INST; \
-    case 176: goto STRB_INST; \
-    case 177: goto LDR_INST; \
-    case 178: goto LDRCOND_INST ; \
-    case 179: goto STR_INST; \
-    case 180: goto CDP_INST; \
-    case 181: goto STC_INST; \
-    case 182: goto LDC_INST; \
-    case 183: goto LDREXD_INST; \
-    case 184: goto STREXD_INST; \
-    case 185: goto LDREXH_INST; \
-    case 186: goto STREXH_INST; \
-    case 187: goto SWI_INST; \
-    case 188: goto BBL_INST; \
-    case 189: goto B_2_THUMB ; \
-    case 190: goto B_COND_THUMB ; \
-    case 191: goto BL_1_THUMB ; \
-    case 192: goto BL_2_THUMB ; \
-    case 193: goto BLX_1_THUMB ; \
-    case 194: goto DISPATCH; \
-    case 195: goto INIT_INST_LENGTH; \
-    case 196: goto END; \
+    case 175: goto MSR_INST; \
+    case 176: goto MSR_INST; \
+    case 177: goto MSR_INST; \
+    case 178: goto MSR_INST; \
+    case 179: goto LDRB_INST; \
+    case 180: goto STRB_INST; \
+    case 181: goto LDR_INST; \
+    case 182: goto LDRCOND_INST ; \
+    case 183: goto STR_INST; \
+    case 184: goto CDP_INST; \
+    case 185: goto STC_INST; \
+    case 186: goto LDC_INST; \
+    case 187: goto LDREXD_INST; \
+    case 188: goto STREXD_INST; \
+    case 189: goto LDREXH_INST; \
+    case 190: goto STREXH_INST; \
+    case 191: goto SWI_INST; \
+    case 192: goto BBL_INST; \
+    case 193: goto B_2_THUMB ; \
+    case 194: goto B_COND_THUMB ; \
+    case 195: goto BL_1_THUMB ; \
+    case 196: goto BL_2_THUMB ; \
+    case 197: goto BLX_1_THUMB ; \
+    case 198: goto DISPATCH; \
+    case 199: goto INIT_INST_LENGTH; \
+    case 200: goto END; \
     }
 #endif
 
@@ -3979,7 +3987,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         &&MCRR_INST,&&MRRC_INST,&&CMP_INST,&&TST_INST,&&TEQ_INST,&&CMN_INST,&&SMULL_INST,&&UMULL_INST,&&UMLAL_INST,&&SMLAL_INST,&&MUL_INST,
         &&MLA_INST,&&SSAT_INST,&&USAT_INST,&&MRS_INST,&&MSR_INST,&&AND_INST,&&BIC_INST,&&LDM_INST,&&EOR_INST,&&ADD_INST,&&RSB_INST,&&RSC_INST,
         &&SBC_INST,&&ADC_INST,&&SUB_INST,&&ORR_INST,&&MVN_INST,&&MOV_INST,&&STM_INST,&&LDM_INST,&&LDRSH_INST,&&STM_INST,&&LDM_INST,&&LDRSB_INST,
-        &&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,&&MSR_INST,
+        &&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,
+        &&MSR_INST, &&MSR_INST, &&MSR_INST, &&MSR_INST, &&MSR_INST,
         &&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST, &&LDREXD_INST,
         &&STREXD_INST,&&LDREXH_INST,&&STREXH_INST, &&SWI_INST,&&BBL_INST,
         &&B_2_THUMB, &&B_COND_THUMB,&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,
