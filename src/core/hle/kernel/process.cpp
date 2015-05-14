@@ -27,7 +27,7 @@ SharedPtr<Process> Process::Create(std::string name, u64 program_id) {
 }
 
 void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
-    for (int i = 0; i < len; ++i) {
+    for (size_t i = 0; i < len; ++i) {
         u32 descriptor = kernel_caps[i];
         u32 type = descriptor >> 20;
 
@@ -64,8 +64,8 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             AddressMapping mapping;
             mapping.address = descriptor << 12;
             mapping.size = (end_desc << 12) - mapping.address;
-            mapping.writable = descriptor & (1 << 20);
-            mapping.unk_flag = end_desc & (1 << 20);
+            mapping.writable = (descriptor & (1 << 20)) != 0;
+            mapping.unk_flag = (end_desc & (1 << 20)) != 0;
 
             address_mappings.push_back(mapping);
         } else if ((type & 0xFFF) == 0xFFE) { // 0x000F
