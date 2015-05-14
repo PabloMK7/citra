@@ -616,7 +616,7 @@ struct Regs {
         }
 
         inline bool IsDefaultAttribute(int id) const {
-            return (id >= 12) || (attribute_mask & (1 << id)) != 0;
+            return (id >= 12) || (attribute_mask & (1ULL << id)) != 0;
         }
 
         inline int GetNumTotalAttributes() const {
