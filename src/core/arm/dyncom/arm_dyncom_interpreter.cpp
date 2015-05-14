@@ -798,14 +798,6 @@ struct bkpt_inst {
     u32 imm;
 };
 
-struct blx1_inst {
-    unsigned int addr;
-};
-
-struct blx2_inst {
-    unsigned int Rm;
-};
-
 typedef struct _stc_inst {
 } stc_inst;
 
