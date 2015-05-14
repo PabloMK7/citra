@@ -454,8 +454,6 @@ void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 c
         }
         else if (crn == 7 && opcode_1 == 0)
         {
-            LOG_WARNING(Core_ARM11, "Cache operations are not fully implemented.");
-
             if (crm == 0 && opcode_2 == 4)
             {
                 cpu->CP15[CP15_WAIT_FOR_INTERRUPT] = value;
