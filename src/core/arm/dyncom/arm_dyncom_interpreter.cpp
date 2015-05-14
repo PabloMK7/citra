@@ -69,10 +69,10 @@ static void remove_exclusive(ARMul_State* state, ARMword addr){
 }
 
 static int CondPassed(ARMul_State* cpu, unsigned int cond) {
-    #define NFLAG        cpu->NFlag
-    #define ZFLAG        cpu->ZFlag
-    #define CFLAG        cpu->CFlag
-    #define VFLAG        cpu->VFlag
+    const u32 NFLAG = cpu->NFlag;
+    const u32 ZFLAG = cpu->ZFlag;
+    const u32 CFLAG = cpu->CFlag;
+    const u32 VFLAG = cpu->VFlag;
 
     int temp = 0;
 
