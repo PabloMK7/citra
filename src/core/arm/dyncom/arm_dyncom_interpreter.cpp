@@ -13,6 +13,7 @@
 #include "core/mem_map.h"
 #include "core/hle/svc.h"
 #include "core/arm/disassembler/arm_disasm.h"
+#include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
@@ -1178,13 +1179,6 @@ static inline void *AllocBuffer(unsigned int size) {
     }
     return (void *)&inst_buf[start];
 }
-
-enum DECODE_STATUS {
-    DECODE_SUCCESS,
-    DECODE_FAILURE
-};
-
-int decode_arm_instr(uint32_t instr, int32_t *idx);
 
 static shtop_fp_t get_shtop(unsigned int inst) {
     if (BIT(inst, 25)) {
