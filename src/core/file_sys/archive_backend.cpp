@@ -8,7 +8,7 @@
 #include "common/string_util.h"
 
 #include "core/file_sys/archive_backend.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 
 namespace FileSys {

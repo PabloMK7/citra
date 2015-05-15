@@ -10,7 +10,7 @@
 #include "common/logging/log.h"
 #include "common/profiler.h"
 
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/hle/svc.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"

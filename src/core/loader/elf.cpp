@@ -12,7 +12,7 @@
 
 #include "core/hle/kernel/kernel.h"
 #include "core/loader/elf.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ELF Header Constants

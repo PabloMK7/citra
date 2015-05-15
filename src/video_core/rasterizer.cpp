@@ -9,6 +9,8 @@
 #include "common/profiler.h"
 
 #include "core/hw/gpu.h"
+#include "core/memory.h"
+
 #include "debug_utils/debug_utils.h"
 #include "math.h"
 #include "color.h"

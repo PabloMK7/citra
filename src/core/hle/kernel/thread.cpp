@@ -21,7 +21,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 namespace Kernel {
 

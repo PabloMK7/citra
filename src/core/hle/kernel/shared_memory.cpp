@@ -6,7 +6,7 @@
 
 #include "common/logging/log.h"
 
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/hle/kernel/shared_memory.h"
 
 namespace Kernel {

@@ -8,7 +8,7 @@
 
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 namespace Kernel {
 

@@ -99,7 +99,7 @@ set(SRCS
             loader/loader.cpp
             loader/ncch.cpp
             mem_map.cpp
-            mem_map_funcs.cpp
+            memory.cpp
             settings.cpp
             system.cpp
             )
@@ -211,6 +211,8 @@ set(HEADERS
             loader/loader.h
             loader/ncch.h
             mem_map.h
+            memory.h
+            memory_setup.h
             settings.h
             system.h
             )

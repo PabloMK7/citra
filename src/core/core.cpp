@@ -8,7 +8,6 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
-#include "core/mem_map.h"
 #include "core/settings.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"

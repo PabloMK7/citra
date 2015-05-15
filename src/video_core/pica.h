@@ -16,8 +16,6 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "core/mem_map.h"
-
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name

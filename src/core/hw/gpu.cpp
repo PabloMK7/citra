@@ -8,7 +8,7 @@
 
 #include "core/settings.h"
 #include "core/core.h"
-#include "core/mem_map.h"
+#include "core/memory.h"
 #include "core/core_timing.h"
 
 #include "core/hle/hle.h"

@@ -5,7 +5,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "core/mem_map.h"
+#include "core/memory.h"
 
 #include "core/hle/hle.h"
 #include "core/hle/kernel/address_arbiter.h"
