@@ -2037,6 +2037,19 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
     return inst_base;
 }
 
+// NOP introduced in ARMv6K.
+static ARM_INST_PTR INTERPRETER_TRANSLATE(nop)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    return inst_base;
+}
+
 static ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(pkh_inst));
@@ -2324,6 +2337,18 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)
     inst_base->load_r15 = 0;
 
     inst_cream->set_bigend = BIT(inst, 9);
+
+    return inst_base;
+}
+
+static ARM_INST_PTR INTERPRETER_TRANSLATE(sev)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
 
     return inst_base;
 }
@@ -3332,6 +3357,40 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb16)(unsigned int inst, int index)
     return INTERPRETER_TRANSLATE(uxtab16)(inst, index);
 }
 
+static ARM_INST_PTR INTERPRETER_TRANSLATE(wfe)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    return inst_base;
+}
+static ARM_INST_PTR INTERPRETER_TRANSLATE(wfi)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    return inst_base;
+}
+static ARM_INST_PTR INTERPRETER_TRANSLATE(yield)(unsigned int inst, int index)
+{
+    arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
+
+    inst_base->cond     = BITS(inst, 28, 31);
+    inst_base->idx      = index;
+    inst_base->br       = NON_BRANCH;
+    inst_base->load_r15 = 0;
+
+    return inst_base;
+}
+
 // Floating point VFPv3 structures and instructions
 
 #define VFP_INTERPRETER_STRUCT
@@ -3521,6 +3580,10 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(mrc),
     INTERPRETER_TRANSLATE(mcr),
     INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
+    INTERPRETER_TRANSLATE(msr),
     INTERPRETER_TRANSLATE(ldrb),
     INTERPRETER_TRANSLATE(strb),
     INTERPRETER_TRANSLATE(ldr),
@@ -3529,12 +3592,17 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(cdp),
     INTERPRETER_TRANSLATE(stc),
     INTERPRETER_TRANSLATE(ldc),
-    INTERPRETER_TRANSLATE(swi),
-    INTERPRETER_TRANSLATE(bbl),
     INTERPRETER_TRANSLATE(ldrexd),
     INTERPRETER_TRANSLATE(strexd),
     INTERPRETER_TRANSLATE(ldrexh),
     INTERPRETER_TRANSLATE(strexh),
+    INTERPRETER_TRANSLATE(nop),
+    INTERPRETER_TRANSLATE(yield),
+    INTERPRETER_TRANSLATE(wfe),
+    INTERPRETER_TRANSLATE(wfi),
+    INTERPRETER_TRANSLATE(sev),
+    INTERPRETER_TRANSLATE(swi),
+    INTERPRETER_TRANSLATE(bbl),
 
     // All the thumb instructions should be placed the end of table
     INTERPRETER_TRANSLATE(b_2_thumb), 
@@ -3708,7 +3776,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     #define FETCH_INST if (inst_base->br != NON_BRANCH) goto DISPATCH; \
                        inst_base = (arm_inst *)&inst_buf[ptr]
 
-    #define INC_PC(l) ptr += sizeof(arm_inst) + l
+    #define INC_PC(l)   ptr += sizeof(arm_inst) + l
+    #define INC_PC_STUB ptr += sizeof(arm_inst)
 
 // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
 // clunky switch statement.
@@ -3897,28 +3966,37 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     case 172: goto MRC_INST; \
     case 173: goto MCR_INST; \
     case 174: goto MSR_INST; \
-    case 175: goto LDRB_INST; \
-    case 176: goto STRB_INST; \
-    case 177: goto LDR_INST; \
-    case 178: goto LDRCOND_INST ; \
-    case 179: goto STR_INST; \
-    case 180: goto CDP_INST; \
-    case 181: goto STC_INST; \
-    case 182: goto LDC_INST; \
-    case 183: goto SWI_INST; \
-    case 184: goto BBL_INST; \
-    case 185: goto LDREXD_INST; \
-    case 186: goto STREXD_INST; \
-    case 187: goto LDREXH_INST; \
-    case 188: goto STREXH_INST; \
-    case 189: goto B_2_THUMB ; \
-    case 190: goto B_COND_THUMB ; \
-    case 191: goto BL_1_THUMB ; \
-    case 192: goto BL_2_THUMB ; \
-    case 193: goto BLX_1_THUMB ; \
-    case 194: goto DISPATCH; \
-    case 195: goto INIT_INST_LENGTH; \
-    case 196: goto END; \
+    case 175: goto MSR_INST; \
+    case 176: goto MSR_INST; \
+    case 177: goto MSR_INST; \
+    case 178: goto MSR_INST; \
+    case 179: goto LDRB_INST; \
+    case 180: goto STRB_INST; \
+    case 181: goto LDR_INST; \
+    case 182: goto LDRCOND_INST ; \
+    case 183: goto STR_INST; \
+    case 184: goto CDP_INST; \
+    case 185: goto STC_INST; \
+    case 186: goto LDC_INST; \
+    case 187: goto LDREXD_INST; \
+    case 188: goto STREXD_INST; \
+    case 189: goto LDREXH_INST; \
+    case 190: goto STREXH_INST; \
+    case 191: goto NOP_INST; \
+    case 192: goto YIELD_INST; \
+    case 193: goto WFE_INST; \
+    case 194: goto WFI_INST; \
+    case 195: goto SEV_INST; \
+    case 196: goto SWI_INST; \
+    case 197: goto BBL_INST; \
+    case 198: goto B_2_THUMB ; \
+    case 199: goto B_COND_THUMB ; \
+    case 200: goto BL_1_THUMB ; \
+    case 201: goto BL_2_THUMB ; \
+    case 202: goto BLX_1_THUMB ; \
+    case 203: goto DISPATCH; \
+    case 204: goto INIT_INST_LENGTH; \
+    case 205: goto END; \
     }
 #endif
 
@@ -3964,9 +4042,11 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         &&MCRR_INST,&&MRRC_INST,&&CMP_INST,&&TST_INST,&&TEQ_INST,&&CMN_INST,&&SMULL_INST,&&UMULL_INST,&&UMLAL_INST,&&SMLAL_INST,&&MUL_INST,
         &&MLA_INST,&&SSAT_INST,&&USAT_INST,&&MRS_INST,&&MSR_INST,&&AND_INST,&&BIC_INST,&&LDM_INST,&&EOR_INST,&&ADD_INST,&&RSB_INST,&&RSC_INST,
         &&SBC_INST,&&ADC_INST,&&SUB_INST,&&ORR_INST,&&MVN_INST,&&MOV_INST,&&STM_INST,&&LDM_INST,&&LDRSH_INST,&&STM_INST,&&LDM_INST,&&LDRSB_INST,
-        &&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,&&MSR_INST,
-        &&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST,&&SWI_INST,&&BBL_INST,&&LDREXD_INST,
-        &&STREXD_INST,&&LDREXH_INST,&&STREXH_INST,&&B_2_THUMB, &&B_COND_THUMB,&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,
+        &&STRD_INST,&&LDRH_INST,&&STRH_INST,&&LDRD_INST,&&STRT_INST,&&STRBT_INST,&&LDRBT_INST,&&LDRT_INST,&&MRC_INST,&&MCR_INST,
+        &&MSR_INST, &&MSR_INST, &&MSR_INST, &&MSR_INST, &&MSR_INST,
+        &&LDRB_INST,&&STRB_INST,&&LDR_INST,&&LDRCOND_INST, &&STR_INST,&&CDP_INST,&&STC_INST,&&LDC_INST, &&LDREXD_INST,
+        &&STREXD_INST,&&LDREXH_INST,&&STREXH_INST, &&NOP_INST, &&YIELD_INST, &&WFE_INST, &&WFI_INST, &&SEV_INST, &&SWI_INST,&&BBL_INST,
+        &&B_2_THUMB, &&B_COND_THUMB,&&BL_1_THUMB, &&BL_2_THUMB, &&BLX_1_THUMB, &&DISPATCH,
         &&INIT_INST_LENGTH,&&END
         };
 #endif
@@ -5019,6 +5099,14 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         GOTO_NEXT_INST;
     }
 
+    NOP_INST:
+    {
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC_STUB;
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
     PKHBT_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
@@ -5498,6 +5586,19 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(setend_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
+    SEV_INST:
+    {
+        // Stubbed, as SEV is a hint instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            LOG_TRACE(Core_ARM11, "SEV executed.");
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC_STUB;
         FETCH_INST;
         GOTO_NEXT_INST;
     }
@@ -6961,6 +7062,45 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
         cpu->Reg[15] += GET_INST_SIZE(cpu);
         INC_PC(sizeof(uxtab_inst));
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
+    WFE_INST:
+    {
+        // Stubbed, as WFE is a hint instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            LOG_TRACE(Core_ARM11, "WFE executed.");
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC_STUB;
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
+    WFI_INST:
+    {
+        // Stubbed, as WFI is a hint instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            LOG_TRACE(Core_ARM11, "WFI executed.");
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC_STUB;
+        FETCH_INST;
+        GOTO_NEXT_INST;
+    }
+
+    YIELD_INST:
+    {
+        // Stubbed, as YIELD is a hint instruction.
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            LOG_TRACE(Core_ARM11, "YIELD executed.");
+        }
+
+        cpu->Reg[15] += GET_INST_SIZE(cpu);
+        INC_PC_STUB;
         FETCH_INST;
         GOTO_NEXT_INST;
     }
