@@ -74,3 +74,39 @@ target_link_libraries(citra-qt ${OPENGL_gl_LIBRARY} ${CITRA_QT_LIBS})
 target_link_libraries(citra-qt ${PLATFORM_LIBRARIES})
 
 #install(TARGETS citra-qt RUNTIME DESTINATION ${bindir})
+
+if (Qt5_FOUND AND MSVC)
+    set(Qt5_DLL_DIR "${Qt5_DIR}/../../../bin")
+    set(Qt5_PLATFORMS_DIR "${Qt5_DIR}/../../../plugins/platforms/")
+    set(Qt5_DLLS
+        icudt*.dll
+        icuin*.dll
+        icuuc*.dll
+        Qt5Core$<$<CONFIG:Debug>:d>.*
+        Qt5Gui$<$<CONFIG:Debug>:d>.*
+        Qt5OpenGL$<$<CONFIG:Debug>:d>.*
+        Qt5Widgets$<$<CONFIG:Debug>:d>.*
+    )
+    set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
+    set(PLATFORMS ${DLL_DEST}platforms/)
+    
+    # windows commandline expects the / to be \ so switch them
+    string(REPLACE "/" "\\" Qt5_DLL_DIR ${Qt5_DLL_DIR})
+    string(REPLACE "/" "\\" Qt5_PLATFORMS_DIR ${Qt5_PLATFORMS_DIR})
+    string(REPLACE "/" "\\" DLL_DEST ${DLL_DEST})
+    string(REPLACE "/" "\\" PLATFORMS ${PLATFORMS})
+    
+    # /NJH /NJS /NDL /NFL /NC /NS /NP - Silence any output
+    # cmake adds an extra check for command success which doesn't work too well with robocopy 
+    # so trick it into thinking the command was successful with the || cmd /c "exit /b 0"
+    add_custom_command(TARGET citra-qt POST_BUILD
+        COMMAND robocopy ${Qt5_DLL_DIR} ${DLL_DEST} ${Qt5_DLLS} /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
+        COMMAND if not exist ${PLATFORMS} mkdir ${PLATFORMS} 2> nul
+        COMMAND robocopy ${Qt5_PLATFORMS_DIR} ${PLATFORMS} qwindows$<$<CONFIG:Debug>:d>.* /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"
+    )
+    unset(Qt5_DLLS)
+    unset(Qt5_DLL_DIR)
+    unset(Qt5_PLATFORMS_DIR)
+    unset(DLL_DEST)
+    unset(PLATFORMS)
+endif()

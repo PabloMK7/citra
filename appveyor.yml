@@ -25,17 +25,7 @@ before_build:
   - cd ..
 
 after_build:
-    # copy the qt dlls
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icudt53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icuin53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\icuuc53.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Core.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Gui.dll  build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5OpenGL.dll build\bin\release
-  - copy C:\Qt\5.4\msvc2013_64_opengl\bin\Qt5Widgets.dll  build\bin\release
-  - mkdir build\bin\release\platforms\
-  - copy C:\Qt\5.4\msvc2013_64_opengl\plugins\platforms\qwindows.dll build\bin\release\platforms
-  
+    # copying the needed QT Dlls is now done post build. See the CMakeLists.txt file in the citra-qt folder
   - ps: >
         if (!"$env:APPVEYOR_PULL_REQUEST_TITLE" -and ("$env:APPVEYOR_REPO_BRANCH" -eq "master"))
           {
