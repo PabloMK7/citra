@@ -13,10 +13,10 @@
 /* VMLA */
 /* cond 1110 0D00 Vn-- Vd-- 101X N0M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmla_inst {
+struct vmla_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vmla_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
@@ -63,10 +63,10 @@ VMLA_INST:
 /* VNMLS */
 /* cond 1110 0D00 Vn-- Vd-- 101X N1M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmls_inst {
+struct vmls_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vmls_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
@@ -113,10 +113,10 @@ VMLS_INST:
 /* VNMLA */
 /* cond 1110 0D01 Vn-- Vd-- 101X N1M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vnmla_inst {
+struct vnmla_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vnmla_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
@@ -164,10 +164,10 @@ VNMLA_INST:
 /* cond 1110 0D01 Vn-- Vd-- 101X N0M0 Vm-- */
 
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vnmls_inst {
+struct vnmls_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vnmls_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
@@ -214,10 +214,10 @@ VNMLS_INST:
 /* VNMUL */
 /* cond 1110 0D10 Vn-- Vd-- 101X N0M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vnmul_inst {
+struct vnmul_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vnmul_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
@@ -264,10 +264,10 @@ VNMUL_INST:
 /* VMUL */
 /* cond 1110 0D10 Vn-- Vd-- 101X N0M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmul_inst {
+struct vmul_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vmul_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
@@ -314,10 +314,10 @@ VMUL_INST:
 /* VADD */
 /* cond 1110 0D11 Vn-- Vd-- 101X N0M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vadd_inst {
+struct vadd_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vadd_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
@@ -364,10 +364,10 @@ VADD_INST:
 /* VSUB */
 /* cond 1110 0D11 Vn-- Vd-- 101X N1M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vsub_inst {
+struct vsub_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vsub_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
@@ -414,10 +414,10 @@ VSUB_INST:
 /* VDIV */
 /* cond 1110 1D00 Vn-- Vd-- 101X N0M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vdiv_inst {
+struct vdiv_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vdiv_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
@@ -465,11 +465,11 @@ VDIV_INST:
 /* cond 1110 1D11 im4H Vd-- 101X 0000 im4L */
 /* cond 1110 opc1 CRn- CRd- copr op20 CRm- CDP */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovi_inst {
+struct vmovi_inst {
     unsigned int single;
     unsigned int d;
     unsigned int imm;
-} vmovi_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
@@ -514,11 +514,11 @@ VMOVI_INST:
 /* cond 1110 1D11 0000 Vd-- 101X 01M0 Vm-- */
 /* cond 1110 opc1 CRn- CRd- copr op20 CRm- CDP */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovr_inst {
+struct vmovr_inst {
     unsigned int single;
     unsigned int d;
     unsigned int m;
-} vmovr_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
@@ -609,10 +609,10 @@ VABS_INST:
 /* cond 1110 1D11 0001 Vd-- 101X 11M0 Vm-- */
 
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vneg_inst {
+struct vneg_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vneg_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
@@ -659,10 +659,10 @@ VNEG_INST:
 /* VSQRT */
 /* cond 1110 1D11 0001 Vd-- 101X 11M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vsqrt_inst {
+struct vsqrt_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vsqrt_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
@@ -709,10 +709,10 @@ VSQRT_INST:
 /* VCMP VCMPE */
 /* cond 1110 1D11 0100 Vd-- 101X E1M0 Vm-- Encoding 1 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcmp_inst {
+struct vcmp_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vcmp_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
@@ -759,10 +759,10 @@ VCMP_INST:
 /* VCMP VCMPE */
 /* cond 1110 1D11 0100 Vd-- 101X E1M0 Vm-- Encoding 2 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcmp2_inst {
+struct vcmp2_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vcmp2_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
@@ -809,10 +809,10 @@ VCMP2_INST:
 /* VCVTBDS between double and single */
 /* cond 1110 1D11 0111 Vd-- 101X 11M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcvtbds_inst {
+struct vcvtbds_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vcvtbds_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
@@ -859,10 +859,10 @@ VCVTBDS_INST:
 /* VCVTBFF between floating point and fixed point */
 /* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcvtbff_inst {
+struct vcvtbff_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vcvtbff_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
@@ -911,10 +911,10 @@ VCVTBFF_INST:
 /* VCVTBFI between floating point and integer */
 /* cond 1110 1D11 1op2 Vd-- 101X X1M0 Vm-- */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vcvtbfi_inst {
+struct vcvtbfi_inst {
     unsigned int instr;
     unsigned int dp_operation;
-} vcvtbfi_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
@@ -967,11 +967,11 @@ VCVTBFI_INST:
 /* cond 1110 000o Vn-- Rt-- 1010 N001 0000 */
 /* cond 1110 op11 CRn- Rt-- copr op21 CRm- MRC */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovbrs_inst {
+struct vmovbrs_inst {
     unsigned int to_arm;
     unsigned int t;
     unsigned int n;
-} vmovbrs_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
@@ -1013,10 +1013,10 @@ VMOVBRS_INST:
 /* cond 1110 1110 reg- Rt-- 1010 0001 0000 */
 /* cond 1110 op10 CRn- Rt-- copr op21 CRm- MCR */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmsr_inst {
+struct vmsr_inst {
     unsigned int reg;
     unsigned int Rd;
-} vmsr_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
@@ -1040,7 +1040,7 @@ VMSR_INST:
 {
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled ,
-           and in privilegied mode */
+           and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
         CHECK_VFP_ENABLED;
 
@@ -1060,12 +1060,12 @@ VMSR_INST:
 /* cond 1110 0XX0 Vd-- Rt-- 1011 DXX1 0000 */
 /* cond 1110 op10 CRn- Rt-- copr op21 CRm- MCR */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovbrc_inst {
+struct vmovbrc_inst {
     unsigned int esize;
     unsigned int index;
     unsigned int d;
     unsigned int t;
-} vmovbrc_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
@@ -1109,10 +1109,10 @@ VMOVBRC_INST:
 /* cond 1110 1111 CRn- Rt-- 1010 0001 0000 */
 /* cond 1110 op11 CRn- Rt-- copr op21 CRm- MRC */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmrs_inst {
+struct vmrs_inst {
     unsigned int reg;
     unsigned int Rt;
-} vmrs_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
@@ -1136,7 +1136,7 @@ VMRS_INST:
 {
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled,
-           and in privilegied mode */
+           and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
         CHECK_VFP_ENABLED;
 
@@ -1191,12 +1191,12 @@ VMRS_INST:
 /* cond 1110 XXX1 Vd-- Rt-- 1011 NXX1 0000 */
 /* cond 1110 op11 CRn- Rt-- copr op21 CRm- MCR */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovbcr_inst {
+struct vmovbcr_inst {
     unsigned int esize;
     unsigned int index;
     unsigned int d;
     unsigned int t;
-} vmovbcr_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
@@ -1245,12 +1245,12 @@ VMOVBCR_INST:
 /* cond 1100 010X Rt2- Rt-- 1010 00X1 Vm-- */
 /* cond 1100 0101 Rt2- Rt-- copr opc1 CRm- MRRC */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovbrrss_inst {
+struct vmovbrrss_inst {
     unsigned int to_arm;
     unsigned int t;
     unsigned int t2;
     unsigned int m;
-} vmovbrrss_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int index)
@@ -1294,12 +1294,12 @@ VMOVBRRSS_INST:
 /* cond 1100 010X Rt2- Rt-- 1011 00X1 Vm-- */
 /* cond 1100 0101 Rt2- Rt-- copr opc1 CRm- MRRC */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vmovbrrd_inst {
+struct vmovbrrd_inst {
     unsigned int to_arm;
     unsigned int t;
     unsigned int t2;
     unsigned int m;
-} vmovbrrd_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index)
@@ -1347,13 +1347,13 @@ VMOVBRRD_INST:
 /* VSTR */
 /* cond 1101 UD00 Rn-- Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vstr_inst {
+struct vstr_inst {
     unsigned int single;
     unsigned int n;
     unsigned int d;
     unsigned int imm32;
     unsigned int add;
-} vstr_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
@@ -1415,12 +1415,12 @@ VSTR_INST:
 /* VPUSH */
 /* cond 1101 0D10 1101 Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vpush_inst {
+struct vpush_inst {
     unsigned int single;
     unsigned int d;
     unsigned int imm32;
     unsigned int regs;
-} vpush_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
@@ -1488,7 +1488,7 @@ VPUSH_INST:
 /* VSTM */
 /* cond 110P UDW0 Rn-- Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vstm_inst {
+struct vstm_inst {
     unsigned int single;
     unsigned int add;
     unsigned int wback;
@@ -1496,7 +1496,7 @@ typedef struct _vstm_inst {
     unsigned int n;
     unsigned int imm32;
     unsigned int regs;
-} vstm_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
@@ -1570,12 +1570,12 @@ VSTM_INST: /* encoding 1 */
 /* VPOP */
 /* cond 1100 1D11 1101 Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vpop_inst {
+struct vpop_inst {
     unsigned int single;
     unsigned int d;
     unsigned int imm32;
     unsigned int regs;
-} vpop_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
@@ -1643,13 +1643,13 @@ VPOP_INST:
 /* VLDR */
 /* cond 1101 UD01 Rn-- Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vldr_inst {
+struct vldr_inst {
     unsigned int single;
     unsigned int n;
     unsigned int d;
     unsigned int imm32;
     unsigned int add;
-} vldr_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
@@ -1711,7 +1711,7 @@ VLDR_INST:
 /* VLDM */
 /* cond 110P UDW1 Rn-- Vd-- 101X imm8 imm8 */
 #ifdef VFP_INTERPRETER_STRUCT
-typedef struct _vldm_inst {
+struct vldm_inst {
     unsigned int single;
     unsigned int add;
     unsigned int wback;
@@ -1719,7 +1719,7 @@ typedef struct _vldm_inst {
     unsigned int n;
     unsigned int imm32;
     unsigned int regs;
-} vldm_inst;
+};
 #endif
 #ifdef VFP_INTERPRETER_TRANS
 static ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
