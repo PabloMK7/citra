@@ -11,6 +11,7 @@
 #include "common/symbols.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/loader/elf.h"
 #include "core/memory.h"
 
@@ -353,6 +354,9 @@ ResultStatus AppLoader_ELF::Load() {
     Kernel::g_current_process = Kernel::Process::Create(filename, 0);
     Kernel::g_current_process->svc_access_mask.set();
     Kernel::g_current_process->address_mappings = default_address_mappings;
+
+    // Attach the default resource limit (APPLICATION) to the process
+    Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
     ElfReader elf_reader(&buffer[0]);
     elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);

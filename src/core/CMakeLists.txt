@@ -30,6 +30,7 @@ set(SRCS
             hle/kernel/kernel.cpp
             hle/kernel/mutex.cpp
             hle/kernel/process.cpp
+            hle/kernel/resource_limit.cpp
             hle/kernel/semaphore.cpp
             hle/kernel/session.cpp
             hle/kernel/shared_memory.cpp
@@ -141,6 +142,7 @@ set(HEADERS
             hle/kernel/kernel.h
             hle/kernel/mutex.h
             hle/kernel/process.h
+            hle/kernel/resource_limit.h
             hle/kernel/semaphore.h
             hle/kernel/session.h
             hle/kernel/shared_memory.h

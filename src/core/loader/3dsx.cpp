@@ -9,6 +9,7 @@
 
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/elf.h"
 #include "core/loader/ncch.h"
@@ -233,6 +234,9 @@ ResultStatus AppLoader_THREEDSX::Load() {
     Kernel::g_current_process = Kernel::Process::Create(filename, 0);
     Kernel::g_current_process->svc_access_mask.set();
     Kernel::g_current_process->address_mappings = default_address_mappings;
+    
+    // Attach the default resource limit (APPLICATION) to the process
+    Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
     Load3DSXFile(*file, Memory::PROCESS_IMAGE_VADDR);
 
