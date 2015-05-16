@@ -11,7 +11,7 @@ For development discussion, please join us @ #citra on [freenode](http://webchat
 
 ### Development
 
-If you want to contribute please take a look at the [Contributor's Guide](CONTRIBUTING.md), [Roadmap](https://github.com/citra-emu/citra/wiki/Roadmap) and [Developer Information](https://github.com/citra-emu/citra/wiki/Developer-Information) pages. You should as well contact any of the developers in the forum in order to know about the current state of the emulator.
+If you want to contribute please take a look at the [Contributor's Guide](CONTRIBUTING.md), [TODO list](https://docs.google.com/document/d/1SWIop0uBI9IW8VGg97TAtoT_CHNoP42FzYmvG1F4QDA) and [Developer Information](https://github.com/citra-emu/citra/wiki/Developer-Information). You should as well contact any of the developers in the forum in order to know about the current state of the emulator.
 
 ### Building
 
