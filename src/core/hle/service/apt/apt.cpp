@@ -269,8 +269,6 @@ void GetAppCpuTimeLimit(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 value = cmd_buff[1];
 
-    ASSERT(cpu_percent != 0);
-
     if (value != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
