@@ -4,16 +4,16 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdarg>
-#include <memory>
-#include <vector>
+#include <string>
+#include <utility>
 
-#include "common/concurrent_ring_buffer.h"
-
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 
 namespace Log {
+
+class Filter;
 
 /**
  * A log entry. Log entries are store in a structured format to permit more varied output
@@ -48,89 +48,21 @@ struct Entry {
     }
 };
 
-struct ClassInfo {
-    Class log_class;
-
-    /**
-        * Total number of (direct or indirect) sub classes this class has. If any, they follow in
-        * sequence after this class in the class list.
-        */
-    unsigned int num_children = 0;
-
-    ClassInfo(Class log_class) : log_class(log_class) {}
-};
+/**
+ * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
+ * instead of underscores as in the enumeration.
+ */
+const char* GetLogClassName(Class log_class);
 
 /**
- * Logging management class. This class has the dual purpose of acting as an exchange point between
- * the logging clients and the log outputter, as well as containing reflection info about available
- * log classes.
+ * Returns the name of the passed log level as a C-string.
  */
-class Logger {
-private:
-    using Buffer = Common::ConcurrentRingBuffer<Entry, 16 * 1024 / sizeof(Entry)>;
-
-public:
-    static const size_t QUEUE_CLOSED = Buffer::QUEUE_CLOSED;
-
-    Logger();
-
-    /**
-     * Returns a list of all vector classes and subclasses. The sequence returned is a pre-order of
-     * classes and subclasses, which together with the `num_children` field in ClassInfo, allows
-     * you to recover the hierarchy.
-     */
-    const std::vector<ClassInfo>& GetClasses() const { return all_classes; }
-
-    /**
-     * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
-     * instead of underscores as in the enumeration.
-     */
-    static const char* GetLogClassName(Class log_class);
-
-    /**
-     * Returns the name of the passed log level as a C-string.
-     */
-    static const char* GetLevelName(Level log_level);
-
-    /**
-     * Appends a messages to the log buffer.
-     * @note This function is thread safe.
-     */
-    void LogMessage(Entry entry);
-
-    /**
-     * Retrieves a batch of messages from the log buffer, blocking until they are available.
-     * @note This function is thread safe.
-     *
-     * @param out_buffer Destination buffer that will receive the log entries.
-     * @param buffer_len The maximum size of `out_buffer`.
-     * @return The number of entries stored. In case the logger is shutting down, `QUEUE_CLOSED` is
-     *         returned, no entries are stored and the logger should shutdown.
-     */
-    size_t GetEntries(Entry* out_buffer, size_t buffer_len);
-
-    /**
-     * Initiates a shutdown of the logger. This will indicate to log output clients that they
-     * should shutdown.
-     */
-    void Close() { ring_buffer.Close(); }
-
-    /**
-     * Returns true if Close() has already been called on the Logger.
-     */
-    bool IsClosed() const { return ring_buffer.IsClosed(); }
-
-private:
-    Buffer ring_buffer;
-    std::vector<ClassInfo> all_classes;
-};
+const char* GetLevelName(Level log_level);
 
 /// Creates a log entry by formatting the given source location, and message.
 Entry CreateEntry(Class log_class, Level log_level,
                         const char* filename, unsigned int line_nr, const char* function,
                         const char* format, va_list args);
-/// Initializes the default Logger.
-std::shared_ptr<Logger> InitGlobalLogger();
 
 void SetFilter(Filter* filter);
 

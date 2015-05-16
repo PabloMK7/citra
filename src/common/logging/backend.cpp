@@ -3,16 +3,16 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
+#include <cstdio>
 
-#include "common/assert.h"
-
+#include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 
 namespace Log {
-
-static std::shared_ptr<Logger> global_logger;
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
 #define ALL_LOG_CLASSES() \
@@ -55,28 +55,8 @@ static std::shared_ptr<Logger> global_logger;
         SUB(Render, OpenGL) \
         CLS(Loader)
 
-Logger::Logger() {
-    // Register logging classes so that they can be queried at runtime
-    size_t parent_class;
-    all_classes.reserve((size_t)Class::Count);
-
-#define CLS(x) \
-        all_classes.push_back(Class::x); \
-        parent_class = all_classes.size() - 1;
-#define SUB(x, y) \
-        all_classes.push_back(Class::x##_##y); \
-        all_classes[parent_class].num_children += 1;
-
-    ALL_LOG_CLASSES()
-#undef CLS
-#undef SUB
-
-    // Ensures that ALL_LOG_CLASSES isn't missing any entries.
-    DEBUG_ASSERT(all_classes.size() == (size_t)Class::Count);
-}
-
 // GetClassName is a macro defined by Windows.h, grrr...
-const char* Logger::GetLogClassName(Class log_class) {
+const char* GetLogClassName(Class log_class) {
     switch (log_class) {
 #define CLS(x) case Class::x: return #x;
 #define SUB(x, y) case Class::x##_##y: return #x "." #y;
@@ -87,7 +67,7 @@ const char* Logger::GetLogClassName(Class log_class) {
     return "Unknown";
 }
 
-const char* Logger::GetLevelName(Level log_level) {
+const char* GetLevelName(Level log_level) {
 #define LVL(x) case Level::x: return #x
     switch (log_level) {
         LVL(Trace);
@@ -99,19 +79,6 @@ const char* Logger::GetLevelName(Level log_level) {
     }
     return "Unknown";
 #undef LVL
-}
-
-void Logger::LogMessage(Entry entry) {
-    ring_buffer.Push(std::move(entry));
-}
-
-size_t Logger::GetEntries(Entry* out_buffer, size_t buffer_len) {
-    return ring_buffer.BlockingPop(out_buffer, buffer_len);
-}
-
-std::shared_ptr<Logger> InitGlobalLogger() {
-    global_logger = std::make_shared<Logger>();
-    return global_logger;
 }
 
 Entry CreateEntry(Class log_class, Level log_level,
@@ -138,7 +105,7 @@ Entry CreateEntry(Class log_class, Level log_level,
     return std::move(entry);
 }
 
-static Filter* filter;
+static Filter* filter = nullptr;
 
 void SetFilter(Filter* new_filter) {
     filter = new_filter;
@@ -147,7 +114,7 @@ void SetFilter(Filter* new_filter) {
 void LogMessage(Class log_class, Level log_level,
                 const char* filename, unsigned int line_nr, const char* function,
                 const char* format, ...) {
-    if (!filter->CheckMessage(log_class, log_level))
+    if (filter != nullptr && !filter->CheckMessage(log_class, log_level))
         return;
 
     va_list args;
@@ -156,12 +123,7 @@ void LogMessage(Class log_class, Level log_level,
             filename, line_nr, function, format, args);
     va_end(args);
 
-    if (global_logger != nullptr && !global_logger->IsClosed()) {
-        global_logger->LogMessage(std::move(entry));
-    } else {
-        // Fall back to directly printing to stderr
-        PrintMessage(entry);
-    }
+    PrintColoredMessage(entry);
 }
 
 }
