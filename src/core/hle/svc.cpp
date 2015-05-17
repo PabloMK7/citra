@@ -296,6 +296,18 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
     return res;
 }
 
+static void Break(u8 break_reason) {
+    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution!");
+    std::string reason_str;
+    switch (break_reason) {
+    case 0: reason_str = "PANIC"; break;
+    case 1: reason_str = "ASSERT"; break;
+    case 2: reason_str = "USER"; break;
+    default: reason_str = "UNKNOWN"; break;
+    }
+    LOG_CRITICAL(Debug_Emulated, "Break reason: %s", reason_str.c_str());
+}
+
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
 static void OutputDebugString(const char* string) {
     LOG_DEBUG(Debug_Emulated, "%s", string);
@@ -737,7 +749,7 @@ static const FunctionDef SVC_Table[] = {
     {0x39, HLE::Wrap<GetResourceLimitLimitValues>, "GetResourceLimitLimitValues"},
     {0x3A, HLE::Wrap<GetResourceLimitCurrentValues>, "GetResourceLimitCurrentValues"},
     {0x3B, nullptr,                         "GetThreadContext"},
-    {0x3C, nullptr,                         "Break"},
+    {0x3C, HLE::Wrap<Break>,                "Break"},
     {0x3D, HLE::Wrap<OutputDebugString>,    "OutputDebugString"},
     {0x3E, nullptr,                         "ControlPerformanceCounter"},
     {0x3F, nullptr,                         "Unknown"},
