@@ -74,11 +74,11 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             // Information about internal vertex attributes
             u32 vertex_attribute_sources[16];
             boost::fill(vertex_attribute_sources, 0xdeadbeef);
-            u32 vertex_attribute_strides[16];
-            Regs::VertexAttributeFormat vertex_attribute_formats[16];
+            u32 vertex_attribute_strides[16] = {};
+            Regs::VertexAttributeFormat vertex_attribute_formats[16] = {};
 
-            u32 vertex_attribute_elements[16];
-            u32 vertex_attribute_element_size[16];
+            u32 vertex_attribute_elements[16] = {};
+            u32 vertex_attribute_element_size[16] = {};
 
             // Setup attribute data from loaders
             for (int loader = 0; loader < 12; ++loader) {
@@ -127,29 +127,31 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 input.attr[0].w = debug_token;
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
+                    // Load the default attribute if we're configured to do so
                     if (attribute_config.IsDefaultAttribute(i)) {
                         input.attr[i] = VertexShader::GetDefaultAttribute(i);
                         LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
                                   i, vertex, index,
                                   input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
                                   input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
-                    } else {
-                        for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                            const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
+                    }
+                    
+                    // Overwrite the default data with the loader data if there's any
+                    for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                        const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
 
-                            const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
-                                (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
-                                (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *(s16*)srcdata :
-                                *(float*)srcdata;
+                        const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
+                            (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
+                            (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *(s16*)srcdata :
+                            *(float*)srcdata;
 
-                            input.attr[i][comp] = float24::FromFloat32(srcval);
-                            LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
-                                      comp, i, vertex, index,
-                                      attribute_config.GetPhysicalBaseAddress(),
-                                      vertex_attribute_sources[i] - base_address,
-                                      vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
-                                      input.attr[i][comp].ToFloat32());
-                        }
+                        input.attr[i][comp] = float24::FromFloat32(srcval);
+                        LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
+                            comp, i, vertex, index,
+                            attribute_config.GetPhysicalBaseAddress(),
+                            vertex_attribute_sources[i] - base_address,
+                            vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
+                            input.attr[i][comp].ToFloat32());
                     }
                 }
 
