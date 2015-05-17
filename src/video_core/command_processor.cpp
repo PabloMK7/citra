@@ -127,7 +127,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 input.attr[0].w = debug_token;
 
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
-                    // Load the default attribute if we're configured to do so
+                    // Load the default attribute if we're configured to do so, this data will be overwritten by the loader data if it's set
                     if (attribute_config.IsDefaultAttribute(i)) {
                         input.attr[i] = VertexShader::GetDefaultAttribute(i);
                         LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
@@ -136,7 +136,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                   input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
                     }
                     
-                    // Overwrite the default data with the loader data if there's any
+                    // Load per-vertex data from the loader arrays
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
                         const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
 
