@@ -166,6 +166,10 @@ template<void func(const char*)> void Wrap() {
     func((char*)Memory::GetPointer(PARAM(0)));
 }
 
+template<void func(u8)> void Wrap() {
+    func((u8)PARAM(0));
+}
+
 #undef PARAM
 #undef FuncReturn
 
