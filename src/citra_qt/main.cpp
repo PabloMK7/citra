@@ -216,6 +216,7 @@ void GMainWindow::BootGame(std::string filename) {
     // Create and start the emulation thread
     emu_thread = Common::make_unique<EmuThread>(render_window);
     emit EmulationStarting(emu_thread.get());
+    render_window->moveContext();
     emu_thread->start();
 
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
