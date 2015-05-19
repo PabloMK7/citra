@@ -69,6 +69,7 @@ private slots:
     void OnOpenHotkeysDialog();
     void OnConfigure();
     void OnDisplayTitleBars(bool);
+    void SetHardwareRendererEnabled(bool);
     void ToggleWindowMode();
 
 private:

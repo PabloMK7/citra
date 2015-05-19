@@ -6,6 +6,7 @@
 #include "common/emu_window.h"
 
 #include "core/core.h"
+#include "core/settings.h"
 
 #include "video_core/video_core.h"
 #include "video_core/renderer_base.h"
@@ -18,6 +19,8 @@ namespace VideoCore {
 
 EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
 RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
+
+std::atomic<bool> g_hw_renderer_enabled;
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {

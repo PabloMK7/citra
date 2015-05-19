@@ -24,6 +24,7 @@
 #include "video_core/math.h"
 #include "video_core/pica.h"
 #include "video_core/utils.h"
+#include "video_core/video_core.h"
 
 #include "debug_utils.h"
 
@@ -39,6 +40,9 @@ void DebugContext::OnEvent(Event event, void* data) {
 
     {
         std::unique_lock<std::mutex> lock(breakpoint_mutex);
+
+        // Commit the hardware renderer's framebuffer so it will show on debug widgets
+        VideoCore::g_renderer->hw_rasterizer->CommitFramebuffer();
 
         // TODO: Should stop the CPU thread here once we multithread emulation.
 
