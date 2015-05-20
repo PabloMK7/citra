@@ -43,6 +43,22 @@ static void GetTransferEndEvent(Service::Interface* self) {
     cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).MoveFrom();
 }
 
+/**
+ * Starts a YUV -> RGB conversion
+ */
+static void StartConversion(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    // TODO(bunnei): This is hack to indicate to the game that the conversion has immediately
+    // completed, even though it's not actually implemented yet. This fixes games that would
+    // otherwise hang on trying to play moflex videos, which uses the Y2R service.
+    completion_event->Signal();
+
+    LOG_WARNING(Service, "(STUBBED) called, expect blank video (MOFLEX) output!");
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, nullptr,                 "SetInputFormat"},
     {0x00030040, nullptr,                 "SetOutputFormat"},
@@ -58,7 +74,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001C0040, nullptr,                 "SetInputLines"},
     {0x00200040, nullptr,                 "SetStandardCoefficient"},
     {0x00220040, nullptr,                 "SetAlpha"},
-    {0x00260000, nullptr,                 "StartConversion"},
+    {0x00260000, StartConversion,         "StartConversion"},
     {0x00270000, nullptr,                 "StopConversion"},
     {0x00280000, IsBusyConversion,        "IsBusyConversion"},
     {0x002A0000, nullptr,                 "PingProcess"},
