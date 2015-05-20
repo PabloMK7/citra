@@ -109,6 +109,8 @@ void Thread::Stop() {
     }
 
     Kernel::g_current_process->used_tls_slots[tls_index] = false;
+
+    HLE::Reschedule(__func__);
 }
 
 Thread* ArbitrateHighestPriorityThread(u32 address) {
@@ -232,6 +234,8 @@ static Thread* PopNextReadyThread() {
 void WaitCurrentThread_Sleep() {
     Thread* thread = GetCurrentThread();
     thread->status = THREADSTATUS_WAIT_SLEEP;
+
+    HLE::Reschedule(__func__);
 }
 
 void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects, bool wait_set_output, bool wait_all) {
@@ -430,6 +434,8 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     ready_queue.push_back(thread->current_priority, thread.get());
     thread->status = THREADSTATUS_READY;
+
+    HLE::Reschedule(__func__);
 
     return MakeResult<SharedPtr<Thread>>(std::move(thread));
 }

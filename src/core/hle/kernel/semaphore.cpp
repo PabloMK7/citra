@@ -54,6 +54,8 @@ ResultVal<s32> Semaphore::Release(s32 release_count) {
         Acquire();
     }
 
+    HLE::Reschedule(__func__);
+
     return MakeResult<s32>(previous_count);
 }
 
