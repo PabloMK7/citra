@@ -11,7 +11,7 @@
 
 #include "common/common_types.h"
 
-#include "tracer.h"
+#include "citrace.h"
 
 namespace CiTrace {
 
@@ -19,17 +19,19 @@ class Recorder {
 public:
     /**
      * Recorder constructor
+     * @param default_attributes Pointer to an array of 32-bit-aligned 24-bit floating point values.
      * @param vs_float_uniforms Pointer to an array of 32-bit-aligned 24-bit floating point values.
      */
-    Recorder(u32* gpu_registers,     u32 gpu_registers_size,
-             u32* lcd_registers,     u32 lcd_registers_size,
-             u32* pica_registers,    u32 pica_registers_size,
-             u32* vs_program_binary, u32 vs_program_binary_size,
-             u32* vs_swizzle_data,   u32 vs_swizzle_data_size,
-             u32* vs_float_uniforms, u32 vs_float_uniforms_size,
-             u32* gs_program_binary, u32 gs_program_binary_size,
-             u32* gs_swizzle_data,   u32 gs_swizzle_data_size,
-             u32* gs_float_uniforms, u32 gs_float_uniforms_size);
+    Recorder(u32* gpu_registers,      u32 gpu_registers_size,
+             u32* lcd_registers,      u32 lcd_registers_size,
+             u32* pica_registers,     u32 pica_registers_size,
+             u32* default_attributes, u32 default_attributes_size,
+             u32* vs_program_binary,  u32 vs_program_binary_size,
+             u32* vs_swizzle_data,    u32 vs_swizzle_data_size,
+             u32* vs_float_uniforms,  u32 vs_float_uniforms_size,
+             u32* gs_program_binary,  u32 gs_program_binary_size,
+             u32* gs_swizzle_data,    u32 gs_swizzle_data_size,
+             u32* gs_float_uniforms,  u32 gs_float_uniforms_size);
 
     /// Finish recording of this Citrace and save it using the given filename.
     void Finish(const std::string& filename);
@@ -56,6 +58,7 @@ private:
     std::vector<u32> gpu_registers;
     std::vector<u32> lcd_registers;
     std::vector<u32> pica_registers;
+    std::vector<u32> default_attributes;
     std::vector<u32> vs_program_binary;
     std::vector<u32> vs_swizzle_data;
     std::vector<u32> vs_float_uniforms;

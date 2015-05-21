@@ -62,12 +62,20 @@ void GraphicsTracingWidget::StartRecording() {
 
     // Encode floating point numbers to 24-bit values
     // TODO: Drop this explicit conversion once we store float24 values bit-correctly internally.
+    std::array<Math::Vec4<uint32_t>, 16> default_attributes;
+    for (unsigned i = 0; i < 16; ++i) {
+        for (unsigned comp = 0; comp < 3; ++comp) {
+            default_attributes[i][comp] = nihstro::to_float24(Pica::g_state.vs.default_attributes[i][comp].ToFloat32());
+        }
+    }
+
     std::array<Math::Vec4<uint32_t>, 96> vs_float_uniforms;
     for (unsigned i = 0; i < 96; ++i)
         for (unsigned comp = 0; comp < 3; ++comp)
             vs_float_uniforms[i][comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
 
     auto recorder = new CiTrace::Recorder((u32*)&GPU::g_regs, 0x700, nullptr, 0, (u32*)&Pica::g_state.regs, 0x300,
+                                          (u32*)default_attributes.data(), default_attributes.size() * 4,
                                           shader_binary.data(), shader_binary.size(),
                                           swizzle_data.data(), swizzle_data.size(),
                                           (u32*)vs_float_uniforms.data(), vs_float_uniforms.size() * 4,

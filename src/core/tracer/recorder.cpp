@@ -12,18 +12,20 @@
 
 namespace CiTrace {
 
-Recorder::Recorder(u32* gpu_registers,     u32 gpu_registers_size,
-                   u32* lcd_registers,     u32 lcd_registers_size,
-                   u32* pica_registers,    u32 pica_registers_size,
-                   u32* vs_program_binary, u32 vs_program_binary_size,
-                   u32* vs_swizzle_data,   u32 vs_swizzle_data_size,
-                   u32* vs_float_uniforms, u32 vs_float_uniforms_size,
-                   u32* gs_program_binary, u32 gs_program_binary_size,
-                   u32* gs_swizzle_data,   u32 gs_swizzle_data_size,
-                   u32* gs_float_uniforms, u32 gs_float_uniforms_size)
+Recorder::Recorder(u32* gpu_registers,      u32 gpu_registers_size,
+                   u32* lcd_registers,      u32 lcd_registers_size,
+                   u32* pica_registers,     u32 pica_registers_size,
+                   u32* default_attributes, u32 default_attributes_size,
+                   u32* vs_program_binary,  u32 vs_program_binary_size,
+                   u32* vs_swizzle_data,    u32 vs_swizzle_data_size,
+                   u32* vs_float_uniforms,  u32 vs_float_uniforms_size,
+                   u32* gs_program_binary,  u32 gs_program_binary_size,
+                   u32* gs_swizzle_data,    u32 gs_swizzle_data_size,
+                   u32* gs_float_uniforms,  u32 gs_float_uniforms_size)
     : gpu_registers(gpu_registers, gpu_registers + gpu_registers_size),
       lcd_registers(lcd_registers, lcd_registers + lcd_registers_size),
       pica_registers(pica_registers, pica_registers + pica_registers_size),
+      default_attributes(default_attributes, default_attributes + default_attributes_size),
       vs_program_binary(vs_program_binary, vs_program_binary + vs_program_binary_size),
       vs_swizzle_data(vs_swizzle_data, vs_swizzle_data + vs_swizzle_data_size),
       vs_float_uniforms(vs_float_uniforms, vs_float_uniforms + vs_float_uniforms_size),
@@ -43,27 +45,29 @@ void Recorder::Finish(const std::string& filename) {
     // Calculate file offsets
     auto& initial = header.initial_state_offsets;
 
-    initial.gpu_registers_size     = gpu_registers.size();
-    initial.lcd_registers_size     = lcd_registers.size();
-    initial.pica_registers_size    = pica_registers.size();
-    initial.vs_program_binary_size = vs_program_binary.size();
-    initial.vs_swizzle_data_size   = vs_swizzle_data.size();
-    initial.vs_float_uniforms_size = vs_float_uniforms.size();
-    initial.gs_program_binary_size = gs_program_binary.size();
-    initial.gs_swizzle_data_size   = gs_swizzle_data.size();
-    initial.gs_float_uniforms_size = gs_float_uniforms.size();
-    header.stream_size             = stream.size();
+    initial.gpu_registers_size      = gpu_registers.size();
+    initial.lcd_registers_size      = lcd_registers.size();
+    initial.pica_registers_size     = pica_registers.size();
+    initial.default_attributes_size = default_attributes.size();
+    initial.vs_program_binary_size  = vs_program_binary.size();
+    initial.vs_swizzle_data_size    = vs_swizzle_data.size();
+    initial.vs_float_uniforms_size  = vs_float_uniforms.size();
+    initial.gs_program_binary_size  = gs_program_binary.size();
+    initial.gs_swizzle_data_size    = gs_swizzle_data.size();
+    initial.gs_float_uniforms_size  = gs_float_uniforms.size();
+    header.stream_size              = stream.size();
 
-    initial.gpu_registers     = sizeof(header);
-    initial.lcd_registers     = initial.gpu_registers     + initial.gpu_registers_size * sizeof(u32);
-    initial.pica_registers    = initial.lcd_registers     + initial.lcd_registers_size * sizeof(u32);;
-    initial.vs_program_binary = initial.pica_registers    + initial.pica_registers_size * sizeof(u32);
-    initial.vs_swizzle_data   = initial.vs_program_binary + initial.vs_program_binary_size * sizeof(u32);
-    initial.vs_float_uniforms = initial.vs_swizzle_data   + initial.vs_swizzle_data_size * sizeof(u32);
-    initial.gs_program_binary = initial.vs_float_uniforms + initial.vs_float_uniforms_size * sizeof(u32);
-    initial.gs_swizzle_data   = initial.gs_program_binary + initial.gs_program_binary_size * sizeof(u32);
-    initial.gs_float_uniforms = initial.gs_swizzle_data   + initial.gs_swizzle_data_size * sizeof(u32);
-    header.stream_offset      = initial.gs_float_uniforms + initial.gs_float_uniforms_size * sizeof(u32);
+    initial.gpu_registers      = sizeof(header);
+    initial.lcd_registers      = initial.gpu_registers      + initial.gpu_registers_size * sizeof(u32);
+    initial.pica_registers     = initial.lcd_registers      + initial.lcd_registers_size * sizeof(u32);;
+    initial.default_attributes = initial.pica_registers     + initial.pica_registers_size * sizeof(u32);
+    initial.vs_program_binary  = initial.default_attributes + initial.default_attributes_size * sizeof(u32);
+    initial.vs_swizzle_data    = initial.vs_program_binary  + initial.vs_program_binary_size * sizeof(u32);
+    initial.vs_float_uniforms  = initial.vs_swizzle_data    + initial.vs_swizzle_data_size * sizeof(u32);
+    initial.gs_program_binary  = initial.vs_float_uniforms  + initial.vs_float_uniforms_size * sizeof(u32);
+    initial.gs_swizzle_data    = initial.gs_program_binary  + initial.gs_program_binary_size * sizeof(u32);
+    initial.gs_float_uniforms  = initial.gs_swizzle_data    + initial.gs_swizzle_data_size * sizeof(u32);
+    header.stream_offset       = initial.gs_float_uniforms  + initial.gs_float_uniforms_size * sizeof(u32);
 
     // Iterate through stream elements, update relevant stream element data
     for (auto& stream_element : stream) {
@@ -103,8 +107,12 @@ void Recorder::Finish(const std::string& filename) {
             throw "Failed to write LCD registers";
 
         written = file.WriteArray(pica_registers.data(), pica_registers.size());
-        if (written != pica_registers.size() || file.Tell() != initial.vs_program_binary)
+        if (written != pica_registers.size() || file.Tell() != initial.default_attributes)
             throw "Failed to write Pica registers";
+
+        written = file.WriteArray(default_attributes.data(), default_attributes.size());
+        if (written != default_attributes.size() || file.Tell() != initial.vs_program_binary)
+            throw "Failed to write default vertex attributes";
 
         written = file.WriteArray(vs_program_binary.data(), vs_program_binary.size());
         if (written != vs_program_binary.size() || file.Tell() != initial.vs_swizzle_data)

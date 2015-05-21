@@ -35,6 +35,8 @@ struct CTHeader {
         uint32_t lcd_registers_size;
         uint32_t pica_registers;
         uint32_t pica_registers_size;
+        uint32_t default_attributes;
+        uint32_t default_attributes_size;
         uint32_t vs_program_binary;
         uint32_t vs_program_binary_size;
         uint32_t vs_swizzle_data;
@@ -50,7 +52,8 @@ struct CTHeader {
 
         // Other things we might want to store here:
         // - Initial framebuffer data, maybe even a full copy of FCRAM/VRAM
-        // - Default vertex attributes
+        // - Lookup tables for fragment lighting
+        // - Lookup tables for procedural textures
     } initial_state_offsets;
 
     uint32_t stream_offset;

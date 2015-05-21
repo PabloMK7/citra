@@ -245,7 +245,7 @@ set(HEADERS
             loader/loader.h
             loader/ncch.h
             tracer/recorder.h
-            tracer/tracer.h
+            tracer/citrace.h
             mem_map.h
             memory.h
             memory_setup.h
