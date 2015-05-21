@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QFileDialog>
 #include <QLabel>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
 
@@ -49,8 +50,6 @@ GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext>
     }
     main_widget->setLayout(main_layout);
     setWidget(main_widget);
-
-    // TODO: Make sure to have this widget disabled as soon as emulation is started!
 }
 
 void GraphicsTracingWidget::StartRecording() {
@@ -120,4 +119,34 @@ void GraphicsTracingWidget::OnBreakPointHit(Pica::DebugContext::Event event, voi
 
 void GraphicsTracingWidget::OnResumed() {
     widget()->setEnabled(false);
+}
+
+void GraphicsTracingWidget::OnEmulationStarting(EmuThread* emu_thread) {
+    // Disable tracing starting/stopping until a GPU breakpoint is reached
+    widget()->setEnabled(false);
+}
+
+void GraphicsTracingWidget::OnEmulationStopping() {
+    // TODO: Is it safe to access the context here?
+
+    auto context = context_weak.lock();
+    if (!context)
+        return;
+
+
+    if (context->recorder) {
+        auto reply = QMessageBox::question(this, tr("CiTracing still active"),
+                tr("A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded."),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+
+        if (reply == QMessageBox::Yes) {
+            StopRecording();
+        } else {
+            AbortRecording();
+        }
+    }
+
+    // If the widget was disabled before, enable it now to allow starting
+    // tracing before starting the next emulation session
+    widget()->setEnabled(true);
 }

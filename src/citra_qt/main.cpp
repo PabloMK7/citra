@@ -154,6 +154,9 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window, SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), graphicsTracingWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), graphicsTracingWidget, SLOT(OnEmulationStopping()));
+
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);

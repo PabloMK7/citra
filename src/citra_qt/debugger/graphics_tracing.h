@@ -6,6 +6,8 @@
 
 #include "graphics_breakpoint_observer.h"
 
+class EmuThread;
+
 class GraphicsTracingWidget : public BreakPointObserverDock {
     Q_OBJECT
 
@@ -19,6 +21,9 @@ private slots:
 
     void OnBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnResumed() override;
+
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
 
 signals:
     void SetStartTracingButtonEnabled(bool enable);
