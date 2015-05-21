@@ -290,9 +290,6 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
     auto res = arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type),
                                          address, value, nanoseconds);
 
-    if (res == RESULT_SUCCESS)
-        HLE::Reschedule(__func__);
-
     return res;
 }
 
@@ -399,8 +396,6 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
         "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X", entry_point,
         name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
 
-    HLE::Reschedule(__func__);
-
     return RESULT_SUCCESS;
 }
 
@@ -409,7 +404,6 @@ static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC());
 
     Kernel::GetCurrentThread()->Stop();
-    HLE::Reschedule(__func__);
 }
 
 /// Gets the priority for the specified thread
@@ -439,11 +433,9 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
-    HLE::Reschedule(__func__);
-
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
         initial_locked ? "true" : "false", *out_handle);
-    
+
     return RESULT_SUCCESS;
 }
 
@@ -458,8 +450,6 @@ static ResultCode ReleaseMutex(Handle handle) {
         return ERR_INVALID_HANDLE;
 
     mutex->Release();
-
-    HLE::Reschedule(__func__);
 
     return RESULT_SUCCESS;
 }
@@ -528,8 +518,6 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
 
     CASCADE_RESULT(*count, semaphore->Release(release_count));
 
-    HLE::Reschedule(__func__);
-
     return RESULT_SUCCESS;
 }
 
@@ -568,7 +556,7 @@ static ResultCode SignalEvent(Handle handle) {
         return ERR_INVALID_HANDLE;
 
     evt->Signal();
-    HLE::Reschedule(__func__);
+
     return RESULT_SUCCESS;
 }
 
@@ -623,8 +611,6 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 
     timer->Set(initial, interval);
 
-    HLE::Reschedule(__func__);
-
     return RESULT_SUCCESS;
 }
 
@@ -640,8 +626,6 @@ static ResultCode CancelTimer(Handle handle) {
 
     timer->Cancel();
 
-    HLE::Reschedule(__func__);
-
     return RESULT_SUCCESS;
 }
 
@@ -654,8 +638,6 @@ static void SleepThread(s64 nanoseconds) {
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::GetCurrentThread()->WakeAfterDelay(nanoseconds);
-
-    HLE::Reschedule(__func__);
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on

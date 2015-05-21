@@ -94,6 +94,8 @@ void Mutex::Release() {
             ResumeWaitingThread(this);
         }
     }
+
+    HLE::Reschedule(__func__);
 }
 
 } // namespace
