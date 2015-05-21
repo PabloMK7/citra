@@ -135,27 +135,32 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
-            // map physical start address to size
-            std::map<u32, u32> accessed_ranges;
-            static auto SimplifyRanges = [](std::map<u32, u32>& ranges) {
-                for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-
-                    // Combine overlapping ranges ... artificially extend first range by 32 bytes to merge "close" ranges
-                    auto it2 = std::next(it);
-                    while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
-                        it->second = std::max(it->second, it2->first + it2->second - it->first);
-                        it2 = ranges.erase(it2);
+            class {
+                /// Combine overlapping and close ranges
+                void SimplifyRanges() {
+                    for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+                        // NOTE: We add 32 to the range end address to make sure "close" ranges are combined, too
+                        auto it2 = std::next(it);
+                        while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
+                            it->second = std::max(it->second, it2->first + it2->second - it->first);
+                            it2 = ranges.erase(it2);
+                        }
                     }
                 }
-            };
 
-            static auto AddMemoryAccess = [](std::map<u32, u32>& ranges, u32 paddr, u32 size) {
-                // Create new range or extend existing one
-                ranges[paddr] = std::max(ranges[paddr], size);
+            public:
+                /// Record a particular memory access in the list
+                void AddAccess(u32 paddr, u32 size) {
+                    // Create new range or extend existing one
+                    ranges[paddr] = std::max(ranges[paddr], size);
 
-                // Simplify ranges...
-                SimplifyRanges(ranges);
-            };
+                    // Simplify ranges...
+                    SimplifyRanges();
+                }
+
+                /// Map of accessed ranges (mapping start address to range size)
+                std::map<u32, u32> ranges;
+            } memory_accesses;
 
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
@@ -165,7 +170,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     // TODO: Implement some sort of vertex cache!
                     if (g_debug_context && Pica::g_debug_context->recorder) {
                         int size = index_u16 ? 2 : 1;
-                        AddMemoryAccess(accessed_ranges, base_address + index_info.offset + size*index, size);
+                        memory_accesses.AddAccess(base_address + index_info.offset + size * index, size);
                     }
                 }
 
@@ -193,9 +198,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                         const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
 
                         if (g_debug_context && Pica::g_debug_context->recorder) {
-                            AddMemoryAccess(accessed_ranges, source_addr,
-                                            (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
-                                            : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
+                            memory_accesses.AddAccess(source_addr,
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
+                                    : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
                         }
 
                         const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
@@ -258,7 +263,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
-            for (auto& range : accessed_ranges) {
+            for (auto& range : memory_accesses.ranges) {
                 g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
                                                           range.second, range.first);
             }
