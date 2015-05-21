@@ -126,6 +126,30 @@ static u32 GetDepth(int x, int y) {
     }
 }
 
+static u8 GetStencil(int x, int y) {
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
+    u8* depth_buffer = Memory::GetPhysicalPointer(addr);
+
+    y = framebuffer.height - y;
+
+    const u32 coarse_y = y & ~7;
+    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 stride = framebuffer.width * bytes_per_pixel;
+
+    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
+    u8* src_pixel = depth_buffer + src_offset;
+
+    switch (framebuffer.depth_format) {
+        case Regs::DepthFormat::D24S8:
+            return Color::DecodeD24S8(src_pixel).y;
+
+        default:
+            LOG_WARNING(HW_GPU, "GetStencil called for function which doesn't have a stencil component (format %u)", framebuffer.depth_format);
+            return 0;
+    }
+}
+
 static void SetDepth(int x, int y, u32 value) {
     const auto& framebuffer = g_state.regs.framebuffer;
     const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
@@ -144,17 +168,66 @@ static void SetDepth(int x, int y, u32 value) {
         case Regs::DepthFormat::D16:
             Color::EncodeD16(value, dst_pixel);
             break;
+
         case Regs::DepthFormat::D24:
             Color::EncodeD24(value, dst_pixel);
             break;
+
         case Regs::DepthFormat::D24S8:
-            // TODO(Subv): Implement the stencil buffer
-            Color::EncodeD24S8(value, 0, dst_pixel);
+            Color::EncodeD24X8(value, dst_pixel);
             break;
+
         default:
             LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
             UNIMPLEMENTED();
             break;
+    }
+}
+
+static void SetStencil(int x, int y, u8 value) {
+    const auto& framebuffer = g_state.regs.framebuffer;
+    const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
+    u8* depth_buffer = Memory::GetPhysicalPointer(addr);
+
+    y = framebuffer.height - y;
+
+    const u32 coarse_y = y & ~7;
+    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 stride = framebuffer.width * bytes_per_pixel;
+
+    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
+    u8* dst_pixel = depth_buffer + dst_offset;
+
+    switch (framebuffer.depth_format) {
+        case Pica::Regs::DepthFormat::D16:
+        case Pica::Regs::DepthFormat::D24:
+            // Nothing to do
+            break;
+
+        case Pica::Regs::DepthFormat::D24S8:
+            Color::EncodeX24S8(value, dst_pixel);
+            break;
+
+        default:
+            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+            UNIMPLEMENTED();
+            break;
+    }
+}
+
+// TODO: Should the stencil mask be applied to the "dest" or "ref" operands? Most likely not!
+static u8 PerformStencilAction(Regs::StencilAction action, u8 dest, u8 ref) {
+    switch (action) {
+    case Regs::StencilAction::Keep:
+        return dest;
+
+    case Regs::StencilAction::Xor:
+        return dest ^ ref;
+
+    default:
+        LOG_CRITICAL(HW_GPU, "Unknown stencil action %x", (int)action);
+        UNIMPLEMENTED();
+        return 0;
     }
 }
 
@@ -275,6 +348,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
     auto textures = regs.GetTextures();
     auto tev_stages = regs.GetTevStages();
+
+    bool stencil_action_enable = g_state.regs.output_merger.stencil_test.enable && g_state.regs.framebuffer.depth_format == Regs::DepthFormat::D24S8;
+    const auto stencil_test = g_state.regs.output_merger.stencil_test;
 
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
@@ -647,6 +723,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
             }
 
             const auto& output_merger = regs.output_merger;
+            // TODO: Does alpha testing happen before or after stencil?
             if (output_merger.alpha_test.enable) {
                 bool pass = false;
 
@@ -686,6 +763,54 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                 if (!pass)
                     continue;
+            }
+
+            u8 old_stencil = 0;
+            if (stencil_action_enable) {
+                old_stencil = GetStencil(x >> 4, y >> 4);
+                u8 dest = old_stencil & stencil_test.mask;
+                u8 ref = stencil_test.reference_value & stencil_test.mask;
+
+                bool pass = false;
+                switch (stencil_test.func) {
+                case Regs::CompareFunc::Never:
+                    pass = false;
+                    break;
+
+                case Regs::CompareFunc::Always:
+                    pass = true;
+                    break;
+
+                case Regs::CompareFunc::Equal:
+                    pass = (ref == dest);
+                    break;
+
+                case Regs::CompareFunc::NotEqual:
+                    pass = (ref != dest);
+                    break;
+
+                case Regs::CompareFunc::LessThan:
+                    pass = (ref < dest);
+                    break;
+
+                case Regs::CompareFunc::LessThanOrEqual:
+                    pass = (ref <= dest);
+                    break;
+
+                case Regs::CompareFunc::GreaterThan:
+                    pass = (ref > dest);
+                    break;
+
+                case Regs::CompareFunc::GreaterThanOrEqual:
+                    pass = (ref >= dest);
+                    break;
+                }
+
+                if (!pass) {
+                    u8 new_stencil = PerformStencilAction(stencil_test.action_stencil_fail, old_stencil, stencil_test.replacement_value);
+                    SetStencil(x >> 4, y >> 4, new_stencil);
+                    continue;
+                }
             }
 
             // TODO: Does depth indeed only get written even if depth testing is enabled?
@@ -732,11 +857,22 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     break;
                 }
 
-                if (!pass)
+                if (!pass) {
+                    if (stencil_action_enable) {
+                        u8 new_stencil = PerformStencilAction(stencil_test.action_depth_fail, old_stencil, stencil_test.replacement_value);
+                        SetStencil(x >> 4, y >> 4, new_stencil);
+                    }
                     continue;
+                }
 
                 if (output_merger.depth_write_enable)
                     SetDepth(x >> 4, y >> 4, z);
+
+                if (stencil_action_enable) {
+                    // TODO: What happens if stencil testing is enabled, but depth testing is not? Will stencil get updated anyway?
+                    u8 new_stencil = PerformStencilAction(stencil_test.action_depth_pass, old_stencil, stencil_test.replacement_value);
+                    SetStencil(x >> 4, y >> 4, new_stencil);
+                }
             }
 
             auto dest = GetPixel(x >> 4, y >> 4);

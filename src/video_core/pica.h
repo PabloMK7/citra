@@ -420,6 +420,11 @@ struct Regs {
         GreaterThanOrEqual = 7,
     };
 
+    enum class StencilAction : u32 {
+        Keep = 0,
+        Xor  = 5,
+    };
+
     struct {
         union {
             // If false, logic blending is used
@@ -454,15 +459,35 @@ struct Regs {
             BitField< 8, 8, u32> ref;
         } alpha_test;
 
-        union {
-            BitField< 0, 1, u32> stencil_test_enable;
-            BitField< 4, 3, CompareFunc> stencil_test_func;
-            BitField< 8, 8, u32> stencil_replacement_value;
-            BitField<16, 8, u32> stencil_reference_value;
-            BitField<24, 8, u32> stencil_mask;
-        } stencil_test;
+        struct {
+            union {
+                // If true, enable stencil testing
+                BitField< 0, 1, u32> enable;
 
-        INSERT_PADDING_WORDS(0x1);
+                // Comparison operation for stencil testing
+                BitField< 4, 3, CompareFunc> func;
+
+                // Value to calculate the new stencil value from
+                BitField< 8, 8, u32> replacement_value;
+
+                // Value to compare against for stencil testing
+                BitField<16, 8, u32> reference_value;
+
+                // Mask to apply on stencil test inputs
+                BitField<24, 8, u32> mask;
+            };
+
+            union {
+                // Action to perform when the stencil test fails
+                BitField< 0, 3, StencilAction> action_stencil_fail;
+
+                // Action to perform when stencil testing passed but depth testing fails
+                BitField< 4, 3, StencilAction> action_depth_fail;
+
+                // Action to perform when both stencil and depth testing pass
+                BitField< 8, 3, StencilAction> action_depth_pass;
+            };
+        } stencil_test;
 
         union {
             BitField< 0, 1, u32> depth_test_enable;
@@ -512,7 +537,7 @@ struct Regs {
     struct {
         INSERT_PADDING_WORDS(0x6);
 
-        DepthFormat depth_format;
+        DepthFormat depth_format; // TODO: Should be a BitField!
         BitField<16, 3, ColorFormat> color_format;
 
         INSERT_PADDING_WORDS(0x4);
