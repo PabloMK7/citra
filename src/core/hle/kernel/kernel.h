@@ -85,10 +85,9 @@ public:
         case HandleType::Redirection:
         case HandleType::Process:
         case HandleType::AddressArbiter:
+        case HandleType::ResourceLimit:
             return false;
         }
-
-        return false;
     }
 
 public:
