@@ -36,6 +36,7 @@ set(SRCS
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/kernel/timer.cpp
+            hle/kernel/vm_manager.cpp
             hle/service/ac_u.cpp
             hle/service/act_u.cpp
             hle/service/am_app.cpp
@@ -147,6 +148,7 @@ set(HEADERS
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/kernel/timer.h
+            hle/kernel/vm_manager.h
             hle/result.h
             hle/service/ac_u.h
             hle/service/act_u.h

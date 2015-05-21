@@ -6,7 +6,12 @@
 
 #include "common/common_types.h"
 
+#include "core/memory.h"
+
 namespace Memory {
+
+const u32 PAGE_MASK = PAGE_SIZE - 1;
+const int PAGE_BITS = 12;
 
 void InitMemoryMap();
 
@@ -25,5 +30,7 @@ void MapMemoryRegion(VAddr base, u32 size, u8* target);
  *       IO isn't yet supported.
  */
 void MapIoRegion(VAddr base, u32 size);
+
+void UnmapRegion(VAddr base, u32 size);
 
 }
