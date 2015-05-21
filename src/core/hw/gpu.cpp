@@ -125,11 +125,11 @@ inline void Write(u32 addr, const T data) {
                 break;
             }
 
-            unsigned horizontal_scale = (config.scaling != config.NoScale) ? 2 : 1;
-            unsigned vertical_scale = (config.scaling == config.ScaleXY) ? 2 : 1;
+            bool horizontal_scale = config.scaling != config.NoScale;
+            bool vertical_scale = config.scaling == config.ScaleXY;
 
-            u32 output_width = config.output_width / horizontal_scale;
-            u32 output_height = config.output_height / vertical_scale;
+            u32 output_width = config.output_width >> horizontal_scale;
+            u32 output_height = config.output_height >> vertical_scale;
 
             u32 input_size = config.input_width * config.input_height * GPU::Regs::BytesPerPixel(config.input_format);
             u32 output_size = output_width * output_height * GPU::Regs::BytesPerPixel(config.output_format);
@@ -161,8 +161,8 @@ inline void Write(u32 addr, const T data) {
 
                     // Calculate the [x,y] position of the input image
                     // based on the current output position and the scale
-                    u32 input_x = x * horizontal_scale;
-                    u32 input_y = y * vertical_scale;
+                    u32 input_x = x << horizontal_scale;
+                    u32 input_y = y << vertical_scale;
 
                     if (config.flip_vertically) {
                         // Flip the y value of the output data,
