@@ -28,11 +28,11 @@
 
 EmuThread::EmuThread(GRenderWindow* render_window) :
     exec_step(false), running(false), stop_run(false), render_window(render_window) {
-
-    connect(this, SIGNAL(started()), render_window, SLOT(moveContext()));
 }
 
 void EmuThread::run() {
+    render_window->MakeCurrent();
+
     stop_run = false;
 
     // holds whether the cpu was running during the last iteration,

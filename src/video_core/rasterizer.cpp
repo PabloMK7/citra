@@ -36,23 +36,23 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
 
     switch (registers.framebuffer.color_format) {
-    case registers.framebuffer.RGBA8:
+    case Pica::Regs::ColorFormat::RGBA8:
         Color::EncodeRGBA8(color, dst_pixel);
         break;
 
-    case registers.framebuffer.RGB8:
+    case Pica::Regs::ColorFormat::RGB8:
         Color::EncodeRGB8(color, dst_pixel);
         break;
 
-    case registers.framebuffer.RGB5A1:
+    case Pica::Regs::ColorFormat::RGB5A1:
         Color::EncodeRGB5A1(color, dst_pixel);
         break;
 
-    case registers.framebuffer.RGB565:
+    case Pica::Regs::ColorFormat::RGB565:
         Color::EncodeRGB565(color, dst_pixel);
         break;
 
-    case registers.framebuffer.RGBA4:
+    case Pica::Regs::ColorFormat::RGBA4:
         Color::EncodeRGBA4(color, dst_pixel);
         break;
 
@@ -73,19 +73,19 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     u8* src_pixel = Memory::GetPhysicalPointer(addr) + src_offset;
 
     switch (registers.framebuffer.color_format) {
-    case registers.framebuffer.RGBA8:
+    case Pica::Regs::ColorFormat::RGBA8:
         return Color::DecodeRGBA8(src_pixel);
 
-    case registers.framebuffer.RGB8:
+    case Pica::Regs::ColorFormat::RGB8:
         return Color::DecodeRGB8(src_pixel);
 
-    case registers.framebuffer.RGB5A1:
+    case Pica::Regs::ColorFormat::RGB5A1:
         return Color::DecodeRGB5A1(src_pixel);
 
-    case registers.framebuffer.RGB565:
+    case Pica::Regs::ColorFormat::RGB565:
         return Color::DecodeRGB565(src_pixel);
 
-    case registers.framebuffer.RGBA4:
+    case Pica::Regs::ColorFormat::RGBA4:
         return Color::DecodeRGBA4(src_pixel);
 
     default:

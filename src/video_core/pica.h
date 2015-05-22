@@ -490,20 +490,37 @@ struct Regs {
         }
     }
 
-    struct {
-        // Components are laid out in reverse byte order, most significant bits first.
-        enum ColorFormat : u32 {
-            RGBA8    = 0,
-            RGB8     = 1,
-            RGB5A1   = 2,
-            RGB565   = 3,
-            RGBA4    = 4,
-        };
+    // Components are laid out in reverse byte order, most significant bits first.
+    enum ColorFormat : u32 {
+        RGBA8    = 0,
+        RGB8     = 1,
+        RGB5A1   = 2,
+        RGB565   = 3,
+        RGBA4    = 4,
+    };
 
+    // Returns the number of bytes in the specified color format
+    static unsigned BytesPerColorPixel(ColorFormat format) {
+        switch (format) {
+        case ColorFormat::RGBA8:
+            return 4;
+        case ColorFormat::RGB8:
+            return 3;
+        case ColorFormat::RGB5A1:
+        case ColorFormat::RGB565:
+        case ColorFormat::RGBA4:
+            return 2;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown color format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
+
+    struct {
         INSERT_PADDING_WORDS(0x6);
 
         DepthFormat depth_format;
-        BitField<16, 3, u32> color_format;
+        BitField<16, 3, ColorFormat> color_format;
 
         INSERT_PADDING_WORDS(0x4);
 

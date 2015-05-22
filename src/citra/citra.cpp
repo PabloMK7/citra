@@ -18,6 +18,8 @@
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
+#include "video_core/video_core.h"
+
 /// Application entry point
 int main(int argc, char **argv) {
     Log::Filter log_filter(Log::Level::Debug);
@@ -33,6 +35,8 @@ int main(int argc, char **argv) {
 
     std::string boot_filename = argv[1];
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
+
+    VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
 
     System::Init(emu_window);
 

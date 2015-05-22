@@ -9,7 +9,11 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/y2r_u.h"
+#include "core/mem_map.h"
+#include "core/memory.h"
+
 #include "video_core/utils.h"
+#include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Y2R_U
@@ -260,6 +264,13 @@ static void StartConversion(Service::Interface* self) {
         break;
     }
     }
+
+    // dst_image_size would seem to be perfect for this, but it doesn't include the stride :(
+    u32 total_output_size = conversion_params.input_lines *
+        (conversion_params.dst_transfer_unit + conversion_params.dst_stride);
+    VideoCore::g_renderer->hw_rasterizer->NotifyFlush(
+        Memory::VirtualToPhysicalAddress(conversion_params.dst_address), total_output_size);
+
     LOG_DEBUG(Service_Y2R, "called");
     completion_event->Signal();
 

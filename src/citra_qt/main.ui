@@ -52,6 +52,7 @@
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="separator"/>
+    <addaction name="action_Use_Hardware_Renderer"/>
     <addaction name="action_Configure"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -129,6 +130,14 @@
   <action name="action_Hotkeys">
    <property name="text">
     <string>Configure &amp;Hotkeys ...</string>
+   </property>
+  </action>
+  <action name="action_Use_Hardware_Renderer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use Hardware Renderer</string>
    </property>
   </action>
   <action name="action_Configure">

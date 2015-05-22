@@ -12,8 +12,10 @@
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "vertex_shader.h"
+#include "video_core.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hw/gpu.h"
+#include "core/settings.h"
 
 #include "debug_utils/debug_utils.h"
 
@@ -107,7 +109,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             bool index_u16 = index_info.format != 0;
 
             DebugUtils::GeometryDumper geometry_dumper;
-            PrimitiveAssembler<VertexShader::OutputVertex> clipper_primitive_assembler(registers.triangle_topology.Value());
+            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(registers.triangle_topology.Value());
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(registers.triangle_topology.Value());
 
             for (unsigned int index = 0; index < registers.num_vertices; ++index)
@@ -185,9 +187,25 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                     // TODO: Add processed vertex to vertex cache!
                 }
 
-                // Send to triangle clipper
-                clipper_primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
+                if (Settings::values.use_hw_renderer) {
+                    // Send to hardware renderer
+                    static auto AddHWTriangle = [](const Pica::VertexShader::OutputVertex& v0,
+                                                   const Pica::VertexShader::OutputVertex& v1,
+                                                   const Pica::VertexShader::OutputVertex& v2) {
+                        VideoCore::g_renderer->hw_rasterizer->AddTriangle(v0, v1, v2);
+                    };
+                    
+                    primitive_assembler.SubmitVertex(output, AddHWTriangle);
+                } else {
+                    // Send to triangle clipper
+                    primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
+                }
             }
+
+            if (Settings::values.use_hw_renderer) {
+                VideoCore::g_renderer->hw_rasterizer->DrawTriangles();
+            }
+
             geometry_dumper.Dump();
 
             if (g_debug_context)
@@ -339,6 +357,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         default:
             break;
     }
+
+    VideoCore::g_renderer->hw_rasterizer->NotifyPicaRegisterChanged(id);
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::CommandProcessed, reinterpret_cast<void*>(&id));
