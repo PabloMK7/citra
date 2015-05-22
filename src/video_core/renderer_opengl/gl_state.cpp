@@ -120,7 +120,7 @@ const void OpenGLState::Apply() {
 
     // Textures
     for (unsigned texture_index = 0; texture_index < ARRAY_SIZE(texture_units); ++texture_index) {
-        if (texture_units[texture_index].enabled_2d != texture_units[texture_index].enabled_2d) {
+        if (texture_units[texture_index].enabled_2d != cur_state.texture_units[texture_index].enabled_2d) {
             glActiveTexture(GL_TEXTURE0 + texture_index);
 
             if (texture_units[texture_index].enabled_2d) {
