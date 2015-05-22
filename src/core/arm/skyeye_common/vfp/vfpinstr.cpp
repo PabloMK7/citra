@@ -1093,8 +1093,6 @@ VMOVBRC_INST:
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        vmovbrc_inst *inst_cream = (vmovbrc_inst *)inst_base->component;
-
         VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
     }
     cpu->Reg[15] += GET_INST_SIZE(cpu);
@@ -1223,8 +1221,6 @@ VMOVBCR_INST:
 {
     if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
-
-        vmovbcr_inst *inst_cream = (vmovbcr_inst *)inst_base->component;
 
         VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
     }

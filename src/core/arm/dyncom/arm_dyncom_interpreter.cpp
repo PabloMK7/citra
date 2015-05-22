@@ -4978,7 +4978,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             msr_inst* inst_cream = (msr_inst*)inst_base->component;
-            const uint32_t UnallocMask = 0x06f0fc00, UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
+            const uint32_t UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
             unsigned int inst = inst_cream->inst;
             unsigned int operand;
 

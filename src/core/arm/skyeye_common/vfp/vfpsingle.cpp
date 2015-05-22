@@ -51,6 +51,8 @@
  * ===========================================================================
  */
 
+#include <cinttypes>
+
 #include "common/logging/log.h"
 
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
@@ -392,7 +394,7 @@ sqrt_invalid:
             term = (u64)vsd.significand * vsd.significand;
             rem = ((u64)vsm.significand << 32) - term;
 
-            LOG_DEBUG(Core_ARM11, "term=%016lx rem=%016lx", term, rem);
+            LOG_DEBUG(Core_ARM11, "term=%016" PRIx64 "rem=%016" PRIx64, term, rem);
 
             while (rem < 0) {
                 vsd.significand -= 1;
