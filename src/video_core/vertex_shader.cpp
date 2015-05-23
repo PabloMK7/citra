@@ -208,6 +208,15 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
                 break;
 
+            case OpCode::Id::MIN:
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = std::min(src1[i], src2[i]);
+                }
+                break;
+
             case OpCode::Id::DP3:
             case OpCode::Id::DP4:
             {
