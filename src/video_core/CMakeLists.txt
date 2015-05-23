@@ -9,6 +9,7 @@ set(SRCS
             debug_utils/debug_utils.cpp
             clipper.cpp
             command_processor.cpp
+            pica.cpp
             primitive_assembly.cpp
             rasterizer.cpp
             utils.cpp

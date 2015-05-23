@@ -21,8 +21,6 @@
 
 namespace Pica {
 
-Regs registers;
-
 namespace CommandProcessor {
 
 static int float_regs_counter = 0;
@@ -36,8 +34,9 @@ static u32 default_attr_write_buffer[3];
 Common::Profiling::TimingCategory category_drawing("Drawing");
 
 static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
+    auto& regs = g_state.regs;
 
-    if (id >= registers.NumIds())
+    if (id >= regs.NumIds())
         return;
 
     // If we're skipping this frame, only allow trigger IRQ
@@ -45,13 +44,13 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         return;
 
     // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
-    u32 old_value = registers[id];
-    registers[id] = (old_value & ~mask) | (value & mask);
+    u32 old_value = regs[id];
+    regs[id] = (old_value & ~mask) | (value & mask);
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::CommandLoaded, reinterpret_cast<void*>(&id));
 
-    DebugUtils::OnPicaRegWrite(id, registers[id]);
+    DebugUtils::OnPicaRegWrite(id, regs[id]);
 
     switch(id) {
         // Trigger IRQ
@@ -65,12 +64,12 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         {
             Common::Profiling::ScopeTimer scope_timer(category_drawing);
 
-            DebugUtils::DumpTevStageConfig(registers.GetTevStages());
+            DebugUtils::DumpTevStageConfig(regs.GetTevStages());
 
             if (g_debug_context)
                 g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
 
-            const auto& attribute_config = registers.vertex_attributes;
+            const auto& attribute_config = regs.vertex_attributes;
             const u32 base_address = attribute_config.GetPhysicalBaseAddress();
 
             // Information about internal vertex attributes
@@ -103,16 +102,16 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             // Load vertices
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
-            const auto& index_info = registers.index_array;
+            const auto& index_info = regs.index_array;
             const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = index_info.format != 0;
 
             DebugUtils::GeometryDumper geometry_dumper;
-            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(registers.triangle_topology.Value());
-            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(registers.triangle_topology.Value());
+            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
+            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
 
-            for (unsigned int index = 0; index < registers.num_vertices; ++index)
+            for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
                 unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
 
@@ -131,7 +130,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                     // Load the default attribute if we're configured to do so, this data will be overwritten by the loader data if it's set
                     if (attribute_config.IsDefaultAttribute(i)) {
-                        input.attr[i] = VertexShader::GetDefaultAttribute(i);
+                        input.attr[i] = g_state.vs.default_attributes[i];
                         LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
                                   i, vertex, index,
                                   input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
@@ -216,7 +215,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         case PICA_REG_INDEX(vs_bool_uniforms):
             for (unsigned i = 0; i < 16; ++i)
-                VertexShader::GetBoolUniform(i) = (registers.vs_bool_uniforms.Value() & (1 << i)) != 0;
+                g_state.vs.uniforms.b[i] = (regs.vs_bool_uniforms.Value() & (1 << i)) != 0;
 
             break;
 
@@ -226,8 +225,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[3], 0x2b4):
         {
             int index = (id - PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1));
-            auto values = registers.vs_int_uniforms[index];
-            VertexShader::GetIntUniform(index) = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
+            auto values = regs.vs_int_uniforms[index];
+            g_state.vs.uniforms.i[index] = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
             LOG_TRACE(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
                       index, values.x.Value(), values.y.Value(), values.z.Value(), values.w.Value());
             break;
@@ -242,7 +241,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[6], 0x2c7):
         case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[7], 0x2c8):
         {
-            auto& uniform_setup = registers.vs_uniform_setup;
+            auto& uniform_setup = regs.vs_uniform_setup;
 
             // TODO: Does actual hardware indeed keep an intermediate buffer or does
             //       it directly write the values?
@@ -255,7 +254,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 (float_regs_counter >= 3 && !uniform_setup.IsFloat32())) {
                 float_regs_counter = 0;
 
-                auto& uniform = VertexShader::GetFloatUniform(uniform_setup.index);
+                auto& uniform = g_state.vs.uniforms.f[uniform_setup.index];
 
                 if (uniform_setup.index > 95) {
                     LOG_ERROR(HW_GPU, "Invalid VS uniform index %d", (int)uniform_setup.index);
@@ -299,14 +298,14 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             if (default_attr_counter >= 3) {
                 default_attr_counter = 0;
 
-                auto& setup = registers.vs_default_attributes_setup;
+                auto& setup = regs.vs_default_attributes_setup;
 
                 if (setup.index >= 16) {
                     LOG_ERROR(HW_GPU, "Invalid VS default attribute index %d", (int)setup.index);
                     break;
                 }
 
-                Math::Vec4<float24>& attribute = VertexShader::GetDefaultAttribute(setup.index);
+                Math::Vec4<float24>& attribute = g_state.vs.default_attributes[setup.index];
                 
                 // NOTE: The destination component order indeed is "backwards"
                 attribute.w = float24::FromRawFloat24(default_attr_write_buffer[0] >> 8);
@@ -334,8 +333,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[6], 0x2d2):
         case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[7], 0x2d3):
         {
-            VertexShader::SubmitShaderMemoryChange(registers.vs_program.offset, value);
-            registers.vs_program.offset++;
+            g_state.vs.program_code[regs.vs_program.offset] = value;
+            regs.vs_program.offset++;
             break;
         }
 
@@ -349,8 +348,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[6], 0x2dc):
         case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[7], 0x2dd):
         {
-            VertexShader::SubmitSwizzleDataChange(registers.vs_swizzle_patterns.offset, value);
-            registers.vs_swizzle_patterns.offset++;
+            g_state.vs.swizzle_data[regs.vs_swizzle_patterns.offset] = value;
+            regs.vs_swizzle_patterns.offset++;
             break;
         }
 

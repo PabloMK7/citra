@@ -16,6 +16,8 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
+#include "math.h" 
+
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name
@@ -356,50 +358,50 @@ struct Regs {
                  tev_stage4, tev_stage5 };
     };
 
-    struct {
-        enum CompareFunc : u32 {
-            Never               = 0,
-            Always              = 1,
-            Equal               = 2,
-            NotEqual            = 3,
-            LessThan            = 4,
-            LessThanOrEqual     = 5,
-            GreaterThan         = 6,
-            GreaterThanOrEqual  = 7,
-        };
+    enum class BlendEquation : u32 {
+        Add             = 0,
+        Subtract        = 1,
+        ReverseSubtract = 2,
+        Min             = 3,
+        Max             = 4,
+    };
 
+    enum class BlendFactor : u32 {
+        Zero                    = 0,
+        One                     = 1,
+        SourceColor             = 2,
+        OneMinusSourceColor     = 3,
+        DestColor               = 4,
+        OneMinusDestColor       = 5,
+        SourceAlpha             = 6,
+        OneMinusSourceAlpha     = 7,
+        DestAlpha               = 8,
+        OneMinusDestAlpha       = 9,
+        ConstantColor           = 10,
+        OneMinusConstantColor   = 11,
+        ConstantAlpha           = 12,
+        OneMinusConstantAlpha   = 13,
+        SourceAlphaSaturate     = 14,
+    };
+
+    enum class CompareFunc : u32 {
+        Never              = 0,
+        Always             = 1,
+        Equal              = 2,
+        NotEqual           = 3,
+        LessThan           = 4,
+        LessThanOrEqual    = 5,
+        GreaterThan        = 6,
+        GreaterThanOrEqual = 7,
+    };
+
+    struct {
         union {
             // If false, logic blending is used
             BitField<8, 1, u32> alphablend_enable;
         };
 
         union {
-            enum class BlendEquation : u32 {
-                Add             = 0,
-                Subtract        = 1,
-                ReverseSubtract = 2,
-                Min             = 3,
-                Max             = 4
-            };
-
-            enum BlendFactor : u32 {
-                Zero                    = 0,
-                One                     = 1,
-                SourceColor             = 2,
-                OneMinusSourceColor     = 3,
-                DestColor               = 4,
-                OneMinusDestColor       = 5,
-                SourceAlpha             = 6,
-                OneMinusSourceAlpha     = 7,
-                DestAlpha               = 8,
-                OneMinusDestAlpha       = 9,
-                ConstantColor           = 10,
-                OneMinusConstantColor   = 11,
-                ConstantAlpha           = 12,
-                OneMinusConstantAlpha   = 13,
-                SourceAlphaSaturate     = 14
-            };
-
             BitField< 0, 8, BlendEquation> blend_equation_rgb;
             BitField< 8, 8, BlendEquation> blend_equation_a;
 
@@ -454,49 +456,19 @@ struct Regs {
         INSERT_PADDING_WORDS(0x8);
     } output_merger;
 
-    enum DepthFormat : u32 {
-        D16    = 0,
-
-        D24    = 2,
-        D24S8  = 3
+    // Components are laid out in reverse byte order, most significant bits first.
+    enum class ColorFormat : u32 {
+        RGBA8  = 0,
+        RGB8   = 1,
+        RGB5A1 = 2,
+        RGB565 = 3,
+        RGBA4  = 4,
     };
 
-    // Returns the number of bytes in the specified depth format
-    static u32 BytesPerDepthPixel(DepthFormat format) {
-        switch (format) {
-        case DepthFormat::D16:
-            return 2;
-        case DepthFormat::D24:
-            return 3;
-        case DepthFormat::D24S8:
-            return 4;
-        default:
-            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
-            UNIMPLEMENTED();
-        }
-    }
-
-    // Returns the number of bits per depth component of the specified depth format
-    static u32 DepthBitsPerPixel(DepthFormat format) {
-        switch (format) {
-        case DepthFormat::D16:
-            return 16;
-        case DepthFormat::D24:
-        case DepthFormat::D24S8:
-            return 24;
-        default:
-            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
-            UNIMPLEMENTED();
-        }
-    }
-
-    // Components are laid out in reverse byte order, most significant bits first.
-    enum ColorFormat : u32 {
-        RGBA8    = 0,
-        RGB8     = 1,
-        RGB5A1   = 2,
-        RGB565   = 3,
-        RGBA4    = 4,
+    enum class DepthFormat : u32 {
+        D16   = 0,
+        D24   = 2,
+        D24S8 = 3,
     };
 
     // Returns the number of bytes in the specified color format
@@ -553,6 +525,35 @@ struct Regs {
             return height + 1;
         }
     } framebuffer;
+
+    // Returns the number of bytes in the specified depth format
+    static u32 BytesPerDepthPixel(DepthFormat format) {
+        switch (format) {
+        case DepthFormat::D16:
+            return 2;
+        case DepthFormat::D24:
+            return 3;
+        case DepthFormat::D24S8:
+            return 4;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
+
+    // Returns the number of bits per depth component of the specified depth format
+    static u32 DepthBitsPerPixel(DepthFormat format) {
+        switch (format) {
+        case DepthFormat::D16:
+            return 16;
+        case DepthFormat::D24:
+        case DepthFormat::D24S8:
+            return 24;
+        default:
+            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
+            UNIMPLEMENTED();
+        }
+    }
 
     INSERT_PADDING_WORDS(0xe0);
 
@@ -953,9 +954,6 @@ ASSERT_REG_POSITION(vs_swizzle_patterns, 0x2d5);
 static_assert(sizeof(Regs) <= 0x300 * sizeof(u32), "Register set structure larger than it should be");
 static_assert(sizeof(Regs) >= 0x300 * sizeof(u32), "Register set structure smaller than it should be");
 
-extern Regs registers; // TODO: Not sure if we want to have one global instance for this
-
-
 struct float24 {
     static float24 FromFloat32(float val) {
         float24 ret;
@@ -1065,5 +1063,31 @@ union CommandHeader {
     BitField<20, 11, u32> extra_data_length;
     BitField<31,  1, u32> group_commands;
 };
+
+/// Struct used to describe current Pica state
+struct State {
+    Regs regs;
+
+    struct {
+        struct {
+            Math::Vec4<float24> f[96];
+            std::array<bool, 16> b;
+            std::array<Math::Vec4<u8>, 4> i;
+        } uniforms;
+
+        Math::Vec4<float24> default_attributes[16];
+
+        std::array<u32, 1024> program_code;
+        std::array<u32, 1024> swizzle_data;
+    } vs;
+};
+
+/// Initialize Pica state
+void Init();
+
+/// Shutdown Pica state
+void Shutdown();
+
+extern State g_state; ///< Current Pica state
 
 } // namespace

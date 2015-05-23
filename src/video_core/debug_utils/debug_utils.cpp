@@ -632,7 +632,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
             info.width = texture_config.width;
             info.height = texture_config.height;
             info.stride = row_stride;
-            info.format = registers.texture0_format;
+            info.format = g_state.regs.texture0_format;
             Math::Vec4<u8> texture_color = LookupTexture(data, x, y, info);
             buf[3 * x + y * row_stride    ] = texture_color.r();
             buf[3 * x + y * row_stride + 1] = texture_color.g();
