@@ -120,10 +120,6 @@ static void ProcessShaderCode(VertexShaderState& state) {
         case OpCode::Type::Arithmetic:
         {
             bool is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
-            // TODO: We don't really support this properly: For instance, the address register
-            //       offset needs to be applied to SRC2 instead, etc.
-            //       For now, we just abort in this situation.
-            ASSERT_MSG(!is_inverted, "Bad condition...");
 
             const int address_offset = (instr.common.address_register_index == 0)
                                        ? 0 : state.address_registers[instr.common.address_register_index - 1];
@@ -287,6 +283,16 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 }
                 break;
             }
+
+            case OpCode::Id::SLT:
+            case OpCode::Id::SLTI:
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = (src1[i] < src2[i]) ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
+                }
+                break;
 
             case OpCode::Id::CMP:
                 for (int i = 0; i < 2; ++i) {
