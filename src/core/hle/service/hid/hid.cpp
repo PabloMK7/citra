@@ -136,7 +136,27 @@ void EnableAccelerometer(Service::Interface* self) {
     LOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
+void DisableAccelerometer(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    event_accelerometer->Signal();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_HID, "(STUBBED) called");
+}
+
 void EnableGyroscopeLow(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    event_gyroscope->Signal();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_HID, "(STUBBED) called");
+}
+
+void DisableGyroscopeLow(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     event_gyroscope->Signal();
