@@ -3490,7 +3490,7 @@ enum {
     FETCH_FAILURE
 };
 
-static tdstate decode_thumb_instr(ARMul_State* cpu, u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
+static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
     // Check if in Thumb mode
     tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
     if(ret == t_branch){
@@ -3581,8 +3581,7 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
         // If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction
         if (cpu->TFlag) {
             uint32_t arm_inst;
-            tdstate state;
-            state = decode_thumb_instr(cpu, inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+            tdstate state = decode_thumb_instr(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 
             // We have translated the branch instruction of thumb in thumb decoder
             if(state == t_branch){
