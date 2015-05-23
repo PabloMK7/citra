@@ -138,7 +138,13 @@ void GRenderWindow::moveContext()
 
 void GRenderWindow::SwapBuffers()
 {
-    // MakeCurrent is already called in renderer_opengl
+#if !defined(QT_NO_DEBUG)
+    // Qt debug runtime prints a bogus warning on the console if you haven't called makeCurrent
+    // since the last time you called swapBuffers. This presumably means something if you're using
+    // QGLWidget the "regular" way, but in our multi-threaded use case is harmless since we never
+    // call doneCurrent in this thread.
+    child->makeCurrent();
+#endif
     child->swapBuffers();
 }
 
