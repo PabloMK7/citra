@@ -236,7 +236,6 @@ static void StartConversion(Service::Interface* self) {
         const size_t tile_size = 8 * 8 * bpp;
 
         for (size_t line = 0; line < input_lines;) {
-            size_t tile_y = line / 8;
             size_t max_line = line + 8;
 
             for (; line < max_line; ++line) {
