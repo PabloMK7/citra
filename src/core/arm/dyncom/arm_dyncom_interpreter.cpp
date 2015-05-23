@@ -711,7 +711,6 @@ struct arm_inst {
     unsigned int idx;
     unsigned int cond;
     int br;
-    int load_r15;
     char component[0];
 };
 
@@ -1250,31 +1249,25 @@ static get_addr_fp_t get_calc_addr_op(unsigned int inst) {
 
 #define INTERPRETER_TRANSLATE(s) glue(InterpreterTranslate_, s)
 
-#define CHECK_RN            (inst_cream->Rn == 15)
-#define CHECK_RM            (inst_cream->Rm == 15)
-#define CHECK_RS            (inst_cream->Rs == 15)
-
 static ARM_INST_PTR INTERPRETER_TRANSLATE(adc)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(adc_inst));
     adc_inst *inst_cream = (adc_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (inst_cream->Rd == 15) {
+
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(add)(unsigned int inst, int index)
@@ -1282,22 +1275,20 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(add)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(add_inst));
     add_inst *inst_cream = (add_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (inst_cream->Rd == 15) {
+
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(and)(unsigned int inst, int index)
@@ -1305,21 +1296,20 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(and)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(and_inst));
     and_inst *inst_cream = (and_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
+	
     if (inst_cream->Rd == 15) 
         inst_base->br = INDIRECT_BRANCH;
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(bbl)(unsigned int inst, int index)
@@ -1349,17 +1339,14 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(bic_inst));
     bic_inst *inst_cream = (bic_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
 
@@ -1373,10 +1360,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bkpt)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(bkpt_inst));
     bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->imm = (BITS(inst, 8, 19) << 4) | BITS(inst, 0, 3);
 
@@ -1423,10 +1409,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index) {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cdp_inst));
     cdp_inst *inst_cream = (cdp_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->CRm      = BITS(inst,  0,  3);
     inst_cream->CRd      = BITS(inst, 12, 15);
@@ -1453,15 +1438,12 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(clz)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(clz_inst));
     clz_inst *inst_cream = (clz_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm = BITS(inst,  0,  3);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RM) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -1470,18 +1452,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cmn)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cmn_inst));
     cmn_inst *inst_cream = (cmn_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->Rn = BITS(inst, 16, 19);
-
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(cmp)(unsigned int inst, int index)
@@ -1489,17 +1468,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cmp)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(cmp_inst));
     cmp_inst *inst_cream = (cmp_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->Rn = BITS(inst, 16, 19);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(cps)(unsigned int inst, int index)
@@ -1546,22 +1523,20 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(eor)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(eor_inst));
     eor_inst *inst_cream = (eor_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (inst_cream->Rd == 15) {
+
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldc)(unsigned int inst, int index)
@@ -1595,16 +1570,13 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sxth)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtb_inst));
     sxtb_inst *inst_cream = (sxtb_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->Rm     = BITS(inst,  0,  3);
     inst_cream->rotate = BITS(inst, 10, 11);
-    if (CHECK_RM) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -1613,17 +1585,16 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
     ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
+    if (BITS(inst, 12, 15) == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 
@@ -1632,17 +1603,16 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrcond)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
     ldst_inst *inst_cream = (ldst_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
+    if (BITS(inst, 12, 15) == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 
@@ -1651,16 +1621,13 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxth)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxth_inst));
     uxth_inst *inst_cream = (uxth_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
     inst_cream->Rm     = BITS(inst,  0,  3);
-    if (CHECK_RM) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -1669,17 +1636,14 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtah)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxtah_inst));
     uxtah_inst *inst_cream = (uxtah_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rn     = BITS(inst, 16, 19);
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
     inst_cream->Rm     = BITS(inst,  0,  3);
-    if (CHECK_RM || CHECK_RN) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -1865,10 +1829,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mcrr)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(mcrr_inst));
     mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->crm      = BITS(inst, 0, 3);
     inst_cream->opcode_1 = BITS(inst, 4, 7);
@@ -1884,19 +1847,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mla)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mla_inst));
     mla_inst *inst_cream = (mla_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rn = BITS(inst, 12, 15);
     inst_cream->Rd = BITS(inst, 16, 19);
     inst_cream->Rs = BITS(inst,  8, 11);
     inst_cream->Rm = BITS(inst,  0,  3);
-
-    if (CHECK_RM || CHECK_RN || CHECK_RS) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -1977,18 +1936,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mul)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(mul_inst));
     mul_inst *inst_cream = (mul_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rm = BITS(inst, 0, 3);
     inst_cream->Rs = BITS(inst, 8, 11);
     inst_cream->Rd = BITS(inst, 16, 19);
 
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(mvn)(unsigned int inst, int index)
@@ -2017,10 +1973,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(orr_inst));
     orr_inst *inst_cream = (orr_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
@@ -2029,11 +1984,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
 
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
-    if (inst_cream->Rd == 15) {
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 
@@ -2042,10 +1995,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(nop)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
@@ -2056,13 +2008,12 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(pkhbt)(unsigned int inst, int index)
     pkh_inst *inst_cream = (pkh_inst *)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx = index;
-    inst_base->br = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
-    inst_cream->Rd = BITS(inst, 12, 15);
-    inst_cream->Rn = BITS(inst, 16, 19);
-    inst_cream->Rm = BITS(inst, 0, 3);
+    inst_cream->Rd  = BITS(inst, 12, 15);
+    inst_cream->Rn  = BITS(inst, 16, 19);
+    inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->imm = BITS(inst, 7, 11);
 
     return inst_base;
@@ -2077,10 +2028,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(pld)(unsigned int inst, int index)
 {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(pld_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
@@ -2090,10 +2040,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(qadd)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->op1 = BITS(inst, 21, 22);
     inst_cream->Rm  = BITS(inst, 0, 3);
@@ -2120,10 +2069,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(qadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->Rn  = BITS(inst, 16, 19);
@@ -2159,10 +2107,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rev)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(rev_inst));
     rev_inst* const inst_cream = (rev_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm  = BITS(inst,  0,  3);
     inst_cream->Rd  = BITS(inst, 12, 15);
@@ -2185,10 +2132,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
     ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
 
-    inst_base->cond     = AL;
-    inst_base->idx      = index;
-    inst_base->br       = INDIRECT_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = AL;
+    inst_base->idx  = index;
+    inst_base->br   = INDIRECT_BRANCH;
 
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
@@ -2201,10 +2147,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rsb_inst));
     rsb_inst *inst_cream = (rsb_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
@@ -2212,12 +2157,10 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
 
-    if (inst_cream->Rd == 15) {
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
@@ -2225,10 +2168,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(rsc_inst));
     rsc_inst *inst_cream = (rsc_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
@@ -2236,12 +2178,10 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (CHECK_RN)
-        inst_base->load_r15 = 1;
 
-    if (inst_cream->Rd == 15) {
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index)
@@ -2249,10 +2189,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->Rn  = BITS(inst, 16, 19);
@@ -2288,10 +2227,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sbc_inst));
     sbc_inst *inst_cream = (sbc_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
@@ -2299,12 +2237,10 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (CHECK_RN)
-        inst_base->load_r15 = 1;
 
-    if (inst_cream->Rd == 15) {
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
+
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)
@@ -2312,10 +2248,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sel)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->Rn  = BITS(inst, 16, 19);
@@ -2331,10 +2266,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(setend)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(setend_inst));
     setend_inst* const inst_cream = (setend_inst*)inst_base->component;
 
-    inst_base->cond     = AL;
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = AL;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->set_bigend = BIT(inst, 9);
 
@@ -2345,10 +2279,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sev)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
@@ -2358,10 +2291,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(shadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->op1 = BITS(inst, 20, 21);
     inst_cream->op2 = BITS(inst, 5, 7);
@@ -2397,10 +2329,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smla)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smla_inst));
     smla_inst *inst_cream = (smla_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->x  = BIT(inst, 5);
     inst_cream->y  = BIT(inst, 6);
@@ -2417,10 +2348,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlad)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
     smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->m   = BIT(inst, 5);
     inst_cream->Rn  = BITS(inst, 0, 3);
@@ -2450,10 +2380,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
     umlal_inst *inst_cream = (umlal_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S    = BIT(inst, 20);
     inst_cream->Rm   = BITS(inst, 0, 3);
@@ -2461,8 +2390,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlal)(unsigned int inst, int index)
     inst_cream->RdHi = BITS(inst, 16, 19);
     inst_cream->RdLo = BITS(inst, 12, 15);
 
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 
@@ -2471,10 +2398,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlalxy)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlalxy_inst));
     smlalxy_inst* const inst_cream = (smlalxy_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->x    = BIT(inst, 5);
     inst_cream->y    = BIT(inst, 6);
@@ -2491,10 +2417,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlaw)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
     smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Ra = BITS(inst, 12, 15);
     inst_cream->Rm = BITS(inst, 8, 11);
@@ -2510,10 +2435,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smlald)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlald_inst));
     smlald_inst* const inst_cream = (smlald_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm   = BITS(inst, 8, 11);
     inst_cream->Rn   = BITS(inst, 0, 3);
@@ -2535,10 +2459,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smmla)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
     smlad_inst* const inst_cream = (smlad_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->m   = BIT(inst, 5);
     inst_cream->Ra  = BITS(inst, 12, 15);
@@ -2564,10 +2487,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smul_inst));
     smul_inst *inst_cream = (smul_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd = BITS(inst, 16, 19);
     inst_cream->Rs = BITS(inst,  8, 11);
@@ -2576,8 +2498,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smul)(unsigned int inst, int index)
     inst_cream->x  = BIT(inst, 5);
     inst_cream->y  = BIT(inst, 6);
 
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
     return inst_base;
 
 }
@@ -2586,10 +2506,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smull)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umull_inst));
     umull_inst *inst_cream = (umull_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S    = BIT(inst, 20);
     inst_cream->Rm   = BITS(inst, 0, 3);
@@ -2597,8 +2516,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smull)(unsigned int inst, int index)
     inst_cream->RdHi = BITS(inst, 16, 19);
     inst_cream->RdLo = BITS(inst, 12, 15);
 
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 
@@ -2607,18 +2524,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(smulw)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(smlad_inst));
     smlad_inst *inst_cream = (smlad_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->m  = BIT(inst, 6);
     inst_cream->Rm = BITS(inst, 8, 11);
     inst_cream->Rn = BITS(inst, 0, 3);
     inst_cream->Rd = BITS(inst, 16, 19);
 
-    if (CHECK_RM || CHECK_RN) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 
@@ -2627,10 +2541,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ldst_inst));
     ldst_inst* const inst_cream = (ldst_inst*)inst_base->component;
 
-    inst_base->cond     = AL;
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = AL;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->inst     = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
@@ -2644,9 +2557,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ssat)(unsigned int inst, int index)
     ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
 
     inst_base->cond = BITS(inst, 28, 31);
-    inst_base->idx = index;
-    inst_base->br = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rn = BITS(inst, 0, 3);
     inst_cream->Rd = BITS(inst, 12, 15);
@@ -2661,10 +2573,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ssat16)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(ssat_inst));
     ssat_inst* const inst_cream = (ssat_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rn      = BITS(inst, 0, 3);
     inst_cream->Rd      = BITS(inst, 12, 15);
@@ -2700,17 +2611,14 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtb_inst));
     sxtb_inst *inst_cream = (sxtb_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->Rm     = BITS(inst,  0,  3);
     inst_cream->rotate = BITS(inst, 10, 11);
 
-    if (CHECK_RM) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(str)(unsigned int inst, int index)
@@ -2735,17 +2643,14 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxth_inst));
     uxth_inst *inst_cream = (uxth_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
     inst_cream->Rm     = BITS(inst,  0,  3);
 
-    if (CHECK_RM) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab)(unsigned int inst, int index)
@@ -2753,10 +2658,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(uxtab_inst));
     uxtab_inst *inst_cream = (uxtab_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
@@ -2899,10 +2803,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sub)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sub_inst));
     sub_inst *inst_cream = (sub_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I  = BIT(inst, 25);
     inst_cream->S  = BIT(inst, 20);
@@ -2910,11 +2813,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sub)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (inst_cream->Rd == 15) {
+
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
-    }
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -2969,10 +2870,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtab_inst));
     sxtab_inst *inst_cream = (sxtab_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
@@ -2987,10 +2887,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab16)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(sxtab_inst));
     sxtab_inst* const inst_cream = (sxtab_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm = BITS(inst, 0, 3);
     inst_cream->Rn = BITS(inst, 16, 19);
@@ -3008,10 +2907,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtah)(unsigned int inst, int index) {
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(sxtah_inst));
     sxtah_inst *inst_cream = (sxtah_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rd     = BITS(inst, 12, 15);
     inst_cream->rotate = BITS(inst, 10, 11);
@@ -3026,18 +2924,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(teq)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(teq_inst));
     teq_inst *inst_cream = (teq_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->I               = BIT(inst, 25);
     inst_cream->Rn              = BITS(inst, 16, 19);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func      = get_shtop(inst);
 
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
@@ -3045,23 +2940,20 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(tst_inst));
     tst_inst *inst_cream = (tst_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
-    inst_cream->I      = BIT(inst, 25);
-    inst_cream->S      = BIT(inst, 20);
-    inst_cream->Rn     = BITS(inst, 16, 19);
-    inst_cream->Rd     = BITS(inst, 12, 15);
+    inst_cream->I  = BIT(inst, 25);
+    inst_cream->S  = BIT(inst, 20);
+    inst_cream->Rn = BITS(inst, 16, 19);
+    inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-    if (inst_cream->Rd == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
 
-    if (CHECK_RN) 
-        inst_base->load_r15 = 1;
+    if (inst_cream->Rd == 15)
+        inst_base->br = INDIRECT_BRANCH;
+
     return inst_base;
 }
 
@@ -3070,10 +2962,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->op1 = BITS(inst, 20, 21);
     inst_cream->op2 = BITS(inst, 5, 7);
@@ -3109,10 +3000,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uhadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->op1 = BITS(inst, 20, 21);
     inst_cream->op2 = BITS(inst, 5, 7);
@@ -3147,18 +3037,14 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(umaal)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(umaal_inst));
     umaal_inst* const inst_cream = (umaal_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm   = BITS(inst, 8, 11);
     inst_cream->Rn   = BITS(inst, 0, 3);
     inst_cream->RdLo = BITS(inst, 12, 15);
     inst_cream->RdHi = BITS(inst, 16, 19);
-
-    if (CHECK_RM || CHECK_RN)
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -3167,19 +3053,15 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(umlal)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umlal_inst));
     umlal_inst *inst_cream = (umlal_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S    = BIT(inst, 20);
     inst_cream->Rm   = BITS(inst, 0, 3);
     inst_cream->Rs   = BITS(inst, 8, 11);
     inst_cream->RdHi = BITS(inst, 16, 19);
     inst_cream->RdLo = BITS(inst, 12, 15);
-
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
 
     return inst_base;
 }
@@ -3188,10 +3070,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(umull)(unsigned int inst, int index)
     arm_inst *inst_base = (arm_inst *)AllocBuffer(sizeof(arm_inst) + sizeof(umull_inst));
     umull_inst *inst_cream = (umull_inst *)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->S    = BIT(inst, 20);
     inst_cream->Rm   = BITS(inst, 0, 3);
@@ -3199,8 +3080,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(umull)(unsigned int inst, int index)
     inst_cream->RdHi = BITS(inst, 16, 19);
     inst_cream->RdLo = BITS(inst, 12, 15);
 
-    if (CHECK_RM || CHECK_RS) 
-        inst_base->load_r15 = 1;
     return inst_base;
 }
 
@@ -3270,10 +3149,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uqadd8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm  = BITS(inst, 0, 3);
     inst_cream->Rn  = BITS(inst, 16, 19);
@@ -3308,10 +3186,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(usada8)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(generic_arm_inst));
     generic_arm_inst* const inst_cream = (generic_arm_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->op1 = BITS(inst, 20, 24);
     inst_cream->op2 = BITS(inst, 5, 7);
@@ -3340,10 +3217,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtab16)(unsigned int inst, int index)
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst) + sizeof(uxtab_inst));
     uxtab_inst* const inst_cream = (uxtab_inst*)inst_base->component;
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     inst_cream->Rm     = BITS(inst, 0, 3);
     inst_cream->Rn     = BITS(inst, 16, 19);
@@ -3361,10 +3237,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(wfe)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
@@ -3372,10 +3247,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(wfi)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
@@ -3383,10 +3257,9 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(yield)(unsigned int inst, int index)
 {
     arm_inst* const inst_base = (arm_inst*)AllocBuffer(sizeof(arm_inst));
 
-    inst_base->cond     = BITS(inst, 28, 31);
-    inst_base->idx      = index;
-    inst_base->br       = NON_BRANCH;
-    inst_base->load_r15 = 0;
+    inst_base->cond = BITS(inst, 28, 31);
+    inst_base->idx  = index;
+    inst_base->br   = NON_BRANCH;
 
     return inst_base;
 }
