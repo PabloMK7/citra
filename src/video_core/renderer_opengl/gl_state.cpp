@@ -43,7 +43,7 @@ OpenGLState::OpenGLState() {
     draw.shader_program = 0;
 }
 
-const void OpenGLState::Apply() {
+void OpenGLState::Apply() {
     // Culling
     if (cull.enabled != cur_state.cull.enabled) {
         if (cull.enabled) {

@@ -63,7 +63,7 @@ public:
     }
     
     /// Apply this state as the current OpenGL state
-    const void Apply();
+    void Apply();
 
 private:
     static OpenGLState cur_state;
