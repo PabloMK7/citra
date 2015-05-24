@@ -119,13 +119,13 @@ static void ProcessShaderCode(VertexShaderState& state) {
         switch (instr.opcode.Value().GetInfo().type) {
         case OpCode::Type::Arithmetic:
         {
-            bool is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
+            const bool is_inverted = (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
 
             const int address_offset = (instr.common.address_register_index == 0)
                                        ? 0 : state.address_registers[instr.common.address_register_index - 1];
 
-            const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) + address_offset);
-            const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted));
+            const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) + (!is_inverted * address_offset));
+            const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted) + ( is_inverted * address_offset));
 
             const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
             const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
