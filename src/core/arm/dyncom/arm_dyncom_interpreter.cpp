@@ -3890,7 +3890,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
     #define CurrentModeHasSPSR (cpu->Mode != SYSTEM32MODE) && (cpu->Mode != USER32MODE)
     #define PC (cpu->Reg[15])
-    #define CHECK_EXT_INT if (!cpu->NirqSig && !(cpu->Cpsr & 0x80)) goto END;
 
     // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback
     // to a clunky switch statement.
