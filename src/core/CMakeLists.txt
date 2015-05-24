@@ -116,7 +116,6 @@ set(HEADERS
             arm/dyncom/arm_dyncom_thumb.h
             arm/skyeye_common/arm_regformat.h
             arm/skyeye_common/armdefs.h
-            arm/skyeye_common/armemu.h
             arm/skyeye_common/armmmu.h
             arm/skyeye_common/vfp/asm_vfp.h
             arm/skyeye_common/vfp/vfp.h
