@@ -2,10 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/color.h"
+
 #include "core/settings.h"
 #include "core/hw/gpu.h"
 
-#include "video_core/color.h"
 #include "video_core/pica.h"
 #include "video_core/utils.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"

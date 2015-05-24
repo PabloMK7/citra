@@ -17,11 +17,11 @@
 #include <nihstro/shader_binary.h>
 
 #include "common/assert.h"
+#include "common/color.h"
 #include "common/file_util.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
 
-#include "video_core/color.h"
 #include "video_core/pica.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"

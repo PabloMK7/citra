@@ -29,7 +29,6 @@ set(HEADERS
             renderer_opengl/pica_to_gl.h
             renderer_opengl/renderer_opengl.h
             clipper.h
-            color.h
             command_processor.h
             gpu_debugger.h
             hwrasterizer_base.h
