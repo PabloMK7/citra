@@ -21,18 +21,9 @@
 
 namespace Memory {
 
-u8* g_exefs_code;  ///< ExeFS:/.code is loaded here
-u8* g_heap;        ///< Application heap (main memory)
-u8* g_shared_mem;  ///< Shared memory
-u8* g_heap_linear; ///< Linear heap
-u8* g_vram;        ///< Video memory (VRAM) pointer
-u8* g_dsp_mem;     ///< DSP memory
-u8* g_tls_mem;     ///< TLS memory
-
 namespace {
 
 struct MemoryArea {
-    u8** ptr;
     u32 base;
     u32 size;
     const char* name;
@@ -40,13 +31,13 @@ struct MemoryArea {
 
 // We don't declare the IO regions in here since its handled by other means.
 static MemoryArea memory_areas[] = {
-    {&g_exefs_code,  PROCESS_IMAGE_VADDR, PROCESS_IMAGE_MAX_SIZE, "Process Image"},
-    {&g_heap,        HEAP_VADDR,          HEAP_SIZE,              "Heap"},
-    {&g_shared_mem,  SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE,     "Shared Memory"},
-    {&g_heap_linear, LINEAR_HEAP_VADDR,   LINEAR_HEAP_SIZE,       "Linear Heap"},
-    {&g_vram,        VRAM_VADDR,          VRAM_SIZE,              "VRAM"},
-    {&g_dsp_mem,     DSP_RAM_VADDR,       DSP_RAM_SIZE,           "DSP RAM"},
-    {&g_tls_mem,     TLS_AREA_VADDR,      TLS_AREA_SIZE,          "TLS Area"},
+    {PROCESS_IMAGE_VADDR, PROCESS_IMAGE_MAX_SIZE, "Process Image"}, // ExeFS:/.code is loaded here
+    {HEAP_VADDR,          HEAP_SIZE,              "Heap"},          // Application heap (main memory)
+    {SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE,     "Shared Memory"}, // Shared memory
+    {LINEAR_HEAP_VADDR,   LINEAR_HEAP_SIZE,       "Linear Heap"},   // Linear heap (main memory)
+    {VRAM_VADDR,          VRAM_SIZE,              "VRAM"},          // Video memory (VRAM)
+    {DSP_RAM_VADDR,       DSP_RAM_SIZE,           "DSP RAM"},       // DSP memory
+    {TLS_AREA_VADDR,      TLS_AREA_SIZE,          "TLS Area"},      // TLS memory
 };
 
 /// Represents a block of memory mapped by ControlMemory/MapMemoryBlock
@@ -150,7 +141,6 @@ void Init() {
 
     for (MemoryArea& area : memory_areas) {
         auto block = std::make_shared<std::vector<u8>>(area.size);
-        *area.ptr = block->data(); // TODO(yuriks): Remove
         address_space.MapMemoryBlock(area.base, std::move(block), 0, area.size, MemoryState::Private).Unwrap();
     }
 
@@ -162,18 +152,13 @@ void Init() {
             (u8*)&SharedPage::shared_page, SHARED_PAGE_SIZE, MemoryState::Shared).MoveFrom();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 
-    LOG_DEBUG(HW_Memory, "initialized OK, RAM at %p", g_heap);
+    LOG_DEBUG(HW_Memory, "initialized OK");
 }
 
 void Shutdown() {
     heap_map.clear();
     heap_linear_map.clear();
-
     address_space.Reset();
-
-    for (MemoryArea& area : memory_areas) {
-        *area.ptr = nullptr;
-    }
 
     LOG_DEBUG(HW_Memory, "shutdown OK");
 }
