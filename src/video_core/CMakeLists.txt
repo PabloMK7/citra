@@ -33,7 +33,6 @@ set(HEADERS
             command_processor.h
             gpu_debugger.h
             hwrasterizer_base.h
-            math.h
             pica.h
             primitive_assembly.h
             rasterizer.h

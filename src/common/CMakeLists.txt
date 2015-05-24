@@ -54,6 +54,7 @@ set(HEADERS
             thread_queue_list.h
             thunk.h
             timer.h
+            vector_math.h
             )
 
 create_directory_groups(${SRCS} ${HEADERS})

@@ -11,10 +11,10 @@
 #include <QSpinBox>
 #include <QComboBox>
 
-#include "video_core/pica.h"
-#include "video_core/math.h"
+#include "common/vector_math.h"
 
 #include "video_core/debug_utils/debug_utils.h"
+#include "video_core/pica.h"
 
 #include "graphics_cmdlists.h"
 
