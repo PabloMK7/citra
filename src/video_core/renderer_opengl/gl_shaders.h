@@ -69,15 +69,16 @@ const char g_fragment_shader_hw[] = R"(
 #define NUM_VTX_ATTR 7
 #define NUM_TEV_STAGES 6
 
-#define SOURCE_PRIMARYCOLOR         0x0
-#define SOURCE_PRIMARYFRAGMENTCOLOR 0x1
-#define SOURCE_TEXTURE0             0x3
-#define SOURCE_TEXTURE1             0x4
-#define SOURCE_TEXTURE2             0x5
-#define SOURCE_TEXTURE3             0x6
-#define SOURCE_PREVIOUSBUFFER       0xd
-#define SOURCE_CONSTANT             0xe
-#define SOURCE_PREVIOUS             0xf
+#define SOURCE_PRIMARYCOLOR           0x0
+#define SOURCE_PRIMARYFRAGMENTCOLOR   0x1
+#define SOURCE_SECONDARYFRAGMENTCOLOR 0x2
+#define SOURCE_TEXTURE0               0x3
+#define SOURCE_TEXTURE1               0x4
+#define SOURCE_TEXTURE2               0x5
+#define SOURCE_TEXTURE3               0x6
+#define SOURCE_PREVIOUSBUFFER         0xd
+#define SOURCE_CONSTANT               0xe
+#define SOURCE_PREVIOUS               0xf
 
 #define COLORMODIFIER_SOURCECOLOR         0x0
 #define COLORMODIFIER_ONEMINUSSOURCECOLOR 0x1
@@ -151,8 +152,11 @@ vec4 GetSource(int source) {
     if (source == SOURCE_PRIMARYCOLOR) {
         return o[2];
     } else if (source == SOURCE_PRIMARYFRAGMENTCOLOR) {
-        // HACK: Uses color value, but should really use fragment lighting output
+        // HACK: Until we implement fragment lighting, use primary_color
         return o[2];
+    } else if (source == SOURCE_SECONDARYFRAGMENTCOLOR) {
+        // HACK: Until we implement fragment lighting, use zero
+        return vec4(0.0, 0.0, 0.0, 0.0);
     } else if (source == SOURCE_TEXTURE0) {
         return texture(tex[0], o[3].xy);
     } else if (source == SOURCE_TEXTURE1) {
