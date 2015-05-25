@@ -570,6 +570,13 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     case Operation::Add:
                         return std::min(255, input[0] + input[1]);
 
+                    case Operation::AddSigned:
+                    {
+                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
+                        auto result = static_cast<int>(input[0]) + static_cast<int>(input[1]) - 128;
+                        return static_cast<u8>(MathUtil::Clamp<int>(result, 0, 255));
+                    }
+
                     case Operation::Lerp:
                         return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
 
