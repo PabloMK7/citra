@@ -815,10 +815,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                using BlendEquation = Regs::BlendEquation;
                 static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
                                                        const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
-                                                       BlendEquation equation) {
+                                                       Regs::BlendEquation equation) {
                     Math::Vec4<int> result;
 
                     auto src_result = (src  *  srcfactor).Cast<int>();
