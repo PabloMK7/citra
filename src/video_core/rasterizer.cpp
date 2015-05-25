@@ -873,8 +873,63 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                 blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
                 blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
             } else {
-                LOG_CRITICAL(HW_GPU, "logic op: %x", output_merger.logic_op);
-                UNIMPLEMENTED();
+                static auto LogicOp = [](u8 src, u8 dest, Regs::LogicOp op) -> u8 {
+                    switch (op) {
+                    case Regs::LogicOp::Clear:
+                        return 0;
+
+                    case Regs::LogicOp::And:
+                        return src & dest;
+
+                    case Regs::LogicOp::AndReverse:
+                        return src & ~dest;
+
+                    case Regs::LogicOp::Copy:
+                        return src;
+
+                    case Regs::LogicOp::Set:
+                        return 255;
+
+                    case Regs::LogicOp::CopyInverted:
+                        return ~src;
+
+                    case Regs::LogicOp::NoOp:
+                        return dest;
+
+                    case Regs::LogicOp::Invert:
+                        return ~dest;
+
+                    case Regs::LogicOp::Nand:
+                        return ~(src & dest);
+
+                    case Regs::LogicOp::Or:
+                        return src | dest;
+
+                    case Regs::LogicOp::Nor:
+                        return ~(src | dest);
+
+                    case Regs::LogicOp::Xor:
+                        return src ^ dest;
+
+                    case Regs::LogicOp::Equiv:
+                        return ~(src ^ dest);
+
+                    case Regs::LogicOp::AndInverted:
+                        return ~src & dest;
+
+                    case Regs::LogicOp::OrReverse:
+                        return src | ~dest;
+
+                    case Regs::LogicOp::OrInverted:
+                        return ~src | dest;
+                    }
+                };
+
+                blend_output = Math::MakeVec(
+                    LogicOp(combiner_output.r(), dest.r(), output_merger.logic_op),
+                    LogicOp(combiner_output.g(), dest.g(), output_merger.logic_op),
+                    LogicOp(combiner_output.b(), dest.b(), output_merger.logic_op),
+                    LogicOp(combiner_output.a(), dest.a(), output_merger.logic_op));
             }
 
             const Math::Vec4<u8> result = {

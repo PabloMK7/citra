@@ -162,6 +162,25 @@ struct Regs {
         ETC1A4       = 13,  // compressed
     };
 
+    enum class LogicOp : u32 {
+        Clear        =  0,
+        And          =  1,
+        AndReverse   =  2,
+        Copy         =  3,
+        Set          =  4,
+        CopyInverted =  5,
+        NoOp         =  6,
+        Invert       =  7,
+        Nand         =  8,
+        Or           =  9,
+        Nor          = 10,
+        Xor          = 11,
+        Equiv        = 12,
+        AndInverted  = 13,
+        OrReverse    = 14,
+        OrInverted   = 15,
+    };
+
     static unsigned NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
@@ -413,12 +432,8 @@ struct Regs {
         } alpha_blending;
 
         union {
-            enum Op {
-                Set = 4,
-            };
-
-            BitField<0, 4, Op> op;
-        } logic_op;
+            BitField<0, 4, LogicOp> logic_op;
+        };
 
         union {
             BitField< 0, 8, u32> r;

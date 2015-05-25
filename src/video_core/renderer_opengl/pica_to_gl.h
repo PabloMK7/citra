@@ -71,6 +71,37 @@ inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     return blend_func_table[(unsigned)factor];
 }
 
+inline GLenum LogicOp(Pica::Regs::LogicOp op) {
+    static const GLenum logic_op_table[] = {
+        GL_CLEAR,           // Clear
+        GL_AND,             // And
+        GL_AND_REVERSE,     // AndReverse
+        GL_COPY,            // Copy
+        GL_SET,             // Set
+        GL_COPY_INVERTED,   // CopyInverted
+        GL_NOOP,            // NoOp
+        GL_INVERT,          // Invert
+        GL_NAND,            // Nand
+        GL_OR,              // Or
+        GL_NOR,             // Nor
+        GL_XOR,             // Xor
+        GL_EQUIV,           // Equiv
+        GL_AND_INVERTED,    // AndInverted
+        GL_OR_REVERSE,      // OrReverse
+        GL_OR_INVERTED,     // OrInverted
+    };
+
+    // Range check table for input
+    if ((unsigned)op >= ARRAY_SIZE(logic_op_table)) {
+        LOG_CRITICAL(Render_OpenGL, "Unknown logic op %d", op);
+        UNREACHABLE();
+
+        return GL_COPY;
+    }
+
+    return logic_op_table[(unsigned)op];
+}
+
 inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     static const GLenum compare_func_table[] = {
         GL_NEVER,    // CompareFunc::Never
