@@ -813,7 +813,7 @@ Opcode ARM_Disasm::Decode11(uint32_t insn) {
         // SWI
         return OP_SWI;
     }
-  
+
     uint8_t bit4 = (insn >> 4) & 0x1;
     uint8_t cpnum = (insn >> 8) & 0xf;
 

@@ -39,7 +39,7 @@ void CallstackWidget::OnDebugModeEntered()
     {
         ret_addr = Memory::Read32(addr);
         call_addr = ret_addr - 4; //get call address???
-        
+
         if (Memory::GetPointer(call_addr) == nullptr)
             break;
 

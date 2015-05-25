@@ -88,7 +88,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
     if (timer->interval_delay != 0) {
         // Reschedule the timer with the interval delay
         u64 interval_microseconds = timer->interval_delay / 1000;
-        CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late, 
+        CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late,
                 timer_callback_event_type, timer_handle);
     }
 }

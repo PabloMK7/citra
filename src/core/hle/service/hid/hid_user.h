@@ -11,7 +11,7 @@
 
 namespace Service {
 namespace HID {
-    
+
 /**
  * HID service interface.
  */

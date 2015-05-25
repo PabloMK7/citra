@@ -16,7 +16,7 @@
     #include <io.h>
     #include <direct.h> // getcwd
     #include <tchar.h>
-    
+
     // 64 bit offsets for windows
     #define fseeko _fseeki64
     #define ftello _ftelli64

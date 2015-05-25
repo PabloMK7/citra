@@ -461,7 +461,7 @@ public:
     // e.g. Vec2 uv() { return Vec2(x,y); }
 
     // _DEFINE_SWIZZLER2 defines a single such function
-    // DEFINE_SWIZZLER2_COMP1 defines one-component functions for all component names (x<->r) 
+    // DEFINE_SWIZZLER2_COMP1 defines one-component functions for all component names (x<->r)
     // DEFINE_SWIZZLER2_COMP2 defines two component functions for all component names (x<->r) and permutations (xy<->yx)
 #define _DEFINE_SWIZZLER2(a, b, name) const Vec2<T> name() const { return Vec2<T>(a, b); }
 #define DEFINE_SWIZZLER2_COMP1(a, a2) \

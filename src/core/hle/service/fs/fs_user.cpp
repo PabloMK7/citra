@@ -434,7 +434,7 @@ static void IsSdmcWriteable(Service::Interface* self) {
 }
 
 /**
- * FS_User::FormatSaveData service function, 
+ * FS_User::FormatSaveData service function,
  * formats the SaveData specified by the input path.
  *  Inputs:
  *      0  : 0x084C0242
@@ -520,7 +520,7 @@ static void CreateExtSaveData(Service::Interface* self) {
     LOG_WARNING(Service_FS, "(STUBBED) savedata_high=%08X savedata_low=%08X cmd_buff[3]=%08X "
             "cmd_buff[4]=%08X cmd_buff[5]=%08X cmd_buff[6]=%08X cmd_buff[7]=%08X cmd_buff[8]=%08X "
             "cmd_buff[9]=%08X cmd_buff[10]=%08X cmd_buff[11]=%08X", save_high, save_low,
-            cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6], cmd_buff[7], cmd_buff[8], cmd_buff[9], 
+            cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6], cmd_buff[7], cmd_buff[8], cmd_buff[9],
             cmd_buff[10], cmd_buff[11]);
 
     cmd_buff[1] = CreateExtSaveData(media_type, save_high, save_low).raw;
@@ -544,7 +544,7 @@ static void DeleteExtSaveData(Service::Interface* self) {
     u32 save_high = cmd_buff[3];
     u32 unknown = cmd_buff[4]; // TODO(Subv): Figure out what this is
 
-    LOG_WARNING(Service_FS, "(STUBBED) save_low=%08X save_high=%08X media_type=%08X unknown=%08X", 
+    LOG_WARNING(Service_FS, "(STUBBED) save_low=%08X save_high=%08X media_type=%08X unknown=%08X",
             save_low, save_high, cmd_buff[1] & 0xFF, unknown);
 
     cmd_buff[1] = DeleteExtSaveData(media_type, save_high, save_low).raw;

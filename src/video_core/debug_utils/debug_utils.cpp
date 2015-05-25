@@ -319,7 +319,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         // TODO(neobrain): Fix code design to unify vertical block offsets!
         source += coarse_y * info.stride;
     }
-    
+
     // TODO: Assert that width/height are multiples of block dimensions
 
     switch (info.format) {

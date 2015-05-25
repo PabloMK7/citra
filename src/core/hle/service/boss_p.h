@@ -14,7 +14,7 @@ namespace BOSS_P {
 class Interface : public Service::Interface {
 public:
     Interface();
-    
+
     std::string GetPortName() const override {
         return "boss:P";
     }

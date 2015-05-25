@@ -140,7 +140,7 @@ inline void Write(u32 addr, const T data) {
                 // Raw copies do not perform color conversion nor tiled->linear / linear->tiled conversions
                 // TODO(Subv): Verify if raw copies perform scaling
                 memcpy(dst_pointer, src_pointer, output_size);
-                
+
                 LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), output format: %x, flags 0x%08X, Raw copy",
                     output_size,
                     config.GetPhysicalInputAddress(), config.input_width.Value(), config.input_height.Value(),
@@ -159,14 +159,14 @@ inline void Write(u32 addr, const T data) {
                 for (u32 x = 0; x < output_width; ++x) {
                     Math::Vec4<u8> src_color = { 0, 0, 0, 0 };
 
-                    // Calculate the [x,y] position of the input image 
+                    // Calculate the [x,y] position of the input image
                     // based on the current output position and the scale
                     u32 input_x = x * horizontal_scale;
                     u32 input_y = y * vertical_scale;
 
                     if (config.flip_vertically) {
-                        // Flip the y value of the output data, 
-                        // we do this after calculating the [x,y] position of the input image 
+                        // Flip the y value of the output data,
+                        // we do this after calculating the [x,y] position of the input image
                         // to account for the scaling options.
                         y = output_height - y - 1;
                     }
@@ -302,7 +302,7 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     //  - If frameskip == 0 (disabled), always swap buffers
     //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
     //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
-    if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) || 
+    if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) && last_skip_frame != g_skip_frame) ||
             Settings::values.frame_skip == 0) {
         VideoCore::g_renderer->SwapBuffers();
     }

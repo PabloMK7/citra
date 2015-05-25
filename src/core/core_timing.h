@@ -87,7 +87,7 @@ void UnregisterAllEvents();
 /// userdata MAY NOT CONTAIN POINTERS. userdata might get written and reloaded from disk,
 /// when we implement state saves.
 /**
- * Schedules an event to run after the specified number of cycles, 
+ * Schedules an event to run after the specified number of cycles,
  * with an optional parameter to be passed to the callback handler.
  * This must be run ONLY from within the cpu thread.
  * @param cycles_into_future The number of cycles after which this event will be fired

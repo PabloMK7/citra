@@ -21,7 +21,7 @@
 namespace FileSys {
 
 static std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
-    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/", sdmc_directory.c_str(), 
+    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/", sdmc_directory.c_str(),
             SYSTEM_ID.c_str(), SDCARD_ID.c_str());
 }
 

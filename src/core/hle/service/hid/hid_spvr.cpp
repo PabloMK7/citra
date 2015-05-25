@@ -25,6 +25,6 @@ const Interface::FunctionInfo FunctionTable[] = {
 HID_SPVR_Interface::HID_SPVR_Interface() {
     Register(FunctionTable);
 }
-    
+
 } // namespace HID
 } // namespace Service

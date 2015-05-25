@@ -167,7 +167,7 @@ static void WriteHWRegsWithMask(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
-    
+
     u32* src_data = (u32*)Memory::GetPointer(cmd_buff[4]);
     u32* mask_data = (u32*)Memory::GetPointer(cmd_buff[6]);
 
@@ -208,21 +208,21 @@ static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
     PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);
     if (info.active_fb == 0) {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)), 4, 
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)), 4,
                 &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)), 4, 
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)), 4,
                 &phys_address_right);
     } else {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)), 4, 
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)), 4,
                 &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)), 4, 
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)), 4,
                 &phys_address_right);
     }
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)), 4, 
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)), 4,
             &info.stride);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)), 4, 
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)), 4,
             &info.format);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)), 4, 
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)), 4,
             &info.shown_fb);
 }
 
@@ -374,7 +374,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     {
         auto& params = command.set_command_list_last;
 
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)), 
+        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)),
                 Memory::VirtualToPhysicalAddress(params.address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.size)), params.size);
 
@@ -470,7 +470,7 @@ static void SetLcdForceBlack(Service::Interface* self) {
 
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw); // Top LCD
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
-    
+
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
 
@@ -516,8 +516,8 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
  */
 static void ImportDisplayCaptureInfo(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    
-    // TODO(Subv): We're always returning the framebuffer structures for thread_id = 0, 
+
+    // TODO(Subv): We're always returning the framebuffer structures for thread_id = 0,
     // because we only support a single running application at a time.
     // This should always return the framebuffer data that is currently displayed on the screen.
 

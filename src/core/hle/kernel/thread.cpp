@@ -100,7 +100,7 @@ void Thread::Stop() {
     }
 
     status = THREADSTATUS_DEAD;
-    
+
     WakeupAllWaitingThreads();
 
     // Clean up any dangling references in objects that this thread was waiting for
@@ -169,7 +169,7 @@ static void PriorityBoostStarvedThreads() {
     }
 }
 
-/** 
+/**
  * Switches the CPU's active thread context to that of the specified thread
  * @param new_thread The thread to switch to
  */
@@ -353,7 +353,7 @@ void Thread::ResumeFromWait() {
                 GetObjectId());
             return;
     }
-    
+
     ready_queue.push_back(current_priority, this);
     status = THREADSTATUS_READY;
 }
@@ -504,7 +504,7 @@ void Reschedule() {
     } else if (next) {
         LOG_TRACE(Kernel, "context switch idle -> %u", next->GetObjectId());
     }
-    
+
     SwitchContext(next);
 }
 

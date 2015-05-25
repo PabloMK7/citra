@@ -89,15 +89,15 @@ if (Qt5_FOUND AND MSVC)
     )
     set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
     set(PLATFORMS ${DLL_DEST}platforms/)
-    
+
     # windows commandline expects the / to be \ so switch them
     string(REPLACE "/" "\\" Qt5_DLL_DIR ${Qt5_DLL_DIR})
     string(REPLACE "/" "\\" Qt5_PLATFORMS_DIR ${Qt5_PLATFORMS_DIR})
     string(REPLACE "/" "\\" DLL_DEST ${DLL_DEST})
     string(REPLACE "/" "\\" PLATFORMS ${PLATFORMS})
-    
+
     # /NJH /NJS /NDL /NFL /NC /NS /NP - Silence any output
-    # cmake adds an extra check for command success which doesn't work too well with robocopy 
+    # cmake adds an extra check for command success which doesn't work too well with robocopy
     # so trick it into thinking the command was successful with the || cmd /c "exit /b 0"
     add_custom_command(TARGET citra-qt POST_BUILD
         COMMAND robocopy ${Qt5_DLL_DIR} ${DLL_DEST} ${Qt5_DLLS} /NJH /NJS /NDL /NFL /NC /NS /NP || cmd /c "exit /b 0"

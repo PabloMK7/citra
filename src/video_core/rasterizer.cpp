@@ -104,7 +104,7 @@ static u32 GetDepth(int x, int y) {
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = framebuffer.height - y;
-    
+
     const u32 coarse_y = y & ~7;
     u32 bytes_per_pixel = Regs::BytesPerDepthPixel(framebuffer.depth_format);
     u32 stride = framebuffer.width * bytes_per_pixel;

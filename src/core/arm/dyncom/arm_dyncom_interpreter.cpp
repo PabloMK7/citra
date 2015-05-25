@@ -134,7 +134,7 @@ static unsigned int DPO(Immediate)(ARMul_State* cpu, unsigned int sht_oper) {
     unsigned int immed_8 = BITS(sht_oper, 0, 7);
     unsigned int rotate_imm = BITS(sht_oper, 8, 11);
     unsigned int shifter_operand = ROTATE_RIGHT_32(immed_8, rotate_imm * 2);
-    if (rotate_imm == 0) 
+    if (rotate_imm == 0)
         cpu->shifter_carry_out = cpu->CFlag;
     else
         cpu->shifter_carry_out = BIT(shifter_operand, 31);
@@ -521,7 +521,7 @@ static void MLnS(ImmediateOffset)(ARMul_State* cpu, unsigned int inst, unsigned 
         addr = CHECK_READ_REG15_WA(cpu, Rn) + offset_8;
     else
         addr = CHECK_READ_REG15_WA(cpu, Rn) - offset_8;
-    
+
     virt_addr = addr;
 }
 
@@ -550,7 +550,7 @@ static void MLnS(ImmediatePreIndexed)(ARMul_State* cpu, unsigned int inst, unsig
 
     if (U_BIT)
         addr = rn + offset_8;
-    else 
+    else
         addr = rn - offset_8;
 
     virt_addr = addr;
@@ -1306,8 +1306,8 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(and)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-	
-    if (inst_cream->Rd == 15) 
+
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
 
     return inst_base;
@@ -1350,7 +1350,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(unsigned int inst, int index)
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
 
-    if (inst_cream->Rd == 15) 
+    if (inst_cream->Rd == 15)
         inst_base->br = INDIRECT_BRANCH;
     return inst_base;
 }
@@ -3269,7 +3269,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(yield)(unsigned int inst, int index)
 #define VFP_INTERPRETER_STRUCT
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_STRUCT
- 
+
 #define VFP_INTERPRETER_TRANS
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_TRANS
@@ -3478,9 +3478,9 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(bbl),
 
     // All the thumb instructions should be placed the end of table
-    INTERPRETER_TRANSLATE(b_2_thumb), 
-    INTERPRETER_TRANSLATE(b_cond_thumb), 
-    INTERPRETER_TRANSLATE(bl_1_thumb), 
+    INTERPRETER_TRANSLATE(b_2_thumb),
+    INTERPRETER_TRANSLATE(b_cond_thumb),
+    INTERPRETER_TRANSLATE(bl_1_thumb),
     INTERPRETER_TRANSLATE(bl_2_thumb),
     INTERPRETER_TRANSLATE(blx_1_thumb)
 };
@@ -4338,7 +4338,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                     }
                 }
                 if (BIT(inst, 13)) {
-                    if (cpu->Mode == USER32MODE) 
+                    if (cpu->Mode == USER32MODE)
                         cpu->Reg[13] = ReadMemory32(cpu, addr);
                     else
                         cpu->Reg_usr[0] = ReadMemory32(cpu, addr);
@@ -4346,7 +4346,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                     addr += 4;
                 }
                 if (BIT(inst, 14)) {
-                    if (cpu->Mode == USER32MODE) 
+                    if (cpu->Mode == USER32MODE)
                         cpu->Reg[14] = ReadMemory32(cpu, addr);
                     else
                         cpu->Reg_usr[1] = ReadMemory32(cpu, addr);
@@ -5148,7 +5148,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     REV16_INST:
     REVSH_INST:
     {
-        
+
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             rev_inst* const inst_cream = (rev_inst*)inst_base->component;
 
@@ -5721,7 +5721,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             if (do_swap)
                 rm_val = (((rm_val & 0xFFFF) << 16) | (rm_val >> 16));
-            
+
             const s32 product1 = (s16)(rn_val & 0xFFFF) * (s16)(rm_val & 0xFFFF);
             const s32 product2 = (s16)((rn_val >> 16) & 0xFFFF) * (s16)((rm_val >> 16) & 0xFFFF);
             s64 result;
@@ -6583,7 +6583,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             {
                 u32 lo_val = 0;
                 u32 hi_val = 0;
-                
+
                 // UHADD16
                 if (op2 == 0x00) {
                     lo_val = (rn_val & 0xFFFF) + (rm_val & 0xFFFF);
@@ -6772,7 +6772,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             u16 lo_val = 0;
             u16 hi_val = 0;
-            
+
             // UQADD16
             if (op2 == 0x00) {
                 lo_val = ARMul_UnsignedSaturatedAdd16(rn_val & 0xFFFF, rm_val & 0xFFFF);

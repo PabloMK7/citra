@@ -63,7 +63,7 @@ void Initialize(Service::Interface* self);
  *      4 : Handle to shared font memory
  */
 void GetSharedFont(Service::Interface* self);
- 
+
 /**
  * APT::NotifyToWait service function
  *  Inputs:
@@ -88,7 +88,7 @@ void Enable(Service::Interface* self);
  *      4 : Home Menu AppId
  *      5 : AppID of currently active app
  */
-void GetAppletManInfo(Service::Interface* self); 
+void GetAppletManInfo(Service::Interface* self);
 
 /**
  * APT::IsRegistered service function. This returns whether the specified AppID is registered with NS yet.
@@ -100,14 +100,14 @@ void GetAppletManInfo(Service::Interface* self);
  *  Outputs:
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Output, 0 = not registered, 1 = registered. 
+ *      2 : Output, 0 = not registered, 1 = registered.
  */
 void IsRegistered(Service::Interface* self);
 
 void InquireNotification(Service::Interface* self);
 
 /**
- * APT::SendParameter service function. This sets the parameter data state. 
+ * APT::SendParameter service function. This sets the parameter data state.
  * Inputs:
  *     1 : Source AppID
  *     2 : Destination AppID

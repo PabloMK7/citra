@@ -16,7 +16,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "math.h" 
+#include "math.h"
 
 namespace Pica {
 
@@ -337,7 +337,7 @@ struct Regs {
             return (stage_index < 4) && (update_mask_a & (1 << stage_index));
         }
     } tev_combiner_buffer_input;
-    
+
     INSERT_PADDING_WORDS(0xf);
     TevStageConfig tev_stage4;
     INSERT_PADDING_WORDS(0x3);
@@ -703,11 +703,11 @@ struct Regs {
     struct {
         // Index of the current default attribute
         u32 index;
-        
+
         // Writing to these registers sets the "current" default attribute.
         u32 set_value[3];
     } vs_default_attributes_setup;
-    
+
     INSERT_PADDING_WORDS(0x28);
 
     enum class TriangleTopology : u32 {
