@@ -3564,17 +3564,13 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     unsigned int inst, inst_size = 4;
     int idx;
     int ret = NON_BRANCH;
-    int thumb = 0;
     int size = 0; // instruction size of basic block
     bb_start = top;
-
-    if (cpu->TFlag)
-        thumb = THUMB;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
 
-    while(ret == NON_BRANCH) {
+    while (ret == NON_BRANCH) {
         inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
 
         size++;
