@@ -1,0 +1,53 @@
+// Copyright 2015 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
+
+#pragma once
+
+#include "common/common_types.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/apt/apt.h"
+
+namespace HLE {
+namespace Applets {
+
+class Applet {
+public:
+    virtual ~Applet() {};
+    Applet(Service::APT::AppletId id) : id(id) {};
+
+    /**
+     * Creates an instance of the Applet subclass identified by the parameter
+     * and stores it in a global map.
+     * @param id Id of the applet to create
+     * @returns ResultCode Whether the operation was successful or not
+     */
+    static ResultCode Create(Service::APT::AppletId id);
+
+    /**
+     * Retrieves the Applet instance identified by the specified id
+     * @param id Id of the Applet to retrieve
+     * @returns Requested Applet or nullptr if not found
+     */
+    static std::shared_ptr<Applet> Get(Service::APT::AppletId id);
+
+    /**
+     * Handles a parameter from the application
+     * @param parameter Parameter data to handle
+     * @returns ResultCode Whether the operation was successful or not
+     */
+    virtual ResultCode ReceiveParameter(Service::APT::MessageParameter const& parameter) = 0;
+
+    /**
+     * Handles the Applet start event, triggered from the application
+     * @param parameter Parameter data to handle
+     * @returns ResultCode Whether the operation was successful or not
+     */
+    virtual ResultCode Start(Service::APT::AppletStartupParameter const& parameter) = 0;
+
+    Service::APT::AppletId id; ///< Id of this Applet
+};
+
+}
+} // namespace

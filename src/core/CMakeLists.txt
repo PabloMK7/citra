@@ -25,6 +25,8 @@ set(SRCS
             file_sys/ivfc_archive.cpp
             hle/config_mem.cpp
             hle/hle.cpp
+            hle/applets/applet.cpp
+            hle/applets/swkbd.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
@@ -150,6 +152,8 @@ set(HEADERS
             hle/config_mem.h
             hle/function_wrappers.h
             hle/hle.h
+            hle/applets/applet.h
+            hle/applets/swkbd.h
             hle/kernel/address_arbiter.h
             hle/kernel/event.h
             hle/kernel/kernel.h
