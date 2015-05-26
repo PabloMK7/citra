@@ -496,6 +496,52 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
 }
 
+/**
+ * GSP_GPU::ImportDisplayCaptureInfo service function
+ *
+ * Returns information about the current framebuffer state
+ *
+ *  Inputs:
+ *      0: Header 0x00180000
+ *  Outputs:
+ *      1: Result code
+ *      2: Left framebuffer virtual address for the main screen
+ *      3: Right framebuffer virtual address for the main screen
+ *      4: Main screen framebuffer format
+ *      5: Main screen framebuffer width
+ *      6: Left framebuffer virtual address for the bottom screen
+ *      7: Right framebuffer virtual address for the bottom screen
+ *      8: Bottom screen framebuffer format
+ *      9: Bottom screen framebuffer width
+ */
+static void ImportDisplayCaptureInfo(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    
+    // TODO(Subv): We're always returning the framebuffer structures for thread_id = 0, 
+    // because we only support a single running application at a time.
+    // This should always return the framebuffer data that is currently displayed on the screen.
+
+    u32 thread_id = 0;
+
+    FrameBufferUpdate* top_screen = GetFrameBufferInfo(thread_id, 0);
+    FrameBufferUpdate* bottom_screen = GetFrameBufferInfo(thread_id, 1);
+
+    cmd_buff[2] = top_screen->framebuffer_info[top_screen->index].address_left;
+    cmd_buff[3] = top_screen->framebuffer_info[top_screen->index].address_right;
+    cmd_buff[4] = top_screen->framebuffer_info[top_screen->index].format;
+    cmd_buff[5] = top_screen->framebuffer_info[top_screen->index].stride;
+
+    cmd_buff[6] = bottom_screen->framebuffer_info[bottom_screen->index].address_left;
+    cmd_buff[7] = bottom_screen->framebuffer_info[bottom_screen->index].address_right;
+    cmd_buff[8] = bottom_screen->framebuffer_info[bottom_screen->index].format;
+    cmd_buff[9] = bottom_screen->framebuffer_info[bottom_screen->index].stride;
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_GSP, "called");
+}
+
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, WriteHWRegs,                   "WriteHWRegs"},
     {0x00020084, WriteHWRegsWithMask,           "WriteHWRegsWithMask"},
@@ -520,7 +566,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00150002, nullptr,                       "TryAcquireRight"},
     {0x00160042, nullptr,                       "AcquireRight"},
     {0x00170000, nullptr,                       "ReleaseRight"},
-    {0x00180000, nullptr,                       "ImportDisplayCaptureInfo"},
+    {0x00180000, ImportDisplayCaptureInfo,      "ImportDisplayCaptureInfo"},
     {0x00190000, nullptr,                       "SaveVramSysArea"},
     {0x001A0000, nullptr,                       "RestoreVramSysArea"},
     {0x001B0000, nullptr,                       "ResetGpuCore"},
