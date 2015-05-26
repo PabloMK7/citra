@@ -42,7 +42,7 @@ static inline u8* GetCommandBuffer(u32 thread_id) {
     return g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
-static inline FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
+FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
     DEBUG_ASSERT_MSG(screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
@@ -205,7 +205,7 @@ static void ReadHWRegs(Service::Interface* self) {
     }
 }
 
-static void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address = 0x400000;
     PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
     PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);

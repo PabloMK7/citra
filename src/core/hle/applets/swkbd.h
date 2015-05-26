@@ -51,6 +51,19 @@ public:
 
     ResultCode ReceiveParameter(Service::APT::MessageParameter const& parameter) override;
     ResultCode Start(Service::APT::AppletStartupParameter const& parameter) override;
+    void Update() override;
+    bool IsRunning() override { return started; }
+
+    /**
+     * Draws a keyboard to the current bottom screen framebuffer.
+     */
+    void DrawScreenKeyboard();
+
+    /**
+     * Sends the LibAppletClosing signal to the application,
+     * along with the relevant data buffers.
+     */
+    void Finalize();
 
     /// TODO(Subv): Find out what this is actually used for. 
     // It is believed that the application stores the current screen image here.
@@ -61,6 +74,9 @@ public:
     
     /// Configuration of this instance of the SoftwareKeyboard, as received from the application
     SoftwareKeyboardConfig config;
+
+    /// Whether this applet is currently running instead of the host application or not.
+    bool started;
 };
 
 }

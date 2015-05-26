@@ -6,13 +6,16 @@
 #include "common/logging/log.h"
 
 #include "core/hle/applets/swkbd.h"
+#include "core/hle/service/hid/hid.h"
+#include "core/hle/service/gsp_gpu.h"
+#include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace HLE {
 namespace Applets {
 
-SoftwareKeyboard::SoftwareKeyboard(Service::APT::AppletId id) : Applet(id) {
+SoftwareKeyboard::SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) {
     // Create the SharedMemory that will hold the framebuffer data
     // TODO(Subv): What size should we use here?
     using Kernel::MemoryPermission;
@@ -47,17 +50,45 @@ ResultCode SoftwareKeyboard::Start(Service::APT::AppletStartupParameter const& p
     // TODO(Subv): Verify if this is the correct behavior
     memset(text_memory->GetPointer(), 0, text_memory->size);
 
+    DrawScreenKeyboard();
+
+    // Update the current applet so we can get update events
+    started = true;
+    g_current_applet = shared_from_this();
+    return RESULT_SUCCESS;
+}
+
+void SoftwareKeyboard::Update() {
+    // TODO(Subv): Handle input using the touch events from the HID module
+
     // TODO(Subv): Remove this hardcoded text
-    const wchar_t str[] = L"Subv";
-    memcpy(text_memory->GetPointer(), str, 4 * sizeof(wchar_t));
-    
+    std::u16string text = Common::UTF8ToUTF16("Citra");
+    memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
+
     // TODO(Subv): Ask for input and write it to the shared memory
     // TODO(Subv): Find out what are the possible values for the return code,
     // some games seem to check for a hardcoded 2
     config.return_code = 2;
-    config.text_length = 5;
+    config.text_length = 6;
     config.text_offset = 0;
 
+    // TODO(Subv): We're finalizing the applet immediately after it's started, 
+    // but we should defer this call until after all the input has been collected.
+    Finalize();
+}
+
+void SoftwareKeyboard::DrawScreenKeyboard() {
+    auto bottom_screen = GSP_GPU::GetFrameBufferInfo(0, 1);
+    auto info = bottom_screen->framebuffer_info[bottom_screen->index];
+
+    // TODO(Subv): Draw the HLE keyboard, for now just zero-fill the framebuffer
+    memset(Memory::GetPointer(info.address_left), 0, info.stride * 320);
+
+    GSP_GPU::SetBufferSwap(1, info);
+}
+
+void SoftwareKeyboard::Finalize() {
+    // Let the application know that we're closing
     Service::APT::MessageParameter message;
     message.buffer_size = sizeof(SoftwareKeyboardConfig);
     message.data = reinterpret_cast<u8*>(&config);
@@ -66,7 +97,9 @@ ResultCode SoftwareKeyboard::Start(Service::APT::AppletStartupParameter const& p
     message.sender_id = static_cast<u32>(id);
     Service::APT::SendParameter(message);
 
-    return RESULT_SUCCESS;
+    started = false;
+    // Unset the current applet, we are not running anymore
+    g_current_applet = nullptr;
 }
 
 }

@@ -12,42 +12,59 @@
 namespace HLE {
 namespace Applets {
 
-class Applet {
+class Applet : public std::enable_shared_from_this<Applet> {
 public:
     virtual ~Applet() {};
     Applet(Service::APT::AppletId id) : id(id) {};
 
     /**
-     * Creates an instance of the Applet subclass identified by the parameter
+     * Creates an instance of the Applet subclass identified by the parameter.
      * and stores it in a global map.
-     * @param id Id of the applet to create
-     * @returns ResultCode Whether the operation was successful or not
+     * @param id Id of the applet to create.
+     * @returns ResultCode Whether the operation was successful or not.
      */
     static ResultCode Create(Service::APT::AppletId id);
 
     /**
-     * Retrieves the Applet instance identified by the specified id
-     * @param id Id of the Applet to retrieve
-     * @returns Requested Applet or nullptr if not found
+     * Retrieves the Applet instance identified by the specified id.
+     * @param id Id of the Applet to retrieve.
+     * @returns Requested Applet or nullptr if not found.
      */
     static std::shared_ptr<Applet> Get(Service::APT::AppletId id);
 
     /**
-     * Handles a parameter from the application
-     * @param parameter Parameter data to handle
-     * @returns ResultCode Whether the operation was successful or not
+     * Handles a parameter from the application.
+     * @param parameter Parameter data to handle.
+     * @returns ResultCode Whether the operation was successful or not.
      */
     virtual ResultCode ReceiveParameter(Service::APT::MessageParameter const& parameter) = 0;
 
     /**
-     * Handles the Applet start event, triggered from the application
-     * @param parameter Parameter data to handle
-     * @returns ResultCode Whether the operation was successful or not
+     * Handles the Applet start event, triggered from the application.
+     * @param parameter Parameter data to handle.
+     * @returns ResultCode Whether the operation was successful or not.
      */
     virtual ResultCode Start(Service::APT::AppletStartupParameter const& parameter) = 0;
+
+    /**
+     * Whether the applet is currently executing instead of the host application or not.
+     */
+    virtual bool IsRunning() = 0;
+
+    /**
+     * Handles an update tick for the Applet, lets it update the screen, send commands, etc.
+     */
+    virtual void Update() = 0;
 
     Service::APT::AppletId id; ///< Id of this Applet
 };
 
+/// Initializes the HLE applets
+void Init();
+
+/// Shuts down the HLE applets
+void Shutdown();
+
+extern std::shared_ptr<Applet> g_current_applet; ///< Applet that is currently executing
 }
 } // namespace

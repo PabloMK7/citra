@@ -68,7 +68,7 @@ void Initialize(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, flags=0x%08X", app_id, flags);
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, flags=0x%08X", app_id, flags);
 }
 
 void GetSharedFont(Service::Interface* self) {
@@ -95,7 +95,6 @@ void GetSharedFont(Service::Interface* self) {
 void NotifyToWait(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
-    
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
 }
@@ -108,7 +107,7 @@ void GetLockHandle(Service::Interface* self) {
 
     // Not sure what these parameters are used for, but retail apps check that they are 0 after
     // GetLockHandle has been called.
-    cmd_buff[2] = 0;
+    cmd_buff[2] = 0; // Applet Attributes, this value is passed to Enable.
     cmd_buff[3] = 0;
     cmd_buff[4] = 0;
 
@@ -118,10 +117,10 @@ void GetLockHandle(Service::Interface* self) {
 
 void Enable(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 unk = cmd_buff[1]; // TODO(bunnei): What is this field used for?
+    u32 attributes = cmd_buff[1];
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     parameter_event->Signal(); // Let the application know that it has been started
-    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X", unk);
+    LOG_WARNING(Service_APT, "(STUBBED) called attributes=0x%08X", attributes);
 }
 
 void GetAppletManInfo(Service::Interface* self) {
@@ -160,19 +159,20 @@ void InquireNotification(Service::Interface* self) {
 
 void SendParameter(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 src_app_id = cmd_buff[1];
-    u32 dst_app_id = cmd_buff[2];
-    u32 signal_type = cmd_buff[3];
-    u32 buffer_size = cmd_buff[4];
-    u32 value = cmd_buff[5];
-    u32 handle = cmd_buff[6];
-    u32 size = cmd_buff[7];
-    u32 buffer = cmd_buff[8];
+    u32 src_app_id     = cmd_buff[1];
+    u32 dst_app_id     = cmd_buff[2];
+    u32 signal_type    = cmd_buff[3];
+    u32 buffer_size    = cmd_buff[4];
+    u32 value          = cmd_buff[5];
+    u32 handle         = cmd_buff[6];
+    u32 size           = cmd_buff[7];
+    u32 buffer         = cmd_buff[8];
 
     std::shared_ptr<HLE::Applets::Applet> dest_applet = HLE::Applets::Applet::Get(static_cast<AppletId>(dst_app_id));
 
     if (dest_applet == nullptr) {
         LOG_ERROR(Service_APT, "Unknown applet id=0x%08X", dst_app_id);
+        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
         return;
     }
 
@@ -286,7 +286,7 @@ void AppletUtility(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // These are from 3dbrew - I'm not really sure what they're used for.
-    u32 unk = cmd_buff[1];
+    u32 command = cmd_buff[1];
     u32 buffer1_size = cmd_buff[2];
     u32 buffer2_size = cmd_buff[3];
     u32 buffer1_addr = cmd_buff[5];
@@ -294,8 +294,8 @@ void AppletUtility(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X, buffer1_size=0x%08X, buffer2_size=0x%08X, "
-             "buffer1_addr=0x%08X, buffer2_addr=0x%08X", unk, buffer1_size, buffer2_size,
+    LOG_WARNING(Service_APT, "(STUBBED) called command=0x%08X, buffer1_size=0x%08X, buffer2_size=0x%08X, "
+             "buffer1_addr=0x%08X, buffer2_addr=0x%08X", command, buffer1_size, buffer2_size,
              buffer1_addr, buffer2_addr);
 }
 
@@ -329,14 +329,20 @@ void GetAppCpuTimeLimit(Service::Interface* self) {
 
 void PrepareToStartLibraryApplet(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = HLE::Applets::Applet::Create(static_cast<AppletId>(cmd_buff[1])).raw;
+    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 }
 
 void StartLibraryApplet(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    std::shared_ptr<HLE::Applets::Applet> applet = HLE::Applets::Applet::Get(static_cast<AppletId>(cmd_buff[1]));
+    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    std::shared_ptr<HLE::Applets::Applet> applet = HLE::Applets::Applet::Get(applet_id);
     
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
+
     if (applet == nullptr) {
+        LOG_ERROR(Service_APT, "unknown applet id=%08X", applet_id);
         cmd_buff[1] = -1; // TODO(Subv): Find the right error code
         return;
     }
@@ -353,6 +359,8 @@ void Init() {
     AddService(new APT_A_Interface);
     AddService(new APT_S_Interface);
     AddService(new APT_U_Interface);
+
+    HLE::Applets::Init();
 
     // Load the shared system font (if available).
     // The expected format is a decrypted, uncompressed BCFNT file with the 0x80 byte header
@@ -398,6 +406,7 @@ void Shutdown() {
     lock = nullptr;
     notification_event = nullptr;
     parameter_event = nullptr;
+    HLE::Applets::Shutdown();
 }
 
 } // namespace APT
