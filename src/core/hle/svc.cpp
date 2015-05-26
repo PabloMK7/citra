@@ -654,6 +654,8 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     using Kernel::MemoryPermission;
     SharedPtr<SharedMemory> shared_memory = SharedMemory::Create(size,
             (MemoryPermission)my_permission, (MemoryPermission)other_permission);
+    // Map the SharedMemory to the specified address
+    shared_memory->base_address = addr;
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(shared_memory)));
 
     LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);
