@@ -272,10 +272,9 @@ void GraphicsVertexShaderModel::DumpShader() {
     auto& setup  = Pica::g_state.vs;
     auto& config = Pica::g_state.regs.vs;
 
-    Pica::DebugUtils::DumpShader(setup.program_code.data(), setup.program_code.size(),
-                                 setup.swizzle_data.data(), setup.swizzle_data.size(),
-                                 config.main_offset, Pica::g_state.regs.vs_output_attributes);
+    Pica::DebugUtils::DumpShader(config, setup, Pica::g_state.regs.vs_output_attributes);
 }
+
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::DebugContext > debug_context,
                                                        QWidget* parent)
         : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
