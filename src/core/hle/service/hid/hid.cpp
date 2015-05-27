@@ -58,7 +58,7 @@ void Update() {
 
     mem->pad.current_state.hex = state.hex;
     mem->pad.index = next_pad_index;
-    ++next_touch_index %= mem->pad.entries.size();
+    next_touch_index = (next_touch_index + 1) % mem->pad.entries.size();
 
     // Get the previous Pad state
     u32 last_entry_index = (mem->pad.index - 1) % mem->pad.entries.size();
@@ -88,7 +88,7 @@ void Update() {
     }
 
     mem->touch.index = next_touch_index;
-    ++next_touch_index %= mem->touch.entries.size();
+    next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
 
     // Get the current touch entry
     TouchDataEntry* touch_entry = &mem->touch.entries[mem->touch.index];
