@@ -31,9 +31,8 @@ namespace Applets {
 
 static std::unordered_map<Service::APT::AppletId, std::shared_ptr<Applet>> applets;
 static u32 applet_update_event = -1; ///< The CoreTiming event identifier for the Applet update callback.
-/// The interval at which the Applet update callback will be called.
-static const u64 applet_update_interval_microseconds = 16666;
-std::shared_ptr<Applet> g_current_applet = nullptr; ///< The applet that is currently executing
+/// The interval at which the Applet update callback will be called, 16.6ms
+static const u64 applet_update_interval_us = 16666;
 
 ResultCode Applet::Create(Service::APT::AppletId id) {
     switch (id) {
@@ -57,21 +56,38 @@ std::shared_ptr<Applet> Applet::Get(Service::APT::AppletId id) {
 }
 
 /// Handles updating the current Applet every time it's called.
-static void AppletUpdateEvent(u64, int cycles_late) {
-    if (g_current_applet && g_current_applet->IsRunning())
-        g_current_applet->Update();
+static void AppletUpdateEvent(u64 applet_id, int cycles_late) {
+    Service::APT::AppletId id = static_cast<Service::APT::AppletId>(applet_id);
+    std::shared_ptr<Applet> applet = Applet::Get(id);
+    ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id=%08X", id);
 
-    CoreTiming::ScheduleEvent(usToCycles(applet_update_interval) - cycles_late,
-        applet_update_event);
+    applet->Update();
+
+    // If the applet is still running after the last update, reschedule the event
+    if (applet->IsRunning()) {
+        CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us) - cycles_late,
+            applet_update_event, applet_id);
+    } else {
+        // Otherwise the applet has terminated, in which case we should clean it up
+        applets[id] = nullptr;
+    }
+}
+
+ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) {
+    ResultCode result = StartImpl(parameter);
+    if (result.IsError())
+        return result;
+    // Schedule the update event
+    CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us), applet_update_event, static_cast<u64>(id));
+    return result;
 }
 
 void Init() {
+    // Register the applet update callback
     applet_update_event = CoreTiming::RegisterEvent("HLE Applet Update Event", AppletUpdateEvent);
-    CoreTiming::ScheduleEvent(usToCycles(applet_update_interval), applet_update_event);
 }
 
 void Shutdown() {
-    CoreTiming::UnscheduleEvent(applet_update_event, 0);
 }
 
 }

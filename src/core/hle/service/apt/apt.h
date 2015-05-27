@@ -63,7 +63,7 @@ enum class AppletId : u32 {
 };
 
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
-void SendParameter(MessageParameter const& parameter);
+void SendParameter(const MessageParameter& parameter);
 
 /**
  * APT::Initialize service function

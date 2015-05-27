@@ -44,7 +44,7 @@ static u32 cpu_percent; ///< CPU time available to the running application
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
 static MessageParameter next_parameter;
 
-void SendParameter(MessageParameter const& parameter) {
+void SendParameter(const MessageParameter& parameter) {
     next_parameter = parameter;
     // Signal the event to let the application know that a new parameter is ready to be read
     parameter_event->Signal();
@@ -338,7 +338,7 @@ void StartLibraryApplet(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
     std::shared_ptr<HLE::Applets::Applet> applet = HLE::Applets::Applet::Get(applet_id);
-    
+
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 
     if (applet == nullptr) {

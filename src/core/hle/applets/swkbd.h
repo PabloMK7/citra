@@ -42,17 +42,21 @@ struct SoftwareKeyboardConfig {
     INSERT_PADDING_BYTES(0x2B6);
 };
 
+/**
+ * The size of this structure (0x400) has been verified via reverse engineering of multiple games
+ * that use the software keyboard.
+ */
 static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config size is wrong");
 
-class SoftwareKeyboard : public Applet {
+class SoftwareKeyboard final : public Applet {
 public:
     SoftwareKeyboard(Service::APT::AppletId id);
     ~SoftwareKeyboard() {}
 
-    ResultCode ReceiveParameter(Service::APT::MessageParameter const& parameter) override;
-    ResultCode Start(Service::APT::AppletStartupParameter const& parameter) override;
+    ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
+    ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
-    bool IsRunning() override { return started; }
+    bool IsRunning() const override { return started; }
 
     /**
      * Draws a keyboard to the current bottom screen framebuffer.
@@ -65,13 +69,13 @@ public:
      */
     void Finalize();
 
-    /// TODO(Subv): Find out what this is actually used for. 
-    // It is believed that the application stores the current screen image here.
+    /// TODO(Subv): Find out what this is actually used for.
+    /// It is believed that the application stores the current screen image here.
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 
     /// SharedMemory where the output text will be stored
     Kernel::SharedPtr<Kernel::SharedMemory> text_memory;
-    
+
     /// Configuration of this instance of the SoftwareKeyboard, as received from the application
     SoftwareKeyboardConfig config;
 

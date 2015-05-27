@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
 
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/service/hid/hid.h"
@@ -33,7 +34,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     Service::APT::MessageParameter result;
     // The buffer passed in parameter contains the data returned by GSPGPU::ImportDisplayCaptureInfo
     result.signal = static_cast<u32>(Service::APT::SignalType::LibAppFinished);
-    result.data = nullptr; 
+    result.data = nullptr;
     result.buffer_size = 0;
     result.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     result.sender_id = static_cast<u32>(id);
@@ -43,7 +44,9 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     return RESULT_SUCCESS;
 }
 
-ResultCode SoftwareKeyboard::Start(Service::APT::AppletStartupParameter const& parameter) {
+ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter const& parameter) {
+    ASSERT_MSG(parameter.buffer_size == sizeof(config), "The size of the parameter (SoftwareKeyboardConfig) is wrong");
+
     memcpy(&config, parameter.data, parameter.buffer_size);
     text_memory = boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
@@ -52,9 +55,7 @@ ResultCode SoftwareKeyboard::Start(Service::APT::AppletStartupParameter const& p
 
     DrawScreenKeyboard();
 
-    // Update the current applet so we can get update events
     started = true;
-    g_current_applet = shared_from_this();
     return RESULT_SUCCESS;
 }
 
@@ -72,7 +73,7 @@ void SoftwareKeyboard::Update() {
     config.text_length = 6;
     config.text_offset = 0;
 
-    // TODO(Subv): We're finalizing the applet immediately after it's started, 
+    // TODO(Subv): We're finalizing the applet immediately after it's started,
     // but we should defer this call until after all the input has been collected.
     Finalize();
 }
@@ -98,8 +99,6 @@ void SoftwareKeyboard::Finalize() {
     Service::APT::SendParameter(message);
 
     started = false;
-    // Unset the current applet, we are not running anymore
-    g_current_applet = nullptr;
 }
 
 }
