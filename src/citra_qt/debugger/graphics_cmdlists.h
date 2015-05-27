@@ -49,6 +49,8 @@ public slots:
 
     void SetCommandInfo(const QModelIndex&);
 
+    void CopyAllToClipboard();
+
 signals:
     void TracingFinished(const Pica::DebugUtils::PicaTrace&);
 
