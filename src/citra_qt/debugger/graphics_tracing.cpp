@@ -13,6 +13,8 @@
 #include <QSpinBox>
 
 #include "core/hw/gpu.h"
+#include "core/hw/lcd.h"
+
 #include "video_core/pica.h"
 
 #include "nihstro/float24.h"
@@ -62,23 +64,25 @@ void GraphicsTracingWidget::StartRecording() {
 
     // Encode floating point numbers to 24-bit values
     // TODO: Drop this explicit conversion once we store float24 values bit-correctly internally.
-    std::array<Math::Vec4<uint32_t>, 16> default_attributes;
+    std::array<uint32_t, 4 * 16> default_attributes;
     for (unsigned i = 0; i < 16; ++i) {
         for (unsigned comp = 0; comp < 3; ++comp) {
-            default_attributes[i][comp] = nihstro::to_float24(Pica::g_state.vs.default_attributes[i][comp].ToFloat32());
+            default_attributes[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.default_attributes[i][comp].ToFloat32());
         }
     }
 
-    std::array<Math::Vec4<uint32_t>, 96> vs_float_uniforms;
+    std::array<uint32_t, 4 * 96> vs_float_uniforms;
     for (unsigned i = 0; i < 96; ++i)
         for (unsigned comp = 0; comp < 3; ++comp)
-            vs_float_uniforms[i][comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
+            vs_float_uniforms[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
 
-    auto recorder = new CiTrace::Recorder((u32*)&GPU::g_regs, 0x700, nullptr, 0, (u32*)&Pica::g_state.regs, 0x300,
-                                          (u32*)default_attributes.data(), default_attributes.size() * 4,
+    auto recorder = new CiTrace::Recorder((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32),
+                                          (u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32),
+                                          (u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32),
+                                          default_attributes.data(), default_attributes.size(),
                                           shader_binary.data(), shader_binary.size(),
                                           swizzle_data.data(), swizzle_data.size(),
-                                          (u32*)vs_float_uniforms.data(), vs_float_uniforms.size() * 4,
+                                          vs_float_uniforms.data(), vs_float_uniforms.size(),
                                           nullptr, 0, nullptr, 0, nullptr, 0 // Geometry shader is not implemented yet, so submit dummy data for now
                                           );
     context->recorder = std::shared_ptr<CiTrace::Recorder>(recorder);
