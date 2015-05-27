@@ -26,6 +26,8 @@ public:
 public slots:
     void OnUpdate();
 
+    void DumpShader();
+
 private:
     nihstro::ShaderInfo info;
 };

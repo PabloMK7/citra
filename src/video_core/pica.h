@@ -80,6 +80,11 @@ struct Regs {
             POSITION_Z   =  2,
             POSITION_W   =  3,
 
+            QUATERNION_X =  4,
+            QUATERNION_Y =  5,
+            QUATERNION_Z =  6,
+            QUATERNION_W =  7,
+
             COLOR_R      =  8,
             COLOR_G      =  9,
             COLOR_B      = 10,
@@ -89,6 +94,12 @@ struct Regs {
             TEXCOORD0_V  = 13,
             TEXCOORD1_U  = 14,
             TEXCOORD1_V  = 15,
+
+            // TODO: Not verified
+            VIEW_X       = 18,
+            VIEW_Y       = 19,
+            VIEW_Z       = 20,
+
             TEXCOORD2_U  = 22,
             TEXCOORD2_V  = 23,
 

@@ -96,12 +96,6 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
     RunInterpreter(state);
 #endif // ARCHITECTURE_x86_64
 
-#if PICA_DUMP_SHADERS
-    DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),
-        state.debug.max_opdesc_id, config.main_offset,
-        g_state.regs.vs_output_attributes); // TODO: Don't hardcode VS here
-#endif
-
     // Setup output data
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to

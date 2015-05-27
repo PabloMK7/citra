@@ -131,11 +131,14 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
     // into shbin format (separate type and component mask).
     union OutputRegisterInfo {
         enum Type : u64 {
-            POSITION = 0,
-            COLOR = 2,
-            TEXCOORD0 = 3,
-            TEXCOORD1 = 5,
-            TEXCOORD2 = 6,
+            POSITION   = 0,
+            QUATERNION = 1,
+            COLOR      = 2,
+            TEXCOORD0  = 3,
+            TEXCOORD1  = 5,
+            TEXCOORD2  = 6,
+
+            VIEW       = 8,
         };
 
         BitField< 0, 64, u64> hex;
@@ -157,6 +160,10 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                 { OutputAttributes::POSITION_Y, { OutputRegisterInfo::POSITION, 2} },
                 { OutputAttributes::POSITION_Z, { OutputRegisterInfo::POSITION, 4} },
                 { OutputAttributes::POSITION_W, { OutputRegisterInfo::POSITION, 8} },
+                { OutputAttributes::QUATERNION_X, { OutputRegisterInfo::QUATERNION, 1} },
+                { OutputAttributes::QUATERNION_Y, { OutputRegisterInfo::QUATERNION, 2} },
+                { OutputAttributes::QUATERNION_Z, { OutputRegisterInfo::QUATERNION, 4} },
+                { OutputAttributes::QUATERNION_W, { OutputRegisterInfo::QUATERNION, 8} },
                 { OutputAttributes::COLOR_R, { OutputRegisterInfo::COLOR, 1} },
                 { OutputAttributes::COLOR_G, { OutputRegisterInfo::COLOR, 2} },
                 { OutputAttributes::COLOR_B, { OutputRegisterInfo::COLOR, 4} },
@@ -166,7 +173,10 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
                 { OutputAttributes::TEXCOORD1_U, { OutputRegisterInfo::TEXCOORD1, 1} },
                 { OutputAttributes::TEXCOORD1_V, { OutputRegisterInfo::TEXCOORD1, 2} },
                 { OutputAttributes::TEXCOORD2_U, { OutputRegisterInfo::TEXCOORD2, 1} },
-                { OutputAttributes::TEXCOORD2_V, { OutputRegisterInfo::TEXCOORD2, 2} }
+                { OutputAttributes::TEXCOORD2_V, { OutputRegisterInfo::TEXCOORD2, 2} },
+                { OutputAttributes::VIEW_X, { OutputRegisterInfo::VIEW, 1} },
+                { OutputAttributes::VIEW_Y, { OutputRegisterInfo::VIEW, 2} },
+                { OutputAttributes::VIEW_Z, { OutputRegisterInfo::VIEW, 4} }
             };
 
             for (const auto& semantic : std::vector<OutputAttributes::Semantic>{
@@ -239,6 +249,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 
     // TODO: Create a label table for "main"
 
+    // TODO: Write uniforms as constants
 
     // Write data to file
     static int dump_index = 0;

@@ -158,7 +158,6 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 namespace DebugUtils {
 
 #define PICA_DUMP_GEOMETRY 0
-#define PICA_DUMP_SHADERS 0
 #define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
 

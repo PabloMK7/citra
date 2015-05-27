@@ -6,6 +6,8 @@
 #include <sstream>
 
 #include <QBoxLayout>
+#include <QLabel>
+#include <QPushButton>
 #include <QTreeView>
 
 #include "video_core/shader/shader_interpreter.h"
@@ -253,18 +255,27 @@ void GraphicsVertexShaderModel::OnUpdate()
 
     info.Clear();
 
-    for (auto instr : Pica::g_state.vs.program_code)
+    auto& shader_setup = Pica::g_state.vs;
+    for (auto instr : shader_setup.program_code)
         info.code.push_back({instr});
 
-    for (auto pattern : Pica::g_state.vs.swizzle_data)
+    for (auto pattern : shader_setup.swizzle_data)
         info.swizzle_info.push_back({pattern});
 
-    info.labels.insert({ Pica::g_state.regs.vs.main_offset, "main" });
+    u32 entry_point = Pica::g_state.regs.vs.main_offset;
+    info.labels.insert({ entry_point, "main" });
 
     endResetModel();
 }
 
+void GraphicsVertexShaderModel::DumpShader() {
+    auto& setup  = Pica::g_state.vs;
+    auto& config = Pica::g_state.regs.vs;
 
+    Pica::DebugUtils::DumpShader(setup.program_code.data(), setup.program_code.size(),
+                                 setup.swizzle_data.data(), setup.swizzle_data.size(),
+                                 config.main_offset, Pica::g_state.regs.vs_output_attributes);
+}
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::DebugContext > debug_context,
                                                        QWidget* parent)
         : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
@@ -276,6 +287,9 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
     binary_list->setRootIsDecorated(false);
     binary_list->setAlternatingRowColors(true);
 
+    auto dump_shader = new QPushButton(tr("Dump"));
+
+    connect(dump_shader, SIGNAL(clicked()), binary_model, SLOT(DumpShader()));
     connect(this, SIGNAL(Update()), binary_model, SLOT(OnUpdate()));
 
     auto main_widget = new QWidget;
@@ -285,6 +299,7 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
         sub_layout->addWidget(binary_list);
         main_layout->addLayout(sub_layout);
     }
+    main_layout->addWidget(dump_shader);
     main_widget->setLayout(main_layout);
     setWidget(main_widget);
 }
