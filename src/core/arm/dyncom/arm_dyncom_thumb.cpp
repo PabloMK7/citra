@@ -189,33 +189,22 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
 
     case 10:
     case 11:
-        // TODO: Format 7 and Format 8 perform the same ARM encoding, so the following could be
-        // merged into a single subset, saving on the following boolean:
-
-        if ((tinstr & (1 << 9)) == 0) {
-            static const ARMword subset[4] = {
-                0xE7800000, // STR  Rd,[Rb,Ro]
-                0xE7C00000, // STRB Rd,[Rb,Ro]
-                0xE7900000, // LDR  Rd,[Rb,Ro]
-                0xE7D00000  // LDRB Rd,[Rb,Ro]
-            };
-
-            *ainstr = subset[(tinstr & 0x0C00) >> 10]   // base
-                |((tinstr & 0x0007) << (12 - 0))        // Rd
-                |((tinstr & 0x0038) << (16 - 3))        // Rb
-                |((tinstr & 0x01C0) >> 6);              // Ro
-
-        } else {
-            static const ARMword subset[4] = {
+        {
+            static const ARMword subset[8] = {
+                0xE7800000, // STR   Rd,[Rb,Ro]
                 0xE18000B0, // STRH  Rd,[Rb,Ro]
+                0xE7C00000, // STRB  Rd,[Rb,Ro]
                 0xE19000D0, // LDRSB Rd,[Rb,Ro]
+                0xE7900000, // LDR   Rd,[Rb,Ro]
                 0xE19000B0, // LDRH  Rd,[Rb,Ro]
+                0xE7D00000, // LDRB  Rd,[Rb,Ro]
                 0xE19000F0  // LDRSH Rd,[Rb,Ro]
             };
-            *ainstr = subset[(tinstr & 0x0C00) >> 10]   // base
-                |((tinstr & 0x0007) << (12 - 0))        // Rd
-                |((tinstr & 0x0038) << (16 - 3))        // Rb
-                |((tinstr & 0x01C0) >> 6);              // Ro
+
+            *ainstr = subset[(tinstr & 0xE00) >> 9] // base
+                |((tinstr & 0x0007) << (12 - 0))    // Rd
+                |((tinstr & 0x0038) << (16 - 3))    // Rb
+                |((tinstr & 0x01C0) >> 6);          // Ro
         }
         break;
 
