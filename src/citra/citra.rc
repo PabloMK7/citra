@@ -5,5 +5,5 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-GLFW_ICON               ICON                    "..\\assets\\citra.ico"
+GLFW_ICON               ICON                    "..\\..\\dist\\citra.ico"
 
