@@ -20,6 +20,13 @@ public:
     } depth;
 
     struct {
+        GLboolean red_enabled;
+        GLboolean green_enabled;
+        GLboolean blue_enabled;
+        GLboolean alpha_enabled;
+    } color_mask; // GL_COLOR_WRITEMASK
+
+    struct {
         bool test_enabled; // GL_STENCIL_TEST
         GLenum test_func; // GL_STENCIL_FUNC
         GLint test_ref; // GL_STENCIL_REF

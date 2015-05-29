@@ -16,6 +16,11 @@ OpenGLState::OpenGLState() {
     depth.test_func = GL_LESS;
     depth.write_mask = GL_TRUE;
 
+    color_mask.red_enabled = GL_TRUE;
+    color_mask.green_enabled = GL_TRUE;
+    color_mask.blue_enabled = GL_TRUE;
+    color_mask.alpha_enabled = GL_TRUE;
+
     stencil.test_enabled = false;
     stencil.test_func = GL_ALWAYS;
     stencil.test_ref = 0;
@@ -75,6 +80,14 @@ void OpenGLState::Apply() {
     // Depth mask
     if (depth.write_mask != cur_state.depth.write_mask) {
         glDepthMask(depth.write_mask);
+    }
+
+    // Color mask
+    if (color_mask.red_enabled != cur_state.color_mask.red_enabled ||
+        color_mask.green_enabled != cur_state.color_mask.green_enabled ||
+        color_mask.blue_enabled != cur_state.color_mask.blue_enabled ||
+        color_mask.alpha_enabled != cur_state.color_mask.alpha_enabled) {
+        glColorMask(color_mask.red_enabled, color_mask.green_enabled, color_mask.blue_enabled, color_mask.alpha_enabled);
     }
 
     // Stencil test
