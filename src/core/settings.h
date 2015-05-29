@@ -35,7 +35,6 @@ struct Values {
     int pad_cright_key;
 
     // Core
-    int gpu_refresh_rate;
     int frame_skip;
 
     // Data Storage

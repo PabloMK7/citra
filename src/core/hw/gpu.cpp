@@ -30,8 +30,8 @@ Regs g_regs;
 
 /// True if the current frame was skipped
 bool g_skip_frame;
-/// 268MHz / gpu_refresh_rate frames per second
-static u64 frame_ticks;
+/// 268MHz CPU clocks / 60Hz frames per second
+const u64 frame_ticks = 268123480ull / 60;
 /// Event id for CoreTiming
 static int vblank_event;
 /// Total number of frames drawn
@@ -357,7 +357,6 @@ void Init() {
     framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
     framebuffer_sub.active_fb = 0;
 
-    frame_ticks = 268123480 / Settings::values.gpu_refresh_rate;
     last_skip_frame = false;
     g_skip_frame = false;
     frame_count = 0;
