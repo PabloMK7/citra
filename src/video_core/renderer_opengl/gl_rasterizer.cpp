@@ -491,7 +491,7 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
     case Pica::Regs::DepthFormat::D24:
         internal_format = GL_DEPTH_COMPONENT24;
         texture.gl_format = GL_DEPTH_COMPONENT;
-        texture.gl_type = GL_UNSIGNED_INT_24_8;
+        texture.gl_type = GL_UNSIGNED_INT;
         break;
 
     case Pica::Regs::DepthFormat::D24S8:
@@ -763,7 +763,7 @@ void RasterizerOpenGL::ReloadColorBuffer() {
         for (int x = 0; x < fb_color_texture.width; ++x) {
             const u32 coarse_y = y & ~7;
             u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_color_texture.width * bytes_per_pixel;
-            u32 gl_px_idx = x * bytes_per_pixel + y * fb_color_texture.width * bytes_per_pixel;
+            u32 gl_px_idx = (x + y * fb_color_texture.width) * bytes_per_pixel;
 
             u8* pixel = color_buffer + dst_offset;
             memcpy(&temp_fb_color_buffer[gl_px_idx], pixel, bytes_per_pixel);
@@ -794,29 +794,29 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
 
     std::unique_ptr<u8[]> temp_fb_depth_buffer(new u8[fb_depth_texture.width * fb_depth_texture.height * gl_bpp]);
 
-    for (int y = 0; y < fb_depth_texture.height; ++y) {
-        for (int x = 0; x < fb_depth_texture.width; ++x) {
-            const u32 coarse_y = y & ~7;
-            u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-            u32 gl_px_idx = x + y * fb_depth_texture.width;
+    u8* temp_fb_depth_data = bytes_per_pixel == 3 ? (temp_fb_depth_buffer.get() + 1) : temp_fb_depth_buffer.get();
 
-            switch (fb_depth_texture.format) {
-            case Pica::Regs::DepthFormat::D16:
-                ((u16*)temp_fb_depth_buffer.get())[gl_px_idx] = Color::DecodeD16(depth_buffer + dst_offset);
-                break;
-            case Pica::Regs::DepthFormat::D24:
-                ((u32*)temp_fb_depth_buffer.get())[gl_px_idx] = Color::DecodeD24(depth_buffer + dst_offset);
-                break;
-            case Pica::Regs::DepthFormat::D24S8:
-            {
-                Math::Vec2<u32> depth_stencil = Color::DecodeD24S8(depth_buffer + dst_offset);
-                ((u32*)temp_fb_depth_buffer.get())[gl_px_idx] = (depth_stencil.x << 8) | depth_stencil.y;
-                break;
+    if (fb_depth_texture.format == Pica::Regs::DepthFormat::D24S8) {
+        for (int y = 0; y < fb_depth_texture.height; ++y) {
+            for (int x = 0; x < fb_depth_texture.width; ++x) {
+                const u32 coarse_y = y & ~7;
+                u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
+                u32 gl_px_idx = (x + y * fb_depth_texture.width);
+
+                u8* pixel = depth_buffer + dst_offset;
+                u32 depth_stencil = *(u32*)pixel;
+                ((u32*)temp_fb_depth_data)[gl_px_idx] = (depth_stencil << 8) | (depth_stencil >> 24);
             }
-            default:
-                LOG_CRITICAL(Render_OpenGL, "Unknown memory framebuffer depth format %x", fb_depth_texture.format);
-                UNIMPLEMENTED();
-                break;
+        }
+    } else {
+        for (int y = 0; y < fb_depth_texture.height; ++y) {
+            for (int x = 0; x < fb_depth_texture.width; ++x) {
+                const u32 coarse_y = y & ~7;
+                u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
+                u32 gl_px_idx = (x + y * fb_depth_texture.width) * gl_bpp;
+
+                u8* pixel = depth_buffer + dst_offset;
+                memcpy(&temp_fb_depth_data[gl_px_idx], pixel, bytes_per_pixel);
             }
         }
     }
@@ -881,29 +881,29 @@ void RasterizerOpenGL::CommitDepthBuffer() {
             glActiveTexture(GL_TEXTURE0);
             glGetTexImage(GL_TEXTURE_2D, 0, fb_depth_texture.gl_format, fb_depth_texture.gl_type, temp_gl_depth_buffer.get());
 
-            for (int y = 0; y < fb_depth_texture.height; ++y) {
-                for (int x = 0; x < fb_depth_texture.width; ++x) {
-                    const u32 coarse_y = y & ~7;
-                    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-                    u32 gl_px_idx = x + y * fb_depth_texture.width;
+            u8* temp_gl_depth_data = bytes_per_pixel == 3 ? (temp_gl_depth_buffer.get() + 1) : temp_gl_depth_buffer.get();
 
-                    switch (fb_depth_texture.format) {
-                    case Pica::Regs::DepthFormat::D16:
-                        Color::EncodeD16(((u16*)temp_gl_depth_buffer.get())[gl_px_idx], depth_buffer + dst_offset);
-                        break;
-                    case Pica::Regs::DepthFormat::D24:
-                        Color::EncodeD24(((u32*)temp_gl_depth_buffer.get())[gl_px_idx], depth_buffer + dst_offset);
-                        break;
-                    case Pica::Regs::DepthFormat::D24S8:
-                    {
-                        u32 depth_stencil = ((u32*)temp_gl_depth_buffer.get())[gl_px_idx];
-                        Color::EncodeD24S8((depth_stencil >> 8), depth_stencil & 0xFF, depth_buffer + dst_offset);
-                        break;
+            if (fb_depth_texture.format == Pica::Regs::DepthFormat::D24S8) {
+                for (int y = 0; y < fb_depth_texture.height; ++y) {
+                    for (int x = 0; x < fb_depth_texture.width; ++x) {
+                        const u32 coarse_y = y & ~7;
+                        u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
+                        u32 gl_px_idx = (x + y * fb_depth_texture.width);
+
+                        u8* pixel = depth_buffer + dst_offset;
+                        u32 depth_stencil = ((u32*)temp_gl_depth_data)[gl_px_idx];
+                        *(u32*)pixel = (depth_stencil >> 8) | (depth_stencil << 24);
                     }
-                    default:
-                        LOG_CRITICAL(Render_OpenGL, "Unknown framebuffer depth format %x", fb_depth_texture.format);
-                        UNIMPLEMENTED();
-                        break;
+                }
+            } else {
+                for (int y = 0; y < fb_depth_texture.height; ++y) {
+                    for (int x = 0; x < fb_depth_texture.width; ++x) {
+                        const u32 coarse_y = y & ~7;
+                        u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
+                        u32 gl_px_idx = (x + y * fb_depth_texture.width) * gl_bpp;
+
+                        u8* pixel = depth_buffer + dst_offset;
+                        memcpy(pixel, &temp_gl_depth_data[gl_px_idx], bytes_per_pixel);
                     }
                 }
             }
