@@ -628,7 +628,7 @@ void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 c
            cpu->CP15[CP15_DATA_SYNC_BARRIER] = value;
        else if (opcode_2 == 5)
            cpu->CP15[CP15_DATA_MEMORY_BARRIER] = value;
-           
+
     }
     else if (crn == 13 && opcode_1 == 0 && crm == 0 && opcode_2 == 2)
     {

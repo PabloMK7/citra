@@ -350,7 +350,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(tev_stage5.color_scale):
         SyncTevMultipliers(5, regs.tev_stage5);
         break;
-    
+
     // TEV combiner buffer color
     case PICA_REG_INDEX(tev_combiner_buffer_color):
         SyncCombinerColor();

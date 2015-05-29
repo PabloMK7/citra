@@ -228,7 +228,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         // Actually wait the current thread on each object if we decided to wait...
         std::vector<SharedPtr<Kernel::WaitObject>> wait_objects;
         wait_objects.reserve(handle_count);
-        
+
         for (int i = 0; i < handle_count; ++i) {
             auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             object->AddWaitingThread(Kernel::GetCurrentThread());
@@ -475,7 +475,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
         return ERR_INVALID_HANDLE;
 
     const SharedPtr<Kernel::Process> process = thread->owner_process;
-    
+
     ASSERT_MSG(process != nullptr, "Invalid parent process for thread=0x%08X", thread_handle);
 
     *process_id = process->process_id;

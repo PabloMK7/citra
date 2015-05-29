@@ -35,11 +35,11 @@ after_build:
             $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
             # Zip up the build folder
             7z a $BUILD_NAME .\build\bin\release\*
-            
+
             # Download winscp
             Invoke-WebRequest "http://hivelocity.dl.sourceforge.net/project/winscp/WinSCP/5.7/winscp570.zip" -OutFile "winscp570.zip"
             7z e -y winscp570.zip
-            
+
             # Upload to server
             .\WinSCP.com /command `
                 "option batch abort" `

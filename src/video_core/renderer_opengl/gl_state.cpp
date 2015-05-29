@@ -82,7 +82,7 @@ void OpenGLState::Apply() {
         } else {
             glDisable(GL_STENCIL_TEST);
         }
-    } 
+    }
 
     if (stencil.test_func != cur_state.stencil.test_func ||
         stencil.test_ref != cur_state.stencil.test_ref ||

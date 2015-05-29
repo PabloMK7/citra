@@ -184,7 +184,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     case 9: // LDR Rd,[PC,#imm8]
         *ainstr = 0xE59F0000                    // base
             | ((tinstr & 0x0700) << (12 - 8))   // Rd
-            |((tinstr & 0x00FF) << (2 - 0));    // off8 
+            |((tinstr & 0x00FF) << (2 - 0));    // off8
         break;
 
     case 10:

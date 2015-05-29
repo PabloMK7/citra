@@ -80,7 +80,7 @@ signals:
      * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
     void DebugModeEntered();
-    
+
     /**
      * Emitted right before the CPU continues execution
      *

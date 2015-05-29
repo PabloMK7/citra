@@ -139,7 +139,7 @@ static int TranslateError(int error) {
     auto found = error_map.find(error);
     if (found != error_map.end())
         return -found->second;
-    
+
     return error;
 }
 
@@ -346,7 +346,7 @@ static void Bind(Service::Interface* self) {
     sockaddr sock_addr = CTRSockAddr::ToPlatform(*ctr_sock_addr);
 
     int res = ::bind(socket_handle, &sock_addr, std::max<u32>(sizeof(sock_addr), len));
-    
+
     int result = 0;
     if (res != 0)
         result = TranslateError(GET_ERRNO);
@@ -360,14 +360,14 @@ static void Fcntl(Service::Interface* self) {
     u32 socket_handle = cmd_buffer[1];
     u32 ctr_cmd = cmd_buffer[2];
     u32 ctr_arg = cmd_buffer[3];
- 
+
     int result = 0;
     u32 posix_ret = 0; // TODO: Check what hardware returns for F_SETFL (unspecified by POSIX)
     SCOPE_EXIT({
             cmd_buffer[1] = result;
             cmd_buffer[2] = posix_ret;
     });
- 
+
     if (ctr_cmd == 3) { // F_GETFL
 #if EMU_PLATFORM == PLATFORM_WINDOWS
         posix_ret = 0;
@@ -404,11 +404,11 @@ static void Fcntl(Service::Interface* self) {
             posix_ret = -1;
             return;
         }
- 
+
         flags &= ~O_NONBLOCK;
         if (ctr_arg & 4) // O_NONBLOCK
             flags |= O_NONBLOCK;
- 
+
         int ret = ::fcntl(socket_handle, F_SETFL, flags);
         if (ret == SOCKET_ERROR_VALUE) {
             result = TranslateError(GET_ERRNO);
@@ -439,8 +439,8 @@ static void Listen(Service::Interface* self) {
 }
 
 static void Accept(Service::Interface* self) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread, 
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always 
+    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
@@ -448,7 +448,7 @@ static void Accept(Service::Interface* self) {
     sockaddr addr;
     socklen_t addr_len = sizeof(addr);
     u32 ret = static_cast<u32>(::accept(socket_handle, &addr, &addr_len));
-    
+
     if ((s32)ret != SOCKET_ERROR_VALUE)
         open_sockets[ret] = { ret, true };
 
@@ -525,8 +525,8 @@ static void SendTo(Service::Interface* self) {
 }
 
 static void RecvFrom(Service::Interface* self) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread, 
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always 
+    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
@@ -568,7 +568,7 @@ static void Poll(Service::Interface* self) {
     pollfd* platform_pollfd = new pollfd[nfds];
     for (unsigned current_fds = 0; current_fds < nfds; ++current_fds)
         platform_pollfd[current_fds] = CTRPollFD::ToPlatform(input_fds[current_fds]);
-    
+
     int ret = ::poll(platform_pollfd, nfds, timeout);
 
     // Now update the output pollfd structure
@@ -630,7 +630,7 @@ static void GetPeerName(Service::Interface* self) {
     socklen_t len = cmd_buffer[2];
 
     CTRSockAddr* ctr_dest_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(cmd_buffer[0x104 >> 2]));
-    
+
     sockaddr dest_addr;
     socklen_t dest_addr_len = sizeof(dest_addr);
     int ret = ::getpeername(socket_handle, &dest_addr, &dest_addr_len);
@@ -651,8 +651,8 @@ static void GetPeerName(Service::Interface* self) {
 }
 
 static void Connect(Service::Interface* self) {
-    // TODO(Subv): Calling this function on a blocking socket will block the emu thread, 
-    // preventing graceful shutdown when closing the emulator, this can be fixed by always 
+    // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
+    // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];

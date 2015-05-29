@@ -52,7 +52,7 @@ std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_por
 std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
 
 /**
- * Creates a function string for logging, complete with the name (or header code, depending 
+ * Creates a function string for logging, complete with the name (or header code, depending
  * on what's passed in) the port name, and all the cmd_buff arguments.
  */
 static std::string MakeFunctionString(const char* name, const char* port_name, const u32* cmd_buff) {

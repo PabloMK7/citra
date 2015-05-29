@@ -136,7 +136,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                   input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
                                   input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
                     }
-                    
+
                     // Load per-vertex data from the loader arrays
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
                         const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
@@ -193,7 +193,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                    const Pica::VertexShader::OutputVertex& v2) {
                         VideoCore::g_renderer->hw_rasterizer->AddTriangle(v0, v1, v2);
                     };
-                    
+
                     primitive_assembler.SubmitVertex(output, AddHWTriangle);
                 } else {
                     // Send to triangle clipper
@@ -282,7 +282,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             }
             break;
         }
-        
+
         // Load default vertex input attributes
         case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[0], 0x233):
         case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[1], 0x234):
@@ -306,7 +306,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
 
                 Math::Vec4<float24>& attribute = g_state.vs.default_attributes[setup.index];
-                
+
                 // NOTE: The destination component order indeed is "backwards"
                 attribute.w = float24::FromRawFloat24(default_attr_write_buffer[0] >> 8);
                 attribute.z = float24::FromRawFloat24(((default_attr_write_buffer[0] & 0xFF) << 16) | ((default_attr_write_buffer[1] >> 16) & 0xFFFF));

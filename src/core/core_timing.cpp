@@ -549,7 +549,7 @@ std::string GetScheduledEventsSummary() {
         const char* name = event_types[event->type].name;
         if (!name)
             name = "[unknown]";
-        text += Common::StringFromFormat("%s : %i %08x%08x\n", name, (int)event->time, 
+        text += Common::StringFromFormat("%s : %i %08x%08x\n", name, (int)event->time,
                 (u32)(event->userdata >> 32), (u32)(event->userdata));
         event = event->next;
     }

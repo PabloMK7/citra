@@ -94,7 +94,7 @@ public:
      * @return The thread's ID
      */
     u32 GetThreadId() const { return thread_id; }
-    
+
     /**
      * Release an acquired wait object
      * @param wait_object WaitObject to release

@@ -330,7 +330,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
         case OpCode::Type::MultiplyAdd:
         {
-            if ((instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) || 
+            if ((instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) ||
                 (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI)) {
                 const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.mad.operand_desc_id];
 
@@ -547,7 +547,7 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes) {
     const auto& attribute_register_map = regs.vs_input_register_map;
     float24 dummy_register;
     boost::fill(state.input_register_table, &dummy_register);
-    
+
     if (num_attributes > 0) state.input_register_table[attribute_register_map.attribute0_register] = &input.attr[0].x;
     if (num_attributes > 1) state.input_register_table[attribute_register_map.attribute1_register] = &input.attr[1].x;
     if (num_attributes > 2) state.input_register_table[attribute_register_map.attribute2_register] = &input.attr[2].x;

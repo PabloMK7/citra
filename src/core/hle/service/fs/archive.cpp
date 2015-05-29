@@ -254,7 +254,7 @@ ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archi
 
     CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res, itr->second->Open(archive_path));
 
-    // This should never even happen in the first place with 64-bit handles, 
+    // This should never even happen in the first place with 64-bit handles,
     while (handle_map.count(next_handle) != 0) {
         ++next_handle;
     }
@@ -488,7 +488,7 @@ void ArchiveInit() {
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
-    
+
     // Create the SaveData archive
     auto savedata_factory = Common::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
@@ -503,7 +503,7 @@ void ArchiveInit() {
     if (sharedextsavedata_factory->Initialize())
         RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     else
-        LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s", 
+        LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s",
             sharedextsavedata_factory->GetMountPoint().c_str());
 
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive

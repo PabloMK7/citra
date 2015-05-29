@@ -157,7 +157,7 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
-    
+
     glActiveTexture(GL_TEXTURE0);
     glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint)pixel_stride);
 

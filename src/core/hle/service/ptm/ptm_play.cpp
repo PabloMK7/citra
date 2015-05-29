@@ -18,6 +18,6 @@ const Interface::FunctionInfo FunctionTable[] = {
 PTM_Play_Interface::PTM_Play_Interface() {
     Register(FunctionTable);
 }
-    
+
 } // namespace PTM
 } // namespace Service

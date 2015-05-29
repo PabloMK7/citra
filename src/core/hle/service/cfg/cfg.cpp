@@ -315,11 +315,11 @@ void Init() {
     AddService(new CFG_I_Interface);
     AddService(new CFG_S_Interface);
     AddService(new CFG_U_Interface);
-    
+
     // Open the SystemSaveData archive 0x00010017
     FileSys::Path archive_path(cfg_system_savedata_id);
     auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
-    
+
     // If the archive didn't exist, create the files inside
     if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
         // Format the archive to create the directories

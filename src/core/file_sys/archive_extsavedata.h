@@ -35,14 +35,14 @@ public:
 private:
     /**
      * This holds the full directory path for this archive, it is only set after a successful call
-     * to Open, this is formed as <base extsavedatapath>/<type>/<high>/<low>. 
+     * to Open, this is formed as <base extsavedatapath>/<type>/<high>/<low>.
      * See GetExtSaveDataPath for the code that extracts this data from an archive path.
      */
     std::string mount_point;
 };
 
 /**
- * Constructs a path to the concrete ExtData archive in the host filesystem based on the 
+ * Constructs a path to the concrete ExtData archive in the host filesystem based on the
  * input Path and base mount point.
  * @param mount_point The base mount point of the ExtSaveData archives.
  * @param path The path that identifies the requested concrete ExtSaveData archive.

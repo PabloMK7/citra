@@ -106,7 +106,7 @@ void Update() {
         mem->touch.index_reset_ticks_previous = mem->touch.index_reset_ticks;
         mem->touch.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
-    
+
     // Signal both handles when there's an update to Pad or touch
     event_pad_or_touch_1->Signal();
     event_pad_or_touch_2->Signal();

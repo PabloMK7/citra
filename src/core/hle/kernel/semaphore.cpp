@@ -42,7 +42,7 @@ void Semaphore::Acquire() {
 
 ResultVal<s32> Semaphore::Release(s32 release_count) {
     if (max_count - available_count < release_count)
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel, 
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel,
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
     s32 previous_count = available_count;

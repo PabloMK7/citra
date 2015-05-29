@@ -19,5 +19,5 @@ namespace CAM_U {
 Interface::Interface() {
     //Register(FunctionTable);
 }
-    
+
 } // namespace

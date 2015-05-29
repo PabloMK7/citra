@@ -135,7 +135,7 @@ template <>
 inline void swap<8>(u8* data) {
     *reinterpret_cast<u64*>(data) = swap64(data);
 }
-    
+
 }  // Namespace Common
 
 

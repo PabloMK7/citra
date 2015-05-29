@@ -127,7 +127,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
     SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
-    
+
     ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", true).toBool());
     ToggleWindowMode();
 

@@ -61,7 +61,7 @@ public:
     static const OpenGLState& GetCurState() {
         return cur_state;
     }
-    
+
     /// Apply this state as the current OpenGL state
     void Apply();
 

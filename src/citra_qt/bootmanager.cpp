@@ -57,7 +57,7 @@ void EmuThread::run() {
             Core::SingleStep();
             emit DebugModeEntered();
             yieldCurrentThread();
-            
+
             was_active = false;
         } else {
             std::unique_lock<std::mutex> lock(running_mutex);
