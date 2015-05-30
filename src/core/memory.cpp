@@ -14,11 +14,9 @@
 #include "core/hw/hw.h"
 #include "core/mem_map.h"
 #include "core/memory.h"
+#include "core/memory_setup.h"
 
 namespace Memory {
-
-const u32 PAGE_MASK = PAGE_SIZE - 1;
-const int PAGE_BITS = 12;
 
 enum class PageType {
     /// Page is unmapped and should cause an access error.
@@ -64,7 +62,7 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     while (base != end) {
         ASSERT_MSG(base < PageTable::NUM_ENTRIES, "out of range mapping at %08X", base);
 
-        if (current_page_table->attributes[base] != PageType::Unmapped) {
+        if (current_page_table->attributes[base] != PageType::Unmapped && type != PageType::Unmapped) {
             LOG_ERROR(HW_Memory, "overlapping memory ranges at %08X", base * PAGE_SIZE);
         }
         current_page_table->attributes[base] = type;
@@ -90,6 +88,12 @@ void MapIoRegion(VAddr base, u32 size) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
     MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
+}
+
+void UnmapRegion(VAddr base, u32 size) {
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
 template <typename T>
