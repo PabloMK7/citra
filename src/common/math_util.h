@@ -12,7 +12,7 @@ namespace MathUtil
 {
 
 inline bool IntervalsIntersect(unsigned start0, unsigned length0, unsigned start1, unsigned length1) {
-    return (std::max(start0, start1) <= std::min(start0 + length0, start1 + length1));
+    return (std::max(start0, start1) < std::min(start0 + length0, start1 + length1));
 }
 
 template<typename T>

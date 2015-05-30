@@ -217,7 +217,19 @@ void RasterizerOpenGL::DrawTriangles() {
 
     vertex_batch.clear();
 
-    // TODO: Flush the resource cache at the current depth and color framebuffer addresses for render-to-texture
+    // Flush the resource cache at the current depth and color framebuffer addresses for render-to-texture
+    const auto& regs = Pica::g_state.regs;
+
+    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+
+    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
+                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+
+    res_cache.NotifyFlush(cur_fb_color_addr, cur_fb_color_size);
+    res_cache.NotifyFlush(cur_fb_depth_addr, cur_fb_depth_size);
 }
 
 void RasterizerOpenGL::CommitFramebuffer() {
