@@ -94,14 +94,27 @@ void RasterizerOpenGL::InitObjects() {
     // Create textures for OGL framebuffer that will be rendered to, initially 1x1 to succeed in framebuffer creation
     fb_color_texture.texture.Create();
     ReconfigureColorTexture(fb_color_texture, Pica::Regs::ColorFormat::RGBA8, 1, 1);
+
+    state.texture_units[0].enabled_2d = true;
+    state.texture_units[0].texture_2d = fb_color_texture.texture.handle;
+    state.Apply();
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
+
     fb_depth_texture.texture.Create();
     ReconfigureDepthTexture(fb_depth_texture, Pica::Regs::DepthFormat::D16, 1, 1);
+
+    state.texture_units[0].enabled_2d = true;
+    state.texture_units[0].texture_2d = fb_depth_texture.texture.handle;
+    state.Apply();
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -110,14 +123,13 @@ void RasterizerOpenGL::InitObjects() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
+
     // Configure OpenGL framebuffer
     framebuffer.Create();
 
     state.draw.framebuffer = framebuffer.handle;
-
-    // Unbind texture to allow binding to framebuffer
-    state.texture_units[0].enabled_2d = true;
-    state.texture_units[0].texture_2d = 0;
     state.Apply();
 
     glActiveTexture(GL_TEXTURE0);
@@ -472,6 +484,9 @@ void RasterizerOpenGL::ReconfigureColorTexture(TextureInfo& texture, Pica::Regs:
     glActiveTexture(GL_TEXTURE0);
     glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
                  texture.gl_format, texture.gl_type, nullptr);
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 }
 
 void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::Regs::DepthFormat format, u32 width, u32 height) {
@@ -513,6 +528,9 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
     glActiveTexture(GL_TEXTURE0);
     glTexImage2D(GL_TEXTURE_2D, 0, internal_format, texture.width, texture.height, 0,
                  texture.gl_format, texture.gl_type, nullptr);
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 }
 
 void RasterizerOpenGL::SyncFramebuffer() {
@@ -777,6 +795,9 @@ void RasterizerOpenGL::ReloadColorBuffer() {
     glActiveTexture(GL_TEXTURE0);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fb_color_texture.width, fb_color_texture.height,
                     fb_color_texture.gl_format, fb_color_texture.gl_type, temp_fb_color_buffer.get());
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 }
 
 void RasterizerOpenGL::ReloadDepthBuffer() {
@@ -828,6 +849,9 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
     glActiveTexture(GL_TEXTURE0);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fb_depth_texture.width, fb_depth_texture.height,
                     fb_depth_texture.gl_format, fb_depth_texture.gl_type, temp_fb_depth_buffer.get());
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 }
 
 void RasterizerOpenGL::CommitColorBuffer() {
@@ -845,6 +869,9 @@ void RasterizerOpenGL::CommitColorBuffer() {
 
             glActiveTexture(GL_TEXTURE0);
             glGetTexImage(GL_TEXTURE_2D, 0, fb_color_texture.gl_format, fb_color_texture.gl_type, temp_gl_color_buffer.get());
+
+            state.texture_units[0].texture_2d = 0;
+            state.Apply();
 
             // Directly copy pixels. Internal OpenGL color formats are consistent so no conversion is necessary.
             for (int y = 0; y < fb_color_texture.height; ++y) {
@@ -880,6 +907,9 @@ void RasterizerOpenGL::CommitDepthBuffer() {
 
             glActiveTexture(GL_TEXTURE0);
             glGetTexImage(GL_TEXTURE_2D, 0, fb_depth_texture.gl_format, fb_depth_texture.gl_type, temp_gl_depth_buffer.get());
+
+            state.texture_units[0].texture_2d = 0;
+            state.Apply();
 
             u8* temp_gl_depth_data = bytes_per_pixel == 3 ? (temp_gl_depth_buffer.get() + 1) : temp_gl_depth_buffer.get();
 
