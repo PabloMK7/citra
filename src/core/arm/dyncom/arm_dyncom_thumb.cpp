@@ -287,6 +287,19 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
             *ainstr = subset[BITS(tinstr, 6, 7)] // base
                 | (BITS(tinstr, 0, 2) << 12)     // Rd
                 | BITS(tinstr, 3, 5);            // Rm
+        } else if ((tinstr & 0x0F00) == 0x600) {
+            if (BIT(tinstr, 5) == 0) {
+                // SETEND
+                *ainstr = 0xF1010000         // base
+                    | (BIT(tinstr, 3) << 9); // endian specifier
+            } else {
+                // CPS
+                *ainstr = 0xF1080000          // base
+                    | (BIT(tinstr, 0) << 6)   // fiq bit
+                    | (BIT(tinstr, 1) << 7)   // irq bit
+                    | (BIT(tinstr, 2) << 8)   // abort bit
+                    | (BIT(tinstr, 4) << 18); // enable bit
+            }
         } else if ((tinstr & 0x0F00) == 0x0a00) {
             static const ARMword subset[3] = {
                 0xE6BF0F30, // REV
