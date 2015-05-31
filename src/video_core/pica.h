@@ -162,6 +162,25 @@ struct Regs {
         ETC1A4       = 13,  // compressed
     };
 
+    enum class LogicOp : u32 {
+        Clear        =  0,
+        And          =  1,
+        AndReverse   =  2,
+        Copy         =  3,
+        Set          =  4,
+        CopyInverted =  5,
+        NoOp         =  6,
+        Invert       =  7,
+        Nand         =  8,
+        Or           =  9,
+        Nor          = 10,
+        Xor          = 11,
+        Equiv        = 12,
+        AndInverted  = 13,
+        OrReverse    = 14,
+        OrInverted   = 15,
+    };
+
     static unsigned NibblesPerPixel(TextureFormat format) {
         switch (format) {
         case TextureFormat::RGBA8:
@@ -221,6 +240,7 @@ struct Regs {
         enum class Source : u32 {
             PrimaryColor           = 0x0,
             PrimaryFragmentColor   = 0x1,
+            SecondaryFragmentColor = 0x2,
 
             Texture0               = 0x3,
             Texture1               = 0x4,
@@ -413,12 +433,8 @@ struct Regs {
         } alpha_blending;
 
         union {
-            enum Op {
-                Set = 4,
-            };
-
-            BitField<0, 4, Op> op;
-        } logic_op;
+            BitField<0, 4, LogicOp> logic_op;
+        };
 
         union {
             BitField< 0, 8, u32> r;
@@ -708,7 +724,33 @@ struct Regs {
         u32 set_value[3];
     } vs_default_attributes_setup;
 
-    INSERT_PADDING_WORDS(0x28);
+    INSERT_PADDING_WORDS(0x2);
+
+    struct {
+        // There are two channels that can be used to configure the next command buffer, which
+        // can be then executed by writing to the "trigger" registers. There are two reasons why a
+        // game might use this feature:
+        //  1) With this, an arbitrary number of additional command buffers may be executed in
+        //     sequence without requiring any intervention of the CPU after the initial one is
+        //     kicked off.
+        //  2) Games can configure these registers to provide a command list subroutine mechanism.
+
+        BitField< 0, 20, u32> size[2]; ///< Size (in bytes / 8) of each channel's command buffer
+        BitField< 0, 28, u32> addr[2]; ///< Physical address / 8 of each channel's command buffer
+        u32 trigger[2]; ///< Triggers execution of the channel's command buffer when written to
+
+        unsigned GetSize(unsigned index) const {
+            ASSERT(index < 2);
+            return 8 * size[index];
+        }
+
+        PAddr GetPhysicalAddress(unsigned index) const {
+            ASSERT(index < 2);
+            return (PAddr)(8 * addr[index]);
+        }
+    } command_buffer;
+
+    INSERT_PADDING_WORDS(0x20);
 
     enum class TriangleTopology : u32 {
         List        = 0,
@@ -861,6 +903,7 @@ struct Regs {
         ADD_FIELD(trigger_draw);
         ADD_FIELD(trigger_draw_indexed);
         ADD_FIELD(vs_default_attributes_setup);
+        ADD_FIELD(command_buffer);
         ADD_FIELD(triangle_topology);
         ADD_FIELD(vs_bool_uniforms);
         ADD_FIELD(vs_int_uniforms);
@@ -938,6 +981,7 @@ ASSERT_REG_POSITION(num_vertices, 0x228);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(vs_default_attributes_setup, 0x232);
+ASSERT_REG_POSITION(command_buffer, 0x238);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
 ASSERT_REG_POSITION(vs_bool_uniforms, 0x2b0);
 ASSERT_REG_POSITION(vs_int_uniforms, 0x2b1);
@@ -1053,21 +1097,12 @@ private:
     float value;
 };
 
-union CommandHeader {
-    CommandHeader(u32 h) : hex(h) {}
-
-    u32 hex;
-
-    BitField< 0, 16, u32> cmd_id;
-    BitField<16,  4, u32> parameter_mask;
-    BitField<20, 11, u32> extra_data_length;
-    BitField<31,  1, u32> group_commands;
-};
-
 /// Struct used to describe current Pica state
 struct State {
+    /// Pica registers
     Regs regs;
 
+    /// Vertex shader memory
     struct {
         struct {
             Math::Vec4<float24> f[96];
@@ -1080,6 +1115,13 @@ struct State {
         std::array<u32, 1024> program_code;
         std::array<u32, 1024> swizzle_data;
     } vs;
+
+    /// Current Pica command list
+    struct {
+        const u32* head_ptr;
+        const u32* current_ptr;
+        u32 length;
+    } cmd_list;
 };
 
 /// Initialize Pica state

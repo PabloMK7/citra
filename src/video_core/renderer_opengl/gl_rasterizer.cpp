@@ -135,6 +135,7 @@ void RasterizerOpenGL::Reset() {
     SyncBlendFuncs();
     SyncBlendColor();
     SyncAlphaTest();
+    SyncLogicOp();
     SyncStencilTest();
     SyncDepthTest();
 
@@ -247,6 +248,11 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     // Depth test
     case PICA_REG_INDEX(output_merger.depth_test_enable):
         SyncDepthTest();
+        break;
+
+    // Logic op
+    case PICA_REG_INDEX(output_merger.logic_op):
+        SyncLogicOp();
         break;
 
     // TEV stage 0
@@ -631,6 +637,10 @@ void RasterizerOpenGL::SyncAlphaTest() {
     glUniform1i(uniform_alphatest_enabled, regs.output_merger.alpha_test.enable);
     glUniform1i(uniform_alphatest_func, (GLint)regs.output_merger.alpha_test.func.Value());
     glUniform1f(uniform_alphatest_ref, regs.output_merger.alpha_test.ref / 255.0f);
+}
+
+void RasterizerOpenGL::SyncLogicOp() {
+    state.logic_op = PicaToGL::LogicOp(Pica::g_state.regs.output_merger.logic_op);
 }
 
 void RasterizerOpenGL::SyncStencilTest() {

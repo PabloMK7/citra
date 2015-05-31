@@ -125,6 +125,9 @@ private:
     /// Syncs the alpha test states to match the PICA register
     void SyncAlphaTest();
 
+    /// Syncs the logic op states to match the PICA register
+    void SyncLogicOp();
+
     /// Syncs the stencil test states to match the PICA register
     void SyncStencilTest();
 

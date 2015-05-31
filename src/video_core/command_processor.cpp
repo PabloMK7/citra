@@ -56,7 +56,17 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         // Trigger IRQ
         case PICA_REG_INDEX(trigger_irq):
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
-            return;
+            break;
+
+        case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[0], 0x23c):
+        case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[1], 0x23d):
+        {
+            unsigned index = id - PICA_REG_INDEX(command_buffer.trigger[0]);
+            u32* head_ptr = (u32*)Memory::GetPhysicalPointer(regs.command_buffer.GetPhysicalAddress(index));
+            g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = head_ptr;
+            g_state.cmd_list.length = regs.command_buffer.GetSize(index) / sizeof(u32);
+            break;
+        }
 
         // It seems like these trigger vertex rendering
         case PICA_REG_INDEX(trigger_draw):
@@ -363,38 +373,34 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         g_debug_context->OnEvent(DebugContext::Event::CommandProcessed, reinterpret_cast<void*>(&id));
 }
 
-static std::ptrdiff_t ExecuteCommandBlock(const u32* first_command_word) {
-    const CommandHeader& header = *(const CommandHeader*)(&first_command_word[1]);
-
-    u32* read_pointer = (u32*)first_command_word;
-
-    const u32 write_mask = ((header.parameter_mask & 0x1) ? (0xFFu <<  0) : 0u) |
-                           ((header.parameter_mask & 0x2) ? (0xFFu <<  8) : 0u) |
-                           ((header.parameter_mask & 0x4) ? (0xFFu << 16) : 0u) |
-                           ((header.parameter_mask & 0x8) ? (0xFFu << 24) : 0u);
-
-    WritePicaReg(header.cmd_id, *read_pointer, write_mask);
-    read_pointer += 2;
-
-    for (unsigned int i = 1; i < 1+header.extra_data_length; ++i) {
-        u32 cmd = header.cmd_id + ((header.group_commands) ? i : 0);
-        WritePicaReg(cmd, *read_pointer, write_mask);
-        ++read_pointer;
-    }
-
-    // align read pointer to 8 bytes
-    if ((first_command_word - read_pointer) % 2)
-        ++read_pointer;
-
-    return read_pointer - first_command_word;
-}
-
 void ProcessCommandList(const u32* list, u32 size) {
-    u32* read_pointer = (u32*)list;
-    u32 list_length = size / sizeof(u32);
+    g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = list;
+    g_state.cmd_list.length = size / sizeof(u32);
 
-    while (read_pointer < list + list_length) {
-        read_pointer += ExecuteCommandBlock(read_pointer);
+    while (g_state.cmd_list.current_ptr < g_state.cmd_list.head_ptr + g_state.cmd_list.length) {
+        // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
+        static const u32 expand_bits_to_bytes[] = {
+            0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff,
+            0x00ff0000, 0x00ff00ff, 0x00ffff00, 0x00ffffff,
+            0xff000000, 0xff0000ff, 0xff00ff00, 0xff00ffff,
+            0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
+        };
+
+        // Align read pointer to 8 bytes
+        if ((g_state.cmd_list.head_ptr - g_state.cmd_list.current_ptr) % 2 != 0)
+            ++g_state.cmd_list.current_ptr;
+
+        u32 value = *g_state.cmd_list.current_ptr++;
+        const CommandHeader header = { *g_state.cmd_list.current_ptr++ };
+        const u32 write_mask = expand_bits_to_bytes[header.parameter_mask];
+        u32 cmd = header.cmd_id;
+
+        WritePicaReg(cmd, value, write_mask);
+
+        for (unsigned i = 0; i < header.extra_data_length; ++i) {
+            u32 cmd = header.cmd_id + (header.group_commands ? i + 1 : 0);
+            WritePicaReg(cmd, *g_state.cmd_list.current_ptr++, write_mask);
+         }
     }
 }
 
