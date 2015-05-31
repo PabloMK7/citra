@@ -276,6 +276,17 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                 |(tinstr & 0x007F);         // off7
         } else if ((tinstr & 0x0F00) == 0x0e00) {
             *ainstr = 0xEF000000 | 0x180000; // base | BKPT mask
+        } else if ((tinstr & 0x0F00) == 0x0200) {
+            static const ARMword subset[4] = {
+                0xE6BF0070, // SXTH
+                0xE6AF0070, // SXTB
+                0xE6FF0070, // UXTH
+                0xE6EF0070, // UXTB
+            };
+
+            *ainstr = subset[BITS(tinstr, 6, 7)] // base
+                | (BITS(tinstr, 0, 2) << 12)     // Rd
+                | BITS(tinstr, 3, 5);            // Rm
         } else if ((tinstr & 0x0F00) == 0x0a00) {
             static const ARMword subset[3] = {
                 0xE6BF0F30, // REV
