@@ -12,7 +12,8 @@
 #include <mutex>
 #include <vector>
 
-#include "video_core/math.h"
+#include "common/vector_math.h"
+
 #include "video_core/pica.h"
 
 namespace Pica {

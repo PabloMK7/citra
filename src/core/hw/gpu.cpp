@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/color.h"
 #include "common/common_types.h"
 
 #include "core/arm/arm_interface.h"
@@ -22,7 +23,6 @@
 #include "video_core/command_processor.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
-#include "video_core/color.h"
 
 namespace GPU {
 

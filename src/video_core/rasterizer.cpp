@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include "common/color.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "common/profiler.h"
@@ -13,7 +14,6 @@
 
 #include "debug_utils/debug_utils.h"
 #include "math.h"
-#include "color.h"
 #include "pica.h"
 #include "rasterizer.h"
 #include "vertex_shader.h"

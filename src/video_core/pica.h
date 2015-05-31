@@ -15,8 +15,7 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
-#include "math.h"
+#include "common/vector_math.h"
 
 namespace Pica {
 

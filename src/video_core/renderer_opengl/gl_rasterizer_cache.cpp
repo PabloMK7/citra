@@ -4,13 +4,13 @@
 
 #include "common/make_unique.h"
 #include "common/math_util.h"
+#include "common/vector_math.h"
 
 #include "core/memory.h"
 
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/math.h"
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
     FullFlush();

@@ -24,6 +24,7 @@ set(HEADERS
             bit_field.h
             break_points.h
             chunk_file.h
+            color.h
             common_funcs.h
             common_paths.h
             common_types.h
@@ -54,6 +55,7 @@ set(HEADERS
             thread_queue_list.h
             thunk.h
             timer.h
+            vector_math.h
             )
 
 create_directory_groups(${SRCS} ${HEADERS})
