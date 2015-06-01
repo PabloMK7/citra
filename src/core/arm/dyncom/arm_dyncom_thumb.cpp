@@ -274,9 +274,46 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                    ? 0xE24DDF00             // SUB
                    : 0xE28DDF00)            // ADD
                 |(tinstr & 0x007F);         // off7
-        } else if ((tinstr & 0x0F00) == 0x0e00)
-            *ainstr = 0xEF000000 | 0x180000; // base | BKPT mask
-        else {
+        } else if ((tinstr & 0x0F00) == 0x0e00) {
+            // BKPT
+            *ainstr = 0xEF000000              // base
+                | BITS(tinstr, 0, 3)          // imm4 field;
+                | (BITS(tinstr, 4, 7) << 8);  // beginning 4 bits of imm12
+        } else if ((tinstr & 0x0F00) == 0x0200) {
+            static const ARMword subset[4] = {
+                0xE6BF0070, // SXTH
+                0xE6AF0070, // SXTB
+                0xE6FF0070, // UXTH
+                0xE6EF0070, // UXTB
+            };
+
+            *ainstr = subset[BITS(tinstr, 6, 7)] // base
+                | (BITS(tinstr, 0, 2) << 12)     // Rd
+                | BITS(tinstr, 3, 5);            // Rm
+        } else if ((tinstr & 0x0F00) == 0x600) {
+            if (BIT(tinstr, 5) == 0) {
+                // SETEND
+                *ainstr = 0xF1010000         // base
+                    | (BIT(tinstr, 3) << 9); // endian specifier
+            } else {
+                // CPS
+                *ainstr = 0xF1080000          // base
+                    | (BIT(tinstr, 0) << 6)   // fiq bit
+                    | (BIT(tinstr, 1) << 7)   // irq bit
+                    | (BIT(tinstr, 2) << 8)   // abort bit
+                    | (BIT(tinstr, 4) << 18); // enable bit
+            }
+        } else if ((tinstr & 0x0F00) == 0x0a00) {
+            static const ARMword subset[3] = {
+                0xE6BF0F30, // REV
+                0xE6BF0FB0, // REV16
+                0xE6FF0FB0, // REVSH
+            };
+
+            *ainstr = subset[BITS(tinstr, 6, 7)] // base
+                | (BITS(tinstr, 0, 2) << 12)     // Rd
+                | BITS(tinstr, 3, 5);            // Rm
+        } else {
             static const ARMword subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
                 0xE92D4000, // STMDB sp!,{rlist,lr}
