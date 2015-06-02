@@ -71,7 +71,7 @@ bool ArchiveFactory_ExtSaveData::Initialize() {
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
-    std::string fullpath = GetExtSaveDataPath(mount_point, path);
+    std::string fullpath = GetExtSaveDataPath(mount_point, path) + "user/";
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
         return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
@@ -82,8 +82,11 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
 }
 
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path) {
-    std::string fullpath = GetExtSaveDataPath(mount_point, path);
-    FileUtil::CreateFullPath(fullpath);
+    // These folders are always created with the ExtSaveData
+    std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
+    std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
+    FileUtil::CreateFullPath(user_path);
+    FileUtil::CreateFullPath(boss_path);
     return RESULT_SUCCESS;
 }
 
