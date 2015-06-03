@@ -177,9 +177,11 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = File
  * @param media_type The media type of the archive to create (NAND / SDMC)
  * @param high The high word of the extdata id to create
  * @param low The low word of the extdata id to create
+ * @param icon_buffer VAddr of the SMDH icon for this ExtSaveData
+ * @param icon_size Size of the SMDH icon
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low);
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size);
 
 /**
  * Deletes the SharedExtSaveData archive for the specified extdata ID

@@ -406,7 +406,7 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path) {
     return archive_itr->second->Format(path);
 }
 
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low) {
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size) {
     // Construct the binary path to the archive first
     FileSys::Path path = FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
 
@@ -421,9 +421,25 @@ ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low) {
     }
 
     std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
-    std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
-    if (!FileUtil::CreateFullPath(extsavedata_path))
+    std::string game_path = FileSys::GetExtSaveDataPath(base_path, path);
+    // These two folders are always created with the ExtSaveData
+    std::string user_path = game_path + "user/";
+    std::string boss_path = game_path + "boss/";
+    if (!FileUtil::CreateFullPath(user_path))
         return ResultCode(-1); // TODO(Subv): Find the right error code
+    if (!FileUtil::CreateFullPath(boss_path))
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+
+    u8* smdh_icon = Memory::GetPointer(icon_buffer);
+    if (!smdh_icon)
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+
+    // Create the icon
+    FileUtil::IOFile icon_file(game_path + "icon", "wb+");
+    if (!icon_file.IsGood())
+        return ResultCode(-1); // TODO(Subv): Find the right error code
+
+    icon_file.WriteBytes(smdh_icon, icon_size);
     return RESULT_SUCCESS;
 }
 
@@ -441,6 +457,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
 
+    // Delete all directories (/user, /boss) and the icon file.
     std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
     std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
     if (!FileUtil::DeleteDirRecursively(extsavedata_path))
