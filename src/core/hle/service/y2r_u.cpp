@@ -20,7 +20,7 @@
 
 namespace Y2R_U {
 
-enum class InputFormat {
+enum class InputFormat : u8 {
     /// 8-bit input, with YUV components in separate planes and using 4:2:2 subsampling.
     YUV422_Indiv8 = 0,
     /// 8-bit input, with YUV components in separate planes and using 4:2:0 subsampling.
@@ -31,28 +31,28 @@ enum class InputFormat {
     YUV422_BATCH = 4,
 };
 
-enum class OutputFormat {
+enum class OutputFormat : u8 {
     Rgb32 = 0,
     Rgb24 = 1,
     Rgb16_555 = 2,
     Rgb16_565 = 3,
 };
 
-enum class Rotation {
+enum class Rotation : u8 {
     None = 0,
     Clockwise_90 = 1,
     Clockwise_180 = 2,
     Clockwise_270 = 3,
 };
 
-enum class BlockAlignment {
+enum class BlockAlignment : u8 {
     /// Image is output in linear format suitable for use as a framebuffer.
     Linear = 0,
     /// Image is output in tiled PICA format, suitable for use as a texture.
     Block8x8 = 1,
 };
 
-enum class StandardCoefficient {
+enum class StandardCoefficient : u8 {
     ITU_Rec601 = 0,
     ITU_Rec709 = 1,
     ITU_Rec601_Scaling = 2,
@@ -65,30 +65,37 @@ struct ConversionParameters {
     InputFormat input_format;
     OutputFormat output_format;
     Rotation rotation;
-    BlockAlignment alignment;
+    BlockAlignment block_alignment;
     u16 input_line_width;
     u16 input_lines;
+    StandardCoefficient standard_coefficient;
+    u8 reserved;
+    u16 alpha;
+};
+static_assert(sizeof(ConversionParameters) == 12, "ConversionParameters struct has incorrect size");
 
-    // Input parameters for the Y (luma) plane
-    VAddr srcY_address;
-    u32 srcY_image_size;
-    u16 srcY_transfer_unit;
-    u16 srcY_stride;
-
-    // Output parameters for the conversion results
-    VAddr dst_address;
-    u32 dst_image_size;
-    u16 dst_transfer_unit;
-    u16 dst_stride;
+struct ConversionBuffer {
+    VAddr address;
+    u32 image_size;
+    u16 transfer_unit;
+    u16 stride;
 };
 
-static ConversionParameters conversion_params;
+struct ConversionData {
+    ConversionParameters params;
+    /// Input parameters for the Y (luma) plane
+    ConversionBuffer src_Y;
+    /// Output parameters for the conversion results
+    ConversionBuffer dst;
+};
+
+static ConversionData conversion;
 
 static void SetInputFormat(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.input_format = static_cast<InputFormat>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called input_format=%u", conversion_params.input_format);
+    conversion.params.input_format = static_cast<InputFormat>(cmd_buff[1]);
+    LOG_DEBUG(Service_Y2R, "called input_format=%u", conversion.params.input_format);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -96,8 +103,8 @@ static void SetInputFormat(Service::Interface* self) {
 static void SetOutputFormat(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.output_format = static_cast<OutputFormat>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called output_format=%u", conversion_params.output_format);
+    conversion.params.output_format = static_cast<OutputFormat>(cmd_buff[1]);
+    LOG_DEBUG(Service_Y2R, "called output_format=%u", conversion.params.output_format);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -105,8 +112,8 @@ static void SetOutputFormat(Service::Interface* self) {
 static void SetRotation(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.rotation = static_cast<Rotation>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called rotation=%u", conversion_params.rotation);
+    conversion.params.rotation = static_cast<Rotation>(cmd_buff[1]);
+    LOG_DEBUG(Service_Y2R, "called rotation=%u", conversion.params.rotation);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -114,18 +121,18 @@ static void SetRotation(Service::Interface* self) {
 static void SetBlockAlignment(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.alignment = static_cast<BlockAlignment>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called alignment=%u", conversion_params.alignment);
+    conversion.params.block_alignment = static_cast<BlockAlignment>(cmd_buff[1]);
+    LOG_DEBUG(Service_Y2R, "called alignment=%u", conversion.params.block_alignment);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
 
 /**
-* Y2R_U::GetTransferEndEvent service function
-*  Outputs:
-*      1 : Result of function, 0 on success, otherwise error code
-*      3 : The handle of the completion event
-*/
+ * Y2R_U::GetTransferEndEvent service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      3 : The handle of the completion event
+ */
 static void GetTransferEndEvent(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
@@ -137,14 +144,14 @@ static void GetTransferEndEvent(Service::Interface* self) {
 static void SetSendingY(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.srcY_address = cmd_buff[1];
-    conversion_params.srcY_image_size = cmd_buff[2];
-    conversion_params.srcY_transfer_unit = cmd_buff[3];
-    conversion_params.srcY_stride = cmd_buff[4];
+    conversion.src_Y.address = cmd_buff[1];
+    conversion.src_Y.image_size = cmd_buff[2];
+    conversion.src_Y.transfer_unit = cmd_buff[3];
+    conversion.src_Y.stride = cmd_buff[4];
     u32 src_process_handle = cmd_buff[6];
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "src_process_handle=0x%08X", conversion_params.srcY_image_size,
-        conversion_params.srcY_transfer_unit, conversion_params.srcY_stride, src_process_handle);
+        "src_process_handle=0x%08X", conversion.src_Y.image_size,
+        conversion.src_Y.transfer_unit, conversion.src_Y.stride, src_process_handle);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -152,14 +159,14 @@ static void SetSendingY(Service::Interface* self) {
 static void SetReceiving(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.dst_address = cmd_buff[1];
-    conversion_params.dst_image_size = cmd_buff[2];
-    conversion_params.dst_transfer_unit = cmd_buff[3];
-    conversion_params.dst_stride = cmd_buff[4];
+    conversion.dst.address = cmd_buff[1];
+    conversion.dst.image_size = cmd_buff[2];
+    conversion.dst.transfer_unit = cmd_buff[3];
+    conversion.dst.stride = cmd_buff[4];
     u32 dst_process_handle = cmd_buff[6];
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "dst_process_handle=0x%08X", conversion_params.dst_image_size,
-        conversion_params.dst_transfer_unit, conversion_params.dst_stride,
+        "dst_process_handle=0x%08X", conversion.dst.image_size,
+        conversion.dst.transfer_unit, conversion.dst.stride,
         dst_process_handle);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
@@ -168,8 +175,8 @@ static void SetReceiving(Service::Interface* self) {
 static void SetInputLineWidth(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.input_line_width = cmd_buff[1];
-    LOG_DEBUG(Service_Y2R, "input_line_width=%u", conversion_params.input_line_width);
+    conversion.params.input_line_width = cmd_buff[1];
+    LOG_DEBUG(Service_Y2R, "input_line_width=%u", conversion.params.input_line_width);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -177,8 +184,8 @@ static void SetInputLineWidth(Service::Interface* self) {
 static void SetInputLines(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    conversion_params.input_lines = cmd_buff[1];
-    LOG_DEBUG(Service_Y2R, "input_line_number=%u", conversion_params.input_lines);
+    conversion.params.input_lines = cmd_buff[1];
+    LOG_DEBUG(Service_Y2R, "input_line_number=%u", conversion.params.input_lines);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
@@ -186,23 +193,25 @@ static void SetInputLines(Service::Interface* self) {
 static void StartConversion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    const u8* srcY_buffer = Memory::GetPointer(conversion_params.srcY_address);
-    u8* dst_buffer = Memory::GetPointer(conversion_params.dst_address);
+    const ConversionParameters& params = conversion.params;
+
+    const u8* srcY_buffer = Memory::GetPointer(conversion.src_Y.address);
+    u8* dst_buffer = Memory::GetPointer(conversion.dst.address);
 
     // TODO: support color and other kinds of conversions
-    ASSERT(conversion_params.input_format == InputFormat::YUV422_Indiv8
-        || conversion_params.input_format == InputFormat::YUV420_Indiv8);
-    ASSERT(conversion_params.output_format == OutputFormat::Rgb24);
-    ASSERT(conversion_params.rotation == Rotation::None);
+    ASSERT(params.input_format == InputFormat::YUV422_Indiv8
+        || params.input_format == InputFormat::YUV420_Indiv8);
+    ASSERT(params.output_format == OutputFormat::Rgb24);
+    ASSERT(params.rotation == Rotation::None);
     const int bpp = 3;
 
-    switch (conversion_params.alignment) {
+    switch (params.block_alignment) {
     case BlockAlignment::Linear:
     {
-        const size_t input_lines = conversion_params.input_lines;
-        const size_t input_line_width = conversion_params.input_line_width;
-        const size_t srcY_stride = conversion_params.srcY_stride;
-        const size_t dst_stride = conversion_params.dst_stride;
+        const size_t input_lines = params.input_lines;
+        const size_t input_line_width = params.input_line_width;
+        const size_t srcY_stride = conversion.src_Y.stride;
+        const size_t dst_stride = conversion.dst.stride;
 
         size_t srcY_offset = 0;
         size_t dst_offset = 0;
@@ -224,11 +233,11 @@ static void StartConversion(Service::Interface* self) {
     }
     case BlockAlignment::Block8x8:
     {
-        const size_t input_lines = conversion_params.input_lines;
-        const size_t input_line_width = conversion_params.input_line_width;
-        const size_t srcY_stride = conversion_params.srcY_stride;
-        const size_t dst_transfer_unit = conversion_params.dst_transfer_unit;
-        const size_t dst_stride = conversion_params.dst_stride;
+        const size_t input_lines = params.input_lines;
+        const size_t input_line_width = params.input_line_width;
+        const size_t srcY_stride = conversion.src_Y.stride;
+        const size_t dst_transfer_unit = conversion.dst.transfer_unit;
+        const size_t dst_stride = conversion.dst.stride;
 
         size_t srcY_offset = 0;
         size_t dst_tile_line_offs = 0;
@@ -265,10 +274,10 @@ static void StartConversion(Service::Interface* self) {
     }
 
     // dst_image_size would seem to be perfect for this, but it doesn't include the stride :(
-    u32 total_output_size = conversion_params.input_lines *
-        (conversion_params.dst_transfer_unit + conversion_params.dst_stride);
+    u32 total_output_size = params.input_lines *
+        (conversion.dst.transfer_unit + conversion.dst.stride);
     VideoCore::g_renderer->hw_rasterizer->NotifyFlush(
-        Memory::VirtualToPhysicalAddress(conversion_params.dst_address), total_output_size);
+        Memory::VirtualToPhysicalAddress(conversion.dst.address), total_output_size);
 
     LOG_DEBUG(Service_Y2R, "called");
     completion_event->Signal();
@@ -277,17 +286,35 @@ static void StartConversion(Service::Interface* self) {
 }
 
 /**
-* Y2R_U::IsBusyConversion service function
-*  Outputs:
-*      1 : Result of function, 0 on success, otherwise error code
-*      2 : 1 if there's a conversion running, otherwise 0.
-*/
+ * Y2R_U::IsBusyConversion service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : 1 if there's a conversion running, otherwise 0.
+ */
 static void IsBusyConversion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0; // StartConversion always finishes immediately
     LOG_DEBUG(Service_Y2R, "called");
+}
+
+/**
+ * Y2R_U::SetConversionParams service function
+ */
+static void SetConversionParams(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    auto params = reinterpret_cast<const ConversionParameters*>(&cmd_buff[1]);
+    conversion.params = *params;
+
+    cmd_buff[0] = 0x00290000; // TODO verify
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    LOG_DEBUG(Service_Y2R,
+        "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
+        "input_line_width=%hX input_lines=%hu standard_coefficient=%hhu reserved=%hhu alpha=%hX",
+        params->input_format, params->output_format, params->rotation, params->block_alignment,
+        params->input_line_width, params->input_lines, params->standard_coefficient);
 }
 
 static void PingProcess(Service::Interface* self) {
@@ -316,6 +343,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00260000, StartConversion,         "StartConversion"},
     {0x00270000, nullptr,                 "StopConversion"},
     {0x00280000, IsBusyConversion,        "IsBusyConversion"},
+    {0x002901C0, SetConversionParams,     "SetConversionParams"},
     {0x002A0000, PingProcess,             "PingProcess"},
     {0x002B0000, nullptr,                 "DriverInitialize"},
     {0x002C0000, nullptr,                 "DriverFinalize"},
@@ -326,7 +354,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     completion_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "Y2R:Completed");
-    std::memset(&conversion_params, 0, sizeof(conversion_params));
+    std::memset(&conversion, 0, sizeof(conversion));
 
     Register(FunctionTable);
 }
