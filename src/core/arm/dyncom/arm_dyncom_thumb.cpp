@@ -327,11 +327,25 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
 
     case 24: //  STMIA
     case 25: //  LDMIA
-        *ainstr = ((tinstr & (1 << 11))         // base
-               ? 0xE8B00000                     // LDMIA
-               : 0xE8A00000)                    // STMIA
-            |((tinstr & 0x0700) << (16 - 8))    // Rb
-            |(tinstr & 0x00FF);                 // mask8
+        if (tinstr & (1 << 11))
+        {
+            unsigned int base = 0xE8900000;
+            unsigned int rn = BITS(tinstr, 8, 10);
+
+            // Writeback
+            if ((tinstr & (1 << rn)) == 0)
+                base |= (1 << 21);
+
+            *ainstr = base           // base (LDMIA)
+                | (rn << 16)         // Rn
+                | (tinstr & 0x00FF); // Register list
+        }
+        else
+        {
+            *ainstr = 0xE8A00000              // base (STMIA)
+                | (BITS(tinstr, 8, 10) << 16) // Rn
+                | (tinstr & 0x00FF);          // Register list
+        }
         break;
 
     case 26: // Bcc
