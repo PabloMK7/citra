@@ -84,10 +84,11 @@ void OpenGLState::Apply() {
 
     // Color mask
     if (color_mask.red_enabled != cur_state.color_mask.red_enabled ||
-        color_mask.green_enabled != cur_state.color_mask.green_enabled ||
-        color_mask.blue_enabled != cur_state.color_mask.blue_enabled ||
-        color_mask.alpha_enabled != cur_state.color_mask.alpha_enabled) {
-        glColorMask(color_mask.red_enabled, color_mask.green_enabled, color_mask.blue_enabled, color_mask.alpha_enabled);
+            color_mask.green_enabled != cur_state.color_mask.green_enabled ||
+            color_mask.blue_enabled != cur_state.color_mask.blue_enabled ||
+            color_mask.alpha_enabled != cur_state.color_mask.alpha_enabled) {
+        glColorMask(color_mask.red_enabled, color_mask.green_enabled,
+                    color_mask.blue_enabled, color_mask.alpha_enabled);
     }
 
     // Stencil test
@@ -100,8 +101,8 @@ void OpenGLState::Apply() {
     }
 
     if (stencil.test_func != cur_state.stencil.test_func ||
-        stencil.test_ref != cur_state.stencil.test_ref ||
-        stencil.test_mask != cur_state.stencil.test_mask) {
+            stencil.test_ref != cur_state.stencil.test_ref ||
+            stencil.test_mask != cur_state.stencil.test_mask) {
         glStencilFunc(stencil.test_func, stencil.test_ref, stencil.test_mask);
     }
 
@@ -125,17 +126,19 @@ void OpenGLState::Apply() {
     }
 
     if (blend.color.red != cur_state.blend.color.red ||
-        blend.color.green != cur_state.blend.color.green ||
-        blend.color.blue != cur_state.blend.color.blue ||
-        blend.color.alpha != cur_state.blend.color.alpha) {
-        glBlendColor(blend.color.red, blend.color.green, blend.color.blue, blend.color.alpha);
+            blend.color.green != cur_state.blend.color.green ||
+            blend.color.blue != cur_state.blend.color.blue ||
+            blend.color.alpha != cur_state.blend.color.alpha) {
+        glBlendColor(blend.color.red, blend.color.green,
+                     blend.color.blue, blend.color.alpha);
     }
 
     if (blend.src_rgb_func != cur_state.blend.src_rgb_func ||
-        blend.dst_rgb_func != cur_state.blend.dst_rgb_func ||
-        blend.src_a_func != cur_state.blend.src_a_func ||
-        blend.dst_a_func != cur_state.blend.dst_a_func) {
-        glBlendFuncSeparate(blend.src_rgb_func, blend.dst_rgb_func, blend.src_a_func, blend.dst_a_func);
+            blend.dst_rgb_func != cur_state.blend.dst_rgb_func ||
+            blend.src_a_func != cur_state.blend.src_a_func ||
+            blend.dst_a_func != cur_state.blend.dst_a_func) {
+        glBlendFuncSeparate(blend.src_rgb_func, blend.dst_rgb_func,
+                            blend.src_a_func, blend.dst_a_func);
     }
 
     if (logic_op != cur_state.logic_op) {

@@ -793,10 +793,10 @@ void RasterizerOpenGL::ReloadColorBuffer() {
         for (int x = 0; x < fb_color_texture.width; ++x) {
             const u32 coarse_y = y & ~7;
             u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_color_texture.width * bytes_per_pixel;
-            u32 gl_px_idx = (x + y * fb_color_texture.width) * bytes_per_pixel;
+            u32 gl_pixel_index = (x + y * fb_color_texture.width) * bytes_per_pixel;
 
             u8* pixel = color_buffer + dst_offset;
-            memcpy(&temp_fb_color_buffer[gl_px_idx], pixel, bytes_per_pixel);
+            memcpy(&temp_fb_color_buffer[gl_pixel_index], pixel, bytes_per_pixel);
         }
     }
 
@@ -834,11 +834,11 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
             for (int x = 0; x < fb_depth_texture.width; ++x) {
                 const u32 coarse_y = y & ~7;
                 u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-                u32 gl_px_idx = (x + y * fb_depth_texture.width);
+                u32 gl_pixel_index = (x + y * fb_depth_texture.width);
 
                 u8* pixel = depth_buffer + dst_offset;
                 u32 depth_stencil = *(u32*)pixel;
-                ((u32*)temp_fb_depth_data)[gl_px_idx] = (depth_stencil << 8) | (depth_stencil >> 24);
+                ((u32*)temp_fb_depth_data)[gl_pixel_index] = (depth_stencil << 8) | (depth_stencil >> 24);
             }
         }
     } else {
@@ -846,10 +846,10 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
             for (int x = 0; x < fb_depth_texture.width; ++x) {
                 const u32 coarse_y = y & ~7;
                 u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-                u32 gl_px_idx = (x + y * fb_depth_texture.width) * gl_bpp;
+                u32 gl_pixel_index = (x + y * fb_depth_texture.width) * gl_bpp;
 
                 u8* pixel = depth_buffer + dst_offset;
-                memcpy(&temp_fb_depth_data[gl_px_idx], pixel, bytes_per_pixel);
+                memcpy(&temp_fb_depth_data[gl_pixel_index], pixel, bytes_per_pixel);
             }
         }
     }
@@ -890,10 +890,10 @@ void RasterizerOpenGL::CommitColorBuffer() {
                 for (int x = 0; x < fb_color_texture.width; ++x) {
                     const u32 coarse_y = y & ~7;
                     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_color_texture.width * bytes_per_pixel;
-                    u32 gl_px_idx = x * bytes_per_pixel + y * fb_color_texture.width * bytes_per_pixel;
+                    u32 gl_pixel_index = x * bytes_per_pixel + y * fb_color_texture.width * bytes_per_pixel;
 
                     u8* pixel = color_buffer + dst_offset;
-                    memcpy(pixel, &temp_gl_color_buffer[gl_px_idx], bytes_per_pixel);
+                    memcpy(pixel, &temp_gl_color_buffer[gl_pixel_index], bytes_per_pixel);
                 }
             }
         }
@@ -930,10 +930,10 @@ void RasterizerOpenGL::CommitDepthBuffer() {
                     for (int x = 0; x < fb_depth_texture.width; ++x) {
                         const u32 coarse_y = y & ~7;
                         u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-                        u32 gl_px_idx = (x + y * fb_depth_texture.width);
+                        u32 gl_pixel_index = (x + y * fb_depth_texture.width);
 
                         u8* pixel = depth_buffer + dst_offset;
-                        u32 depth_stencil = ((u32*)temp_gl_depth_data)[gl_px_idx];
+                        u32 depth_stencil = ((u32*)temp_gl_depth_data)[gl_pixel_index];
                         *(u32*)pixel = (depth_stencil >> 8) | (depth_stencil << 24);
                     }
                 }
@@ -942,10 +942,10 @@ void RasterizerOpenGL::CommitDepthBuffer() {
                     for (int x = 0; x < fb_depth_texture.width; ++x) {
                         const u32 coarse_y = y & ~7;
                         u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * fb_depth_texture.width * bytes_per_pixel;
-                        u32 gl_px_idx = (x + y * fb_depth_texture.width) * gl_bpp;
+                        u32 gl_pixel_index = (x + y * fb_depth_texture.width) * gl_bpp;
 
                         u8* pixel = depth_buffer + dst_offset;
-                        memcpy(pixel, &temp_gl_depth_data[gl_px_idx], bytes_per_pixel);
+                        memcpy(pixel, &temp_gl_depth_data[gl_pixel_index], bytes_per_pixel);
                     }
                 }
             }
