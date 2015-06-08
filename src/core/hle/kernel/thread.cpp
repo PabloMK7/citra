@@ -13,6 +13,7 @@
 #include "common/thread_queue_list.h"
 
 #include "core/arm/arm_interface.h"
+#include "core/arm/skyeye_common/armdefs.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/hle.h"
@@ -193,7 +194,21 @@ static void SwitchContext(Thread* new_thread) {
     if (new_thread) {
         DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
 
+        // Cancel any outstanding wakeup events for this thread
+        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
+
         current_thread = new_thread;
+
+        // If the thread was waited by a svcWaitSynch call, step back PC by one instruction to rerun
+        // the SVC when the thread wakes up. This is necessary to ensure that the thread can acquire
+        // the requested wait object(s) before continuing.
+        if (new_thread->waitsynch_waited) {
+            // CPSR flag indicates CPU mode
+            bool thumb_mode = (new_thread->context.cpsr & TBIT) != 0;
+
+            // SVC instruction is 2 bytes for THUMB, 4 bytes for ARM
+            new_thread->context.pc -= thumb_mode ? 2 : 4;
+        }
 
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = THREADSTATUS_RUNNING;
@@ -243,6 +258,7 @@ void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wa
     thread->wait_set_output = wait_set_output;
     thread->wait_all = wait_all;
     thread->wait_objects = std::move(wait_objects);
+    thread->waitsynch_waited = true;
     thread->status = THREADSTATUS_WAIT_SYNCH;
 }
 
@@ -268,6 +284,8 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
         return;
     }
 
+    thread->waitsynch_waited = false;
+
     if (thread->status == THREADSTATUS_WAIT_SYNCH) {
         thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                                                         ErrorSummary::StatusChanged, ErrorLevel::Info));
@@ -288,63 +306,20 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     CoreTiming::ScheduleEvent(usToCycles(microseconds), ThreadWakeupEventType, callback_handle);
 }
 
-void Thread::ReleaseWaitObject(WaitObject* wait_object) {
-    if (status != THREADSTATUS_WAIT_SYNCH || wait_objects.empty()) {
-        LOG_CRITICAL(Kernel, "thread is not waiting on any objects!");
-        return;
-    }
-
-    // Remove this thread from the waiting object's thread list
-    wait_object->RemoveWaitingThread(this);
-
-    unsigned index = 0;
-    bool wait_all_failed = false; // Will be set to true if any object is unavailable
-
-    // Iterate through all waiting objects to check availability...
-    for (auto itr = wait_objects.begin(); itr != wait_objects.end(); ++itr) {
-        if ((*itr)->ShouldWait())
-            wait_all_failed = true;
-
-        // The output should be the last index of wait_object
-        if (*itr == wait_object)
-            index = itr - wait_objects.begin();
-    }
-
-    // If we are waiting on all objects...
-    if (wait_all) {
-        // Resume the thread only if all are available...
-        if (!wait_all_failed) {
-            SetWaitSynchronizationResult(RESULT_SUCCESS);
-            SetWaitSynchronizationOutput(-1);
-
-            ResumeFromWait();
-        }
-    } else {
-        // Otherwise, resume
-        SetWaitSynchronizationResult(RESULT_SUCCESS);
-
-        if (wait_set_output)
-            SetWaitSynchronizationOutput(index);
-
-        ResumeFromWait();
-    }
-}
-
 void Thread::ResumeFromWait() {
-    // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
-
     switch (status) {
         case THREADSTATUS_WAIT_SYNCH:
-            // Remove this thread from all other WaitObjects
-            for (auto wait_object : wait_objects)
-                wait_object->RemoveWaitingThread(this);
-            break;
         case THREADSTATUS_WAIT_ARB:
         case THREADSTATUS_WAIT_SLEEP:
             break;
-        case THREADSTATUS_RUNNING:
+
         case THREADSTATUS_READY:
+            // If the thread is waiting on multiple wait objects, it might be awoken more than once
+            // before actually resuming. We can ignore subsequent wakeups if the thread status has
+            // already been set to THREADSTATUS_READY.
+            return;
+
+        case THREADSTATUS_RUNNING:
             DEBUG_ASSERT_MSG(false, "Thread with object id %u has already resumed.", GetObjectId());
             return;
         case THREADSTATUS_DEAD:
@@ -415,6 +390,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
     thread->owner_process = g_current_process;
     thread->tls_index = -1;
+    thread->waitsynch_waited = false;
 
     // Find the next available TLS index, and mark it as used
     auto& used_tls_slots = Kernel::g_current_process->used_tls_slots;

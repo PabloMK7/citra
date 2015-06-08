@@ -9,10 +9,14 @@
 #include "core/arm/arm_interface.h"
 #include "core/memory.h"
 #include "core/hle/hle.h"
+#include "core/hle/result.h"
 
 namespace HLE {
 
 #define PARAM(n)    Core::g_app_core->GetReg(n)
+
+/// An invalid result code that is meant to be overwritten when a thread resumes from waiting
+static const ResultCode RESULT_INVALID(0xDEADC0DE);
 
 /**
  * HLE a function return from the current ARM11 userland process
@@ -57,8 +61,11 @@ template<ResultCode func(s32*, u32*, s32, bool, s64)> void Wrap() {
     s32 param_1 = 0;
     s32 retval = func(&param_1, (Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
         (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0))).raw;
-    Core::g_app_core->SetReg(1, (u32)param_1);
-    FuncReturn(retval);
+
+    if (retval != RESULT_INVALID.raw) {
+        Core::g_app_core->SetReg(1, (u32)param_1);
+        FuncReturn(retval);
+    }
 }
 
 template<ResultCode func(u32, u32, u32, u32, s64)> void Wrap() {
@@ -73,7 +80,11 @@ template<ResultCode func(u32*)> void Wrap(){
 }
 
 template<ResultCode func(u32, s64)> void Wrap() {
-    FuncReturn(func(PARAM(0), (((s64)PARAM(3) << 32) | PARAM(2))).raw);
+    s32 retval = func(PARAM(0), (((s64)PARAM(3) << 32) | PARAM(2))).raw;
+
+    if (retval != RESULT_INVALID.raw) {
+        FuncReturn(retval);
+    }
 }
 
 template<ResultCode func(void*, void*, u32)> void Wrap(){

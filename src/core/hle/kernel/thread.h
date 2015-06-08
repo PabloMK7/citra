@@ -96,12 +96,6 @@ public:
     u32 GetThreadId() const { return thread_id; }
 
     /**
-     * Release an acquired wait object
-     * @param wait_object WaitObject to release
-     */
-    void ReleaseWaitObject(WaitObject* wait_object);
-
-    /**
      * Resumes a thread from waiting
      */
     void ResumeFromWait();
@@ -152,6 +146,8 @@ public:
 
     s32 tls_index; ///< Index of the Thread Local Storage of the thread
 
+    bool waitsynch_waited; ///< Set to true if the last svcWaitSynch call caused the thread to wait
+
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
@@ -163,12 +159,12 @@ public:
 
     std::string name;
 
+    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
+    Handle callback_handle;
+
 private:
     Thread();
     ~Thread() override;
-
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
 };
 
 /**

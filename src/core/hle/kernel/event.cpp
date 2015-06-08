@@ -41,10 +41,7 @@ void Event::Acquire() {
 
 void Event::Signal() {
     signaled = true;
-
     WakeupAllWaitingThreads();
-
-    HLE::Reschedule(__func__);
 }
 
 void Event::Clear() {

@@ -40,9 +40,6 @@ const ResultCode ERR_NOT_FOUND(ErrorDescription::NotFound, ErrorModule::Kernel,
 const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
         ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E0181E
 
-/// An invalid result code that is meant to be overwritten when a thread resumes from waiting
-const ResultCode RESULT_INVALID(0xDEADC0DE);
-
 enum ControlMemoryOperation {
     MEMORY_OPERATION_HEAP       = 0x00000003,
     MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
@@ -143,6 +140,10 @@ static ResultCode CloseHandle(Handle handle) {
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     auto object = Kernel::g_handle_table.GetWaitObject(handle);
+    Kernel::Thread* thread = Kernel::GetCurrentThread();
+
+    thread->waitsynch_waited = false;
+
     if (object == nullptr)
         return ERR_INVALID_HANDLE;
 
@@ -154,14 +155,14 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     // Check for next thread to schedule
     if (object->ShouldWait()) {
 
-        object->AddWaitingThread(Kernel::GetCurrentThread());
+        object->AddWaitingThread(thread);
         Kernel::WaitCurrentThread_WaitSynchronization({ object }, false, false);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
-        Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
+        thread->WakeAfterDelay(nano_seconds);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
-        return RESULT_INVALID;
+        return HLE::RESULT_INVALID;
     }
 
     object->Acquire();
@@ -173,6 +174,9 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all, s64 nano_seconds) {
     bool wait_thread = !wait_all;
     int handle_index = 0;
+    Kernel::Thread* thread = Kernel::GetCurrentThread();
+    bool was_waiting = thread->waitsynch_waited;
+    thread->waitsynch_waited = false;
 
     // Check if 'handles' is invalid
     if (handles == nullptr)
@@ -190,6 +194,9 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
     // necessary
     if (handle_count != 0) {
         bool selected = false; // True once an object has been selected
+
+        Kernel::SharedPtr<Kernel::WaitObject> wait_object;
+
         for (int i = 0; i < handle_count; ++i) {
             auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
             if (object == nullptr)
@@ -204,10 +211,11 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
                     wait_thread = true;
             } else {
                 // Do not wait on this object, check if this object should be selected...
-                if (!wait_all && !selected) {
+                if (!wait_all && (!selected || (wait_object == object && was_waiting))) {
                     // Do not wait the thread
                     wait_thread = false;
                     handle_index = i;
+                    wait_object = object;
                     selected = true;
                 }
             }
@@ -241,7 +249,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         Kernel::GetCurrentThread()->WakeAfterDelay(nano_seconds);
 
         // NOTE: output of this SVC will be set later depending on how the thread resumes
-        return RESULT_INVALID;
+        return HLE::RESULT_INVALID;
     }
 
     // Acquire objects if we did not wait...
@@ -261,7 +269,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 
     // TODO(bunnei): If 'wait_all' is true, this is probably wrong. However, real hardware does
     // not seem to set it to any meaningful value.
-    *out = wait_all ? 0 : handle_index;
+    *out = handle_count != 0 ? (wait_all ? -1 : handle_index) : 0;
 
     return RESULT_SUCCESS;
 }
