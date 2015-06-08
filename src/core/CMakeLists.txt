@@ -96,6 +96,7 @@ set(SRCS
             hw/gpu.cpp
             hw/hw.cpp
             hw/lcd.cpp
+            hw/y2r.cpp
             loader/3dsx.cpp
             loader/elf.cpp
             loader/loader.cpp
@@ -209,6 +210,7 @@ set(HEADERS
             hw/gpu.h
             hw/hw.h
             hw/lcd.h
+            hw/y2r.h
             loader/3dsx.h
             loader/elf.h
             loader/loader.h
