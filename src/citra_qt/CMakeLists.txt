@@ -91,10 +91,10 @@ if (Qt5_FOUND AND MSVC)
     set(PLATFORMS ${DLL_DEST}platforms/)
 
     # windows commandline expects the / to be \ so switch them
-    string(REPLACE "/" "\\" Qt5_DLL_DIR ${Qt5_DLL_DIR})
-    string(REPLACE "/" "\\" Qt5_PLATFORMS_DIR ${Qt5_PLATFORMS_DIR})
-    string(REPLACE "/" "\\" DLL_DEST ${DLL_DEST})
-    string(REPLACE "/" "\\" PLATFORMS ${PLATFORMS})
+    string(REPLACE "/" "\\\\" Qt5_DLL_DIR ${Qt5_DLL_DIR})
+    string(REPLACE "/" "\\\\" Qt5_PLATFORMS_DIR ${Qt5_PLATFORMS_DIR})
+    string(REPLACE "/" "\\\\" DLL_DEST ${DLL_DEST})
+    string(REPLACE "/" "\\\\" PLATFORMS ${PLATFORMS})
 
     # /NJH /NJS /NDL /NFL /NC /NS /NP - Silence any output
     # cmake adds an extra check for command success which doesn't work too well with robocopy
