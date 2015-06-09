@@ -170,6 +170,9 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
                     texture.gl_format, texture.gl_type, framebuffer_data);
 
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 }
 
 /**
@@ -238,6 +241,9 @@ void RendererOpenGL::InitOpenGLObjects() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
+
+    state.texture_units[0].texture_2d = 0;
+    state.Apply();
 
     hw_rasterizer->InitObjects();
 }
