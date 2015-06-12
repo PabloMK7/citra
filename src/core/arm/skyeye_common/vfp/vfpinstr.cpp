@@ -1068,10 +1068,12 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRC_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        VFP_DEBUG_UNIMPLEMENTED(VMOVBRC);
+        vmovbrc_inst* const inst_cream = (vmovbrc_inst*)inst_base->component;
+
+        cpu->ExtReg[(2 * inst_cream->d) + inst_cream->index] = cpu->Reg[inst_cream->t];
     }
     cpu->Reg[15] += GET_INST_SIZE(cpu);
     INC_PC(sizeof(vmovbrc_inst));
@@ -1195,10 +1197,12 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBCR_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        VFP_DEBUG_UNIMPLEMENTED(VMOVBCR);
+        vmovbcr_inst* const inst_cream = (vmovbcr_inst*) inst_base->component;
+
+        cpu->Reg[inst_cream->t] = cpu->ExtReg[(2 * inst_cream->d) + inst_cream->index];
     }
     cpu->Reg[15] += GET_INST_SIZE(cpu);
     INC_PC(sizeof(vmovbcr_inst));
