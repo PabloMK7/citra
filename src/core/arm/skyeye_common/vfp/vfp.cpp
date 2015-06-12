@@ -33,6 +33,10 @@ unsigned VFPInit(ARMul_State* state)
     state->VFP[VFP_FPEXC] = 0;
     state->VFP[VFP_FPSCR] = 0;
 
+    // ARM11 MPCore feature register values.
+    state->VFP[VFP_MVFR0] = 0x11111111;
+    state->VFP[VFP_MVFR1] = 0;
+
     return 0;
 }
 
