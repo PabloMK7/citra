@@ -1141,12 +1141,10 @@ VMRS_INST:
                 cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSID];
                 break;
             case 6:
-                /* MVFR1, VFPv3 only ? */
-                LOG_TRACE(Core_ARM11, "\tr%d <= MVFR1 unimplemented\n", inst_cream->Rt);
+                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_MVFR1];
                 break;
             case 7:
-                /* MVFR0, VFPv3 only? */
-                LOG_TRACE(Core_ARM11, "\tr%d <= MVFR0 unimplemented\n", inst_cream->Rt);
+                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_MVFR0];
                 break;
             case 8:
                 cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPEXC];
