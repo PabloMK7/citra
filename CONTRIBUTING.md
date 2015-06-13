@@ -10,16 +10,16 @@ Citra is a brand new project, so we have a great opportunity to keep things clea
 
 ### Naming Rules
 * Functions
- * CamelCase, "_" may also be used for clarity (e.g. ARM_InitCore)
+ * PascalCase, "_" may also be used for clarity (e.g. ARM_InitCore)
 * Variables
  * lower_case_underscored
  * Prefix "g_" if global
 * Classes
- * CamelCase, "_" may also be used for clarity (e.g. OGL_VideoInterface)
+ * PascalCase, "_" may also be used for clarity (e.g. OGL_VideoInterface)
 * Files/Folders
  * lower_case_underscored
 * Namespaces
- * CamelCase, "_" may also be used for clarity (e.g. ARM_InitCore)
+ * PascalCase, "_" may also be used for clarity (e.g. ARM_InitCore)
 
 ### Indentation/Whitespace Style
 Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spaces instead.
