@@ -372,9 +372,9 @@ struct Regs {
     INSERT_PADDING_WORDS(0x2);
 
     const std::array<Regs::TevStageConfig,6> GetTevStages() const {
-        return { tev_stage0, tev_stage1,
-                 tev_stage2, tev_stage3,
-                 tev_stage4, tev_stage5 };
+        return {{ tev_stage0, tev_stage1,
+                  tev_stage2, tev_stage3,
+                  tev_stage4, tev_stage5 }};
     };
 
     enum class BlendEquation : u32 {
