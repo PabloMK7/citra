@@ -40,7 +40,7 @@ after_build:
             7z a $BUILD_NAME_NOQT .\build\bin\release\*.exe
 
             # Download winscp
-            Invoke-WebRequest "http://winscp.net/download/winscp573.zip" -OutFile "winscp573.zip"
+            Invoke-WebRequest "https://cdn.winscp.net/files/winscp573.zip?secure=yE1jHlRoBZTA0htWnu1OVQ==,1434405422" -OutFile "winscp573.zip"
             7z e -y winscp573.zip
 
             # Upload to server
