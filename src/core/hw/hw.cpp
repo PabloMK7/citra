@@ -18,7 +18,7 @@ inline void Read(T &var, const u32 addr) {
         GPU::Read(var, addr);
         break;
     case VADDR_LCD:
-        LCD::Write(var, addr);
+        LCD::Read(var, addr);
         break;
     default:
         LOG_ERROR(HW_Memory, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
