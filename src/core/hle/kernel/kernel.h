@@ -140,12 +140,6 @@ public:
      */
     void RemoveWaitingThread(Thread* thread);
 
-    /**
-     * Wake up the next thread waiting on this object
-     * @return Pointer to the thread that was resumed, nullptr if no threads are waiting
-     */
-    SharedPtr<Thread> WakeupNextThread();
-
     /// Wake up all threads waiting on this object
     void WakeupAllWaitingThreads();
 

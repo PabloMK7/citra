@@ -48,13 +48,7 @@ ResultVal<s32> Semaphore::Release(s32 release_count) {
     s32 previous_count = available_count;
     available_count += release_count;
 
-    // Notify some of the threads that the semaphore has been released
-    // stop once the semaphore is full again or there are no more waiting threads
-    while (!ShouldWait() && WakeupNextThread() != nullptr) {
-        Acquire();
-    }
-
-    HLE::Reschedule(__func__);
+    WakeupAllWaitingThreads();
 
     return MakeResult<s32>(previous_count);
 }
