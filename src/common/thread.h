@@ -4,24 +4,12 @@
 
 #pragma once
 
-#include "common/common_types.h"
-#include <cstdio>
-#include <cstring>
+#include <cstddef>
 #include <thread>
 #include <condition_variable>
 #include <mutex>
 
-// This may not be defined outside _WIN32
-#ifndef _WIN32
-#ifndef INFINITE
-#define INFINITE 0xffffffff
-#endif
-
-//for gettimeofday and struct time(spec|val)
-#include <time.h>
-#include <sys/time.h>
-#include <unistd.h>
-#endif
+#include "common/common_types.h"
 
 // Support for C++11's thread_local keyword was surprisingly spotty in compilers until very
 // recently. Fortunately, thread local variables have been well supported for compilers for a while,
