@@ -3,9 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
-#include "common/platform.h"
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -35,7 +34,7 @@
 #include "core/hle/service/soc_u.h"
 #include <unordered_map>
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
 #    define WSAEAGAIN      WSAEWOULDBLOCK
 #    define WSAEMULTIHOP   -1 // Invalid dummy value
 #    define ERRNO(x)       WSA##x
@@ -369,7 +368,7 @@ static void Fcntl(Service::Interface* self) {
     });
 
     if (ctr_cmd == 3) { // F_GETFL
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
         posix_ret = 0;
         auto iter = open_sockets.find(socket_handle);
         if (iter != open_sockets.end() && iter->second.blocking == false)
@@ -386,7 +385,7 @@ static void Fcntl(Service::Interface* self) {
             posix_ret |= 4; // O_NONBLOCK
 #endif
     } else if (ctr_cmd == 4) { // F_SETFL
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
         unsigned long tmp = (ctr_arg & 4 /* O_NONBLOCK */) ? 1 : 0;
         int ret = ioctlsocket(socket_handle, FIONBIO, &tmp);
         if (ret == SOCKET_ERROR_VALUE) {
@@ -675,7 +674,7 @@ static void Connect(Service::Interface* self) {
 
 static void InitializeSockets(Service::Interface* self) {
     // TODO(Subv): Implement
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSADATA data;
     WSAStartup(MAKEWORD(2, 2), &data);
 #endif
@@ -688,7 +687,7 @@ static void ShutdownSockets(Service::Interface* self) {
     // TODO(Subv): Implement
     CleanupSockets();
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSACleanup();
 #endif
 
@@ -739,7 +738,7 @@ Interface::Interface() {
 
 Interface::~Interface() {
     CleanupSockets();
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSACleanup();
 #endif
 }
