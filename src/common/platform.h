@@ -24,38 +24,8 @@
 
 #pragma once
 
-#include "common/common_types.h"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Platform definitions
-
-/// Enumeration for defining the supported platforms
-#define PLATFORM_NULL 0
-#define PLATFORM_WINDOWS 1
-#define PLATFORM_MACOSX 2
-#define PLATFORM_LINUX 3
-#define PLATFORM_ANDROID 4
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Platform detection
-
-#ifndef EMU_PLATFORM
-
-#if defined( __WIN32__ ) || defined( _WIN32 )
-#define EMU_PLATFORM PLATFORM_WINDOWS
-
-#elif defined( __APPLE__ ) || defined( __APPLE_CC__ )
-#define EMU_PLATFORM PLATFORM_MACOSX
-
-#elif defined(__linux__)
-#define EMU_PLATFORM PLATFORM_LINUX
-
-#else // Assume linux otherwise
-#define EMU_PLATFORM PLATFORM_LINUX
-
-#endif
-
-#endif
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__)
     #define EMU_ARCH_BITS 64

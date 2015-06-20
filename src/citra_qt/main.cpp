@@ -18,10 +18,6 @@
 #include "common/platform.h"
 #include "common/scope_exit.h"
 
-#if EMU_PLATFORM == PLATFORM_LINUX
-#include <unistd.h>
-#endif
-
 #include "bootmanager.h"
 #include "hotkeys.h"
 
