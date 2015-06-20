@@ -6,6 +6,7 @@
 
 #include "common/logging/log.h"
 #include "common/make_unique.h"
+#include "common/string_util.h"
 
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"

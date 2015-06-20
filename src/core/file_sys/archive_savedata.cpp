@@ -8,6 +8,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/make_unique.h"
+#include "common/string_util.h"
 
 #include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/disk_archive.h"

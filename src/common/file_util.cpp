@@ -17,6 +17,8 @@
     #include <direct.h> // getcwd
     #include <tchar.h>
 
+    #include "common/string_util.h"
+
     // 64 bit offsets for windows
     #define fseeko _fseeki64
     #define ftello _ftelli64
@@ -25,8 +27,13 @@
     #define fstat64 _fstat64
     #define fileno _fileno
 #else
-    #include <sys/param.h>
-    #include <sys/types.h>
+    #ifdef __APPLE__
+        #include <sys/param.h>
+    #endif
+    #include <cctype>
+    #include <cerrno>
+    #include <cstdlib>
+    #include <cstring>
     #include <dirent.h>
     #include <pwd.h>
     #include <unistd.h>
