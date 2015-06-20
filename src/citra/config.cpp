@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <inih/cpp/INIReader.h>
 
 #include "citra/default_ini.h"
 
@@ -10,7 +12,6 @@
 #include "common/logging/log.h"
 
 #include "core/settings.h"
-#include "core/core.h"
 
 #include "config.h"
 

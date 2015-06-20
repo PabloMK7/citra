@@ -4,11 +4,9 @@
 
 #pragma once
 
-#include <map>
+#include <string>
 
-#include <inih/cpp/INIReader.h>
-
-#include "common/common_types.h"
+class INIReader;
 
 class Config {
     INIReader* glfw_config;

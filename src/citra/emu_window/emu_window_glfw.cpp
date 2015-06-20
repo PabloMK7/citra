@@ -2,13 +2,25 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cstdlib>
+#include <string>
+
+// Let’s use our own GL header, instead of one from GLFW.
+#include "video_core/renderer_opengl/generated/gl_3_2_core.h"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include "common/assert.h"
+#include "common/key_map.h"
 #include "common/logging/log.h"
+#include "common/scm_rev.h"
+#include "common/string_util.h"
 
 #include "video_core/video_core.h"
 
 #include "core/settings.h"
+#include "core/hle/service/hid/hid.h"
 
 #include "citra/emu_window/emu_window_glfw.h"
 
