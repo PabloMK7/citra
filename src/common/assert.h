@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cstdio>
 #include <cstdlib>
 
 #include "common/common_funcs.h"
