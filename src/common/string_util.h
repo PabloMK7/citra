@@ -5,9 +5,10 @@
 #pragma once
 
 #include <cstdarg>
+#include <cstddef>
 #include <iomanip>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include "common/common_types.h"
