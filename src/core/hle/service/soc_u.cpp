@@ -2,37 +2,45 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cstring>
+#include <unordered_map>
+
+#include "common/assert.h"
+#include "common/bit_field.h"
+#include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/scope_exit.h"
+
+#include "core/hle/kernel/session.h"
+#include "core/hle/result.h"
+#include "core/hle/service/soc_u.h"
+#include "core/memory.h"
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
 
-// MinGW does not define several errno constants
-#ifndef _MSC_VER
-#define EBADMSG 104
-#define ENODATA 120
-#define ENOMSG  122
-#define ENOSR   124
-#define ENOSTR  125
-#define ETIME   137
-#define EIDRM   2001
-#define ENOLINK 2002
-#endif // _MSC_VER
-
+    // MinGW does not define several errno constants
+    #ifndef _MSC_VER
+        #define EBADMSG 104
+        #define ENODATA 120
+        #define ENOMSG  122
+        #define ENOSR   124
+        #define ENOSTR  125
+        #define ETIME   137
+        #define EIDRM   2001
+        #define ENOLINK 2002
+    #endif // _MSC_VER
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <poll.h>
+    #include <cerrno>
+    #include <fcntl.h>
+    #include <netinet/in.h>
+    #include <netdb.h>
+    #include <poll.h>
+    #include <sys/socket.h>
+    #include <unistd.h>
 #endif
-
-#include "common/scope_exit.h"
-#include "core/hle/hle.h"
-#include "core/hle/service/soc_u.h"
-#include <unordered_map>
 
 #ifdef _WIN32
 #    define WSAEAGAIN      WSAEWOULDBLOCK
