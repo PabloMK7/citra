@@ -2,9 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <sys/stat.h>
+#include <algorithm>
 
-#include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/make_unique.h"

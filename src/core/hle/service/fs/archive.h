@@ -4,21 +4,24 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "common/common_types.h"
 
 #include "core/file_sys/archive_backend.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
+
+namespace FileSys {
+class DirectoryBackend;
+class FileBackend;
+}
 
 /// The unique system identifier hash, also known as ID0
 extern const std::string SYSTEM_ID;
 /// The scrambled SD card CID, also known as ID1
 extern const std::string SDCARD_ID;
-
-namespace Kernel {
-    class Session;
-}
 
 namespace Service {
 namespace FS {

@@ -2,7 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <sys/stat.h>
+#include <algorithm>
+#include <vector>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -13,7 +14,6 @@
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

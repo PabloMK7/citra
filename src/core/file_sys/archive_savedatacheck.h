@@ -4,12 +4,11 @@
 
 #pragma once
 
-#include <vector>
+#include <memory>
+#include <string>
 
-#include "common/common_types.h"
-
-#include "core/file_sys/ivfc_archive.h"
-#include "core/loader/loader.h"
+#include "core/file_sys/archive_backend.h"
+#include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

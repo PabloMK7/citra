@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstddef>
+#include <iomanip>
 #include <sstream>
 
 #include "common/logging/log.h"
