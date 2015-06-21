@@ -4,9 +4,7 @@
 
 #pragma once
 
-#ifndef _WIN32
-#include <sys/mman.h>
-#endif
+#include <cstddef>
 #include <string>
 
 void* AllocateExecutableMemory(size_t size, bool low = true);

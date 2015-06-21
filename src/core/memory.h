@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "common/common_types.h"
 
 namespace Memory {

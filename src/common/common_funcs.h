@@ -5,8 +5,6 @@
 #pragma once
 
 #include "common_types.h"
-#include <cstdlib>
-
 
 #define b2(x)   (   (x) | (   (x) >> 1) )
 #define b4(x)   ( b2(x) | ( b2(x) >> 2) )
@@ -42,8 +40,6 @@
 #endif
 
 #ifndef _MSC_VER
-
-#include <errno.h>
 
 #if defined(__x86_64__) || defined(_M_X64)
 #define Crash() __asm__ __volatile__("int $3")

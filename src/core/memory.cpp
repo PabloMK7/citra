@@ -9,9 +9,6 @@
 #include "common/logging/log.h"
 #include "common/swap.h"
 
-#include "core/hle/config_mem.h"
-#include "core/hle/shared_page.h"
-#include "core/hw/hw.h"
 #include "core/mem_map.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
