@@ -20,6 +20,7 @@
 
 /* Note: this file handles interface with arm core and vfp registers */
 
+#include "common/common_funcs.h"
 #include "common/logging/log.h"
 
 #include "core/arm/skyeye_common/armdefs.h"
@@ -153,9 +154,8 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
     LOG_TRACE(Core_ARM11, "VFP: raising exceptions %08x\n", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {
-        LOG_TRACE(Core_ARM11, "unhandled bounce %x\n", inst);
-        exit(-1);
-        return;
+        LOG_CRITICAL(Core_ARM11, "unhandled bounce %x\n", inst);
+        Crash();
     }
 
     /*
