@@ -2,15 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/common_types.h"
 #include "common/logging/log.h"
 
 #include "core/core.h"
 #include "core/core_timing.h"
 
-#include "core/settings.h"
 #include "core/arm/arm_interface.h"
-#include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/thread.h"
