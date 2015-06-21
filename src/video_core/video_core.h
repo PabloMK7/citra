@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include "common/emu_window.h"
-
-#include "renderer_base.h"
-
 #include <atomic>
+
+class EmuWindow;
+class RendererBase;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Video Core namespace

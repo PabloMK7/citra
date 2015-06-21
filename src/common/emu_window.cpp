@@ -2,6 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cmath>
+
+#include "common/assert.h"
+#include "common/key_map.h"
+
 #include "emu_window.h"
 #include "video_core/video_core.h"
 

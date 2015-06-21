@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <initializer_list>
+#include <type_traits>
 
-#include <common/common_types.h>
+#include "common/vector_math.h"
 
-#include "math.h"
 #include "pica.h"
 
 namespace Pica {
