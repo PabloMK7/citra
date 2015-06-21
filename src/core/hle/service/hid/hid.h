@@ -6,16 +6,18 @@
 
 #include <array>
 
-#include "core/hle/kernel/kernel.h"
-#include "core/hle/service/service.h"
-#include "common/bit_field.h"
+#ifndef _MSC_VER
+#include <cstddef>
+#endif
 
-namespace Kernel {
-    class SharedMemory;
-    class Event;
-}
+#include "common/bit_field.h"
+#include "common/common_funcs.h"
+#include "common/common_types.h"
 
 namespace Service {
+
+class Interface;
+
 namespace HID {
 
 /**

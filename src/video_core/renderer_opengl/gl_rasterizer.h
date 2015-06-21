@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include <vector>
+
+#include "common/common_types.h"
+
 #include "video_core/hwrasterizer_base.h"
 
 #include "gl_state.h"
