@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QSettings>
 #include <QString>
 #include <QStringList>
 
 #include "core/settings.h"
-#include "core/core.h"
 #include "common/file_util.h"
 
 #include "config.h"

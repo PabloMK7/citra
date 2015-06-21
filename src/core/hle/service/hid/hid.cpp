@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
+#include "common/emu_window.h"
 
 #include "core/hle/service/service.h"
 #include "core/hle/service/hid/hid.h"

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
 #include <string>
 #include <memory>
 
@@ -10,7 +11,7 @@
 #include "common/logging/log.h"
 #include "common/symbols.h"
 
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/loader/elf.h"
 #include "core/memory.h"

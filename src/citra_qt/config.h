@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <QSettings>
+#include <string>
 
-#include "common/common_types.h"
+class QSettings;
 
 class Config {
     QSettings* qt_config;

@@ -12,6 +12,7 @@
 #include "core/hw/y2r.h"
 #include "core/mem_map.h"
 
+#include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 

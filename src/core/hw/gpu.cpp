@@ -21,6 +21,7 @@
 #include "core/hw/gpu.h"
 
 #include "video_core/command_processor.h"
+#include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
