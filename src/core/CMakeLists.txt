@@ -39,18 +39,26 @@ set(SRCS
             hle/kernel/vm_manager.cpp
             hle/service/ac_u.cpp
             hle/service/act_u.cpp
-            hle/service/am_app.cpp
-            hle/service/am_net.cpp
-            hle/service/am_sys.cpp
+            hle/service/am/am.cpp
+            hle/service/am/am_app.cpp
+            hle/service/am/am_net.cpp
+            hle/service/am/am_sys.cpp
+            hle/service/am/am_u.cpp
             hle/service/apt/apt.cpp
             hle/service/apt/apt_a.cpp
             hle/service/apt/apt_s.cpp
             hle/service/apt/apt_u.cpp
-            hle/service/boss_p.cpp
-            hle/service/boss_u.cpp
-            hle/service/cam_u.cpp
-            hle/service/cecd_s.cpp
-            hle/service/cecd_u.cpp
+            hle/service/boss/boss.cpp
+            hle/service/boss/boss_p.cpp
+            hle/service/boss/boss_u.cpp
+            hle/service/cam/cam.cpp
+            hle/service/cam/cam_c.cpp
+            hle/service/cam/cam_q.cpp
+            hle/service/cam/cam_s.cpp
+            hle/service/cam/cam_u.cpp
+            hle/service/cecd/cecd.cpp
+            hle/service/cecd/cecd_s.cpp
+            hle/service/cecd/cecd_u.cpp
             hle/service/cfg/cfg.cpp
             hle/service/cfg/cfg_i.cpp
             hle/service/cfg/cfg_s.cpp
@@ -58,8 +66,9 @@ set(SRCS
             hle/service/csnd_snd.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
-            hle/service/frd_a.cpp
-            hle/service/frd_u.cpp
+            hle/service/frd/frd.cpp
+            hle/service/frd/frd_a.cpp
+            hle/service/frd/frd_u.cpp
             hle/service/fs/archive.cpp
             hle/service/fs/fs_user.cpp
             hle/service/gsp_gpu.cpp
@@ -75,10 +84,13 @@ set(SRCS
             hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
             hle/service/ndm_u.cpp
-            hle/service/news_s.cpp
-            hle/service/news_u.cpp
-            hle/service/nim_aoc.cpp
-            hle/service/nim_u.cpp
+            hle/service/news/news.cpp
+            hle/service/news/news_s.cpp
+            hle/service/news/news_u.cpp
+            hle/service/nim/nim.cpp
+            hle/service/nim/nim_aoc.cpp
+            hle/service/nim/nim_s.cpp
+            hle/service/nim/nim_u.cpp
             hle/service/ns_s.cpp
             hle/service/nwm_uds.cpp
             hle/service/pm_app.cpp
@@ -152,18 +164,26 @@ set(HEADERS
             hle/result.h
             hle/service/ac_u.h
             hle/service/act_u.h
-            hle/service/am_app.h
-            hle/service/am_net.h
-            hle/service/am_sys.h
+            hle/service/am/am.h
+            hle/service/am/am_app.h
+            hle/service/am/am_net.h
+            hle/service/am/am_sys.h
+            hle/service/am/am_u.h
             hle/service/apt/apt.h
             hle/service/apt/apt_a.h
             hle/service/apt/apt_s.h
             hle/service/apt/apt_u.h
-            hle/service/boss_p.h
-            hle/service/boss_u.h
-            hle/service/cam_u.h
-            hle/service/cecd_s.h
-            hle/service/cecd_u.h
+            hle/service/boss/boss.h
+            hle/service/boss/boss_p.h
+            hle/service/boss/boss_u.h
+            hle/service/cam/cam.h
+            hle/service/cam/cam_c.h
+            hle/service/cam/cam_q.h
+            hle/service/cam/cam_s.h
+            hle/service/cam/cam_u.h
+            hle/service/cecd/cecd.h
+            hle/service/cecd/cecd_s.h
+            hle/service/cecd/cecd_u.h
             hle/service/cfg/cfg.h
             hle/service/cfg/cfg_i.h
             hle/service/cfg/cfg_s.h
@@ -171,8 +191,9 @@ set(HEADERS
             hle/service/csnd_snd.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
-            hle/service/frd_a.h
-            hle/service/frd_u.h
+            hle/service/frd/frd.h
+            hle/service/frd/frd_a.h
+            hle/service/frd/frd_u.h
             hle/service/fs/archive.h
             hle/service/fs/fs_user.h
             hle/service/gsp_gpu.h
@@ -188,10 +209,13 @@ set(HEADERS
             hle/service/ldr_ro.h
             hle/service/mic_u.h
             hle/service/ndm_u.h
-            hle/service/news_s.h
-            hle/service/news_u.h
-            hle/service/nim_aoc.h
-            hle/service/nim_u.h
+            hle/service/news/news.h
+            hle/service/news/news_s.h
+            hle/service/news/news_u.h
+            hle/service/nim/nim.h
+            hle/service/nim/nim_aoc.h
+            hle/service/nim/nim_s.h
+            hle/service/nim/nim_u.h
             hle/service/ns_s.h
             hle/service/nwm_uds.h
             hle/service/pm_app.h
