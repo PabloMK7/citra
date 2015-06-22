@@ -3,7 +3,7 @@
 set -e
 set -x
 
-if grep -r '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .travis* dist/*.desktop \
+if grep -nr '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .travis* dist/*.desktop \
                  dist/*.svg dist/*.xml; then
     echo Trailing whitespace found, aborting
     exit 1
