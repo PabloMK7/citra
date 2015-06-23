@@ -45,7 +45,7 @@ void Initialize(Service::Interface* self) {
     u32 app_id = cmd_buff[1];
     u32 flags  = cmd_buff[2];
 
-    cmd_buff[2] = 0x04000000; // According to 3dbrew, this value should be 0x04000000
+    cmd_buff[2] = IPC::MoveHandleDesc(2);
     cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(start_event).MoveFrom();
 
@@ -70,11 +70,13 @@ void GetSharedFont(Service::Interface* self) {
         // an easy way to do this, but the copy should be sufficient for now.
         memcpy(Memory::GetPointer(SHARED_FONT_VADDR), shared_font.data(), shared_font.size());
 
-        cmd_buff[0] = 0x00440082;
+        cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
         cmd_buff[1] = RESULT_SUCCESS.raw; // No error
         cmd_buff[2] = SHARED_FONT_VADDR;
+        cmd_buff[3] = IPC::MoveHandleDesc();
         cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
     } else {
+        cmd_buff[0] = IPC::MakeHeader(0x44, 1, 0);
         cmd_buff[1] = -1; // Generic error (not really possible to verify this on hardware)
         LOG_ERROR(Kernel_SVC, "called, but %s has not been loaded!", SHARED_FONT);
     }

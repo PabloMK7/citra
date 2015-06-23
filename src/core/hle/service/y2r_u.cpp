@@ -121,7 +121,7 @@ static void SetBlockAlignment(Service::Interface* self) {
 static void SetTransferEndInterrupt(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[0] = 0x000D0040;
+    cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     LOG_DEBUG(Service_Y2R, "(STUBBED) called");
 }
@@ -279,7 +279,7 @@ static void StartConversion(Service::Interface* self) {
 static void StopConversion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[0] = 0x00270040;
+    cmd_buff[0] = IPC::MakeHeader(0x27, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -328,7 +328,7 @@ static void SetConversionParams(Service::Interface* self) {
     conversion.alpha = params->alpha;
 
 cleanup:
-    cmd_buff[0] = 0x00290040; // TODO verify
+    cmd_buff[0] = IPC::MakeHeader(0x29, 1, 0);
     cmd_buff[1] = result.raw;
 }
 
@@ -360,7 +360,7 @@ static void DriverInitialize(Service::Interface* self) {
 
     completion_event->Clear();
 
-    cmd_buff[0] = 0x002B0040;
+    cmd_buff[0] = IPC::MakeHeader(0x2B, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     LOG_DEBUG(Service_Y2R, "called");
 }
@@ -368,7 +368,7 @@ static void DriverInitialize(Service::Interface* self) {
 static void DriverFinalize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[0] = 0x002C0040;
+    cmd_buff[0] = IPC::MakeHeader(0x2C, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     LOG_DEBUG(Service_Y2R, "called");
 }
