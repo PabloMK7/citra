@@ -3,6 +3,15 @@
 // Refer to the license.txt file included.
 
 #include <string>
+#include <thread>
+#include <iostream>
+
+#ifdef _MSC_VER
+#include <getopt.h>
+#else
+#include <unistd.h>
+#include <getopt.h>
+#endif
 
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
@@ -18,12 +27,39 @@
 
 #include "video_core/video_core.h"
 
+
+static void PrintHelp()
+{
+    std::cout << "Usage: citra <filename>" << std::endl;
+}
+
 /// Application entry point
 int main(int argc, char **argv) {
+    int option_index = 0;
+    std::string boot_filename;
+    static struct option long_options[] = {
+        { "help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+    };
+
+    while (optind < argc) {
+        char arg = getopt_long(argc, argv, ":h", long_options, &option_index);
+        if (arg != -1) {
+            switch (arg) {
+            case 'h':
+                PrintHelp();
+                return 0;
+            }
+        } else {
+            boot_filename = argv[optind];
+            optind++;
+        }
+    }
+
     Log::Filter log_filter(Log::Level::Debug);
     Log::SetFilter(&log_filter);
 
-    if (argc < 2) {
+    if (boot_filename.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
     }
@@ -31,7 +67,7 @@ int main(int argc, char **argv) {
     Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
-    std::string boot_filename = argv[1];
+
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
     VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
