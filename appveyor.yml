@@ -1,6 +1,3 @@
-# it seems that Qt is only installed by default on unstable os at the moment
-os: unstable
-
 # shallow clone
 clone_depth: 5
 
