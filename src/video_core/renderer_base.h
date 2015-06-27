@@ -10,6 +10,8 @@
 
 #include "video_core/hwrasterizer_base.h"
 
+class EmuWindow;
+
 class RendererBase : NonCopyable {
 public:
 

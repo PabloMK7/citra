@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "common/color.h"
+#include "common/math_util.h"
 
 #include "core/hw/gpu.h"
 #include "core/memory.h"

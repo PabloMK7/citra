@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <type_traits>
+
 #include "common/bit_field.h"
 #include "common/common_types.h"
-
-#include "pica.h"
 
 namespace Pica {
 

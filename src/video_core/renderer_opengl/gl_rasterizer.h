@@ -9,6 +9,7 @@
 #include "common/common_types.h"
 
 #include "video_core/hwrasterizer_base.h"
+#include "video_core/vertex_shader.h"
 
 #include "gl_state.h"
 #include "gl_rasterizer_cache.h"
