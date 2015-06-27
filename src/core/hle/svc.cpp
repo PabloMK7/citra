@@ -333,7 +333,7 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle
 
 /// Get resource limit current values
 static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_limit_handle, u32* names,
-    s32 name_count) {
+    u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
         resource_limit_handle, names, name_count);
 
@@ -349,7 +349,7 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_lim
 
 /// Get resource limit max values
 static ResultCode GetResourceLimitLimitValues(s64* values, Handle resource_limit_handle, u32* names,
-    s32 name_count) {
+    u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
         resource_limit_handle, names, name_count);
 
