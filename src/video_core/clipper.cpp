@@ -94,7 +94,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
     // NOTE: We clip against a w=epsilon plane to guarantee that the output has a positive w value.
     // TODO: Not sure if this is a valid approach. Also should probably instead use the smallest
     //       epsilon possible within float24 accuracy.
-    static const float24 EPSILON = float24::FromFloat32(0.00001);
+    static const float24 EPSILON = float24::FromFloat32(0.00001f);
     static const float24 f0 = float24::FromFloat32(0.0);
     static const float24 f1 = float24::FromFloat32(1.0);
     static const std::array<ClippingEdge, 7> clipping_edges = {{
