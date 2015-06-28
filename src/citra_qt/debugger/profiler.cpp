@@ -74,7 +74,7 @@ int ProfilerModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     } else {
-        return results.time_per_category.size() + 2;
+        return static_cast<int>(results.time_per_category.size() + 2);
     }
 }
 
