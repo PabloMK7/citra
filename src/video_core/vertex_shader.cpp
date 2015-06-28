@@ -96,7 +96,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
             state.program_counter = &program_code[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
             state.call_stack.push({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
         };
-        u32 binary_offset = state.program_counter - program_code.data();
+        u32 binary_offset = static_cast<u32>(state.program_counter - program_code.data());
 
         state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + binary_offset);
 
