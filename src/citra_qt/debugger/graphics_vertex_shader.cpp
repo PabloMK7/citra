@@ -34,7 +34,7 @@ int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
 }
 
 int GraphicsVertexShaderModel::rowCount(const QModelIndex& parent) const {
-    return info.code.size();
+    return static_cast<int>(info.code.size());
 }
 
 QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orientation, int role) const {
