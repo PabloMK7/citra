@@ -502,7 +502,7 @@ void Advance() {
         Core::g_app_core->down_count += diff;
     }
     if (advance_callback)
-        advance_callback(cycles_executed);
+        advance_callback(static_cast<int>(cycles_executed));
 }
 
 void LogPendingEvents() {
