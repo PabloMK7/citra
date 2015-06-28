@@ -52,32 +52,6 @@ typedef double  f64; ///< 64-bit floating point
 typedef u32 VAddr; ///< Represents a pointer in the userspace virtual address space.
 typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space.
 
-/// Union for fast 16-bit type casting
-union t16 {
-    u8  _u8[2];             ///< 8-bit unsigned char(s)
-    u16 _u16;               ///< 16-bit unsigned shorts(s)
-};
-
-/// Union for fast 32-bit type casting
-union t32 {
-    f32 _f32;               ///< 32-bit floating point(s)
-    u32 _u32;               ///< 32-bit unsigned int(s)
-    s32 _s32;               ///< 32-bit signed int(s)
-    u16 _u16[2];            ///< 16-bit unsigned shorts(s)
-    u8  _u8[4];             ///< 8-bit unsigned char(s)
-};
-
-/// Union for fast 64-bit type casting
-union t64 {
-    f64 _f64;               ///< 64-bit floating point
-    u64 _u64;               ///< 64-bit unsigned long
-    f32 _f32[2];            ///< 32-bit floating point(s)
-    u32 _u32[2];            ///< 32-bit unsigned int(s)
-    s32 _s32[2];            ///< 32-bit signed int(s)
-    u16 _u16[4];            ///< 16-bit unsigned shorts(s)
-    u8  _u8[8];             ///< 8-bit unsigned char(s)
-};
-
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable {
 protected:
