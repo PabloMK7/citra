@@ -85,6 +85,7 @@ void GeometryDumper::AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2) {
     vertices.push_back(v1);
     vertices.push_back(v2);
 
+    int num_vertices = static_cast<int>(vertices.size());
     faces.push_back({ num_vertices-3, num_vertices-2, num_vertices-1 });
 }
 
@@ -240,6 +241,8 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 
     dvle.main_offset_words = main_offset;
     dvle.output_register_table_offset = write_offset - dvlb.dvle_offset;
+    dvle.output_register_table_size = static_cast<uint32_t>(output_info_table.size());
+    QueueForWriting((u8*)output_info_table.data(), static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
 
     // TODO: Create a label table for "main"
 
@@ -495,18 +498,30 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
                 Math::Vec3<int> ret;
                 if (differential_mode) {
                     ret.r() = static_cast<int>(differential.r);
+                    ret.g() = static_cast<int>(differential.g);
+                    ret.b() = static_cast<int>(differential.b);
                     if (x >= 2) {
+                        ret.r() += static_cast<int>(differential.dr);
+                        ret.g() += static_cast<int>(differential.dg);
+                        ret.b() += static_cast<int>(differential.db);
                     }
                     ret.r() = Color::Convert5To8(ret.r());
                     ret.g() = Color::Convert5To8(ret.g());
                     ret.b() = Color::Convert5To8(ret.b());
                 } else {
                     if (x < 2) {
+                        ret.r() = Color::Convert4To8(static_cast<u8>(separate.r1));
+                        ret.g() = Color::Convert4To8(static_cast<u8>(separate.g1));
+                        ret.b() = Color::Convert4To8(static_cast<u8>(separate.b1));
                     } else {
+                        ret.r() = Color::Convert4To8(static_cast<u8>(separate.r2));
+                        ret.g() = Color::Convert4To8(static_cast<u8>(separate.g2));
+                        ret.b() = Color::Convert4To8(static_cast<u8>(separate.b2));
                     }
                 }
 
                 // Add modifier
+                unsigned table_index = static_cast<int>((x < 2) ? table_index_1.Value() : table_index_2.Value());
 
                 static const std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
                     {  2,  8 }, {  5, 17 }, {  9,  29 }, { 13,  42 },
