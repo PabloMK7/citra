@@ -313,7 +313,7 @@ static std::string UTF16ToUTF8(const std::wstring& input)
     std::string output;
     output.resize(size);
 
-    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), input.size(), &output[0], output.size(), nullptr, nullptr))
+    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size()), nullptr, nullptr))
         output.clear();
 
     return output;
