@@ -191,7 +191,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr, Shared
                             *pos = (addr);
                             break;
                         case 1:
-                            *pos = (addr - in_addr);
+                            *pos = static_cast<u32>(addr - in_addr);
                             break;
                         default:
                             break; //this should never happen
