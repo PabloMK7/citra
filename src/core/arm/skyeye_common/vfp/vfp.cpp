@@ -33,23 +33,15 @@ unsigned VFPInit(ARMul_State* state)
     state->VFP[VFP_FPEXC] = 0;
     state->VFP[VFP_FPSCR] = 0;
 
+    // ARM11 MPCore instruction register reset values.
+    state->VFP[VFP_FPINST]  = 0xEE000A00;
+    state->VFP[VFP_FPINST2] = 0;
+
     // ARM11 MPCore feature register values.
     state->VFP[VFP_MVFR0] = 0x11111111;
     state->VFP[VFP_MVFR1] = 0;
 
     return 0;
-}
-
-void VMSR(ARMul_State* state, ARMword reg, ARMword Rt)
-{
-    if (reg == 1)
-    {
-        state->VFP[VFP_FPSCR] = state->Reg[Rt];
-    }
-    else if (reg == 8)
-    {
-        state->VFP[VFP_FPEXC] = state->Reg[Rt];
-    }
 }
 
 void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value)

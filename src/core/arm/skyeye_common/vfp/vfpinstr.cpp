@@ -995,7 +995,7 @@ VMOVBRS_INST:
 #ifdef VFP_INTERPRETER_STRUCT
 struct vmsr_inst {
     unsigned int reg;
-    unsigned int Rd;
+    unsigned int Rt;
 };
 #endif
 #ifdef VFP_INTERPRETER_TRANS
@@ -1009,7 +1009,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
     inst_base->br   = NON_BRANCH;
 
     inst_cream->reg = BITS(inst, 16, 19);
-    inst_cream->Rd  = BITS(inst, 12, 15);
+    inst_cream->Rt  = BITS(inst, 12, 15);
 
     return inst_base;
 }
@@ -1017,15 +1017,30 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMSR_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled ,
            and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
         CHECK_VFP_ENABLED;
 
-        vmsr_inst *inst_cream = (vmsr_inst *)inst_base->component;
+        vmsr_inst* const inst_cream = (vmsr_inst*)inst_base->component;
 
-        VMSR(cpu, inst_cream->reg, inst_cream->Rd);
+        unsigned int reg = inst_cream->reg;
+        unsigned int rt  = inst_cream->Rt;
+
+        if (reg == 1)
+        {
+            cpu->VFP[VFP_FPSCR] = cpu->Reg[rt];
+        }
+        else if (InAPrivilegedMode(cpu))
+        {
+            if (reg == 8)
+                cpu->VFP[VFP_FPEXC] = cpu->Reg[rt];
+            else if (reg == 9)
+                cpu->VFP[VFP_FPINST] = cpu->Reg[rt];
+            else if (reg == 10)
+                cpu->VFP[VFP_FPINST2] = cpu->Reg[rt];
+        }
     }
     cpu->Reg[15] += GET_INST_SIZE(cpu);
     INC_PC(sizeof(vmsr_inst));
@@ -1111,19 +1126,22 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMRS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled,
            and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
         CHECK_VFP_ENABLED;
 
-        vmrs_inst *inst_cream = (vmrs_inst *)inst_base->component;
+        vmrs_inst* const inst_cream = (vmrs_inst*)inst_base->component;
 
-        if (inst_cream->reg == 1) /* FPSCR */
+        unsigned int reg = inst_cream->reg;
+        unsigned int rt  = inst_cream->Rt;
+
+        if (reg == 1) // FPSCR
         {
-            if (inst_cream->Rt != 15)
+            if (rt != 15)
             {
-                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSCR];
+                cpu->Reg[rt] = cpu->VFP[VFP_FPSCR];
             }
             else
             {
@@ -1133,25 +1151,26 @@ VMRS_INST:
                 cpu->VFlag = (cpu->VFP[VFP_FPSCR] >> 28) & 1;
             }
         }
-        else
+        else if (reg == 0)
         {
-            switch (inst_cream->reg)
-            {
-            case 0:
-                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPSID];
-                break;
-            case 6:
-                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_MVFR1];
-                break;
-            case 7:
-                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_MVFR0];
-                break;
-            case 8:
-                cpu->Reg[inst_cream->Rt] = cpu->VFP[VFP_FPEXC];
-                break;
-            default:
-                break;
-            }
+            cpu->Reg[rt] = cpu->VFP[VFP_FPSID];
+        }
+        else if (reg == 6)
+        {
+            cpu->Reg[rt] = cpu->VFP[VFP_MVFR1];
+        }
+        else if (reg == 7)
+        {
+            cpu->Reg[rt] = cpu->VFP[VFP_MVFR0];
+        }
+        else if (InAPrivilegedMode(cpu))
+        {
+            if (reg == 8)
+                cpu->Reg[rt] = cpu->VFP[VFP_FPEXC];
+            else if (reg == 9)
+                cpu->Reg[rt] = cpu->VFP[VFP_FPINST];
+            else if (reg == 10)
+                cpu->Reg[rt] = cpu->VFP[VFP_FPINST2];
         }
     }
     cpu->Reg[15] += GET_INST_SIZE(cpu);

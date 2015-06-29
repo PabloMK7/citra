@@ -59,6 +59,8 @@ enum {
     VFP_FPSID,
     VFP_FPSCR,
     VFP_FPEXC,
+    VFP_FPINST,
+    VFP_FPINST2,
     VFP_MVFR0,
     VFP_MVFR1,
 
