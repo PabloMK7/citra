@@ -26,7 +26,7 @@
 #define CHECK_VFP_ENABLED
 #define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 
-unsigned VFPInit(ARMul_State* state);
+void VFPInit(ARMul_State* state);
 
 s32 vfp_get_float(ARMul_State* state, u32 reg);
 void vfp_put_float(ARMul_State* state, s32 val, u32 reg);

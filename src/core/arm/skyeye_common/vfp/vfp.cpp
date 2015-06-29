@@ -26,7 +26,7 @@
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
-unsigned VFPInit(ARMul_State* state)
+void VFPInit(ARMul_State* state)
 {
     state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN<<24 | VFP_FPSID_SW<<23 | VFP_FPSID_SUBARCH<<16 |
                             VFP_FPSID_PARTNUM<<8 | VFP_FPSID_VARIANT<<4 | VFP_FPSID_REVISION;
@@ -40,8 +40,6 @@ unsigned VFPInit(ARMul_State* state)
     // ARM11 MPCore feature register values.
     state->VFP[VFP_MVFR0] = 0x11111111;
     state->VFP[VFP_MVFR1] = 0;
-
-    return 0;
 }
 
 void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value)
