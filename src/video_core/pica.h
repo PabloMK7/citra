@@ -898,7 +898,7 @@ struct Regs {
 
         #define ADD_FIELD(name)                                                                               \
             do {                                                                                              \
-                map.insert({PICA_REG_INDEX(name), #name});                                                    \
+                map.insert({static_cast<u32>(PICA_REG_INDEX(name)), #name});                                                    \
                 /* TODO: change to Regs::name when VS2015 and other compilers support it  */                   \
                 for (u32 i = PICA_REG_INDEX(name) + 1; i < PICA_REG_INDEX(name) + sizeof(Regs().name) / 4; ++i) \
                     map.insert({i, #name + std::string("+") + std::to_string(i-PICA_REG_INDEX(name))});       \
