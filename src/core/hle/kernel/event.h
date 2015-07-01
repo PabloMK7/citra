@@ -26,7 +26,6 @@ public:
     static const HandleType HANDLE_TYPE = HandleType::Event;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
-    ResetType intitial_reset_type;          ///< ResetType specified at Event initialization
     ResetType reset_type;                   ///< Current ResetType
 
     bool signaled;                          ///< Whether the event has already been signaled
