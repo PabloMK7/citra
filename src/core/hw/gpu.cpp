@@ -53,6 +53,29 @@ inline void Read(T &var, const u32 raw_addr) {
     var = g_regs[addr / 4];
 }
 
+static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_pixel) {
+    switch (input_format) {
+    case Regs::PixelFormat::RGBA8:
+        return Color::DecodeRGBA8(src_pixel);
+
+    case Regs::PixelFormat::RGB8:
+        return Color::DecodeRGB8(src_pixel);
+
+    case Regs::PixelFormat::RGB565:
+        return Color::DecodeRGB565(src_pixel);
+
+    case Regs::PixelFormat::RGB5A1:
+        return Color::DecodeRGB5A1(src_pixel);
+
+    case Regs::PixelFormat::RGBA4:
+        return Color::DecodeRGBA4(src_pixel);
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", input_format);
+        return {0, 0, 0, 0};
+    }
+}
+
 template <typename T>
 inline void Write(u32 addr, const T data) {
     addr -= HW::VADDR_GPU;
@@ -125,11 +148,18 @@ inline void Write(u32 addr, const T data) {
                 break;
             }
 
-            unsigned horizontal_scale = (config.scaling != config.NoScale) ? 2 : 1;
-            unsigned vertical_scale = (config.scaling == config.ScaleXY) ? 2 : 1;
+            if (config.output_tiled &&
+                    (config.scaling == config.ScaleXY || config.scaling == config.ScaleX)) {
+                LOG_CRITICAL(HW_GPU, "Scaling is only implemented on tiled input");
+                UNIMPLEMENTED();
+                break;
+            }
 
-            u32 output_width = config.output_width / horizontal_scale;
-            u32 output_height = config.output_height / vertical_scale;
+            bool horizontal_scale = config.scaling != config.NoScale;
+            bool vertical_scale = config.scaling == config.ScaleXY;
+
+            u32 output_width = config.output_width >> horizontal_scale;
+            u32 output_height = config.output_height >> vertical_scale;
 
             u32 input_size = config.input_width * config.input_height * GPU::Regs::BytesPerPixel(config.input_format);
             u32 output_size = output_width * output_height * GPU::Regs::BytesPerPixel(config.output_format);
@@ -153,16 +183,14 @@ inline void Write(u32 addr, const T data) {
                 break;
             }
 
-            // TODO(Subv): Implement the box filter when scaling is enabled
-            // right now we're just skipping the extra pixels.
             for (u32 y = 0; y < output_height; ++y) {
                 for (u32 x = 0; x < output_width; ++x) {
-                    Math::Vec4<u8> src_color = { 0, 0, 0, 0 };
+                    Math::Vec4<u8> src_color;
 
                     // Calculate the [x,y] position of the input image
                     // based on the current output position and the scale
-                    u32 input_x = x * horizontal_scale;
-                    u32 input_y = y * vertical_scale;
+                    u32 input_x = x << horizontal_scale;
+                    u32 input_y = y << vertical_scale;
 
                     if (config.flip_vertically) {
                         // Flip the y value of the output data,
@@ -193,30 +221,15 @@ inline void Write(u32 addr, const T data) {
                     }
 
                     const u8* src_pixel = src_pointer + src_offset;
-                    switch (config.input_format) {
-                    case Regs::PixelFormat::RGBA8:
-                        src_color = Color::DecodeRGBA8(src_pixel);
-                        break;
-
-                    case Regs::PixelFormat::RGB8:
-                        src_color = Color::DecodeRGB8(src_pixel);
-                        break;
-
-                    case Regs::PixelFormat::RGB565:
-                        src_color = Color::DecodeRGB565(src_pixel);
-                        break;
-
-                    case Regs::PixelFormat::RGB5A1:
-                        src_color = Color::DecodeRGB5A1(src_pixel);
-                        break;
-
-                    case Regs::PixelFormat::RGBA4:
-                        src_color = Color::DecodeRGBA4(src_pixel);
-                        break;
-
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", config.input_format.Value());
-                        break;
+                    src_color = DecodePixel(config.input_format, src_pixel);
+                    if (config.scaling == config.ScaleX) {
+                        Math::Vec4<u8> pixel = DecodePixel(config.input_format, src_pixel + src_bytes_per_pixel);
+                        src_color = ((src_color + pixel) / 2).Cast<u8>();
+                    } else if (config.scaling == config.ScaleXY) {
+                        Math::Vec4<u8> pixel1 = DecodePixel(config.input_format, src_pixel + 1 * src_bytes_per_pixel);
+                        Math::Vec4<u8> pixel2 = DecodePixel(config.input_format, src_pixel + 2 * src_bytes_per_pixel);
+                        Math::Vec4<u8> pixel3 = DecodePixel(config.input_format, src_pixel + 3 * src_bytes_per_pixel);
+                        src_color = (((src_color + pixel1) + (pixel2 + pixel3)) / 4).Cast<u8>();
                     }
 
                     u8* dst_pixel = dst_pointer + dst_offset;
