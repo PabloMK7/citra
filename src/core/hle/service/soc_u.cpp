@@ -328,6 +328,7 @@ static void Socket(Service::Interface* self) {
     if ((s32)socket_handle == SOCKET_ERROR_VALUE)
         result = TranslateError(GET_ERRNO);
 
+    cmd_buffer[0] = IPC::MakeHeader(2, 2, 0);
     cmd_buffer[1] = result;
     cmd_buffer[2] = socket_handle;
 }
@@ -351,8 +352,9 @@ static void Bind(Service::Interface* self) {
     if (res != 0)
         result = TranslateError(GET_ERRNO);
 
-    cmd_buffer[2] = res;
+    cmd_buffer[0] = IPC::MakeHeader(5, 2, 0);
     cmd_buffer[1] = result;
+    cmd_buffer[2] = res;
 }
 
 static void Fcntl(Service::Interface* self) {
@@ -434,8 +436,9 @@ static void Listen(Service::Interface* self) {
     if (ret != 0)
         result = TranslateError(GET_ERRNO);
 
-    cmd_buffer[2] = ret;
+    cmd_buffer[0] = IPC::MakeHeader(3, 2, 0);
     cmd_buffer[1] = result;
+    cmd_buffer[2] = ret;
 }
 
 static void Accept(Service::Interface* self) {
@@ -460,8 +463,10 @@ static void Accept(Service::Interface* self) {
         Memory::WriteBlock(cmd_buffer[0x104 >> 2], (const u8*)&ctr_addr, max_addr_len);
     }
 
-    cmd_buffer[2] = ret;
+    cmd_buffer[0] = IPC::MakeHeader(4, 2, 2);
     cmd_buffer[1] = result;
+    cmd_buffer[2] = ret;
+    cmd_buffer[3] = IPC::StaticBufferDesc(static_cast<u32>(max_addr_len), 0);
 }
 
 static void GetHostId(Service::Interface* self) {
@@ -669,8 +674,10 @@ static void Connect(Service::Interface* self) {
     int result = 0;
     if (ret != 0)
         result = TranslateError(GET_ERRNO);
-    cmd_buffer[2] = ret;
+
+    cmd_buffer[0] = IPC::MakeHeader(6, 2, 0);
     cmd_buffer[1] = result;
+    cmd_buffer[2] = ret;
 }
 
 static void InitializeSockets(Service::Interface* self) {
@@ -681,7 +688,8 @@ static void InitializeSockets(Service::Interface* self) {
 #endif
 
     u32* cmd_buffer = Kernel::GetCommandBuffer();
-    cmd_buffer[1] = 0;
+    cmd_buffer[0] = IPC::MakeHeader(1, 1, 0);
+    cmd_buffer[1] = RESULT_SUCCESS.raw;
 }
 
 static void ShutdownSockets(Service::Interface* self) {
