@@ -13,7 +13,7 @@ configuration:
   - Release
 
 install:
-  - git submodule update --init --recursive --depth 20
+  - git submodule update --init --recursive
 
 before_build:
   - mkdir build
