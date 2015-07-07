@@ -239,7 +239,6 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "Bss size:                    0x%08X", bss_size);
     LOG_DEBUG(Loader, "Core version:                %d"    , core_version);
     LOG_DEBUG(Loader, "Thread priority:             0x%X"  , priority);
-    LOG_DEBUG(Loader, "Resource limit descriptor:   0x%08X", exheader_header.arm11_system_local_caps.resource_limit_descriptor);
     LOG_DEBUG(Loader, "Resource limit category:     %d"    , resource_limit_category);
 
     // Read ExeFS...
