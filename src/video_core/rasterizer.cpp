@@ -349,6 +349,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                             val = std::min(val, (int)size - 1);
                             return val;
 
+                        case Regs::TextureConfig::ClampToBorder:
+                            return val;
+
                         case Regs::TextureConfig::Repeat:
                             return (int)((unsigned)val % size);
 
@@ -367,17 +370,23 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     }
                 };
 
-                // Textures are laid out from bottom to top, hence we invert the t coordinate.
-                // NOTE: This may not be the right place for the inversion.
-                // TODO: Check if this applies to ETC textures, too.
-                s = GetWrappedTexCoord(texture.config.wrap_s, s, texture.config.width);
-                t = texture.config.height - 1 - GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
+                if ((texture.config.wrap_s == Regs::TextureConfig::ClampToBorder && (s < 0 || s >= texture.config.width))
+                    || (texture.config.wrap_t == Regs::TextureConfig::ClampToBorder && (t < 0 || t >= texture.config.height))) {
+                    auto border_color = texture.config.border_color;
+                    texture_color[i] = { border_color.r, border_color.g, border_color.b, border_color.a };
+                } else {
+                    // Textures are laid out from bottom to top, hence we invert the t coordinate.
+                    // NOTE: This may not be the right place for the inversion.
+                    // TODO: Check if this applies to ETC textures, too.
+                    s = GetWrappedTexCoord(texture.config.wrap_s, s, texture.config.width);
+                    t = texture.config.height - 1 - GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
 
-                u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
-                auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
+                    u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
+                    auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
-                texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
-                DebugUtils::DumpTexture(texture.config, texture_data);
+                    texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
+                    DebugUtils::DumpTexture(texture.config, texture_data);
+                }
             }
 
             // Texture environment - consists of 6 stages of color and alpha combining.
