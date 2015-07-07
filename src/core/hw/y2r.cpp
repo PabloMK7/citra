@@ -111,7 +111,7 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
         while (output < unit_end) {
             u32 color = *input++;
             Math::Vec4<u8> col_vec{
-                (color >> 24) & 0xFF, (color >> 16) & 0xFF, (color >>  8) & 0xFF, alpha,
+                (u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha
             };
 
             switch (output_format) {
