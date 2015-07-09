@@ -116,8 +116,6 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     loadinfo.seg_sizes[1] = (hdr.rodata_seg_size + 0xFFF) &~0xFFF;
     loadinfo.seg_sizes[2] = (hdr.data_seg_size + 0xFFF) &~0xFFF;
     u32 offsets[2] = { loadinfo.seg_sizes[0], loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1] };
-    u32 data_load_size = (hdr.data_seg_size - hdr.bss_size + 0xFFF) &~0xFFF;
-    u32 bss_load_size = loadinfo.seg_sizes[2] - data_load_size;
     u32 n_reloc_tables = hdr.reloc_hdr_size / 4;
     std::vector<u8> all_mem(loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1] + loadinfo.seg_sizes[2] + 3 * n_reloc_tables);
 
@@ -204,10 +202,9 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
     // Write the data
     memcpy(Memory::GetPointer(base_addr), &all_mem[0], loadinfo.seg_sizes[0] + loadinfo.seg_sizes[1] + loadinfo.seg_sizes[2]);
 
-    LOG_DEBUG(Loader, "CODE:   %u pages\n", loadinfo.seg_sizes[0] / 0x1000);
-    LOG_DEBUG(Loader, "RODATA: %u pages\n", loadinfo.seg_sizes[1] / 0x1000);
-    LOG_DEBUG(Loader, "DATA:   %u pages\n", data_load_size / 0x1000);
-    LOG_DEBUG(Loader, "BSS:    %u pages\n", bss_load_size / 0x1000);
+    LOG_DEBUG(Loader, "code size:   0x%X", loadinfo.seg_sizes[0]);
+    LOG_DEBUG(Loader, "rodata size: 0x%X", loadinfo.seg_sizes[1]);
+    LOG_DEBUG(Loader, "data size:   0x%X (including 0x%X of bss)", loadinfo.seg_sizes[2], hdr.bss_size);
 
     return ERROR_NONE;
 }
