@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "common/common_types.h"
+#include "common/file_util.h"
 
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/directory_backend.h"
@@ -28,7 +29,8 @@ namespace FileSys {
  */
 class IVFCArchive : public ArchiveBackend {
 public:
-    IVFCArchive(std::shared_ptr<const std::vector<u8>> data);
+    IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
+        : romfs_file(file), data_offset(offset), data_size(size) {}
 
     std::string GetName() const override;
 
@@ -42,12 +44,15 @@ public:
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
 
 protected:
-    std::shared_ptr<const std::vector<u8>> data;
+    std::shared_ptr<FileUtil::IOFile> romfs_file;
+    u64 data_offset;
+    u64 data_size;
 };
 
 class IVFCFile : public FileBackend {
 public:
-    IVFCFile(std::shared_ptr<const std::vector<u8>> data) : data(data) {}
+    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
+        : romfs_file(file), data_offset(offset), data_size(size) {}
 
     bool Open() override { return true; }
     size_t Read(const u64 offset, const u32 length, u8* buffer) const override;
@@ -58,7 +63,9 @@ public:
     void Flush() const override { }
 
 private:
-    std::shared_ptr<const std::vector<u8>> data;
+    std::shared_ptr<FileUtil::IOFile> romfs_file;
+    u64 data_offset;
+    u64 data_size;
 };
 
 class IVFCDirectory : public DirectoryBackend {

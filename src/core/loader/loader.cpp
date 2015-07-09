@@ -124,7 +124,7 @@ ResultStatus LoadFile(const std::string& filename) {
     case FileType::CXI:
     case FileType::CCI:
     {
-        AppLoader_NCCH app_loader(std::move(file));
+        AppLoader_NCCH app_loader(std::move(file), filename);
 
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {

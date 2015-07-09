@@ -163,7 +163,8 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class AppLoader_NCCH final : public AppLoader {
 public:
-    AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file) : AppLoader(std::move(file)) { }
+    AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file, const std::string& filepath)
+        : AppLoader(std::move(file)), filepath(filepath) { }
 
     /**
      * Returns the type of the file
@@ -211,7 +212,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::vector<u8>& buffer) const override;
+    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) const override;
 
 private:
 
@@ -244,6 +245,8 @@ private:
     NCCH_Header     ncch_header;
     ExeFs_Header    exefs_header;
     ExHeader_Header exheader_header;
+
+    std::string     filepath;
 };
 
 } // namespace Loader

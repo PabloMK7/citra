@@ -99,10 +99,13 @@ public:
 
     /**
      * Get the RomFS of the application
-     * @param buffer Reference to buffer to store data
+     * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
+     * @param romfs_file The file containing the RomFS
+     * @param offset The offset the romfs begins on
+     * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::vector<u8>& buffer) const {
+    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) const {
         return ResultStatus::ErrorNotImplemented;
     }
 
