@@ -5,24 +5,39 @@
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "common/make_unique.h"
 
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/vm_manager.h"
+#include "core/mem_map.h"
 #include "core/memory.h"
 
 namespace Kernel {
 
+SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
+    SharedPtr<CodeSet> codeset(new CodeSet);
+
+    codeset->name = std::move(name);
+    codeset->program_id = program_id;
+
+    return codeset;
+}
+
+CodeSet::CodeSet() {}
+CodeSet::~CodeSet() {}
+
 u32 Process::next_process_id;
 
-SharedPtr<Process> Process::Create(std::string name, u64 program_id) {
+SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
     SharedPtr<Process> process(new Process);
 
-    process->name = std::move(name);
-    process->program_id = program_id;
-
+    process->codeset = std::move(code_set);
     process->flags.raw = 0;
     process->flags.memory_region = MemoryRegion::APPLICATION;
+    process->address_space = Common::make_unique<VMManager>();
+    Memory::InitLegacyAddressSpace(*process->address_space);
 
     return process;
 }
@@ -87,8 +102,19 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
     }
 }
 
-void Process::Run(VAddr entry_point, s32 main_thread_priority, u32 stack_size) {
-    Kernel::SetupMainThread(entry_point, main_thread_priority);
+void Process::Run(s32 main_thread_priority, u32 stack_size) {
+    auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions, MemoryState memory_state) {
+        auto vma = address_space->MapMemoryBlock(segment.addr, codeset->memory,
+                segment.offset, segment.size, memory_state).Unwrap();
+        address_space->Reprotect(vma, permissions);
+    };
+
+    MapSegment(codeset->code,   VMAPermission::ReadExecute, MemoryState::Code);
+    MapSegment(codeset->rodata, VMAPermission::Read,        MemoryState::Code);
+    MapSegment(codeset->data,   VMAPermission::ReadWrite,   MemoryState::Private);
+
+    address_space->LogLayout();
+    Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
 }
 
 Kernel::Process::Process() {}

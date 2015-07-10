@@ -101,7 +101,7 @@ struct VirtualMemoryArea {
  *  - http://duartes.org/gustavo/blog/post/how-the-kernel-manages-your-memory/
  *  - http://duartes.org/gustavo/blog/post/page-cache-the-affair-between-memory-and-files/
  */
-class VMManager {
+class VMManager final {
     // TODO(yuriks): Make page tables switchable to support multiple VMManagers
 public:
     /**
@@ -121,6 +121,7 @@ public:
     using VMAHandle = decltype(vma_map)::const_iterator;
 
     VMManager();
+    ~VMManager();
 
     /// Clears the address space map, re-initializing with a single free area.
     void Reset();
@@ -167,6 +168,9 @@ public:
 
     /// Changes the permissions of the given VMA.
     void Reprotect(VMAHandle vma, VMAPermission new_perms);
+
+    /// Dumps the address space layout to the log, for debugging
+    void LogLayout() const;
 
 private:
     using VMAIter = decltype(vma_map)::iterator;

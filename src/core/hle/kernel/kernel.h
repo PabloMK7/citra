@@ -47,6 +47,7 @@ enum class HandleType : u32 {
     Semaphore       = 10,
     Timer           = 11,
     ResourceLimit   = 12,
+    CodeSet         = 13,
 };
 
 enum {

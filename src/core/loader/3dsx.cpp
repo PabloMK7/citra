@@ -101,7 +101,10 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo *loadinfo, u32* offsets)
     return loadinfo->seg_addrs[2] + addr - offsets[1];
 }
 
-static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
+using Kernel::SharedPtr;
+using Kernel::CodeSet;
+
+static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr, SharedPtr<CodeSet>* out_codeset)
 {
     if (!file.IsOpen())
         return ERROR_FILE;
@@ -201,13 +204,29 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr)
         }
     }
 
-    // Write the data
-    memcpy(Memory::GetPointer(base_addr), program_image.data(), program_image.size());
+    // Create the CodeSet
+    SharedPtr<CodeSet> code_set = CodeSet::Create("", 0);
+
+    code_set->code.offset = loadinfo.seg_ptrs[0] - program_image.data();
+    code_set->code.addr   = loadinfo.seg_addrs[0];
+    code_set->code.size   = loadinfo.seg_sizes[0];
+
+    code_set->rodata.offset = loadinfo.seg_ptrs[1] - program_image.data();
+    code_set->rodata.addr   = loadinfo.seg_addrs[1];
+    code_set->rodata.size   = loadinfo.seg_sizes[1];
+
+    code_set->data.offset = loadinfo.seg_ptrs[2] - program_image.data();
+    code_set->data.addr   = loadinfo.seg_addrs[2];
+    code_set->data.size   = loadinfo.seg_sizes[2];
+
+    code_set->entrypoint = code_set->code.addr;
+    code_set->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
 
     LOG_DEBUG(Loader, "code size:   0x%X", loadinfo.seg_sizes[0]);
     LOG_DEBUG(Loader, "rodata size: 0x%X", loadinfo.seg_sizes[1]);
     LOG_DEBUG(Loader, "data size:   0x%X (including 0x%X of bss)", loadinfo.seg_sizes[2], hdr.bss_size);
 
+    *out_codeset = code_set;
     return ERROR_NONE;
 }
 
@@ -230,17 +249,19 @@ ResultStatus AppLoader_THREEDSX::Load() {
     if (!file->IsOpen())
         return ResultStatus::Error;
 
-    Kernel::g_current_process = Kernel::Process::Create(filename, 0);
+    SharedPtr<CodeSet> codeset;
+    if (Load3DSXFile(*file, Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
+        return ResultStatus::Error;
+    codeset->name = filename;
+
+    Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
     Kernel::g_current_process->svc_access_mask.set();
     Kernel::g_current_process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
     Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
-    if (Load3DSXFile(*file, Memory::PROCESS_IMAGE_VADDR) != ERROR_NONE)
-        return ResultStatus::Error;
-
-    Kernel::g_current_process->Run(Memory::PROCESS_IMAGE_VADDR, 48, Kernel::DEFAULT_STACK_SIZE);
+    Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
     is_loaded = true;
     return ResultStatus::Success;

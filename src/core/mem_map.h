@@ -6,9 +6,14 @@
 
 #include "common/common_types.h"
 
+namespace Kernel {
+class VMManager;
+}
+
 namespace Memory {
 
 void Init();
+void InitLegacyAddressSpace(Kernel::VMManager& address_space);
 void Shutdown();
 
 /**
