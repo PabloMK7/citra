@@ -23,11 +23,6 @@ addons:
       - lib32stdc++6 # For CMake
       - lftp # To upload builds
 
-before_install:
- - sh .travis-deps.sh
-
-script:
- - sh .travis-build.sh
-
-after_success:
- - sh .travis-upload.sh
+install: ./.travis-deps.sh
+script: ./.travis-build.sh
+after_success: ./.travis-upload.sh
