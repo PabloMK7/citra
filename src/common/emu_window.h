@@ -4,11 +4,17 @@
 
 #pragma once
 
+#include <tuple>
+#include <utility>
+
 #include "common/common_types.h"
-#include "common/key_map.h"
 #include "common/math_util.h"
-#include "common/scm_rev.h"
-#include "common/string_util.h"
+
+#include "core/hle/service/hid/hid.h"
+
+namespace KeyMap {
+struct HostDeviceKey;
+}
 
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend

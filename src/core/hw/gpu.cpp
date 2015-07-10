@@ -2,17 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
+#include <type_traits>
+
 #include "common/color.h"
 #include "common/common_types.h"
-
-#include "core/arm/arm_interface.h"
+#include "common/logging/log.h"
+#include "common/vector_math.h"
 
 #include "core/settings.h"
-#include "core/core.h"
 #include "core/memory.h"
 #include "core/core_timing.h"
 
-#include "core/hle/hle.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/hid/hid.h"
@@ -21,6 +22,8 @@
 #include "core/hw/gpu.h"
 
 #include "video_core/command_processor.h"
+#include "video_core/hwrasterizer_base.h"
+#include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 

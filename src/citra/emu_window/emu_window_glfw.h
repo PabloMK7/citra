@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "common/emu_window.h"
 
 struct GLFWwindow;

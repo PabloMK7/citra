@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "common/common_types.h"
@@ -12,7 +14,7 @@
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/file_backend.h"
-#include "core/loader/loader.h"
+#include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

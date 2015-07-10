@@ -17,11 +17,15 @@
 
 #pragma once
 
-#if defined(__linux__)
-#include <byteswap.h>
+#if defined(_MSC_VER)
+    #include <cstdlib>
+#elif defined(__linux__)
+    #include <byteswap.h>
 #elif defined(__FreeBSD__)
-#include <sys/endian.h>
+    #include <sys/endian.h>
 #endif
+
+#include "common/common_types.h"
 
 // GCC 4.6+
 #if __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)

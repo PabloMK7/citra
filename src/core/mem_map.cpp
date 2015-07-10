@@ -3,13 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <map>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
 #include "core/hle/config_mem.h"
-#include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/hle/shared_page.h"

@@ -4,12 +4,18 @@
 
 #pragma once
 
+#include <algorithm>
+#include <initializer_list>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
 
-#include "core/hle/kernel/process.h"
+namespace Kernel {
+struct AddressMapping;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Loader namespace

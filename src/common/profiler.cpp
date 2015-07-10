@@ -2,13 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cstddef>
+#include <vector>
+
+#include "common/assert.h"
 #include "common/profiler.h"
 #include "common/profiler_reporting.h"
-#include "common/assert.h"
+#include "common/synchronized_wrapper.h"
 
 #if defined(_MSC_VER) && _MSC_VER <= 1800 // MSVC 2013.
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h> // For QueryPerformanceCounter/Frequency
+    #define WIN32_LEAN_AND_MEAN
+    #include <Windows.h> // For QueryPerformanceCounter/Frequency
 #endif
 
 namespace Common {

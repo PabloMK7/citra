@@ -2,22 +2,25 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdlib>
+
+#include "common/assert.h"
+#include "common/emu_window.h"
+#include "common/logging/log.h"
+#include "common/profiler_reporting.h"
+
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
 #include "core/settings.h"
 
-#include "common/emu_window.h"
-#include "common/logging/log.h"
-#include "common/profiler_reporting.h"
-
 #include "video_core/video_core.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_shaders.h"
-
-#include <algorithm>
 
 /**
  * Vertex structure that the drawn screen rectangles are composed of.

@@ -2,29 +2,35 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstddef>
+#include <system_error>
+#include <type_traits>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include <boost/container/flat_map.hpp>
 
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/make_unique.h"
-#include "common/math_util.h"
 
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
-#include "core/file_sys/archive_romfs.h"
 #include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
+#include "core/file_sys/file_backend.h"
+#include "core/hle/hle.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/result.h"
+#include "core/memory.h"
 
 // Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
 // Workaroung for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970

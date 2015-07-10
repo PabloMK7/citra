@@ -11,6 +11,10 @@
 #include "bootmanager.h"
 #include "main.h"
 
+#include "common/string_util.h"
+#include "common/scm_rev.h"
+#include "common/key_map.h"
+
 #include "core/core.h"
 #include "core/settings.h"
 #include "core/system.h"

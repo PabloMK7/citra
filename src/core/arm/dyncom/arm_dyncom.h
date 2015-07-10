@@ -10,6 +10,11 @@
 
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/arm_regformat.h"
+
+namespace Core {
+struct ThreadContext;
+}
 
 class ARM_DynCom final : virtual public ARM_Interface {
 public:

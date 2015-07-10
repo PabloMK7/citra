@@ -26,16 +26,18 @@
 // - Zero backwards/forwards compatibility
 // - Serialization code for anything complex has to be manually written.
 
-#include <map>
-#include <vector>
+#include <cstring>
 #include <deque>
-#include <string>
 #include <list>
+#include <map>
 #include <set>
+#include <string>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
+#include "common/assert.h"
 #include "common/common_types.h"
-#include "common/file_util.h"
 #include "common/logging/log.h"
 
 template <class T>

@@ -31,7 +31,6 @@ set(HEADERS
             cpu_detect.h
             debug_interface.h
             emu_window.h
-            fifo_queue.h
             file_util.h
             key_map.h
             linear_disk_cache.h

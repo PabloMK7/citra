@@ -4,10 +4,6 @@
 
 #pragma once
 
-#include <cassert>
-#include <chrono>
-#include <string>
-
 #include "common/common_types.h"
 
 namespace Log {

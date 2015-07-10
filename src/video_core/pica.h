@@ -5,10 +5,10 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <cstddef>
-#include <initializer_list>
 #include <map>
-#include <vector>
+#include <string>
 
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -1014,7 +1014,7 @@ struct float24 {
             u32 mantissa = hex & 0xFFFF;
             u32 exponent = (hex >> 16) & 0x7F;
             u32 sign = hex >> 23;
-            ret.value = powf(2.0f, (float)exponent-63.0f) * (1.0f + mantissa * powf(2.0f, -16.f));
+            ret.value = std::pow(2.0f, (float)exponent-63.0f) * (1.0f + mantissa * std::pow(2.0f, -16.f));
             if (sign)
                 ret.value = -ret.value;
         }

@@ -5,11 +5,20 @@
 #include "common/thread.h"
 
 #ifdef __APPLE__
-#include <mach/mach.h>
-#elif defined(BSD4_4) || defined(__OpenBSD__)
-#include <pthread_np.h>
+    #include <mach/mach.h>
 #elif defined(_WIN32)
-#include <Windows.h>
+    #include <Windows.h>
+#else
+    #if defined(BSD4_4) || defined(__OpenBSD__)
+        #include <pthread_np.h>
+    #else
+        #include <pthread.h>
+    #endif
+    #include <sched.h>
+#endif
+
+#ifndef _WIN32
+    #include <unistd.h>
 #endif
 
 namespace Common

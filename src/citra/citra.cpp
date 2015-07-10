@@ -2,13 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <thread>
+#include <string>
 
 #include "common/logging/log.h"
-#include "common/logging/text_formatter.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
-#include "common/scope_exit.h"
 
 #include "core/settings.h"
 #include "core/system.h"

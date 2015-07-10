@@ -5,9 +5,11 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 #include "common/common_types.h"
 
+#include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

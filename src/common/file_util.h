@@ -6,13 +6,12 @@
 
 #include <array>
 #include <fstream>
+#include <cstddef>
 #include <cstdio>
-#include <cstring>
 #include <string>
 #include <vector>
 
 #include "common/common_types.h"
-#include "common/string_util.h"
 
 // User directory indices for GetUserPath
 enum {

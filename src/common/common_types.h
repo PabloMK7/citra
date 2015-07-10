@@ -24,9 +24,7 @@
 
 #pragma once
 
-#include <cmath>
 #include <cstdint>
-#include <cstdlib>
 
 #ifdef _MSC_VER
 #ifndef __func__

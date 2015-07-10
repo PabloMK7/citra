@@ -2,40 +2,47 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
-#include "common/platform.h"
-
-#if EMU_PLATFORM == PLATFORM_WINDOWS
-#include <winsock2.h>
-#include <ws2tcpip.h>
-
-// MinGW does not define several errno constants
-#ifndef _MSC_VER
-#define EBADMSG 104
-#define ENODATA 120
-#define ENOMSG  122
-#define ENOSR   124
-#define ENOSTR  125
-#define ETIME   137
-#define EIDRM   2001
-#define ENOLINK 2002
-#endif // _MSC_VER
-
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <poll.h>
-#endif
-
-#include "common/scope_exit.h"
-#include "core/hle/hle.h"
-#include "core/hle/service/soc_u.h"
+#include <algorithm>
+#include <cstring>
 #include <unordered_map>
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#include "common/assert.h"
+#include "common/bit_field.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
+#include "common/scope_exit.h"
+
+#include "core/hle/kernel/session.h"
+#include "core/hle/result.h"
+#include "core/hle/service/soc_u.h"
+#include "core/memory.h"
+
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+
+    // MinGW does not define several errno constants
+    #ifndef _MSC_VER
+        #define EBADMSG 104
+        #define ENODATA 120
+        #define ENOMSG  122
+        #define ENOSR   124
+        #define ENOSTR  125
+        #define ETIME   137
+        #define EIDRM   2001
+        #define ENOLINK 2002
+    #endif // _MSC_VER
+#else
+    #include <cerrno>
+    #include <fcntl.h>
+    #include <netinet/in.h>
+    #include <netdb.h>
+    #include <poll.h>
+    #include <sys/socket.h>
+    #include <unistd.h>
+#endif
+
+#ifdef _WIN32
 #    define WSAEAGAIN      WSAEWOULDBLOCK
 #    define WSAEMULTIHOP   -1 // Invalid dummy value
 #    define ERRNO(x)       WSA##x
@@ -371,7 +378,7 @@ static void Fcntl(Service::Interface* self) {
     });
 
     if (ctr_cmd == 3) { // F_GETFL
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
         posix_ret = 0;
         auto iter = open_sockets.find(socket_handle);
         if (iter != open_sockets.end() && iter->second.blocking == false)
@@ -388,7 +395,7 @@ static void Fcntl(Service::Interface* self) {
             posix_ret |= 4; // O_NONBLOCK
 #endif
     } else if (ctr_cmd == 4) { // F_SETFL
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
         unsigned long tmp = (ctr_arg & 4 /* O_NONBLOCK */) ? 1 : 0;
         int ret = ioctlsocket(socket_handle, FIONBIO, &tmp);
         if (ret == SOCKET_ERROR_VALUE) {
@@ -682,7 +689,7 @@ static void Connect(Service::Interface* self) {
 
 static void InitializeSockets(Service::Interface* self) {
     // TODO(Subv): Implement
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSADATA data;
     WSAStartup(MAKEWORD(2, 2), &data);
 #endif
@@ -696,7 +703,7 @@ static void ShutdownSockets(Service::Interface* self) {
     // TODO(Subv): Implement
     CleanupSockets();
 
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSACleanup();
 #endif
 
@@ -747,7 +754,7 @@ Interface::Interface() {
 
 Interface::~Interface() {
     CleanupSockets();
-#if EMU_PLATFORM == PLATFORM_WINDOWS
+#ifdef _WIN32
     WSACleanup();
 #endif
 }

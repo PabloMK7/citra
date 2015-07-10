@@ -10,17 +10,15 @@
 #include "qhexedit.h"
 #include "main.h"
 
+#include "common/string_util.h"
 #include "common/logging/text_formatter.h"
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/make_unique.h"
 #include "common/platform.h"
+#include "common/scm_rev.h"
 #include "common/scope_exit.h"
-
-#if EMU_PLATFORM == PLATFORM_LINUX
-#include <unistd.h>
-#endif
 
 #include "bootmanager.h"
 #include "hotkeys.h"

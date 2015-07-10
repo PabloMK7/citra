@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QShortcut>
-#include <QDialog>
 #include "ui_hotkeys.h"
 
+class QDialog;
 class QKeySequence;
 class QSettings;
+class QShortcut;
 
 /**
  * Register a hotkey.

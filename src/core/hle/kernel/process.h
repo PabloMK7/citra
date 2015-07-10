@@ -5,6 +5,8 @@
 #pragma once
 
 #include <bitset>
+#include <cstddef>
+#include <string>
 
 #include <boost/container/static_vector.hpp>
 
@@ -12,7 +14,6 @@
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/result.h"
 
 namespace Kernel {
 

@@ -53,6 +53,8 @@
 
 #include <cinttypes>
 
+#include "common/common_funcs.h"
+#include "common/common_types.h"
 #include "common/logging/log.h"
 
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
@@ -1246,7 +1248,7 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr)
 
     if (!fop->fn) {
         LOG_CRITICAL(Core_ARM11, "could not find single op %d, inst=0x%x@0x%x", FEXT_TO_IDX(inst), inst, state->Reg[15]);
-        exit(-1);
+        Crash();
         goto invalid;
     }
 

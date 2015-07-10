@@ -10,8 +10,11 @@
  * write access, according to 3dbrew; this is not emulated)
  */
 
+#include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
+
+#include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

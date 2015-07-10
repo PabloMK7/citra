@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <unordered_map>
 
@@ -11,8 +12,8 @@
 
 #include "common/common_types.h"
 
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/session.h"
+#include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service

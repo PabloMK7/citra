@@ -4,8 +4,13 @@
 
 #pragma once
 
-#include "common/emu_window.h"
-#include "video_core/vertex_shader.h"
+#include "common/common_types.h"
+
+namespace Pica {
+namespace VertexShader {
+struct OutputVertex;
+}
+}
 
 class HWRasterizer {
 public:

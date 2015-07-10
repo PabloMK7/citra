@@ -3,12 +3,12 @@
 // Refer to the license.txt file included.
 
 #include <atomic>
-#include <cstdio>
 #include <mutex>
 #include <vector>
 
-#include "common/assert.h"
 #include "common/chunk_file.h"
+#include "common/logging/log.h"
+#include "common/string_util.h"
 
 #include "core/arm/arm_interface.h"
 #include "core/core.h"

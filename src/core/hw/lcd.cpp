@@ -7,8 +7,6 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "core/arm/arm_interface.h"
-#include "core/hle/hle.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 

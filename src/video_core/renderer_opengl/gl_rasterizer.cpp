@@ -2,10 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/color.h"
+#include <cstring>
+#include <memory>
 
-#include "core/settings.h"
+#include "common/color.h"
+#include "common/math_util.h"
+
 #include "core/hw/gpu.h"
+#include "core/memory.h"
+#include "core/settings.h"
 
 #include "video_core/pica.h"
 #include "video_core/utils.h"
@@ -15,8 +20,6 @@
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
 #include "generated/gl_3_2_core.h"
-
-#include <memory>
 
 static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
     return (stage.color_op == Pica::Regs::TevStageConfig::Operation::Replace &&
