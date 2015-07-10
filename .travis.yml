@@ -8,6 +8,21 @@ env:
   global:
     - secure: "AXHFIafTmbGDsHD3mUVj5a4I397DQjti/WoqAJGUp2PglxTcc04BwxZ9Z+xLuf5N2Hs5r9ojAJLT8OGxJCLBDXzneQTNSqXbFuYSLbqrEAiIRlA9eRIotWCg+wYcO+5e8MKX+cHVKwiIWasUB21AtCdq6msh6Y3pUshZp212VPg="
 
+sudo: false
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.9
+      - g++-4.9
+      - xorg-dev
+      - libglu1-mesa-dev
+      - libxcursor-dev
+      - lib32stdc++6 # For CMake
+      - lftp # To upload builds
+
 before_install:
  - sh .travis-deps.sh
 

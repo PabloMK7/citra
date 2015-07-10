@@ -7,7 +7,6 @@ if [ "$TRAVIS_BRANCH" = "master" ]; then
         UPLOAD_DIR="/citra/nightly/linux-amd64"
         mkdir "$REV_NAME"
 
-        sudo apt-get -qq install lftp
         cp build/src/citra/citra "$REV_NAME"
         cp build/src/citra_qt/citra-qt "$REV_NAME"
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
