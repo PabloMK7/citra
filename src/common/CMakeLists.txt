@@ -52,7 +52,6 @@ set(HEADERS
             synchronized_wrapper.h
             thread.h
             thread_queue_list.h
-            thunk.h
             timer.h
             vector_math.h
             )
