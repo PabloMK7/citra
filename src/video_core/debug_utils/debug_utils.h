@@ -181,7 +181,8 @@ private:
     std::vector<Face> faces;
 };
 
-void DumpShader(const Regs::ShaderConfig& config, const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
+void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
+                const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
 
 
 // Utility class to log Pica commands.

@@ -111,7 +111,7 @@ void GeometryDumper::Dump() {
 }
 
 
-void DumpShader(const Regs::ShaderConfig& config, const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
+void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
 {
     struct StuffToWrite {
         u8* pointer;
@@ -294,7 +294,6 @@ void DumpShader(const Regs::ShaderConfig& config, const State::ShaderSetup& setu
 
     // Write data to file
     static int dump_index = 0;
-    std::string filename = std::string("shader_dump") + std::to_string(++dump_index) + std::string(".shbin");
     std::ofstream file(filename, std::ios_base::out | std::ios_base::binary);
 
     for (auto& chunk : writing_queue) {

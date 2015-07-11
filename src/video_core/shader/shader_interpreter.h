@@ -12,7 +12,8 @@ namespace Pica {
 
 namespace Shader {
 
-void RunInterpreter(UnitState& state);
+template<bool Debug>
+void RunInterpreter(UnitState<Debug>& state);
 
 } // namespace
 

@@ -6,11 +6,16 @@
 #include <sstream>
 
 #include <QBoxLayout>
+#include <QFileDialog>
+#include <QGroupBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPushButton>
+#include <QSignalMapper>
+#include <QSpinBox>
 #include <QTreeView>
 
-#include "video_core/shader/shader_interpreter.h"
+#include "video_core/shader/shader.h"
 
 #include "graphics_vertex_shader.h"
 
@@ -19,7 +24,7 @@ using nihstro::Instruction;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-GraphicsVertexShaderModel::GraphicsVertexShaderModel(QObject* parent): QAbstractItemModel(parent) {
+GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent): QAbstractItemModel(parent), par(parent) {
 
 }
 
@@ -36,7 +41,7 @@ int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
 }
 
 int GraphicsVertexShaderModel::rowCount(const QModelIndex& parent) const {
-    return static_cast<int>(info.code.size());
+    return static_cast<int>(par->info.code.size());
 }
 
 QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -64,21 +69,21 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
     {
         switch (index.column()) {
         case 0:
-            if (info.HasLabel(index.row()))
-                return QString::fromStdString(info.GetLabel(index.row()));
+            if (par->info.HasLabel(index.row()))
+                return QString::fromStdString(par->info.GetLabel(index.row()));
 
             return QString("%1").arg(4*index.row(), 4, 16, QLatin1Char('0'));
 
         case 1:
-            return QString("%1").arg(info.code[index.row()].hex, 8, 16, QLatin1Char('0'));
+            return QString("%1").arg(par->info.code[index.row()].hex, 8, 16, QLatin1Char('0'));
 
         case 2:
         {
             std::stringstream output;
             output.flags(std::ios::hex);
 
-            Instruction instr = info.code[index.row()];
-            const SwizzlePattern& swizzle = info.swizzle_info[instr.common.operand_desc_id].pattern;
+            Instruction instr = par->info.code[index.row()];
+            const SwizzlePattern& swizzle = par->info.swizzle_info[instr.common.operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
             output << std::setw(8) << std::left << instr.opcode.Value().GetInfo().name;
@@ -242,6 +247,18 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
     case Qt::FontRole:
         return QFont("monospace");
 
+    case Qt::BackgroundRole:
+        // Highlight instructions which have no debug data associated to them
+        for (const auto& record : par->debug_data.records)
+            if (index.row() == record.instruction_offset)
+                return QVariant();
+
+        return QBrush(QColor(255, 255, 127));
+
+
+    // TODO: Draw arrows for each "reachable" instruction to visualize control flow
+
+
     default:
         break;
     }
@@ -249,13 +266,153 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
     return QVariant();
 }
 
-void GraphicsVertexShaderModel::OnUpdate()
-{
-    beginResetModel();
+void GraphicsVertexShaderWidget::DumpShader() {
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save Shader Dump"), "shader_dump.shbin",
+                                                    tr("Shader Binary (*.shbin)"));
 
+    if (filename.isEmpty()) {
+        // If the user canceled the dialog, don't dump anything.
+        return;
+    }
+
+    auto& setup  = Pica::g_state.vs;
+    auto& config = Pica::g_state.regs.vs;
+
+    Pica::DebugUtils::DumpShader(filename.toStdString(), config, setup, Pica::g_state.regs.vs_output_attributes);
+}
+
+GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::DebugContext > debug_context,
+                                                       QWidget* parent)
+        : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
+    setObjectName("PicaVertexShader");
+
+    auto input_data_mapper = new QSignalMapper(this);
+
+    // TODO: Support inputting data in hexadecimal raw format
+    for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
+        input_data[i] = new QLineEdit;
+        input_data[i]->setValidator(new QDoubleValidator(input_data[i]));
+    }
+
+    breakpoint_warning = new QLabel(tr("(data only available at VertexLoaded breakpoints)"));
+
+    // TODO: Add some button for jumping to the shader entry point
+
+    model = new GraphicsVertexShaderModel(this);
+    binary_list = new QTreeView;
+    binary_list->setModel(model);
+    binary_list->setRootIsDecorated(false);
+    binary_list->setAlternatingRowColors(true);
+
+    auto dump_shader = new QPushButton(QIcon::fromTheme("document-save"), tr("Dump"));
+
+    instruction_description = new QLabel;
+
+    iteration_index = new QSpinBox;
+
+    connect(this, SIGNAL(SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags)),
+            binary_list->selectionModel(), SLOT(select(const QModelIndex&, QItemSelectionModel::SelectionFlags)));
+
+    connect(dump_shader, SIGNAL(clicked()), this, SLOT(DumpShader()));
+
+    connect(iteration_index, SIGNAL(valueChanged(int)), this, SLOT(OnIterationIndexChanged(int)));
+
+    for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
+        connect(input_data[i], SIGNAL(textEdited(const QString&)), input_data_mapper, SLOT(map()));
+        input_data_mapper->setMapping(input_data[i], i);
+    }
+    connect(input_data_mapper, SIGNAL(mapped(int)), this, SLOT(OnInputAttributeChanged(int)));
+
+    auto main_widget = new QWidget;
+    auto main_layout = new QVBoxLayout;
+    {
+        auto input_data_group = new QGroupBox(tr("Input Data"));
+
+        // For each vertex attribute, add a QHBoxLayout consisting of:
+        // - A QLabel denoting the source attribute index
+        // - Four QLineEdits for showing and manipulating attribute data
+        // - A QLabel denoting the shader input attribute index
+        auto sub_layout = new QVBoxLayout;
+        for (unsigned i = 0; i < 16; ++i) {
+            // Create an HBoxLayout to store the widgets used to specify a particular attribute
+            // and store it in a QWidget to allow for easy hiding and unhiding.
+            auto row_layout = new QHBoxLayout;
+            row_layout->addWidget(new QLabel(tr("Attribute %1").arg(i, 2)));
+            for (unsigned comp = 0; comp < 4; ++comp)
+                row_layout->addWidget(input_data[4 * i + comp]);
+
+            row_layout->addWidget(input_data_mapping[i] = new QLabel);
+
+            input_data_container[i] = new QWidget;
+            input_data_container[i]->setLayout(row_layout);
+            input_data_container[i]->hide();
+
+            sub_layout->addWidget(input_data_container[i]);
+        }
+
+        sub_layout->addWidget(breakpoint_warning);
+        breakpoint_warning->hide();
+
+        input_data_group->setLayout(sub_layout);
+        main_layout->addWidget(input_data_group);
+    }
+    {
+        auto sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(binary_list);
+        main_layout->addLayout(sub_layout);
+    }
+    main_layout->addWidget(dump_shader);
+    {
+        auto sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(new QLabel(tr("Iteration Index:")));
+        sub_layout->addWidget(iteration_index);
+        main_layout->addLayout(sub_layout);
+    }
+    main_layout->addWidget(instruction_description);
+    main_widget->setLayout(main_layout);
+    setWidget(main_widget);
+
+    widget()->setEnabled(false);
+}
+
+void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
+    auto input = static_cast<Pica::Shader::InputVertex*>(data);
+    if (event == Pica::DebugContext::Event::VertexLoaded) {
+        Reload(true, data);
+    } else {
+        // No vertex data is retrievable => invalidate currently stored vertex data
+        Reload(true, nullptr);
+    }
+    widget()->setEnabled(true);
+}
+
+void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_data) {
+    model->beginResetModel();
+
+    if (replace_vertex_data) {
+        if (vertex_data) {
+            memcpy(&input_vertex, vertex_data, sizeof(input_vertex));
+            for (unsigned attr = 0; attr < 16; ++attr) {
+                for (unsigned comp = 0; comp < 4; ++comp) {
+                    input_data[4 * attr + comp]->setText(QString("%1").arg(input_vertex.attr[attr][comp].ToFloat32()));
+                }
+            }
+            breakpoint_warning->hide();
+        } else {
+            for (unsigned attr = 0; attr < 16; ++attr) {
+                for (unsigned comp = 0; comp < 4; ++comp) {
+                    input_data[4 * attr + comp]->setText(QString("???"));
+                }
+            }
+            breakpoint_warning->show();
+        }
+    }
+
+    // Reload shader code
     info.Clear();
 
     auto& shader_setup = Pica::g_state.vs;
+    auto& shader_config = Pica::g_state.regs.vs;
     for (auto instr : shader_setup.program_code)
         info.code.push_back({instr});
 
@@ -265,49 +422,75 @@ void GraphicsVertexShaderModel::OnUpdate()
     u32 entry_point = Pica::g_state.regs.vs.main_offset;
     info.labels.insert({ entry_point, "main" });
 
-    endResetModel();
-}
+    // Generate debug information
+    debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, 1, shader_config, shader_setup);
 
-void GraphicsVertexShaderModel::DumpShader() {
-    auto& setup  = Pica::g_state.vs;
-    auto& config = Pica::g_state.regs.vs;
+    // Reload widget state
 
-    Pica::DebugUtils::DumpShader(config, setup, Pica::g_state.regs.vs_output_attributes);
-}
-
-GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::DebugContext > debug_context,
-                                                       QWidget* parent)
-        : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
-    setObjectName("PicaVertexShader");
-
-    auto binary_model = new GraphicsVertexShaderModel(this);
-    auto binary_list = new QTreeView;
-    binary_list->setModel(binary_model);
-    binary_list->setRootIsDecorated(false);
-    binary_list->setAlternatingRowColors(true);
-
-    auto dump_shader = new QPushButton(tr("Dump"));
-
-    connect(dump_shader, SIGNAL(clicked()), binary_model, SLOT(DumpShader()));
-    connect(this, SIGNAL(Update()), binary_model, SLOT(OnUpdate()));
-
-    auto main_widget = new QWidget;
-    auto main_layout = new QVBoxLayout;
-    {
-        auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(binary_list);
-        main_layout->addLayout(sub_layout);
+    // Only show input attributes which are used as input to the shader
+    for (unsigned int attr = 0; attr < 16; ++attr) {
+        input_data_container[attr]->setVisible(false);
     }
-    main_layout->addWidget(dump_shader);
-    main_widget->setLayout(main_layout);
-    setWidget(main_widget);
-}
+    for (unsigned int attr = 0; attr < Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes(); ++attr) {
+        unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
+        input_data_mapping[source_attr]->setText(QString("-> v%1").arg(attr));
+        input_data_container[source_attr]->setVisible(true);
+    }
 
-void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
-    emit Update();
-    widget()->setEnabled(true);
+    // Initialize debug info text for current iteration count
+    iteration_index->setMaximum(debug_data.records.size() - 1);
+    OnIterationIndexChanged(iteration_index->value());
+
+    model->endResetModel();
 }
 
 void GraphicsVertexShaderWidget::OnResumed() {
     widget()->setEnabled(false);
+}
+
+void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
+    float value = input_data[index]->text().toFloat();
+    Reload();
+}
+
+void GraphicsVertexShaderWidget::OnIterationIndexChanged(int index) {
+    QString text;
+
+    auto& record = debug_data.records[index];
+    if (record.mask & Pica::Shader::DebugDataRecord::SRC1)
+        text += tr("SRC1: %1, %2, %3, %4\n").arg(record.src1.x.ToFloat32()).arg(record.src1.y.ToFloat32()).arg(record.src1.z.ToFloat32()).arg(record.src1.w.ToFloat32());
+    if (record.mask & Pica::Shader::DebugDataRecord::SRC2)
+        text += tr("SRC2: %1, %2, %3, %4\n").arg(record.src2.x.ToFloat32()).arg(record.src2.y.ToFloat32()).arg(record.src2.z.ToFloat32()).arg(record.src2.w.ToFloat32());
+    if (record.mask & Pica::Shader::DebugDataRecord::SRC3)
+        text += tr("SRC3: %1, %2, %3, %4\n").arg(record.src3.x.ToFloat32()).arg(record.src3.y.ToFloat32()).arg(record.src3.z.ToFloat32()).arg(record.src3.w.ToFloat32());
+    if (record.mask & Pica::Shader::DebugDataRecord::DEST_IN)
+        text += tr("DEST_IN: %1, %2, %3, %4\n").arg(record.dest_in.x.ToFloat32()).arg(record.dest_in.y.ToFloat32()).arg(record.dest_in.z.ToFloat32()).arg(record.dest_in.w.ToFloat32());
+    if (record.mask & Pica::Shader::DebugDataRecord::DEST_OUT)
+        text += tr("DEST_OUT: %1, %2, %3, %4\n").arg(record.dest_out.x.ToFloat32()).arg(record.dest_out.y.ToFloat32()).arg(record.dest_out.z.ToFloat32()).arg(record.dest_out.w.ToFloat32());
+
+    if (record.mask & Pica::Shader::DebugDataRecord::ADDR_REG_OUT)
+        text += tr("Addres Registers: %1, %2\n").arg(record.address_registers[0]).arg(record.address_registers[1]);
+    if (record.mask & Pica::Shader::DebugDataRecord::CMP_RESULT)
+        text += tr("Compare Result: %1, %2\n").arg(record.conditional_code[0] ? "true" : "false").arg(record.conditional_code[1] ? "true" : "false");
+
+    if (record.mask & Pica::Shader::DebugDataRecord::COND_BOOL_IN)
+        text += tr("Static Condition: %1\n").arg(record.cond_bool ? "true" : "false");
+    if (record.mask & Pica::Shader::DebugDataRecord::COND_CMP_IN)
+        text += tr("Dynamic Conditions: %1, %2\n").arg(record.cond_cmp[0] ? "true" : "false").arg(record.cond_cmp[1] ? "true" : "false");
+    if (record.mask & Pica::Shader::DebugDataRecord::LOOP_INT_IN)
+        text += tr("Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4\n").arg(record.loop_int.x).arg(record.loop_int.y).arg(record.loop_int.z).arg(record.loop_int.w);
+
+    text += tr("Instruction offset: 0x%1").arg(4 * record.instruction_offset, 4, 16, QLatin1Char('0'));
+    if (record.mask & Pica::Shader::DebugDataRecord::NEXT_INSTR) {
+        text += tr(" -> 0x%2").arg(4 * record.next_instruction, 4, 16, QLatin1Char('0'));
+    } else {
+        text += tr(" (last instruction)");
+    }
+
+    instruction_description->setText(text);
+
+    // Scroll to current instruction
+    const QModelIndex& instr_index = model->index(record.instruction_offset, 0);
+    emit SelectCommand(instr_index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    binary_list->scrollTo(instr_index, QAbstractItemView::EnsureVisible);
 }
