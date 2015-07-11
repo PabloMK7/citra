@@ -392,15 +392,15 @@ ResultStatus AppLoader_ELF::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    if (!file->IsOpen())
+    if (!file.IsOpen())
         return ResultStatus::Error;
 
     // Reset read pointer in case this file has been read before.
-    file->Seek(0, SEEK_SET);
+    file.Seek(0, SEEK_SET);
 
-    u32 size = static_cast<u32>(file->GetSize());
+    u32 size = static_cast<u32>(file.GetSize());
     std::unique_ptr<u8[]> buffer(new u8[size]);
-    if (file->ReadBytes(&buffer[0], size) != size)
+    if (file.ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;
 
     ElfReader elf_reader(&buffer[0]);

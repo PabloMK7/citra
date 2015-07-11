@@ -163,7 +163,7 @@ namespace Loader {
 /// Loads an NCCH file (e.g. from a CCI, or the first NCCH in a CXI)
 class AppLoader_NCCH final : public AppLoader {
 public:
-    AppLoader_NCCH(std::unique_ptr<FileUtil::IOFile>&& file, const std::string& filepath)
+    AppLoader_NCCH(FileUtil::IOFile&& file, const std::string& filepath)
         : AppLoader(std::move(file)), filepath(filepath) { }
 
     /**
@@ -184,35 +184,35 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadCode(std::vector<u8>& buffer) const override;
+    ResultStatus ReadCode(std::vector<u8>& buffer) override;
 
     /**
      * Get the icon (typically icon section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadIcon(std::vector<u8>& buffer) const override;
+    ResultStatus ReadIcon(std::vector<u8>& buffer) override;
 
     /**
      * Get the banner (typically banner section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadBanner(std::vector<u8>& buffer) const override;
+    ResultStatus ReadBanner(std::vector<u8>& buffer) override;
 
     /**
      * Get the logo (typically logo section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadLogo(std::vector<u8>& buffer) const override;
+    ResultStatus ReadLogo(std::vector<u8>& buffer) override;
 
     /**
      * Get the RomFS of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) const override;
+    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) override;
 
 private:
 
@@ -222,13 +222,13 @@ private:
      * @param buffer Vector to read data into
      * @return ResultStatus result of function
      */
-    ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const;
+    ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer);
 
     /**
      * Loads .code section into memory for booting
      * @return ResultStatus result of function
      */
-    ResultStatus LoadExec() const;
+    ResultStatus LoadExec();
 
     bool            is_compressed = false;
 

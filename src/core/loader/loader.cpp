@@ -90,8 +90,8 @@ static const char* GetFileTypeString(FileType type) {
 }
 
 ResultStatus LoadFile(const std::string& filename) {
-    std::unique_ptr<FileUtil::IOFile> file(new FileUtil::IOFile(filename, "rb"));
-    if (!file->IsOpen()) {
+    FileUtil::IOFile file(filename, "rb");
+    if (!file.IsOpen()) {
         LOG_ERROR(Loader, "Failed to load file %s", filename.c_str());
         return ResultStatus::Error;
     }
@@ -99,7 +99,7 @@ ResultStatus LoadFile(const std::string& filename) {
     std::string filename_filename, filename_extension;
     Common::SplitPath(filename, nullptr, &filename_filename, &filename_extension);
 
-    FileType type = IdentifyFile(*file);
+    FileType type = IdentifyFile(file);
     FileType filename_type = GuessFromExtension(filename_extension);
 
     if (type != filename_type) {

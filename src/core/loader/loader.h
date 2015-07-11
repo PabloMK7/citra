@@ -52,7 +52,7 @@ static inline u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    AppLoader(std::unique_ptr<FileUtil::IOFile>&& file) : file(std::move(file)) { }
+    AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) { }
     virtual ~AppLoader() { }
 
     /**
@@ -66,7 +66,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadCode(std::vector<u8>& buffer) const {
+    virtual ResultStatus ReadCode(std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -75,7 +75,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) const {
+    virtual ResultStatus ReadIcon(std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -84,7 +84,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) const {
+    virtual ResultStatus ReadBanner(std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -93,7 +93,7 @@ public:
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) const {
+    virtual ResultStatus ReadLogo(std::vector<u8>& buffer) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -105,13 +105,13 @@ public:
      * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) const {
+    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) {
         return ResultStatus::ErrorNotImplemented;
     }
 
 protected:
-    std::unique_ptr<FileUtil::IOFile> file;
-    bool                              is_loaded = false;
+    FileUtil::IOFile file;
+    bool is_loaded = false;
 };
 
 /**

@@ -117,7 +117,7 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_NCCH::LoadExec() const {
+ResultStatus AppLoader_NCCH::LoadExec() {
     using Kernel::SharedPtr;
     using Kernel::CodeSet;
 
@@ -171,8 +171,8 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
     return ResultStatus::Error;
 }
 
-ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer) const {
-    if (!file->IsOpen())
+ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>& buffer) {
+    if (!file.IsOpen())
         return ResultStatus::Error;
 
     LOG_DEBUG(Loader, "%d sections:", kMaxSections);
@@ -186,7 +186,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
                       section.offset, section.size, section.name);
 
             s64 section_offset = (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
-            file->Seek(section_offset, SEEK_SET);
+            file.Seek(section_offset, SEEK_SET);
 
             if (is_compressed) {
                 // Section is compressed, read compressed .code section...
@@ -197,7 +197,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
                     return ResultStatus::ErrorMemoryAllocationFailed;
                 }
 
-                if (file->ReadBytes(&temp_buffer[0], section.size) != section.size)
+                if (file.ReadBytes(&temp_buffer[0], section.size) != section.size)
                     return ResultStatus::Error;
 
                 // Decompress .code section...
@@ -208,7 +208,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
             } else {
                 // Section is uncompressed...
                 buffer.resize(section.size);
-                if (file->ReadBytes(&buffer[0], section.size) != section.size)
+                if (file.ReadBytes(&buffer[0], section.size) != section.size)
                     return ResultStatus::Error;
             }
             return ResultStatus::Success;
@@ -221,21 +221,21 @@ ResultStatus AppLoader_NCCH::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    if (!file->IsOpen())
+    if (!file.IsOpen())
         return ResultStatus::Error;
 
     // Reset read pointer in case this file has been read before.
-    file->Seek(0, SEEK_SET);
+    file.Seek(0, SEEK_SET);
 
-    if (file->ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
+    if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
         return ResultStatus::Error;
 
     // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
     if (MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
         LOG_WARNING(Loader, "Only loading the first (bootable) NCCH within the NCSD file!");
         ncch_offset = 0x4000;
-        file->Seek(ncch_offset, SEEK_SET);
-        file->ReadBytes(&ncch_header, sizeof(NCCH_Header));
+        file.Seek(ncch_offset, SEEK_SET);
+        file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
     }
 
     // Verify we are loading the correct file type...
@@ -244,7 +244,7 @@ ResultStatus AppLoader_NCCH::Load() {
 
     // Read ExHeader...
 
-    if (file->ReadBytes(&exheader_header, sizeof(ExHeader_Header)) != sizeof(ExHeader_Header))
+    if (file.ReadBytes(&exheader_header, sizeof(ExHeader_Header)) != sizeof(ExHeader_Header))
         return ResultStatus::Error;
 
     is_compressed           = (exheader_header.codeset_info.flags.flag & 1) == 1;
@@ -274,8 +274,8 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "ExeFS offset:                0x%08X", exefs_offset);
     LOG_DEBUG(Loader, "ExeFS size:                  0x%08X", exefs_size);
 
-    file->Seek(exefs_offset + ncch_offset, SEEK_SET);
-    if (file->ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
+    file.Seek(exefs_offset + ncch_offset, SEEK_SET);
+    if (file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
         return ResultStatus::Error;
 
     is_loaded = true; // Set state to loaded
@@ -283,24 +283,24 @@ ResultStatus AppLoader_NCCH::Load() {
     return LoadExec(); // Load the executable into memory for booting
 }
 
-ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) const {
+ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) {
     return LoadSectionExeFS(".code", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer) const {
+ResultStatus AppLoader_NCCH::ReadIcon(std::vector<u8>& buffer) {
     return LoadSectionExeFS("icon", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) const {
+ResultStatus AppLoader_NCCH::ReadBanner(std::vector<u8>& buffer) {
     return LoadSectionExeFS("banner", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) const {
+ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
     return LoadSectionExeFS("logo", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) const {
-    if (!file->IsOpen())
+ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) {
+    if (!file.IsOpen())
         return ResultStatus::Error;
 
     // Check if the NCCH has a RomFS...
@@ -311,7 +311,7 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_
         LOG_DEBUG(Loader, "RomFS offset:           0x%08X", romfs_offset);
         LOG_DEBUG(Loader, "RomFS size:             0x%08X", romfs_size);
 
-        if (file->GetSize () < romfs_offset + romfs_size)
+        if (file.GetSize () < romfs_offset + romfs_size)
             return ResultStatus::Error;
 
         // We reopen the file, to allow its position to be independent from file's
