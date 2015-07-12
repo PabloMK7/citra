@@ -86,6 +86,7 @@ public:
         case HandleType::Process:
         case HandleType::AddressArbiter:
         case HandleType::ResourceLimit:
+        case HandleType::CodeSet:
             return false;
         }
     }
