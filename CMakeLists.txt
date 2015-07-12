@@ -203,6 +203,10 @@ add_subdirectory(${INI_PREFIX})
 
 include_directories(externals/nihstro/include)
 
+if (MSVC)
+    add_subdirectory(externals/getopt)
+endif()
+
 # process subdirectories
 if(ENABLE_QT)
     include_directories(externals/qhexedit)
