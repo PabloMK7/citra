@@ -69,8 +69,10 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // _MSC_VER
-    // Function Cross-Compatibility
-    #define snprintf _snprintf
+    #if (_MSC_VER < 1900)
+        // Function Cross-Compatibility
+        #define snprintf _snprintf
+    #endif
 
     // Locale Cross-Compatibility
     #define locale_t _locale_t
