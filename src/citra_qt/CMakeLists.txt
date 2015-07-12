@@ -73,7 +73,9 @@ target_link_libraries(citra-qt core common video_core qhexedit)
 target_link_libraries(citra-qt ${OPENGL_gl_LIBRARY} ${CITRA_QT_LIBS})
 target_link_libraries(citra-qt ${PLATFORM_LIBRARIES})
 
-#install(TARGETS citra-qt RUNTIME DESTINATION ${bindir})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
+    install(TARGETS citra-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
 
 if (Qt5_FOUND AND MSVC)
     set(Qt5_DLL_DIR "${Qt5_DIR}/../../../bin")

@@ -18,4 +18,6 @@ target_link_libraries(citra core common video_core)
 target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih)
 target_link_libraries(citra ${PLATFORM_LIBRARIES})
 
-#install(TARGETS citra RUNTIME DESTINATION ${bindir})
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
+    install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
