@@ -47,23 +47,51 @@ union ProcessFlags {
 };
 
 class ResourceLimit;
+class VMManager;
+
+struct CodeSet final : public Object {
+    static SharedPtr<CodeSet> Create(std::string name, u64 program_id);
+
+    std::string GetTypeName() const override { return "CodeSet"; }
+    std::string GetName() const override { return name; }
+
+    static const HandleType HANDLE_TYPE = HandleType::CodeSet;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+
+    /// Name of the process
+    std::string name;
+    /// Title ID corresponding to the process
+    u64 program_id;
+
+    std::shared_ptr<std::vector<u8>> memory;
+
+    struct Segment {
+        size_t offset = 0;
+        VAddr addr = 0;
+        u32 size = 0;
+    };
+
+    Segment code, rodata, data;
+    VAddr entrypoint;
+
+private:
+    CodeSet();
+    ~CodeSet() override;
+};
 
 class Process final : public Object {
 public:
-    static SharedPtr<Process> Create(std::string name, u64 program_id);
+    static SharedPtr<Process> Create(SharedPtr<CodeSet> code_set);
 
     std::string GetTypeName() const override { return "Process"; }
-    std::string GetName() const override { return name; }
+    std::string GetName() const override { return codeset->name; }
 
     static const HandleType HANDLE_TYPE = HandleType::Process;
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     static u32 next_process_id;
 
-    /// Name of the process
-    std::string name;
-    /// Title ID corresponding to the process
-    u64 program_id;
+    SharedPtr<CodeSet> codeset;
     /// Resource limit descriptor for this process
     SharedPtr<ResourceLimit> resource_limit;
 
@@ -81,6 +109,7 @@ public:
 
     /// Bitmask of the used TLS slots
     std::bitset<300> used_tls_slots;
+    std::unique_ptr<VMManager> address_space;
 
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
@@ -91,7 +120,7 @@ public:
     /**
      * Applies address space changes and launches the process main thread.
      */
-    void Run(VAddr entry_point, s32 main_thread_priority, u32 stack_size);
+    void Run(s32 main_thread_priority, u32 stack_size);
 
 private:
     Process();

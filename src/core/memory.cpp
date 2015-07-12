@@ -59,14 +59,12 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     while (base != end) {
         ASSERT_MSG(base < PageTable::NUM_ENTRIES, "out of range mapping at %08X", base);
 
-        if (current_page_table->attributes[base] != PageType::Unmapped && type != PageType::Unmapped) {
-            LOG_ERROR(HW_Memory, "overlapping memory ranges at %08X", base * PAGE_SIZE);
-        }
         current_page_table->attributes[base] = type;
         current_page_table->pointers[base] = memory;
 
         base += 1;
-        memory += PAGE_SIZE;
+        if (memory != nullptr)
+            memory += PAGE_SIZE;
     }
 }
 

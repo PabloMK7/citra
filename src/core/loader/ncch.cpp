@@ -118,6 +118,9 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
 }
 
 ResultStatus AppLoader_NCCH::LoadExec() const {
+    using Kernel::SharedPtr;
+    using Kernel::CodeSet;
+
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
 
@@ -126,7 +129,30 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
                 (const char*)exheader_header.codeset_info.name, 8);
         u64 program_id = *reinterpret_cast<u64_le const*>(&ncch_header.program_id[0]);
-        Kernel::g_current_process = Kernel::Process::Create(process_name, program_id);
+
+        SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, program_id);
+
+        codeset->code.offset = 0;
+        codeset->code.addr = exheader_header.codeset_info.text.address;
+        codeset->code.size = exheader_header.codeset_info.text.num_max_pages * Memory::PAGE_SIZE;
+
+        codeset->rodata.offset = codeset->code.offset + codeset->code.size;
+        codeset->rodata.addr = exheader_header.codeset_info.ro.address;
+        codeset->rodata.size = exheader_header.codeset_info.ro.num_max_pages * Memory::PAGE_SIZE;
+
+        // TODO(yuriks): Not sure if the bss size is added to the page-aligned .data size or just
+        //               to the regular size. Playing it safe for now.
+        u32 bss_page_size = (exheader_header.codeset_info.bss_size + 0xFFF) & ~0xFFF;
+        code.resize(code.size() + bss_page_size, 0);
+
+        codeset->data.offset = codeset->rodata.offset + codeset->rodata.size;
+        codeset->data.addr = exheader_header.codeset_info.data.address;
+        codeset->data.size = exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE + bss_page_size;
+
+        codeset->entrypoint = codeset->code.addr;
+        codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
+
+        Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
         Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(
@@ -137,11 +163,9 @@ ResultStatus AppLoader_NCCH::LoadExec() const {
         std::copy_n(exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(), begin(kernel_caps));
         Kernel::g_current_process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
 
-        Memory::WriteBlock(entry_point, &code[0], code.size());
-
         s32 priority = exheader_header.arm11_system_local_caps.priority;
         u32 stack_size = exheader_header.codeset_info.stack_size;
-        Kernel::g_current_process->Run(entry_point, priority, stack_size);
+        Kernel::g_current_process->Run(priority, stack_size);
         return ResultStatus::Success;
     }
     return ResultStatus::Error;
