@@ -15,7 +15,7 @@ namespace PicaToGL {
 inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     static const GLenum wrap_mode_table[] = {
         GL_CLAMP_TO_EDGE,  // WrapMode::ClampToEdge
-        0,                 // Unknown
+        GL_CLAMP_TO_BORDER,// WrapMode::ClampToBorder
         GL_REPEAT,         // WrapMode::Repeat
         GL_MIRRORED_REPEAT // WrapMode::MirroredRepeat
     };

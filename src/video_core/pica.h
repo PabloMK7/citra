@@ -114,11 +114,17 @@ struct Regs {
     struct TextureConfig {
         enum WrapMode : u32 {
             ClampToEdge    = 0,
+            ClampToBorder  = 1,
             Repeat         = 2,
             MirroredRepeat = 3,
         };
 
-        INSERT_PADDING_WORDS(0x1);
+        union {
+            BitField< 0, 8, u32> r;
+            BitField< 8, 8, u32> g;
+            BitField<16, 8, u32> b;
+            BitField<24, 8, u32> a;
+        } border_color;
 
         union {
             BitField< 0, 16, u32> height;
