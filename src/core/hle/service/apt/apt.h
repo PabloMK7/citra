@@ -11,6 +11,23 @@
 namespace Service {
 namespace APT {
 
+/// Holds information about the parameters used in Send/Glance/ReceiveParameter
+struct MessageParameter {
+    u32 sender_id = 0;
+    u32 destination_id = 0;
+    u32 signal = 0;
+    u32 buffer_size = 0;
+    Kernel::SharedPtr<Kernel::Object> object = nullptr;
+    u8* data = nullptr;
+};
+
+/// Holds information about the parameters used in StartLibraryApplet
+struct AppletStartupParameter {
+    u32 buffer_size = 0;
+    Kernel::SharedPtr<Kernel::Object> object = nullptr;
+    u8* data = nullptr;
+};
+
 /// Signals used by APT functions
 enum class SignalType : u32 {
     None              = 0x0,
@@ -23,7 +40,7 @@ enum class SignalType : u32 {
 };
 
 /// App Id's used by APT functions
-enum class AppID : u32 {
+enum class AppletId : u32 {
     HomeMenu           = 0x101,
     AlternateMenu      = 0x103,
     Camera             = 0x110,
@@ -44,6 +61,9 @@ enum class AppID : u32 {
     Application        = 0x300,
     SoftwareKeyboard2  = 0x401,
 };
+
+/// Send a parameter to the currently-running application, which will read it via ReceiveParameter
+void SendParameter(const MessageParameter& parameter);
 
 /**
  * APT::Initialize service function
@@ -248,6 +268,33 @@ void SetAppCpuTimeLimit(Service::Interface* self);
  *      2 : System core CPU time percentage
  */
 void GetAppCpuTimeLimit(Service::Interface* self);
+
+/**
+ * APT::PrepareToStartLibraryApplet service function
+ *  Inputs:
+ *      0 : Command header [0x00180040]
+ *      1 : Id of the applet to start
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void PrepareToStartLibraryApplet(Service::Interface* self);
+
+/**
+ * APT::StartLibraryApplet service function
+ *  Inputs:
+ *      0 : Command header [0x001E0084]
+ *      1 : Id of the applet to start
+ *      2 : Buffer size
+ *      3 : Always 0?
+ *      4 : Handle passed to the applet
+ *      5 : (Size << 14) | 2
+ *      6 : Input buffer virtual address
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void StartLibraryApplet(Service::Interface* self);
 
 /// Initialize the APT service
 void Init();
