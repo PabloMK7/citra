@@ -7,19 +7,14 @@ Citra is a brand new project, so we have a great opportunity to keep things clea
 * Don't ever introduce new external dependencies into Core
 * Don't use any platform specific code in Core
 * Use namespaces often
+* Avoid the use of C-style casts and instead prefer C++-style `static_cast` and `reinterpret_cast`. Never use `const_cast` or `dynamic_cast` (we build with RTTI disabled). The only exception to this rule is for casting between two numeric types, where C-style casts are encouraged for brevity and readability.
 
 ### Naming Rules
-* Functions
- * PascalCase, "_" may also be used for clarity (e.g. ARM_InitCore)
-* Variables
- * lower_case_underscored
- * Prefix "g_" if global
-* Classes
- * PascalCase, "_" may also be used for clarity (e.g. OGL_VideoInterface)
-* Files/Folders
- * lower_case_underscored
-* Namespaces
- * PascalCase, "_" may also be used for clarity (e.g. ARM_InitCore)
+* Functions: `PascalCase`
+* Variables: `lower_case_underscored`. Prefix with `g_` if global.
+* Classes: `PascalCase`
+* Files and Directories: `lower_case_underscored`
+* Namespaces: `PascalCase`, `_` may also be used for clarity (e.g. `ARM_InitCore`)
 
 ### Indentation/Whitespace Style
 Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spaces instead.
@@ -36,25 +31,25 @@ namespace Example {
 
 // Declare globals at the top
 int g_foo = 0;
-char* g_some_pointer; // Notice the position of the *
+char* g_some_pointer; // Pointer * and reference & stick to the type name
 
 /// A colorful enum.
 enum SomeEnum {
     COLOR_RED,   ///< The color of fire.
     COLOR_GREEN, ///< The color of grass.
-    COLOR_BLUE   ///< Not actually the color of water.
+    COLOR_BLUE,  ///< Not actually the color of water.
 };
 
 /**
  * Very important struct that does a lot of stuff.
- * Note that the asterisks are indented by one space.
+ * Note that the asterisks are indented by one space to align to the first line.
  */
 struct Position {
     int x, y;
 };
 
-// Use "typename" rather than "class" here, just to be consistent
-template
+// Use "typename" rather than "class" here
+template <typename T>
 void FooBar() {
     int some_array[] = {
         5,
@@ -72,7 +67,7 @@ void FooBar() {
     // Comment directly above code when possible
     if (some_condition) single_statement();
 
-    // Place a single space after the for loop semicolons
+    // Place a single space after the for loop semicolons, prefer pre-increment
     for (int i = 0; i != 25; ++i) {
         // This is how we write loops
     }
@@ -83,6 +78,9 @@ void FooBar() {
     if (this || condition_takes_up_multiple &&
         lines && like && this || everything ||
         alright || then) {
+
+        // Leave a blank space before the if block body if the condition was continued across
+        // several lines.
     }
 
     switch (var) {
@@ -101,11 +99,7 @@ void FooBar() {
         break;
     }
 
-    std::vector
-        you_can_declare,
-        a_few,
-        variables,
-        like_this;
+    std::vector<T> you_can_declare, a_few, variables, like_this;
 }
 
 }
