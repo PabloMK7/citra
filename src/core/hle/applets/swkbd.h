@@ -5,9 +5,12 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "common/common_funcs.h"
+
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
 namespace HLE {

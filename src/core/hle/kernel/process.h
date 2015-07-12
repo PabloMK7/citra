@@ -6,6 +6,7 @@
 
 #include <bitset>
 #include <cstddef>
+#include <memory>
 #include <string>
 
 #include <boost/container/static_vector.hpp>

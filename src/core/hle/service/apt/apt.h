@@ -4,11 +4,14 @@
 
 #pragma once
 
-#include <array>
-#include "core/hle/result.h"
-#include "core/hle/service/service.h"
+#include "common/common_types.h"
+
+#include "core/hle/kernel/kernel.h"
 
 namespace Service {
+
+class Interface;
+
 namespace APT {
 
 /// Holds information about the parameters used in Send/Glance/ReceiveParameter
