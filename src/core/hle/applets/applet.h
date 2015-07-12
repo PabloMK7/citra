@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "common/common_types.h"
-#include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/shared_memory.h"
+#include <memory>
+
+#include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
 namespace HLE {

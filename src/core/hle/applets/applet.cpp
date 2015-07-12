@@ -2,12 +2,19 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <unordered_map>
+
 #include "common/assert.h"
-#include "common/logging/log.h"
+#include "common/common_types.h"
 
 #include "core/core_timing.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/applets/swkbd.h"
+#include "core/hle/result.h"
+#include "core/hle/service/apt/apt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
