@@ -12,6 +12,8 @@
 #include <QPushButton>
 #include <QSpinBox>
 
+#include <boost/range/algorithm/copy.hpp>
+
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 
@@ -76,15 +78,19 @@ void GraphicsTracingWidget::StartRecording() {
         for (unsigned comp = 0; comp < 3; ++comp)
             vs_float_uniforms[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
 
-    auto recorder = new CiTrace::Recorder((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32),
-                                          (u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32),
-                                          (u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32),
-                                          default_attributes.data(), default_attributes.size(),
-                                          shader_binary.data(), shader_binary.size(),
-                                          swizzle_data.data(), swizzle_data.size(),
-                                          vs_float_uniforms.data(), vs_float_uniforms.size(),
-                                          nullptr, 0, nullptr, 0, nullptr, 0 // Geometry shader is not implemented yet, so submit dummy data for now
-                                          );
+    CiTrace::Recorder::InitialState state;
+    std::copy_n((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32), std::back_inserter(state.gpu_registers));
+    std::copy_n((u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32), std::back_inserter(state.lcd_registers));
+    std::copy_n((u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32), std::back_inserter(state.pica_registers));
+    boost::copy(default_attributes, std::back_inserter(state.default_attributes));
+    boost::copy(shader_binary, std::back_inserter(state.vs_program_binary));
+    boost::copy(swizzle_data, std::back_inserter(state.vs_swizzle_data));
+    boost::copy(vs_float_uniforms, std::back_inserter(state.vs_float_uniforms));
+    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
+    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
+    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));
+
+    auto recorder = new CiTrace::Recorder(state);
     context->recorder = std::shared_ptr<CiTrace::Recorder>(recorder);
 
     emit SetStartTracingButtonEnabled(false);

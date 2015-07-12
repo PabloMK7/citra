@@ -12,26 +12,7 @@
 
 namespace CiTrace {
 
-Recorder::Recorder(u32* gpu_registers,      u32 gpu_registers_size,
-                   u32* lcd_registers,      u32 lcd_registers_size,
-                   u32* pica_registers,     u32 pica_registers_size,
-                   u32* default_attributes, u32 default_attributes_size,
-                   u32* vs_program_binary,  u32 vs_program_binary_size,
-                   u32* vs_swizzle_data,    u32 vs_swizzle_data_size,
-                   u32* vs_float_uniforms,  u32 vs_float_uniforms_size,
-                   u32* gs_program_binary,  u32 gs_program_binary_size,
-                   u32* gs_swizzle_data,    u32 gs_swizzle_data_size,
-                   u32* gs_float_uniforms,  u32 gs_float_uniforms_size)
-    : gpu_registers(gpu_registers, gpu_registers + gpu_registers_size),
-      lcd_registers(lcd_registers, lcd_registers + lcd_registers_size),
-      pica_registers(pica_registers, pica_registers + pica_registers_size),
-      default_attributes(default_attributes, default_attributes + default_attributes_size),
-      vs_program_binary(vs_program_binary, vs_program_binary + vs_program_binary_size),
-      vs_swizzle_data(vs_swizzle_data, vs_swizzle_data + vs_swizzle_data_size),
-      vs_float_uniforms(vs_float_uniforms, vs_float_uniforms + vs_float_uniforms_size),
-      gs_program_binary(gs_program_binary, gs_program_binary + gs_program_binary_size),
-      gs_swizzle_data(gs_swizzle_data, gs_swizzle_data + gs_swizzle_data_size),
-      gs_float_uniforms(gs_float_uniforms, gs_float_uniforms + gs_float_uniforms_size) {
+Recorder::Recorder(const InitialState& initial_state) : initial_state(initial_state) {
 
 }
 
@@ -45,16 +26,16 @@ void Recorder::Finish(const std::string& filename) {
     // Calculate file offsets
     auto& initial = header.initial_state_offsets;
 
-    initial.gpu_registers_size      = gpu_registers.size();
-    initial.lcd_registers_size      = lcd_registers.size();
-    initial.pica_registers_size     = pica_registers.size();
-    initial.default_attributes_size = default_attributes.size();
-    initial.vs_program_binary_size  = vs_program_binary.size();
-    initial.vs_swizzle_data_size    = vs_swizzle_data.size();
-    initial.vs_float_uniforms_size  = vs_float_uniforms.size();
-    initial.gs_program_binary_size  = gs_program_binary.size();
-    initial.gs_swizzle_data_size    = gs_swizzle_data.size();
-    initial.gs_float_uniforms_size  = gs_float_uniforms.size();
+    initial.gpu_registers_size      = initial_state.gpu_registers.size();
+    initial.lcd_registers_size      = initial_state.lcd_registers.size();
+    initial.pica_registers_size     = initial_state.pica_registers.size();
+    initial.default_attributes_size = initial_state.default_attributes.size();
+    initial.vs_program_binary_size  = initial_state.vs_program_binary.size();
+    initial.vs_swizzle_data_size    = initial_state.vs_swizzle_data.size();
+    initial.vs_float_uniforms_size  = initial_state.vs_float_uniforms.size();
+    initial.gs_program_binary_size  = initial_state.gs_program_binary.size();
+    initial.gs_swizzle_data_size    = initial_state.gs_swizzle_data.size();
+    initial.gs_float_uniforms_size  = initial_state.gs_float_uniforms.size();
     header.stream_size              = stream.size();
 
     initial.gpu_registers      = sizeof(header);
@@ -98,44 +79,44 @@ void Recorder::Finish(const std::string& filename) {
             throw "Failed to write header";
 
         // Write initial state
-        written = file.WriteArray(gpu_registers.data(), gpu_registers.size());
-        if (written != gpu_registers.size() || file.Tell() != initial.lcd_registers)
+        written = file.WriteArray(initial_state.gpu_registers.data(), initial_state.gpu_registers.size());
+        if (written != initial_state.gpu_registers.size() || file.Tell() != initial.lcd_registers)
             throw "Failed to write GPU registers";
 
-        written = file.WriteArray(lcd_registers.data(), lcd_registers.size());
-        if (written != lcd_registers.size() || file.Tell() != initial.pica_registers)
+        written = file.WriteArray(initial_state.lcd_registers.data(), initial_state.lcd_registers.size());
+        if (written != initial_state.lcd_registers.size() || file.Tell() != initial.pica_registers)
             throw "Failed to write LCD registers";
 
-        written = file.WriteArray(pica_registers.data(), pica_registers.size());
-        if (written != pica_registers.size() || file.Tell() != initial.default_attributes)
+        written = file.WriteArray(initial_state.pica_registers.data(), initial_state.pica_registers.size());
+        if (written != initial_state.pica_registers.size() || file.Tell() != initial.default_attributes)
             throw "Failed to write Pica registers";
 
-        written = file.WriteArray(default_attributes.data(), default_attributes.size());
-        if (written != default_attributes.size() || file.Tell() != initial.vs_program_binary)
+        written = file.WriteArray(initial_state.default_attributes.data(), initial_state.default_attributes.size());
+        if (written != initial_state.default_attributes.size() || file.Tell() != initial.vs_program_binary)
             throw "Failed to write default vertex attributes";
 
-        written = file.WriteArray(vs_program_binary.data(), vs_program_binary.size());
-        if (written != vs_program_binary.size() || file.Tell() != initial.vs_swizzle_data)
+        written = file.WriteArray(initial_state.vs_program_binary.data(), initial_state.vs_program_binary.size());
+        if (written != initial_state.vs_program_binary.size() || file.Tell() != initial.vs_swizzle_data)
             throw "Failed to write vertex shader program binary";
 
-        written = file.WriteArray(vs_swizzle_data.data(), vs_swizzle_data.size());
-        if (written != vs_swizzle_data.size() || file.Tell() != initial.vs_float_uniforms)
+        written = file.WriteArray(initial_state.vs_swizzle_data.data(), initial_state.vs_swizzle_data.size());
+        if (written != initial_state.vs_swizzle_data.size() || file.Tell() != initial.vs_float_uniforms)
             throw "Failed to write vertex shader swizzle data";
 
-        written = file.WriteArray(vs_float_uniforms.data(), vs_float_uniforms.size());
-        if (written != vs_float_uniforms.size() || file.Tell() != initial.gs_program_binary)
+        written = file.WriteArray(initial_state.vs_float_uniforms.data(), initial_state.vs_float_uniforms.size());
+        if (written != initial_state.vs_float_uniforms.size() || file.Tell() != initial.gs_program_binary)
             throw "Failed to write vertex shader float uniforms";
 
-        written = file.WriteArray(gs_program_binary.data(), gs_program_binary.size());
-        if (written != gs_program_binary.size() || file.Tell() != initial.gs_swizzle_data)
+        written = file.WriteArray(initial_state.gs_program_binary.data(), initial_state.gs_program_binary.size());
+        if (written != initial_state.gs_program_binary.size() || file.Tell() != initial.gs_swizzle_data)
             throw "Failed to write geomtry shader program binary";
 
-        written = file.WriteArray(gs_swizzle_data.data(), gs_swizzle_data.size());
-        if (written != gs_swizzle_data.size() || file.Tell() != initial.gs_float_uniforms)
+        written = file.WriteArray(initial_state.gs_swizzle_data.data(), initial_state.gs_swizzle_data.size());
+        if (written != initial_state.gs_swizzle_data.size() || file.Tell() != initial.gs_float_uniforms)
             throw "Failed to write geometry shader swizzle data";
 
-        written = file.WriteArray(gs_float_uniforms.data(), gs_float_uniforms.size());
-        if (written != gs_float_uniforms.size() || file.Tell() != initial.gs_float_uniforms + sizeof(u32) * initial.gs_float_uniforms_size)
+        written = file.WriteArray(initial_state.gs_float_uniforms.data(), initial_state.gs_float_uniforms.size());
+        if (written != initial_state.gs_float_uniforms.size() || file.Tell() != initial.gs_float_uniforms + sizeof(u32) * initial.gs_float_uniforms_size)
             throw "Failed to write geometry shader float uniforms";
 
         // Iterate through stream elements, write "extra data"
