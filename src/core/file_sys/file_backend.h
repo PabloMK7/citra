@@ -31,7 +31,7 @@ public:
      * @param buffer Buffer to read data into
      * @return Number of bytes read
      */
-    virtual size_t Read(const u64 offset, const u32 length, u8* buffer) const = 0;
+    virtual size_t Read(u64 offset, size_t length, u8* buffer) const = 0;
 
     /**
      * Write data to the file
@@ -41,20 +41,20 @@ public:
      * @param buffer Buffer to read data from
      * @return Number of bytes written
      */
-    virtual size_t Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const = 0;
+    virtual size_t Write(u64 offset, size_t length, bool flush, const u8* buffer) const = 0;
 
     /**
      * Get the size of the file in bytes
      * @return Size of the file in bytes
      */
-    virtual size_t GetSize() const = 0;
+    virtual u64 GetSize() const = 0;
 
     /**
      * Set the size of the file in bytes
      * @param size New size of the file
      * @return true if successful
      */
-    virtual bool SetSize(const u64 size) const = 0;
+    virtual bool SetSize(u64 size) const = 0;
 
     /**
      * Close the file

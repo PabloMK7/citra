@@ -116,7 +116,7 @@ ResultVal<bool> File::SyncRequest() {
             u32 address = cmd_buff[6];
             LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
-            cmd_buff[2] = static_cast<u32>(backend->Write(offset, length, flush, Memory::GetPointer(address)));
+            cmd_buff[2] = static_cast<u32>(backend->Write(offset, length, flush != 0, Memory::GetPointer(address)));
             break;
         }
 
