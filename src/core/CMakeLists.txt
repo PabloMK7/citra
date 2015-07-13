@@ -115,6 +115,7 @@ set(SRCS
             loader/elf.cpp
             loader/loader.cpp
             loader/ncch.cpp
+            tracer/recorder.cpp
             mem_map.cpp
             memory.cpp
             settings.cpp
@@ -243,6 +244,8 @@ set(HEADERS
             loader/elf.h
             loader/loader.h
             loader/ncch.h
+            tracer/recorder.h
+            tracer/citrace.h
             mem_map.h
             memory.h
             memory_setup.h

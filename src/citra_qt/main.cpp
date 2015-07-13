@@ -32,6 +32,7 @@
 #include "debugger/graphics_breakpoints.h"
 #include "debugger/graphics_cmdlists.h"
 #include "debugger/graphics_framebuffer.h"
+#include "debugger/graphics_tracing.h"
 #include "debugger/graphics_vertex_shader.h"
 #include "debugger/profiler.h"
 
@@ -94,6 +95,10 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
 
+    auto graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
+    graphicsTracingWidget->hide();
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(profilerWidget->toggleViewAction());
     debug_menu->addAction(disasmWidget->toggleViewAction());
@@ -104,6 +109,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
     debug_menu->addAction(graphicsFramebufferWidget->toggleViewAction());
     debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
+    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
 
     // Set default UI state
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
@@ -148,6 +154,9 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window, SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), graphicsTracingWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStopping()), graphicsTracingWidget, SLOT(OnEmulationStopping()));
+
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);

@@ -123,12 +123,55 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
 
+            if (g_debug_context) {
+                for (int i = 0; i < 3; ++i) {
+                    const auto texture = regs.GetTextures()[i];
+                    if (!texture.enabled)
+                        continue;
+
+                    u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
+                    if (g_debug_context && Pica::g_debug_context->recorder)
+                        g_debug_context->recorder->MemoryAccessed(texture_data, Pica::Regs::NibblesPerPixel(texture.format) * texture.config.width / 2 * texture.config.height, texture.config.GetPhysicalAddress());
+                }
+            }
+
+            class {
+                /// Combine overlapping and close ranges
+                void SimplifyRanges() {
+                    for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+                        // NOTE: We add 32 to the range end address to make sure "close" ranges are combined, too
+                        auto it2 = std::next(it);
+                        while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
+                            it->second = std::max(it->second, it2->first + it2->second - it->first);
+                            it2 = ranges.erase(it2);
+                        }
+                    }
+                }
+
+            public:
+                /// Record a particular memory access in the list
+                void AddAccess(u32 paddr, u32 size) {
+                    // Create new range or extend existing one
+                    ranges[paddr] = std::max(ranges[paddr], size);
+
+                    // Simplify ranges...
+                    SimplifyRanges();
+                }
+
+                /// Map of accessed ranges (mapping start address to range size)
+                std::map<u32, u32> ranges;
+            } memory_accesses;
+
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
                 unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
 
                 if (is_indexed) {
                     // TODO: Implement some sort of vertex cache!
+                    if (g_debug_context && Pica::g_debug_context->recorder) {
+                        int size = index_u16 ? 2 : 1;
+                        memory_accesses.AddAccess(base_address + index_info.offset + size * index, size);
+                    }
                 }
 
                 // Initialize data for the current vertex
@@ -151,7 +194,14 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                     // Load per-vertex data from the loader arrays
                     for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                        const u8* srcdata = Memory::GetPhysicalPointer(vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i]);
+                        u32 source_addr = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
+                        const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
+
+                        if (g_debug_context && Pica::g_debug_context->recorder) {
+                            memory_accesses.AddAccess(source_addr,
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
+                                    : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
+                        }
 
                         const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
                             (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
@@ -213,14 +263,20 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
+            for (auto& range : memory_accesses.ranges) {
+                g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
+                                                          range.second, range.first);
+            }
+
             if (Settings::values.use_hw_renderer) {
                 VideoCore::g_renderer->hw_rasterizer->DrawTriangles();
             }
 
             geometry_dumper.Dump();
 
-            if (g_debug_context)
+            if (g_debug_context) {
                 g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+            }
 
             break;
         }

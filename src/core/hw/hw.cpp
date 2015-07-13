@@ -15,6 +15,21 @@ template <typename T>
 inline void Read(T &var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
     case VADDR_GPU:
+    case VADDR_GPU + 0x1000:
+    case VADDR_GPU + 0x2000:
+    case VADDR_GPU + 0x3000:
+    case VADDR_GPU + 0x4000:
+    case VADDR_GPU + 0x5000:
+    case VADDR_GPU + 0x6000:
+    case VADDR_GPU + 0x7000:
+    case VADDR_GPU + 0x8000:
+    case VADDR_GPU + 0x9000:
+    case VADDR_GPU + 0xA000:
+    case VADDR_GPU + 0xB000:
+    case VADDR_GPU + 0xC000:
+    case VADDR_GPU + 0xD000:
+    case VADDR_GPU + 0xE000:
+    case VADDR_GPU + 0xF000:
         GPU::Read(var, addr);
         break;
     case VADDR_LCD:
@@ -29,6 +44,21 @@ template <typename T>
 inline void Write(u32 addr, const T data) {
     switch (addr & 0xFFFFF000) {
     case VADDR_GPU:
+    case VADDR_GPU + 0x1000:
+    case VADDR_GPU + 0x2000:
+    case VADDR_GPU + 0x3000:
+    case VADDR_GPU + 0x4000:
+    case VADDR_GPU + 0x5000:
+    case VADDR_GPU + 0x6000:
+    case VADDR_GPU + 0x7000:
+    case VADDR_GPU + 0x8000:
+    case VADDR_GPU + 0x9000:
+    case VADDR_GPU + 0xA000:
+    case VADDR_GPU + 0xB000:
+    case VADDR_GPU + 0xC000:
+    case VADDR_GPU + 0xD000:
+    case VADDR_GPU + 0xE000:
+    case VADDR_GPU + 0xF000:
         GPU::Write(addr, data);
         break;
     case VADDR_LCD:
