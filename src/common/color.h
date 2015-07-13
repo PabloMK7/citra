@@ -208,7 +208,32 @@ inline void EncodeD24(u32 value, u8* bytes) {
  * @param bytes Pointer where to store the encoded value
  */
 inline void EncodeD24S8(u32 depth, u8 stencil, u8* bytes) {
-    *reinterpret_cast<u32_le*>(bytes) = (stencil << 24) | depth;
+    bytes[0] = depth & 0xFF;
+    bytes[1] = (depth >> 8) & 0xFF;
+    bytes[2] = (depth >> 16) & 0xFF;
+    bytes[3] = stencil;
+}
+
+/**
+ * Encode a 24 bit depth value as D24X8 format (32 bits per pixel with 8 bits unused)
+ * @param depth 24 bit source depth value to encode
+ * @param bytes Pointer where to store the encoded value
+ * @note unused bits will not be modified
+ */
+inline void EncodeD24X8(u32 depth, u8* bytes) {
+    bytes[0] = depth & 0xFF;
+    bytes[1] = (depth >> 8) & 0xFF;
+    bytes[2] = (depth >> 16) & 0xFF;
+}
+
+/**
+ * Encode an 8 bit stencil value as X24S8 format (32 bits per pixel with 24 bits unused)
+ * @param stencil 8 bit source stencil value to encode
+ * @param bytes Pointer where to store the encoded value
+ * @note unused bits will not be modified
+ */
+inline void EncodeX24S8(u8 stencil, u8* bytes) {
+    bytes[3] = stencil;
 }
 
 } // namespace
