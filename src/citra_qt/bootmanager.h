@@ -35,7 +35,10 @@ public:
      * Steps the emulation thread by a single CPU instruction (if the CPU is not already running)
      * @note This function is thread-safe
      */
-    void ExecStep() { exec_step = true; }
+    void ExecStep() {
+        exec_step = true;
+        running_cv.notify_all();
+    }
 
     /**
      * Sets whether the emulation thread is running or not

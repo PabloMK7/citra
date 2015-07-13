@@ -65,7 +65,7 @@ void EmuThread::run() {
             was_active = false;
         } else {
             std::unique_lock<std::mutex> lock(running_mutex);
-            running_cv.wait(lock, [this]{ return IsRunning() || stop_run; });
+            running_cv.wait(lock, [this]{ return IsRunning() || exec_step || stop_run; });
         }
     }
 
