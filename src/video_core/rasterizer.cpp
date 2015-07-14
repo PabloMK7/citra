@@ -641,7 +641,18 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                         result = (result * input[2].Cast<int>()) / 255;
                         return result.Cast<u8>();
                     }
-
+                    case Operation::Dot3_RGB:
+                    {
+                        // Not fully accurate.
+                        // Worst case scenario seems to yield a +/-3 error
+                        // Some HW results indicate that the per-component computation can't have a higher precision than 1/256,
+                        // while dot3_rgb( (0x80,g0,b0),(0x7F,g1,b1) ) and dot3_rgb( (0x80,g0,b0),(0x80,g1,b1) ) give different results
+                        int result = ((input[0].r() * 2 - 255) * (input[1].r() * 2 - 255) + 128) / 256 +
+                                     ((input[0].g() * 2 - 255) * (input[1].g() * 2 - 255) + 128) / 256 +
+                                     ((input[0].b() * 2 - 255) * (input[1].b() * 2 - 255) + 128) / 256;
+                        result = std::max(0, std::min(255, result));
+                        return { (u8)result, (u8)result, (u8)result };
+                    }
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
                         UNIMPLEMENTED();
