@@ -153,7 +153,7 @@ void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
                   "Triangle %lu/%lu at position (%.3f, %.3f, %.3f, %.3f), "
                   "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
                   "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",
-                  i, output_list->size(),
+                  i + 1, output_list->size() - 2,
                   vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(), vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(),
                   vtx1.pos.x.ToFloat32(), vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
                   vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(), vtx2.pos.w.ToFloat32(),
