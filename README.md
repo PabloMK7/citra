@@ -7,7 +7,7 @@ Citra is an experimental open-source Nintendo 3DS emulator/debugger written in C
 
 Citra is licensed under the GPLv2 (or any later version). Refer to the license.txt file included. Please read the [FAQ](https://github.com/citra-emu/citra/wiki/FAQ) before getting started with the project.
 
-For development discussion, please join us @ #citra on [freenode](http://webchat.freenode.net/?channels=citra).
+For development discussion, please join us @ #citra on freenode.
 
 ### Development
 
