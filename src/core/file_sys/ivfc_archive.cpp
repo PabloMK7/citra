@@ -16,15 +16,12 @@
 
 namespace FileSys {
 
-IVFCArchive::IVFCArchive(std::shared_ptr<const std::vector<u8>> data) : data(data) {
-}
-
 std::string IVFCArchive::GetName() const {
     return "IVFC";
 }
 
 std::unique_ptr<FileBackend> IVFCArchive::OpenFile(const Path& path, const Mode mode) const {
-    return Common::make_unique<IVFCFile>(data);
+    return Common::make_unique<IVFCFile>(romfs_file, data_offset, data_size);
 }
 
 bool IVFCArchive::DeleteFile(const Path& path) const {
@@ -64,19 +61,21 @@ std::unique_ptr<DirectoryBackend> IVFCArchive::OpenDirectory(const Path& path) c
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t IVFCFile::Read(const u64 offset, const u32 length, u8* buffer) const {
+size_t IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%llu, length=%d", offset, length);
-    memcpy(buffer, data->data() + offset, length);
-    return length;
+    romfs_file->Seek(data_offset + offset, SEEK_SET);
+    size_t read_length = (size_t)std::min((u64)length, data_size - offset);
+
+    return romfs_file->ReadBytes(buffer, read_length);
 }
 
-size_t IVFCFile::Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const {
+size_t IVFCFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     return 0;
 }
 
-size_t IVFCFile::GetSize() const {
-    return sizeof(u8) * data->size();
+u64 IVFCFile::GetSize() const {
+    return data_size;
 }
 
 bool IVFCFile::SetSize(const u64 size) const {

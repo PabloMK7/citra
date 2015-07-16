@@ -273,7 +273,6 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     LOG_DEBUG(Loader, "%i segments:", header->e_phnum);
 
     // First pass : Get the bits into RAM
-    u32 segment_addr[32];
     u32 base_addr = relocate ? vaddr : 0;
 
     u32 total_image_size = 0;
@@ -392,15 +391,15 @@ ResultStatus AppLoader_ELF::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
-    if (!file->IsOpen())
+    if (!file.IsOpen())
         return ResultStatus::Error;
 
     // Reset read pointer in case this file has been read before.
-    file->Seek(0, SEEK_SET);
+    file.Seek(0, SEEK_SET);
 
-    u32 size = static_cast<u32>(file->GetSize());
+    size_t size = file.GetSize();
     std::unique_ptr<u8[]> buffer(new u8[size]);
-    if (file->ReadBytes(&buffer[0], size) != size)
+    if (file.ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;
 
     ElfReader elf_reader(&buffer[0]);

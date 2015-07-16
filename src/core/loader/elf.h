@@ -17,7 +17,7 @@ namespace Loader {
 /// Loads an ELF/AXF file
 class AppLoader_ELF final : public AppLoader {
 public:
-    AppLoader_ELF(std::unique_ptr<FileUtil::IOFile>&& file, std::string filename)
+    AppLoader_ELF(FileUtil::IOFile&& file, std::string filename)
         : AppLoader(std::move(file)), filename(std::move(filename)) { }
 
     /**

@@ -22,14 +22,16 @@ namespace FileSys {
 /// File system interface to the RomFS archive
 class ArchiveFactory_RomFS final : public ArchiveFactory {
 public:
-    ArchiveFactory_RomFS(const Loader::AppLoader& app_loader);
+    ArchiveFactory_RomFS(Loader::AppLoader& app_loader);
 
     std::string GetName() const override { return "RomFS"; }
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path) override;
 
 private:
-    std::shared_ptr<std::vector<u8>> romfs_data;
+    std::shared_ptr<FileUtil::IOFile> romfs_file;
+    u64 data_offset;
+    u64 data_size;
 };
 
 } // namespace FileSys

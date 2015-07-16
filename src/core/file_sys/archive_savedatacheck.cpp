@@ -37,17 +37,14 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(co
     auto vec = path.AsBinary();
     const u32* data = reinterpret_cast<u32*>(vec.data());
     std::string file_path = GetSaveDataCheckPath(mount_point, data[1], data[0]);
-    FileUtil::IOFile file(file_path, "rb");
+    auto file = std::make_shared<FileUtil::IOFile>(file_path, "rb");
 
-    if (!file.IsOpen()) {
+    if (!file->IsOpen()) {
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
-    auto size = file.GetSize();
-    auto raw_data = std::make_shared<std::vector<u8>>(size);
-    file.ReadBytes(raw_data->data(), size);
-    file.Close();
+    auto size = file->GetSize();
 
-    auto archive = Common::make_unique<IVFCArchive>(std::move(raw_data));
+    auto archive = Common::make_unique<IVFCArchive>(file, 0, size);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

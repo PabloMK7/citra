@@ -105,12 +105,12 @@ bool DiskFile::Open() {
     return true;
 }
 
-size_t DiskFile::Read(const u64 offset, const u32 length, u8* buffer) const {
+size_t DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     file->Seek(offset, SEEK_SET);
     return file->ReadBytes(buffer, length);
 }
 
-size_t DiskFile::Write(const u64 offset, const u32 length, const u32 flush, const u8* buffer) const {
+size_t DiskFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
     file->Seek(offset, SEEK_SET);
     size_t written = file->WriteBytes(buffer, length);
     if (flush)
@@ -118,8 +118,8 @@ size_t DiskFile::Write(const u64 offset, const u32 length, const u32 flush, cons
     return written;
 }
 
-size_t DiskFile::GetSize() const {
-    return static_cast<size_t>(file->GetSize());
+u64 DiskFile::GetSize() const {
+    return file->GetSize();
 }
 
 bool DiskFile::SetSize(const u64 size) const {
