@@ -87,8 +87,16 @@ template<ResultCode func(u32, s64)> void Wrap() {
     }
 }
 
-template<ResultCode func(void*, void*, u32)> void Wrap(){
-    FuncReturn(func(Memory::GetPointer(PARAM(0)), Memory::GetPointer(PARAM(1)), PARAM(2)).raw);
+template<ResultCode func(MemoryInfo*, PageInfo*, u32)> void Wrap() {
+    MemoryInfo memory_info = {};
+    PageInfo page_info = {};
+    u32 retval = func(&memory_info, &page_info, PARAM(2)).raw;
+    Core::g_app_core->SetReg(1, memory_info.base_address);
+    Core::g_app_core->SetReg(2, memory_info.size);
+    Core::g_app_core->SetReg(3, memory_info.permission);
+    Core::g_app_core->SetReg(4, memory_info.state);
+    Core::g_app_core->SetReg(5, page_info.flags);
+    FuncReturn(retval);
 }
 
 template<ResultCode func(s32*, u32)> void Wrap(){

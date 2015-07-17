@@ -22,6 +22,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
+#include "core/hle/kernel/vm_manager.h"
 
 #include "core/hle/function_wrappers.h"
 #include "core/hle/result.h"
@@ -530,8 +531,19 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
 }
 
 /// Query memory
-static ResultCode QueryMemory(void* info, void* out, u32 addr) {
-    LOG_ERROR(Kernel_SVC, "(UNIMPLEMENTED) called addr=0x%08X", addr);
+static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 addr) {
+    auto vma = Kernel::g_current_process->address_space->FindVMA(addr);
+
+    if (vma == Kernel::g_current_process->address_space->vma_map.end())
+        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+
+    memory_info->base_address = vma->second.base;
+    memory_info->permission = static_cast<u32>(vma->second.permissions);
+    memory_info->size = vma->second.size;
+    memory_info->state = static_cast<u32>(vma->second.meminfo_state);
+
+    page_info->flags = 0;
+    LOG_TRACE(Kernel_SVC, "called addr=0x%08X", addr);
     return RESULT_SUCCESS;
 }
 
