@@ -406,6 +406,9 @@ void Shutdown() {
     lock = nullptr;
     notification_event = nullptr;
     parameter_event = nullptr;
+
+    next_parameter.object = nullptr;
+
     HLE::Applets::Shutdown();
 }
 

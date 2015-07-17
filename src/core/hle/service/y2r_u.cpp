@@ -410,4 +410,8 @@ Interface::Interface() {
     Register(FunctionTable);
 }
 
+Interface::~Interface() {
+    completion_event = nullptr;
+}
+
 } // namespace

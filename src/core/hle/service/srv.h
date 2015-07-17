@@ -13,6 +13,7 @@ namespace SRV {
 class Interface : public Service::Interface {
 public:
     Interface();
+    ~Interface() override;
 
     std::string GetPortName() const override {
         return "srv:";

@@ -37,6 +37,10 @@ void Thread::Acquire() {
     ASSERT_MSG(!ShouldWait(), "object unavailable!");
 }
 
+// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
+//               us to simply use a pool index or similar.
+static Kernel::HandleTable wakeup_callback_handle_table;
+
 // Lists all thread ids that aren't deleted/etc.
 static std::vector<SharedPtr<Thread>> thread_list;
 
@@ -93,6 +97,8 @@ void Thread::Stop() {
 
     // Cancel any outstanding wakeup events for this thread
     CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
+    wakeup_callback_handle_table.Close(callback_handle);
+    callback_handle = 0;
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -108,6 +114,7 @@ void Thread::Stop() {
     for (auto& wait_object : wait_objects) {
         wait_object->RemoveWaitingThread(this);
     }
+    wait_objects.clear();
 
     Kernel::g_current_process->used_tls_slots[tls_index] = false;
 
@@ -267,10 +274,6 @@ void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
     thread->wait_address = wait_address;
     thread->status = THREADSTATUS_WAIT_ARB;
 }
-
-// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
-//               us to simply use a pool index or similar.
-static Kernel::HandleTable wakeup_callback_handle_table;
 
 /**
  * Callback that will wake up the thread it was scheduled for
@@ -503,12 +506,16 @@ void ThreadingInit() {
 
     current_thread = nullptr;
     next_thread_id = 1;
-
-    thread_list.clear();
-    ready_queue.clear();
 }
 
 void ThreadingShutdown() {
+    current_thread = nullptr;
+
+    for (auto& t : thread_list) {
+        t->Stop();
+    }
+    thread_list.clear();
+    ready_queue.clear();
 }
 
 } // namespace
