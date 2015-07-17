@@ -584,13 +584,18 @@ const Interface::FunctionInfo FunctionTable[] = {
 Interface::Interface() {
     Register(FunctionTable);
 
-    g_interrupt_event = 0;
+    g_interrupt_event = nullptr;
 
     using Kernel::MemoryPermission;
     g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
             MemoryPermission::ReadWrite, "GSPSharedMem");
 
     g_thread_id = 0;
+}
+
+Interface::~Interface() {
+    g_interrupt_event = nullptr;
+    g_shared_memory = nullptr;
 }
 
 } // namespace

@@ -161,6 +161,7 @@ static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrec
 class Interface : public Service::Interface {
 public:
     Interface();
+    ~Interface() override;
 
     std::string GetPortName() const override {
         return "gsp::Gpu";

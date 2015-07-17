@@ -310,4 +310,9 @@ Interface::Interface() {
     Register(FunctionTable);
 }
 
+Interface::~Interface() {
+    semaphore_event = nullptr;
+    interrupt_event = nullptr;
+}
+
 } // namespace

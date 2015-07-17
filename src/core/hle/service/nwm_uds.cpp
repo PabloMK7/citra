@@ -125,4 +125,8 @@ Interface::Interface() {
     Register(FunctionTable);
 }
 
+Interface::~Interface() {
+    handle_event = nullptr;
+}
+
 } // namespace
