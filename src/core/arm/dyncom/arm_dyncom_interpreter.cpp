@@ -5695,7 +5695,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             const s16 operand2 = (high) ? ((rm_val >> 16) & 0xFFFF) : (rm_val & 0xFFFF);
             const s64 result = (s64)(s32)rn_val * (s64)(s32)operand2 + ((s64)(s32)ra_val << 16);
 
-            RD = (result & (0xFFFFFFFFFFFFFFFFLL >> 15)) >> 16;
+            RD = BITS(result, 16, 47);
 
             if ((result >> 16) != (s32)RD)
                 cpu->Cpsr |= (1 << 27);
