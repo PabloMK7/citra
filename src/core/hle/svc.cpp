@@ -530,11 +530,16 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
     return RESULT_SUCCESS;
 }
 
-/// Query memory
-static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 addr) {
-    auto vma = Kernel::g_current_process->address_space->FindVMA(addr);
+/// Query process memory
+static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_info, Handle process_handle, u32 addr) {
+    using Kernel::Process;
+    Kernel::SharedPtr<Process> process = Kernel::g_handle_table.Get<Process>(process_handle);
+    if (process == nullptr)
+        return ERR_INVALID_HANDLE;
 
-    if (vma == Kernel::g_current_process->address_space->vma_map.end())
+    auto vma = process->address_space->FindVMA(addr);
+
+    if (vma == process->address_space->vma_map.end())
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 
     memory_info->base_address = vma->second.base;
@@ -543,8 +548,13 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
     memory_info->state = static_cast<u32>(vma->second.meminfo_state);
 
     page_info->flags = 0;
-    LOG_TRACE(Kernel_SVC, "called addr=0x%08X", addr);
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X addr=0x%08X", process_handle, addr);
     return RESULT_SUCCESS;
+}
+
+/// Query memory
+static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 addr) {
+    return QueryProcessMemory(memory_info, page_info, Kernel::CurrentProcess, addr);
 }
 
 /// Create an event
@@ -818,7 +828,7 @@ static const FunctionDef SVC_Table[] = {
     {0x7A, nullptr,                         "AddCodeSegment"},
     {0x7B, nullptr,                         "Backdoor"},
     {0x7C, nullptr,                         "KernelSetState"},
-    {0x7D, nullptr,                         "QueryProcessMemory"},
+    {0x7D, HLE::Wrap<QueryProcessMemory>,   "QueryProcessMemory"},
 };
 
 Common::Profiling::TimingCategory profiler_svc("SVC Calls");
