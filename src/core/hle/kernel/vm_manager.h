@@ -170,7 +170,7 @@ public:
     void Reprotect(VMAHandle vma, VMAPermission new_perms);
 
     /// Dumps the address space layout to the log, for debugging
-    void LogLayout() const;
+    void LogLayout(Log::Level log_level) const;
 
 private:
     using VMAIter = decltype(vma_map)::iterator;

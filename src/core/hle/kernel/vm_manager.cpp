@@ -11,6 +11,15 @@
 
 namespace Kernel {
 
+static const char* GetMemoryStateName(MemoryState state) {
+    static const char* names[] = {
+        "Free", "Reserved", "IO", "Static", "Code", "Private", "Shared", "Continuous", "Aliased",
+        "Alias", "AliasCode", "Locked",
+    };
+
+    return names[(int)state];
+}
+
 bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     ASSERT(base + size == next.base);
     if (permissions != next.permissions ||
@@ -134,13 +143,14 @@ void VMManager::Reprotect(VMAHandle vma_handle, VMAPermission new_perms) {
     MergeAdjacent(iter);
 }
 
-void VMManager::LogLayout() const {
+void VMManager::LogLayout(Log::Level log_level) const {
     for (const auto& p : vma_map) {
         const VirtualMemoryArea& vma = p.second;
-        LOG_DEBUG(Kernel, "%08X - %08X  size: %8X %c%c%c", vma.base, vma.base + vma.size, vma.size,
+        LOG_GENERIC(Log::Class::Kernel, log_level, "%08X - %08X  size: %8X %c%c%c %s",
+            vma.base, vma.base + vma.size, vma.size,
             (u8)vma.permissions & (u8)VMAPermission::Read    ? 'R' : '-',
             (u8)vma.permissions & (u8)VMAPermission::Write   ? 'W' : '-',
-            (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-');
+            (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-', GetMemoryStateName(vma.meminfo_state));
     }
 }
 

@@ -113,7 +113,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     MapSegment(codeset->rodata, VMAPermission::Read,        MemoryState::Code);
     MapSegment(codeset->data,   VMAPermission::ReadWrite,   MemoryState::Private);
 
-    address_space->LogLayout();
+    address_space->LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
 }
 
