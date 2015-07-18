@@ -167,15 +167,13 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
     VMAIter vma_handle = StripIterConstness(FindVMA(base));
     if (vma_handle == vma_map.end()) {
         // Target address is outside the range managed by the kernel
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E01BF5
+        return ERR_INVALID_ADDRESS;
     }
 
     VirtualMemoryArea& vma = vma_handle->second;
     if (vma.type != VMAType::Free) {
         // Region is already allocated
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidState, ErrorLevel::Usage); // 0xE0A01BF5
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     u32 start_in_vma = base - vma.base;
@@ -183,8 +181,7 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
 
     if (end_in_vma > vma.size) {
         // Requested allocation doesn't fit inside VMA
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidState, ErrorLevel::Usage); // 0xE0A01BF5
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     if (end_in_vma != vma.size) {
