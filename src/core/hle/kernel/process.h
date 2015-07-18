@@ -15,6 +15,7 @@
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/vm_manager.h"
 
 namespace Kernel {
 
@@ -48,7 +49,6 @@ union ProcessFlags {
 };
 
 class ResourceLimit;
-class VMManager;
 
 struct CodeSet final : public Object {
     static SharedPtr<CodeSet> Create(std::string name, u64 program_id);
@@ -108,10 +108,6 @@ public:
     /// The id of this process
     u32 process_id = next_process_id++;
 
-    /// Bitmask of the used TLS slots
-    std::bitset<300> used_tls_slots;
-    std::unique_ptr<VMManager> address_space;
-
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
      * to this process.
@@ -122,6 +118,31 @@ public:
      * Applies address space changes and launches the process main thread.
      */
     void Run(s32 main_thread_priority, u32 stack_size);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // Memory Management
+
+    VMManager vm_manager;
+
+    // Memory used to back the allocations in the regular heap. A single vector is used to cover
+    // the entire virtual address space extents that bound the allocations, including any holes.
+    // This makes deallocation and reallocation of holes fast and keeps process memory contiguous
+    // in the emulator address space, allowing Memory::GetPointer to be reasonably safe.
+    std::shared_ptr<std::vector<u8>> heap_memory;
+    // The left/right bounds of the address space covered by heap_memory.
+    VAddr heap_start = 0, heap_end = 0;
+
+    std::shared_ptr<std::vector<u8>> linear_heap_memory;
+
+    /// Bitmask of the used TLS slots
+    std::bitset<300> used_tls_slots;
+
+    ResultVal<VAddr> HeapAllocate(VAddr target, u32 size, VMAPermission perms);
+    ResultCode HeapFree(VAddr target, u32 size);
+
+    ResultVal<VAddr> LinearAllocate(VAddr target, u32 size, VMAPermission perms);
+    ResultCode LinearFree(VAddr target, u32 size);
 
 private:
     Process();

@@ -41,32 +41,114 @@ const ResultCode ERR_NOT_FOUND(ErrorDescription::NotFound, ErrorModule::Kernel,
 const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
         ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E0181E
 
+const ResultCode ERR_MISALIGNED_ADDRESS{ // 0xE0E01BF1
+        ErrorDescription::MisalignedAddress, ErrorModule::OS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Usage};
+const ResultCode ERR_MISALIGNED_SIZE{ // 0xE0E01BF2
+        ErrorDescription::MisalignedSize, ErrorModule::OS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Usage};
+const ResultCode ERR_INVALID_COMBINATION{ // 0xE0E01BEE
+        ErrorDescription::InvalidCombination, ErrorModule::OS,
+        ErrorSummary::InvalidArgument, ErrorLevel::Usage};
+
 enum ControlMemoryOperation {
-    MEMORY_OPERATION_HEAP       = 0x00000003,
-    MEMORY_OPERATION_GSP_HEAP   = 0x00010003,
+    MEMOP_FREE    = 1,
+    MEMOP_RESERVE = 2, // This operation seems to be unsupported in the kernel
+    MEMOP_COMMIT  = 3,
+    MEMOP_MAP     = 4,
+    MEMOP_UNMAP   = 5,
+    MEMOP_PROTECT = 6,
+    MEMOP_OPERATION_MASK = 0xFF,
+
+    MEMOP_REGION_APP    = 0x100,
+    MEMOP_REGION_SYSTEM = 0x200,
+    MEMOP_REGION_BASE   = 0x300,
+    MEMOP_REGION_MASK   = 0xF00,
+
+    MEMOP_LINEAR = 0x10000,
 };
 
 /// Map application or GSP heap memory
 static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size, u32 permissions) {
-    LOG_TRACE(Kernel_SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=%08X, permissions=0x%08X",
+    using namespace Kernel;
+
+    LOG_DEBUG(Kernel_SVC,"called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=0x%X, permissions=0x%08X",
         operation, addr0, addr1, size, permissions);
 
-    switch (operation) {
+    if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0) {
+        return ERR_MISALIGNED_ADDRESS;
+    }
+    if ((size & Memory::PAGE_MASK) != 0) {
+        return ERR_MISALIGNED_SIZE;
+    }
 
-    // Map normal heap memory
-    case MEMORY_OPERATION_HEAP:
-        *out_addr = Memory::MapBlock_Heap(size, operation, permissions);
+    u32 region = operation & MEMOP_REGION_MASK;
+    operation &= ~MEMOP_REGION_MASK;
+
+    if (region != 0) {
+        LOG_WARNING(Kernel_SVC, "ControlMemory with specified region not supported, region=%X", region);
+    }
+
+    if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions) {
+        return ERR_INVALID_COMBINATION;
+    }
+    VMAPermission vma_permissions = (VMAPermission)permissions;
+
+    auto& process = *g_current_process;
+
+    switch (operation & MEMOP_OPERATION_MASK) {
+    case MEMOP_FREE:
+    {
+        if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
+            ResultCode result = process.HeapFree(addr0, size);
+            if (result.IsError()) return result;
+        } else if (addr0 >= Memory::LINEAR_HEAP_VADDR && addr0 < Memory::LINEAR_HEAP_VADDR_END) {
+            ResultCode result = process.LinearFree(addr0, size);
+            if (result.IsError()) return result;
+        } else {
+            return ERR_INVALID_ADDRESS;
+        }
+        *out_addr = addr0;
         break;
+    }
 
-    // Map GSP heap memory
-    case MEMORY_OPERATION_GSP_HEAP:
-        *out_addr = Memory::MapBlock_HeapLinear(size, operation, permissions);
+    case MEMOP_COMMIT:
+    {
+        if (operation & MEMOP_LINEAR) {
+            CASCADE_RESULT(*out_addr, process.LinearAllocate(addr0, size, vma_permissions));
+        } else {
+            CASCADE_RESULT(*out_addr, process.HeapAllocate(addr0, size, vma_permissions));
+        }
         break;
+    }
 
-    // Unknown ControlMemory operation
+    case MEMOP_MAP: // TODO: This is just a hack to avoid regressions until memory aliasing is implemented
+    {
+        CASCADE_RESULT(*out_addr, process.HeapAllocate(addr0, size, vma_permissions));
+        break;
+    }
+
+    case MEMOP_UNMAP: // TODO: This is just a hack to avoid regressions until memory aliasing is implemented
+    {
+        ResultCode result = process.HeapFree(addr0, size);
+        if (result.IsError()) return result;
+        break;
+    }
+
+    case MEMOP_PROTECT:
+    {
+        ResultCode result = process.vm_manager.ReprotectRange(addr0, size, vma_permissions);
+        if (result.IsError()) return result;
+        break;
+    }
+
     default:
         LOG_ERROR(Kernel_SVC, "unknown operation=0x%08X", operation);
+        return ERR_INVALID_COMBINATION;
     }
+
+    process.vm_manager.LogLayout(Log::Level::Trace);
+
     return RESULT_SUCCESS;
 }
 
@@ -537,9 +619,9 @@ static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_inf
     if (process == nullptr)
         return ERR_INVALID_HANDLE;
 
-    auto vma = process->address_space->FindVMA(addr);
+    auto vma = process->vm_manager.FindVMA(addr);
 
-    if (vma == process->address_space->vma_map.end())
+    if (vma == Kernel::g_current_process->vm_manager.vma_map.end())
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 
     memory_info->base_address = vma->second.base;

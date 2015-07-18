@@ -171,11 +171,20 @@ public:
      */
     ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state);
 
-    /// Unmaps the given VMA.
-    void Unmap(VMAHandle vma);
+    /// Unmaps a range of addresses, splitting VMAs as necessary.
+    ResultCode UnmapRange(VAddr target, u32 size);
 
     /// Changes the permissions of the given VMA.
-    void Reprotect(VMAHandle vma, VMAPermission new_perms);
+    VMAHandle Reprotect(VMAHandle vma, VMAPermission new_perms);
+
+    /// Changes the permissions of a range of addresses, splitting VMAs as necessary.
+    ResultCode ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
+
+    /**
+     * Scans all VMAs and updates the page table range of any that use the given vector as backing
+     * memory. This should be called after any operation that causes reallocation of the vector.
+     */
+    void RefreshMemoryBlockMappings(const std::vector<u8>* block);
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Log::Level log_level) const;
@@ -186,11 +195,20 @@ private:
     /// Converts a VMAHandle to a mutable VMAIter.
     VMAIter StripIterConstness(const VMAHandle& iter);
 
+    /// Unmaps the given VMA.
+    VMAIter Unmap(VMAIter vma);
+
     /**
      * Carves a VMA of a specific size at the specified address by splitting Free VMAs while doing
      * the appropriate error checking.
      */
     ResultVal<VMAIter> CarveVMA(VAddr base, u32 size);
+
+    /**
+     * Splits the edges of the given range of non-Free VMAs so that there is a VMA split at each
+     * end of the range.
+     */
+    ResultVal<VMAIter> CarveVMARange(VAddr base, u32 size);
 
     /**
      * Splits a VMA in two, at the specified offset.

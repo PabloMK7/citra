@@ -32,9 +32,7 @@ struct MemoryArea {
 
 // We don't declare the IO regions in here since its handled by other means.
 static MemoryArea memory_areas[] = {
-    {HEAP_VADDR,          HEAP_SIZE,              "Heap"},          // Application heap (main memory)
     {SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE,     "Shared Memory"}, // Shared memory
-    {LINEAR_HEAP_VADDR,   LINEAR_HEAP_SIZE,       "Linear Heap"},   // Linear heap (main memory)
     {VRAM_VADDR,          VRAM_SIZE,              "VRAM"},          // Video memory (VRAM)
     {DSP_RAM_VADDR,       DSP_RAM_SIZE,           "DSP RAM"},       // DSP memory
     {TLS_AREA_VADDR,      TLS_AREA_SIZE,          "TLS Area"},      // TLS memory
