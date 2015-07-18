@@ -130,14 +130,13 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
             }
         } else {
             ARMword Rd = ((tinstr & 0x0007) >> 0);
-            ARMword Rs = ((tinstr & 0x0038) >> 3);
+            ARMword Rs = ((tinstr & 0x0078) >> 3);
 
             if (tinstr & (1 << 7))
                 Rd += 8;
-            if (tinstr & (1 << 6))
-                Rs += 8;
 
             switch ((tinstr & 0x03C0) >> 6) {
+            case 0x0:                           // ADD Rd,Rd,Rs
             case 0x1:                           // ADD Rd,Rd,Hs
             case 0x2:                           // ADD Hd,Hd,Rs
             case 0x3:                           // ADD Hd,Hd,Hs
@@ -146,19 +145,19 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                     |(Rd << 12)                 // Rd
                     |(Rs << 0);                 // Rm
                 break;
+            case 0x4:                           // CMP Rd,Rs
             case 0x5:                           // CMP Rd,Hs
             case 0x6:                           // CMP Hd,Rs
             case 0x7:                           // CMP Hd,Hs
                 *ainstr = 0xE1500000            // base
                     | (Rd << 16)                // Rn
-                    |(Rd << 12)                 // Rd
                     |(Rs << 0);                 // Rm
                 break;
+            case 0x8:                           // MOV Rd,Rs
             case 0x9:                           // MOV Rd,Hs
             case 0xA:                           // MOV Hd,Rs
             case 0xB:                           // MOV Hd,Hs
                 *ainstr = 0xE1A00000            // base
-                    | (Rd << 16)                // Rn
                     |(Rd << 12)                 // Rd
                     |(Rs << 0);                 // Rm
                 break;
@@ -166,11 +165,6 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
             case 0xD:                           // BX Hs
                 *ainstr = 0xE12FFF10            // base
                     | ((tinstr & 0x0078) >> 3); // Rd
-                break;
-            case 0x0:                           // UNDEFINED
-            case 0x4:                           // UNDEFINED
-            case 0x8:                           // UNDEFINED
-                valid = t_undefined;
                 break;
             case 0xE:                           // BLX
             case 0xF:                           // BLX
