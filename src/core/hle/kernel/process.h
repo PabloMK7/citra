@@ -104,6 +104,8 @@ public:
     /// processes access to specific I/O regions and device memory.
     boost::container::static_vector<AddressMapping, 8> address_mappings;
     ProcessFlags flags;
+    /// Kernel compatibility version for this process
+    u16 kernel_version = 0;
 
     /// The id of this process
     u32 process_id = next_process_id++;

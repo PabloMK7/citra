@@ -92,9 +92,11 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             mapping.unk_flag = false;
         } else if ((type & 0xFE0) == 0xFC0) { // 0x01FF
             // Kernel version
-            int minor = descriptor & 0xFF;
-            int major = (descriptor >> 8) & 0xFF;
-            LOG_INFO(Loader, "ExHeader kernel version ignored: %d.%d", major, minor);
+            kernel_version = descriptor & 0xFFFF;
+
+            int minor = kernel_version & 0xFF;
+            int major = (kernel_version >> 8) & 0xFF;
+            LOG_DEBUG(Loader, "ExHeader kernel version: %d.%d", major, minor);
         } else {
             LOG_ERROR(Loader, "Unhandled kernel caps descriptor: 0x%08X", descriptor);
         }
