@@ -15,6 +15,8 @@ namespace Memory {
  * be mapped.
  */
 const u32 PAGE_SIZE = 0x1000;
+const u32 PAGE_MASK = PAGE_SIZE - 1;
+const int PAGE_BITS = 12;
 
 /// Physical memory regions as seen from the ARM11
 enum : PAddr {
