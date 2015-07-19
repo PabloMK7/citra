@@ -816,12 +816,16 @@ void RasterizerOpenGL::ReloadColorBuffer() {
 }
 
 void RasterizerOpenGL::ReloadDepthBuffer() {
-    // TODO: Appears to work, but double-check endianness of depth values and order of depth-stencil
-    u8* depth_buffer = Memory::GetPhysicalPointer(Pica::g_state.regs.framebuffer.GetDepthBufferPhysicalAddress());
+    PAddr depth_buffer_addr = Pica::g_state.regs.framebuffer.GetDepthBufferPhysicalAddress();
 
-    if (depth_buffer == nullptr) {
+    if (depth_buffer_addr == 0)
         return;
-    }
+
+    // TODO: Appears to work, but double-check endianness of depth values and order of depth-stencil
+    u8* depth_buffer = Memory::GetPhysicalPointer(depth_buffer_addr);
+
+    if (depth_buffer == nullptr)
+        return;
 
     u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format);
 
