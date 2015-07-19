@@ -221,7 +221,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
                 for (int i = 0; i < num_components; ++i)
                     dot = dot + src1[i] * src2[i];
 
-                for (int i = 0; i < num_components; ++i) {
+                for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
