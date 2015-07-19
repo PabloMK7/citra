@@ -54,7 +54,7 @@ static std::string MakeFunctionString(const char* name, const char* port_name, c
 
     std::string function_string = Common::StringFromFormat("function '%s': port=%s", name, port_name);
     for (int i = 1; i <= num_params; ++i) {
-        function_string += Common::StringFromFormat(", cmd_buff[%i]=%u", i, cmd_buff[i]);
+        function_string += Common::StringFromFormat(", cmd_buff[%i]=0x%X", i, cmd_buff[i]);
     }
     return function_string;
 }
