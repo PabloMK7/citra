@@ -200,6 +200,7 @@ struct Regs {
         case TextureFormat::IA8:
             return 4;
 
+        case TextureFormat::I4:
         case TextureFormat::A4:
             return 1;
 

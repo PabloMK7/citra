@@ -74,7 +74,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     format_choice->addItem(tr("I8"));
     format_choice->addItem(tr("A8"));
     format_choice->addItem(tr("IA4"));
-    format_choice->addItem(tr("UNK10"));
+    format_choice->addItem(tr("I4"));
     format_choice->addItem(tr("A4"));
     format_choice->addItem(tr("ETC1"));
     format_choice->addItem(tr("ETC1A4"));
