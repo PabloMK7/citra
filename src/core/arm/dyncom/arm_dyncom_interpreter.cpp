@@ -4144,11 +4144,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             bx_inst* const inst_cream = (bx_inst*)inst_base->component;
 
-            if (inst_cream->Rm == 15)
-                LOG_WARNING(Core_ARM11, "BX at pc %x: use of Rm = R15 is discouraged", cpu->Reg[15]);
+            u32 address = RM;
 
-            cpu->TFlag = cpu->Reg[inst_cream->Rm] & 0x1;
-            cpu->Reg[15] = cpu->Reg[inst_cream->Rm] & 0xfffffffe;
+            if (inst_cream->Rm == 15)
+                address += 2 * GET_INST_SIZE(cpu);
+
+            cpu->TFlag   = address & 1;
+            cpu->Reg[15] = address & 0xfffffffe;
             INC_PC(sizeof(bx_inst));
             goto DISPATCH;
         }
