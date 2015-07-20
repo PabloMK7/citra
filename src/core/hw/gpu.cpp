@@ -217,19 +217,37 @@ inline void Write(u32 addr, const T data) {
                     u32 dst_offset;
 
                     if (config.output_tiled) {
-                        // Interpret the input as linear and the output as tiled
-                        u32 coarse_y = y & ~7;
-                        u32 stride = output_width * dst_bytes_per_pixel;
+                        if (!config.dont_swizzle) {
+                            // Interpret the input as linear and the output as tiled
+                            u32 coarse_y = y & ~7;
+                            u32 stride = output_width * dst_bytes_per_pixel;
 
-                        src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
-                        dst_offset = VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) + coarse_y * stride;
+                            src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
+                            dst_offset = VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) + coarse_y * stride;
+                        } else {
+                           // Both input and output are linear
+                            src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
+                            dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
+                        }
                     } else {
-                        // Interpret the input as tiled and the output as linear
-                        u32 coarse_y = input_y & ~7;
-                        u32 stride = config.input_width * src_bytes_per_pixel;
+                        if (!config.dont_swizzle) {
+                            // Interpret the input as tiled and the output as linear
+                            u32 coarse_y = input_y & ~7;
+                            u32 stride = config.input_width * src_bytes_per_pixel;
 
-                        src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) + coarse_y * stride;
-                        dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
+                            src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) + coarse_y * stride;
+                            dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
+                        } else {
+                            // Both input and output are tiled
+                            u32 out_coarse_y = y & ~7;
+                            u32 out_stride = output_width * dst_bytes_per_pixel;
+
+                            u32 in_coarse_y = input_y & ~7;
+                            u32 in_stride = config.input_width * src_bytes_per_pixel;
+
+                            src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) + in_coarse_y * in_stride;
+                            dst_offset = VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) + out_coarse_y * out_stride;
+                        }
                     }
 
                     const u8* src_pixel = src_pointer + src_offset;

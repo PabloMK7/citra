@@ -203,6 +203,7 @@ struct Regs {
             BitField< 0, 1, u32> flip_vertically;  // flips input data vertically
             BitField< 1, 1, u32> output_tiled;     // Converts from linear to tiled format
             BitField< 3, 1, u32> raw_copy;         // Copies the data without performing any processing
+            BitField< 5, 1, u32> dont_swizzle;
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
 
