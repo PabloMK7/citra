@@ -99,6 +99,18 @@ template<ResultCode func(MemoryInfo*, PageInfo*, u32)> void Wrap() {
     FuncReturn(retval);
 }
 
+template<ResultCode func(MemoryInfo*, PageInfo*, Handle, u32)> void Wrap() {
+    MemoryInfo memory_info = {};
+    PageInfo page_info = {};
+    u32 retval = func(&memory_info, &page_info, PARAM(2), PARAM(3)).raw;
+    Core::g_app_core->SetReg(1, memory_info.base_address);
+    Core::g_app_core->SetReg(2, memory_info.size);
+    Core::g_app_core->SetReg(3, memory_info.permission);
+    Core::g_app_core->SetReg(4, memory_info.state);
+    Core::g_app_core->SetReg(5, page_info.flags);
+    FuncReturn(retval);
+}
+
 template<ResultCode func(s32*, u32)> void Wrap(){
     s32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1)).raw;
