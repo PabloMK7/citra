@@ -217,6 +217,14 @@ static void SwitchContext(Thread* new_thread) {
             new_thread->context.pc -= thumb_mode ? 2 : 4;
         }
 
+        // Clean up the thread's wait_objects, they'll be restored if needed during
+        // the svcWaitSynchronization call
+        for (int i = 0; i < new_thread->wait_objects.size(); ++i) {
+            SharedPtr<WaitObject> object = new_thread->wait_objects[i];
+            object->RemoveWaitingThread(new_thread);
+        }
+        new_thread->wait_objects.clear();
+
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = THREADSTATUS_RUNNING;
 
