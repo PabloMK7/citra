@@ -45,7 +45,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     if (GPU::g_skip_frame && id != PICA_REG_INDEX(trigger_irq))
         return;
 
-    // TODO: Figure out how register masking acts on e.g. vs_uniform_setup.set_value
+    // TODO: Figure out how register masking acts on e.g. vs.uniform_setup.set_value
     u32 old_value = regs[id];
     regs[id] = (old_value & ~mask) | (value & mask);
 
@@ -282,7 +282,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                                    &geometry_dumper, _1, _2, _3));
 
                 // Send to vertex shader
-                VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes());
+                VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes(), g_state.regs.vs, g_state.vs);
 
                 if (is_indexed) {
                     // TODO: Add processed vertex to vertex cache!
@@ -321,35 +321,35 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
         }
 
-        case PICA_REG_INDEX(vs_bool_uniforms):
+        case PICA_REG_INDEX(vs.bool_uniforms):
             for (unsigned i = 0; i < 16; ++i)
-                g_state.vs.uniforms.b[i] = (regs.vs_bool_uniforms.Value() & (1 << i)) != 0;
+                g_state.vs.uniforms.b[i] = (regs.vs.bool_uniforms.Value() & (1 << i)) != 0;
 
             break;
 
-        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1):
-        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[1], 0x2b2):
-        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[2], 0x2b3):
-        case PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[3], 0x2b4):
+        case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1):
+        case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[1], 0x2b2):
+        case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[2], 0x2b3):
+        case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[3], 0x2b4):
         {
-            int index = (id - PICA_REG_INDEX_WORKAROUND(vs_int_uniforms[0], 0x2b1));
-            auto values = regs.vs_int_uniforms[index];
+            int index = (id - PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1));
+            auto values = regs.vs.int_uniforms[index];
             g_state.vs.uniforms.i[index] = Math::Vec4<u8>(values.x, values.y, values.z, values.w);
             LOG_TRACE(HW_GPU, "Set integer uniform %d to %02x %02x %02x %02x",
                       index, values.x.Value(), values.y.Value(), values.z.Value(), values.w.Value());
             break;
         }
 
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[0], 0x2c1):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[1], 0x2c2):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[2], 0x2c3):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[3], 0x2c4):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[4], 0x2c5):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[5], 0x2c6):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[6], 0x2c7):
-        case PICA_REG_INDEX_WORKAROUND(vs_uniform_setup.set_value[7], 0x2c8):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[0], 0x2c1):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[1], 0x2c2):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[2], 0x2c3):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[3], 0x2c4):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[4], 0x2c5):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[5], 0x2c6):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[6], 0x2c7):
+        case PICA_REG_INDEX_WORKAROUND(vs.uniform_setup.set_value[7], 0x2c8):
         {
-            auto& uniform_setup = regs.vs_uniform_setup;
+            auto& uniform_setup = regs.vs.uniform_setup;
 
             // TODO: Does actual hardware indeed keep an intermediate buffer or does
             //       it directly write the values?
@@ -392,32 +392,32 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         }
 
         // Load shader program code
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[0], 0x2cc):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[1], 0x2cd):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[2], 0x2ce):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[3], 0x2cf):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[4], 0x2d0):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[5], 0x2d1):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[6], 0x2d2):
-        case PICA_REG_INDEX_WORKAROUND(vs_program.set_word[7], 0x2d3):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[0], 0x2cc):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[1], 0x2cd):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[2], 0x2ce):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[3], 0x2cf):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[4], 0x2d0):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[5], 0x2d1):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[6], 0x2d2):
+        case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[7], 0x2d3):
         {
-            g_state.vs.program_code[regs.vs_program.offset] = value;
-            regs.vs_program.offset++;
+            g_state.vs.program_code[regs.vs.program.offset] = value;
+            regs.vs.program.offset++;
             break;
         }
 
         // Load swizzle pattern data
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[0], 0x2d6):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[1], 0x2d7):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[2], 0x2d8):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[3], 0x2d9):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[4], 0x2da):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[5], 0x2db):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[6], 0x2dc):
-        case PICA_REG_INDEX_WORKAROUND(vs_swizzle_patterns.set_word[7], 0x2dd):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[0], 0x2d6):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[1], 0x2d7):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[2], 0x2d8):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[3], 0x2d9):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[4], 0x2da):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[5], 0x2db):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[6], 0x2dc):
+        case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[7], 0x2dd):
         {
-            g_state.vs.swizzle_data[regs.vs_swizzle_patterns.offset] = value;
-            regs.vs_swizzle_patterns.offset++;
+            g_state.vs.swizzle_data[regs.vs.swizzle_patterns.offset] = value;
+            regs.vs.swizzle_patterns.offset++;
             break;
         }
 

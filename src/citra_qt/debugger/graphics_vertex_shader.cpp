@@ -259,7 +259,7 @@ void GraphicsVertexShaderModel::OnUpdate()
     for (auto pattern : Pica::g_state.vs.swizzle_data)
         info.swizzle_info.push_back({pattern});
 
-    info.labels.insert({ Pica::g_state.regs.vs_main_offset, "main" });
+    info.labels.insert({ Pica::g_state.regs.vs.main_offset, "main" });
 
     endResetModel();
 }

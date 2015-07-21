@@ -65,7 +65,7 @@ struct OutputVertex {
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
-OutputVertex RunShader(const InputVertex& input, int num_attributes);
+OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup);
 
 } // namespace
 
