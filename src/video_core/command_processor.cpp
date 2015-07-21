@@ -217,56 +217,52 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 // Initialize data for the current vertex
                 VertexShader::InputVertex input;
 
-                // Load a debugging token to check whether this gets loaded by the running
-                // application or not.
-                static const float24 debug_token = float24::FromRawFloat24(0x00abcdef);
-                input.attr[0].w = debug_token;
-
                 for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
-                    // Load the default attribute if we're configured to do so, this data will be overwritten by the loader data if it's set
-                    if (attribute_config.IsDefaultAttribute(i)) {
+                    if (vertex_attribute_elements[i] != 0) {
+                        // Default attribute values set if array elements have < 4 components. This
+                        // is *not* carried over from the default attribute settings even if they're
+                        // enabled for this attribute.
+                        static const float24 zero = float24::FromFloat32(0.0f);
+                        static const float24 one = float24::FromFloat32(1.0f);
+                        input.attr[i] = Math::Vec4<float24>(zero, zero, zero, one);
+
+                        // Load per-vertex data from the loader arrays
+                        for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                            u32 source_addr = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
+                            const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
+
+                            if (g_debug_context && Pica::g_debug_context->recorder) {
+                                memory_accesses.AddAccess(source_addr,
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
+                                    : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
+                            }
+
+                            const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
+                                (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
+                                (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *(s16*)srcdata :
+                                *(float*)srcdata;
+
+                            input.attr[i][comp] = float24::FromFloat32(srcval);
+                            LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
+                                comp, i, vertex, index,
+                                attribute_config.GetPhysicalBaseAddress(),
+                                vertex_attribute_sources[i] - base_address,
+                                vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
+                                input.attr[i][comp].ToFloat32());
+                        }
+                    } else if (attribute_config.IsDefaultAttribute(i)) {
+                        // Load the default attribute if we're configured to do so
                         input.attr[i] = g_state.vs.default_attributes[i];
                         LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
                                   i, vertex, index,
                                   input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
                                   input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
-                    }
-
-                    // Load per-vertex data from the loader arrays
-                    for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                        u32 source_addr = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
-                        const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
-
-                        if (g_debug_context && Pica::g_debug_context->recorder) {
-                            memory_accesses.AddAccess(source_addr,
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
-                                    : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
-                        }
-
-                        const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
-                            (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
-                            (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *(s16*)srcdata :
-                            *(float*)srcdata;
-
-                        input.attr[i][comp] = float24::FromFloat32(srcval);
-                        LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08lx + 0x%04lx: %f",
-                            comp, i, vertex, index,
-                            attribute_config.GetPhysicalBaseAddress(),
-                            vertex_attribute_sources[i] - base_address,
-                            vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
-                            input.attr[i][comp].ToFloat32());
+                    } else {
+                        // TODO(yuriks): In this case, no data gets loaded and the vertex remains
+                        //              with the last value it had. This isn't currently maintained
+                        //              as global state, however, and so won't work in Cita yet.
                     }
                 }
-
-                // HACK: Some games do not initialize the vertex position's w component. This leads
-                //       to critical issues since it messes up perspective division. As a
-                //       workaround, we force the fourth component to 1.0 if we find this to be the
-                //       case.
-                //       To do this, we additionally have to assume that the first input attribute
-                //       is the vertex position, since there's no information about this other than
-                //       the empiric observation that this is usually the case.
-                if (input.attr[0].w == debug_token)
-                    input.attr[0].w = float24::FromFloat32(1.0);
 
                 if (g_debug_context)
                     g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
