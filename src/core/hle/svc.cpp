@@ -833,8 +833,7 @@ static const FunctionDef SVC_Table[] = {
 
 Common::Profiling::TimingCategory profiler_svc("SVC Calls");
 
-static const FunctionDef* GetSVCInfo(u32 opcode) {
-    u32 func_num = opcode & 0xFFFFFF; // 8 bits
+static const FunctionDef* GetSVCInfo(u32 func_num) {
     if (func_num >= ARRAY_SIZE(SVC_Table)) {
         LOG_ERROR(Kernel_SVC, "unknown svc=0x%02X", func_num);
         return nullptr;
@@ -842,10 +841,10 @@ static const FunctionDef* GetSVCInfo(u32 opcode) {
     return &SVC_Table[func_num];
 }
 
-void CallSVC(u32 opcode) {
+void CallSVC(u32 immediate) {
     Common::Profiling::ScopeTimer timer_svc(profiler_svc);
 
-    const FunctionDef *info = GetSVCInfo(opcode);
+    const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {
         if (info->func) {
             info->func();
