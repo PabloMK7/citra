@@ -345,7 +345,7 @@ void GPUCommandListWidget::CopyAllToClipboard() {
     QClipboard* clipboard = QApplication::clipboard();
     QString text;
 
-    QAbstractItemModel* model = (QAbstractListModel*)list_widget->model();
+    QAbstractItemModel* model = static_cast<QAbstractListModel*>(list_widget->model());
 
     for (int row = 0; row < model->rowCount({}); ++row) {
         for (int col = 0; col < model->columnCount({}); ++col) {
