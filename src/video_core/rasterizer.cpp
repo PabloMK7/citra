@@ -460,6 +460,7 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
                     u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
                     auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
+                    // TODO: Apply the min and mag filters to the texture
                     texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
                     DebugUtils::DumpTexture(texture.config, texture_data);
                 }

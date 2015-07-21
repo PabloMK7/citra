@@ -12,6 +12,33 @@
 
 namespace PicaToGL {
 
+inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
+    static const GLenum filter_mode_table[] = {
+        GL_NEAREST,  // TextureFilter::Nearest
+        GL_LINEAR    // TextureFilter::Linear
+    };
+
+    // Range check table for input
+    if (mode >= ARRAY_SIZE(filter_mode_table)) {
+        LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode %d", mode);
+        UNREACHABLE();
+
+        return GL_LINEAR;
+    }
+
+    GLenum gl_mode = filter_mode_table[mode];
+
+    // Check for dummy values indicating an unknown mode
+    if (gl_mode == 0) {
+        LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode %d", mode);
+        UNIMPLEMENTED();
+
+        return GL_LINEAR;
+    }
+
+    return gl_mode;
+}
+
 inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     static const GLenum wrap_mode_table[] = {
         GL_CLAMP_TO_EDGE,  // WrapMode::ClampToEdge

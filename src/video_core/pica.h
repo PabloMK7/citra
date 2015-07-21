@@ -119,6 +119,11 @@ struct Regs {
             MirroredRepeat = 3,
         };
 
+        enum TextureFilter : u32 {
+            Nearest = 0,
+            Linear  = 1
+        };
+
         union {
             BitField< 0, 8, u32> r;
             BitField< 8, 8, u32> g;
@@ -132,6 +137,8 @@ struct Regs {
         };
 
         union {
+            BitField< 1, 1, TextureFilter> mag_filter;
+            BitField< 2, 1, TextureFilter> min_filter;
             BitField< 8, 2, WrapMode> wrap_t;
             BitField<12, 2, WrapMode> wrap_s;
         };
