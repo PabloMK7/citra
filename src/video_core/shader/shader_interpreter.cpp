@@ -2,18 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/container/static_vector.hpp>
-#include <boost/range/algorithm.hpp>
-
 #include <common/file_util.h>
 
 #include <nihstro/shader_bytecode.h>
 
-#include "common/profiler.h"
-
 #include "video_core/pica.h"
-#include "video_core/shader/shader_interpreter.h"
-#include "video_core/debug_utils/debug_utils.h"
+
+#include "shader.h"
+#include "shader_interpreter.h"
 
 using nihstro::OpCode;
 using nihstro::Instruction;
@@ -25,42 +21,7 @@ namespace Pica {
 
 namespace Shader {
 
-struct ShaderState {
-    u32 program_counter;
-
-    const float24* input_register_table[16];
-    Math::Vec4<float24> output_registers[16];
-
-    Math::Vec4<float24> temporary_registers[16];
-    bool conditional_code[2];
-
-    // Two Address registers and one loop counter
-    // TODO: How many bits do these actually have?
-    s32 address_registers[3];
-
-    enum {
-        INVALID_ADDRESS = 0xFFFFFFFF
-    };
-
-    struct CallStackElement {
-        u32 final_address;  // Address upon which we jump to return_address
-        u32 return_address; // Where to jump when leaving scope
-        u8 repeat_counter;  // How often to repeat until this call stack element is removed
-        u8 loop_increment;  // Which value to add to the loop counter after an iteration
-                            // TODO: Should this be a signed value? Does it even matter?
-        u32 loop_address;   // The address where we'll return to after each loop iteration
-    };
-
-    // TODO: Is there a maximal size for this?
-    boost::container::static_vector<CallStackElement, 16> call_stack;
-
-    struct {
-        u32 max_offset; // maximum program counter ever reached
-        u32 max_opdesc_id; // maximum swizzle pattern index ever used
-    } debug;
-};
-
-static void ProcessShaderCode(ShaderState& state) {
+void RunInterpreter(UnitState& state) {
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
     const auto& program_code = g_state.vs.program_code;
@@ -90,7 +51,7 @@ static void ProcessShaderCode(ShaderState& state) {
         const Instruction instr = { program_code[state.program_counter] };
         const SwizzlePattern swizzle = { swizzle_data[instr.common.operand_desc_id] };
 
-        static auto call = [](ShaderState& state, u32 offset, u32 num_instructions,
+        static auto call = [](UnitState& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
             state.program_counter = offset - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
             ASSERT(state.call_stack.size() < state.call_stack.capacity());
@@ -101,7 +62,7 @@ static void ProcessShaderCode(ShaderState& state) {
         auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
             switch (source_reg.GetRegisterType()) {
             case RegisterType::Input:
-                return state.input_register_table[source_reg.GetIndex()];
+                return &state.input_registers[source_reg.GetIndex()].x;
 
             case RegisterType::Temporary:
                 return &state.temporary_registers[source_reg.GetIndex()].x;
@@ -413,7 +374,7 @@ static void ProcessShaderCode(ShaderState& state) {
 
         default:
         {
-            static auto evaluate_condition = [](const ShaderState& state, bool refx, bool refy, Instruction::FlowControlType flow_control) {
+            static auto evaluate_condition = [](const UnitState& state, bool refx, bool refy, Instruction::FlowControlType flow_control) {
                 bool results[2] = { refx == state.conditional_code[0],
                                     refy == state.conditional_code[1] };
 
@@ -541,88 +502,6 @@ static void ProcessShaderCode(ShaderState& state) {
             break;
     }
 }
-
-static Common::Profiling::TimingCategory shader_category("Vertex Shader");
-
-OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup) {
-    Common::Profiling::ScopeTimer timer(shader_category);
-
-    ShaderState state;
-
-    state.program_counter = config.main_offset;
-    state.debug.max_offset = 0;
-    state.debug.max_opdesc_id = 0;
-
-    // Setup input register table
-    const auto& attribute_register_map = config.input_register_map;
-    float24 dummy_register;
-    boost::fill(state.input_register_table, &dummy_register);
-
-    if (num_attributes > 0) state.input_register_table[attribute_register_map.attribute0_register] = &input.attr[0].x;
-    if (num_attributes > 1) state.input_register_table[attribute_register_map.attribute1_register] = &input.attr[1].x;
-    if (num_attributes > 2) state.input_register_table[attribute_register_map.attribute2_register] = &input.attr[2].x;
-    if (num_attributes > 3) state.input_register_table[attribute_register_map.attribute3_register] = &input.attr[3].x;
-    if (num_attributes > 4) state.input_register_table[attribute_register_map.attribute4_register] = &input.attr[4].x;
-    if (num_attributes > 5) state.input_register_table[attribute_register_map.attribute5_register] = &input.attr[5].x;
-    if (num_attributes > 6) state.input_register_table[attribute_register_map.attribute6_register] = &input.attr[6].x;
-    if (num_attributes > 7) state.input_register_table[attribute_register_map.attribute7_register] = &input.attr[7].x;
-    if (num_attributes > 8) state.input_register_table[attribute_register_map.attribute8_register] = &input.attr[8].x;
-    if (num_attributes > 9) state.input_register_table[attribute_register_map.attribute9_register] = &input.attr[9].x;
-    if (num_attributes > 10) state.input_register_table[attribute_register_map.attribute10_register] = &input.attr[10].x;
-    if (num_attributes > 11) state.input_register_table[attribute_register_map.attribute11_register] = &input.attr[11].x;
-    if (num_attributes > 12) state.input_register_table[attribute_register_map.attribute12_register] = &input.attr[12].x;
-    if (num_attributes > 13) state.input_register_table[attribute_register_map.attribute13_register] = &input.attr[13].x;
-    if (num_attributes > 14) state.input_register_table[attribute_register_map.attribute14_register] = &input.attr[14].x;
-    if (num_attributes > 15) state.input_register_table[attribute_register_map.attribute15_register] = &input.attr[15].x;
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
-    ProcessShaderCode(state);
-#if PICA_DUMP_SHADERS
-    DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),
-                           state.debug.max_opdesc_id, config.main_offset,
-                           g_state.regs.vs_output_attributes); // TODO: Don't hardcode VS here
-#endif
-
-    // Setup output data
-    OutputVertex ret;
-    // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
-    // figure out what those circumstances are and enable the remaining outputs then.
-    for (int i = 0; i < 7; ++i) {
-        const auto& output_register_map = g_state.regs.vs_output_attributes[i]; // TODO: Don't hardcode VS here
-
-        u32 semantics[4] = {
-            output_register_map.map_x, output_register_map.map_y,
-            output_register_map.map_z, output_register_map.map_w
-        };
-
-        for (int comp = 0; comp < 4; ++comp) {
-            float24* out = ((float24*)&ret) + semantics[comp];
-            if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = state.output_registers[i][comp];
-            } else {
-                // Zero output so that attributes which aren't output won't have denormals in them,
-                // which would slow us down later.
-                memset(out, 0, sizeof(*out));
-            }
-        }
-    }
-
-    // The hardware takes the absolute and saturates vertex colors like this, *before* doing interpolation
-    for (int i = 0; i < 4; ++i) {
-        ret.color[i] = float24::FromFloat32(
-            std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
-    }
-
-    LOG_TRACE(Render_Software, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
-        ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
-        ret.color.x.ToFloat32(), ret.color.y.ToFloat32(), ret.color.z.ToFloat32(), ret.color.w.ToFloat32(),
-        ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32());
-
-    return ret;
-}
-
 
 } // namespace
 

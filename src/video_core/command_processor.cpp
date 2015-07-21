@@ -215,6 +215,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             unsigned int vertex_cache_pos = 0;
             vertex_cache_ids.fill(-1);
 
+            Shader::UnitState shader_unit;
+            Shader::Setup(shader_unit);
+
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
                 unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
@@ -307,7 +310,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                                        &geometry_dumper, _1, _2, _3));
 #endif
                     // Send to vertex shader
-                    output = Shader::RunShader(input, attribute_config.GetNumTotalAttributes(), g_state.regs.vs, g_state.vs);
+                    output = Shader::Run(shader_unit, input, attribute_config.GetNumTotalAttributes());
 
                     if (is_indexed) {
                         vertex_cache[vertex_cache_pos] = output;

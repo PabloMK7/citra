@@ -1083,6 +1083,7 @@ private:
     // TODO: Perform proper arithmetic on this!
     float value;
 };
+static_assert(sizeof(float24) == sizeof(float), "Shader JIT assumes float24 is implemented as a 32-bit float");
 
 /// Struct used to describe current Pica state
 struct State {
@@ -1092,7 +1093,10 @@ struct State {
     /// Vertex shader memory
     struct ShaderSetup {
         struct {
-            Math::Vec4<float24> f[96];
+            // The float uniforms are accessed by the shader JIT using SSE instructions, and are
+            // therefore required to be 16-byte aligned.
+            Math::Vec4<float24> MEMORY_ALIGNED16(f[96]);
+
             std::array<bool, 16> b;
             std::array<Math::Vec4<u8>, 4> i;
         } uniforms;

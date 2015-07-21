@@ -11,6 +11,7 @@ set(SRCS
             pica.cpp
             primitive_assembly.cpp
             rasterizer.cpp
+            shader/shader.cpp
             shader/shader_interpreter.cpp
             utils.cpp
             video_core.cpp
@@ -35,6 +36,7 @@ set(HEADERS
             primitive_assembly.h
             rasterizer.h
             renderer_base.h
+            shader/shader.h
             shader/shader_interpreter.h
             utils.h
             video_core.h
