@@ -8,7 +8,7 @@
 
 #include "video_core/pica.h"
 
-#include "video_core/vertex_shader.h"
+#include "video_core/shader_interpreter.h"
 
 namespace Pica {
 

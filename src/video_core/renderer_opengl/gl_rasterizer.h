@@ -9,7 +9,7 @@
 #include "common/common_types.h"
 
 #include "video_core/hwrasterizer_base.h"
-#include "video_core/vertex_shader.h"
+#include "video_core/shader_interpreter.h"
 
 #include "gl_state.h"
 #include "gl_rasterizer_cache.h"
@@ -27,9 +27,9 @@ public:
     void Reset() override;
 
     /// Queues the primitive formed by the given vertices for rendering
-    void AddTriangle(const Pica::VertexShader::OutputVertex& v0,
-                     const Pica::VertexShader::OutputVertex& v1,
-                     const Pica::VertexShader::OutputVertex& v2) override;
+    void AddTriangle(const Pica::Shader::OutputVertex& v0,
+                     const Pica::Shader::OutputVertex& v1,
+                     const Pica::Shader::OutputVertex& v2) override;
 
     /// Draw the current batch of triangles
     void DrawTriangles() override;
@@ -82,7 +82,7 @@ private:
 
     /// Structure that the hardware rendered vertices are composed of
     struct HardwareVertex {
-        HardwareVertex(const Pica::VertexShader::OutputVertex& v) {
+        HardwareVertex(const Pica::Shader::OutputVertex& v) {
             position[0] = v.pos.x.ToFloat32();
             position[1] = v.pos.y.ToFloat32();
             position[2] = v.pos.z.ToFloat32();

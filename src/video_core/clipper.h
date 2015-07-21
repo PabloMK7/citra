@@ -6,13 +6,13 @@
 
 namespace Pica {
 
-namespace VertexShader {
+namespace Shader {
     struct OutputVertex;
 }
 
 namespace Clipper {
 
-using VertexShader::OutputVertex;
+using Shader::OutputVertex;
 
 void ProcessTriangle(OutputVertex& v0, OutputVertex& v1, OutputVertex& v2);
 

@@ -7,7 +7,7 @@
 #include "clipper.h"
 #include "pica.h"
 #include "rasterizer.h"
-#include "vertex_shader.h"
+#include "shader_interpreter.h"
 
 namespace Pica {
 

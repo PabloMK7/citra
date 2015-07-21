@@ -12,7 +12,7 @@
 #include "common/profiler.h"
 
 #include "pica.h"
-#include "vertex_shader.h"
+#include "shader_interpreter.h"
 #include "debug_utils/debug_utils.h"
 
 using nihstro::OpCode;
@@ -23,9 +23,9 @@ using nihstro::SwizzlePattern;
 
 namespace Pica {
 
-namespace VertexShader {
+namespace Shader {
 
-struct VertexShaderState {
+struct ShaderState {
     u32 program_counter;
 
     const float24* input_register_table[16];
@@ -60,7 +60,7 @@ struct VertexShaderState {
     } debug;
 };
 
-static void ProcessShaderCode(VertexShaderState& state) {
+static void ProcessShaderCode(ShaderState& state) {
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
     const auto& program_code = g_state.vs.program_code;
@@ -90,7 +90,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
         const Instruction instr = { program_code[state.program_counter] };
         const SwizzlePattern swizzle = { swizzle_data[instr.common.operand_desc_id] };
 
-        static auto call = [](VertexShaderState& state, u32 offset, u32 num_instructions,
+        static auto call = [](ShaderState& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
             state.program_counter = offset - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
             ASSERT(state.call_stack.size() < state.call_stack.capacity());
@@ -413,7 +413,7 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
         default:
         {
-            static auto evaluate_condition = [](const VertexShaderState& state, bool refx, bool refy, Instruction::FlowControlType flow_control) {
+            static auto evaluate_condition = [](const ShaderState& state, bool refx, bool refy, Instruction::FlowControlType flow_control) {
                 bool results[2] = { refx == state.conditional_code[0],
                                     refy == state.conditional_code[1] };
 
@@ -547,7 +547,7 @@ static Common::Profiling::TimingCategory shader_category("Vertex Shader");
 OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup) {
     Common::Profiling::ScopeTimer timer(shader_category);
 
-    VertexShaderState state;
+    ShaderState state;
 
     state.program_counter = config.main_offset;
     state.debug.max_offset = 0;

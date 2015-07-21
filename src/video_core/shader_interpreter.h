@@ -12,7 +12,7 @@
 
 namespace Pica {
 
-namespace VertexShader {
+namespace Shader {
 
 struct InputVertex {
     Math::Vec4<float24> attr[16];
@@ -70,4 +70,3 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs:
 } // namespace
 
 } // namespace
-

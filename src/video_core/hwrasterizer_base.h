@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 
 namespace Pica {
-namespace VertexShader {
+namespace Shader {
 struct OutputVertex;
 }
 }
@@ -24,9 +24,9 @@ public:
     virtual void Reset() = 0;
 
     /// Queues the primitive formed by the given vertices for rendering
-    virtual void AddTriangle(const Pica::VertexShader::OutputVertex& v0,
-                             const Pica::VertexShader::OutputVertex& v1,
-                             const Pica::VertexShader::OutputVertex& v2) = 0;
+    virtual void AddTriangle(const Pica::Shader::OutputVertex& v0,
+                             const Pica::Shader::OutputVertex& v1,
+                             const Pica::Shader::OutputVertex& v2) = 0;
 
     /// Draw the current batch of triangles
     virtual void DrawTriangles() = 0;

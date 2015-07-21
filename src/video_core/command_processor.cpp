@@ -18,7 +18,7 @@
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "renderer_base.h"
-#include "vertex_shader.h"
+#include "shader_interpreter.h"
 #include "video_core.h"
 
 namespace Pica {
@@ -165,7 +165,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             DebugUtils::GeometryDumper geometry_dumper;
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
 #endif
-            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
+            PrimitiveAssembler<Shader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
 
             if (g_debug_context) {
                 for (int i = 0; i < 3; ++i) {
@@ -210,7 +210,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             // The size has been tuned for optimal balance between hit-rate and the cost of lookup
             const size_t VERTEX_CACHE_SIZE = 32;
             std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
-            std::array<VertexShader::OutputVertex, VERTEX_CACHE_SIZE> vertex_cache;
+            std::array<Shader::OutputVertex, VERTEX_CACHE_SIZE> vertex_cache;
 
             unsigned int vertex_cache_pos = 0;
             vertex_cache_ids.fill(-1);
@@ -224,7 +224,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 ASSERT(vertex != -1);
 
                 bool vertex_cache_hit = false;
-                VertexShader::OutputVertex output;
+                Shader::OutputVertex output;
 
                 if (is_indexed) {
                     if (g_debug_context && Pica::g_debug_context->recorder) {
@@ -243,7 +243,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 if (!vertex_cache_hit) {
                     // Initialize data for the current vertex
-                    VertexShader::InputVertex input;
+                    Shader::InputVertex input;
 
                     for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
                         if (vertex_attribute_elements[i] != 0) {
@@ -306,9 +306,8 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                              std::bind(&DebugUtils::GeometryDumper::AddTriangle,
                                                                        &geometry_dumper, _1, _2, _3));
 #endif
-
                     // Send to vertex shader
-                    output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes(), g_state.regs.vs, g_state.vs);
+                    output = Shader::RunShader(input, attribute_config.GetNumTotalAttributes(), g_state.regs.vs, g_state.vs);
 
                     if (is_indexed) {
                         vertex_cache[vertex_cache_pos] = output;
@@ -319,9 +318,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 if (Settings::values.use_hw_renderer) {
                     // Send to hardware renderer
-                    static auto AddHWTriangle = [](const Pica::VertexShader::OutputVertex& v0,
-                                                   const Pica::VertexShader::OutputVertex& v1,
-                                                   const Pica::VertexShader::OutputVertex& v2) {
+                    static auto AddHWTriangle = [](const Pica::Shader::OutputVertex& v0,
+                                                   const Pica::Shader::OutputVertex& v1,
+                                                   const Pica::Shader::OutputVertex& v2) {
                         VideoCore::g_renderer->hw_rasterizer->AddTriangle(v0, v1, v2);
                     };
 
