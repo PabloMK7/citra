@@ -115,7 +115,8 @@ static void OpenFileDirectly(Service::Interface* self) {
 
     ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
-        LOG_ERROR(Service_FS, "failed to get a handle for archive");
+        LOG_ERROR(Service_FS, "failed to get a handle for archive archive_id=0x%08X archive_path=%s",
+                  archive_id, archive_path.DebugStr().c_str());
         cmd_buff[1] = archive_handle.Code().raw;
         cmd_buff[3] = 0;
         return;
@@ -128,7 +129,8 @@ static void OpenFileDirectly(Service::Interface* self) {
         cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
     } else {
         cmd_buff[3] = 0;
-        LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
+        LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%d",
+                  file_path.DebugStr().c_str(), mode.hex, attributes);
     }
 }
 
@@ -347,7 +349,8 @@ static void OpenDirectory(Service::Interface* self) {
     if (dir_res.Succeeded()) {
         cmd_buff[3] = Kernel::g_handle_table.Create(*dir_res).MoveFrom();
     } else {
-        LOG_ERROR(Service_FS, "failed to get a handle for directory");
+        LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",
+                  dirname_type, dirname_size, dir_path.DebugStr().c_str());
     }
 }
 
@@ -382,7 +385,8 @@ static void OpenArchive(Service::Interface* self) {
         cmd_buff[3] = (*handle >> 32) & 0xFFFFFFFF;
     } else {
         cmd_buff[2] = cmd_buff[3] = 0;
-        LOG_ERROR(Service_FS, "failed to get a handle for archive");
+        LOG_ERROR(Service_FS, "failed to get a handle for archive archive_id=0x%08X archive_path=%s",
+                  archive_id, archive_path.DebugStr().c_str());
     }
 }
 
