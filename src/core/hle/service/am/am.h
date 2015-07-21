@@ -37,6 +37,19 @@ void TitleIDListGetTotal(Service::Interface* self);
  */
 void GetTitleIDList(Service::Interface* self);
 
+/**
+ * AM::GetNumContentInfos service function
+ *  Inputs:
+ *      0 : Command header (0x100100C0)
+ *      1 : Unknown
+ *      2 : Unknown
+ *      3 : Unknown
+ *  Outputs:
+ *      1 : Result, 0 on success, otherwise error code
+ *      2 : Number of content infos plus one
+ */
+void GetNumContentInfos(Service::Interface* self);
+
 /// Initialize AM service
 void Init();
 
