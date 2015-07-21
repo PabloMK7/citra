@@ -6248,7 +6248,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     SWI_INST:
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
-            SVC::CallSVC(Memory::Read32(cpu->Reg[15]));
+            swi_inst* const inst_cream = (swi_inst*)inst_base->component;
+            SVC::CallSVC(inst_cream->num & 0xFFFF);
         }
 
         cpu->Reg[15] += GET_INST_SIZE(cpu);
