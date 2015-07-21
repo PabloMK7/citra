@@ -9,11 +9,19 @@
 namespace Service {
 namespace AM {
 
-// Empty arrays are illegal -- commented out until an entry is added.
-//const Interface::FunctionInfo FunctionTable[] = { };
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x100100C0, GetNumContentInfos, "GetNumContentInfos"},
+    {0x10020104, nullptr, "FindContentInfos"},
+    {0x10030142, nullptr, "ListContentInfos"},
+    {0x10040102, nullptr, "DeleteContents"},
+    {0x10050084, nullptr, "GetDataTitleInfos"},
+    {0x10070102, nullptr, "ListDataTitleTicketInfos"},
+    {0x100900C0, nullptr, "IsDataTitleInUse"},
+    {0x100A0000, nullptr, "IsExternalTitleDatabaseInitialized"},
+};
 
 AM_APP_Interface::AM_APP_Interface() {
-    //Register(FunctionTable);
+    Register(FunctionTable);
 }
 
 } // namespace AM

@@ -38,6 +38,15 @@ void GetTitleIDList(Service::Interface* self) {
     LOG_WARNING(Service_AM, "(STUBBED) Requested %u titles from media type %u", num_titles, media_type);
 }
 
+void GetNumContentInfos(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 1; // Number of content infos plus one
+
+    LOG_WARNING(Service_AM, "(STUBBED) called");
+}
+
 void Init() {
     using namespace Kernel;
 
