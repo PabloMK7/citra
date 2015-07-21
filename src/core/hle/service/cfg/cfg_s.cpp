@@ -11,7 +11,9 @@ namespace CFG {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, GetConfigInfoBlk2,                    "GetConfigInfoBlk2"},
-    {0x00020000, nullptr,                              "SecureInfoGetRegion"},
+    {0x00020000, SecureInfoGetRegion,                  "SecureInfoGetRegion"},
+    {0x00030040, GenHashConsoleUnique,                 "GenHashConsoleUnique"},
+    {0x00050000, GetSystemModel,                       "GetSystemModel"},
     {0x04010082, GetConfigInfoBlk8,                    "GetConfigInfoBlk8"},
     {0x04020082, nullptr,                              "SetConfigInfoBlk4"},
     {0x04030000, UpdateConfigNANDSavegame,             "UpdateConfigNANDSavegame"},
