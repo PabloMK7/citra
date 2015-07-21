@@ -56,6 +56,14 @@ set(HEADERS
             vector_math.h
             )
 
+if(_M_X86)
+    set(SRCS ${SRCS}
+             cpu_detect_x86.cpp)
+else()
+    set(SRCS ${SRCS}
+             cpu_detect_generic.cpp)
+endif()
+
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(common STATIC ${SRCS} ${HEADERS})

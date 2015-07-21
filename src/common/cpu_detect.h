@@ -3,10 +3,12 @@
 // Refer to the license.txt file included.
 
 
-// Detect the cpu, so we'll know which optimizations to use
+// Detect the CPU, so we'll know which optimizations to use
 #pragma once
 
 #include <string>
+
+namespace Common {
 
 enum CPUVendor
 {
@@ -40,29 +42,28 @@ struct CPUInfo
     bool bLZCNT;
     bool bSSE4A;
     bool bAVX;
+    bool bAVX2;
+    bool bBMI1;
+    bool bBMI2;
+    bool bFMA;
+    bool bFMA4;
     bool bAES;
+    // FXSAVE/FXRSTOR
+    bool bFXSR;
+    bool bMOVBE;
+    // This flag indicates that the hardware supports some mode
+    // in which denormal inputs _and_ outputs are automatically set to (signed) zero.
+    bool bFlushToZero;
     bool bLAHFSAHF64;
     bool bLongMode;
-
-    // ARM specific CPUInfo
-    bool bSwp;
-    bool bHalf;
-    bool bThumb;
-    bool bFastMult;
-    bool bVFP;
-    bool bEDSP;
-    bool bThumbEE;
-    bool bNEON;
-    bool bVFPv3;
-    bool bTLS;
-    bool bVFPv4;
-    bool bIDIVa;
-    bool bIDIVt;
-    bool bArmV7;  // enable MOVT, MOVW etc
+    bool bAtom;
 
     // ARMv8 specific
     bool bFP;
     bool bASIMD;
+    bool bCRC32;
+    bool bSHA1;
+    bool bSHA2;
 
     // Call Detect()
     explicit CPUInfo();
@@ -76,3 +77,5 @@ private:
 };
 
 extern CPUInfo cpu_info;
+
+} // namespace Common
