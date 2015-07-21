@@ -31,9 +31,8 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         state.texture_units[texture_unit].texture_2d = new_texture->texture.handle;
         state.Apply();
 
-        // TODO: Need to choose filters that correspond to PICA once register is declared
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureFilterMode(config.config.mag_filter));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, PicaToGL::TextureFilterMode(config.config.min_filter));
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, PicaToGL::WrapMode(config.config.wrap_s));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, PicaToGL::WrapMode(config.config.wrap_t));
