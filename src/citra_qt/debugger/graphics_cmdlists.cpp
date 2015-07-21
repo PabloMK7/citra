@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QApplication>
+#include <QClipboard>
 #include <QLabel>
 #include <QListView>
 #include <QMainWindow>
@@ -304,16 +306,24 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
             this, SLOT(OnCommandDoubleClicked(const QModelIndex&)));
 
     toggle_tracing = new QPushButton(tr("Start Tracing"));
+    QPushButton* copy_all = new QPushButton(tr("Copy All"));
 
     connect(toggle_tracing, SIGNAL(clicked()), this, SLOT(OnToggleTracing()));
     connect(this, SIGNAL(TracingFinished(const Pica::DebugUtils::PicaTrace&)),
             model, SLOT(OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&)));
 
+    connect(copy_all, SIGNAL(clicked()), this, SLOT(CopyAllToClipboard()));
+
     command_info_widget = new QWidget;
 
     QVBoxLayout* main_layout = new QVBoxLayout;
     main_layout->addWidget(list_widget);
-    main_layout->addWidget(toggle_tracing);
+    {
+        QHBoxLayout* sub_layout = new QHBoxLayout;
+        sub_layout->addWidget(toggle_tracing);
+        sub_layout->addWidget(copy_all);
+        main_layout->addLayout(sub_layout);
+    }
     main_layout->addWidget(command_info_widget);
     main_widget->setLayout(main_layout);
 
@@ -329,4 +339,22 @@ void GPUCommandListWidget::OnToggleTracing() {
         emit TracingFinished(*pica_trace);
         toggle_tracing->setText(tr("Start Tracing"));
     }
+}
+
+void GPUCommandListWidget::CopyAllToClipboard() {
+    QClipboard* clipboard = QApplication::clipboard();
+    QString text;
+
+    QAbstractItemModel* model = (QAbstractListModel*)list_widget->model();
+
+    for (int row = 0; row < model->rowCount({}); ++row) {
+        for (int col = 0; col < model->columnCount({}); ++col) {
+            QModelIndex index = model->index(row, col);
+            text += model->data(index).value<QString>();
+            text += '\t';
+        }
+        text += '\n';
+    }
+
+    clipboard->setText(text);
 }
