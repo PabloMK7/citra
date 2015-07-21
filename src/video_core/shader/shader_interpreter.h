@@ -8,7 +8,7 @@
 
 #include "common/vector_math.h"
 
-#include "pica.h"
+#include "video_core/pica.h"
 
 namespace Pica {
 

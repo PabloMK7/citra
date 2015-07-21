@@ -16,7 +16,7 @@
 #include "math.h"
 #include "pica.h"
 #include "rasterizer.h"
-#include "shader_interpreter.h"
+#include "shader/shader_interpreter.h"
 #include "video_core/utils.h"
 
 namespace Pica {

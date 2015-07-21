@@ -11,9 +11,9 @@
 
 #include "common/profiler.h"
 
-#include "pica.h"
-#include "shader_interpreter.h"
-#include "debug_utils/debug_utils.h"
+#include "video_core/pica.h"
+#include "video_core/shader/shader_interpreter.h"
+#include "video_core/debug_utils/debug_utils.h"
 
 using nihstro::OpCode;
 using nihstro::Instruction;

@@ -4,7 +4,7 @@
 
 #include "pica.h"
 #include "primitive_assembly.h"
-#include "shader_interpreter.h"
+#include "shader/shader_interpreter.h"
 
 #include "common/logging/log.h"
 #include "video_core/debug_utils/debug_utils.h"

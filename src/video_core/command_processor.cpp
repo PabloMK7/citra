@@ -18,7 +18,7 @@
 #include "pica.h"
 #include "primitive_assembly.h"
 #include "renderer_base.h"
-#include "shader_interpreter.h"
+#include "shader/shader_interpreter.h"
 #include "video_core.h"
 
 namespace Pica {
