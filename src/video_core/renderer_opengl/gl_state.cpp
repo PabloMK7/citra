@@ -147,19 +147,16 @@ void OpenGLState::Apply() {
 
     // Textures
     for (unsigned texture_index = 0; texture_index < ARRAY_SIZE(texture_units); ++texture_index) {
-        if (texture_units[texture_index].enabled_2d != cur_state.texture_units[texture_index].enabled_2d) {
+        if (texture_units[texture_index].enabled_2d != cur_state.texture_units[texture_index].enabled_2d ||
+            texture_units[texture_index].texture_2d != cur_state.texture_units[texture_index].texture_2d) {
+
             glActiveTexture(GL_TEXTURE0 + texture_index);
 
             if (texture_units[texture_index].enabled_2d) {
-                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, texture_units[texture_index].texture_2d);
             } else {
-                glDisable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, 0);
             }
-        }
-
-        if (texture_units[texture_index].texture_2d != cur_state.texture_units[texture_index].texture_2d) {
-            glActiveTexture(GL_TEXTURE0 + texture_index);
-            glBindTexture(GL_TEXTURE_2D, texture_units[texture_index].texture_2d);
         }
     }
 
