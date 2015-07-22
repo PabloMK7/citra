@@ -7,6 +7,7 @@
 
 #include "common_types.h"
 #include "cpu_detect.h"
+#include "hash.h"
 
 #ifndef _WIN32
 

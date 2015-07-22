@@ -6,6 +6,7 @@ set(SRCS
             break_points.cpp
             emu_window.cpp
             file_util.cpp
+            hash.cpp
             key_map.cpp
             logging/filter.cpp
             logging/text_formatter.cpp
@@ -35,6 +36,7 @@ set(HEADERS
             debug_interface.h
             emu_window.h
             file_util.h
+            hash.h
             key_map.h
             linear_disk_cache.h
             logging/text_formatter.h
@@ -59,7 +61,7 @@ set(HEADERS
             vector_math.h
             )
 
-if(_M_X86)
+if(_M_X86_64)
     set(SRCS ${SRCS}
             cpu_detect_x86.cpp
             x64_emitter.cpp)

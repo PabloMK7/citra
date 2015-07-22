@@ -3,12 +3,14 @@
 // Refer to the license.txt file included.
 
 #include "cpu_detect.h"
+#include "hash.h"
 
 namespace Common {
 
 CPUInfo cpu_info;
 
-CPUInfo::CPUInfo() { }
+CPUInfo::CPUInfo() {
+}
 
 std::string CPUInfo::Summarize() {
     return "Generic";

@@ -16,7 +16,7 @@ namespace Pica {
 namespace Shader {
 
 void Setup(UnitState& state) {
-    // TODO(bunnei): This will be used by the JIT in a subsequent commit
+    // TODO(bunnei): This will be used by the JIT in a subsequent patch
 }
 
 static Common::Profiling::TimingCategory shader_category("Vertex Shader");
