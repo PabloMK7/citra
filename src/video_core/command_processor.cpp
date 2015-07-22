@@ -50,7 +50,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     regs[id] = (old_value & ~mask) | (value & mask);
 
     if (g_debug_context)
-        g_debug_context->OnEvent(DebugContext::Event::CommandLoaded, reinterpret_cast<void*>(&id));
+        g_debug_context->OnEvent(DebugContext::Event::PicaCommandLoaded, reinterpret_cast<void*>(&id));
 
     DebugUtils::OnPicaRegWrite(id, regs[id]);
 
@@ -428,7 +428,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
     VideoCore::g_renderer->hw_rasterizer->NotifyPicaRegisterChanged(id);
 
     if (g_debug_context)
-        g_debug_context->OnEvent(DebugContext::Event::CommandProcessed, reinterpret_cast<void*>(&id));
+        g_debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, reinterpret_cast<void*>(&id));
 }
 
 void ProcessCommandList(const u32* list, u32 size) {

@@ -151,6 +151,10 @@ inline void Write(u32 addr, const T data) {
     {
         const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
+
+            if (Pica::g_debug_context)
+                Pica::g_debug_context->OnEvent(Pica::DebugContext::Event::IncomingDisplayTransfer, nullptr);
+
             u8* src_pointer = Memory::GetPhysicalPointer(config.GetPhysicalInputAddress());
             u8* dst_pointer = Memory::GetPhysicalPointer(config.GetPhysicalOutputAddress());
 

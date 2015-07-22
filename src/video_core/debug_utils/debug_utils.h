@@ -25,11 +25,14 @@ public:
     enum class Event {
         FirstEvent = 0,
 
-        CommandLoaded = FirstEvent,
-        CommandProcessed,
+        PicaCommandLoaded = FirstEvent,
+        PicaCommandProcessed,
         IncomingPrimitiveBatch,
         FinishedPrimitiveBatch,
         VertexLoaded,
+        IncomingDisplayTransfer,
+        GSPCommandProcessed,
+        BufferSwapped,
 
         NumEvents
     };
