@@ -2,6 +2,7 @@
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp" @ONLY)
 
 set(SRCS
+            abi.cpp
             break_points.cpp
             emu_window.cpp
             file_util.cpp
@@ -20,10 +21,12 @@ set(SRCS
             )
 
 set(HEADERS
+            abi.h
             assert.h
             bit_field.h
             break_points.h
             chunk_file.h
+            code_block.h
             color.h
             common_funcs.h
             common_paths.h
@@ -58,10 +61,17 @@ set(HEADERS
 
 if(_M_X86)
     set(SRCS ${SRCS}
-             cpu_detect_x86.cpp)
+            cpu_detect_x86.cpp
+            x64_emitter.cpp)
+
+    set(HEADERS ${HEADERS}
+            x64_emitter.h)
 else()
     set(SRCS ${SRCS}
-             cpu_detect_generic.cpp)
+            cpu_detect_generic.cpp)
+
+    set(HEADERS ${HEADERS}
+            fake_emitter.h)
 endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
