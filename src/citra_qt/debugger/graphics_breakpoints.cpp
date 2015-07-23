@@ -42,11 +42,14 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
         case 0:
         {
             static const std::map<Pica::DebugContext::Event, QString> map = {
-                { Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded") },
-                { Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed") },
+                { Pica::DebugContext::Event::PicaCommandLoaded, tr("Pica command loaded") },
+                { Pica::DebugContext::Event::PicaCommandProcessed, tr("Pica command processed") },
                 { Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch") },
                 { Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch") },
-                { Pica::DebugContext::Event::VertexLoaded, tr("Vertex loaded") }
+                { Pica::DebugContext::Event::VertexLoaded, tr("Vertex loaded") },
+                { Pica::DebugContext::Event::IncomingDisplayTransfer, tr("Incoming display transfer") },
+                { Pica::DebugContext::Event::GSPCommandProcessed, tr("GSP command processed") },
+                { Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped") }
             };
 
             DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
