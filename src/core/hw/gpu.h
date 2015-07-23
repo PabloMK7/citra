@@ -201,12 +201,14 @@ struct Regs {
             u32 flags;
 
             BitField< 0, 1, u32> flip_vertically;  // flips input data vertically
-            BitField< 1, 1, u32> output_tiled;     // Converts from linear to tiled format
-            BitField< 3, 1, u32> raw_copy;         // Copies the data without performing any processing
+            BitField< 1, 1, u32> input_linear;     // Converts from linear to tiled format
+            BitField< 2, 1, u32> crop_input_lines;
+            BitField< 3, 1, u32> is_texture_copy;  // Copies the data without performing any processing and respecting texture copy fields
             BitField< 5, 1, u32> dont_swizzle;
             BitField< 8, 3, PixelFormat> input_format;
             BitField<12, 3, PixelFormat> output_format;
-
+            /// Uses some kind of 32x32 block swizzling mode, instead of the usual 8x8 one.
+            BitField<16, 1, u32> block_32; // TODO(yuriks): unimplemented
             BitField<24, 2, ScalingMode> scaling; // Determines the scaling mode of the transfer
         };
 
@@ -214,10 +216,30 @@ struct Regs {
 
         // it seems that writing to this field triggers the display transfer
         u32 trigger;
-    } display_transfer_config;
-    ASSERT_MEMBER_SIZE(display_transfer_config, 0x1c);
 
-    INSERT_PADDING_WORDS(0x331);
+        INSERT_PADDING_WORDS(0x1);
+
+        struct {
+            u32 size;
+
+            union {
+                u32 input_size;
+
+                BitField< 0, 16, u32> input_width;
+                BitField<16, 16, u32> input_gap;
+            };
+
+            union {
+                u32 output_size;
+
+                BitField< 0, 16, u32> output_width;
+                BitField<16, 16, u32> output_gap;
+            };
+        } texture_copy;
+    } display_transfer_config;
+    ASSERT_MEMBER_SIZE(display_transfer_config, 0x2c);
+
+    INSERT_PADDING_WORDS(0x32D);
 
     struct {
         // command list size (in bytes)
