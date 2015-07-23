@@ -2,21 +2,52 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
+#include <memory>
+#include <unordered_map>
+
+#include "common/hash.h"
+#include "common/make_unique.h"
 #include "common/profiler.h"
 
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
+#include "video_core/video_core.h"
 
 #include "shader.h"
 #include "shader_interpreter.h"
+#include "shader_jit.h"
 
 namespace Pica {
 
 namespace Shader {
 
+#ifdef ARCHITECTURE_x86_64
+
+static std::unordered_map<u64, CompiledShader*> shader_map;
+static JitCompiler jit;
+static CompiledShader* jit_shader;
+
+#endif // ARCHITECTURE_x86_64
+
 void Setup(UnitState& state) {
-    // TODO(bunnei): This will be used by the JIT in a subsequent patch
+#ifdef ARCHITECTURE_x86_64
+    if (VideoCore::g_shader_jit_enabled) {
+        u64 cache_key = (Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
+            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data)) ^
+            g_state.regs.vs.main_offset);
+
+        auto iter = shader_map.find(cache_key);
+        if (iter != shader_map.end()) {
+            jit_shader = iter->second;
+        } else {
+            jit_shader = jit.Compile();
+            shader_map.emplace(cache_key, jit_shader);
+        }
+    }
+}
+
+void Shutdown() {
+    shader_map.clear();
 }
 
 static Common::Profiling::TimingCategory shader_category("Vertex Shader");
@@ -54,7 +85,14 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
 
+#ifdef ARCHITECTURE_x86_64
+    if (VideoCore::g_shader_jit_enabled)
+        jit_shader(&state);
+    else
+        RunInterpreter(state);
+#else
     RunInterpreter(state);
+#endif
 
 #if PICA_DUMP_SHADERS
     DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),

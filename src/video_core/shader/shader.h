@@ -149,6 +149,9 @@ struct UnitState {
  */
 void Setup(UnitState& state);
 
+/// Performs any cleanup when the emulator is shutdown
+void Shutdown();
+
 /**
  * Runs the currently setup shader
  * @param state Shader unit state, must be setup per shader and per shader unit

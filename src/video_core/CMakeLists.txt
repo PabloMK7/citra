@@ -13,6 +13,7 @@ set(SRCS
             rasterizer.cpp
             shader/shader.cpp
             shader/shader_interpreter.cpp
+            shader/shader_jit.cpp
             utils.cpp
             video_core.cpp
             )
@@ -38,9 +39,18 @@ set(HEADERS
             renderer_base.h
             shader/shader.h
             shader/shader_interpreter.h
+            shader/shader_jit.h
             utils.h
             video_core.h
             )
+
+if(_M_X86_64)
+    set(SRCS ${SRCS}
+            shader/shader_jit_x64.cpp)
+else()
+    set(SRCS ${SRCS}
+            shader/shader_jit_fake.cpp)
+endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
 

@@ -23,6 +23,7 @@ EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
 RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
 
 std::atomic<bool> g_hw_renderer_enabled;
+std::atomic<bool> g_shader_jit_enabled;
 
 /// Initialize the video core
 void Init(EmuWindow* emu_window) {

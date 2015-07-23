@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
     VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
+    VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;
 
     System::Init(emu_window);
 

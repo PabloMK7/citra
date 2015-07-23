@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "pica.h"
+#include "shader/shader.h"
 
 namespace Pica {
 
@@ -84,6 +85,8 @@ void Init() {
 }
 
 void Shutdown() {
+    Shader::Shutdown();
+
     memset(&g_state, 0, sizeof(State));
 }
 

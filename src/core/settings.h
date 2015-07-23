@@ -53,6 +53,7 @@ struct Values {
 
     // Renderer
     bool use_hw_renderer;
+    bool use_shader_jit;
 
     float bg_red;
     float bg_green;
