@@ -62,6 +62,7 @@ enum class AppletId : u32 {
     Extrapad           = 0x208,
     Memolib            = 0x209,
     Application        = 0x300,
+    AnyLibraryApplet   = 0x400,
     SoftwareKeyboard2  = 0x401,
 };
 
@@ -96,8 +97,26 @@ void GetSharedFont(Service::Interface* self);
  */
 void NotifyToWait(Service::Interface* self);
 
+/**
+ * APT::GetLockHandle service function
+ *  Inputs:
+ *      1 : Applet attributes
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Applet attributes
+ *      3 : Power button state
+ *      4 : IPC handle descriptor
+ *      5 : APT mutex handle
+ */
 void GetLockHandle(Service::Interface* self);
 
+/**
+ * APT::Enable service function
+ *  Inputs:
+ *      1 : Applet attributes
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
 void Enable(Service::Interface* self);
 
 /**

@@ -101,18 +101,19 @@ void NotifyToWait(Service::Interface* self) {
 
 void GetLockHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 flags = cmd_buff[1]; // TODO(bunnei): Figure out the purpose of the flag field
+    // Bits [0:2] are the applet type (System, Library, etc)
+    // Bit 5 tells the application that there's a pending APT parameter,
+    // this will cause the app to wait until parameter_event is signaled.
+    u32 applet_attributes = cmd_buff[1];
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    // Not sure what these parameters are used for, but retail apps check that they are 0 after
-    // GetLockHandle has been called.
-    cmd_buff[2] = 0; // Applet Attributes, this value is passed to Enable.
-    cmd_buff[3] = 0;
-    cmd_buff[4] = 0;
-
+    cmd_buff[2] = applet_attributes; // Applet Attributes, this value is passed to Enable.
+    cmd_buff[3] = 0; // Least significant bit = power button state
+    cmd_buff[4] = IPC::CopyHandleDesc();
     cmd_buff[5] = Kernel::g_handle_table.Create(lock).MoveFrom();
-    LOG_TRACE(Service_APT, "called handle=0x%08X", cmd_buff[5]);
+
+    LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", cmd_buff[5], applet_attributes);
 }
 
 void Enable(Service::Interface* self) {
@@ -139,13 +140,16 @@ void IsRegistered(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 app_id = cmd_buff[1];
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    /// TODO(Subv): It is currently unknown what this value (0x400) means,
-    /// but i believe it is used as a global "LibraryApplet" id, to verify if there's
-    /// any LibApplet currently running. This is not verified.
-    if (app_id != 0x400)
+
+    // TODO(Subv): An application is considered "registered" if it has already called APT::Enable
+    // handle this properly once we implement multiprocess support.
+    cmd_buff[2] = 0; // Set to not registered by default
+
+    if (app_id == static_cast<u32>(AppletId::AnyLibraryApplet)) {
+        cmd_buff[2] = HLE::Applets::IsLibraryAppletRunning() ? 1 : 0;
+    } else if (auto applet = HLE::Applets::Applet::Get(static_cast<AppletId>(app_id))) {
         cmd_buff[2] = 1; // Set to registered
-    else
-        cmd_buff[2] = 0; // Set to not registered
+    }
     LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
 }
 

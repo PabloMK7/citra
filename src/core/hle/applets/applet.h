@@ -67,6 +67,9 @@ protected:
     Service::APT::AppletId id; ///< Id of this Applet
 };
 
+/// Returns whether a library applet is currently running
+bool IsLibraryAppletRunning();
+
 /// Initializes the HLE applets
 void Init();
 
