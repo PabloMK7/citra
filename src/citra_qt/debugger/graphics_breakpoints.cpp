@@ -4,7 +4,7 @@
 
 #include <QMetaType>
 #include <QPushButton>
-#include <QTreeWidget>
+#include <QTreeView>
 #include <QVBoxLayout>
 #include <QLabel>
 
@@ -23,7 +23,7 @@ BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_conte
 
 int BreakPointModel::columnCount(const QModelIndex& parent) const
 {
-    return 2;
+    return 1;
 }
 
 int BreakPointModel::rowCount(const QModelIndex& parent) const
@@ -38,9 +38,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
     switch (role) {
     case Qt::DisplayRole:
     {
-        switch (index.column()) {
-        case 0:
-        {
+        if (index.column() == 0) {
             static const std::map<Pica::DebugContext::Event, QString> map = {
                 { Pica::DebugContext::Event::CommandLoaded, tr("Pica command loaded") },
                 { Pica::DebugContext::Event::CommandProcessed, tr("Pica command processed") },
@@ -50,17 +48,16 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
             };
 
             DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
-
             return (map.find(event) != map.end()) ? map.at(event) : QString();
         }
 
-        case 1:
-            return data(index, Role_IsEnabled).toBool() ? tr("Enabled") : tr("Disabled");
+        break;
+    }
 
-        default:
-            break;
-        }
-
+    case Qt::CheckStateRole:
+    {
+        if (index.column() == 0)
+            return data(index, Role_IsEnabled).toBool() ? Qt::Checked : Qt::Unchecked;
         break;
     }
 
@@ -84,37 +81,34 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-QVariant BreakPointModel::headerData(int section, Qt::Orientation orientation, int role) const
+Qt::ItemFlags BreakPointModel::flags(const QModelIndex &index) const
 {
-    switch(role) {
-    case Qt::DisplayRole:
-    {
-        if (section == 0) {
-            return tr("Event");
-        } else if (section == 1) {
-            return tr("Status");
-        }
+    if (!index.isValid())
+        return 0;
 
-        break;
-    }
-    }
-
-    return QVariant();
+    Qt::ItemFlags flags = Qt::ItemIsEnabled;
+    if (index.column() == 0)
+        flags |= Qt::ItemIsUserCheckable;
+    return flags;
 }
+
 
 bool BreakPointModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     const auto event = static_cast<Pica::DebugContext::Event>(index.row());
 
     switch (role) {
-    case Role_IsEnabled:
+    case Qt::CheckStateRole:
     {
+        if (index.column() != 0)
+            return false;
+
         auto context = context_weak.lock();
         if (!context)
             return false;
 
-        context->breakpoints[event].enabled = value.toBool();
-        QModelIndex changed_index = createIndex(index.row(), 1);
+        context->breakpoints[event].enabled = value == Qt::Checked;
+        QModelIndex changed_index = createIndex(index.row(), 0);
         emit dataChanged(changed_index, changed_index);
         return true;
     }
@@ -133,7 +127,7 @@ void BreakPointModel::OnBreakPointHit(Pica::DebugContext::Event event)
     active_breakpoint = context->active_breakpoint;
     at_breakpoint = context->at_breakpoint;
     emit dataChanged(createIndex(static_cast<int>(event), 0),
-                     createIndex(static_cast<int>(event), 1));
+                     createIndex(static_cast<int>(event), 0));
 }
 
 void BreakPointModel::OnResumed()
@@ -144,7 +138,7 @@ void BreakPointModel::OnResumed()
 
     at_breakpoint = context->at_breakpoint;
     emit dataChanged(createIndex(static_cast<int>(active_breakpoint), 0),
-                     createIndex(static_cast<int>(active_breakpoint), 1));
+                     createIndex(static_cast<int>(active_breakpoint), 0));
     active_breakpoint = context->active_breakpoint;
 }
 
@@ -162,12 +156,14 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::Debug
 
     breakpoint_model = new BreakPointModel(debug_context, this);
     breakpoint_list = new QTreeView;
+    breakpoint_list->setRootIsDecorated(false);
+    breakpoint_list->setHeaderHidden(true);
     breakpoint_list->setModel(breakpoint_model);
 
-    toggle_breakpoint_button = new QPushButton(tr("Enable"));
-    toggle_breakpoint_button->setEnabled(false);
-
     qRegisterMetaType<Pica::DebugContext::Event>("Pica::DebugContext::Event");
+
+    connect(breakpoint_list, SIGNAL(doubleClicked(const QModelIndex&)),
+            this, SLOT(OnItemDoubleClicked(const QModelIndex&)));
 
     connect(resume_button, SIGNAL(clicked()), this, SLOT(OnResumeRequested()));
 
@@ -184,11 +180,6 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::Debug
     connect(this, SIGNAL(BreakPointsChanged(const QModelIndex&,const QModelIndex&)),
             breakpoint_model, SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&)));
 
-    connect(breakpoint_list->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-            this, SLOT(OnBreakpointSelectionChanged(QModelIndex)));
-
-    connect(toggle_breakpoint_button, SIGNAL(clicked()), this, SLOT(OnToggleBreakpointEnabled()));
-
     QWidget* main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;
     {
@@ -198,7 +189,6 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::Debug
         main_layout->addLayout(sub_layout);
     }
     main_layout->addWidget(breakpoint_list);
-    main_layout->addWidget(toggle_breakpoint_button);
     main_widget->setLayout(main_layout);
 
     setWidget(main_widget);
@@ -234,32 +224,15 @@ void GraphicsBreakPointsWidget::OnResumeRequested()
         context->Resume();
 }
 
-void GraphicsBreakPointsWidget::OnBreakpointSelectionChanged(const QModelIndex& index)
+void GraphicsBreakPointsWidget::OnItemDoubleClicked(const QModelIndex& index)
 {
-    if (!index.isValid()) {
-        toggle_breakpoint_button->setEnabled(false);
+    if (!index.isValid())
         return;
-    }
 
-    toggle_breakpoint_button->setEnabled(true);
-    UpdateToggleBreakpointButton(index);
-}
-
-void GraphicsBreakPointsWidget::OnToggleBreakpointEnabled()
-{
-    QModelIndex index = breakpoint_list->selectionModel()->currentIndex();
-    bool new_state = !(breakpoint_model->data(index, BreakPointModel::Role_IsEnabled).toBool());
-
-    breakpoint_model->setData(index, new_state,
-                              BreakPointModel::Role_IsEnabled);
-    UpdateToggleBreakpointButton(index);
-}
-
-void GraphicsBreakPointsWidget::UpdateToggleBreakpointButton(const QModelIndex& index)
-{
-    if (true == breakpoint_model->data(index, BreakPointModel::Role_IsEnabled).toBool()) {
-        toggle_breakpoint_button->setText(tr("Disable"));
-    } else {
-        toggle_breakpoint_button->setText(tr("Enable"));
-    }
+    QModelIndex check_index = breakpoint_list->model()->index(index.row(), 0);
+    QVariant enabled = breakpoint_list->model()->data(check_index, Qt::CheckStateRole);
+    QVariant new_state = Qt::Unchecked;
+    if (enabled == Qt::Unchecked)
+        new_state = Qt::Checked;
+    breakpoint_list->model()->setData(check_index, new_state, Qt::CheckStateRole);
 }
