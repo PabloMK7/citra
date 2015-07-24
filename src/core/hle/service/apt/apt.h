@@ -303,6 +303,17 @@ void GetAppCpuTimeLimit(Service::Interface* self);
 void PrepareToStartLibraryApplet(Service::Interface* self);
 
 /**
+ * APT::PreloadLibraryApplet service function
+ *  Inputs:
+ *      0 : Command header [0x00160040]
+ *      1 : Id of the applet to start
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void PreloadLibraryApplet(Service::Interface* self);
+
+/**
  * APT::StartLibraryApplet service function
  *  Inputs:
  *      0 : Command header [0x001E0084]

@@ -334,7 +334,26 @@ void GetAppCpuTimeLimit(Service::Interface* self) {
 void PrepareToStartLibraryApplet(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
-    cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+    auto applet = HLE::Applets::Applet::Get(applet_id);
+    if (applet) {
+        LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
+        cmd_buff[1] = RESULT_SUCCESS.raw;
+    } else {
+        cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+    }
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
+}
+
+void PreloadLibraryApplet(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    auto applet = HLE::Applets::Applet::Get(applet_id);
+    if (applet) {
+        LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
+        cmd_buff[1] = RESULT_SUCCESS.raw;
+    } else {
+        cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+    }
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 }
 
