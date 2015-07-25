@@ -133,7 +133,7 @@ template<ResultCode func(u32)> void Wrap() {
     FuncReturn(func(PARAM(0)).raw);
 }
 
-template<ResultCode func(s64*, u32, u32*, s32)> void Wrap(){
+template<ResultCode func(s64*, u32, u32*, u32)> void Wrap(){
     FuncReturn(func((s64*)Memory::GetPointer(PARAM(0)), PARAM(1), (u32*)Memory::GetPointer(PARAM(2)),
         (s32)PARAM(3)).raw);
 }
