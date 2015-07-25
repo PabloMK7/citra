@@ -103,7 +103,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[0], 0x23c):
         case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[1], 0x23d):
         {
-            unsigned index = id - PICA_REG_INDEX(command_buffer.trigger[0]);
+            unsigned index = static_cast<unsigned>(id - PICA_REG_INDEX(command_buffer.trigger[0]));
             u32* head_ptr = (u32*)Memory::GetPhysicalPointer(regs.command_buffer.GetPhysicalAddress(index));
             g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = head_ptr;
             g_state.cmd_list.length = regs.command_buffer.GetSize(index) / sizeof(u32);

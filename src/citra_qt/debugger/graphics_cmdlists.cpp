@@ -170,7 +170,7 @@ GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(p
 }
 
 int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
-    return pica_trace.writes.size();
+    return static_cast<int>(pica_trace.writes.size());
 }
 
 int GPUCommandListModel::columnCount(const QModelIndex& parent) const {
