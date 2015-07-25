@@ -85,7 +85,7 @@ void GeometryDumper::AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2) {
     vertices.push_back(v1);
     vertices.push_back(v2);
 
-    size_t num_vertices = vertices.size();
+    int num_vertices = (int)vertices.size();
     faces.push_back({ num_vertices-3, num_vertices-2, num_vertices-1 });
 }
 
