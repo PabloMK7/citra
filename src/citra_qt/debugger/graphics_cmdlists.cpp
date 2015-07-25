@@ -300,7 +300,9 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
 
     list_widget = new QTreeView;
     list_widget->setModel(model);
-    list_widget->setFont(QFont("monospace"));
+    QFont font("monospace");
+    font.setStyleHint(QFont::Monospace); // Automatic fallback to a monospace font on on platforms without a font called "monospace"
+    list_widget->setFont(font);
     list_widget->setRootIsDecorated(false);
     list_widget->setUniformRowHeights(true);
 
