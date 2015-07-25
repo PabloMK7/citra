@@ -280,7 +280,7 @@ bool IsPicaTracing()
     return is_pica_tracing != 0;
 }
 
-void OnPicaRegWrite(u32 id, u32 value)
+void OnPicaRegWrite(PicaTrace::Write write)
 {
     // Double check for is_pica_tracing to avoid pointless locking overhead
     if (!is_pica_tracing)
@@ -291,7 +291,7 @@ void OnPicaRegWrite(u32 id, u32 value)
     if (!is_pica_tracing)
         return;
 
-    pica_trace->writes.emplace_back(id, value);
+    pica_trace->writes.push_back(write);
 }
 
 std::unique_ptr<PicaTrace> FinishPicaTracing()

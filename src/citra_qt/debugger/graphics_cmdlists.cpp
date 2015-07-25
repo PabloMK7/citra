@@ -175,29 +175,29 @@ int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
 }
 
 int GPUCommandListModel::columnCount(const QModelIndex& parent) const {
-    return 3;
+    return 4;
 }
 
 QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
-    const auto& writes = pica_trace.writes;
-    const Pica::CommandProcessor::CommandHeader cmd{writes[index.row()].Id()};
-    const u32 val{writes[index.row()].Value()};
+    const auto& write = pica_trace.writes[index.row()];
 
     if (role == Qt::DisplayRole) {
         QString content;
         switch ( index.column() ) {
         case 0:
-            return QString::fromLatin1(Pica::Regs::GetCommandName(cmd.cmd_id).c_str());
+            return QString::fromLatin1(Pica::Regs::GetCommandName(write.cmd_id).c_str());
         case 1:
-            return QString("%1").arg(cmd.cmd_id, 3, 16, QLatin1Char('0'));
+            return QString("%1").arg(write.cmd_id, 3, 16, QLatin1Char('0'));
         case 2:
-            return QString("%1").arg(val, 8, 16, QLatin1Char('0'));
+            return QString("%1").arg(write.mask, 4, 2, QLatin1Char('0'));
+        case 3:
+            return QString("%1").arg(write.value, 8, 16, QLatin1Char('0'));
         }
     } else if (role == CommandIdRole) {
-        return QVariant::fromValue<int>(cmd.cmd_id.Value());
+        return QVariant::fromValue<int>(write.cmd_id);
     }
 
     return QVariant();
@@ -213,6 +213,8 @@ QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientatio
         case 1:
             return tr("Register");
         case 2:
+            return tr("Mask");
+        case 3:
             return tr("New Value");
         }
 
