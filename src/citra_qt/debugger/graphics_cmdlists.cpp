@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QTreeView>
+#include <QHeaderView>
 #include <QSpinBox>
 #include <QComboBox>
 
@@ -301,6 +302,13 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
     list_widget->setModel(model);
     list_widget->setFont(QFont("monospace"));
     list_widget->setRootIsDecorated(false);
+    list_widget->setUniformRowHeights(true);
+
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+    list_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    list_widget->header()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 
     connect(list_widget->selectionModel(), SIGNAL(currentChanged(const QModelIndex&,const QModelIndex&)),
             this, SLOT(SetCommandInfo(const QModelIndex&)));
