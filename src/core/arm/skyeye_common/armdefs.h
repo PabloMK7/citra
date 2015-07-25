@@ -219,13 +219,13 @@ enum {
 };
 
 /***************************************************************************\
-*                  Definitons of things in the emulator                     *
+*                  Definitions of things in the emulator                     *
 \***************************************************************************/
-extern void ARMul_Reset(ARMul_State* state);
-extern ARMul_State* ARMul_NewState(ARMul_State* state);
+void ARMul_Reset(ARMul_State* state);
+ARMul_State* ARMul_NewState(ARMul_State* state);
 
 /***************************************************************************\
-*            Definitons of things in the co-processor interface             *
+*            Definitions of things in the co-processor interface             *
 \***************************************************************************/
 
 enum {
@@ -240,7 +240,7 @@ enum {
 };
 
 /***************************************************************************\
-*               Definitons of things in the host environment                *
+*               Definitions of things in the host environment                *
 \***************************************************************************/
 
 enum ConditionCode {
@@ -290,29 +290,29 @@ enum {
 };
 
 
-extern bool AddOverflow(ARMword, ARMword, ARMword);
-extern bool SubOverflow(ARMword, ARMword, ARMword);
+bool AddOverflow(ARMword, ARMword, ARMword);
+bool SubOverflow(ARMword, ARMword, ARMword);
 
-extern void ARMul_SelectProcessor(ARMul_State*, unsigned);
+void ARMul_SelectProcessor(ARMul_State*, unsigned);
 
-extern u32 AddWithCarry(u32, u32, u32, bool*, bool*);
-extern bool ARMul_AddOverflowQ(ARMword, ARMword);
+u32 AddWithCarry(u32, u32, u32, bool*, bool*);
+bool ARMul_AddOverflowQ(ARMword, ARMword);
 
-extern u8 ARMul_SignedSaturatedAdd8(u8, u8);
-extern u8 ARMul_SignedSaturatedSub8(u8, u8);
-extern u16 ARMul_SignedSaturatedAdd16(u16, u16);
-extern u16 ARMul_SignedSaturatedSub16(u16, u16);
+u8 ARMul_SignedSaturatedAdd8(u8, u8);
+u8 ARMul_SignedSaturatedSub8(u8, u8);
+u16 ARMul_SignedSaturatedAdd16(u16, u16);
+u16 ARMul_SignedSaturatedSub16(u16, u16);
 
-extern u8 ARMul_UnsignedSaturatedAdd8(u8, u8);
-extern u16 ARMul_UnsignedSaturatedAdd16(u16, u16);
-extern u8 ARMul_UnsignedSaturatedSub8(u8, u8);
-extern u16 ARMul_UnsignedSaturatedSub16(u16, u16);
-extern u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
-extern u32 ARMul_SignedSatQ(s32, u8, bool*);
-extern u32 ARMul_UnsignedSatQ(s32, u8, bool*);
+u8 ARMul_UnsignedSaturatedAdd8(u8, u8);
+u16 ARMul_UnsignedSaturatedAdd16(u16, u16);
+u8 ARMul_UnsignedSaturatedSub8(u8, u8);
+u16 ARMul_UnsignedSaturatedSub16(u16, u16);
+u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
+u32 ARMul_SignedSatQ(s32, u8, bool*);
+u32 ARMul_UnsignedSatQ(s32, u8, bool*);
 
-extern bool InBigEndianMode(ARMul_State*);
-extern bool InAPrivilegedMode(ARMul_State*);
+bool InBigEndianMode(ARMul_State*);
+bool InAPrivilegedMode(ARMul_State*);
 
-extern u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
-extern void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
+u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
+void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
