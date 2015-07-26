@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QTreeView>
+#include <QHeaderView>
 #include <QSpinBox>
 #include <QComboBox>
 
@@ -174,7 +175,7 @@ int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
 }
 
 int GPUCommandListModel::columnCount(const QModelIndex& parent) const {
-    return 2;
+    return 3;
 }
 
 QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
@@ -187,14 +188,13 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
 
     if (role == Qt::DisplayRole) {
         QString content;
-        if (index.column() == 0) {
-            QString content = QString::fromLatin1(Pica::Regs::GetCommandName(cmd.cmd_id).c_str());
-            content.append(" ");
-            return content;
-        } else if (index.column() == 1) {
-            QString content = QString("%1 ").arg(cmd.hex, 8, 16, QLatin1Char('0'));
-            content.append(QString("%1 ").arg(val, 8, 16, QLatin1Char('0')));
-            return content;
+        switch ( index.column() ) {
+        case 0:
+            return QString::fromLatin1(Pica::Regs::GetCommandName(cmd.cmd_id).c_str());
+        case 1:
+            return QString("%1").arg(cmd.cmd_id, 3, 16, QLatin1Char('0'));
+        case 2:
+            return QString("%1").arg(val, 8, 16, QLatin1Char('0'));
         }
     } else if (role == CommandIdRole) {
         return QVariant::fromValue<int>(cmd.cmd_id.Value());
@@ -207,10 +207,13 @@ QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientatio
     switch(role) {
     case Qt::DisplayRole:
     {
-        if (section == 0) {
+        switch (section) {
+        case 0:
             return tr("Command Name");
-        } else if (section == 1) {
-            return tr("Data");
+        case 1:
+            return tr("Register");
+        case 2:
+            return tr("New Value");
         }
 
         break;
@@ -299,6 +302,13 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
     list_widget->setModel(model);
     list_widget->setFont(QFont("monospace"));
     list_widget->setRootIsDecorated(false);
+    list_widget->setUniformRowHeights(true);
+
+#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+    list_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#else
+    list_widget->header()->setResizeMode(QHeaderView::ResizeToContents);
+#endif
 
     connect(list_widget->selectionModel(), SIGNAL(currentChanged(const QModelIndex&,const QModelIndex&)),
             this, SLOT(SetCommandInfo(const QModelIndex&)));
