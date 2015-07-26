@@ -33,10 +33,6 @@ pad_cleft =
 pad_cright =
 
 [Core]
-# The refresh rate for the GPU
-# Defaults to 30
-gpu_refresh_rate =
-
 # The applied frameskip amount. Must be a power of two.
 # 0 (default): No frameskip, 1: x2 frameskip, 2: x4 frameskip, 3: x8 frameskip, etc.
 frame_skip =
