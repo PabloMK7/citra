@@ -262,7 +262,7 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
 }
 
 void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
-    QWidget* new_info_widget;
+    QWidget* new_info_widget = nullptr;
 
     const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
     if (COMMAND_IN_RANGE(command_id, texture0) ||
@@ -283,14 +283,15 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
         u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
-    } else {
-        new_info_widget = new QWidget;
     }
-
-    widget()->layout()->removeWidget(command_info_widget);
-    delete command_info_widget;
-    widget()->layout()->addWidget(new_info_widget);
-    command_info_widget = new_info_widget;
+    if (command_info_widget) {
+        delete command_info_widget;
+        command_info_widget = nullptr;
+    }
+    if (new_info_widget) {
+        widget()->layout()->addWidget(new_info_widget);
+        command_info_widget = new_info_widget;
+    }
 }
 #undef COMMAND_IN_RANGE
 
@@ -328,7 +329,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
 
     connect(copy_all, SIGNAL(clicked()), this, SLOT(CopyAllToClipboard()));
 
-    command_info_widget = new QWidget;
+    command_info_widget = nullptr;
 
     QVBoxLayout* main_layout = new QVBoxLayout;
     main_layout->addWidget(list_widget);
@@ -338,7 +339,6 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
         sub_layout->addWidget(copy_all);
         main_layout->addLayout(sub_layout);
     }
-    main_layout->addWidget(command_info_widget);
     main_widget->setLayout(main_layout);
 
     setWidget(main_widget);
