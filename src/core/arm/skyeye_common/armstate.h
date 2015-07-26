@@ -37,13 +37,6 @@ enum {
     INSTCACHE = 2,
 };
 
-// Abort models
-enum {
-    ABORT_BASE_RESTORED = 0,
-    ABORT_EARLY         = 1,
-    ABORT_BASE_UPDATED  = 2
-};
-
 #define VFP_REG_NUM 64
 struct ARMul_State
 {
@@ -96,49 +89,12 @@ struct ARMul_State
     unsigned bigendSig;
     unsigned syscallSig;
 
-/* 2004-05-09 chy
-----------------------------------------------------------
-read ARM Architecture Reference Manual
-2.6.5 Data Abort
-There are three Abort Model in ARM arch.
-
-Early Abort Model: used in some ARMv3 and earlier implementations. In this
-model, base register wirteback occurred for LDC,LDM,STC,STM instructions, and
-the base register was unchanged for all other instructions. (oldest)
-
-Base Restored Abort Model: If a Data Abort occurs in an instruction which
-specifies base register writeback, the value in the base register is
-unchanged. (strongarm, xscale)
-
-Base Updated Abort Model: If a Data Abort occurs in an instruction which
-specifies base register writeback, the base register writeback still occurs.
-(arm720T)
-
-read PART B
-chap2 The System Control Coprocessor  CP15
-2.4 Register1:control register
-L(bit 6): in some ARMv3 and earlier implementations, the abort model of the
-processor could be configured:
-0=early Abort Model Selected(now obsolete)
-1=Late Abort Model selceted(same as Base Updated Abort Model)
-
-on later processors, this bit reads as 1 and ignores writes.
--------------------------------------------------------------
-So, if lateabtSig=1, then it means Late Abort Model(Base Updated Abort Model)
-    if lateabtSig=0, then it means Base Restored Abort Model
-*/
-    unsigned lateabtSig;
-
-    // For differentiating ARM core emulaiton.
+    // For differentiating ARM core emulation.
     bool is_v4;     // Are we emulating a v4 architecture (or higher)?
     bool is_v5;     // Are we emulating a v5 architecture?
     bool is_v5e;    // Are we emulating a v5e architecture?
     bool is_v6;     // Are we emulating a v6 architecture?
     bool is_v7;     // Are we emulating a v7 architecture?
-
-    // ARM_ARM A2-18
-    // 0 Base Restored Abort Model, 1 the Early Abort Model, 2 Base Updated Abort Model
-    int abort_model;
 
     // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
     // process for our purposes), not per ARMul_State (which tracks CPU core state).

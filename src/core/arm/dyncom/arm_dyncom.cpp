@@ -23,10 +23,7 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     ARMul_NewState(state.get());
     ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
 
-    state->abort_model = ABORT_BASE_RESTORED;
-
     state->bigendSig = LOW;
-    state->lateabtSig = LOW;
     state->NirqSig = HIGH;
 
     // Reset the core to initial state
