@@ -579,9 +579,11 @@ OutputVertex RunShader(const InputVertex& input, int num_attributes, const Regs:
     state.conditional_code[1] = false;
 
     ProcessShaderCode(state);
+#if PICA_DUMP_SHADERS
     DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),
                            state.debug.max_opdesc_id, config.main_offset,
                            g_state.regs.vs_output_attributes); // TODO: Don't hardcode VS here
+#endif
 
     // Setup output data
     OutputVertex ret;

@@ -462,7 +462,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
 
                     // TODO: Apply the min and mag filters to the texture
                     texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
+#if PICA_DUMP_TEXTURES
                     DebugUtils::DumpTexture(texture.config, texture_data);
+#endif
                 }
             }
 

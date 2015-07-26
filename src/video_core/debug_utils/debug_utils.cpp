@@ -90,10 +90,6 @@ void GeometryDumper::AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2) {
 }
 
 void GeometryDumper::Dump() {
-    // NOTE: Permanently enabling this just trashes the hard disk for no reason.
-    //       Hence, this is currently disabled.
-    return;
-
     static int index = 0;
     std::string filename = std::string("geometry_dump") + std::to_string(++index) + ".obj";
 
@@ -116,10 +112,6 @@ void GeometryDumper::Dump() {
 void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
                 u32 main_offset, const Regs::VSOutputAttributes* output_attributes)
 {
-    // NOTE: Permanently enabling this just trashes hard disks for no reason.
-    //       Hence, this is currently disabled.
-    return;
-
     struct StuffToWrite {
         u8* pointer;
         u32 size;
@@ -565,10 +557,6 @@ TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
 }
 
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
-    // NOTE: Permanently enabling this just trashes hard disks for no reason.
-    //       Hence, this is currently disabled.
-    return;
-
 #ifndef HAVE_PNG
     return;
 #else

@@ -116,7 +116,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
         {
             Common::Profiling::ScopeTimer scope_timer(category_drawing);
 
+#if PICA_LOG_TEV
             DebugUtils::DumpTevStageConfig(regs.GetTevStages());
+#endif
 
             if (g_debug_context)
                 g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
@@ -159,9 +161,11 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             const u16* index_address_16 = (u16*)index_address_8;
             bool index_u16 = index_info.format != 0;
 
+#if PICA_DUMP_GEOMETRY
             DebugUtils::GeometryDumper geometry_dumper;
-            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
+#endif
+            PrimitiveAssembler<VertexShader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
 
             if (g_debug_context) {
                 for (int i = 0; i < 3; ++i) {
@@ -271,6 +275,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (g_debug_context)
                     g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
+#if PICA_DUMP_GEOMETRY
                 // NOTE: When dumping geometry, we simply assume that the first input attribute
                 //       corresponds to the position for now.
                 DebugUtils::GeometryDumper::Vertex dumped_vertex = {
@@ -280,6 +285,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 dumping_primitive_assembler.SubmitVertex(dumped_vertex,
                                                          std::bind(&DebugUtils::GeometryDumper::AddTriangle,
                                                                    &geometry_dumper, _1, _2, _3));
+#endif
 
                 // Send to vertex shader
                 VertexShader::OutputVertex output = VertexShader::RunShader(input, attribute_config.GetNumTotalAttributes(), g_state.regs.vs, g_state.vs);
@@ -312,7 +318,9 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
                 VideoCore::g_renderer->hw_rasterizer->DrawTriangles();
             }
 
+#if PICA_DUMP_GEOMETRY
             geometry_dumper.Dump();
+#endif
 
             if (g_debug_context) {
                 g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
