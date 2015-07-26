@@ -6,7 +6,8 @@
 
 #include "common/make_unique.h"
 
-#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armstate.h"
+#include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
 #include "core/arm/dyncom/arm_dyncom.h"
@@ -19,18 +20,8 @@
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = Common::make_unique<ARMul_State>();
 
-    ARMul_NewState(state.get());
-    ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
-
-    state->abort_model = ABORT_BASE_RESTORED;
-
-    state->bigendSig = LOW;
-    state->lateabtSig = LOW;
-    state->NirqSig = HIGH;
-
     // Reset the core to initial state
     ARMul_Reset(state.get());
-    state->Emulate = RUN;
 
     // Switch to the desired privilege mode.
     switch_mode(state.get(), initial_mode);

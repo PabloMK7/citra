@@ -13,7 +13,7 @@
 #include "common/thread_queue_list.h"
 
 #include "core/arm/arm_interface.h"
-#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/hle.h"

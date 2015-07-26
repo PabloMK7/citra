@@ -36,8 +36,8 @@ void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpsc
 u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr);
 
-void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value);
-void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
-void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2);
-void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
-void VMOVR(ARMul_State* state, ARMword single, ARMword d, ARMword imm);
+void VMOVBRS(ARMul_State* state, u32 to_arm, u32 t, u32 n, u32* value);
+void VMOVBRRD(ARMul_State* state, u32 to_arm, u32 t, u32 t2, u32 n, u32* value1, u32* value2);
+void VMOVBRRSS(ARMul_State* state, u32 to_arm, u32 t, u32 t2, u32 n, u32* value1, u32* value2);
+void VMOVI(ARMul_State* state, u32 single, u32 d, u32 imm);
+void VMOVR(ARMul_State* state, u32 single, u32 d, u32 imm);

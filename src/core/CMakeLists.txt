@@ -6,8 +6,8 @@ set(SRCS
             arm/dyncom/arm_dyncom_interpreter.cpp
             arm/dyncom/arm_dyncom_run.cpp
             arm/dyncom/arm_dyncom_thumb.cpp
-            arm/interpreter/arminit.cpp
-            arm/interpreter/armsupp.cpp
+            arm/skyeye_common/arminit.cpp
+            arm/skyeye_common/armsupp.cpp
             arm/skyeye_common/vfp/vfp.cpp
             arm/skyeye_common/vfp/vfpdouble.cpp
             arm/skyeye_common/vfp/vfpinstr.cpp
@@ -132,8 +132,9 @@ set(HEADERS
             arm/dyncom/arm_dyncom_run.h
             arm/dyncom/arm_dyncom_thumb.h
             arm/skyeye_common/arm_regformat.h
-            arm/skyeye_common/armdefs.h
+            arm/skyeye_common/armstate.h
             arm/skyeye_common/armmmu.h
+            arm/skyeye_common/armsupp.h
             arm/skyeye_common/vfp/asm_vfp.h
             arm/skyeye_common/vfp/vfp.h
             arm/skyeye_common/vfp/vfp_helper.h

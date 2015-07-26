@@ -23,7 +23,8 @@
 #include "common/swap.h"
 
 #include "core/memory.h"
-#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armstate.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 // Register numbers in the MMU
 enum

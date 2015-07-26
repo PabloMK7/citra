@@ -9,8 +9,8 @@
 #include "common/common_types.h"
 
 #include "core/arm/arm_interface.h"
-#include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
+#include "core/arm/skyeye_common/armstate.h"
 
 namespace Core {
 struct ThreadContext;
