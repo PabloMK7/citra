@@ -2,8 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <stack>
-
+#include <boost/container/static_vector.hpp>
 #include <boost/range/algorithm.hpp>
 
 #include <common/file_util.h>
@@ -53,7 +52,7 @@ struct VertexShaderState {
     };
 
     // TODO: Is there a maximal size for this?
-    std::stack<CallStackElement> call_stack;
+    boost::container::static_vector<CallStackElement, 16> call_stack;
 
     struct {
         u32 max_offset; // maximum program counter ever reached
@@ -71,13 +70,13 @@ static void ProcessShaderCode(VertexShaderState& state) {
 
     while (true) {
         if (!state.call_stack.empty()) {
-            auto& top = state.call_stack.top();
+            auto& top = state.call_stack.back();
             if (state.program_counter - program_code.data() == top.final_address) {
                 state.address_registers[2] += top.loop_increment;
 
                 if (top.repeat_counter-- == 0) {
                     state.program_counter = &program_code[top.return_address];
-                    state.call_stack.pop();
+                    state.call_stack.pop_back();
                 } else {
                     state.program_counter = &program_code[top.loop_address];
                 }
@@ -94,7 +93,8 @@ static void ProcessShaderCode(VertexShaderState& state) {
         static auto call = [&program_code](VertexShaderState& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
             state.program_counter = &program_code[offset] - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
-            state.call_stack.push({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
+            ASSERT(state.call_stack.size() < state.call_stack.capacity());
+            state.call_stack.push_back({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
         };
         u32 binary_offset = state.program_counter - program_code.data();
 
