@@ -65,6 +65,7 @@ public:
         GLuint vertex_array; // GL_VERTEX_ARRAY_BINDING
         GLuint vertex_buffer; // GL_ARRAY_BUFFER_BINDING
         GLuint shader_program; // GL_CURRENT_PROGRAM
+        bool shader_dirty;
     } draw;
 
     OpenGLState();

@@ -8,6 +8,12 @@
 
 namespace ShaderUtil {
 
+enum Attributes {
+    ATTRIBUTE_POSITION  = 0,
+    ATTRIBUTE_COLOR     = 1,
+    ATTRIBUTE_TEXCOORDS = 2,
+};
+
 GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path);
 
 }

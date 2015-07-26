@@ -49,14 +49,16 @@ const char g_vertex_shader_hw[] = R"(
 
 in vec4 vert_position;
 in vec4 vert_color;
-in vec2 vert_texcoords[3];
+in vec2 vert_texcoords0;
+in vec2 vert_texcoords1;
+in vec2 vert_texcoords2;
 
 out vec4 o[NUM_VTX_ATTR];
 
 void main() {
     o[2] = vert_color;
-    o[3] = vec4(vert_texcoords[0].xy, vert_texcoords[1].xy);
-    o[5] = vec4(0.0, 0.0, vert_texcoords[2].xy);
+    o[3] = vec4(vert_texcoords0.xy, vert_texcoords1.xy);
+    o[5] = vec4(0.0, 0.0, vert_texcoords2.xy);
 
     gl_Position = vec4(vert_position.x, -vert_position.y, -vert_position.z, vert_position.w);
 }
