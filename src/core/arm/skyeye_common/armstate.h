@@ -253,27 +253,27 @@ enum ConditionCode {
 
 // Flags for use with the APSR.
 enum : u32 {
-	NBIT = (1U << 31U),
-	ZBIT = (1 << 30),
-	CBIT = (1 << 29),
-	VBIT = (1 << 28),
-	QBIT = (1 << 27),
-	JBIT = (1 << 24),
-	EBIT = (1 << 9),
-	ABIT = (1 << 8),
-	IBIT = (1 << 7),
-	FBIT = (1 << 6),
-	TBIT = (1 << 5),
+    NBIT = (1U << 31U),
+    ZBIT = (1 << 30),
+    CBIT = (1 << 29),
+    VBIT = (1 << 28),
+    QBIT = (1 << 27),
+    JBIT = (1 << 24),
+    EBIT = (1 << 9),
+    ABIT = (1 << 8),
+    IBIT = (1 << 7),
+    FBIT = (1 << 6),
+    TBIT = (1 << 5),
 
-	// Masks for groups of bits in the APSR.
-	MODEBITS = 0x1F,
-	INTBITS = 0x1C0,
+    // Masks for groups of bits in the APSR.
+    MODEBITS = 0x1F,
+    INTBITS = 0x1C0,
 };
 
 // Values for Emulate.
 enum {
-	STOP       = 0, // Stop
-	CHANGEMODE = 1, // Change mode
-	ONCE       = 2, // Execute just one iteration
-	RUN        = 3  // Continuous execution
+    STOP       = 0, // Stop
+    CHANGEMODE = 1, // Change mode
+    ONCE       = 2, // Execute just one iteration
+    RUN        = 3  // Continuous execution
 };

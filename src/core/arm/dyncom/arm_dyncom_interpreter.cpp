@@ -17,8 +17,8 @@
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
-#include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/armmmu.h"
+#include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 

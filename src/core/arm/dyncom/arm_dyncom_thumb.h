@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "core/arm/skyeye_common/armdefs.h"
+#include "common/common_types.h"
 
 enum tdstate {
     t_undefined,    // Undefined Thumb instruction

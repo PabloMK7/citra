@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armstate.h"
 
 void switch_mode(ARMul_State* core, uint32_t mode);
 

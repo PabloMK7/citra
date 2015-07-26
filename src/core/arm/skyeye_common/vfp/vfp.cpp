@@ -23,7 +23,7 @@
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 
-#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
