@@ -6,8 +6,6 @@
 
 #include "common/common_types.h"
 
-struct ARMul_State;
-
 #define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
 #define BIT(s, n) ((s >> (n)) & 1)
 
@@ -32,9 +30,3 @@ u16 ARMul_UnsignedSaturatedSub16(u16, u16);
 u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
 u32 ARMul_SignedSatQ(s32, u8, bool*);
 u32 ARMul_UnsignedSatQ(s32, u8, bool*);
-
-bool InBigEndianMode(ARMul_State*);
-bool InAPrivilegedMode(ARMul_State*);
-
-u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
-void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);

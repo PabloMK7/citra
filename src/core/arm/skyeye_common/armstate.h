@@ -37,67 +37,30 @@ enum {
     INSTCACHE = 2,
 };
 
-#define VFP_REG_NUM 64
-struct ARMul_State
-{
-    u32 Emulate;       // To start and stop emulation
-
-    // Order of the following register should not be modified
-    u32 Reg[16];            // The current register file
-    u32 Cpsr;               // The current PSR
-    u32 Spsr_copy;
-    u32 phys_pc;
-    u32 Reg_usr[2];
-    u32 Reg_svc[2];         // R13_SVC R14_SVC
-    u32 Reg_abort[2];       // R13_ABORT R14_ABORT
-    u32 Reg_undef[2];       // R13 UNDEF R14 UNDEF
-    u32 Reg_irq[2];         // R13_IRQ R14_IRQ
-    u32 Reg_firq[7];        // R8---R14 FIRQ
-    u32 Spsr[7];            // The exception psr's
-    u32 Mode;               // The current mode
-    u32 Bank;               // The current register bank
-    u32 exclusive_tag;      // The address for which the local monitor is in exclusive access mode
-    u32 exclusive_state;
-    u32 exclusive_result;
-    u32 CP15[CP15_REGISTER_COUNT];
-
-    // FPSID, FPSCR, and FPEXC
-    u32 VFP[VFP_SYSTEM_REGISTER_COUNT];
-    // VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
-    // VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
-    // and only 32 singleword registers are accessible (S0-S31).
-    u32 ExtReg[VFP_REG_NUM];
-    /* ---- End of the ordered registers ---- */
-
-    u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
-    unsigned int shifter_carry_out;
-
-    // Add armv6 flags dyf:2010-08-09
-    u32 GEFlag, EFlag, AFlag, QFlag;
-
-    u32 TFlag; // Thumb state
-
-    unsigned long long NumInstrs; // The number of instructions executed
-    unsigned NumInstrsToExecute;
-
-    unsigned NresetSig; // Reset the processor
-    unsigned NfiqSig;
-    unsigned NirqSig;
-
-    unsigned abortSig;
-    unsigned NtransSig;
-    unsigned bigendSig;
-    unsigned syscallSig;
-
-    // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
-    // process for our purposes), not per ARMul_State (which tracks CPU core state).
-    std::unordered_map<u32, int> instruction_cache;
+// ARM privilege modes
+enum PrivilegeMode {
+    USER32MODE   = 16,
+    FIQ32MODE    = 17,
+    IRQ32MODE    = 18,
+    SVC32MODE    = 19,
+    ABORT32MODE  = 23,
+    UNDEF32MODE  = 27,
+    SYSTEM32MODE = 31
 };
 
-/***************************************************************************\
-*                      The hardware vector addresses                        *
-\***************************************************************************/
+// ARM privilege mode register banks
+enum {
+    USERBANK   = 0,
+    FIQBANK    = 1,
+    IRQBANK    = 2,
+    SVCBANK    = 3,
+    ABORTBANK  = 4,
+    UNDEFBANK  = 5,
+    DUMMYBANK  = 6,
+    SYSTEMBANK = 7
+};
 
+// Hardware vector addresses
 enum {
     ARMResetV          = 0,
     ARMUndefinedInstrV = 4,
@@ -119,40 +82,7 @@ enum {
     ARMul_FIQV            = ARMFIQV
 };
 
-/***************************************************************************\
-*                          Mode and Bank Constants                          *
-\***************************************************************************/
-
-enum PrivilegeMode {
-    USER32MODE   = 16,
-    FIQ32MODE    = 17,
-    IRQ32MODE    = 18,
-    SVC32MODE    = 19,
-    ABORT32MODE  = 23,
-    UNDEF32MODE  = 27,
-    SYSTEM32MODE = 31
-};
-
-enum {
-    USERBANK   = 0,
-    FIQBANK    = 1,
-    IRQBANK    = 2,
-    SVCBANK    = 3,
-    ABORTBANK  = 4,
-    UNDEFBANK  = 5,
-    DUMMYBANK  = 6,
-    SYSTEMBANK = 7
-};
-
-/***************************************************************************\
-*                  Definitions of things in the emulator                     *
-\***************************************************************************/
-void ARMul_Reset(ARMul_State* state);
-
-/***************************************************************************\
-*            Definitions of things in the co-processor interface             *
-\***************************************************************************/
-
+// Coprocessor status values
 enum {
     ARMul_FIRST     = 0,
     ARMul_TRANSFER  = 1,
@@ -164,10 +94,7 @@ enum {
     ARMul_INC       = 3
 };
 
-/***************************************************************************\
-*               Definitions of things in the host environment                *
-\***************************************************************************/
-
+// Instruction condition codes
 enum ConditionCode {
     EQ = 0,
     NE = 1,
@@ -212,4 +139,94 @@ enum {
     CHANGEMODE = 1, // Change mode
     ONCE       = 2, // Execute just one iteration
     RUN        = 3  // Continuous execution
+};
+
+#define VFP_REG_NUM 64
+struct ARMul_State final
+{
+public:
+    explicit ARMul_State(PrivilegeMode initial_mode);
+
+    void ChangePrivilegeMode(u32 new_mode);
+    void Reset();
+
+    // Reads/writes data in big/little endian format based on the
+    // state of the E (endian) bit in the APSR.
+    u16 ReadMemory16(u32 address) const;
+    u32 ReadMemory32(u32 address) const;
+    u64 ReadMemory64(u32 address) const;
+    void WriteMemory16(u32 address, u16 data);
+    void WriteMemory32(u32 address, u32 data);
+    void WriteMemory64(u32 address, u64 data);
+
+    u32 ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) const;
+    void WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
+
+    // Whether or not the given CPU is in big endian mode (E bit is set)
+    bool InBigEndianMode() const {
+        return (Cpsr & (1 << 9)) != 0;
+    }
+    // Whether or not the given CPU is in a mode other than user mode.
+    bool InAPrivilegedMode() const {
+        return (Mode != USER32MODE);
+    }
+    // Note that for the 3DS, a Thumb instruction will only ever be
+    // two bytes in size. Thus we don't need to worry about ThumbEE
+    // or Thumb-2 where instructions can be 4 bytes in length.
+    u32 GetInstructionSize() const {
+        return TFlag ? 2 : 4;
+    }
+
+    u32 Emulate;       // To start and stop emulation
+
+    // Order of the following register should not be modified
+    u32 Reg[16];            // The current register file
+    u32 Cpsr;               // The current PSR
+    u32 Spsr_copy;
+    u32 phys_pc;
+    u32 Reg_usr[2];
+    u32 Reg_svc[2];         // R13_SVC R14_SVC
+    u32 Reg_abort[2];       // R13_ABORT R14_ABORT
+    u32 Reg_undef[2];       // R13 UNDEF R14 UNDEF
+    u32 Reg_irq[2];         // R13_IRQ R14_IRQ
+    u32 Reg_firq[7];        // R8---R14 FIRQ
+    u32 Spsr[7];            // The exception psr's
+    u32 Mode;               // The current mode
+    u32 Bank;               // The current register bank
+    u32 exclusive_tag;      // The address for which the local monitor is in exclusive access mode
+    u32 exclusive_state;
+    u32 exclusive_result;
+    u32 CP15[CP15_REGISTER_COUNT];
+
+    // FPSID, FPSCR, and FPEXC
+    u32 VFP[VFP_SYSTEM_REGISTER_COUNT];
+    // VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
+    // VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
+    // and only 32 singleword registers are accessible (S0-S31).
+    u32 ExtReg[VFP_REG_NUM];
+    /* ---- End of the ordered registers ---- */
+
+    u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
+    unsigned int shifter_carry_out;
+
+    u32 TFlag; // Thumb state
+
+    unsigned long long NumInstrs; // The number of instructions executed
+    unsigned NumInstrsToExecute;
+
+    unsigned NresetSig; // Reset the processor
+    unsigned NfiqSig;
+    unsigned NirqSig;
+
+    unsigned abortSig;
+    unsigned NtransSig;
+    unsigned bigendSig;
+    unsigned syscallSig;
+
+    // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
+    // process for our purposes), not per ARMul_State (which tracks CPU core state).
+    std::unordered_map<u32, int> instruction_cache;
+
+private:
+    void ResetMPCoreCP15Registers();
 };

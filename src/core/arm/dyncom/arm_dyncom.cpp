@@ -18,16 +18,7 @@
 #include "core/core_timing.h"
 
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
-    state = Common::make_unique<ARMul_State>();
-
-    // Reset the core to initial state
-    ARMul_Reset(state.get());
-
-    // Switch to the desired privilege mode.
-    switch_mode(state.get(), initial_mode);
-
-    state->Reg[13] = 0x10000000; // Set stack pointer to the top of the stack
-    state->Reg[15] = 0x00000000;
+    state = Common::make_unique<ARMul_State>(initial_mode);
 }
 
 ARM_DynCom::~ARM_DynCom() {

@@ -20,38 +20,29 @@
 
 #include "core/arm/skyeye_common/armstate.h"
 
-void switch_mode(ARMul_State* core, uint32_t mode);
-
-// Note that for the 3DS, a Thumb instruction will only ever be
-// two bytes in size. Thus we don't need to worry about ThumbEE
-// or Thumb-2 where instructions can be 4 bytes in length.
-static inline u32 GET_INST_SIZE(ARMul_State* core) {
-    return core->TFlag? 2 : 4;
-}
-
 /**
  * Checks if the PC is being read, and if so, word-aligns it.
  * Used with address calculations.
  *
- * @param core The ARM CPU state instance.
+ * @param cpu The ARM CPU state instance.
  * @param Rn   The register being read.
  *
  * @return If the PC is being read, then the word-aligned PC value is returned.
  *         If the PC is not being read, then the value stored in the register is returned.
  */
-static inline u32 CHECK_READ_REG15_WA(ARMul_State* core, int Rn) {
-    return (Rn == 15) ? ((core->Reg[15] & ~0x3) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+static inline u32 CHECK_READ_REG15_WA(ARMul_State* cpu, int Rn) {
+    return (Rn == 15) ? ((cpu->Reg[15] & ~0x3) + cpu->GetInstructionSize() * 2) : cpu->Reg[Rn];
 }
 
 /**
  * Reads the PC. Used for data processing operations that use the PC.
  *
- * @param core The ARM CPU state instance.
+ * @param cpu The ARM CPU state instance.
  * @param Rn   The register being read.
  *
  * @return If the PC is being read, then the incremented PC value is returned.
  *         If the PC is not being read, then the values stored in the register is returned.
  */
-static inline u32 CHECK_READ_REG15(ARMul_State* core, int Rn) {
-    return (Rn == 15) ? ((core->Reg[15] & ~0x1) + GET_INST_SIZE(core) * 2) : core->Reg[Rn];
+static inline u32 CHECK_READ_REG15(ARMul_State* cpu, int Rn) {
+    return (Rn == 15) ? ((cpu->Reg[15] & ~0x1) + cpu->GetInstructionSize() * 2) : cpu->Reg[Rn];
 }
