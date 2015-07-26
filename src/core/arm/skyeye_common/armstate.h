@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <array>
 #include <unordered_map>
 
 #include "common/common_types.h"
@@ -141,7 +142,7 @@ enum {
     RUN        = 3  // Continuous execution
 };
 
-#define VFP_REG_NUM 64
+
 struct ARMul_State final
 {
 public:
@@ -177,34 +178,34 @@ public:
         return TFlag ? 2 : 4;
     }
 
-    u32 Emulate;       // To start and stop emulation
-
-    // Order of the following register should not be modified
-    u32 Reg[16];            // The current register file
-    u32 Cpsr;               // The current PSR
-    u32 Spsr_copy;
-    u32 phys_pc;
-    u32 Reg_usr[2];
-    u32 Reg_svc[2];         // R13_SVC R14_SVC
-    u32 Reg_abort[2];       // R13_ABORT R14_ABORT
-    u32 Reg_undef[2];       // R13 UNDEF R14 UNDEF
-    u32 Reg_irq[2];         // R13_IRQ R14_IRQ
-    u32 Reg_firq[7];        // R8---R14 FIRQ
-    u32 Spsr[7];            // The exception psr's
-    u32 Mode;               // The current mode
-    u32 Bank;               // The current register bank
-    u32 exclusive_tag;      // The address for which the local monitor is in exclusive access mode
-    u32 exclusive_state;
-    u32 exclusive_result;
-    u32 CP15[CP15_REGISTER_COUNT];
+    std::array<u32, 16> Reg;      // The current register file
+    std::array<u32, 2> Reg_usr;
+    std::array<u32, 2> Reg_svc;   // R13_SVC R14_SVC
+    std::array<u32, 2> Reg_abort; // R13_ABORT R14_ABORT
+    std::array<u32, 2> Reg_undef; // R13 UNDEF R14 UNDEF
+    std::array<u32, 2> Reg_irq;   // R13_IRQ R14_IRQ
+    std::array<u32, 7> Reg_firq;  // R8---R14 FIRQ
+    std::array<u32, 7> Spsr;      // The exception psr's
+    std::array<u32, CP15_REGISTER_COUNT> CP15;
 
     // FPSID, FPSCR, and FPEXC
-    u32 VFP[VFP_SYSTEM_REGISTER_COUNT];
+    std::array<u32, VFP_SYSTEM_REGISTER_COUNT> VFP;
+
     // VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
     // VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
     // and only 32 singleword registers are accessible (S0-S31).
-    u32 ExtReg[VFP_REG_NUM];
-    /* ---- End of the ordered registers ---- */
+    std::array<u32, 64> ExtReg;
+
+    u32 Emulate; // To start and stop emulation
+    u32 Cpsr;    // The current PSR
+    u32 Spsr_copy;
+    u32 phys_pc;
+
+    u32 Mode;          // The current mode
+    u32 Bank;          // The current register bank
+    u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
+    u32 exclusive_state;
+    u32 exclusive_result;
 
     u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;

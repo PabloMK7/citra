@@ -82,8 +82,8 @@ void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 e
 }
 
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
-    memcpy(ctx.cpu_registers, state->Reg, sizeof(ctx.cpu_registers));
-    memcpy(ctx.fpu_registers, state->ExtReg, sizeof(ctx.fpu_registers));
+    memcpy(ctx.cpu_registers, state->Reg.data(), sizeof(ctx.cpu_registers));
+    memcpy(ctx.fpu_registers, state->ExtReg.data(), sizeof(ctx.fpu_registers));
 
     ctx.sp = state->Reg[13];
     ctx.lr = state->Reg[14];
@@ -95,8 +95,8 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
 }
 
 void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
-    memcpy(state->Reg, ctx.cpu_registers, sizeof(ctx.cpu_registers));
-    memcpy(state->ExtReg, ctx.fpu_registers, sizeof(ctx.fpu_registers));
+    memcpy(state->Reg.data(), ctx.cpu_registers, sizeof(ctx.cpu_registers));
+    memcpy(state->ExtReg.data(), ctx.fpu_registers, sizeof(ctx.fpu_registers));
 
     state->Reg[13] = ctx.sp;
     state->Reg[14] = ctx.lr;
