@@ -415,7 +415,7 @@ struct op {
     u32 flags;
 };
 
-static inline u32 fls(ARMword x)
+static inline u32 fls(u32 x)
 {
     int r = 32;
 

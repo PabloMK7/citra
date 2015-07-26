@@ -14,7 +14,7 @@
 
 tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     tdstate valid = t_uninitialized;
-    ARMword tinstr = instr;
+    u32 tinstr = instr;
 
     // The endian should be judge here
     if((addr & 0x3) != 0)
@@ -37,7 +37,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
 
     case 3: // ADD/SUB
         {
-            static const ARMword subset[4] = {
+            static const u32 subset[4] = {
                 0xE0900000,     // ADDS Rd,Rs,Rn
                 0xE0500000,     // SUBS Rd,Rs,Rn
                 0xE2900000,     // ADDS Rd,Rs,#imm3
@@ -56,7 +56,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     case 6: // ADD
     case 7: // SUB
         {
-            static const ARMword subset[4] = {
+            static const u32 subset[4] = {
                 0xE3B00000,     // MOVS Rd,#imm8
                 0xE3500000,     // CMP  Rd,#imm8
                 0xE2900000,     // ADDS Rd,Rd,#imm8
@@ -85,7 +85,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
             };
 
             static const struct {
-                ARMword opcode;
+                u32 opcode;
                 otype type;
             } subset[16] = {
                 { 0xE0100000, t_norm },     // ANDS Rd,Rd,Rs
@@ -130,8 +130,8 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                 break;
             }
         } else {
-            ARMword Rd = ((tinstr & 0x0007) >> 0);
-            ARMword Rs = ((tinstr & 0x0078) >> 3);
+            u32 Rd = ((tinstr & 0x0007) >> 0);
+            u32 Rs = ((tinstr & 0x0078) >> 3);
 
             if (tinstr & (1 << 7))
                 Rd += 8;
@@ -185,7 +185,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     case 10:
     case 11:
         {
-            static const ARMword subset[8] = {
+            static const u32 subset[8] = {
                 0xE7800000, // STR   Rd,[Rb,Ro]
                 0xE18000B0, // STRH  Rd,[Rb,Ro]
                 0xE7C00000, // STRB  Rd,[Rb,Ro]
@@ -208,7 +208,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     case 14: // STRB Rd,[Rb,#imm5]
     case 15: // LDRB Rd,[Rb,#imm5]
         {
-            static const ARMword subset[4] = {
+            static const u32 subset[4] = {
                 0xE5800000,     // STR  Rd,[Rb,#imm5]
                 0xE5900000,     // LDR  Rd,[Rb,#imm5]
                 0xE5C00000,     // STRB Rd,[Rb,#imm5]
@@ -275,7 +275,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                 | BITS(tinstr, 0, 3)          // imm4 field;
                 | (BITS(tinstr, 4, 7) << 8);  // beginning 4 bits of imm12
         } else if ((tinstr & 0x0F00) == 0x0200) {
-            static const ARMword subset[4] = {
+            static const u32 subset[4] = {
                 0xE6BF0070, // SXTH
                 0xE6AF0070, // SXTB
                 0xE6FF0070, // UXTH
@@ -299,7 +299,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                     | (BIT(tinstr, 4) << 18); // enable bit
             }
         } else if ((tinstr & 0x0F00) == 0x0a00) {
-            static const ARMword subset[3] = {
+            static const u32 subset[3] = {
                 0xE6BF0F30, // REV
                 0xE6BF0FB0, // REV16
                 0xE6FF0FB0, // REVSH
@@ -309,7 +309,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
                 | (BITS(tinstr, 0, 2) << 12)     // Rd
                 | BITS(tinstr, 3, 5);            // Rm
         } else {
-            static const ARMword subset[4] = {
+            static const u32 subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
                 0xE92D4000, // STMDB sp!,{rlist,lr}
                 0xE8BD0000, // LDMIA sp!,{rlist}

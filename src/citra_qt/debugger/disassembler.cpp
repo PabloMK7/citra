@@ -219,7 +219,7 @@ void DisassemblerWidget::OnToggleStartStop() {
 }
 
 void DisassemblerWidget::OnDebugModeEntered() {
-    ARMword next_instr = Core::g_app_core->GetPC();
+    u32 next_instr = Core::g_app_core->GetPC();
 
     if (model->GetBreakPoints().IsAddressBreakPoint(next_instr))
         emu_thread->SetRunning(false);

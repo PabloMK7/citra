@@ -51,22 +51,21 @@ typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 // Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
 // This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
 // support LDR/STREXD.
-static const ARMword RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
+static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
 
 // Exclusive memory access
-static int exclusive_detect(ARMul_State* state, ARMword addr) {
+static int exclusive_detect(ARMul_State* state, u32 addr) {
     if(state->exclusive_tag == (addr & RESERVATION_GRANULE_MASK))
         return 0;
     else
         return -1;
 }
 
-static void add_exclusive_addr(ARMul_State* state, ARMword addr){
+static void add_exclusive_addr(ARMul_State* state, u32 addr){
     state->exclusive_tag = addr & RESERVATION_GRANULE_MASK;
-    return;
 }
 
-static void remove_exclusive(ARMul_State* state, ARMword addr){
+static void remove_exclusive(ARMul_State* state, u32 addr){
     state->exclusive_tag = 0xFFFFFFFF;
 }
 

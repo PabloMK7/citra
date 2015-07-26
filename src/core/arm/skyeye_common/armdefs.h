@@ -44,50 +44,45 @@ enum {
     ABORT_BASE_UPDATED  = 2
 };
 
-typedef u64 ARMdword;  // must be 64 bits wide
-typedef u32 ARMword;   // must be 32 bits wide
-typedef u16 ARMhword;  // must be 16 bits wide
-typedef u8 ARMbyte;    // must be 8 bits wide
-
 #define VFP_REG_NUM 64
 struct ARMul_State
 {
-    ARMword Emulate;       // To start and stop emulation
+    u32 Emulate;       // To start and stop emulation
 
     // Order of the following register should not be modified
-    ARMword Reg[16];            // The current register file
-    ARMword Cpsr;               // The current PSR
-    ARMword Spsr_copy;
-    ARMword phys_pc;
-    ARMword Reg_usr[2];
-    ARMword Reg_svc[2];         // R13_SVC R14_SVC
-    ARMword Reg_abort[2];       // R13_ABORT R14_ABORT
-    ARMword Reg_undef[2];       // R13 UNDEF R14 UNDEF
-    ARMword Reg_irq[2];         // R13_IRQ R14_IRQ
-    ARMword Reg_firq[7];        // R8---R14 FIRQ
-    ARMword Spsr[7];            // The exception psr's
-    ARMword Mode;               // The current mode
-    ARMword Bank;               // The current register bank
-    ARMword exclusive_tag;      // The address for which the local monitor is in exclusive access mode
-    ARMword exclusive_state;
-    ARMword exclusive_result;
-    ARMword CP15[CP15_REGISTER_COUNT];
+    u32 Reg[16];            // The current register file
+    u32 Cpsr;               // The current PSR
+    u32 Spsr_copy;
+    u32 phys_pc;
+    u32 Reg_usr[2];
+    u32 Reg_svc[2];         // R13_SVC R14_SVC
+    u32 Reg_abort[2];       // R13_ABORT R14_ABORT
+    u32 Reg_undef[2];       // R13 UNDEF R14 UNDEF
+    u32 Reg_irq[2];         // R13_IRQ R14_IRQ
+    u32 Reg_firq[7];        // R8---R14 FIRQ
+    u32 Spsr[7];            // The exception psr's
+    u32 Mode;               // The current mode
+    u32 Bank;               // The current register bank
+    u32 exclusive_tag;      // The address for which the local monitor is in exclusive access mode
+    u32 exclusive_state;
+    u32 exclusive_result;
+    u32 CP15[CP15_REGISTER_COUNT];
 
     // FPSID, FPSCR, and FPEXC
-    ARMword VFP[VFP_SYSTEM_REGISTER_COUNT];
+    u32 VFP[VFP_SYSTEM_REGISTER_COUNT];
     // VFPv2 and VFPv3-D16 has 16 doubleword registers (D0-D16 or S0-S31).
     // VFPv3-D32/ASIMD may have up to 32 doubleword registers (D0-D31),
     // and only 32 singleword registers are accessible (S0-S31).
-    ARMword ExtReg[VFP_REG_NUM];
+    u32 ExtReg[VFP_REG_NUM];
     /* ---- End of the ordered registers ---- */
 
-    ARMword NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
+    u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;
 
     // Add armv6 flags dyf:2010-08-09
-    ARMword GEFlag, EFlag, AFlag, QFlag;
+    u32 GEFlag, EFlag, AFlag, QFlag;
 
-    ARMword TFlag; // Thumb state
+    u32 TFlag; // Thumb state
 
     unsigned long long NumInstrs; // The number of instructions executed
     unsigned NumInstrsToExecute;

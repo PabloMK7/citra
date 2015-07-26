@@ -43,7 +43,7 @@ void VFPInit(ARMul_State* state)
     state->VFP[VFP_MVFR1] = 0;
 }
 
-void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* value)
+void VMOVBRS(ARMul_State* state, u32 to_arm, u32 t, u32 n, u32* value)
 {
     if (to_arm)
     {
@@ -55,7 +55,7 @@ void VMOVBRS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword n, ARMword* 
     }
 }
 
-void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2)
+void VMOVBRRD(ARMul_State* state, u32 to_arm, u32 t, u32 t2, u32 n, u32* value1, u32* value2)
 {
     if (to_arm)
     {
@@ -68,7 +68,7 @@ void VMOVBRRD(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword
         state->ExtReg[n*2] = *value1;
     }
 }
-void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMword n, ARMword* value1, ARMword* value2)
+void VMOVBRRSS(ARMul_State* state, u32 to_arm, u32 t, u32 t2, u32 n, u32* value1, u32* value2)
 {
     if (to_arm)
     {
@@ -82,7 +82,7 @@ void VMOVBRRSS(ARMul_State* state, ARMword to_arm, ARMword t, ARMword t2, ARMwor
     }
 }
 
-void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm)
+void VMOVI(ARMul_State* state, u32 single, u32 d, u32 imm)
 {
     if (single)
     {
@@ -95,7 +95,7 @@ void VMOVI(ARMul_State* state, ARMword single, ARMword d, ARMword imm)
         state->ExtReg[d*2] = 0;
     }
 }
-void VMOVR(ARMul_State* state, ARMword single, ARMword d, ARMword m)
+void VMOVR(ARMul_State* state, u32 single, u32 d, u32 m)
 {
     if (single)
     {
