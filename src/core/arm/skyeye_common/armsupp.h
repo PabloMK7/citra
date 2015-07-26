@@ -17,8 +17,6 @@ struct ARMul_State;
 bool AddOverflow(u32, u32, u32);
 bool SubOverflow(u32, u32, u32);
 
-void ARMul_SelectProcessor(ARMul_State*, unsigned);
-
 u32 AddWithCarry(u32, u32, u32, bool*, bool*);
 bool ARMul_AddOverflowQ(u32, u32);
 

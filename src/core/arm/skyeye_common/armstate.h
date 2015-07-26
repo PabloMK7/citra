@@ -89,28 +89,9 @@ struct ARMul_State
     unsigned bigendSig;
     unsigned syscallSig;
 
-    // For differentiating ARM core emulation.
-    bool is_v4;     // Are we emulating a v4 architecture (or higher)?
-    bool is_v5;     // Are we emulating a v5 architecture?
-    bool is_v5e;    // Are we emulating a v5e architecture?
-    bool is_v6;     // Are we emulating a v6 architecture?
-    bool is_v7;     // Are we emulating a v7 architecture?
-
     // TODO(bunnei): Move this cache to a better place - it should be per codeset (likely per
     // process for our purposes), not per ARMul_State (which tracks CPU core state).
     std::unordered_map<u32, int> instruction_cache;
-};
-
-/***************************************************************************\
-*                        Types of ARM we know about                         *
-\***************************************************************************/
-
-enum {
-    ARM_v4_Prop  = 0x01,
-    ARM_v5_Prop  = 0x02,
-    ARM_v5e_Prop = 0x04,
-    ARM_v6_Prop  = 0x08,
-    ARM_v7_Prop  = 0x10,
 };
 
 /***************************************************************************\
@@ -167,7 +148,6 @@ enum {
 *                  Definitions of things in the emulator                     *
 \***************************************************************************/
 void ARMul_Reset(ARMul_State* state);
-ARMul_State* ARMul_NewState(ARMul_State* state);
 
 /***************************************************************************\
 *            Definitions of things in the co-processor interface             *

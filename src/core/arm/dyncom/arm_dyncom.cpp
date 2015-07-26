@@ -20,15 +20,8 @@
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = Common::make_unique<ARMul_State>();
 
-    ARMul_NewState(state.get());
-    ARMul_SelectProcessor(state.get(), ARM_v6_Prop | ARM_v5_Prop | ARM_v5e_Prop);
-
-    state->bigendSig = LOW;
-    state->NirqSig = HIGH;
-
     // Reset the core to initial state
     ARMul_Reset(state.get());
-    state->Emulate = RUN;
 
     // Switch to the desired privilege mode.
     switch_mode(state.get(), initial_mode);

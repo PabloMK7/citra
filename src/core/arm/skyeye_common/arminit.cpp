@@ -19,33 +19,6 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
-/***************************************************************************\
-*            Returns a new instantiation of the ARMulator's state           *
-\***************************************************************************/
-ARMul_State* ARMul_NewState(ARMul_State* state)
-{
-    state->Emulate = RUN;
-    state->Mode = USER32MODE;
-
-    state->lateabtSig = HIGH;
-    state->bigendSig = LOW;
-
-    return state;
-}
-
-/***************************************************************************\
-*       Call this routine to set ARMulator to model a certain processor     *
-\***************************************************************************/
-
-void ARMul_SelectProcessor(ARMul_State* state, unsigned properties)
-{
-    state->is_v4  = (properties & (ARM_v4_Prop | ARM_v5_Prop)) != 0;
-    state->is_v5  = (properties & ARM_v5_Prop) != 0;
-    state->is_v5e = (properties & ARM_v5e_Prop) != 0;
-    state->is_v6  = (properties & ARM_v6_Prop) != 0;
-    state->is_v7  = (properties & ARM_v7_Prop) != 0;
-}
-
 // Resets certain MPCore CP15 values to their ARM-defined reset values.
 static void ResetMPCoreCP15Registers(ARMul_State* cpu)
 {
@@ -104,9 +77,7 @@ static void ResetMPCoreCP15Registers(ARMul_State* cpu)
     cpu->CP15[CP15_TLB_DEBUG_CONTROL] = 0x00000000;
 }
 
-/***************************************************************************\
-* Call this routine to set up the initial machine state (or perform a RESET *
-\***************************************************************************/
+// Performs a reset
 void ARMul_Reset(ARMul_State* state)
 {
     VFPInit(state);
@@ -125,4 +96,5 @@ void ARMul_Reset(ARMul_State* state)
     state->abortSig = LOW;
 
     state->NumInstrs = 0;
+    state->Emulate = RUN;
 }
