@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/dyncom/arm_dyncom_dec.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 const ISEITEM arm_instruction[] = {
     { "vmla", 4, ARMVFP2,      { 23, 27, 0x1C, 20, 21, 0x0, 9, 11, 0x5, 4, 4, 0 }},
@@ -414,7 +414,7 @@ const ISEITEM arm_exclusion_code[] = {
     { "invalid", 0, INVALID,     { 0 }}
 };
 
-int decode_arm_instr(uint32_t instr, int32_t *idx) {
+int decode_arm_instr(u32 instr, s32* idx) {
     int n = 0;
     int base = 0;
     int ret = DECODE_FAILURE;

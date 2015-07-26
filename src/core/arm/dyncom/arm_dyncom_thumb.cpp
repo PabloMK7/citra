@@ -6,6 +6,7 @@
 // ARM instruction, and using the existing ARM simulator.
 
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 // Decode a 16bit Thumb instruction.  The instruction is in the low 16-bits of the tinstr field,
 // with the following Thumb instruction held in the high 16-bits.  Passing in two Thumb instructions

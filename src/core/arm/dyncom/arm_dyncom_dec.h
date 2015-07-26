@@ -4,7 +4,9 @@
 
 #pragma once
 
-int decode_arm_instr(uint32_t instr, int32_t *idx);
+#include "common/common_types.h"
+
+int decode_arm_instr(u32 instr, s32* idx);
 
 enum DECODE_STATUS {
     DECODE_SUCCESS,

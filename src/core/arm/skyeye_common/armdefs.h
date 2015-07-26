@@ -22,9 +22,6 @@
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 
-#define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
-#define BIT(s, n) ((s >> (n)) & 1)
-
 // Signal levels
 enum {
     LOW     = 0,
@@ -46,9 +43,6 @@ enum {
     ABORT_EARLY         = 1,
     ABORT_BASE_UPDATED  = 2
 };
-
-#define POS(i) ( (~(i)) >> 31 )
-#define NEG(i) ( (i) >> 31 )
 
 typedef u64 ARMdword;  // must be 64 bits wide
 typedef u32 ARMword;   // must be 32 bits wide
@@ -288,31 +282,3 @@ enum {
 	ONCE       = 2, // Execute just one iteration
 	RUN        = 3  // Continuous execution
 };
-
-
-bool AddOverflow(ARMword, ARMword, ARMword);
-bool SubOverflow(ARMword, ARMword, ARMword);
-
-void ARMul_SelectProcessor(ARMul_State*, unsigned);
-
-u32 AddWithCarry(u32, u32, u32, bool*, bool*);
-bool ARMul_AddOverflowQ(ARMword, ARMword);
-
-u8 ARMul_SignedSaturatedAdd8(u8, u8);
-u8 ARMul_SignedSaturatedSub8(u8, u8);
-u16 ARMul_SignedSaturatedAdd16(u16, u16);
-u16 ARMul_SignedSaturatedSub16(u16, u16);
-
-u8 ARMul_UnsignedSaturatedAdd8(u8, u8);
-u16 ARMul_UnsignedSaturatedAdd16(u16, u16);
-u8 ARMul_UnsignedSaturatedSub8(u8, u8);
-u16 ARMul_UnsignedSaturatedSub16(u16, u16);
-u8 ARMul_UnsignedAbsoluteDifference(u8, u8);
-u32 ARMul_SignedSatQ(s32, u8, bool*);
-u32 ARMul_UnsignedSatQ(s32, u8, bool*);
-
-bool InBigEndianMode(ARMul_State*);
-bool InAPrivilegedMode(ARMul_State*);
-
-u32 ReadCP15Register(ARMul_State* cpu, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
-void WriteCP15Register(ARMul_State* cpu, u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);

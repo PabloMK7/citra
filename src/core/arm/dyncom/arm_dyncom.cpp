@@ -7,6 +7,7 @@
 #include "common/make_unique.h"
 
 #include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
 #include "core/arm/dyncom/arm_dyncom.h"

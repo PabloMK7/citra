@@ -134,6 +134,7 @@ set(HEADERS
             arm/skyeye_common/arm_regformat.h
             arm/skyeye_common/armdefs.h
             arm/skyeye_common/armmmu.h
+            arm/skyeye_common/armsupp.h
             arm/skyeye_common/vfp/asm_vfp.h
             arm/skyeye_common/vfp/vfp.h
             arm/skyeye_common/vfp/vfp_helper.h

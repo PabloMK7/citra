@@ -18,8 +18,9 @@
 #include "common/logging/log.h"
 
 #include "core/mem_map.h"
-#include "core/arm/skyeye_common/armdefs.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
+#include "core/arm/skyeye_common/armdefs.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 // Unsigned sum of absolute difference
 u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right)
@@ -47,21 +48,21 @@ u32 AddWithCarry(u32 left, u32 right, u32 carry_in, bool* carry_out_occurred, bo
 }
 
 // Compute whether an addition of A and B, giving RESULT, overflowed.
-bool AddOverflow(ARMword a, ARMword b, ARMword result)
+bool AddOverflow(u32 a, u32 b, u32 result)
 {
     return ((NEG(a) && NEG(b) && POS(result)) ||
             (POS(a) && POS(b) && NEG(result)));
 }
 
 // Compute whether a subtraction of A and B, giving RESULT, overflowed.
-bool SubOverflow(ARMword a, ARMword b, ARMword result)
+bool SubOverflow(u32 a, u32 b, u32 result)
 {
     return ((NEG(a) && POS(b) && POS(result)) ||
             (POS(a) && NEG(b) && NEG(result)));
 }
 
 // Returns true if the Q flag should be set as a result of overflow.
-bool ARMul_AddOverflowQ(ARMword a, ARMword b)
+bool ARMul_AddOverflowQ(u32 a, u32 b)
 {
     u32 result = a + b;
     if (((result ^ a) & (u32)0x80000000) && ((a ^ b) & (u32)0x80000000) == 0)
