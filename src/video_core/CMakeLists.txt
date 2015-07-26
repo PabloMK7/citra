@@ -2,7 +2,6 @@ set(SRCS
             renderer_opengl/generated/gl_3_2_core.c
             renderer_opengl/gl_rasterizer.cpp
             renderer_opengl/gl_rasterizer_cache.cpp
-            renderer_opengl/gl_resource_manager.cpp
             renderer_opengl/gl_shader_util.cpp
             renderer_opengl/gl_state.cpp
             renderer_opengl/renderer_opengl.cpp
