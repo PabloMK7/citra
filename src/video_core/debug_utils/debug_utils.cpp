@@ -62,7 +62,7 @@ void DebugContext::OnEvent(Event event, void* data) {
 
 void DebugContext::Resume() {
     {
-        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+        std::lock_guard<std::mutex> lock(breakpoint_mutex);
 
         // Tell all observers that we are about to resume
         for (auto& breakpoint_observer : breakpoint_observers) {
@@ -268,11 +268,10 @@ void StartPicaTracing()
         return;
     }
 
-    pica_trace_mutex.lock();
+    std::lock_guard<std::mutex> lock(pica_trace_mutex);
     pica_trace = std::unique_ptr<PicaTrace>(new PicaTrace);
 
     is_pica_tracing = true;
-    pica_trace_mutex.unlock();
 }
 
 bool IsPicaTracing()
@@ -286,7 +285,7 @@ void OnPicaRegWrite(PicaTrace::Write write)
     if (!is_pica_tracing)
         return;
 
-    std::unique_lock<std::mutex> lock(pica_trace_mutex);
+    std::lock_guard<std::mutex> lock(pica_trace_mutex);
 
     if (!is_pica_tracing)
         return;
@@ -305,9 +304,9 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     is_pica_tracing = false;
 
     // Wait until running tracing is finished
-    pica_trace_mutex.lock();
+    std::lock_guard<std::mutex> lock(pica_trace_mutex);
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
-    pica_trace_mutex.unlock();
+
     return std::move(ret);
 }
 
