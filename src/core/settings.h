@@ -5,34 +5,42 @@
 #pragma once
 
 #include <string>
+#include <array>
 
 namespace Settings {
 
+namespace NativeInput {
+enum Values {
+    A, B, X, Y,
+    L, R, ZL, ZR,
+    START, SELECT, HOME,
+    DUP, DDOWN, DLEFT, DRIGHT,
+    SUP, SDOWN, SLEFT, SRIGHT,
+    CUP, CDOWN, CLEFT, CRIGHT,
+    NUM_INPUTS
+};
+static const std::array<const char*, NUM_INPUTS> Mapping = {
+    "pad_a", "pad_b", "pad_x", "pad_y",
+    "pad_l", "pad_r", "pad_zl", "pad_zr",
+    "pad_start", "pad_select", "pad_home",
+    "pad_dup", "pad_ddown", "pad_dleft", "pad_dright",
+    "pad_sup", "pad_sdown", "pad_sleft", "pad_sright",
+    "pad_cup", "pad_cdown", "pad_cleft", "pad_cright"
+};
+static const std::array<Values, NUM_INPUTS> All = {
+    A, B, X, Y,
+    L, R, ZL, ZR,
+    START, SELECT, HOME,
+    DUP, DDOWN, DLEFT, DRIGHT,
+    SUP, SDOWN, SLEFT, SRIGHT,
+    CUP, CDOWN, CLEFT, CRIGHT
+};
+}
+
+
 struct Values {
     // Controls
-    int pad_a_key;
-    int pad_b_key;
-    int pad_x_key;
-    int pad_y_key;
-    int pad_l_key;
-    int pad_r_key;
-    int pad_zl_key;
-    int pad_zr_key;
-    int pad_start_key;
-    int pad_select_key;
-    int pad_home_key;
-    int pad_dup_key;
-    int pad_ddown_key;
-    int pad_dleft_key;
-    int pad_dright_key;
-    int pad_sup_key;
-    int pad_sdown_key;
-    int pad_sleft_key;
-    int pad_sright_key;
-    int pad_cup_key;
-    int pad_cdown_key;
-    int pad_cleft_key;
-    int pad_cright_key;
+    std::array<int, NativeInput::NUM_INPUTS> input_mappings;
 
     // Core
     int frame_skip;

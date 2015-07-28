@@ -40,31 +40,21 @@ bool Config::LoadINI(INIReader* config, const char* location, const std::string&
     return true;
 }
 
+static const std::array<int, Settings::NativeInput::NUM_INPUTS> defaults = {
+    GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_Z, GLFW_KEY_X,
+    GLFW_KEY_Q, GLFW_KEY_W, GLFW_KEY_1, GLFW_KEY_2,
+    GLFW_KEY_M, GLFW_KEY_N, GLFW_KEY_B,
+    GLFW_KEY_T, GLFW_KEY_G, GLFW_KEY_F, GLFW_KEY_H,
+    GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT,
+    GLFW_KEY_I, GLFW_KEY_K, GLFW_KEY_J, GLFW_KEY_L
+};
+
 void Config::ReadValues() {
     // Controls
-    Settings::values.pad_a_key = glfw_config->GetInteger("Controls", "pad_a", GLFW_KEY_A);
-    Settings::values.pad_b_key = glfw_config->GetInteger("Controls", "pad_b", GLFW_KEY_S);
-    Settings::values.pad_x_key = glfw_config->GetInteger("Controls", "pad_x", GLFW_KEY_Z);
-    Settings::values.pad_y_key = glfw_config->GetInteger("Controls", "pad_y", GLFW_KEY_X);
-    Settings::values.pad_l_key = glfw_config->GetInteger("Controls", "pad_l", GLFW_KEY_Q);
-    Settings::values.pad_r_key = glfw_config->GetInteger("Controls", "pad_r", GLFW_KEY_W);
-    Settings::values.pad_zl_key = glfw_config->GetInteger("Controls", "pad_zl", GLFW_KEY_1);
-    Settings::values.pad_zr_key = glfw_config->GetInteger("Controls", "pad_zr", GLFW_KEY_2);
-    Settings::values.pad_start_key  = glfw_config->GetInteger("Controls", "pad_start",  GLFW_KEY_M);
-    Settings::values.pad_select_key = glfw_config->GetInteger("Controls", "pad_select", GLFW_KEY_N);
-    Settings::values.pad_home_key   = glfw_config->GetInteger("Controls", "pad_home",   GLFW_KEY_B);
-    Settings::values.pad_dup_key    = glfw_config->GetInteger("Controls", "pad_dup",    GLFW_KEY_T);
-    Settings::values.pad_ddown_key  = glfw_config->GetInteger("Controls", "pad_ddown",  GLFW_KEY_G);
-    Settings::values.pad_dleft_key  = glfw_config->GetInteger("Controls", "pad_dleft",  GLFW_KEY_F);
-    Settings::values.pad_dright_key = glfw_config->GetInteger("Controls", "pad_dright", GLFW_KEY_H);
-    Settings::values.pad_sup_key    = glfw_config->GetInteger("Controls", "pad_sup",    GLFW_KEY_UP);
-    Settings::values.pad_sdown_key  = glfw_config->GetInteger("Controls", "pad_sdown",  GLFW_KEY_DOWN);
-    Settings::values.pad_sleft_key  = glfw_config->GetInteger("Controls", "pad_sleft",  GLFW_KEY_LEFT);
-    Settings::values.pad_sright_key = glfw_config->GetInteger("Controls", "pad_sright", GLFW_KEY_RIGHT);
-    Settings::values.pad_cup_key    = glfw_config->GetInteger("Controls", "pad_cup",    GLFW_KEY_I);
-    Settings::values.pad_cdown_key  = glfw_config->GetInteger("Controls", "pad_cdown",  GLFW_KEY_K);
-    Settings::values.pad_cleft_key  = glfw_config->GetInteger("Controls", "pad_cleft",  GLFW_KEY_J);
-    Settings::values.pad_cright_key = glfw_config->GetInteger("Controls", "pad_cright", GLFW_KEY_L);
+    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
+        Settings::values.input_mappings[Settings::NativeInput::All[i]] =
+            glfw_config->GetInteger("Controls", Settings::NativeInput::Mapping[i], defaults[i]);
+    }
 
     // Core
     Settings::values.frame_skip = glfw_config->GetInteger("Core", "frame_skip", 0);
