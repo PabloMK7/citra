@@ -263,6 +263,7 @@ void GMainWindow::ShutdownGame() {
 
     // Update the GUI
     ui.action_Start->setEnabled(false);
+    ui.action_Start->setText(tr("Start"));
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     render_window->hide();
@@ -291,6 +292,8 @@ void GMainWindow::OnStartGame()
     emu_thread->SetRunning(true);
 
     ui.action_Start->setEnabled(false);
+    ui.action_Start->setText(tr("Continue"));
+
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
 }
