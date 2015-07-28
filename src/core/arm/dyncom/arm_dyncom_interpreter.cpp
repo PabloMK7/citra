@@ -3548,10 +3548,6 @@ enum {
     FETCH_EXCEPTION
 };
 
-typedef struct instruction_set_encoding_item ISEITEM;
-
-extern const ISEITEM arm_instruction[];
-
 static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     Common::Profiling::ScopeTimer timer_decode(profile_decode);
 
