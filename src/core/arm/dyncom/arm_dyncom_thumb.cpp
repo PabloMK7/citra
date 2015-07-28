@@ -12,8 +12,8 @@
 // with the following Thumb instruction held in the high 16-bits.  Passing in two Thumb instructions
 // allows easier simulation of the special dual BL instruction.
 
-tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
-    tdstate valid = t_uninitialized;
+ThumbDecodeStatus TranslateThumbInstruction(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
+    ThumbDecodeStatus valid = ThumbDecodeStatus::UNINITIALIZED;
     u32 tinstr = GetThumbInstruction(instr, addr);
 
     *ainstr = 0xDEADC0DE; // Debugging to catch non updates
@@ -351,21 +351,21 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
             else
                 *ainstr |= (tinstr & 0x00FF);
         } else if ((tinstr & 0x0F00) != 0x0E00)
-            valid = t_branch;
+            valid = ThumbDecodeStatus::BRANCH;
         else //  UNDEFINED : cc=1110(AL) uses different format
-            valid = t_undefined;
+            valid = ThumbDecodeStatus::UNDEFINED;
 
         break;
 
     case 28: // B
-        valid = t_branch;
+        valid = ThumbDecodeStatus::BRANCH;
         break;
 
     case 29:
-        if(tinstr & 0x1)
-            valid = t_undefined;
+        if (tinstr & 0x1)
+            valid = ThumbDecodeStatus::UNDEFINED;
         else
-            valid = t_branch;
+            valid = ThumbDecodeStatus::BRANCH;
         break;
 
     case 30: // BL instruction 1
@@ -374,7 +374,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
         // simulation simple (from the user perspective) we check if the following instruction is
         // the second half of this BL, and if it is we simulate it immediately
 
-        valid = t_branch;
+        valid = ThumbDecodeStatus::BRANCH;
         break;
 
     case 31: // BL instruction 2
@@ -383,7 +383,7 @@ tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
         // ever be matched with the fmt19 "BL instruction 1" instruction. However, we do allow the
         // simulation of it on its own, with undefined results if r14 is not suitably initialised.
 
-        valid = t_branch;
+        valid = ThumbDecodeStatus::BRANCH;
         break;
     }
 

@@ -3468,10 +3468,10 @@ enum {
     FETCH_FAILURE
 };
 
-static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
+static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
     // Check if in Thumb mode
-    tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
-    if (ret == t_branch) {
+    ThumbDecodeStatus ret = TranslateThumbInstruction (addr, inst, arm_inst, inst_size);
+    if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
         int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
         u32 tinstr = GetThumbInstruction(inst, addr);
@@ -3509,7 +3509,7 @@ static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_s
             *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             break;
         default:
-            ret = t_undefined;
+            ret = ThumbDecodeStatus::UNDEFINED;
             break;
         }
     }
@@ -3542,20 +3542,19 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
         inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
 
         size++;
-        // If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction
+        // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
         if (cpu->TFlag) {
             uint32_t arm_inst;
-            tdstate state = decode_thumb_instr(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+            ThumbDecodeStatus state = DecodeThumbInstruction(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 
-            // We have translated the branch instruction of thumb in thumb decoder
-            if(state == t_branch){
+            // We have translated the Thumb branch instruction in the Thumb decoder
+            if (state == ThumbDecodeStatus::BRANCH) {
                 goto translated;
             }
             inst = arm_inst;
         }
 
-        ret = decode_arm_instr(inst, &idx);
-        if (ret == DECODE_FAILURE) {
+        if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
             std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
             LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, disasm.c_str(), inst);
             LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);

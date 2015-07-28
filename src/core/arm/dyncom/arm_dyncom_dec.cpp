@@ -414,14 +414,13 @@ const ISEITEM arm_exclusion_code[] = {
     { "invalid", 0, INVALID,     { 0 }}
 };
 
-int decode_arm_instr(u32 instr, s32* idx) {
+ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
     int n = 0;
     int base = 0;
-    int ret = DECODE_FAILURE;
-    int i = 0;
     int instr_slots = sizeof(arm_instruction) / sizeof(ISEITEM);
+    ARMDecodeStatus ret = ARMDecodeStatus::FAILURE;
 
-    for (i = 0; i < instr_slots; i++) {
+    for (int i = 0; i < instr_slots; i++) {
         n = arm_instruction[i].attribute_value;
         base = 0;
 
@@ -438,11 +437,11 @@ int decode_arm_instr(u32 instr, s32* idx) {
             n--;
         }
 
-        // All conditions is satisfied.
+        // All conditions are satisfied.
         if (n == 0)
-            ret = DECODE_SUCCESS;
+            ret = ARMDecodeStatus::SUCCESS;
 
-        if (ret == DECODE_SUCCESS) {
+        if (ret == ARMDecodeStatus::SUCCESS) {
             n = arm_exclusion_code[i].attribute_value;
             if (n != 0) {
                 base = 0;
@@ -454,13 +453,13 @@ int decode_arm_instr(u32 instr, s32* idx) {
                     n--;
                 }
 
-                // All conditions is satisfied.
+                // All conditions are satisfied.
                 if (n == 0)
-                    ret = DECODE_FAILURE;
+                    ret = ARMDecodeStatus::FAILURE;
             }
         }
 
-        if (ret == DECODE_SUCCESS) {
+        if (ret == ARMDecodeStatus::SUCCESS) {
             *idx = i;
             return ret;
         }

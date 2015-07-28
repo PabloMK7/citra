@@ -6,12 +6,12 @@
 
 #include "common/common_types.h"
 
-int decode_arm_instr(u32 instr, s32* idx);
-
-enum DECODE_STATUS {
-    DECODE_SUCCESS,
-    DECODE_FAILURE
+enum class ARMDecodeStatus {
+    SUCCESS,
+    FAILURE
 };
+
+ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx);
 
 struct instruction_set_encoding_item {
     const char *name;
