@@ -66,7 +66,8 @@ void Config::ReadValues() {
 void Config::SaveValues() {
     qt_config->beginGroup("Controls");
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        qt_config->setValue(QString::fromStdString(Settings::NativeInput::Mapping[i]), Settings::NativeInput::All[i]);
+        qt_config->setValue(QString::fromStdString(Settings::NativeInput::Mapping[i]),
+            Settings::values.input_mappings[Settings::NativeInput::All[i]]);
     }
     qt_config->endGroup();
 
