@@ -13,14 +13,12 @@ enum class ARMDecodeStatus {
 
 ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx);
 
-struct instruction_set_encoding_item {
+struct InstructionSetEncodingItem {
     const char *name;
     int attribute_value;
     int version;
     u32 content[21];
 };
-
-typedef struct instruction_set_encoding_item ISEITEM;
 
 // ARM versions
 enum {
@@ -38,4 +36,4 @@ enum {
     ARMV6K,
 };
 
-extern const ISEITEM arm_instruction[];
+extern const InstructionSetEncodingItem arm_instruction[];
