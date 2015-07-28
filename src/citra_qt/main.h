@@ -24,6 +24,8 @@ class GMainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    static const int max_recent_files_item = 10; ///< Max number of recently loaded items to keep track
+
     // TODO: Make use of this!
     enum {
         UI_IDLE,
@@ -58,6 +60,8 @@ private:
     void BootGame(const std::string& filename);
     void ShutdownGame();
 
+    void UpdateRecentFiles();
+
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
@@ -66,6 +70,7 @@ private slots:
     void OnStopGame();
     void OnMenuLoadFile();
     void OnMenuLoadSymbolMap();
+    void OnMenuRecentFile();
     void OnOpenHotkeysDialog();
     void OnConfigure();
     void OnDisplayTitleBars(bool);
@@ -85,6 +90,8 @@ private:
     CallstackWidget* callstackWidget;
     GPUCommandStreamWidget* graphicsWidget;
     GPUCommandListWidget* graphicsCommandsWidget;
+
+    QAction* actions_recent_files[max_recent_files_item];
 };
 
 #endif // _CITRA_QT_MAIN_HXX_
