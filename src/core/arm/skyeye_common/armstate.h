@@ -163,6 +163,19 @@ public:
     u32 ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) const;
     void WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u32 opcode_2);
 
+    // Exclusive memory access functions
+    bool IsExclusiveMemoryAccess(u32 address) const {
+        return exclusive_state && exclusive_tag == (address & RESERVATION_GRANULE_MASK);
+    }
+    void SetExclusiveMemoryAddress(u32 address) {
+        exclusive_tag = address & RESERVATION_GRANULE_MASK;
+        exclusive_state = true;
+    }
+    void UnsetExclusiveMemoryAddress() {
+        exclusive_tag = 0xFFFFFFFF;
+        exclusive_state = false;
+    }
+
     // Whether or not the given CPU is in big endian mode (E bit is set)
     bool InBigEndianMode() const {
         return (Cpsr & (1 << 9)) != 0;
@@ -203,9 +216,6 @@ public:
 
     u32 Mode;          // The current mode
     u32 Bank;          // The current register bank
-    u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
-    u32 exclusive_state;
-    u32 exclusive_result;
 
     u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;
@@ -230,4 +240,13 @@ public:
 
 private:
     void ResetMPCoreCP15Registers();
+
+    // Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
+    // This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
+    // support LDR/STREXD.
+    static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
+
+    u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
+    u32 exclusive_result;
+    bool exclusive_state;
 };

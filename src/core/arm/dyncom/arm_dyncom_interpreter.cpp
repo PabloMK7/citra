@@ -47,27 +47,6 @@ enum {
 
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
-// Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
-// This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
-// support LDR/STREXD.
-static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
-
-// Exclusive memory access
-static int exclusive_detect(ARMul_State* state, u32 addr) {
-    if(state->exclusive_tag == (addr & RESERVATION_GRANULE_MASK))
-        return 0;
-    else
-        return -1;
-}
-
-static void add_exclusive_addr(ARMul_State* state, u32 addr){
-    state->exclusive_tag = addr & RESERVATION_GRANULE_MASK;
-}
-
-static void remove_exclusive(ARMul_State* state, u32 addr){
-    state->exclusive_tag = 0xFFFFFFFF;
-}
-
 static int CondPassed(ARMul_State* cpu, unsigned int cond) {
     const u32 NFLAG = cpu->NFlag;
     const u32 ZFLAG = cpu->ZFlag;
@@ -4170,9 +4149,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
     CLREX_INST:
     {
-        remove_exclusive(cpu, 0);
-        cpu->exclusive_state = 0;
-
+        cpu->UnsetExclusiveMemoryAddress();
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(clrex_inst));
         FETCH_INST;
@@ -4539,8 +4516,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory32(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4559,8 +4535,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = Memory::Read8(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4579,8 +4554,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory16(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4599,8 +4573,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD  = cpu->ReadMemory32(read_addr);
             RD2 = cpu->ReadMemory32(read_addr + 4);
@@ -6085,10 +6058,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 cpu->WriteMemory32(write_addr, RM);
                 RD = 0;
             } else {
@@ -6107,10 +6078,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 Memory::Write8(write_addr, cpu->Reg[inst_cream->Rm]);
                 RD = 0;
             } else {
@@ -6129,9 +6098,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
 
                 const u32 rt  = cpu->Reg[inst_cream->Rm + 0];
                 const u32 rt2 = cpu->Reg[inst_cream->Rm + 1];
@@ -6161,10 +6129,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 cpu->WriteMemory16(write_addr, RM);
                 RD = 0;
             } else {
