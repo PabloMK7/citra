@@ -3471,18 +3471,12 @@ enum {
 static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
     // Check if in Thumb mode
     tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
-    if(ret == t_branch){
-        // TODO: FIXME, endian should be judged
-        u32 tinstr;
-        if((addr & 0x3) != 0)
-            tinstr = inst >> 16;
-        else
-            tinstr = inst & 0xFFFF;
-
+    if (ret == t_branch) {
         int inst_index;
         int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
+        u32 tinstr = GetThumbInstruction(inst, addr);
 
-        switch((tinstr & 0xF800) >> 11){
+        switch ((tinstr & 0xF800) >> 11) {
         case 26:
         case 27:
             if (((tinstr & 0x0F00) != 0x0E00) && ((tinstr & 0x0F00) != 0x0F00)){

@@ -14,13 +14,7 @@
 
 tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size) {
     tdstate valid = t_uninitialized;
-    u32 tinstr = instr;
-
-    // The endian should be judge here
-    if((addr & 0x3) != 0)
-        tinstr = instr >> 16;
-    else
-        tinstr &= 0xFFFF;
+    u32 tinstr = GetThumbInstruction(instr, addr);
 
     *ainstr = 0xDEADC0DE; // Debugging to catch non updates
 
