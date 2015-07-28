@@ -5,7 +5,7 @@
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/skyeye_common/armsupp.h"
 
-const ISEITEM arm_instruction[] = {
+const InstructionSetEncodingItem arm_instruction[] = {
     { "vmla", 4, ARMVFP2,      { 23, 27, 0x1C, 20, 21, 0x0, 9, 11, 0x5, 4, 4, 0 }},
     { "vmls", 7, ARMVFP2,      { 28, 31, 0xF, 25, 27, 0x1, 23, 23, 1, 11, 11, 0, 8, 9, 0x2, 6, 6, 1, 4, 4, 0 }},
     { "vnmla", 4, ARMVFP2,     { 23, 27, 0x1C, 20, 21, 0x1, 9, 11, 0x5, 4, 4, 0 }},
@@ -207,7 +207,7 @@ const ISEITEM arm_instruction[] = {
     { "bbl", 1, 0,         { 25, 27, 0x00000005 }},
 };
 
-const ISEITEM arm_exclusion_code[] = {
+const InstructionSetEncodingItem arm_exclusion_code[] = {
     { "vmla", 0, ARMVFP2,      { 0 }},
     { "vmls", 0, ARMVFP2,      { 0 }},
     { "vnmla", 0, ARMVFP2,     { 0 }},
@@ -414,14 +414,13 @@ const ISEITEM arm_exclusion_code[] = {
     { "invalid", 0, INVALID,     { 0 }}
 };
 
-int decode_arm_instr(u32 instr, s32* idx) {
+ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
     int n = 0;
     int base = 0;
-    int ret = DECODE_FAILURE;
-    int i = 0;
-    int instr_slots = sizeof(arm_instruction) / sizeof(ISEITEM);
+    int instr_slots = sizeof(arm_instruction) / sizeof(InstructionSetEncodingItem);
+    ARMDecodeStatus ret = ARMDecodeStatus::FAILURE;
 
-    for (i = 0; i < instr_slots; i++) {
+    for (int i = 0; i < instr_slots; i++) {
         n = arm_instruction[i].attribute_value;
         base = 0;
 
@@ -438,11 +437,11 @@ int decode_arm_instr(u32 instr, s32* idx) {
             n--;
         }
 
-        // All conditions is satisfied.
+        // All conditions are satisfied.
         if (n == 0)
-            ret = DECODE_SUCCESS;
+            ret = ARMDecodeStatus::SUCCESS;
 
-        if (ret == DECODE_SUCCESS) {
+        if (ret == ARMDecodeStatus::SUCCESS) {
             n = arm_exclusion_code[i].attribute_value;
             if (n != 0) {
                 base = 0;
@@ -454,13 +453,13 @@ int decode_arm_instr(u32 instr, s32* idx) {
                     n--;
                 }
 
-                // All conditions is satisfied.
+                // All conditions are satisfied.
                 if (n == 0)
-                    ret = DECODE_FAILURE;
+                    ret = ARMDecodeStatus::FAILURE;
             }
         }
 
-        if (ret == DECODE_SUCCESS) {
+        if (ret == ARMDecodeStatus::SUCCESS) {
             *idx = i;
             return ret;
         }

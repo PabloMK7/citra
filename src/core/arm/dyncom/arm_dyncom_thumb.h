@@ -28,20 +28,22 @@
 
 #include "common/common_types.h"
 
-enum tdstate {
-    t_undefined,    // Undefined Thumb instruction
-    t_decoded,      // Instruction decoded to ARM equivalent
-    t_branch,       // Thumb branch (already processed)
-    t_uninitialized,
+enum class ThumbDecodeStatus {
+    UNDEFINED,    // Undefined Thumb instruction
+    DECODED,      // Instruction decoded to ARM equivalent
+    BRANCH,       // Thumb branch (already processed)
+    UNINITIALIZED,
 };
 
-tdstate thumb_translate(u32 addr, u32 instr, u32* ainstr, u32* inst_size);
+// Translates a Thumb mode instruction into its ARM equivalent.
+ThumbDecodeStatus TranslateThumbInstruction(u32 addr, u32 instr, u32* ainstr, u32* inst_size);
 
-static inline u32 get_thumb_instr(u32 instr, u32 pc) {
-    u32 tinstr;
-    if ((pc & 0x3) != 0)
-        tinstr = instr >> 16;
-    else
-        tinstr = instr & 0xFFFF;
-    return tinstr;
+static inline u32 GetThumbInstruction(u32 instr, u32 address) {
+    // Normally you would need to handle instruction endianness,
+    // however, it is fixed to little-endian on the MPCore, so
+    // there's no need to check for this beforehand.
+    if ((address & 0x3) != 0)
+        return instr >> 16;
+
+    return instr & 0xFFFF;
 }

@@ -47,27 +47,6 @@ enum {
 
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
-// Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
-// This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
-// support LDR/STREXD.
-static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
-
-// Exclusive memory access
-static int exclusive_detect(ARMul_State* state, u32 addr) {
-    if(state->exclusive_tag == (addr & RESERVATION_GRANULE_MASK))
-        return 0;
-    else
-        return -1;
-}
-
-static void add_exclusive_addr(ARMul_State* state, u32 addr){
-    state->exclusive_tag = addr & RESERVATION_GRANULE_MASK;
-}
-
-static void remove_exclusive(ARMul_State* state, u32 addr){
-    state->exclusive_tag = 0xFFFFFFFF;
-}
-
 static int CondPassed(ARMul_State* cpu, unsigned int cond) {
     const u32 NFLAG = cpu->NFlag;
     const u32 ZFLAG = cpu->ZFlag;
@@ -3489,21 +3468,15 @@ enum {
     FETCH_FAILURE
 };
 
-static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
+static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_inst, u32* inst_size, ARM_INST_PTR* ptr_inst_base) {
     // Check if in Thumb mode
-    tdstate ret = thumb_translate (addr, inst, arm_inst, inst_size);
-    if(ret == t_branch){
-        // TODO: FIXME, endian should be judged
-        u32 tinstr;
-        if((addr & 0x3) != 0)
-            tinstr = inst >> 16;
-        else
-            tinstr = inst & 0xFFFF;
-
+    ThumbDecodeStatus ret = TranslateThumbInstruction (addr, inst, arm_inst, inst_size);
+    if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
         int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
+        u32 tinstr = GetThumbInstruction(inst, addr);
 
-        switch((tinstr & 0xF800) >> 11){
+        switch ((tinstr & 0xF800) >> 11) {
         case 26:
         case 27:
             if (((tinstr & 0x0F00) != 0x0E00) && ((tinstr & 0x0F00) != 0x0F00)){
@@ -3536,7 +3509,7 @@ static tdstate decode_thumb_instr(u32 inst, u32 addr, u32* arm_inst, u32* inst_s
             *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             break;
         default:
-            ret = t_undefined;
+            ret = ThumbDecodeStatus::UNDEFINED;
             break;
         }
     }
@@ -3547,10 +3520,6 @@ enum {
     KEEP_GOING,
     FETCH_EXCEPTION
 };
-
-typedef struct instruction_set_encoding_item ISEITEM;
-
-extern const ISEITEM arm_instruction[];
 
 static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     Common::Profiling::ScopeTimer timer_decode(profile_decode);
@@ -3573,20 +3542,19 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
         inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
 
         size++;
-        // If we are in thumb instruction, we will translate one thumb to one corresponding arm instruction
+        // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
         if (cpu->TFlag) {
             uint32_t arm_inst;
-            tdstate state = decode_thumb_instr(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+            ThumbDecodeStatus state = DecodeThumbInstruction(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 
-            // We have translated the branch instruction of thumb in thumb decoder
-            if(state == t_branch){
+            // We have translated the Thumb branch instruction in the Thumb decoder
+            if (state == ThumbDecodeStatus::BRANCH) {
                 goto translated;
             }
             inst = arm_inst;
         }
 
-        ret = decode_arm_instr(inst, &idx);
-        if (ret == DECODE_FAILURE) {
+        if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
             std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
             LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, disasm.c_str(), inst);
             LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
@@ -4174,9 +4142,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
     CLREX_INST:
     {
-        remove_exclusive(cpu, 0);
-        cpu->exclusive_state = 0;
-
+        cpu->UnsetExclusiveMemoryAddress();
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(clrex_inst));
         FETCH_INST;
@@ -4543,8 +4509,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory32(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4563,8 +4528,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = Memory::Read8(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4583,8 +4547,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory16(read_addr);
             if (inst_cream->Rd == 15) {
@@ -4603,8 +4566,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int read_addr = RN;
 
-            add_exclusive_addr(cpu, read_addr);
-            cpu->exclusive_state = 1;
+            cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD  = cpu->ReadMemory32(read_addr);
             RD2 = cpu->ReadMemory32(read_addr + 4);
@@ -6089,10 +6051,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 cpu->WriteMemory32(write_addr, RM);
                 RD = 0;
             } else {
@@ -6111,10 +6071,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 Memory::Write8(write_addr, cpu->Reg[inst_cream->Rm]);
                 RD = 0;
             } else {
@@ -6133,9 +6091,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
 
                 const u32 rt  = cpu->Reg[inst_cream->Rm + 0];
                 const u32 rt2 = cpu->Reg[inst_cream->Rm + 1];
@@ -6165,10 +6122,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             generic_arm_inst* inst_cream = (generic_arm_inst*)inst_base->component;
             unsigned int write_addr = cpu->Reg[inst_cream->Rn];
 
-            if ((exclusive_detect(cpu, write_addr) == 0) && (cpu->exclusive_state == 1)) {
-                remove_exclusive(cpu, write_addr);
-                cpu->exclusive_state = 0;
-
+            if (cpu->IsExclusiveMemoryAccess(write_addr)) {
+                cpu->UnsetExclusiveMemoryAddress();
                 cpu->WriteMemory16(write_addr, RM);
                 RD = 0;
             } else {
