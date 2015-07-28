@@ -481,11 +481,17 @@ static void GetHostId(Service::Interface* self) {
 
     char name[128];
     gethostname(name, sizeof(name));
-    hostent* host = gethostbyname(name);
-    in_addr* addr = reinterpret_cast<in_addr*>(host->h_addr);
+    addrinfo hints = {};
+    addrinfo* res;
+
+    hints.ai_family = AF_INET;
+    getaddrinfo(name, NULL, &hints, &res);
+    sockaddr_in* sock_addr = reinterpret_cast<sockaddr_in*>(res->ai_addr);
+    in_addr* addr = &sock_addr->sin_addr;
 
     cmd_buffer[2] = addr->s_addr;
     cmd_buffer[1] = 0;
+    freeaddrinfo(res);
 }
 
 static void Close(Service::Interface* self) {
