@@ -3924,9 +3924,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             adc_inst* const inst_cream = (adc_inst*)inst_base->component;
 
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * cpu->GetInstructionSize();
+
             bool carry;
             bool overflow;
-            RD = AddWithCarry(RN, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
+            RD = AddWithCarry(rn_val, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
 
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
@@ -3987,11 +3991,17 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     }
     AND_INST:
     {
-        and_inst *inst_cream = (and_inst *)inst_base->component;
-        if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+        if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+            and_inst* const inst_cream = (and_inst*)inst_base->component;
+
             u32 lop = RN;
             u32 rop = SHIFTER_OPERAND;
+
+            if (inst_cream->Rn == 15)
+                lop += 2 * cpu->GetInstructionSize();
+
             RD = lop & rop;
+
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
                     cpu->Cpsr = cpu->Spsr_copy;
@@ -4164,9 +4174,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             cmn_inst* const inst_cream = (cmn_inst*)inst_base->component;
 
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * cpu->GetInstructionSize();
+
             bool carry;
             bool overflow;
-            u32 result = AddWithCarry(RN, SHIFTER_OPERAND, 0, &carry, &overflow);
+            u32 result = AddWithCarry(rn_val, SHIFTER_OPERAND, 0, &carry, &overflow);
 
             UPDATE_NFLAG(result);
             UPDATE_ZFLAG(result);
@@ -4905,6 +4919,10 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             u32 lop = RN;
             u32 rop = SHIFTER_OPERAND;
+
+            if (inst_cream->Rn == 15)
+                lop += 2 * cpu->GetInstructionSize();
+
             RD = lop | rop;
 
             if (inst_cream->S && (inst_cream->Rd == 15)) {
@@ -5195,9 +5213,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             rsc_inst* const inst_cream = (rsc_inst*)inst_base->component;
 
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * cpu->GetInstructionSize();
+
             bool carry;
             bool overflow;
-            RD = AddWithCarry(~RN, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
+            RD = AddWithCarry(~rn_val, SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
 
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
@@ -5335,9 +5357,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             sbc_inst* const inst_cream = (sbc_inst*)inst_base->component;
 
+            u32 rn_val = RN;
+            if (inst_cream->Rn == 15)
+                rn_val += 2 * cpu->GetInstructionSize();
+
             bool carry;
             bool overflow;
-            RD = AddWithCarry(RN, ~SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
+            RD = AddWithCarry(rn_val, ~SHIFTER_OPERAND, cpu->CFlag, &carry, &overflow);
 
             if (inst_cream->S && (inst_cream->Rd == 15)) {
                 if (CurrentModeHasSPSR) {
@@ -6171,7 +6197,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             u32 rn_val = RN;
             if (inst_cream->Rn == 15)
-                rn_val += 8;
+                rn_val += 2 * cpu->GetInstructionSize();
 
             bool carry;
             bool overflow;
