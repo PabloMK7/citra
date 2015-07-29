@@ -14,6 +14,7 @@
 #include "common/vector_math.h"
 
 #include "core/hle/service/y2r_u.h"
+#include "core/hw/y2r.h"
 #include "core/memory.h"
 
 namespace HW {
