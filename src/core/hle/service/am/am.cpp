@@ -5,6 +5,7 @@
 #include "common/logging/log.h"
 
 #include "core/hle/service/service.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/am/am_app.h"
 #include "core/hle/service/am/am_net.h"
 #include "core/hle/service/am/am_sys.h"
