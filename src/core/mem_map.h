@@ -32,15 +32,4 @@ u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
  */
 u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions);
 
-/**
- * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
- * address. This should be used by services to translate addresses for use by the hardware.
- */
-PAddr VirtualToPhysicalAddress(VAddr addr);
-
-/**
- * Undoes a mapping performed by VirtualToPhysicalAddress().
- */
-VAddr PhysicalToVirtualAddress(PAddr addr);
-
 } // namespace

@@ -124,6 +124,17 @@ void WriteBlock(VAddr addr, const u8* data, size_t size);
 u8* GetPointer(VAddr virtual_address);
 
 /**
+* Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+* address. This should be used by services to translate addresses for use by the hardware.
+*/
+PAddr VirtualToPhysicalAddress(VAddr addr);
+
+/**
+* Undoes a mapping performed by VirtualToPhysicalAddress().
+*/
+VAddr PhysicalToVirtualAddress(PAddr addr);
+
+/**
  * Gets a pointer to the memory region beginning at the specified physical address.
  *
  * @note This is currently implemented using PhysicalToVirtualAddress().

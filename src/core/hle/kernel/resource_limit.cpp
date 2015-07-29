@@ -6,7 +6,6 @@
 
 #include "common/logging/log.h"
 
-#include "core/mem_map.h"
 #include "core/hle/kernel/resource_limit.h"
 
 namespace Kernel {
