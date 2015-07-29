@@ -159,7 +159,7 @@ void DisassemblerModel::SetNextInstruction(unsigned int address) {
 }
 
 DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread* emu_thread) :
-    QDockWidget(parent), emu_thread(emu_thread), base_addr(0) {
+    QDockWidget(parent), base_addr(0), emu_thread(emu_thread) {
 
     disasm_ui.setupUi(this);
 
