@@ -55,7 +55,7 @@ signals:
     void EmulationStopping();
 
 private:
-    void BootGame(std::string filename);
+    void BootGame(const std::string& filename);
     void ShutdownGame();
 
     void closeEvent(QCloseEvent* event) override;

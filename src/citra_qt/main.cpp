@@ -207,7 +207,7 @@ void GMainWindow::OnDisplayTitleBars(bool show)
     }
 }
 
-void GMainWindow::BootGame(std::string filename) {
+void GMainWindow::BootGame(const std::string& filename) {
     LOG_INFO(Frontend, "Citra starting...\n");
 
     // Initialize the core emulation
