@@ -21,6 +21,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0080, ReceiveParameter,             "ReceiveParameter"},
     {0x000E0080, GlanceParameter,              "GlanceParameter"},
     {0x000F0100, CancelParameter,              "CancelParameter"},
+    {0x00160040, PreloadLibraryApplet,         "PreloadLibraryApplet"},
     {0x00180040, PrepareToStartLibraryApplet,  "PrepareToStartLibraryApplet"},
     {0x001E0084, StartLibraryApplet,           "StartLibraryApplet"},
     {0x003B0040, nullptr,                      "CancelLibraryApplet?"},

@@ -33,7 +33,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00130000, nullptr,                         "GetPreparationState"},
     {0x00140040, nullptr,                         "SetPreparationState"},
     {0x00150140, nullptr,                         "PrepareToStartApplication"},
-    {0x00160040, nullptr,                         "PreloadLibraryApplet"},
+    {0x00160040, PreloadLibraryApplet,            "PreloadLibraryApplet"},
     {0x00170040, nullptr,                         "FinishPreloadingLibraryApplet"},
     {0x00180040, PrepareToStartLibraryApplet,     "PrepareToStartLibraryApplet"},
     {0x00190040, nullptr,                         "PrepareToStartSystemApplet"},

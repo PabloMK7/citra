@@ -89,12 +89,21 @@ ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) 
     return result;
 }
 
+bool IsLibraryAppletRunning() {
+    // Check the applets map for instances of any applet
+    for (auto itr = applets.begin(); itr != applets.end(); ++itr)
+        if (itr->second != nullptr)
+            return true;
+    return false;
+}
+
 void Init() {
     // Register the applet update callback
     applet_update_event = CoreTiming::RegisterEvent("HLE Applet Update Event", AppletUpdateEvent);
 }
 
 void Shutdown() {
+    CoreTiming::RemoveEvent(applet_update_event);
 }
 
 }
