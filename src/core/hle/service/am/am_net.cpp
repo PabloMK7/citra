@@ -28,7 +28,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08130000, nullptr,               "GetTotalContents"},
     {0x08140042, nullptr,               "GetContentIndexes"},
     {0x08150044, nullptr,               "GetContentsInfo"},
-    {0x08190108, nullptr,               "Unknown"},
+    {0x08180042, nullptr,               "GetCTCert"},
+    {0x08190108, nullptr,               "SetCertificates"},
     {0x081B00C2, nullptr,               "InstallTitlesFinish"},
 };
 
