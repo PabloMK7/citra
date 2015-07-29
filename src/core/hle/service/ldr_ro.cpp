@@ -40,7 +40,8 @@ static void Initialize(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called");
+    LOG_WARNING(Service_LDR, "(STUBBED) called. crs_buffer_ptr=0x%08X, crs_size=0x%08X, address=0x%08X, value=0x%08X, process=0x%08X",
+                crs_buffer_ptr, crs_size, address, value, process);
 }
 
 /**
@@ -69,7 +70,8 @@ static void LoadCRR(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called");
+    LOG_WARNING(Service_LDR, "(STUBBED) called. crs_buffer_ptr=0x%08X, crs_size=0x%08X, value=0x%08X, process=0x%08X",
+                crs_buffer_ptr, crs_size, value, process);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
