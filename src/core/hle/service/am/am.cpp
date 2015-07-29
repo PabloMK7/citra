@@ -36,7 +36,7 @@ void GetTitleIDList(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
 
-    LOG_WARNING(Service_AM, "(STUBBED) Requested %u titles from media type %u", num_titles, media_type);
+    LOG_WARNING(Service_AM, "(STUBBED) Requested %u titles from media type %u. Address=0x%08X", num_titles, media_type, addr);
 }
 
 void GetNumContentInfos(Service::Interface* self) {
