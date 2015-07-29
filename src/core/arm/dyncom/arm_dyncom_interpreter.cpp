@@ -3886,7 +3886,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 #endif
     arm_inst* inst_base;
     unsigned int addr;
-    unsigned int phys_addr;
     unsigned int num_instrs = 0;
 
     int ptr;
@@ -3904,8 +3903,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             cpu->Reg[15] &= 0xfffffffe;
         else
             cpu->Reg[15] &= 0xfffffffc;
-
-        phys_addr = cpu->Reg[15];
 
         // Find the cached instruction cream, otherwise translate it...
         auto itr = cpu->instruction_cache.find(cpu->Reg[15]);
