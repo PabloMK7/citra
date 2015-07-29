@@ -4,11 +4,11 @@
 
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/mem_map.h"
 #include "core/system.h"
 #include "core/hw/hw.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/memory.h"
 
 #include "video_core/video_core.h"
 

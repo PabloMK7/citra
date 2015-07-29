@@ -7,11 +7,11 @@
 #include "common/logging/log.h"
 #include "common/make_unique.h"
 
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/vm_manager.h"
-#include "core/mem_map.h"
 #include "core/memory.h"
 
 namespace Kernel {

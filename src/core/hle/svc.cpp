@@ -10,11 +10,11 @@
 #include "common/symbols.h"
 
 #include "core/core_timing.h"
-#include "core/mem_map.h"
 #include "core/arm/arm_interface.h"
 
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
