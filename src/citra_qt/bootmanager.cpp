@@ -94,7 +94,7 @@ private:
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
-    QWidget(parent), emu_thread(emu_thread), keyboard_id(0) {
+    QWidget(parent), keyboard_id(0), emu_thread(emu_thread) {
 
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
