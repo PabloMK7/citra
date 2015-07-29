@@ -5997,7 +5997,12 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
+            unsigned int reg = BITS(inst_cream->inst, 12, 15);
+            unsigned int value = cpu->Reg[reg];
+
+            if (reg == 15)
+                value += 2 * cpu->GetInstructionSize();
+
             cpu->WriteMemory32(addr, value);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
