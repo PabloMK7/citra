@@ -7,6 +7,7 @@
 
 #include "common/color.h"
 #include "common/math_util.h"
+#include "common/profiler.h"
 
 #include "core/hw/gpu.h"
 #include "core/memory.h"
@@ -873,11 +874,15 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
     state.Apply();
 }
 
+Common::Profiling::TimingCategory buffer_commit_category("Framebuffer Commit");
+
 void RasterizerOpenGL::CommitColorBuffer() {
     if (last_fb_color_addr != 0) {
         u8* color_buffer = Memory::GetPhysicalPointer(last_fb_color_addr);
 
         if (color_buffer != nullptr) {
+            Common::Profiling::ScopeTimer timer(buffer_commit_category);
+
             u32 bytes_per_pixel = Pica::Regs::BytesPerColorPixel(fb_color_texture.format);
 
             std::unique_ptr<u8[]> temp_gl_color_buffer(new u8[fb_color_texture.width * fb_color_texture.height * bytes_per_pixel]);
@@ -913,6 +918,8 @@ void RasterizerOpenGL::CommitDepthBuffer() {
         u8* depth_buffer = Memory::GetPhysicalPointer(last_fb_depth_addr);
 
         if (depth_buffer != nullptr) {
+            Common::Profiling::ScopeTimer timer(buffer_commit_category);
+
             u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format);
 
             // OpenGL needs 4 bpp alignment for D24
