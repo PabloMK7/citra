@@ -1511,19 +1511,26 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSTM_INST: /* encoding 1 */
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        vstm_inst *inst_cream = (vstm_inst *)inst_base->component;
+        vstm_inst* inst_cream = (vstm_inst*)inst_base->component;
 
-        addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
+        u32 address = cpu->Reg[inst_cream->n];
+
+        // Only possible in ARM mode, where PC accesses have an 8 byte offset.
+        if (inst_cream->n == 15)
+            address += 8;
+
+        if (inst_cream->add == 0)
+            address -= inst_cream->imm32;
 
         for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
-                cpu->WriteMemory32(addr, cpu->ExtReg[inst_cream->d+i]);
-                addr += 4;
+                cpu->WriteMemory32(address, cpu->ExtReg[inst_cream->d+i]);
+                address += 4;
             }
             else
             {
@@ -1531,17 +1538,17 @@ VSTM_INST: /* encoding 1 */
                 const u32 word2 = cpu->ExtReg[(inst_cream->d+i)*2+1];
 
                 if (cpu->InBigEndianMode()) {
-                    cpu->WriteMemory32(addr + 0, word2);
-                    cpu->WriteMemory32(addr + 4, word1);
+                    cpu->WriteMemory32(address + 0, word2);
+                    cpu->WriteMemory32(address + 4, word1);
                 } else {
-                    cpu->WriteMemory32(addr + 0, word1);
-                    cpu->WriteMemory32(addr + 4, word2);
+                    cpu->WriteMemory32(address + 0, word1);
+                    cpu->WriteMemory32(address + 4, word2);
                 }
 
-                addr += 8;
+                address += 8;
             }
         }
-        if (inst_cream->wback){
+        if (inst_cream->wback) {
             cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 :
                 cpu->Reg[inst_cream->n] - inst_cream->imm32);
         }
@@ -1731,24 +1738,31 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VLDM_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
-        vldm_inst *inst_cream = (vldm_inst *)inst_base->component;
+        vldm_inst* inst_cream = (vldm_inst*)inst_base->component;
 
-        addr = (inst_cream->add ? cpu->Reg[inst_cream->n] : cpu->Reg[inst_cream->n] - inst_cream->imm32);
+        u32 address = cpu->Reg[inst_cream->n];
+
+        // Only possible in ARM mode, where PC accesses have an 8 byte offset.
+        if (inst_cream->n == 15)
+            address += 8;
+
+        if (inst_cream->add == 0)
+            address -= inst_cream->imm32;
 
         for (unsigned int i = 0; i < inst_cream->regs; i++)
         {
             if (inst_cream->single)
             {
-                cpu->ExtReg[inst_cream->d+i] = cpu->ReadMemory32(addr);
-                addr += 4;
+                cpu->ExtReg[inst_cream->d+i] = cpu->ReadMemory32(address);
+                address += 4;
             }
             else
             {
-                const u32 word1 = cpu->ReadMemory32(addr + 0);
-                const u32 word2 = cpu->ReadMemory32(addr + 4);
+                const u32 word1 = cpu->ReadMemory32(address + 0);
+                const u32 word2 = cpu->ReadMemory32(address + 4);
 
                 if (cpu->InBigEndianMode()) {
                     cpu->ExtReg[(inst_cream->d+i)*2+0] = word2;
@@ -1758,10 +1772,10 @@ VLDM_INST:
                     cpu->ExtReg[(inst_cream->d+i)*2+1] = word2;
                 }
 
-                addr += 8;
+                address += 8;
             }
         }
-        if (inst_cream->wback){
+        if (inst_cream->wback) {
             cpu->Reg[inst_cream->n] = (inst_cream->add ? cpu->Reg[inst_cream->n] + inst_cream->imm32 :
                 cpu->Reg[inst_cream->n] - inst_cream->imm32);
         }
