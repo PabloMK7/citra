@@ -91,9 +91,10 @@ const JitFunction instr_table[64] = {
 // purposes, as documented below:
 
 /// Pointer to the uniform memory
-static const X64Reg UNIFORMS = R10;
+static const X64Reg UNIFORMS = R9;
 /// The two 32-bit VS address offset registers set by the MOVA instruction
-static const X64Reg ADDROFFS_REG = R11;
+static const X64Reg ADDROFFS_REG_0 = R10;
+static const X64Reg ADDROFFS_REG_1 = R11;
 /// VS loop count register
 static const X64Reg LOOPCOUNT_REG = R12;
 /// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
@@ -162,21 +163,18 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         if (src_num == offset_src && instr.common.address_register_index != 0) {
             switch (instr.common.address_register_index) {
             case 1: // address offset 1
-                MOV(32, R(RBX), R(ADDROFFS_REG));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, 1, src_offset));
                 break;
             case 2: // address offset 2
-                MOV(64, R(RBX), R(ADDROFFS_REG));
-                SHR(64, R(RBX), Imm8(32));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, 1, src_offset));
                 break;
             case 3: // adddress offet 3
-                MOV(64, R(RBX), R(LOOPCOUNT_REG));
+                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, 1, src_offset));
                 break;
             default:
                 UNREACHABLE();
                 break;
             }
-
-            MOVAPS(dest, MComplex(src_ptr, RBX, 1, src_offset));
         } else {
             // Load the source
             MOVAPS(dest, MDisp(src_ptr, src_offset));
@@ -381,33 +379,34 @@ void JitCompiler::Compile_MOVA(Instruction instr) {
 
     // Get result
     MOVQ_xmm(R(RAX), SRC1);
-    SHL(64, R(RAX), Imm8(4)); // Multiply by 16 to be used as an offset later
 
     // Handle destination enable
     if (swiz.DestComponentEnabled(0) && swiz.DestComponentEnabled(1)) {
-        MOV(64, R(ADDROFFS_REG), R(RAX)); // Overwrite both
+        // Move and sign-extend low 32 bits
+        MOVSX(64, 32, ADDROFFS_REG_0, R(RAX));
+
+        // Move and sign-extend high 32 bits
+        SHR(64, R(RAX), Imm8(32));
+        MOVSX(64, 32, ADDROFFS_REG_1, R(RAX));
+
+        // Multiply by 16 to be used as an offset later
+        SHL(64, R(ADDROFFS_REG_0), Imm8(4));
+        SHL(64, R(ADDROFFS_REG_1), Imm8(4));
     } else {
         if (swiz.DestComponentEnabled(0)) {
-            // Preserve Y-component
+            // Move and sign-extend low 32 bits
+            MOVSX(64, 32, ADDROFFS_REG_0, R(RAX));
 
-            // Clear low 32 bits of previous address register
-            MOV(32, R(RBX), R(ADDROFFS_REG));
-            XOR(64, R(ADDROFFS_REG), R(RBX));
-
-            // Clear high 32-bits of new address register
-            MOV(32, R(RAX), R(RAX));
+            // Multiply by 16 to be used as an offset later
+            SHL(64, R(ADDROFFS_REG_0), Imm8(4));
         } else if (swiz.DestComponentEnabled(1)) {
-            // Preserve X-component
+            // Move and sign-extend high 32 bits
+            SHR(64, R(RAX), Imm8(32));
+            MOVSX(64, 32, ADDROFFS_REG_1, R(RAX));
 
-            // Clear high 32-bits of previous address register
-            MOV(32, R(ADDROFFS_REG), R(ADDROFFS_REG));
-
-            // Clear low 32 bits of new address register
-            MOV(32, R(RBX), R(RAX));
-            XOR(64, R(RAX), R(RBX));
+            // Multiply by 16 to be used as an offset later
+            SHL(64, R(ADDROFFS_REG_1), Imm8(4));
         }
-
-        OR(64, R(ADDROFFS_REG), R(RAX)); // Combine result
     }
 }
 
