@@ -122,9 +122,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     y = (screenRect.y() + screenRect.height()) / 2 - h * 55 / 100;
     setGeometry(x, y, w, h);
 
-
     // Restore UI state
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Citra team", "Citra");
+    QSettings settings;
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("state").toByteArray());
     render_window->restoreGeometry(settings.value("geometryRenderWindow").toByteArray());
@@ -271,8 +270,13 @@ void GMainWindow::ShutdownGame() {
 
 void GMainWindow::OnMenuLoadFile()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), QString(), tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
+    QSettings settings;
+    QString rom_path = settings.value("romsPath", QString()).toString();
+
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), rom_path, tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
     if (filename.size()) {
+        settings.setValue("romsPath", QFileInfo(filename).path());
+
         // Shutdown previous session if the emu thread is still active...
         if (emu_thread != nullptr)
             ShutdownGame();
@@ -282,9 +286,15 @@ void GMainWindow::OnMenuLoadFile()
 }
 
 void GMainWindow::OnMenuLoadSymbolMap() {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load Symbol Map"), QString(), tr("Symbol map (*)"));
-    if (filename.size())
+    QSettings settings;
+    QString symbol_path = settings.value("symbolsPath", QString()).toString();
+
+    QString filename = QFileDialog::getOpenFileName(this, tr("Load Symbol Map"), symbol_path, tr("Symbol map (*)"));
+    if (filename.size()) {
+        settings.setValue("symbolsPath", QFileInfo(filename).path());
+
         LoadSymbolMap(filename.toLatin1().data());
+    }
 }
 
 void GMainWindow::OnStartGame()
@@ -374,6 +384,11 @@ int main(int argc, char* argv[])
 {
     Log::Filter log_filter(Log::Level::Info);
     Log::SetFilter(&log_filter);
+
+    // Init settings params
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QCoreApplication::setOrganizationName("Citra team");
+    QCoreApplication::setApplicationName("Citra");
 
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
