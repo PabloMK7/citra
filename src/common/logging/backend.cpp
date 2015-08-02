@@ -80,8 +80,7 @@ const char* GetLevelName(Level log_level) {
         LVL(Error);
         LVL(Critical);
         case Level::Count:
-            ASSERT_MSG(false, "invalid log level");
-            return "Unknown";
+            UNREACHABLE();
     }
 #undef LVL
 }

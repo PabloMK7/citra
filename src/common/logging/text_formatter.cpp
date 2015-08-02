@@ -84,7 +84,7 @@ void PrintColoredMessage(const Entry& entry) {
     case Level::Critical: // Bright magenta
         color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
     case Level::Count:
-        ASSERT_MSG(false, "invalid log level"); break;
+        UNREACHABLE();
     }
 
     SetConsoleTextAttribute(console_handle, color);
@@ -105,7 +105,7 @@ void PrintColoredMessage(const Entry& entry) {
     case Level::Critical: // Bright magenta
         color = ESC "[1;35m"; break;
     case Level::Count:
-        ASSERT_MSG(false, "invalid log level"); break;
+        UNREACHABLE();
     }
 
     fputs(color, stderr);
