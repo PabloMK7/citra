@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdio>
 
+#include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
@@ -78,8 +79,10 @@ const char* GetLevelName(Level log_level) {
         LVL(Warning);
         LVL(Error);
         LVL(Critical);
+        case Level::Count:
+            ASSERT_MSG(false, "invalid log level");
+            return "Unknown";
     }
-    return "Unknown";
 #undef LVL
 }
 

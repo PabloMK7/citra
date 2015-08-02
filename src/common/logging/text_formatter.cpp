@@ -14,6 +14,7 @@
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 
+#include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/string_util.h"
 
@@ -82,6 +83,8 @@ void PrintColoredMessage(const Entry& entry) {
         color = FOREGROUND_RED | FOREGROUND_INTENSITY; break;
     case Level::Critical: // Bright magenta
         color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
+    case Level::Count:
+        ASSERT_MSG(false, "invalid log level"); break;
     }
 
     SetConsoleTextAttribute(console_handle, color);
@@ -101,6 +104,8 @@ void PrintColoredMessage(const Entry& entry) {
         color = ESC "[1;31m"; break;
     case Level::Critical: // Bright magenta
         color = ESC "[1;35m"; break;
+    case Level::Count:
+        ASSERT_MSG(false, "invalid log level"); break;
     }
 
     fputs(color, stderr);
