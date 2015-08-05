@@ -41,11 +41,13 @@ enum Opcode {
     OP_MSR,
     OP_MUL,
     OP_MVN,
+    OP_NOP,
     OP_ORR,
     OP_PLD,
     OP_RSB,
     OP_RSC,
     OP_SBC,
+    OP_SEV,
     OP_SMLAL,
     OP_SMULL,
     OP_STC,
@@ -63,6 +65,9 @@ enum Opcode {
     OP_TST,
     OP_UMLAL,
     OP_UMULL,
+    OP_WFE,
+    OP_WFI,
+    OP_YIELD,
 
     // Define thumb opcodes
     OP_THUMB_UNDEFINED,
@@ -118,6 +123,7 @@ class ARM_Disasm {
   static Opcode Decode10(uint32_t insn);
   static Opcode Decode11(uint32_t insn);
   static Opcode DecodeMUL(uint32_t insn);
+  static Opcode DecodeMSRImmAndHints(uint32_t insn);
   static Opcode DecodeLDRH(uint32_t insn);
   static Opcode DecodeALU(uint32_t insn);
 
@@ -135,6 +141,7 @@ class ARM_Disasm {
   static std::string DisassembleMUL(Opcode opcode, uint32_t insn);
   static std::string DisassembleMRS(uint32_t insn);
   static std::string DisassembleMSR(uint32_t insn);
+  static std::string DisassembleNoOperands(Opcode opcode, uint32_t insn);
   static std::string DisassemblePLD(uint32_t insn);
   static std::string DisassembleSWI(uint32_t insn);
   static std::string DisassembleSWP(Opcode opcode, uint32_t insn);

@@ -4,6 +4,7 @@
 
 #include "common/string_util.h"
 #include "core/arm/disassembler/arm_disasm.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 static const char *cond_names[] = {
     "eq",
@@ -58,11 +59,13 @@ static const char *opcode_names[] = {
     "msr",
     "mul",
     "mvn",
+    "nop",
     "orr",
     "pld",
     "rsb",
     "rsc",
     "sbc",
+    "sev",
     "smlal",
     "smull",
     "stc",
@@ -80,6 +83,9 @@ static const char *opcode_names[] = {
     "tst",
     "umlal",
     "umull",
+    "wfe",
+    "wfi",
+    "yield",
 
     "undefined",
     "adc",
@@ -204,6 +210,12 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassembleMSR(insn);
         case OP_MUL:
             return DisassembleMUL(opcode, insn);
+        case OP_NOP:
+        case OP_SEV:
+        case OP_WFE:
+        case OP_WFI:
+        case OP_YIELD:
+            return DisassembleNoOperands(opcode, insn);
         case OP_PLD:
             return DisassemblePLD(insn);
         case OP_STC:
@@ -646,6 +658,12 @@ std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
             cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rm);
 }
 
+std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, uint32_t insn)
+{
+    uint32_t cond = BITS(insn, 28, 31);
+    return Common::StringFromFormat("%s%s", opcode_names[opcode], cond_to_str(cond));
+}
+
 std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
 {
     uint8_t is_reg = (insn >> 25) & 0x1;
@@ -737,6 +755,12 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
             // One of the load/store halfword/byte instructions
             return DecodeLDRH(insn);
         }
+    }
+
+    uint32_t op1 = BITS(insn, 20, 24);
+    if (bit25 && (op1 == 0x12 || op1 == 0x16)) {
+        // One of the MSR (immediate) and hints instructions
+        return DecodeMSRImmAndHints(insn);
     }
 
     // One of the data processing instructions
@@ -876,6 +900,31 @@ Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     if (bit21_A == 0)
         return OP_SMULL;
     return OP_SMLAL;
+}
+
+Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
+    uint32_t op = BIT(insn, 22);
+    uint32_t op1 = BITS(insn, 16, 19);
+    uint32_t op2 = BITS(insn, 0, 7);
+
+    if (op == 0 && op1 == 0) {
+        switch (op2) {
+            case 0x0:
+                return OP_NOP;
+            case 0x1:
+                return OP_YIELD;
+            case 0x2:
+                return OP_WFE;
+            case 0x3:
+                return OP_WFI;
+            case 0x4:
+                return OP_SEV;
+            default:
+                return OP_UNDEFINED;
+        }
+    }
+
+    return OP_MSR;
 }
 
 Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
