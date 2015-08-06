@@ -109,59 +109,6 @@ static MemoryArea memory_areas[] = {
     {TLS_AREA_VADDR,      TLS_AREA_SIZE,          "TLS Area"},      // TLS memory
 };
 
-/// Represents a block of memory mapped by ControlMemory/MapMemoryBlock
-struct MemoryBlock {
-    MemoryBlock() : handle(0), base_address(0), address(0), size(0), operation(0), permissions(0) {
-    }
-    u32 handle;
-    u32 base_address;
-    u32 address;
-    u32 size;
-    u32 operation;
-    u32 permissions;
-
-    const u32 GetVirtualAddress() const{
-        return base_address + address;
-    }
-};
-
-static std::map<u32, MemoryBlock> heap_map;
-static std::map<u32, MemoryBlock> heap_linear_map;
-
-}
-
-u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions) {
-    MemoryBlock block;
-
-    block.base_address  = HEAP_VADDR;
-    block.size          = size;
-    block.operation     = operation;
-    block.permissions   = permissions;
-
-    if (heap_map.size() > 0) {
-        const MemoryBlock last_block = heap_map.rbegin()->second;
-        block.address = last_block.address + last_block.size;
-    }
-    heap_map[block.GetVirtualAddress()] = block;
-
-    return block.GetVirtualAddress();
-}
-
-u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions) {
-    MemoryBlock block;
-
-    block.base_address  = LINEAR_HEAP_VADDR;
-    block.size          = size;
-    block.operation     = operation;
-    block.permissions   = permissions;
-
-    if (heap_linear_map.size() > 0) {
-        const MemoryBlock last_block = heap_linear_map.rbegin()->second;
-        block.address = last_block.address + last_block.size;
-    }
-    heap_linear_map[block.GetVirtualAddress()] = block;
-
-    return block.GetVirtualAddress();
 }
 
 void Init() {
@@ -184,13 +131,6 @@ void InitLegacyAddressSpace(Kernel::VMManager& address_space) {
     auto shared_page_vma = address_space.MapBackingMemory(SHARED_PAGE_VADDR,
             (u8*)&SharedPage::shared_page, SHARED_PAGE_SIZE, MemoryState::Shared).MoveFrom();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
-}
-
-void Shutdown() {
-    heap_map.clear();
-    heap_linear_map.clear();
-
-    LOG_DEBUG(HW_Memory, "shutdown OK");
 }
 
 } // namespace

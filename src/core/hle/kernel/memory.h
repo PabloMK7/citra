@@ -31,22 +31,5 @@ namespace Memory {
 
 void Init();
 void InitLegacyAddressSpace(Kernel::VMManager& address_space);
-void Shutdown();
-
-/**
- * Maps a block of memory on the heap
- * @param size Size of block in bytes
- * @param operation Memory map operation type
- * @param permissions Memory allocation permissions
- */
-u32 MapBlock_Heap(u32 size, u32 operation, u32 permissions);
-
-/**
- * Maps a block of memory on the GSP heap
- * @param size Size of block in bytes
- * @param operation Memory map operation type
- * @param permissions Control memory permissions
- */
-u32 MapBlock_HeapLinear(u32 size, u32 operation, u32 permissions);
 
 } // namespace

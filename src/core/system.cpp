@@ -29,7 +29,6 @@ void Shutdown() {
     HLE::Shutdown();
     Kernel::Shutdown();
     HW::Shutdown();
-    Memory::Shutdown();
     CoreTiming::Shutdown();
     Core::Shutdown();
 }
