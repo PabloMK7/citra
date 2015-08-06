@@ -73,6 +73,12 @@ public:
     /// Apply this state as the current OpenGL state
     void Apply();
 
+    static void ResetTexture(GLuint id);
+    static void ResetProgram(GLuint id);
+    static void ResetBuffer(GLuint id);
+    static void ResetVertexArray(GLuint id);
+    static void ResetFramebuffer(GLuint id);
+
 private:
     static OpenGLState cur_state;
 };

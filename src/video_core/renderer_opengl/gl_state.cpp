@@ -174,3 +174,35 @@ void OpenGLState::Apply() {
 
     cur_state = *this;
 }
+
+void OpenGLState::ResetTexture(GLuint id) {
+    for (auto& unit : cur_state.texture_units) {
+        if (unit.texture_2d == id) {
+            unit.texture_2d = 0;
+        }
+    }
+}
+
+void OpenGLState::ResetProgram(GLuint id) {
+    if (cur_state.draw.shader_program == id) {
+        cur_state.draw.shader_program = 0;
+    }
+}
+
+void OpenGLState::ResetBuffer(GLuint id) {
+    if (cur_state.draw.vertex_buffer == id) {
+        cur_state.draw.vertex_buffer = 0;
+    }
+}
+
+void OpenGLState::ResetVertexArray(GLuint id) {
+    if (cur_state.draw.vertex_array == id) {
+        cur_state.draw.vertex_array = 0;
+    }
+}
+
+void OpenGLState::ResetFramebuffer(GLuint id) {
+    if (cur_state.draw.framebuffer == id) {
+        cur_state.draw.framebuffer = 0;
+    }
+}

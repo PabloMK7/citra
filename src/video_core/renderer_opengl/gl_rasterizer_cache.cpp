@@ -30,6 +30,7 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         new_texture->texture.Create();
         state.texture_units[texture_unit].texture_2d = new_texture->texture.handle;
         state.Apply();
+        glActiveTexture(GL_TEXTURE0 + texture_unit);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureFilterMode(config.config.mag_filter));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, PicaToGL::TextureFilterMode(config.config.min_filter));
