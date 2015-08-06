@@ -18,7 +18,4 @@ void Init() {
     shared_page.running_hw = 0x1; // product
 }
 
-void Shutdown() {
-}
-
 } // namespace

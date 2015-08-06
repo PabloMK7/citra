@@ -36,7 +36,4 @@ void Init() {
     config_mem.firm_sys_core_ver = 0x2;
 }
 
-void Shutdown() {
-}
-
 } // namespace

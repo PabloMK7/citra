@@ -43,8 +43,6 @@ void Init() {
 }
 
 void Shutdown() {
-    ConfigMem::Shutdown();
-    SharedPage::Shutdown();
     Service::Shutdown();
 
     LOG_DEBUG(Kernel, "shutdown OK");
