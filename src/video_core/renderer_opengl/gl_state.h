@@ -53,7 +53,6 @@ public:
 
     // 3 texture units - one for each that is used in PICA fragment shader emulation
     struct {
-        bool enabled_2d; // GL_TEXTURE_2D
         GLuint texture_2d; // GL_TEXTURE_BINDING_2D
     } texture_units[3];
 

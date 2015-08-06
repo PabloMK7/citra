@@ -163,7 +163,6 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
     // only allows rows to have a memory alignement of 4.
     ASSERT(pixel_stride % 4 == 0);
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
 
@@ -191,7 +190,6 @@ void RendererOpenGL::LoadFBToActiveGLTexture(const GPU::Regs::FramebufferConfig&
  */
 void RendererOpenGL::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
                                                 const TextureInfo& texture) {
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
 
@@ -239,7 +237,6 @@ void RendererOpenGL::InitOpenGLObjects() {
         // Allocation of storage is deferred until the first frame, when we
         // know the framebuffer size.
 
-        state.texture_units[0].enabled_2d = true;
         state.texture_units[0].texture_2d = texture.handle;
         state.Apply();
 
@@ -305,7 +302,6 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
         UNIMPLEMENTED();
     }
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
 
@@ -325,7 +321,6 @@ void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x
         ScreenRectVertex(x+w, y+h, 0.f, 1.f),
     };
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
 

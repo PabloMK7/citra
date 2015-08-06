@@ -99,7 +99,6 @@ void RasterizerOpenGL::InitObjects() {
     fb_color_texture.texture.Create();
     ReconfigureColorTexture(fb_color_texture, Pica::Regs::ColorFormat::RGBA8, 1, 1);
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = fb_color_texture.texture.handle;
     state.Apply();
 
@@ -115,7 +114,6 @@ void RasterizerOpenGL::InitObjects() {
     fb_depth_texture.texture.Create();
     ReconfigureDepthTexture(fb_depth_texture, Pica::Regs::DepthFormat::D16, 1, 1);
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = fb_depth_texture.texture.handle;
     state.Apply();
 
@@ -493,7 +491,6 @@ void RasterizerOpenGL::ReconfigureColorTexture(TextureInfo& texture, Pica::Regs:
         break;
     }
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.texture.handle;
     state.Apply();
 
@@ -537,7 +534,6 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
         break;
     }
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = texture.texture.handle;
     state.Apply();
 
@@ -766,10 +762,9 @@ void RasterizerOpenGL::SyncDrawState() {
         const auto& texture = pica_textures[texture_index];
 
         if (texture.enabled) {
-            state.texture_units[texture_index].enabled_2d = true;
             res_cache.LoadAndBindTexture(state, texture_index, texture);
         } else {
-            state.texture_units[texture_index].enabled_2d = false;
+            state.texture_units[texture_index].texture_2d = 0;
         }
     }
 
@@ -804,7 +799,6 @@ void RasterizerOpenGL::ReloadColorBuffer() {
         }
     }
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = fb_color_texture.texture.handle;
     state.Apply();
 
@@ -862,7 +856,6 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
         }
     }
 
-    state.texture_units[0].enabled_2d = true;
     state.texture_units[0].texture_2d = fb_depth_texture.texture.handle;
     state.Apply();
 
@@ -887,7 +880,6 @@ void RasterizerOpenGL::CommitColorBuffer() {
 
             std::unique_ptr<u8[]> temp_gl_color_buffer(new u8[fb_color_texture.width * fb_color_texture.height * bytes_per_pixel]);
 
-            state.texture_units[0].enabled_2d = true;
             state.texture_units[0].texture_2d = fb_color_texture.texture.handle;
             state.Apply();
 
@@ -927,7 +919,6 @@ void RasterizerOpenGL::CommitDepthBuffer() {
 
             std::unique_ptr<u8[]> temp_gl_depth_buffer(new u8[fb_depth_texture.width * fb_depth_texture.height * gl_bpp]);
 
-            state.texture_units[0].enabled_2d = true;
             state.texture_units[0].texture_2d = fb_depth_texture.texture.handle;
             state.Apply();
 
