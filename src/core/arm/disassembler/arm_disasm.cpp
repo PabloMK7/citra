@@ -4,6 +4,7 @@
 
 #include "common/string_util.h"
 #include "core/arm/disassembler/arm_disasm.h"
+#include "core/arm/skyeye_common/armsupp.h"
 
 static const char *cond_names[] = {
     "eq",
@@ -37,6 +38,7 @@ static const char *opcode_names[] = {
     "blx",
     "bx",
     "cdp",
+    "clrex",
     "clz",
     "cmn",
     "cmp",
@@ -46,6 +48,10 @@ static const char *opcode_names[] = {
     "ldr",
     "ldrb",
     "ldrbt",
+    "ldrex",
+    "ldrexb",
+    "ldrexd",
+    "ldrexh",
     "ldrh",
     "ldrsb",
     "ldrsh",
@@ -58,11 +64,13 @@ static const char *opcode_names[] = {
     "msr",
     "mul",
     "mvn",
+    "nop",
     "orr",
     "pld",
     "rsb",
     "rsc",
     "sbc",
+    "sev",
     "smlal",
     "smull",
     "stc",
@@ -70,6 +78,10 @@ static const char *opcode_names[] = {
     "str",
     "strb",
     "strbt",
+    "strex",
+    "strexb",
+    "strexd",
+    "strexh",
     "strh",
     "strt",
     "sub",
@@ -80,6 +92,9 @@ static const char *opcode_names[] = {
     "tst",
     "umlal",
     "umull",
+    "wfe",
+    "wfi",
+    "yield",
 
     "undefined",
     "adc",
@@ -172,6 +187,8 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassembleBX(insn);
         case OP_CDP:
             return "cdp";
+        case OP_CLREX:
+            return "clrex";
         case OP_CLZ:
             return DisassembleCLZ(insn);
         case OP_LDC:
@@ -188,6 +205,15 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
         case OP_STRBT:
         case OP_STRT:
             return DisassembleMem(insn);
+        case OP_LDREX:
+        case OP_LDREXB:
+        case OP_LDREXD:
+        case OP_LDREXH:
+        case OP_STREX:
+        case OP_STREXB:
+        case OP_STREXD:
+        case OP_STREXH:
+            return DisassembleREX(opcode, insn);
         case OP_LDRH:
         case OP_LDRSB:
         case OP_LDRSH:
@@ -204,6 +230,12 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassembleMSR(insn);
         case OP_MUL:
             return DisassembleMUL(opcode, insn);
+        case OP_NOP:
+        case OP_SEV:
+        case OP_WFE:
+        case OP_WFI:
+        case OP_YIELD:
+            return DisassembleNoOperands(opcode, insn);
         case OP_PLD:
             return DisassemblePLD(insn);
         case OP_STC:
@@ -646,6 +678,12 @@ std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
             cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rm);
 }
 
+std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, uint32_t insn)
+{
+    uint32_t cond = BITS(insn, 28, 31);
+    return Common::StringFromFormat("%s%s", opcode_names[opcode], cond_to_str(cond));
+}
+
 std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
 {
     uint8_t is_reg = (insn >> 25) & 0x1;
@@ -666,6 +704,36 @@ std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
         return Common::StringFromFormat("pld\t[r%d]", rn);
     } else {
         return Common::StringFromFormat("pld\t[r%d, #%s%u]", rn, minus, offset);
+    }
+}
+
+std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rt = BITS(insn, 0, 3);
+    uint32_t cond = BITS(insn, 28, 31);
+
+    switch (opcode) {
+        case OP_STREX:
+        case OP_STREXB:
+        case OP_STREXH:
+            return Common::StringFromFormat("%s%s\tr%d, r%d, [r%d]", opcode_names[opcode],
+                                            cond_to_str(cond), rd, rt, rn);
+        case OP_STREXD:
+            return Common::StringFromFormat("%s%s\tr%d, r%d, r%d, [r%d]", opcode_names[opcode],
+                                            cond_to_str(cond), rd, rt, rt + 1, rn);
+
+        // for LDREX instructions, rd corresponds to Rt from reference manual
+        case OP_LDREX:
+        case OP_LDREXB:
+        case OP_LDREXH:
+            return Common::StringFromFormat("%s%s\tr%d, [r%d]", opcode_names[opcode],
+                                            cond_to_str(cond), rd, rn);
+        case OP_LDREXD:
+            return Common::StringFromFormat("%s%s\tr%d, r%d, [r%d]", opcode_names[opcode],
+                                            cond_to_str(cond), rd, rd + 1, rn);
+        default:
+            return opcode_names[OP_UNDEFINED];
     }
 }
 
@@ -721,12 +789,9 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
         }
         uint32_t bits7_4 = (insn >> 4) & 0xf;
         if (bits7_4 == 0x9) {
-            if ((insn & 0x0ff00ff0) == 0x01000090) {
-                // Swp instruction
-                uint8_t bit22 = (insn >> 22) & 0x1;
-                if (bit22)
-                    return OP_SWPB;
-                return OP_SWP;
+            uint32_t bit24 = BIT(insn, 24);
+            if (bit24) {
+                return DecodeSyncPrimitive(insn);
             }
             // One of the multiply instructions
             return DecodeMUL(insn);
@@ -737,6 +802,12 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
             // One of the load/store halfword/byte instructions
             return DecodeLDRH(insn);
         }
+    }
+
+    uint32_t op1 = BITS(insn, 20, 24);
+    if (bit25 && (op1 == 0x12 || op1 == 0x16)) {
+        // One of the MSR (immediate) and hints instructions
+        return DecodeMSRImmAndHints(insn);
     }
 
     // One of the data processing instructions
@@ -753,6 +824,10 @@ Opcode ARM_Disasm::Decode01(uint32_t insn) {
     if ((insn & 0xfd70f000) == 0xf550f000) {
         // Pre-load
         return OP_PLD;
+    }
+    if (insn == 0xf57ff01f) {
+        // Clear-Exclusive
+        return OP_CLREX;
     }
     if (is_load) {
         if (is_byte) {
@@ -844,6 +919,35 @@ Opcode ARM_Disasm::Decode11(uint32_t insn) {
     return OP_MCR;
 }
 
+Opcode ARM_Disasm::DecodeSyncPrimitive(uint32_t insn) {
+    uint32_t op = BITS(insn, 20, 23);
+    uint32_t bit22 = BIT(insn, 22);
+    switch (op) {
+        case 0x0:
+            if (bit22)
+                return OP_SWPB;
+            return OP_SWP;
+        case 0x8:
+            return OP_STREX;
+        case 0x9:
+            return OP_LDREX;
+        case 0xA:
+            return OP_STREXD;
+        case 0xB:
+            return OP_LDREXD;
+        case 0xC:
+            return OP_STREXB;
+        case 0xD:
+            return OP_LDREXB;
+        case 0xE:
+            return OP_STREXH;
+        case 0xF:
+            return OP_LDREXH;
+        default:
+            return OP_UNDEFINED;
+    }
+}
+
 Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     uint8_t bit24 = (insn >> 24) & 0x1;
     if (bit24 != 0) {
@@ -876,6 +980,31 @@ Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     if (bit21_A == 0)
         return OP_SMULL;
     return OP_SMLAL;
+}
+
+Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
+    uint32_t op = BIT(insn, 22);
+    uint32_t op1 = BITS(insn, 16, 19);
+    uint32_t op2 = BITS(insn, 0, 7);
+
+    if (op == 0 && op1 == 0) {
+        switch (op2) {
+            case 0x0:
+                return OP_NOP;
+            case 0x1:
+                return OP_YIELD;
+            case 0x2:
+                return OP_WFE;
+            case 0x3:
+                return OP_WFI;
+            case 0x4:
+                return OP_SEV;
+            default:
+                return OP_UNDEFINED;
+        }
+    }
+
+    return OP_MSR;
 }
 
 Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
