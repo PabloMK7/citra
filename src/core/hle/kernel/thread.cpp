@@ -117,6 +117,7 @@ void Thread::Stop() {
     wait_objects.clear();
 
     Kernel::g_current_process->used_tls_slots[tls_index] = false;
+    g_current_process->misc_memory_used -= Memory::TLS_ENTRY_SIZE;
 
     HLE::Reschedule(__func__);
 }
@@ -414,6 +415,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     }
 
     ASSERT_MSG(thread->tls_index != -1, "Out of TLS space");
+    g_current_process->misc_memory_used += Memory::TLS_ENTRY_SIZE;
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
@@ -504,7 +506,7 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 }
 
 VAddr Thread::GetTLSAddress() const {
-    return Memory::TLS_AREA_VADDR + tls_index * 0x200;
+    return Memory::TLS_AREA_VADDR + tls_index * Memory::TLS_ENTRY_SIZE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

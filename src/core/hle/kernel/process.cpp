@@ -110,6 +110,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
         auto vma = vm_manager.MapMemoryBlock(segment.addr, codeset->memory,
                 segment.offset, segment.size, memory_state).Unwrap();
         vm_manager.Reprotect(vma, permissions);
+        misc_memory_used += segment.size;
     };
 
     // Map CodeSet segments
@@ -121,6 +122,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     vm_manager.MapMemoryBlock(Memory::HEAP_VADDR_END - stack_size,
             std::make_shared<std::vector<u8>>(stack_size, 0), 0, stack_size, MemoryState::Locked
             ).Unwrap();
+    misc_memory_used += stack_size;
 
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
@@ -162,6 +164,8 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
     CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, heap_memory, target - heap_start, size, MemoryState::Private));
     vm_manager.Reprotect(vma, perms);
 
+    heap_used += size;
+
     return MakeResult<VAddr>(heap_end - size);
 }
 
@@ -172,6 +176,8 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
 
     ResultCode result = vm_manager.UnmapRange(target, size);
     if (result.IsError()) return result;
+
+    heap_used -= size;
 
     return RESULT_SUCCESS;
 }
@@ -206,6 +212,8 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size, MemoryState::Continuous));
     vm_manager.Reprotect(vma, perms);
 
+    linear_heap_used += size;
+
     return MakeResult<VAddr>(target);
 }
 
@@ -225,6 +233,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
 
     ResultCode result = vm_manager.UnmapRange(target, size);
     if (result.IsError()) return result;
+
+    linear_heap_used -= size;
 
     if (target + size == heap_end) {
         // End of linear heap has been freed, so check what's the last allocated block in it and

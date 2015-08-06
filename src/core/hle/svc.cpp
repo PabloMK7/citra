@@ -774,6 +774,52 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     return RESULT_SUCCESS;
 }
 
+static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X type=%u", process_handle, type);
+
+    using Kernel::Process;
+    Kernel::SharedPtr<Process> process = Kernel::g_handle_table.Get<Process>(process_handle);
+    if (process == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    switch (type) {
+    case 0:
+    case 2:
+        // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
+        // what's the difference between them.
+        *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
+        break;
+    case 1:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        // These are valid, but not implemented yet
+        LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type=%u", type);
+        break;
+    case 20:
+        *out = Memory::FCRAM_PADDR - process->GetLinearHeapBase();
+        break;
+    default:
+        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type=%u", type);
+
+        if (type >= 21 && type <= 23) {
+            return ResultCode( // 0xE0E01BF4
+                    ErrorDescription::NotImplemented, ErrorModule::OS,
+                    ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        } else {
+            return ResultCode( // 0xD8E007ED
+                    ErrorDescription::InvalidEnumValue, ErrorModule::Kernel,
+                    ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        }
+        break;
+    }
+
+    return RESULT_SUCCESS;
+}
+
 namespace {
     struct FunctionDef {
         using Func = void();
@@ -828,7 +874,7 @@ static const FunctionDef SVC_Table[] = {
     {0x28, HLE::Wrap<GetSystemTick>,        "GetSystemTick"},
     {0x29, nullptr,                         "GetHandleInfo"},
     {0x2A, nullptr,                         "GetSystemInfo"},
-    {0x2B, nullptr,                         "GetProcessInfo"},
+    {0x2B, HLE::Wrap<GetProcessInfo>,       "GetProcessInfo"},
     {0x2C, nullptr,                         "GetThreadInfo"},
     {0x2D, HLE::Wrap<ConnectToPort>,        "ConnectToPort"},
     {0x2E, nullptr,                         "SendSyncRequest1"},

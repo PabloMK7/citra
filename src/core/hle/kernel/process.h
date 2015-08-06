@@ -136,6 +136,8 @@ public:
     // The left/right bounds of the address space covered by heap_memory.
     VAddr heap_start = 0, heap_end = 0;
 
+    u32 heap_used = 0, linear_heap_used = 0, misc_memory_used = 0;
+
     MemoryRegionInfo* memory_region = nullptr;
 
     /// Bitmask of the used TLS slots
