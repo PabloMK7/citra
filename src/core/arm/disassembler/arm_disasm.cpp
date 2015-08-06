@@ -779,20 +779,12 @@ Opcode ARM_Disasm::Decode10(uint32_t insn) {
             return OP_LDM;
         return OP_STM;
     }
-    // Branch or Branch with link
-    uint8_t is_link = (insn >> 24) & 1;
-    uint32_t offset = insn & 0xffffff;
 
-    // Sign-extend the 24-bit offset
-    if ((offset >> 23) & 1)
-        offset |= 0xff000000;
+    // Branch with link
+    if ((insn >> 24) & 1)
+        return OP_BL;
 
-    // Pre-compute the left-shift and the prefetch offset
-    offset <<= 2;
-    offset += 8;
-    if (is_link == 0)
-        return OP_B;
-    return OP_BL;
+    return OP_B;
 }
 
 Opcode ARM_Disasm::Decode11(uint32_t insn) {
