@@ -107,6 +107,11 @@ enum : VAddr {
     TLS_AREA_VADDR     = 0x1FF82000,
     TLS_AREA_SIZE      = 0x00030000, // Each TLS buffer is 0x200 bytes, allows for 300 threads
     TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
+
+    /// Equivalent to LINEAR_HEAP_VADDR, but expanded to cover the extra memory in the New 3DS.
+    NEW_LINEAR_HEAP_VADDR     = 0x30000000,
+    NEW_LINEAR_HEAP_SIZE      = 0x10000000,
+    NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
 u8 Read8(VAddr addr);

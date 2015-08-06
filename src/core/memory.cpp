@@ -9,6 +9,7 @@
 #include "common/logging/log.h"
 #include "common/swap.h"
 
+#include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 
@@ -208,6 +209,8 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
         return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
     } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
         return addr - IO_AREA_VADDR + IO_AREA_PADDR;
+    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+        return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
     }
 
     LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08X", addr);
@@ -221,7 +224,7 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
     } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return addr - VRAM_PADDR + VRAM_VADDR;
     } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return addr - FCRAM_PADDR + LINEAR_HEAP_VADDR;
+        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapBase();
     } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
         return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
     } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {

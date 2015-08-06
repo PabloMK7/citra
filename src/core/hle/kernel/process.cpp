@@ -96,7 +96,7 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 
             int minor = kernel_version & 0xFF;
             int major = (kernel_version >> 8) & 0xFF;
-            LOG_DEBUG(Loader, "ExHeader kernel version: %d.%d", major, minor);
+            LOG_INFO(Loader, "ExHeader kernel version: %d.%d", major, minor);
         } else {
             LOG_ERROR(Loader, "Unhandled kernel caps descriptor: 0x%08X", descriptor);
         }
@@ -104,6 +104,8 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 }
 
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
+    memory_region = GetMemoryRegion(flags.memory_region);
+
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions, MemoryState memory_state) {
         auto vma = vm_manager.MapMemoryBlock(segment.addr, codeset->memory,
                 segment.offset, segment.size, memory_state).Unwrap();
@@ -122,6 +124,15 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
+}
+
+VAddr Process::GetLinearHeapBase() const {
+    return (kernel_version < 0x22C ? Memory::LINEAR_HEAP_VADDR : Memory::NEW_LINEAR_HEAP_SIZE)
+            + memory_region->base;
+}
+
+VAddr Process::GetLinearHeapLimit() const {
+    return GetLinearHeapBase() + memory_region->size;
 }
 
 ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission perms) {
@@ -166,19 +177,16 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
 }
 
 ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission perms) {
-    if (linear_heap_memory == nullptr) {
-        // Initialize heap
-        linear_heap_memory = std::make_shared<std::vector<u8>>();
-    }
+    auto& linheap_memory = memory_region->linear_heap_memory;
 
-    VAddr heap_end = Memory::LINEAR_HEAP_VADDR + (u32)linear_heap_memory->size();
+    VAddr heap_end = GetLinearHeapBase() + (u32)linheap_memory->size();
     // Games and homebrew only ever seem to pass 0 here (which lets the kernel decide the address),
     // but explicit addresses are also accepted and respected.
     if (target == 0) {
         target = heap_end;
     }
 
-    if (target < Memory::LINEAR_HEAP_VADDR || target + size > Memory::LINEAR_HEAP_VADDR_END ||
+    if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
         target > heap_end || target + size < target) {
 
         return ERR_INVALID_ADDRESS;
@@ -188,25 +196,29 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     // end. It's possible to free gaps in the middle of the heap and then reallocate them later,
     // but expansions are only allowed at the end.
     if (target == heap_end) {
-        linear_heap_memory->insert(linear_heap_memory->end(), size, 0);
-        vm_manager.RefreshMemoryBlockMappings(linear_heap_memory.get());
+        linheap_memory->insert(linheap_memory->end(), size, 0);
+        vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
     }
 
-    size_t offset = target - Memory::LINEAR_HEAP_VADDR;
-    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linear_heap_memory, offset, size, MemoryState::Continuous));
+    // TODO(yuriks): As is, this lets processes map memory allocated by other processes from the
+    // same region. It is unknown if or how the 3DS kernel checks against this.
+    size_t offset = target - GetLinearHeapBase();
+    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size, MemoryState::Continuous));
     vm_manager.Reprotect(vma, perms);
 
     return MakeResult<VAddr>(target);
 }
 
 ResultCode Process::LinearFree(VAddr target, u32 size) {
-    if (linear_heap_memory == nullptr || target < Memory::LINEAR_HEAP_VADDR ||
-        target + size > Memory::LINEAR_HEAP_VADDR_END || target + size < target) {
+    auto& linheap_memory = memory_region->linear_heap_memory;
+
+    if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
+        target + size < target) {
 
         return ERR_INVALID_ADDRESS;
     }
 
-    VAddr heap_end = Memory::LINEAR_HEAP_VADDR + (u32)linear_heap_memory->size();
+    VAddr heap_end = GetLinearHeapBase() + (u32)linheap_memory->size();
     if (target + size > heap_end) {
         return ERR_INVALID_ADDRESS_STATE;
     }
@@ -221,8 +233,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         ASSERT(vma != vm_manager.vma_map.end());
         ASSERT(vma->second.type == VMAType::Free);
         VAddr new_end = vma->second.base;
-        if (new_end >= Memory::LINEAR_HEAP_VADDR) {
-            linear_heap_memory->resize(new_end - Memory::LINEAR_HEAP_VADDR);
+        if (new_end >= GetLinearHeapBase()) {
+            linheap_memory->resize(new_end - GetLinearHeapBase());
         }
     }
 

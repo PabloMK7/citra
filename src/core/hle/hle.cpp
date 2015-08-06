@@ -34,8 +34,6 @@ void Reschedule(const char *reason) {
 
 void Init() {
     Service::Init();
-    ConfigMem::Init();
-    SharedPage::Init();
 
     g_reschedule = false;
 

@@ -7,11 +7,14 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 
+#include "core/hle/config_mem.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/resource_limit.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
+#include "core/hle/shared_page.h"
 
 namespace Kernel {
 
@@ -119,6 +122,13 @@ void HandleTable::Clear() {
 
 /// Initialize the kernel
 void Init() {
+    ConfigMem::Init();
+    SharedPage::Init();
+
+    // TODO(yuriks): The memory type parameter needs to be determined by the ExHeader field instead
+    // For now it defaults to the one with a largest allocation to the app
+    Kernel::MemoryInit(2); // Allocates 96MB to the application
+
     Kernel::ResourceLimitsInit();
     Kernel::ThreadingInit();
     Kernel::TimersInit();
@@ -131,11 +141,14 @@ void Init() {
 
 /// Shutdown the kernel
 void Shutdown() {
+    g_handle_table.Clear(); // Free all kernel objects
+
     Kernel::ThreadingShutdown();
+    g_current_process = nullptr;
+
     Kernel::TimersShutdown();
     Kernel::ResourceLimitsShutdown();
-    g_handle_table.Clear(); // Free all kernel objects
-    g_current_process = nullptr;
+    Kernel::MemoryShutdown();
 }
 
 } // namespace

@@ -102,7 +102,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
             ResultCode result = process.HeapFree(addr0, size);
             if (result.IsError()) return result;
-        } else if (addr0 >= Memory::LINEAR_HEAP_VADDR && addr0 < Memory::LINEAR_HEAP_VADDR_END) {
+        } else if (addr0 >= process.GetLinearHeapBase() && addr0 < process.GetLinearHeapLimit()) {
             ResultCode result = process.LinearFree(addr0, size);
             if (result.IsError()) return result;
         } else {

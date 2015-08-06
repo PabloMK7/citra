@@ -49,6 +49,7 @@ union ProcessFlags {
 };
 
 class ResourceLimit;
+struct MemoryRegionInfo;
 
 struct CodeSet final : public Object {
     static SharedPtr<CodeSet> Create(std::string name, u64 program_id);
@@ -135,10 +136,13 @@ public:
     // The left/right bounds of the address space covered by heap_memory.
     VAddr heap_start = 0, heap_end = 0;
 
-    std::shared_ptr<std::vector<u8>> linear_heap_memory;
+    MemoryRegionInfo* memory_region = nullptr;
 
     /// Bitmask of the used TLS slots
     std::bitset<300> used_tls_slots;
+
+    VAddr GetLinearHeapBase() const;
+    VAddr GetLinearHeapLimit() const;
 
     ResultVal<VAddr> HeapAllocate(VAddr target, u32 size, VMAPermission perms);
     ResultCode HeapFree(VAddr target, u32 size);
