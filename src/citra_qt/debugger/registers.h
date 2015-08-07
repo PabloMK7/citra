@@ -30,5 +30,5 @@ private:
     QTreeWidget* tree;
 
     QTreeWidgetItem* registers;
-    QTreeWidgetItem* CSPR;
+    QTreeWidgetItem* cpsr;
 };
