@@ -57,6 +57,8 @@ enum Opcode {
     OP_SEV,
     OP_SMLAL,
     OP_SMULL,
+    OP_SSAT,
+    OP_SSAT16,
     OP_STC,
     OP_STM,
     OP_STR,
@@ -82,6 +84,8 @@ enum Opcode {
     OP_TST,
     OP_UMLAL,
     OP_UMULL,
+    OP_USAT,
+    OP_USAT16,
     OP_UXTAB,
     OP_UXTAB16,
     OP_UXTAH,
@@ -171,6 +175,7 @@ class ARM_Disasm {
   static std::string DisassemblePKH(uint32_t insn);
   static std::string DisassemblePLD(uint32_t insn);
   static std::string DisassembleREX(Opcode opcode, uint32_t insn);
+  static std::string DisassembleSAT(Opcode opcode, uint32_t insn);
   static std::string DisassembleSEL(uint32_t insn);
   static std::string DisassembleSWI(uint32_t insn);
   static std::string DisassembleSWP(Opcode opcode, uint32_t insn);

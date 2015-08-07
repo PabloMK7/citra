@@ -76,6 +76,8 @@ static const char *opcode_names[] = {
     "sev",
     "smlal",
     "smull",
+    "ssat",
+    "ssat16",
     "stc",
     "stm",
     "str",
@@ -101,6 +103,8 @@ static const char *opcode_names[] = {
     "tst",
     "umlal",
     "umull",
+    "usat",
+    "usat16",
     "uxtab",
     "uxtab16",
     "uxtah",
@@ -257,6 +261,11 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassemblePLD(insn);
         case OP_SEL:
             return DisassembleSEL(insn);
+        case OP_SSAT:
+        case OP_SSAT16:
+        case OP_USAT:
+        case OP_USAT16:
+            return DisassembleSAT(opcode, insn);
         case OP_STC:
             return "stc";
         case OP_SWI:
@@ -793,8 +802,35 @@ std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
     }
 }
 
-std::string ARM_Disasm::DisassembleSEL(uint32_t insn)
-{
+std::string ARM_Disasm::DisassembleSAT(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t sat_imm = BITS(insn, 16, 20);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t imm5 = BITS(insn, 7, 11);
+    uint32_t sh = BIT(insn, 6);
+    uint32_t rn = BITS(insn, 0, 3);
+
+    std::string shift_part = "";
+    bool opcode_has_shift = (opcode == OP_SSAT) || (opcode == OP_USAT);
+    if (opcode_has_shift && !(sh == 0 && imm5 == 0)) {
+        if (sh == 0)
+            shift_part += ", LSL #";
+        else
+            shift_part += ", ASR #";
+
+        if (imm5 == 0)
+            imm5 = 32;
+        shift_part += std::to_string(imm5);
+    }
+
+    if (opcode == OP_SSAT || opcode == OP_SSAT16)
+        sat_imm++;
+
+    return Common::StringFromFormat("%s%s\tr%u, #%u, r%u%s", opcode_names[opcode], cond_to_str(cond), rd,
+                                    sat_imm, rn, shift_part.c_str());
+}
+
+std::string ARM_Disasm::DisassembleSEL(uint32_t insn) {
     uint32_t cond = BITS(insn, 28, 31);
     uint32_t rn = BITS(insn, 16, 19);
     uint32_t rd = BITS(insn, 12, 15);
@@ -1048,12 +1084,18 @@ Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
                 return OP_SEL;
             break;
         case 0x2:
+            if (BIT(op2, 0) == 0)
+                return OP_SSAT;
+            if (op2 == 0x1)
+                return OP_SSAT16;
             if (op2 == 0x3 && a != 0xf)
                 return OP_SXTAB;
             if (op2 == 0x3 && a == 0xf)
                 return OP_SXTB;
             break;
         case 0x3:
+            if (BIT(op2, 0) == 0)
+                return OP_SSAT;
             if (op2 == 0x3 && a != 0xf)
                 return OP_SXTAH;
             if (op2 == 0x3 && a == 0xf)
@@ -1066,12 +1108,18 @@ Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
                 return OP_UXTB16;
             break;
         case 0x6:
+            if (BIT(op2, 0) == 0)
+                return OP_USAT;
+            if (op2 == 0x1)
+                return OP_USAT16;
             if (op2 == 0x3 && a != 0xf)
                 return OP_UXTAB;
             if (op2 == 0x3 && a == 0xf)
                 return OP_UXTB;
             break;
         case 0x7:
+            if (BIT(op2, 0) == 0)
+                return OP_USAT;
             if (op2 == 0x3 && a != 0xf)
                 return OP_UXTAH;
             if (op2 == 0x3 && a == 0xf)
