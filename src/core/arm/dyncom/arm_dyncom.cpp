@@ -40,6 +40,22 @@ void ARM_DynCom::SetReg(int index, u32 value) {
     state->Reg[index] = value;
 }
 
+u32 ARM_DynCom::GetVFPReg(int index) const {
+    return state->ExtReg[index];
+}
+
+void ARM_DynCom::SetVFPReg(int index, u32 value) {
+    state->ExtReg[index] = value;
+}
+
+u32 ARM_DynCom::GetVFPSystemReg(VFPSystemRegister reg) const {
+    return state->VFP[reg];
+}
+
+void ARM_DynCom::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
+    state->VFP[reg] = value;
+}
+
 u32 ARM_DynCom::GetCPSR() const {
     return state->Cpsr;
 }

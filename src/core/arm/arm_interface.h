@@ -62,6 +62,34 @@ public:
     virtual void SetReg(int index, u32 value) = 0;
 
     /**
+     * Gets the value of a VFP register
+     * @param index Register index (0-31)
+     * @return Returns the value in the register
+     */
+    virtual u32 GetVFPReg(int index) const = 0;
+
+    /**
+     * Sets a VFP register to the given value
+     * @param index Register index (0-31)
+     * @param value Value to set register to
+     */
+    virtual void SetVFPReg(int index, u32 value) = 0;
+
+    /**
+     * Gets the current value within a given VFP system register
+     * @param reg The VFP system register
+     * @return The value within the VFP system register
+     */
+    virtual u32 GetVFPSystemReg(VFPSystemRegister reg) const = 0;
+
+    /**
+     * Sets the VFP system register to the given value
+     * @param reg   The VFP system register
+     * @param value Value to set the VFP system register to
+     */
+    virtual void SetVFPSystemReg(VFPSystemRegister reg, u32 value) = 0;
+
+    /**
      * Get the current CPSR register
      * @return Returns the value of the CPSR register
      */
