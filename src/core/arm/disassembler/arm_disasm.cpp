@@ -69,6 +69,9 @@ static const char *opcode_names[] = {
     "orr",
     "pkh",
     "pld",
+    "rev",
+    "rev16",
+    "revsh",
     "rsb",
     "rsc",
     "sbc",
@@ -259,6 +262,10 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassemblePKH(insn);
         case OP_PLD:
             return DisassemblePLD(insn);
+        case OP_REV:
+        case OP_REV16:
+        case OP_REVSH:
+            return DisassembleREV(opcode, insn);
         case OP_SEL:
             return DisassembleSEL(insn);
         case OP_SSAT:
@@ -772,6 +779,15 @@ std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
     }
 }
 
+std::string ARM_Disasm::DisassembleREV(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    return Common::StringFromFormat("%s%s\tr%u, r%u", opcode_names[opcode], cond_to_str(cond),
+                                    rd, rm);
+}
+
 std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
     uint32_t rn = BITS(insn, 16, 19);
     uint32_t rd = BITS(insn, 12, 15);
@@ -1094,12 +1110,16 @@ Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
                 return OP_SXTB;
             break;
         case 0x3:
+            if (op2 == 0x1)
+                return OP_REV;
             if (BIT(op2, 0) == 0)
                 return OP_SSAT;
             if (op2 == 0x3 && a != 0xf)
                 return OP_SXTAH;
             if (op2 == 0x3 && a == 0xf)
                 return OP_SXTH;
+            if (op2 == 0x5)
+                return OP_REV16;
             break;
         case 0x4:
             if (op2 == 0x3 && a != 0xf)
@@ -1124,6 +1144,8 @@ Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
                 return OP_UXTAH;
             if (op2 == 0x3 && a == 0xf)
                 return OP_UXTH;
+            if (op2 == 0x5)
+                return OP_REVSH;
             break;
         default:
             break;

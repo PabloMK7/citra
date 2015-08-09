@@ -50,6 +50,9 @@ enum Opcode {
     OP_ORR,
     OP_PKH,
     OP_PLD,
+    OP_REV,
+    OP_REV16,
+    OP_REVSH,
     OP_RSB,
     OP_RSC,
     OP_SBC,
@@ -174,6 +177,7 @@ class ARM_Disasm {
   static std::string DisassembleNoOperands(Opcode opcode, uint32_t insn);
   static std::string DisassemblePKH(uint32_t insn);
   static std::string DisassemblePLD(uint32_t insn);
+  static std::string DisassembleREV(Opcode opcode, uint32_t insn);
   static std::string DisassembleREX(Opcode opcode, uint32_t insn);
   static std::string DisassembleSAT(Opcode opcode, uint32_t insn);
   static std::string DisassembleSEL(uint32_t insn);
