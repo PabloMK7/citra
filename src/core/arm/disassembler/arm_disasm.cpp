@@ -69,18 +69,36 @@ static const char *opcode_names[] = {
     "orr",
     "pkh",
     "pld",
+    "qadd16",
+    "qadd8",
+    "qasx",
+    "qsax",
+    "qsub16",
+    "qsub8",
     "rev",
     "rev16",
     "revsh",
     "rsb",
     "rsc",
+    "sadd16",
+    "sadd8",
+    "sasx",
     "sbc",
     "sel",
     "sev",
+    "shadd16",
+    "shadd8",
+    "shasx",
+    "shsax",
+    "shsub16",
+    "shsub8",
     "smlal",
     "smull",
     "ssat",
     "ssat16",
+    "ssax",
+    "ssub16",
+    "ssub8",
     "stc",
     "stm",
     "str",
@@ -104,10 +122,28 @@ static const char *opcode_names[] = {
     "sxth",
     "teq",
     "tst",
+    "uadd16",
+    "uadd8",
+    "uasx",
+    "uhadd16",
+    "uhadd8",
+    "uhasx",
+    "uhsax",
+    "uhsub16",
+    "uhsub8",
     "umlal",
     "umull",
+    "uqadd16",
+    "uqadd8",
+    "uqasx",
+    "uqsax",
+    "uqsub16",
+    "uqsub8",
     "usat",
     "usat16",
+    "usax",
+    "usub16",
+    "usub8",
     "uxtab",
     "uxtab16",
     "uxtah",
@@ -262,6 +298,43 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassemblePKH(insn);
         case OP_PLD:
             return DisassemblePLD(insn);
+        case OP_QADD16:
+        case OP_QADD8:
+        case OP_QASX:
+        case OP_QSAX:
+        case OP_QSUB16:
+        case OP_QSUB8:
+        case OP_SADD16:
+        case OP_SADD8:
+        case OP_SASX:
+        case OP_SHADD16:
+        case OP_SHADD8:
+        case OP_SHASX:
+        case OP_SHSAX:
+        case OP_SHSUB16:
+        case OP_SHSUB8:
+        case OP_SSAX:
+        case OP_SSUB16:
+        case OP_SSUB8:
+        case OP_UADD16:
+        case OP_UADD8:
+        case OP_UASX:
+        case OP_UHADD16:
+        case OP_UHADD8:
+        case OP_UHASX:
+        case OP_UHSAX:
+        case OP_UHSUB16:
+        case OP_UHSUB8:
+        case OP_UQADD16:
+        case OP_UQADD8:
+        case OP_UQASX:
+        case OP_UQSAX:
+        case OP_UQSUB16:
+        case OP_UQSUB8:
+        case OP_USAX:
+        case OP_USUB16:
+        case OP_USUB8:
+            return DisassembleParallelAddSub(opcode, insn);
         case OP_REV:
         case OP_REV16:
         case OP_REVSH:
@@ -732,6 +805,16 @@ std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, uint32_t insn)
     return Common::StringFromFormat("%s%s", opcode_names[opcode], cond_to_str(cond));
 }
 
+std::string ARM_Disasm::DisassembleParallelAddSub(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    return Common::StringFromFormat("%s%s\tr%u, r%u, r%u", opcode_names[opcode], cond_to_str(cond),
+                                    rd, rn, rm);
+}
+
 std::string ARM_Disasm::DisassemblePKH(uint32_t insn)
 {
     uint32_t cond = BITS(insn, 28, 31);
@@ -1083,6 +1166,49 @@ Opcode ARM_Disasm::DecodeSyncPrimitive(uint32_t insn) {
     }
 }
 
+Opcode ARM_Disasm::DecodeParallelAddSub(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 21);
+    uint32_t op2 = BITS(insn, 5, 7);
+    uint32_t is_unsigned = BIT(insn, 22);
+
+    if (op1 == 0x0 || op2 == 0x5 || op2 == 0x6)
+        return OP_UNDEFINED;
+
+    // change op1 range from [1, 3] to range [0, 2]
+    op1--;
+
+    // change op2 range from [0, 4] U {7} to range [0, 5]
+    if (op2 == 0x7)
+        op2 = 0x5;
+
+    static std::vector<Opcode> opcodes = {
+        // op1 = 0
+        OP_SADD16, OP_UADD16,
+        OP_SASX, OP_UASX,
+        OP_SSAX, OP_USAX,
+        OP_SSUB16, OP_USUB16,
+        OP_SADD8, OP_UADD8,
+        OP_SSUB8, OP_USUB8,
+        // op1 = 1
+        OP_QADD16, OP_UQADD16,
+        OP_QASX, OP_UQASX,
+        OP_QSAX, OP_UQSAX,
+        OP_QSUB16, OP_UQSUB16,
+        OP_QADD8, OP_UQADD8,
+        OP_QSUB8, OP_UQSUB8,
+        // op1 = 2
+        OP_SHADD16, OP_UHADD16,
+        OP_SHASX, OP_UHASX,
+        OP_SHSAX, OP_UHSAX,
+        OP_SHSUB16, OP_UHSUB16,
+        OP_SHADD8, OP_UHADD8,
+        OP_SHSUB8, OP_UHSUB8
+    };
+
+    uint32_t opcode_index = op1 * 12 + op2 * 2 + is_unsigned;
+    return opcodes[opcode_index];
+}
+
 Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
     uint32_t op1 = BITS(insn, 20, 22);
     uint32_t a = BITS(insn, 16, 19);
@@ -1220,6 +1346,9 @@ Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
     uint32_t rn = BITS(insn, 0, 3);
 
     switch (BITS(op1, 3, 4)) {
+        case 0x0:
+            // unsigned and signed parallel addition and subtraction
+            return DecodeParallelAddSub(insn);
         case 0x1:
             // Packing, unpacking, saturation, and reversal
             return DecodePackingSaturationReversal(insn);

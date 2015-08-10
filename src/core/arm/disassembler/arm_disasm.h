@@ -50,18 +50,36 @@ enum Opcode {
     OP_ORR,
     OP_PKH,
     OP_PLD,
+    OP_QADD16,
+    OP_QADD8,
+    OP_QASX,
+    OP_QSAX,
+    OP_QSUB16,
+    OP_QSUB8,
     OP_REV,
     OP_REV16,
     OP_REVSH,
     OP_RSB,
     OP_RSC,
+    OP_SADD16,
+    OP_SADD8,
+    OP_SASX,
     OP_SBC,
     OP_SEL,
     OP_SEV,
+    OP_SHADD16,
+    OP_SHADD8,
+    OP_SHASX,
+    OP_SHSAX,
+    OP_SHSUB16,
+    OP_SHSUB8,
     OP_SMLAL,
     OP_SMULL,
     OP_SSAT,
     OP_SSAT16,
+    OP_SSAX,
+    OP_SSUB16,
+    OP_SSUB8,
     OP_STC,
     OP_STM,
     OP_STR,
@@ -85,10 +103,28 @@ enum Opcode {
     OP_SXTH,
     OP_TEQ,
     OP_TST,
+    OP_UADD16,
+    OP_UADD8,
+    OP_UASX,
+    OP_UHADD16,
+    OP_UHADD8,
+    OP_UHASX,
+    OP_UHSAX,
+    OP_UHSUB16,
+    OP_UHSUB8,
     OP_UMLAL,
     OP_UMULL,
+    OP_UQADD16,
+    OP_UQADD8,
+    OP_UQASX,
+    OP_UQSAX,
+    OP_UQSUB16,
+    OP_UQSUB8,
     OP_USAT,
     OP_USAT16,
+    OP_USAX,
+    OP_USUB16,
+    OP_USUB8,
     OP_UXTAB,
     OP_UXTAB16,
     OP_UXTAH,
@@ -153,6 +189,7 @@ class ARM_Disasm {
   static Opcode Decode10(uint32_t insn);
   static Opcode Decode11(uint32_t insn);
   static Opcode DecodeSyncPrimitive(uint32_t insn);
+  static Opcode DecodeParallelAddSub(uint32_t insn);
   static Opcode DecodePackingSaturationReversal(uint32_t insn);
   static Opcode DecodeMUL(uint32_t insn);
   static Opcode DecodeMSRImmAndHints(uint32_t insn);
@@ -175,6 +212,7 @@ class ARM_Disasm {
   static std::string DisassembleMRS(uint32_t insn);
   static std::string DisassembleMSR(uint32_t insn);
   static std::string DisassembleNoOperands(Opcode opcode, uint32_t insn);
+  static std::string DisassembleParallelAddSub(Opcode opcode, uint32_t insn);
   static std::string DisassemblePKH(uint32_t insn);
   static std::string DisassemblePLD(uint32_t insn);
   static std::string DisassembleREV(Opcode opcode, uint32_t insn);
