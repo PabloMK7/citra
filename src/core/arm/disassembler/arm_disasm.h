@@ -73,8 +73,17 @@ enum Opcode {
     OP_SHSAX,
     OP_SHSUB16,
     OP_SHSUB8,
+    OP_SMLAD,
     OP_SMLAL,
+    OP_SMLALD,
+    OP_SMLSD,
+    OP_SMLSLD,
+    OP_SMMLA,
+    OP_SMMLS,
+    OP_SMMUL,
+    OP_SMUAD,
     OP_SMULL,
+    OP_SMUSD,
     OP_SSAT,
     OP_SSAT16,
     OP_SSAX,
@@ -120,6 +129,8 @@ enum Opcode {
     OP_UQSAX,
     OP_UQSUB16,
     OP_UQSUB8,
+    OP_USAD8,
+    OP_USADA8,
     OP_USAT,
     OP_USAT16,
     OP_USAX,
@@ -193,6 +204,7 @@ class ARM_Disasm {
   static Opcode DecodePackingSaturationReversal(uint32_t insn);
   static Opcode DecodeMUL(uint32_t insn);
   static Opcode DecodeMSRImmAndHints(uint32_t insn);
+  static Opcode DecodeMediaMulDiv(uint32_t insn);
   static Opcode DecodeMedia(uint32_t insn);
   static Opcode DecodeLDRH(uint32_t insn);
   static Opcode DecodeALU(uint32_t insn);
@@ -202,6 +214,7 @@ class ARM_Disasm {
   static std::string DisassembleBX(uint32_t insn);
   static std::string DisassembleBKPT(uint32_t insn);
   static std::string DisassembleCLZ(uint32_t insn);
+  static std::string DisassembleMediaMulDiv(Opcode opcode, uint32_t insn);
   static std::string DisassembleMemblock(Opcode opcode, uint32_t insn);
   static std::string DisassembleMem(uint32_t insn);
   static std::string DisassembleMemHalf(uint32_t insn);

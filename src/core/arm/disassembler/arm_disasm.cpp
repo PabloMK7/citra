@@ -92,8 +92,17 @@ static const char *opcode_names[] = {
     "shsax",
     "shsub16",
     "shsub8",
+    "smlad",
     "smlal",
+    "smlald",
+    "smlsd",
+    "smlsld",
+    "smmla",
+    "smmls",
+    "smmul",
+    "smuad",
     "smull",
+    "smusd",
     "ssat",
     "ssat16",
     "ssax",
@@ -139,6 +148,8 @@ static const char *opcode_names[] = {
     "uqsax",
     "uqsub16",
     "uqsub8",
+    "usad8",
+    "usada8",
     "usat",
     "usat16",
     "usax",
@@ -341,6 +352,18 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
             return DisassembleREV(opcode, insn);
         case OP_SEL:
             return DisassembleSEL(insn);
+        case OP_SMLAD:
+        case OP_SMLALD:
+        case OP_SMLSD:
+        case OP_SMLSLD:
+        case OP_SMMLA:
+        case OP_SMMLS:
+        case OP_SMMUL:
+        case OP_SMUAD:
+        case OP_SMUSD:
+        case OP_USAD8:
+        case OP_USADA8:
+            return DisassembleMediaMulDiv(opcode, insn);
         case OP_SSAT:
         case OP_SSAT16:
         case OP_USAT:
@@ -501,6 +524,38 @@ std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t rm = insn & 0xf;
     return Common::StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
+}
+
+std::string ARM_Disasm::DisassembleMediaMulDiv(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rd = BITS(insn, 16, 19);
+    uint32_t ra = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 8, 11);
+    uint32_t m = BIT(insn, 5);
+    uint32_t rn = BITS(insn, 0, 3);
+
+    std::string cross = "";
+    if (m) {
+        if (opcode == OP_SMMLA || opcode == OP_SMMUL || opcode == OP_SMMLS)
+            cross = "r";
+        else
+            cross = "x";
+    }
+
+    std::string ext_reg = "";
+    std::unordered_set<Opcode, std::hash<int>> with_ext_reg = {
+            OP_SMLAD, OP_SMLSD, OP_SMMLA, OP_SMMLS, OP_USADA8
+    };
+    if (with_ext_reg.find(opcode) != with_ext_reg.end())
+        ext_reg = Common::StringFromFormat(", r%u", ra);
+
+    std::string rd_low = "";
+    if (opcode == OP_SMLALD || opcode == OP_SMLSLD)
+        rd_low = Common::StringFromFormat("r%u, ", ra);
+
+    return Common::StringFromFormat("%s%s%s\t%sr%u, r%u, r%u%s", opcode_names[opcode],
+                                    cross.c_str(), cond_to_str(cond), rd_low.c_str(), rd, rn, rm,
+                                    ext_reg.c_str());
 }
 
 std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
@@ -1339,11 +1394,52 @@ Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
     return OP_MSR;
 }
 
+Opcode ARM_Disasm::DecodeMediaMulDiv(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 22);
+    uint32_t op2_h = BITS(insn, 6, 7);
+    uint32_t a = BITS(insn, 12, 15);
+
+    switch (op1) {
+        case 0x0:
+            if (op2_h == 0x0) {
+                if (a != 0xf)
+                    return OP_SMLAD;
+                else
+                    return OP_SMUAD;
+            } else if (op2_h == 0x1) {
+                if (a != 0xf)
+                    return OP_SMLSD;
+                else
+                    return OP_SMUSD;
+            }
+            break;
+        case 0x4:
+            if (op2_h == 0x0)
+                return OP_SMLALD;
+            else if (op2_h == 0x1)
+                return OP_SMLSLD;
+            break;
+        case 0x5:
+            if (op2_h == 0x0) {
+                if (a != 0xf)
+                    return OP_SMMLA;
+                else
+                    return OP_SMMUL;
+            } else if (op2_h == 0x3) {
+                return OP_SMMLS;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return OP_UNDEFINED;
+}
+
 Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
     uint32_t op1 = BITS(insn, 20, 24);
     uint32_t rd = BITS(insn, 12, 15);
     uint32_t op2 = BITS(insn, 5, 7);
-    uint32_t rn = BITS(insn, 0, 3);
 
     switch (BITS(op1, 3, 4)) {
         case 0x0:
@@ -1352,6 +1448,15 @@ Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
         case 0x1:
             // Packing, unpacking, saturation, and reversal
             return DecodePackingSaturationReversal(insn);
+        case 0x2:
+            // Signed multiply, signed and unsigned divide
+            return DecodeMediaMulDiv(insn);
+        case 0x3:
+            if (op2 == 0 && rd == 0xf)
+                return OP_USAD8;
+            if (op2 == 0 && rd != 0xf)
+                return OP_USADA8;
+            break;
         default:
             break;
     }
