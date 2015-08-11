@@ -3,7 +3,9 @@
 #include <string>
 #include <unordered_set>
 
+#include "common/common_types.h"
 #include "common/string_util.h"
+
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/skyeye_common/armsupp.h"
 
@@ -215,11 +217,11 @@ static const char *shift_names[] = {
     "ROR"
 };
 
-static const char* cond_to_str(uint32_t cond) {
+static const char* cond_to_str(u32 cond) {
     return cond_names[cond];
 }
 
-std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
+std::string ARM_Disasm::Disassemble(u32 addr, u32 insn)
 {
     Opcode opcode = Decode(insn);
     switch (opcode) {
@@ -400,22 +402,22 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
     return NULL;
 }
 
-std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleALU(Opcode opcode, u32 insn)
 {
-    static const uint8_t kNoOperand1 = 1;
-    static const uint8_t kNoDest = 2;
-    static const uint8_t kNoSbit = 4;
+    static const u8 kNoOperand1 = 1;
+    static const u8 kNoDest = 2;
+    static const u8 kNoSbit = 4;
 
     std::string rn_str;
     std::string rd_str;
 
-    uint8_t flags = 0;
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t is_immed = (insn >> 25) & 0x1;
-    uint8_t bit_s = (insn >> 20) & 1;
-    uint8_t rn = (insn >> 16) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint8_t immed = insn & 0xff;
+    u8 flags = 0;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 is_immed = (insn >> 25) & 0x1;
+    u8 bit_s = (insn >> 20) & 1;
+    u8 rn = (insn >> 16) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u8 immed = insn & 0xff;
 
     const char* opname = opcode_names[opcode];
     switch (opcode) {
@@ -455,14 +457,14 @@ std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
                 opname, cond_to_str(cond), sbit_str, rd_str.c_str(), rn_str.c_str(), immed, immed);
     }
 
-    uint8_t shift_is_reg = (insn >> 4) & 1;
-    uint8_t rotate = (insn >> 8) & 0xf;
-    uint8_t rm = insn & 0xf;
-    uint8_t shift_type = (insn >> 5) & 0x3;
-    uint8_t rs = (insn >> 8) & 0xf;
-    uint8_t shift_amount = (insn >> 7) & 0x1f;
-    uint32_t rotated_val = immed;
-    uint8_t rotate2 = rotate << 1;
+    u8 shift_is_reg = (insn >> 4) & 1;
+    u8 rotate = (insn >> 8) & 0xf;
+    u8 rm = insn & 0xf;
+    u8 shift_type = (insn >> 5) & 0x3;
+    u8 rs = (insn >> 8) & 0xf;
+    u8 shift_amount = (insn >> 7) & 0x1f;
+    u32 rotated_val = immed;
+    u8 rotate2 = rotate << 1;
     rotated_val = (rotated_val >> rotate2) | (rotated_val << (32 - rotate2));
 
     if (!shift_is_reg && shift_type == 0 && shift_amount == 0) {
@@ -488,10 +490,10 @@ std::string ARM_Disasm::DisassembleALU(Opcode opcode, uint32_t insn)
             shift_name, shift_amount);
 }
 
-std::string ARM_Disasm::DisassembleBranch(uint32_t addr, Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleBranch(u32 addr, Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint32_t offset = insn & 0xffffff;
+    u8 cond = (insn >> 28) & 0xf;
+    u32 offset = insn & 0xffffff;
     // Sign-extend the 24-bit offset
     if ((offset >> 23) & 1)
         offset |= 0xff000000;
@@ -504,35 +506,35 @@ std::string ARM_Disasm::DisassembleBranch(uint32_t addr, Opcode opcode, uint32_t
     return Common::StringFromFormat("%s%s\t0x%x", opname, cond_to_str(cond), addr);
 }
 
-std::string ARM_Disasm::DisassembleBX(uint32_t insn)
+std::string ARM_Disasm::DisassembleBX(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rn = insn & 0xf;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rn = insn & 0xf;
     return Common::StringFromFormat("bx%s\tr%d", cond_to_str(cond), rn);
 }
 
-std::string ARM_Disasm::DisassembleBKPT(uint32_t insn)
+std::string ARM_Disasm::DisassembleBKPT(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint32_t immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
+    u8 cond = (insn >> 28) & 0xf;
+    u32 immed = (((insn >> 8) & 0xfff) << 4) | (insn & 0xf);
     return Common::StringFromFormat("bkpt%s\t#%d", cond_to_str(cond), immed);
 }
 
-std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
+std::string ARM_Disasm::DisassembleCLZ(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint8_t rm = insn & 0xf;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u8 rm = insn & 0xf;
     return Common::StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
 }
 
-std::string ARM_Disasm::DisassembleMediaMulDiv(Opcode opcode, uint32_t insn) {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rd = BITS(insn, 16, 19);
-    uint32_t ra = BITS(insn, 12, 15);
-    uint32_t rm = BITS(insn, 8, 11);
-    uint32_t m = BIT(insn, 5);
-    uint32_t rn = BITS(insn, 0, 3);
+std::string ARM_Disasm::DisassembleMediaMulDiv(Opcode opcode, u32 insn) {
+    u32 cond = BITS(insn, 28, 31);
+    u32 rd = BITS(insn, 16, 19);
+    u32 ra = BITS(insn, 12, 15);
+    u32 rm = BITS(insn, 8, 11);
+    u32 m = BIT(insn, 5);
+    u32 rn = BITS(insn, 0, 3);
 
     std::string cross = "";
     if (m) {
@@ -558,17 +560,17 @@ std::string ARM_Disasm::DisassembleMediaMulDiv(Opcode opcode, uint32_t insn) {
                                     ext_reg.c_str());
 }
 
-std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, u32 insn)
 {
     std::string tmp_list;
 
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t write_back = (insn >> 21) & 0x1;
-    uint8_t bit_s = (insn >> 22) & 0x1;
-    uint8_t is_up = (insn >> 23) & 0x1;
-    uint8_t is_pre = (insn >> 24) & 0x1;
-    uint8_t rn = (insn >> 16) & 0xf;
-    uint16_t reg_list = insn & 0xffff;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 write_back = (insn >> 21) & 0x1;
+    u8 bit_s = (insn >> 22) & 0x1;
+    u8 is_up = (insn >> 23) & 0x1;
+    u8 is_pre = (insn >> 24) & 0x1;
+    u8 rn = (insn >> 16) & 0xf;
+    u16 reg_list = insn & 0xffff;
 
     const char *opname = opcode_names[opcode];
 
@@ -608,18 +610,18 @@ std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
             opname, cond_to_str(cond), addr_mode, rn, bang, tmp_list.c_str(), carret);
 }
 
-std::string ARM_Disasm::DisassembleMem(uint32_t insn)
+std::string ARM_Disasm::DisassembleMem(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t is_reg = (insn >> 25) & 0x1;
-    uint8_t is_load = (insn >> 20) & 0x1;
-    uint8_t write_back = (insn >> 21) & 0x1;
-    uint8_t is_byte = (insn >> 22) & 0x1;
-    uint8_t is_up = (insn >> 23) & 0x1;
-    uint8_t is_pre = (insn >> 24) & 0x1;
-    uint8_t rn = (insn >> 16) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint16_t offset = insn & 0xfff;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 is_reg = (insn >> 25) & 0x1;
+    u8 is_load = (insn >> 20) & 0x1;
+    u8 write_back = (insn >> 21) & 0x1;
+    u8 is_byte = (insn >> 22) & 0x1;
+    u8 is_up = (insn >> 23) & 0x1;
+    u8 is_pre = (insn >> 24) & 0x1;
+    u8 rn = (insn >> 16) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u16 offset = insn & 0xfff;
 
     const char *opname = "ldr";
     if (!is_load)
@@ -656,9 +658,9 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
         }
     }
 
-    uint8_t rm = insn & 0xf;
-    uint8_t shift_type = (insn >> 5) & 0x3;
-    uint8_t shift_amount = (insn >> 7) & 0x1f;
+    u8 rm = insn & 0xf;
+    u8 shift_type = (insn >> 5) & 0x3;
+    u8 shift_amount = (insn >> 7) & 0x1f;
 
     const char *shift_name = shift_names[shift_type];
 
@@ -700,19 +702,19 @@ std::string ARM_Disasm::DisassembleMem(uint32_t insn)
             shift_name, shift_amount);
 }
 
-std::string ARM_Disasm::DisassembleMemHalf(uint32_t insn)
+std::string ARM_Disasm::DisassembleMemHalf(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t is_load = (insn >> 20) & 0x1;
-    uint8_t write_back = (insn >> 21) & 0x1;
-    uint8_t is_immed = (insn >> 22) & 0x1;
-    uint8_t is_up = (insn >> 23) & 0x1;
-    uint8_t is_pre = (insn >> 24) & 0x1;
-    uint8_t rn = (insn >> 16) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint8_t bits_65 = (insn >> 5) & 0x3;
-    uint8_t rm = insn & 0xf;
-    uint8_t offset = (((insn >> 8) & 0xf) << 4) | (insn & 0xf);
+    u8 cond = (insn >> 28) & 0xf;
+    u8 is_load = (insn >> 20) & 0x1;
+    u8 write_back = (insn >> 21) & 0x1;
+    u8 is_immed = (insn >> 22) & 0x1;
+    u8 is_up = (insn >> 23) & 0x1;
+    u8 is_pre = (insn >> 24) & 0x1;
+    u8 rn = (insn >> 16) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u8 bits_65 = (insn >> 5) & 0x3;
+    u8 rm = insn & 0xf;
+    u8 offset = (((insn >> 8) & 0xf) << 4) | (insn & 0xf);
 
     const char *opname = "ldr";
     if (is_load == 0)
@@ -756,78 +758,78 @@ std::string ARM_Disasm::DisassembleMemHalf(uint32_t insn)
     }
 }
 
-std::string ARM_Disasm::DisassembleMCR(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleMCR(Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t crn = (insn >> 16) & 0xf;
-    uint8_t crd = (insn >> 12) & 0xf;
-    uint8_t cpnum = (insn >> 8) & 0xf;
-    uint8_t opcode2 = (insn >> 5) & 0x7;
-    uint8_t crm = insn & 0xf;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 crn = (insn >> 16) & 0xf;
+    u8 crd = (insn >> 12) & 0xf;
+    u8 cpnum = (insn >> 8) & 0xf;
+    u8 opcode2 = (insn >> 5) & 0x7;
+    u8 crm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s\t%d, 0, r%d, cr%d, cr%d, {%d}",
             opname, cond_to_str(cond), cpnum, crd, crn, crm, opcode2);
 }
 
-std::string ARM_Disasm::DisassembleMLA(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleMLA(Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rd = (insn >> 16) & 0xf;
-    uint8_t rn = (insn >> 12) & 0xf;
-    uint8_t rs = (insn >> 8) & 0xf;
-    uint8_t rm = insn & 0xf;
-    uint8_t bit_s = (insn >> 20) & 1;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rd = (insn >> 16) & 0xf;
+    u8 rn = (insn >> 12) & 0xf;
+    u8 rs = (insn >> 8) & 0xf;
+    u8 rm = insn & 0xf;
+    u8 bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs, rn);
 }
 
-std::string ARM_Disasm::DisassembleUMLAL(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleUMLAL(Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rdhi = (insn >> 16) & 0xf;
-    uint8_t rdlo = (insn >> 12) & 0xf;
-    uint8_t rs = (insn >> 8) & 0xf;
-    uint8_t rm = insn & 0xf;
-    uint8_t bit_s = (insn >> 20) & 1;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rdhi = (insn >> 16) & 0xf;
+    u8 rdlo = (insn >> 12) & 0xf;
+    u8 rs = (insn >> 8) & 0xf;
+    u8 rm = insn & 0xf;
+    u8 bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rdlo, rdhi, rm, rs);
 }
 
-std::string ARM_Disasm::DisassembleMUL(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleMUL(Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rd = (insn >> 16) & 0xf;
-    uint8_t rs = (insn >> 8) & 0xf;
-    uint8_t rm = insn & 0xf;
-    uint8_t bit_s = (insn >> 20) & 1;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rd = (insn >> 16) & 0xf;
+    u8 rs = (insn >> 8) & 0xf;
+    u8 rm = insn & 0xf;
+    u8 bit_s = (insn >> 20) & 1;
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s%s\tr%d, r%d, r%d",
             opname, cond_to_str(cond), bit_s ? "s" : "", rd, rm, rs);
 }
 
-std::string ARM_Disasm::DisassembleMRS(uint32_t insn)
+std::string ARM_Disasm::DisassembleMRS(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint8_t ps = (insn >> 22) & 1;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u8 ps = (insn >> 22) & 1;
 
     return Common::StringFromFormat("mrs%s\tr%d, %s", cond_to_str(cond), rd, ps ? "spsr" : "cpsr");
 }
 
-std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
+std::string ARM_Disasm::DisassembleMSR(u32 insn)
 {
     char flags[8];
     int flag_index = 0;
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t is_immed = (insn >> 25) & 0x1;
-    uint8_t pd = (insn >> 22) & 1;
-    uint8_t mask = (insn >> 16) & 0xf;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 is_immed = (insn >> 25) & 0x1;
+    u8 pd = (insn >> 22) & 1;
+    u8 mask = (insn >> 16) & 0xf;
 
     if (mask & 1)
         flags[flag_index++] = 'c';
@@ -840,44 +842,44 @@ std::string ARM_Disasm::DisassembleMSR(uint32_t insn)
     flags[flag_index] = 0;
 
     if (is_immed) {
-        uint32_t immed = insn & 0xff;
-        uint8_t rotate = (insn >> 8) & 0xf;
-        uint8_t rotate2 = rotate << 1;
-        uint32_t rotated_val = (immed >> rotate2) | (immed << (32 - rotate2));
+        u32 immed = insn & 0xff;
+        u8 rotate = (insn >> 8) & 0xf;
+        u8 rotate2 = rotate << 1;
+        u32 rotated_val = (immed >> rotate2) | (immed << (32 - rotate2));
         return Common::StringFromFormat("msr%s\t%s_%s, #0x%x",
                 cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rotated_val);
     }
 
-    uint8_t rm = insn & 0xf;
+    u8 rm = insn & 0xf;
 
     return Common::StringFromFormat("msr%s\t%s_%s, r%d",
             cond_to_str(cond), pd ? "spsr" : "cpsr", flags, rm);
 }
 
-std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, u32 insn)
 {
-    uint32_t cond = BITS(insn, 28, 31);
+    u32 cond = BITS(insn, 28, 31);
     return Common::StringFromFormat("%s%s", opcode_names[opcode], cond_to_str(cond));
 }
 
-std::string ARM_Disasm::DisassembleParallelAddSub(Opcode opcode, uint32_t insn) {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rn = BITS(insn, 16, 19);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t rm = BITS(insn, 0, 3);
+std::string ARM_Disasm::DisassembleParallelAddSub(Opcode opcode, u32 insn) {
+    u32 cond = BITS(insn, 28, 31);
+    u32 rn = BITS(insn, 16, 19);
+    u32 rd = BITS(insn, 12, 15);
+    u32 rm = BITS(insn, 0, 3);
 
     return Common::StringFromFormat("%s%s\tr%u, r%u, r%u", opcode_names[opcode], cond_to_str(cond),
                                     rd, rn, rm);
 }
 
-std::string ARM_Disasm::DisassemblePKH(uint32_t insn)
+std::string ARM_Disasm::DisassemblePKH(u32 insn)
 {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rn = BITS(insn, 16, 19);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t imm5 = BITS(insn, 7, 11);
-    uint32_t tb = BIT(insn, 6);
-    uint32_t rm = BITS(insn, 0, 3);
+    u32 cond = BITS(insn, 28, 31);
+    u32 rn = BITS(insn, 16, 19);
+    u32 rd = BITS(insn, 12, 15);
+    u32 imm5 = BITS(insn, 7, 11);
+    u32 tb = BIT(insn, 6);
+    u32 rm = BITS(insn, 0, 3);
 
     std::string suffix = tb ? "tb" : "bt";
     std::string shift = "";
@@ -894,22 +896,22 @@ std::string ARM_Disasm::DisassemblePKH(uint32_t insn)
                                     rd, rn, rm, shift.c_str());
 }
 
-std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
+std::string ARM_Disasm::DisassemblePLD(u32 insn)
 {
-    uint8_t is_reg = (insn >> 25) & 0x1;
-    uint8_t is_up = (insn >> 23) & 0x1;
-    uint8_t rn = (insn >> 16) & 0xf;
+    u8 is_reg = (insn >> 25) & 0x1;
+    u8 is_up = (insn >> 23) & 0x1;
+    u8 rn = (insn >> 16) & 0xf;
 
     const char *minus = "";
     if (is_up == 0)
         minus = "-";
 
     if (is_reg) {
-        uint8_t rm = insn & 0xf;
+        u8 rm = insn & 0xf;
         return Common::StringFromFormat("pld\t[r%d, %sr%d]", rn, minus, rm);
     }
 
-    uint16_t offset = insn & 0xfff;
+    u16 offset = insn & 0xfff;
     if (offset == 0) {
         return Common::StringFromFormat("pld\t[r%d]", rn);
     } else {
@@ -917,20 +919,20 @@ std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
     }
 }
 
-std::string ARM_Disasm::DisassembleREV(Opcode opcode, uint32_t insn) {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t rm = BITS(insn, 0, 3);
+std::string ARM_Disasm::DisassembleREV(Opcode opcode, u32 insn) {
+    u32 cond = BITS(insn, 28, 31);
+    u32 rd = BITS(insn, 12, 15);
+    u32 rm = BITS(insn, 0, 3);
 
     return Common::StringFromFormat("%s%s\tr%u, r%u", opcode_names[opcode], cond_to_str(cond),
                                     rd, rm);
 }
 
-std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
-    uint32_t rn = BITS(insn, 16, 19);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t rt = BITS(insn, 0, 3);
-    uint32_t cond = BITS(insn, 28, 31);
+std::string ARM_Disasm::DisassembleREX(Opcode opcode, u32 insn) {
+    u32 rn = BITS(insn, 16, 19);
+    u32 rd = BITS(insn, 12, 15);
+    u32 rt = BITS(insn, 0, 3);
+    u32 cond = BITS(insn, 28, 31);
 
     switch (opcode) {
         case OP_STREX:
@@ -956,13 +958,13 @@ std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
     }
 }
 
-std::string ARM_Disasm::DisassembleSAT(Opcode opcode, uint32_t insn) {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t sat_imm = BITS(insn, 16, 20);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t imm5 = BITS(insn, 7, 11);
-    uint32_t sh = BIT(insn, 6);
-    uint32_t rn = BITS(insn, 0, 3);
+std::string ARM_Disasm::DisassembleSAT(Opcode opcode, u32 insn) {
+    u32 cond = BITS(insn, 28, 31);
+    u32 sat_imm = BITS(insn, 16, 20);
+    u32 rd = BITS(insn, 12, 15);
+    u32 imm5 = BITS(insn, 7, 11);
+    u32 sh = BIT(insn, 6);
+    u32 rn = BITS(insn, 0, 3);
 
     std::string shift_part = "";
     bool opcode_has_shift = (opcode == OP_SSAT) || (opcode == OP_USAT);
@@ -984,42 +986,42 @@ std::string ARM_Disasm::DisassembleSAT(Opcode opcode, uint32_t insn) {
                                     sat_imm, rn, shift_part.c_str());
 }
 
-std::string ARM_Disasm::DisassembleSEL(uint32_t insn) {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rn = BITS(insn, 16, 19);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t rm = BITS(insn, 0, 3);
+std::string ARM_Disasm::DisassembleSEL(u32 insn) {
+    u32 cond = BITS(insn, 28, 31);
+    u32 rn = BITS(insn, 16, 19);
+    u32 rd = BITS(insn, 12, 15);
+    u32 rm = BITS(insn, 0, 3);
 
     return Common::StringFromFormat("%s%s\tr%u, r%u, r%u", opcode_names[OP_SEL], cond_to_str(cond),
                                     rd, rn, rm);
 }
 
-std::string ARM_Disasm::DisassembleSWI(uint32_t insn)
+std::string ARM_Disasm::DisassembleSWI(u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint32_t sysnum = insn & 0x00ffffff;
+    u8 cond = (insn >> 28) & 0xf;
+    u32 sysnum = insn & 0x00ffffff;
 
     return Common::StringFromFormat("swi%s 0x%x", cond_to_str(cond), sysnum);
 }
 
-std::string ARM_Disasm::DisassembleSWP(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleSWP(Opcode opcode, u32 insn)
 {
-    uint8_t cond = (insn >> 28) & 0xf;
-    uint8_t rn = (insn >> 16) & 0xf;
-    uint8_t rd = (insn >> 12) & 0xf;
-    uint8_t rm = insn & 0xf;
+    u8 cond = (insn >> 28) & 0xf;
+    u8 rn = (insn >> 16) & 0xf;
+    u8 rd = (insn >> 12) & 0xf;
+    u8 rm = insn & 0xf;
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
 }
 
-std::string ARM_Disasm::DisassembleXT(Opcode opcode, uint32_t insn)
+std::string ARM_Disasm::DisassembleXT(Opcode opcode, u32 insn)
 {
-    uint32_t cond = BITS(insn, 28, 31);
-    uint32_t rn = BITS(insn, 16, 19);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t rotate = BITS(insn, 10, 11);
-    uint32_t rm = BITS(insn, 0, 3);
+    u32 cond = BITS(insn, 28, 31);
+    u32 rn = BITS(insn, 16, 19);
+    u32 rd = BITS(insn, 12, 15);
+    u32 rotate = BITS(insn, 10, 11);
+    u32 rm = BITS(insn, 0, 3);
 
     std::string rn_part = "";
     static std::unordered_set<Opcode, std::hash<int>> extend_with_add = {
@@ -1037,8 +1039,8 @@ std::string ARM_Disasm::DisassembleXT(Opcode opcode, uint32_t insn)
                                     rd, rn_part.c_str(), rm, rotate_part.c_str());
 }
 
-Opcode ARM_Disasm::Decode(uint32_t insn) {
-    uint32_t bits27_26 = (insn >> 26) & 0x3;
+Opcode ARM_Disasm::Decode(u32 insn) {
+    u32 bits27_26 = (insn >> 26) & 0x3;
     switch (bits27_26) {
         case 0x0:
             return Decode00(insn);
@@ -1052,9 +1054,9 @@ Opcode ARM_Disasm::Decode(uint32_t insn) {
     return OP_INVALID;
 }
 
-Opcode ARM_Disasm::Decode00(uint32_t insn) {
-    uint8_t bit25 = (insn >> 25) & 0x1;
-    uint8_t bit4 = (insn >> 4) & 0x1;
+Opcode ARM_Disasm::Decode00(u32 insn) {
+    u8 bit25 = (insn >> 25) & 0x1;
+    u8 bit4 = (insn >> 4) & 0x1;
     if (bit25 == 0 && bit4 == 1) {
         if ((insn & 0x0ffffff0) == 0x012fff10) {
             // Bx instruction
@@ -1068,9 +1070,9 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
             // Bkpt instruction
             return OP_BKPT;
         }
-        uint32_t bits7_4 = (insn >> 4) & 0xf;
+        u32 bits7_4 = (insn >> 4) & 0xf;
         if (bits7_4 == 0x9) {
-            uint32_t bit24 = BIT(insn, 24);
+            u32 bit24 = BIT(insn, 24);
             if (bit24) {
                 return DecodeSyncPrimitive(insn);
             }
@@ -1078,14 +1080,14 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
             return DecodeMUL(insn);
         }
 
-        uint8_t bit7 = (insn >> 7) & 0x1;
+        u8 bit7 = (insn >> 7) & 0x1;
         if (bit7 == 1) {
             // One of the load/store halfword/byte instructions
             return DecodeLDRH(insn);
         }
     }
 
-    uint32_t op1 = BITS(insn, 20, 24);
+    u32 op1 = BITS(insn, 20, 24);
     if (bit25 && (op1 == 0x12 || op1 == 0x16)) {
         // One of the MSR (immediate) and hints instructions
         return DecodeMSRImmAndHints(insn);
@@ -1095,13 +1097,13 @@ Opcode ARM_Disasm::Decode00(uint32_t insn) {
     return DecodeALU(insn);
 }
 
-Opcode ARM_Disasm::Decode01(uint32_t insn) {
-    uint8_t is_reg = (insn >> 25) & 0x1;
-    uint8_t bit4 = (insn >> 4) & 0x1;
+Opcode ARM_Disasm::Decode01(u32 insn) {
+    u8 is_reg = (insn >> 25) & 0x1;
+    u8 bit4 = (insn >> 4) & 0x1;
     if (is_reg == 1 && bit4 == 1)
         return DecodeMedia(insn);
-    uint8_t is_load = (insn >> 20) & 0x1;
-    uint8_t is_byte = (insn >> 22) & 0x1;
+    u8 is_load = (insn >> 20) & 0x1;
+    u8 is_byte = (insn >> 22) & 0x1;
     if ((insn & 0xfd70f000) == 0xf550f000) {
         // Pre-load
         return OP_PLD;
@@ -1126,11 +1128,11 @@ Opcode ARM_Disasm::Decode01(uint32_t insn) {
     return OP_STR;
 }
 
-Opcode ARM_Disasm::Decode10(uint32_t insn) {
-    uint8_t bit25 = (insn >> 25) & 0x1;
+Opcode ARM_Disasm::Decode10(u32 insn) {
+    u8 bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDM/STM
-        uint8_t is_load = (insn >> 20) & 0x1;
+        u8 is_load = (insn >> 20) & 0x1;
         if (is_load)
             return OP_LDM;
         return OP_STM;
@@ -1143,11 +1145,11 @@ Opcode ARM_Disasm::Decode10(uint32_t insn) {
     return OP_B;
 }
 
-Opcode ARM_Disasm::Decode11(uint32_t insn) {
-    uint8_t bit25 = (insn >> 25) & 0x1;
+Opcode ARM_Disasm::Decode11(u32 insn) {
+    u8 bit25 = (insn >> 25) & 0x1;
     if (bit25 == 0) {
         // LDC, SDC
-        uint8_t is_load = (insn >> 20) & 0x1;
+        u8 is_load = (insn >> 20) & 0x1;
         if (is_load) {
             // LDC
             return OP_LDC;
@@ -1156,18 +1158,18 @@ Opcode ARM_Disasm::Decode11(uint32_t insn) {
         return OP_STC;
     }
 
-    uint8_t bit24 = (insn >> 24) & 0x1;
+    u8 bit24 = (insn >> 24) & 0x1;
     if (bit24 == 0x1) {
         // SWI
         return OP_SWI;
     }
 
-    uint8_t bit4 = (insn >> 4) & 0x1;
-    uint8_t cpnum = (insn >> 8) & 0xf;
+    u8 bit4 = (insn >> 4) & 0x1;
+    u8 cpnum = (insn >> 8) & 0xf;
 
     if (cpnum == 15) {
         // Special case for coprocessor 15
-        uint8_t opcode = (insn >> 21) & 0x7;
+        u8 opcode = (insn >> 21) & 0x7;
         if (bit4 == 0 || opcode != 0) {
             // This is an unexpected bit pattern.  Create an undefined
             // instruction in case this is ever executed.
@@ -1175,7 +1177,7 @@ Opcode ARM_Disasm::Decode11(uint32_t insn) {
         }
 
         // MRC, MCR
-        uint8_t is_mrc = (insn >> 20) & 0x1;
+        u8 is_mrc = (insn >> 20) & 0x1;
         if (is_mrc)
             return OP_MRC;
         return OP_MCR;
@@ -1186,15 +1188,15 @@ Opcode ARM_Disasm::Decode11(uint32_t insn) {
         return OP_CDP;
     }
     // MRC, MCR
-    uint8_t is_mrc = (insn >> 20) & 0x1;
+    u8 is_mrc = (insn >> 20) & 0x1;
     if (is_mrc)
         return OP_MRC;
     return OP_MCR;
 }
 
-Opcode ARM_Disasm::DecodeSyncPrimitive(uint32_t insn) {
-    uint32_t op = BITS(insn, 20, 23);
-    uint32_t bit22 = BIT(insn, 22);
+Opcode ARM_Disasm::DecodeSyncPrimitive(u32 insn) {
+    u32 op = BITS(insn, 20, 23);
+    u32 bit22 = BIT(insn, 22);
     switch (op) {
         case 0x0:
             if (bit22)
@@ -1221,10 +1223,10 @@ Opcode ARM_Disasm::DecodeSyncPrimitive(uint32_t insn) {
     }
 }
 
-Opcode ARM_Disasm::DecodeParallelAddSub(uint32_t insn) {
-    uint32_t op1 = BITS(insn, 20, 21);
-    uint32_t op2 = BITS(insn, 5, 7);
-    uint32_t is_unsigned = BIT(insn, 22);
+Opcode ARM_Disasm::DecodeParallelAddSub(u32 insn) {
+    u32 op1 = BITS(insn, 20, 21);
+    u32 op2 = BITS(insn, 5, 7);
+    u32 is_unsigned = BIT(insn, 22);
 
     if (op1 == 0x0 || op2 == 0x5 || op2 == 0x6)
         return OP_UNDEFINED;
@@ -1260,14 +1262,14 @@ Opcode ARM_Disasm::DecodeParallelAddSub(uint32_t insn) {
         OP_SHSUB8, OP_UHSUB8
     };
 
-    uint32_t opcode_index = op1 * 12 + op2 * 2 + is_unsigned;
+    u32 opcode_index = op1 * 12 + op2 * 2 + is_unsigned;
     return opcodes[opcode_index];
 }
 
-Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
-    uint32_t op1 = BITS(insn, 20, 22);
-    uint32_t a = BITS(insn, 16, 19);
-    uint32_t op2 = BITS(insn, 5, 7);
+Opcode ARM_Disasm::DecodePackingSaturationReversal(u32 insn) {
+    u32 op1 = BITS(insn, 20, 22);
+    u32 a = BITS(insn, 16, 19);
+    u32 op2 = BITS(insn, 5, 7);
 
     switch (op1) {
         case 0x0:
@@ -1335,16 +1337,16 @@ Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
     return OP_UNDEFINED;
 }
 
-Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
-    uint8_t bit24 = (insn >> 24) & 0x1;
+Opcode ARM_Disasm::DecodeMUL(u32 insn) {
+    u8 bit24 = (insn >> 24) & 0x1;
     if (bit24 != 0) {
         // This is an unexpected bit pattern.  Create an undefined
         // instruction in case this is ever executed.
         return OP_UNDEFINED;
     }
-    uint8_t bit23 = (insn >> 23) & 0x1;
-    uint8_t bit22_U = (insn >> 22) & 0x1;
-    uint8_t bit21_A = (insn >> 21) & 0x1;
+    u8 bit23 = (insn >> 23) & 0x1;
+    u8 bit22_U = (insn >> 22) & 0x1;
+    u8 bit21_A = (insn >> 21) & 0x1;
     if (bit23 == 0) {
         // 32-bit multiply
         if (bit22_U != 0) {
@@ -1369,10 +1371,10 @@ Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     return OP_SMLAL;
 }
 
-Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
-    uint32_t op = BIT(insn, 22);
-    uint32_t op1 = BITS(insn, 16, 19);
-    uint32_t op2 = BITS(insn, 0, 7);
+Opcode ARM_Disasm::DecodeMSRImmAndHints(u32 insn) {
+    u32 op = BIT(insn, 22);
+    u32 op1 = BITS(insn, 16, 19);
+    u32 op2 = BITS(insn, 0, 7);
 
     if (op == 0 && op1 == 0) {
         switch (op2) {
@@ -1394,10 +1396,10 @@ Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
     return OP_MSR;
 }
 
-Opcode ARM_Disasm::DecodeMediaMulDiv(uint32_t insn) {
-    uint32_t op1 = BITS(insn, 20, 22);
-    uint32_t op2_h = BITS(insn, 6, 7);
-    uint32_t a = BITS(insn, 12, 15);
+Opcode ARM_Disasm::DecodeMediaMulDiv(u32 insn) {
+    u32 op1 = BITS(insn, 20, 22);
+    u32 op2_h = BITS(insn, 6, 7);
+    u32 a = BITS(insn, 12, 15);
 
     switch (op1) {
         case 0x0:
@@ -1436,10 +1438,10 @@ Opcode ARM_Disasm::DecodeMediaMulDiv(uint32_t insn) {
     return OP_UNDEFINED;
 }
 
-Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
-    uint32_t op1 = BITS(insn, 20, 24);
-    uint32_t rd = BITS(insn, 12, 15);
-    uint32_t op2 = BITS(insn, 5, 7);
+Opcode ARM_Disasm::DecodeMedia(u32 insn) {
+    u32 op1 = BITS(insn, 20, 24);
+    u32 rd = BITS(insn, 12, 15);
+    u32 op2 = BITS(insn, 5, 7);
 
     switch (BITS(op1, 3, 4)) {
         case 0x0:
@@ -1464,9 +1466,9 @@ Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
     return OP_UNDEFINED;
 }
 
-Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
-    uint8_t is_load = (insn >> 20) & 0x1;
-    uint8_t bits_65 = (insn >> 5) & 0x3;
+Opcode ARM_Disasm::DecodeLDRH(u32 insn) {
+    u8 is_load = (insn >> 20) & 0x1;
+    u8 bits_65 = (insn >> 5) & 0x3;
     if (is_load) {
         if (bits_65 == 0x1) {
             // Load unsigned halfword
@@ -1494,12 +1496,12 @@ Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
     return OP_STRH;
 }
 
-Opcode ARM_Disasm::DecodeALU(uint32_t insn) {
-    uint8_t is_immed = (insn >> 25) & 0x1;
-    uint8_t opcode = (insn >> 21) & 0xf;
-    uint8_t bit_s = (insn >> 20) & 1;
-    uint8_t shift_is_reg = (insn >> 4) & 1;
-    uint8_t bit7 = (insn >> 7) & 1;
+Opcode ARM_Disasm::DecodeALU(u32 insn) {
+    u8 is_immed = (insn >> 25) & 0x1;
+    u8 opcode = (insn >> 21) & 0xf;
+    u8 bit_s = (insn >> 20) & 1;
+    u8 shift_is_reg = (insn >> 4) & 1;
+    u8 bit7 = (insn >> 7) & 1;
     if (!is_immed && shift_is_reg && (bit7 != 0)) {
         // This is an unexpected bit pattern.  Create an undefined
         // instruction in case this is ever executed.

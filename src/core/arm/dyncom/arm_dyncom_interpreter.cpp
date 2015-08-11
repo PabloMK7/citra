@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/profiler.h"
 
@@ -759,8 +760,8 @@ struct bx_inst {
 
 struct blx_inst {
     union {
-        int32_t signed_immed_24;
-        uint32_t Rm;
+        s32 signed_immed_24;
+        u32 Rm;
     } val;
     unsigned int inst;
 };
@@ -3544,7 +3545,7 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
         size++;
         // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
         if (cpu->TFlag) {
-            uint32_t arm_inst;
+            u32 arm_inst;
             ThumbDecodeStatus state = DecodeThumbInstruction(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 
             // We have translated the Thumb branch instruction in the Thumb decoder
@@ -4215,8 +4216,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     CPS_INST:
     {
         cps_inst *inst_cream = (cps_inst *)inst_base->component;
-        uint32_t aif_val = 0;
-        uint32_t aif_mask = 0;
+        u32 aif_val = 0;
+        u32 aif_mask = 0;
         if (cpu->InAPrivilegedMode()) {
             if (inst_cream->imod1) {
                 if (inst_cream->A) {
@@ -4710,11 +4711,11 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             mla_inst* inst_cream = (mla_inst*)inst_base->component;
 
-            uint64_t rm = RM;
-            uint64_t rs = RS;
-            uint64_t rn = RN;
+            u64 rm = RM;
+            u64 rs = RS;
+            u64 rn = RN;
 
-            RD = static_cast<uint32_t>((rm * rs + rn) & 0xffffffff);
+            RD = static_cast<u32>((rm * rs + rn) & 0xffffffff);
             if (inst_cream->S) {
                 UPDATE_NFLAG(RD);
                 UPDATE_ZFLAG(RD);
@@ -4819,7 +4820,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             msr_inst* inst_cream = (msr_inst*)inst_base->component;
-            const uint32_t UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
+            const u32 UserMask = 0xf80f0200, PrivMask = 0x000001df, StateMask = 0x01000020;
             unsigned int inst = inst_cream->inst;
             unsigned int operand;
 
@@ -4829,9 +4830,9 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             } else {
                 operand = cpu->Reg[BITS(inst, 0, 3)];
             }
-            uint32_t byte_mask = (BIT(inst, 16) ? 0xff : 0) | (BIT(inst, 17) ? 0xff00 : 0)
+            u32 byte_mask = (BIT(inst, 16) ? 0xff : 0) | (BIT(inst, 17) ? 0xff00 : 0)
                         | (BIT(inst, 18) ? 0xff0000 : 0) | (BIT(inst, 19) ? 0xff000000 : 0);
-            uint32_t mask = 0;
+            u32 mask = 0;
             if (!inst_cream->R) {
                 if (cpu->InAPrivilegedMode()) {
                     if ((operand & StateMask) != 0) {
@@ -4864,9 +4865,9 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             mul_inst* inst_cream = (mul_inst*)inst_base->component;
 
-            uint64_t rm = RM;
-            uint64_t rs = RS;
-            RD = static_cast<uint32_t>((rm * rs) & 0xffffffff);
+            u64 rm = RM;
+            u64 rs = RS;
+            RD = static_cast<u32>((rm * rs) & 0xffffffff);
             if (inst_cream->S) {
                 UPDATE_NFLAG(RD);
                 UPDATE_ZFLAG(RD);
@@ -5532,7 +5533,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             smla_inst* inst_cream = (smla_inst*)inst_base->component;
-            int32_t operand1, operand2;
+            s32 operand1, operand2;
             if (inst_cream->x == 0)
                 operand1 = (BIT(RM, 15)) ? (BITS(RM, 0, 15) | 0xffff0000) : BITS(RM, 0, 15);
             else
@@ -5771,7 +5772,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             smul_inst* inst_cream = (smul_inst*)inst_base->component;
-            uint32_t operand1, operand2;
+            u32 operand1, operand2;
             if (inst_cream->x == 0)
                 operand1 = (BIT(RM, 15)) ? (BITS(RM, 0, 15) | 0xffff0000) : BITS(RM, 0, 15);
             else
@@ -5792,15 +5793,15 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
             umull_inst* inst_cream = (umull_inst*)inst_base->component;
-            int64_t rm = RM;
-            int64_t rs = RS;
+            s64 rm = RM;
+            s64 rs = RS;
             if (BIT(rm, 31)) {
                 rm |= 0xffffffff00000000LL;
             }
             if (BIT(rs, 31)) {
                 rs |= 0xffffffff00000000LL;
             }
-            int64_t rst = rm * rs;
+            s64 rst = rm * rs;
             RDHI = BITS(rst, 32, 63);
             RDLO = BITS(rst,  0, 31);
 
