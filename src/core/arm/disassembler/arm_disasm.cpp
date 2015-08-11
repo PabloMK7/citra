@@ -1,6 +1,7 @@
 // Copyright 2006 The Android Open Source Project
 
 #include <string>
+#include <unordered_set>
 
 #include "common/string_util.h"
 #include "core/arm/disassembler/arm_disasm.h"
@@ -66,13 +67,47 @@ static const char *opcode_names[] = {
     "mvn",
     "nop",
     "orr",
+    "pkh",
     "pld",
+    "qadd16",
+    "qadd8",
+    "qasx",
+    "qsax",
+    "qsub16",
+    "qsub8",
+    "rev",
+    "rev16",
+    "revsh",
     "rsb",
     "rsc",
+    "sadd16",
+    "sadd8",
+    "sasx",
     "sbc",
+    "sel",
     "sev",
+    "shadd16",
+    "shadd8",
+    "shasx",
+    "shsax",
+    "shsub16",
+    "shsub8",
+    "smlad",
     "smlal",
+    "smlald",
+    "smlsd",
+    "smlsld",
+    "smmla",
+    "smmls",
+    "smmul",
+    "smuad",
     "smull",
+    "smusd",
+    "ssat",
+    "ssat16",
+    "ssax",
+    "ssub16",
+    "ssub8",
     "stc",
     "stm",
     "str",
@@ -88,10 +123,44 @@ static const char *opcode_names[] = {
     "swi",
     "swp",
     "swpb",
+    "sxtab",
+    "sxtab16",
+    "sxtah",
+    "sxtb",
+    "sxtb16",
+    "sxth",
     "teq",
     "tst",
+    "uadd16",
+    "uadd8",
+    "uasx",
+    "uhadd16",
+    "uhadd8",
+    "uhasx",
+    "uhsax",
+    "uhsub16",
+    "uhsub8",
     "umlal",
     "umull",
+    "uqadd16",
+    "uqadd8",
+    "uqasx",
+    "uqsax",
+    "uqsub16",
+    "uqsub8",
+    "usad8",
+    "usada8",
+    "usat",
+    "usat16",
+    "usax",
+    "usub16",
+    "usub8",
+    "uxtab",
+    "uxtab16",
+    "uxtah",
+    "uxtb",
+    "uxtb16",
+    "uxth",
     "wfe",
     "wfi",
     "yield",
@@ -236,8 +305,70 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
         case OP_WFI:
         case OP_YIELD:
             return DisassembleNoOperands(opcode, insn);
+        case OP_PKH:
+            return DisassemblePKH(insn);
         case OP_PLD:
             return DisassemblePLD(insn);
+        case OP_QADD16:
+        case OP_QADD8:
+        case OP_QASX:
+        case OP_QSAX:
+        case OP_QSUB16:
+        case OP_QSUB8:
+        case OP_SADD16:
+        case OP_SADD8:
+        case OP_SASX:
+        case OP_SHADD16:
+        case OP_SHADD8:
+        case OP_SHASX:
+        case OP_SHSAX:
+        case OP_SHSUB16:
+        case OP_SHSUB8:
+        case OP_SSAX:
+        case OP_SSUB16:
+        case OP_SSUB8:
+        case OP_UADD16:
+        case OP_UADD8:
+        case OP_UASX:
+        case OP_UHADD16:
+        case OP_UHADD8:
+        case OP_UHASX:
+        case OP_UHSAX:
+        case OP_UHSUB16:
+        case OP_UHSUB8:
+        case OP_UQADD16:
+        case OP_UQADD8:
+        case OP_UQASX:
+        case OP_UQSAX:
+        case OP_UQSUB16:
+        case OP_UQSUB8:
+        case OP_USAX:
+        case OP_USUB16:
+        case OP_USUB8:
+            return DisassembleParallelAddSub(opcode, insn);
+        case OP_REV:
+        case OP_REV16:
+        case OP_REVSH:
+            return DisassembleREV(opcode, insn);
+        case OP_SEL:
+            return DisassembleSEL(insn);
+        case OP_SMLAD:
+        case OP_SMLALD:
+        case OP_SMLSD:
+        case OP_SMLSLD:
+        case OP_SMMLA:
+        case OP_SMMLS:
+        case OP_SMMUL:
+        case OP_SMUAD:
+        case OP_SMUSD:
+        case OP_USAD8:
+        case OP_USADA8:
+            return DisassembleMediaMulDiv(opcode, insn);
+        case OP_SSAT:
+        case OP_SSAT16:
+        case OP_USAT:
+        case OP_USAT16:
+            return DisassembleSAT(opcode, insn);
         case OP_STC:
             return "stc";
         case OP_SWI:
@@ -245,6 +376,19 @@ std::string ARM_Disasm::Disassemble(uint32_t addr, uint32_t insn)
         case OP_SWP:
         case OP_SWPB:
             return DisassembleSWP(opcode, insn);
+        case OP_SXTAB:
+        case OP_SXTAB16:
+        case OP_SXTAH:
+        case OP_SXTB:
+        case OP_SXTB16:
+        case OP_SXTH:
+        case OP_UXTAB:
+        case OP_UXTAB16:
+        case OP_UXTAH:
+        case OP_UXTB:
+        case OP_UXTB16:
+        case OP_UXTH:
+            return DisassembleXT(opcode, insn);
         case OP_UMLAL:
         case OP_UMULL:
         case OP_SMLAL:
@@ -380,6 +524,38 @@ std::string ARM_Disasm::DisassembleCLZ(uint32_t insn)
     uint8_t rd = (insn >> 12) & 0xf;
     uint8_t rm = insn & 0xf;
     return Common::StringFromFormat("clz%s\tr%d, r%d", cond_to_str(cond), rd, rm);
+}
+
+std::string ARM_Disasm::DisassembleMediaMulDiv(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rd = BITS(insn, 16, 19);
+    uint32_t ra = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 8, 11);
+    uint32_t m = BIT(insn, 5);
+    uint32_t rn = BITS(insn, 0, 3);
+
+    std::string cross = "";
+    if (m) {
+        if (opcode == OP_SMMLA || opcode == OP_SMMUL || opcode == OP_SMMLS)
+            cross = "r";
+        else
+            cross = "x";
+    }
+
+    std::string ext_reg = "";
+    std::unordered_set<Opcode, std::hash<int>> with_ext_reg = {
+            OP_SMLAD, OP_SMLSD, OP_SMMLA, OP_SMMLS, OP_USADA8
+    };
+    if (with_ext_reg.find(opcode) != with_ext_reg.end())
+        ext_reg = Common::StringFromFormat(", r%u", ra);
+
+    std::string rd_low = "";
+    if (opcode == OP_SMLALD || opcode == OP_SMLSLD)
+        rd_low = Common::StringFromFormat("r%u, ", ra);
+
+    return Common::StringFromFormat("%s%s%s\t%sr%u, r%u, r%u%s", opcode_names[opcode],
+                                    cross.c_str(), cond_to_str(cond), rd_low.c_str(), rd, rn, rm,
+                                    ext_reg.c_str());
 }
 
 std::string ARM_Disasm::DisassembleMemblock(Opcode opcode, uint32_t insn)
@@ -684,6 +860,40 @@ std::string ARM_Disasm::DisassembleNoOperands(Opcode opcode, uint32_t insn)
     return Common::StringFromFormat("%s%s", opcode_names[opcode], cond_to_str(cond));
 }
 
+std::string ARM_Disasm::DisassembleParallelAddSub(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    return Common::StringFromFormat("%s%s\tr%u, r%u, r%u", opcode_names[opcode], cond_to_str(cond),
+                                    rd, rn, rm);
+}
+
+std::string ARM_Disasm::DisassemblePKH(uint32_t insn)
+{
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t imm5 = BITS(insn, 7, 11);
+    uint32_t tb = BIT(insn, 6);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    std::string suffix = tb ? "tb" : "bt";
+    std::string shift = "";
+
+    if (tb && imm5 == 0)
+        imm5 = 32;
+
+    if (imm5 > 0) {
+        shift = tb ? ", ASR" : ", LSL";
+        shift += " #" + std::to_string(imm5);
+    }
+
+    return Common::StringFromFormat("pkh%s%s\tr%u, r%u, r%u%s", suffix.c_str(), cond_to_str(cond),
+                                    rd, rn, rm, shift.c_str());
+}
+
 std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
 {
     uint8_t is_reg = (insn >> 25) & 0x1;
@@ -705,6 +915,15 @@ std::string ARM_Disasm::DisassemblePLD(uint32_t insn)
     } else {
         return Common::StringFromFormat("pld\t[r%d, #%s%u]", rn, minus, offset);
     }
+}
+
+std::string ARM_Disasm::DisassembleREV(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    return Common::StringFromFormat("%s%s\tr%u, r%u", opcode_names[opcode], cond_to_str(cond),
+                                    rd, rm);
 }
 
 std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
@@ -737,6 +956,44 @@ std::string ARM_Disasm::DisassembleREX(Opcode opcode, uint32_t insn) {
     }
 }
 
+std::string ARM_Disasm::DisassembleSAT(Opcode opcode, uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t sat_imm = BITS(insn, 16, 20);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t imm5 = BITS(insn, 7, 11);
+    uint32_t sh = BIT(insn, 6);
+    uint32_t rn = BITS(insn, 0, 3);
+
+    std::string shift_part = "";
+    bool opcode_has_shift = (opcode == OP_SSAT) || (opcode == OP_USAT);
+    if (opcode_has_shift && !(sh == 0 && imm5 == 0)) {
+        if (sh == 0)
+            shift_part += ", LSL #";
+        else
+            shift_part += ", ASR #";
+
+        if (imm5 == 0)
+            imm5 = 32;
+        shift_part += std::to_string(imm5);
+    }
+
+    if (opcode == OP_SSAT || opcode == OP_SSAT16)
+        sat_imm++;
+
+    return Common::StringFromFormat("%s%s\tr%u, #%u, r%u%s", opcode_names[opcode], cond_to_str(cond), rd,
+                                    sat_imm, rn, shift_part.c_str());
+}
+
+std::string ARM_Disasm::DisassembleSEL(uint32_t insn) {
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    return Common::StringFromFormat("%s%s\tr%u, r%u, r%u", opcode_names[OP_SEL], cond_to_str(cond),
+                                    rd, rn, rm);
+}
+
 std::string ARM_Disasm::DisassembleSWI(uint32_t insn)
 {
     uint8_t cond = (insn >> 28) & 0xf;
@@ -754,6 +1011,30 @@ std::string ARM_Disasm::DisassembleSWP(Opcode opcode, uint32_t insn)
 
     const char *opname = opcode_names[opcode];
     return Common::StringFromFormat("%s%s\tr%d, r%d, [r%d]", opname, cond_to_str(cond), rd, rm, rn);
+}
+
+std::string ARM_Disasm::DisassembleXT(Opcode opcode, uint32_t insn)
+{
+    uint32_t cond = BITS(insn, 28, 31);
+    uint32_t rn = BITS(insn, 16, 19);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t rotate = BITS(insn, 10, 11);
+    uint32_t rm = BITS(insn, 0, 3);
+
+    std::string rn_part = "";
+    static std::unordered_set<Opcode, std::hash<int>> extend_with_add = {
+        OP_SXTAB, OP_SXTAB16, OP_SXTAH,
+        OP_UXTAB, OP_UXTAB16, OP_UXTAH
+    };
+    if (extend_with_add.find(opcode) != extend_with_add.end())
+        rn_part = ", r" + std::to_string(rn);
+
+    std::string rotate_part = "";
+    if (rotate != 0)
+        rotate_part = ", ROR #" + std::to_string(rotate << 3);
+
+    return Common::StringFromFormat("%s%s\tr%u%s, r%u%s", opcode_names[opcode], cond_to_str(cond),
+                                    rd, rn_part.c_str(), rm, rotate_part.c_str());
 }
 
 Opcode ARM_Disasm::Decode(uint32_t insn) {
@@ -818,7 +1099,7 @@ Opcode ARM_Disasm::Decode01(uint32_t insn) {
     uint8_t is_reg = (insn >> 25) & 0x1;
     uint8_t bit4 = (insn >> 4) & 0x1;
     if (is_reg == 1 && bit4 == 1)
-        return OP_UNDEFINED;
+        return DecodeMedia(insn);
     uint8_t is_load = (insn >> 20) & 0x1;
     uint8_t is_byte = (insn >> 22) & 0x1;
     if ((insn & 0xfd70f000) == 0xf550f000) {
@@ -940,6 +1221,120 @@ Opcode ARM_Disasm::DecodeSyncPrimitive(uint32_t insn) {
     }
 }
 
+Opcode ARM_Disasm::DecodeParallelAddSub(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 21);
+    uint32_t op2 = BITS(insn, 5, 7);
+    uint32_t is_unsigned = BIT(insn, 22);
+
+    if (op1 == 0x0 || op2 == 0x5 || op2 == 0x6)
+        return OP_UNDEFINED;
+
+    // change op1 range from [1, 3] to range [0, 2]
+    op1--;
+
+    // change op2 range from [0, 4] U {7} to range [0, 5]
+    if (op2 == 0x7)
+        op2 = 0x5;
+
+    static std::vector<Opcode> opcodes = {
+        // op1 = 0
+        OP_SADD16, OP_UADD16,
+        OP_SASX, OP_UASX,
+        OP_SSAX, OP_USAX,
+        OP_SSUB16, OP_USUB16,
+        OP_SADD8, OP_UADD8,
+        OP_SSUB8, OP_USUB8,
+        // op1 = 1
+        OP_QADD16, OP_UQADD16,
+        OP_QASX, OP_UQASX,
+        OP_QSAX, OP_UQSAX,
+        OP_QSUB16, OP_UQSUB16,
+        OP_QADD8, OP_UQADD8,
+        OP_QSUB8, OP_UQSUB8,
+        // op1 = 2
+        OP_SHADD16, OP_UHADD16,
+        OP_SHASX, OP_UHASX,
+        OP_SHSAX, OP_UHSAX,
+        OP_SHSUB16, OP_UHSUB16,
+        OP_SHADD8, OP_UHADD8,
+        OP_SHSUB8, OP_UHSUB8
+    };
+
+    uint32_t opcode_index = op1 * 12 + op2 * 2 + is_unsigned;
+    return opcodes[opcode_index];
+}
+
+Opcode ARM_Disasm::DecodePackingSaturationReversal(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 22);
+    uint32_t a = BITS(insn, 16, 19);
+    uint32_t op2 = BITS(insn, 5, 7);
+
+    switch (op1) {
+        case 0x0:
+            if (BIT(op2, 0) == 0)
+                return OP_PKH;
+            if (op2 == 0x3 && a != 0xf)
+                return OP_SXTAB16;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_SXTB16;
+            if (op2 == 0x5)
+                return OP_SEL;
+            break;
+        case 0x2:
+            if (BIT(op2, 0) == 0)
+                return OP_SSAT;
+            if (op2 == 0x1)
+                return OP_SSAT16;
+            if (op2 == 0x3 && a != 0xf)
+                return OP_SXTAB;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_SXTB;
+            break;
+        case 0x3:
+            if (op2 == 0x1)
+                return OP_REV;
+            if (BIT(op2, 0) == 0)
+                return OP_SSAT;
+            if (op2 == 0x3 && a != 0xf)
+                return OP_SXTAH;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_SXTH;
+            if (op2 == 0x5)
+                return OP_REV16;
+            break;
+        case 0x4:
+            if (op2 == 0x3 && a != 0xf)
+                return OP_UXTAB16;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_UXTB16;
+            break;
+        case 0x6:
+            if (BIT(op2, 0) == 0)
+                return OP_USAT;
+            if (op2 == 0x1)
+                return OP_USAT16;
+            if (op2 == 0x3 && a != 0xf)
+                return OP_UXTAB;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_UXTB;
+            break;
+        case 0x7:
+            if (BIT(op2, 0) == 0)
+                return OP_USAT;
+            if (op2 == 0x3 && a != 0xf)
+                return OP_UXTAH;
+            if (op2 == 0x3 && a == 0xf)
+                return OP_UXTH;
+            if (op2 == 0x5)
+                return OP_REVSH;
+            break;
+        default:
+            break;
+    }
+
+    return OP_UNDEFINED;
+}
+
 Opcode ARM_Disasm::DecodeMUL(uint32_t insn) {
     uint8_t bit24 = (insn >> 24) & 0x1;
     if (bit24 != 0) {
@@ -997,6 +1392,76 @@ Opcode ARM_Disasm::DecodeMSRImmAndHints(uint32_t insn) {
     }
 
     return OP_MSR;
+}
+
+Opcode ARM_Disasm::DecodeMediaMulDiv(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 22);
+    uint32_t op2_h = BITS(insn, 6, 7);
+    uint32_t a = BITS(insn, 12, 15);
+
+    switch (op1) {
+        case 0x0:
+            if (op2_h == 0x0) {
+                if (a != 0xf)
+                    return OP_SMLAD;
+                else
+                    return OP_SMUAD;
+            } else if (op2_h == 0x1) {
+                if (a != 0xf)
+                    return OP_SMLSD;
+                else
+                    return OP_SMUSD;
+            }
+            break;
+        case 0x4:
+            if (op2_h == 0x0)
+                return OP_SMLALD;
+            else if (op2_h == 0x1)
+                return OP_SMLSLD;
+            break;
+        case 0x5:
+            if (op2_h == 0x0) {
+                if (a != 0xf)
+                    return OP_SMMLA;
+                else
+                    return OP_SMMUL;
+            } else if (op2_h == 0x3) {
+                return OP_SMMLS;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return OP_UNDEFINED;
+}
+
+Opcode ARM_Disasm::DecodeMedia(uint32_t insn) {
+    uint32_t op1 = BITS(insn, 20, 24);
+    uint32_t rd = BITS(insn, 12, 15);
+    uint32_t op2 = BITS(insn, 5, 7);
+
+    switch (BITS(op1, 3, 4)) {
+        case 0x0:
+            // unsigned and signed parallel addition and subtraction
+            return DecodeParallelAddSub(insn);
+        case 0x1:
+            // Packing, unpacking, saturation, and reversal
+            return DecodePackingSaturationReversal(insn);
+        case 0x2:
+            // Signed multiply, signed and unsigned divide
+            return DecodeMediaMulDiv(insn);
+        case 0x3:
+            if (op2 == 0 && rd == 0xf)
+                return OP_USAD8;
+            if (op2 == 0 && rd != 0xf)
+                return OP_USADA8;
+            break;
+        default:
+            break;
+    }
+
+    return OP_UNDEFINED;
 }
 
 Opcode ARM_Disasm::DecodeLDRH(uint32_t insn) {
