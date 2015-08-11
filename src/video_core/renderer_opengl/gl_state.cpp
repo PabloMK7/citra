@@ -40,7 +40,6 @@ OpenGLState::OpenGLState() {
     logic_op = GL_COPY;
 
     for (auto& texture_unit : texture_units) {
-        texture_unit.enabled_2d = false;
         texture_unit.texture_2d = 0;
     }
 
@@ -147,16 +146,9 @@ void OpenGLState::Apply() {
 
     // Textures
     for (unsigned texture_index = 0; texture_index < ARRAY_SIZE(texture_units); ++texture_index) {
-        if (texture_units[texture_index].enabled_2d != cur_state.texture_units[texture_index].enabled_2d ||
-            texture_units[texture_index].texture_2d != cur_state.texture_units[texture_index].texture_2d) {
-
+        if (texture_units[texture_index].texture_2d != cur_state.texture_units[texture_index].texture_2d) {
             glActiveTexture(GL_TEXTURE0 + texture_index);
-
-            if (texture_units[texture_index].enabled_2d) {
-                glBindTexture(GL_TEXTURE_2D, texture_units[texture_index].texture_2d);
-            } else {
-                glBindTexture(GL_TEXTURE_2D, 0);
-            }
+            glBindTexture(GL_TEXTURE_2D, texture_units[texture_index].texture_2d);
         }
     }
 
@@ -181,4 +173,36 @@ void OpenGLState::Apply() {
     }
 
     cur_state = *this;
+}
+
+void OpenGLState::ResetTexture(GLuint id) {
+    for (auto& unit : cur_state.texture_units) {
+        if (unit.texture_2d == id) {
+            unit.texture_2d = 0;
+        }
+    }
+}
+
+void OpenGLState::ResetProgram(GLuint id) {
+    if (cur_state.draw.shader_program == id) {
+        cur_state.draw.shader_program = 0;
+    }
+}
+
+void OpenGLState::ResetBuffer(GLuint id) {
+    if (cur_state.draw.vertex_buffer == id) {
+        cur_state.draw.vertex_buffer = 0;
+    }
+}
+
+void OpenGLState::ResetVertexArray(GLuint id) {
+    if (cur_state.draw.vertex_array == id) {
+        cur_state.draw.vertex_array = 0;
+    }
+}
+
+void OpenGLState::ResetFramebuffer(GLuint id) {
+    if (cur_state.draw.framebuffer == id) {
+        cur_state.draw.framebuffer = 0;
+    }
 }

@@ -53,7 +53,6 @@ public:
 
     // 3 texture units - one for each that is used in PICA fragment shader emulation
     struct {
-        bool enabled_2d; // GL_TEXTURE_2D
         GLuint texture_2d; // GL_TEXTURE_BINDING_2D
     } texture_units[3];
 
@@ -73,6 +72,12 @@ public:
 
     /// Apply this state as the current OpenGL state
     void Apply();
+
+    static void ResetTexture(GLuint id);
+    static void ResetProgram(GLuint id);
+    static void ResetBuffer(GLuint id);
+    static void ResetVertexArray(GLuint id);
+    static void ResetFramebuffer(GLuint id);
 
 private:
     static OpenGLState cur_state;
