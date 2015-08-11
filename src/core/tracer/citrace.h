@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include "common/common_types.h"
 
 namespace CiTrace {
 
@@ -17,38 +17,38 @@ struct CTHeader {
         return "CiTr";
     }
 
-    static uint32_t ExpectedVersion() {
+    static u32 ExpectedVersion() {
         return 1;
     }
 
     char magic[4];
-    uint32_t version;
-    uint32_t header_size;
+    u32 version;
+    u32 header_size;
 
     struct {
         // NOTE: Register range sizes are technically hardware-constants, but the actual limits
         // aren't known. Hence we store the presumed limits along the offsets.
-        // Sizes are given in uint32_t units.
-        uint32_t gpu_registers;
-        uint32_t gpu_registers_size;
-        uint32_t lcd_registers;
-        uint32_t lcd_registers_size;
-        uint32_t pica_registers;
-        uint32_t pica_registers_size;
-        uint32_t default_attributes;
-        uint32_t default_attributes_size;
-        uint32_t vs_program_binary;
-        uint32_t vs_program_binary_size;
-        uint32_t vs_swizzle_data;
-        uint32_t vs_swizzle_data_size;
-        uint32_t vs_float_uniforms;
-        uint32_t vs_float_uniforms_size;
-        uint32_t gs_program_binary;
-        uint32_t gs_program_binary_size;
-        uint32_t gs_swizzle_data;
-        uint32_t gs_swizzle_data_size;
-        uint32_t gs_float_uniforms;
-        uint32_t gs_float_uniforms_size;
+        // Sizes are given in u32 units.
+        u32 gpu_registers;
+        u32 gpu_registers_size;
+        u32 lcd_registers;
+        u32 lcd_registers_size;
+        u32 pica_registers;
+        u32 pica_registers_size;
+        u32 default_attributes;
+        u32 default_attributes_size;
+        u32 vs_program_binary;
+        u32 vs_program_binary_size;
+        u32 vs_swizzle_data;
+        u32 vs_swizzle_data_size;
+        u32 vs_float_uniforms;
+        u32 vs_float_uniforms_size;
+        u32 gs_program_binary;
+        u32 gs_program_binary_size;
+        u32 gs_swizzle_data;
+        u32 gs_swizzle_data_size;
+        u32 gs_float_uniforms;
+        u32 gs_float_uniforms_size;
 
         // Other things we might want to store here:
         // - Initial framebuffer data, maybe even a full copy of FCRAM/VRAM
@@ -56,27 +56,27 @@ struct CTHeader {
         // - Lookup tables for procedural textures
     } initial_state_offsets;
 
-    uint32_t stream_offset;
-    uint32_t stream_size;
+    u32 stream_offset;
+    u32 stream_size;
 };
 
-enum CTStreamElementType : uint32_t {
+enum CTStreamElementType : u32 {
     FrameMarker   = 0xE1,
     MemoryLoad    = 0xE2,
     RegisterWrite = 0xE3,
 };
 
 struct CTMemoryLoad {
-    uint32_t file_offset;
-    uint32_t size;
-    uint32_t physical_address;
-    uint32_t pad;
+    u32 file_offset;
+    u32 size;
+    u32 physical_address;
+    u32 pad;
 };
 
 struct CTRegisterWrite {
-    uint32_t physical_address;
+    u32 physical_address;
 
-    enum : uint32_t {
+    enum : u32 {
         SIZE_8  = 0xD1,
         SIZE_16 = 0xD2,
         SIZE_32 = 0xD3,
@@ -84,7 +84,7 @@ struct CTRegisterWrite {
     } size;
 
     // TODO: Make it clearer which bits of this member are used for sizes other than 32 bits
-    uint64_t value;
+    u64 value;
 };
 
 struct CTStreamElement {

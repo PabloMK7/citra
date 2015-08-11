@@ -14,6 +14,8 @@
 
 #include <boost/range/algorithm/copy.hpp>
 
+#include "common/common_types.h"
+
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 
@@ -66,14 +68,14 @@ void GraphicsTracingWidget::StartRecording() {
 
     // Encode floating point numbers to 24-bit values
     // TODO: Drop this explicit conversion once we store float24 values bit-correctly internally.
-    std::array<uint32_t, 4 * 16> default_attributes;
+    std::array<u32, 4 * 16> default_attributes;
     for (unsigned i = 0; i < 16; ++i) {
         for (unsigned comp = 0; comp < 3; ++comp) {
             default_attributes[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.default_attributes[i][comp].ToFloat32());
         }
     }
 
-    std::array<uint32_t, 4 * 96> vs_float_uniforms;
+    std::array<u32, 4 * 96> vs_float_uniforms;
     for (unsigned i = 0; i < 96; ++i)
         for (unsigned comp = 0; comp < 3; ++comp)
             vs_float_uniforms[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());

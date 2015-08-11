@@ -4,12 +4,14 @@
 
 #include <QStandardItemModel>
 
+#include "common/common_types.h"
+#include "common/symbols.h"
+
 #include "callstack.h"
 
 #include "core/core.h"
 #include "core/arm/arm_interface.h"
 #include "core/memory.h"
-#include "common/symbols.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 CallstackWidget::CallstackWidget(QWidget* parent): QDockWidget(parent)
@@ -49,8 +51,8 @@ void CallstackWidget::OnDebugModeEntered()
         {
             std::string name;
             // ripped from disasm
-            uint8_t cond = (insn >> 28) & 0xf;
-            uint32_t i_offset = insn & 0xffffff;
+            u8 cond = (insn >> 28) & 0xf;
+            u32 i_offset = insn & 0xffffff;
             // Sign-extend the 24-bit offset
             if ((i_offset >> 23) & 1)
                 i_offset |= 0xff000000;

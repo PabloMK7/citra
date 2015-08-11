@@ -18,6 +18,7 @@
 
 #include "common/assert.h"
 #include "common/color.h"
+#include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
@@ -233,7 +234,7 @@ void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data
 
     dvle.main_offset_words = main_offset;
     dvle.output_register_table_offset = write_offset - dvlb.dvle_offset;
-    dvle.output_register_table_size = static_cast<uint32_t>(output_info_table.size());
+    dvle.output_register_table_size = static_cast<u32>(output_info_table.size());
     QueueForWriting((u8*)output_info_table.data(), static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
 
     // TODO: Create a label table for "main"
