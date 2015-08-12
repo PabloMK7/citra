@@ -62,7 +62,7 @@ CPUInfo::CPUInfo() {
 // Detects the various CPU features
 void CPUInfo::Detect() {
     memset(this, 0, sizeof(*this));
-#ifdef _M_X86_64
+#ifdef ARCHITECTURE_X64
     Mode64bit = true;
     OS64bit = true;
 #endif

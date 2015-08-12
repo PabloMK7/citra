@@ -6,11 +6,7 @@
 
 #include <nihstro/shader_bytecode.h>
 
-#if defined(_M_X86_64)
-#include "common/x64_emitter.h"
-#else
-#include "common/fake_emitter.h"
-#endif
+#include "common/x64/emitter.h"
 
 #include "video_core/pica.h"
 
@@ -65,18 +61,16 @@ private:
     void Compile_Block(unsigned stop);
     void Compile_NextInstr(unsigned* offset);
 
-#if defined(_M_X86_64)
     void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, Gen::X64Reg dest);
     void Compile_DestEnable(Instruction instr, Gen::X64Reg dest);
 
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
-#endif
 
     /// Pointer to the variable that stores the current Pica code offset. Used to handle nested code blocks.
     unsigned* offset_ptr = nullptr;
 
-    bool done = false;
+    /// Set to true if currently in a loop, used to check for the existence of nested loops
     bool looping = false;
 };
 

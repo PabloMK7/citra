@@ -17,13 +17,13 @@
 
 #include <cstring>
 
-#include "logging/log.h"
+#include "common/assert.h"
+#include "common/cpu_detect.h"
+#include "common/logging/log.h"
+#include "common/memory_util.h"
 
-#include "assert.h"
-#include "x64_emitter.h"
 #include "abi.h"
-#include "cpu_detect.h"
-#include "memory_util.h"
+#include "emitter.h"
 
 #define PRIx64 "llx"
 
@@ -164,7 +164,7 @@ void XEmitter::WriteSIB(int scale, int index, int base)
 void OpArg::WriteRex(XEmitter *emit, int opBits, int bits, int customOp) const
 {
     if (customOp == -1)       customOp = operandReg;
-#ifdef _M_X86_64
+#ifdef ARCHITECTURE_X64
     u8 op = 0x40;
     // REX.W (whether operation is a 64-bit operation)
     if (opBits == 64)         op |= 8;
@@ -236,7 +236,7 @@ void OpArg::WriteRest(XEmitter *emit, int extraBytes, X64Reg _operandReg,
         _offsetOrBaseReg = 5;
         emit->WriteModRM(0, _operandReg, _offsetOrBaseReg);
         //TODO : add some checks
-#ifdef _M_X86_64
+#ifdef ARCHITECTURE_X64
         u64 ripAddr = (u64)emit->GetCodePtr() + 4 + extraBytes;
         s64 distance = (s64)offset - (s64)ripAddr;
         ASSERT_MSG(
@@ -1463,7 +1463,7 @@ void XEmitter::MOVD_xmm(const OpArg &arg, X64Reg src) {WriteSSEOp(0x66, 0x7E, sr
 
 void XEmitter::MOVQ_xmm(X64Reg dest, OpArg arg)
 {
-#ifdef _M_X86_64
+#ifdef ARCHITECTURE_X64
         // Alternate encoding
         // This does not display correctly in MSVC's debugger, it thinks it's a MOVD
         arg.operandReg = dest;

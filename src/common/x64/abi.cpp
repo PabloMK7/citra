@@ -15,8 +15,8 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "x64_emitter.h"
 #include "abi.h"
+#include "emitter.h"
 
 using namespace Gen;
 
@@ -27,7 +27,7 @@ void XEmitter::ABI_EmitPrologue(int maxCallParams)
 {
 #ifdef _M_IX86
     // Don't really need to do anything
-#elif defined(_M_X86_64)
+#elif defined(ARCHITECTURE_X64)
 #if _WIN32
     int stacksize = ((maxCallParams + 1) & ~1) * 8 + 8;
     // Set up a stack frame so that we can call functions
@@ -43,7 +43,7 @@ void XEmitter::ABI_EmitEpilogue(int maxCallParams)
 {
 #ifdef _M_IX86
     RET();
-#elif defined(_M_X86_64)
+#elif defined(ARCHITECTURE_X64)
 #ifdef _WIN32
     int stacksize = ((maxCallParams+1)&~1)*8 + 8;
     ADD(64, R(RSP), Imm8(stacksize));

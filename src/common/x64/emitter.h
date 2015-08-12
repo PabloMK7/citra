@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "assert.h"
-#include "common_types.h"
-#include "code_block.h"
+#include "common/assert.h"
+#include "common/common_types.h"
+#include "common/code_block.h"
 
-#if defined(_M_X86_64) && !defined(_ARCH_64)
+#if defined(ARCHITECTURE_X64) && !defined(_ARCH_64)
 #define _ARCH_64
 #endif
 

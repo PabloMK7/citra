@@ -4,12 +4,13 @@
 
 #include <smmintrin.h>
 
-#include "common/abi.h"
 #include "common/cpu_detect.h"
-#include "common/x64_emitter.h"
+
+#include "common/x64/abi.h"
+#include "common/x64/emitter.h"
 
 #include "shader.h"
-#include "shader_jit.h"
+#include "shader_jit_x64.h"
 
 namespace Pica {
 
@@ -134,7 +135,7 @@ static const u8 NO_DEST_REG_MASK = 0xf;
  */
 void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, X64Reg dest) {
     X64Reg src_ptr;
-    std::size_t src_offset;
+    int src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
         src_ptr = UNIFORMS;
@@ -451,7 +452,6 @@ void JitCompiler::Compile_NOP(Instruction instr) {
 void JitCompiler::Compile_END(Instruction instr) {
     ABI_PopAllCalleeSavedRegsAndAdjustStack();
     RET();
-    done = true;
 }
 
 void JitCompiler::Compile_CALL(Instruction instr) {
@@ -655,12 +655,20 @@ CompiledShader* JitCompiler::Compile() {
     MOVAPS(NEGBIT, MDisp(RAX, 0));
 
     looping = false;
-    done = false;
+
     while (offset < g_state.vs.program_code.size()) {
         Compile_NextInstr(&offset);
     }
 
     return (CompiledShader*)start;
+}
+
+JitCompiler::JitCompiler() {
+    AllocCodeSpace(1024 * 1024 * 4);
+}
+
+void JitCompiler::Clear() {
+    ClearCodeSpace();
 }
 
 } // namespace Shader

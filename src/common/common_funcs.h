@@ -35,7 +35,7 @@
 
 #ifndef _MSC_VER
 
-#if defined(__x86_64__) || defined(_M_X86_64)
+#if defined(__x86_64__) || defined(ARCHITECTURE_X64)
 #define Crash() __asm__ __volatile__("int $3")
 #elif defined(_M_ARM)
 #define Crash() __asm__ __volatile__("trap")

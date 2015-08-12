@@ -15,7 +15,10 @@
 
 #include "shader.h"
 #include "shader_interpreter.h"
-#include "shader_jit.h"
+
+#ifdef ARCHITECTURE_X64
+#include "shader_jit_x64.h"
+#endif // ARCHITECTURE_X64
 
 namespace Pica {
 
@@ -43,7 +46,7 @@ void Setup(UnitState& state) {
             jit_shader = jit.Compile();
             shader_map.emplace(cache_key, jit_shader);
         }
-    }
+#endif // ARCHITECTURE_X64
 }
 
 void Shutdown() {
@@ -92,7 +95,7 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
         RunInterpreter(state);
 #else
     RunInterpreter(state);
-#endif
+#endif // ARCHITECTURE_X64
 
 #if PICA_DUMP_SHADERS
     DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),
