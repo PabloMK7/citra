@@ -5,9 +5,9 @@
 #include <cstring>
 #include <string>
 
-#include "common_types.h"
+#include "common/common_types.h"
+
 #include "cpu_detect.h"
-#include "hash.h"
 
 #ifndef _WIN32
 

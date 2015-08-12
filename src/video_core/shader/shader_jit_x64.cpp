@@ -4,9 +4,8 @@
 
 #include <smmintrin.h>
 
-#include "common/cpu_detect.h"
-
 #include "common/x64/abi.h"
+#include "common/x64/cpu_detect.h"
 #include "common/x64/emitter.h"
 
 #include "shader.h"

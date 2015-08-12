@@ -18,11 +18,11 @@
 #include <cstring>
 
 #include "common/assert.h"
-#include "common/cpu_detect.h"
 #include "common/logging/log.h"
 #include "common/memory_util.h"
 
 #include "abi.h"
+#include "cpu_detect.h"
 #include "emitter.h"
 
 #define PRIx64 "llx"

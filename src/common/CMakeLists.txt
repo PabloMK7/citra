@@ -3,7 +3,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 
 set(SRCS
             break_points.cpp
-            cpu_detect.cpp
             emu_window.cpp
             file_util.cpp
             hash.cpp
@@ -31,7 +30,6 @@ set(HEADERS
             common_funcs.h
             common_paths.h
             common_types.h
-            cpu_detect.h
             debug_interface.h
             emu_window.h
             file_util.h
@@ -63,10 +61,12 @@ set(HEADERS
 if(ARCHITECTURE_X64)
     set(SRCS ${SRCS}
             x64/abi.cpp
+            x64/cpu_detect.cpp
             x64/emitter.cpp)
 
     set(HEADERS ${HEADERS}
             x64/abi.h
+            x64/cpu_detect.h
             x64/emitter.h)
 endif()
 
