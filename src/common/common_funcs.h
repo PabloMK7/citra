@@ -20,12 +20,13 @@
 
 #ifdef _WIN32
     // Alignment
+    #define FORCE_INLINE __forceinline
     #define MEMORY_ALIGNED16(x) __declspec(align(16)) x
     #define MEMORY_ALIGNED32(x) __declspec(align(32)) x
     #define MEMORY_ALIGNED64(x) __declspec(align(64)) x
     #define MEMORY_ALIGNED128(x) __declspec(align(128)) x
 #else
-    #define __forceinline inline __attribute__((always_inline))
+    #define FORCE_INLINE inline __attribute__((always_inline))
     #define MEMORY_ALIGNED16(x) __attribute__((aligned(16))) x
     #define MEMORY_ALIGNED32(x) __attribute__((aligned(32))) x
     #define MEMORY_ALIGNED64(x) __attribute__((aligned(64))) x

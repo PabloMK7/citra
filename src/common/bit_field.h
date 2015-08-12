@@ -141,22 +141,22 @@ public:
     BitField& operator=(const BitField&) = delete;
 #endif
 
-    __forceinline BitField& operator=(T val)
+    FORCE_INLINE BitField& operator=(T val)
     {
         Assign(val);
         return *this;
     }
 
-    __forceinline operator T() const
+    FORCE_INLINE operator T() const
     {
         return Value();
     }
 
-    __forceinline void Assign(const T& value) {
+    FORCE_INLINE void Assign(const T& value) {
         storage = (storage & ~GetMask()) | (((StorageType)value << position) & GetMask());
     }
 
-    __forceinline T Value() const
+    FORCE_INLINE T Value() const
     {
         if (std::numeric_limits<T>::is_signed)
         {
@@ -170,7 +170,7 @@ public:
     }
 
     // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
-    __forceinline bool ToBool() const
+    FORCE_INLINE bool ToBool() const
     {
         return Value() != 0;
     }
@@ -187,7 +187,7 @@ private:
     // Unsigned version of StorageType
     typedef typename std::make_unsigned<StorageType>::type StorageTypeU;
 
-    __forceinline StorageType GetMask() const
+    FORCE_INLINE StorageType GetMask() const
     {
         return (((StorageTypeU)~0) >> (8 * sizeof(T)-bits)) << position;
     }
