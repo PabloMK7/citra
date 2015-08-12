@@ -1,81 +1,66 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
+// Copyright 2013 Dolphin Emulator Project / 2015 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-// Detect the CPU, so we'll know which optimizations to use
 #pragma once
 
 #include <string>
 
 namespace Common {
 
-enum CPUVendor
-{
-    VENDOR_INTEL = 0,
-    VENDOR_AMD = 1,
-    VENDOR_ARM = 2,
-    VENDOR_OTHER = 3,
+/// x86/x64 CPU vendors that may be detected by this module
+enum class CPUVendor {
+    INTEL,
+    AMD,
+    OTHER,
 };
 
-struct CPUInfo
-{
+/// x86/x64 CPU capabilities that may be detected by this module
+struct CPUCaps {
     CPUVendor vendor;
-
     char cpu_string[0x21];
     char brand_string[0x41];
-    bool OS64bit;
-    bool CPU64bit;
-    bool Mode64bit;
-
-    bool HTT;
     int num_cores;
-    int logical_cpu_count;
+    bool sse;
+    bool sse2;
+    bool sse3;
+    bool ssse3;
+    bool sse4_1;
+    bool sse4_2;
+    bool lzcnt;
+    bool avx;
+    bool avx2;
+    bool bmi1;
+    bool bmi2;
+    bool fma;
+    bool fma4;
+    bool aes;
 
-    bool bSSE;
-    bool bSSE2;
-    bool bSSE3;
-    bool bSSSE3;
-    bool bPOPCNT;
-    bool bSSE4_1;
-    bool bSSE4_2;
-    bool bLZCNT;
-    bool bSSE4A;
-    bool bAVX;
-    bool bAVX2;
-    bool bBMI1;
-    bool bBMI2;
-    bool bFMA;
-    bool bFMA4;
-    bool bAES;
-    // FXSAVE/FXRSTOR
-    bool bFXSR;
-    bool bMOVBE;
-    // This flag indicates that the hardware supports some mode
-    // in which denormal inputs _and_ outputs are automatically set to (signed) zero.
-    bool bFlushToZero;
-    bool bLAHFSAHF64;
-    bool bLongMode;
-    bool bAtom;
+    // Support for the FXSAVE and FXRSTOR instructions
+    bool fxsave_fxrstor;
 
-    // ARMv8 specific
-    bool bFP;
-    bool bASIMD;
-    bool bCRC32;
-    bool bSHA1;
-    bool bSHA2;
+    bool movbe;
 
-    // Call Detect()
-    explicit CPUInfo();
+    // This flag indicates that the hardware supports some mode in which denormal inputs and outputs
+    // are automatically set to (signed) zero.
+    bool flush_to_zero;
 
-    // Turn the cpu info into a string we can show
-    std::string Summarize();
+    // Support for LAHF and SAHF instructions in 64-bit mode
+    bool lahf_sahf_64;
 
-private:
-    // Detects the various cpu features
-    void Detect();
+    bool long_mode;
 };
 
-extern CPUInfo cpu_info;
+/**
+ * Gets the supported capabilities of the host CPU
+ * @return Reference to a CPUCaps struct with the detected host CPU capabilities
+ */
+const CPUCaps& GetCPUCaps();
+
+/**
+ * Gets a string summary of the name and supported capabilities of the host CPU
+ * @return String summary
+ */
+std::string GetCPUCapsString();
 
 } // namespace Common

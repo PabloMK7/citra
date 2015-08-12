@@ -532,7 +532,7 @@ public:
     void MOVSX(int dbits, int sbits, X64Reg dest, OpArg src); //automatically uses MOVSXD if necessary
     void MOVZX(int dbits, int sbits, X64Reg dest, OpArg src);
 
-    // Available only on Atom or >= Haswell so far. Test with cpu_info.bMOVBE.
+    // Available only on Atom or >= Haswell so far. Test with GetCPUCaps().movbe.
     void MOVBE(int dbits, const OpArg& dest, const OpArg& src);
 
     // Available only on AMD >= Phenom or Intel >= Haswell

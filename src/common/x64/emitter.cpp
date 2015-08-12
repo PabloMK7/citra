@@ -826,14 +826,14 @@ void XEmitter::BSR(int bits, X64Reg dest, OpArg src) {WriteBitSearchType(bits,de
 void XEmitter::TZCNT(int bits, X64Reg dest, OpArg src)
 {
     CheckFlags();
-    if (!Common::cpu_info.bBMI1)
+    if (!Common::GetCPUCaps().bmi1)
         ASSERT_MSG(0, "Trying to use BMI1 on a system that doesn't support it. Bad programmer.");
     WriteBitSearchType(bits, dest, src, 0xBC, true);
 }
 void XEmitter::LZCNT(int bits, X64Reg dest, OpArg src)
 {
     CheckFlags();
-    if (!Common::cpu_info.bLZCNT)
+    if (!Common::GetCPUCaps().lzcnt)
         ASSERT_MSG(0, "Trying to use LZCNT on a system that doesn't support it. Bad programmer.");
     WriteBitSearchType(bits, dest, src, 0xBD, true);
 }
@@ -907,7 +907,7 @@ void XEmitter::MOVZX(int dbits, int sbits, X64Reg dest, OpArg src)
 
 void XEmitter::MOVBE(int bits, const OpArg& dest, const OpArg& src)
 {
-    ASSERT_MSG(Common::cpu_info.bMOVBE, "Generating MOVBE on a system that does not support it.");
+    ASSERT_MSG(Common::GetCPUCaps().movbe, "Generating MOVBE on a system that does not support it.");
     if (bits == 8)
     {
         MOV(bits, dest, src);
@@ -1420,7 +1420,7 @@ static int GetVEXpp(u8 opPrefix)
 
 void XEmitter::WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes)
 {
-    if (!Common::cpu_info.bAVX)
+    if (!Common::GetCPUCaps().avx)
         ASSERT_MSG(0, "Trying to use AVX on a system that doesn't support it. Bad programmer.");
     int mmmmm = GetVEXmmmmm(op);
     int pp = GetVEXpp(opPrefix);
@@ -1445,7 +1445,7 @@ void XEmitter::WriteVEXOp(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg r
 void XEmitter::WriteBMI1Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes)
 {
     CheckFlags();
-    if (!Common::cpu_info.bBMI1)
+    if (!Common::GetCPUCaps().bmi1)
         ASSERT_MSG(0, "Trying to use BMI1 on a system that doesn't support it. Bad programmer.");
     WriteVEXOp(size, opPrefix, op, regOp1, regOp2, arg, extrabytes);
 }
@@ -1453,7 +1453,7 @@ void XEmitter::WriteBMI1Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg 
 void XEmitter::WriteBMI2Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes)
 {
     CheckFlags();
-    if (!Common::cpu_info.bBMI2)
+    if (!Common::GetCPUCaps().bmi2)
         ASSERT_MSG(0, "Trying to use BMI2 on a system that doesn't support it. Bad programmer.");
     WriteVEXOp(size, opPrefix, op, regOp1, regOp2, arg, extrabytes);
 }
@@ -1647,7 +1647,7 @@ void XEmitter::UNPCKHPD(X64Reg dest, OpArg arg) {WriteSSEOp(0x66, 0x15, dest, ar
 
 void XEmitter::MOVDDUP(X64Reg regOp, OpArg arg)
 {
-    if (Common::cpu_info.bSSE3)
+    if (Common::GetCPUCaps().sse3)
     {
         WriteSSEOp(0xF2, 0x12, regOp, arg); //SSE3 movddup
     }
@@ -1737,14 +1737,14 @@ void XEmitter::PSRAD(X64Reg reg, int shift)
 
 void XEmitter::WriteSSSE3Op(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes)
 {
-    if (!Common::cpu_info.bSSSE3)
+    if (!Common::GetCPUCaps().ssse3)
         ASSERT_MSG(0, "Trying to use SSSE3 on a system that doesn't support it. Bad programmer.");
     WriteSSEOp(opPrefix, op, regOp, arg, extrabytes);
 }
 
 void XEmitter::WriteSSE41Op(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes)
 {
-    if (!Common::cpu_info.bSSE4_1)
+    if (!Common::GetCPUCaps().sse4_1)
         ASSERT_MSG(0, "Trying to use SSE4.1 on a system that doesn't support it. Bad programmer.");
     WriteSSEOp(opPrefix, op, regOp, arg, extrabytes);
 }

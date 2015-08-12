@@ -223,7 +223,7 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
         // Not all components are enabled, so mask the result when storing to the destination register...
         MOVAPS(SCRATCH, MDisp(STATE, UnitState::OutputOffset(dest)));
 
-        if (Common::cpu_info.bSSE4_1) {
+        if (Common::GetCPUCaps().sse4_1) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             BLENDPS(SCRATCH, R(src), mask);
         } else {
@@ -291,7 +291,7 @@ void JitCompiler::Compile_DP3(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::cpu_info.bSSE4_1) {
+    if (Common::GetCPUCaps().sse4_1) {
         DPPS(SRC1, R(SRC2), 0x7f);
     } else {
         MULPS(SRC1, R(SRC2));
@@ -314,7 +314,7 @@ void JitCompiler::Compile_DP4(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::cpu_info.bSSE4_1) {
+    if (Common::GetCPUCaps().sse4_1) {
         DPPS(SRC1, R(SRC2), 0xff);
     } else {
         MULPS(SRC1, R(SRC2));
@@ -341,7 +341,7 @@ void JitCompiler::Compile_MUL(Instruction instr) {
 void JitCompiler::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    if (Common::cpu_info.bSSE4_1) {
+    if (Common::GetCPUCaps().sse4_1) {
         ROUNDFLOORPS(SRC1, R(SRC1));
     } else {
         CVTPS2DQ(SRC1, R(SRC1));
@@ -513,7 +513,7 @@ void JitCompiler::Compile_MAD(Instruction instr) {
         Compile_SwizzleSrc(instr, 3, instr.mad.src3, SRC3);
     }
 
-    if (Common::cpu_info.bFMA) {
+    if (Common::GetCPUCaps().fma) {
         VFMADD213PS(SRC1, SRC2, R(SRC3));
     } else {
         MULPS(SRC1, R(SRC2));
