@@ -25,6 +25,10 @@ public:
     u32 GetPC() const override;
     u32 GetReg(int index) const override;
     void SetReg(int index, u32 value) override;
+    u32 GetVFPReg(int index) const override;
+    void SetVFPReg(int index, u32 value) override;
+    u32 GetVFPSystemReg(VFPSystemRegister reg) const override;
+    void SetVFPSystemReg(VFPSystemRegister reg, u32 value) override;
     u32 GetCPSR() const override;
     void SetCPSR(u32 cpsr) override;
     u32 GetCP15Register(CP15Register reg) override;

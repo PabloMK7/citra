@@ -55,7 +55,7 @@ enum {
 };
 
 // VFP system registers
-enum {
+enum VFPSystemRegister {
     VFP_FPSID,
     VFP_FPSCR,
     VFP_FPEXC,
