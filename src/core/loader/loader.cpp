@@ -77,6 +77,8 @@ static const char* GetFileTypeString(FileType type) {
         return "NCSD";
     case FileType::CXI:
         return "NCCH";
+    case FileType::CIA:
+        return "CIA";
     case FileType::ELF:
         return "ELF";
     case FileType::THREEDSX:
