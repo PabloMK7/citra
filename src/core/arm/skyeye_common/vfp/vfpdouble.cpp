@@ -51,6 +51,7 @@
  * ===========================================================================
  */
 
+#include <algorithm>
 #include "common/logging/log.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
@@ -785,9 +786,7 @@ u32 vfp_double_add(struct vfp_double *vdd, struct vfp_double *vdn,struct vfp_dou
      * This ensures that NaN propagation works correctly.
      */
     if (vdn->exponent < vdm->exponent) {
-        struct vfp_double *t = vdn;
-        vdn = vdm;
-        vdm = t;
+        std::swap(vdm, vdn);
     }
 
     /*
@@ -843,9 +842,7 @@ vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn,
      * This ensures that NaN propagation works correctly.
      */
     if (vdn->exponent < vdm->exponent) {
-        struct vfp_double *t = vdn;
-        vdn = vdm;
-        vdm = t;
+        std::swap(vdm, vdn);
         LOG_TRACE(Core_ARM11, "VFP: swapping M <-> N\n");
     }
 
