@@ -6,15 +6,15 @@
 
 namespace Pica {
 
-namespace VertexShader {
+namespace Shader {
     struct OutputVertex;
 }
 
 namespace Rasterizer {
 
-void ProcessTriangle(const VertexShader::OutputVertex& v0,
-                     const VertexShader::OutputVertex& v1,
-                     const VertexShader::OutputVertex& v2);
+void ProcessTriangle(const Shader::OutputVertex& v0,
+                     const Shader::OutputVertex& v1,
+                     const Shader::OutputVertex& v2);
 
 } // namespace Rasterizer
 

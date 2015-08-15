@@ -131,6 +131,9 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
     SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
 
+    ui.action_Use_Shader_JIT->setChecked(Settings::values.use_shader_jit);
+    SetShaderJITEnabled(ui.action_Use_Shader_JIT->isChecked());
+
     ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", true).toBool());
     ToggleWindowMode();
 
@@ -144,6 +147,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
     connect(ui.action_Use_Hardware_Renderer, SIGNAL(triggered(bool)), this, SLOT(SetHardwareRendererEnabled(bool)));
+    connect(ui.action_Use_Shader_JIT, SIGNAL(triggered(bool)), this, SLOT(SetShaderJITEnabled(bool)));
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
@@ -329,6 +333,10 @@ void GMainWindow::OnOpenHotkeysDialog()
 
 void GMainWindow::SetHardwareRendererEnabled(bool enabled) {
     VideoCore::g_hw_renderer_enabled = enabled;
+}
+
+void GMainWindow::SetShaderJITEnabled(bool enabled) {
+    VideoCore::g_shader_jit_enabled = enabled;
 }
 
 void GMainWindow::ToggleWindowMode() {

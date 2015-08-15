@@ -202,9 +202,9 @@ void RasterizerOpenGL::Reset() {
     res_cache.FullFlush();
 }
 
-void RasterizerOpenGL::AddTriangle(const Pica::VertexShader::OutputVertex& v0,
-                                   const Pica::VertexShader::OutputVertex& v1,
-                                   const Pica::VertexShader::OutputVertex& v2) {
+void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
+                                   const Pica::Shader::OutputVertex& v1,
+                                   const Pica::Shader::OutputVertex& v2) {
     vertex_batch.push_back(HardwareVertex(v0));
     vertex_batch.push_back(HardwareVertex(v1));
     vertex_batch.push_back(HardwareVertex(v2));

@@ -16,7 +16,7 @@
 #include "math.h"
 #include "pica.h"
 #include "rasterizer.h"
-#include "vertex_shader.h"
+#include "shader/shader_interpreter.h"
 #include "video_core/utils.h"
 
 namespace Pica {
@@ -272,9 +272,9 @@ static Common::Profiling::TimingCategory rasterization_category("Rasterization")
  * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
  * culling via recursion.
  */
-static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
-                                    const VertexShader::OutputVertex& v1,
-                                    const VertexShader::OutputVertex& v2,
+static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
+                                    const Shader::OutputVertex& v1,
+                                    const Shader::OutputVertex& v2,
                                     bool reversed = false)
 {
     const auto& regs = g_state.regs;
@@ -1107,9 +1107,9 @@ static void ProcessTriangleInternal(const VertexShader::OutputVertex& v0,
     }
 }
 
-void ProcessTriangle(const VertexShader::OutputVertex& v0,
-                     const VertexShader::OutputVertex& v1,
-                     const VertexShader::OutputVertex& v2) {
+void ProcessTriangle(const Shader::OutputVertex& v0,
+                     const Shader::OutputVertex& v1,
+                     const Shader::OutputVertex& v2) {
     ProcessTriangleInternal(v0, v1, v2);
 }
 

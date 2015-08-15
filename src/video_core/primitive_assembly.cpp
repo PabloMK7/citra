@@ -4,7 +4,7 @@
 
 #include "pica.h"
 #include "primitive_assembly.h"
-#include "vertex_shader.h"
+#include "shader/shader_interpreter.h"
 
 #include "common/logging/log.h"
 #include "video_core/debug_utils/debug_utils.h"
@@ -56,7 +56,7 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandl
 
 // explicitly instantiate use cases
 template
-struct PrimitiveAssembler<VertexShader::OutputVertex>;
+struct PrimitiveAssembler<Shader::OutputVertex>;
 template
 struct PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex>;
 

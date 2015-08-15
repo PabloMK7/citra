@@ -5,6 +5,7 @@ set(SRCS
             break_points.cpp
             emu_window.cpp
             file_util.cpp
+            hash.cpp
             key_map.cpp
             logging/filter.cpp
             logging/text_formatter.cpp
@@ -24,14 +25,15 @@ set(HEADERS
             bit_field.h
             break_points.h
             chunk_file.h
+            code_block.h
             color.h
             common_funcs.h
             common_paths.h
             common_types.h
-            cpu_detect.h
             debug_interface.h
             emu_window.h
             file_util.h
+            hash.h
             key_map.h
             linear_disk_cache.h
             logging/text_formatter.h
@@ -55,6 +57,18 @@ set(HEADERS
             timer.h
             vector_math.h
             )
+
+if(ARCHITECTURE_x86_64)
+    set(SRCS ${SRCS}
+            x64/abi.cpp
+            x64/cpu_detect.cpp
+            x64/emitter.cpp)
+
+    set(HEADERS ${HEADERS}
+            x64/abi.h
+            x64/cpu_detect.h
+            x64/emitter.h)
+endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
 

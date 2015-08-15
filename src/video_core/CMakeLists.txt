@@ -11,8 +11,9 @@ set(SRCS
             pica.cpp
             primitive_assembly.cpp
             rasterizer.cpp
+            shader/shader.cpp
+            shader/shader_interpreter.cpp
             utils.cpp
-            vertex_shader.cpp
             video_core.cpp
             )
 
@@ -35,10 +36,19 @@ set(HEADERS
             primitive_assembly.h
             rasterizer.h
             renderer_base.h
+            shader/shader.h
+            shader/shader_interpreter.h
             utils.h
-            vertex_shader.h
             video_core.h
             )
+
+if(ARCHITECTURE_x86_64)
+    set(SRCS ${SRCS}
+            shader/shader_jit_x64.cpp)
+
+    set(HEADERS ${HEADERS}
+            shader/shader_jit_x64.h)
+endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
 

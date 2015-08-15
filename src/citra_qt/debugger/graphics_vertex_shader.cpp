@@ -8,7 +8,7 @@
 #include <QBoxLayout>
 #include <QTreeView>
 
-#include "video_core/vertex_shader.h"
+#include "video_core/shader/shader_interpreter.h"
 
 #include "graphics_vertex_shader.h"
 

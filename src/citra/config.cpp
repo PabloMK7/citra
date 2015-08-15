@@ -61,6 +61,7 @@ void Config::ReadValues() {
 
     // Renderer
     Settings::values.use_hw_renderer = glfw_config->GetBoolean("Renderer", "use_hw_renderer", false);
+    Settings::values.use_shader_jit = glfw_config->GetBoolean("Renderer", "use_shader_jit", true);
 
     Settings::values.bg_red   = (float)glfw_config->GetReal("Renderer", "bg_red",   1.0);
     Settings::values.bg_green = (float)glfw_config->GetReal("Renderer", "bg_green", 1.0);
