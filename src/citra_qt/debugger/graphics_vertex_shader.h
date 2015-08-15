@@ -51,7 +51,7 @@ private slots:
 
     void OnInputAttributeChanged(int index);
 
-    void OnIterationIndexChanged(int index);
+    void OnCycleIndexChanged(int index);
 
     void DumpShader();
 
@@ -80,7 +80,7 @@ private:
     // Text to be shown when input vertex data is not retrievable
     QLabel* breakpoint_warning;
 
-    QSpinBox* iteration_index;
+    QSpinBox* cycle_index;
 
     nihstro::ShaderInfo info;
     Pica::Shader::DebugData<true> debug_data;

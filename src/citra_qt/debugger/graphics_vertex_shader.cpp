@@ -308,14 +308,14 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
 
     instruction_description = new QLabel;
 
-    iteration_index = new QSpinBox;
+    cycle_index = new QSpinBox;
 
     connect(this, SIGNAL(SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags)),
             binary_list->selectionModel(), SLOT(select(const QModelIndex&, QItemSelectionModel::SelectionFlags)));
 
     connect(dump_shader, SIGNAL(clicked()), this, SLOT(DumpShader()));
 
-    connect(iteration_index, SIGNAL(valueChanged(int)), this, SLOT(OnIterationIndexChanged(int)));
+    connect(cycle_index, SIGNAL(valueChanged(int)), this, SLOT(OnCycleIndexChanged(int)));
 
     for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
         connect(input_data[i], SIGNAL(textEdited(const QString&)), input_data_mapper, SLOT(map()));
@@ -364,11 +364,12 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
     main_layout->addWidget(dump_shader);
     {
         auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Iteration Index:")));
-        sub_layout->addWidget(iteration_index);
+        sub_layout->addWidget(new QLabel(tr("Cycle Index:")));
+        sub_layout->addWidget(cycle_index);
         main_layout->addLayout(sub_layout);
     }
     main_layout->addWidget(instruction_description);
+    main_layout->addStretch();
     main_widget->setLayout(main_layout);
     setWidget(main_widget);
 
@@ -437,9 +438,9 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
         input_data_container[source_attr]->setVisible(true);
     }
 
-    // Initialize debug info text for current iteration count
-    iteration_index->setMaximum(debug_data.records.size() - 1);
-    OnIterationIndexChanged(iteration_index->value());
+    // Initialize debug info text for current cycle count
+    cycle_index->setMaximum(debug_data.records.size() - 1);
+    OnCycleIndexChanged(cycle_index->value());
 
     model->endResetModel();
 }
@@ -453,7 +454,7 @@ void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
     Reload();
 }
 
-void GraphicsVertexShaderWidget::OnIterationIndexChanged(int index) {
+void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
     QString text;
 
     auto& record = debug_data.records[index];
