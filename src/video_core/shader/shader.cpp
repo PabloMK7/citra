@@ -67,29 +67,29 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
     // Setup input register table
     const auto& attribute_register_map = config.input_register_map;
 
-    if (num_attributes > 0) state.input_registers[attribute_register_map.attribute0_register] = input.attr[0];
-    if (num_attributes > 1) state.input_registers[attribute_register_map.attribute1_register] = input.attr[1];
-    if (num_attributes > 2) state.input_registers[attribute_register_map.attribute2_register] = input.attr[2];
-    if (num_attributes > 3) state.input_registers[attribute_register_map.attribute3_register] = input.attr[3];
-    if (num_attributes > 4) state.input_registers[attribute_register_map.attribute4_register] = input.attr[4];
-    if (num_attributes > 5) state.input_registers[attribute_register_map.attribute5_register] = input.attr[5];
-    if (num_attributes > 6) state.input_registers[attribute_register_map.attribute6_register] = input.attr[6];
-    if (num_attributes > 7) state.input_registers[attribute_register_map.attribute7_register] = input.attr[7];
-    if (num_attributes > 8) state.input_registers[attribute_register_map.attribute8_register] = input.attr[8];
-    if (num_attributes > 9) state.input_registers[attribute_register_map.attribute9_register] = input.attr[9];
-    if (num_attributes > 10) state.input_registers[attribute_register_map.attribute10_register] = input.attr[10];
-    if (num_attributes > 11) state.input_registers[attribute_register_map.attribute11_register] = input.attr[11];
-    if (num_attributes > 12) state.input_registers[attribute_register_map.attribute12_register] = input.attr[12];
-    if (num_attributes > 13) state.input_registers[attribute_register_map.attribute13_register] = input.attr[13];
-    if (num_attributes > 14) state.input_registers[attribute_register_map.attribute14_register] = input.attr[14];
-    if (num_attributes > 15) state.input_registers[attribute_register_map.attribute15_register] = input.attr[15];
+    if (num_attributes > 0) state.registers.input[attribute_register_map.attribute0_register] = input.attr[0];
+    if (num_attributes > 1) state.registers.input[attribute_register_map.attribute1_register] = input.attr[1];
+    if (num_attributes > 2) state.registers.input[attribute_register_map.attribute2_register] = input.attr[2];
+    if (num_attributes > 3) state.registers.input[attribute_register_map.attribute3_register] = input.attr[3];
+    if (num_attributes > 4) state.registers.input[attribute_register_map.attribute4_register] = input.attr[4];
+    if (num_attributes > 5) state.registers.input[attribute_register_map.attribute5_register] = input.attr[5];
+    if (num_attributes > 6) state.registers.input[attribute_register_map.attribute6_register] = input.attr[6];
+    if (num_attributes > 7) state.registers.input[attribute_register_map.attribute7_register] = input.attr[7];
+    if (num_attributes > 8) state.registers.input[attribute_register_map.attribute8_register] = input.attr[8];
+    if (num_attributes > 9) state.registers.input[attribute_register_map.attribute9_register] = input.attr[9];
+    if (num_attributes > 10) state.registers.input[attribute_register_map.attribute10_register] = input.attr[10];
+    if (num_attributes > 11) state.registers.input[attribute_register_map.attribute11_register] = input.attr[11];
+    if (num_attributes > 12) state.registers.input[attribute_register_map.attribute12_register] = input.attr[12];
+    if (num_attributes > 13) state.registers.input[attribute_register_map.attribute13_register] = input.attr[13];
+    if (num_attributes > 14) state.registers.input[attribute_register_map.attribute14_register] = input.attr[14];
+    if (num_attributes > 15) state.registers.input[attribute_register_map.attribute15_register] = input.attr[15];
 
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled)
-        jit_shader(&state);
+        jit_shader(&state.registers);
     else
         RunInterpreter(state);
 #else
@@ -117,7 +117,7 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
         for (int comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
             if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = state.output_registers[i][comp];
+                *out = state.registers.output[i][comp];
             } else {
                 // Zero output so that attributes which aren't output won't have denormals in them,
                 // which would slow us down later.

@@ -79,11 +79,14 @@ static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has inva
  * here will make it easier for us to parallelize the shader processing later.
  */
 struct UnitState {
-    // The registers are accessed by the shader JIT using SSE instructions, and are therefore
-    // required to be 16-byte aligned.
-    Math::Vec4<float24> MEMORY_ALIGNED16(input_registers[16]);
-    Math::Vec4<float24> MEMORY_ALIGNED16(output_registers[16]);
-    Math::Vec4<float24> MEMORY_ALIGNED16(temporary_registers[16]);
+    struct Registers {
+        // The registers are accessed by the shader JIT using SSE instructions, and are therefore
+        // required to be 16-byte aligned.
+        Math::Vec4<float24> MEMORY_ALIGNED16(input[16]);
+        Math::Vec4<float24> MEMORY_ALIGNED16(output[16]);
+        Math::Vec4<float24> MEMORY_ALIGNED16(temporary[16]);
+    } registers;
+    static_assert(std::is_pod<Registers>::value, "Structure is not POD");
 
     u32 program_counter;
     bool conditional_code[2];
@@ -116,10 +119,10 @@ struct UnitState {
     static int InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
-            return (int)offsetof(UnitState, input_registers) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return (int)offsetof(UnitState::Registers, input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return (int)offsetof(UnitState, temporary_registers) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return (int)offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -130,10 +133,10 @@ struct UnitState {
     static int OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return (int)offsetof(UnitState, output_registers) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return (int)offsetof(UnitState::Registers, output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return (int)offsetof(UnitState, temporary_registers) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return (int)offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();

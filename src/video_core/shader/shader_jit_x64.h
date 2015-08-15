@@ -20,7 +20,7 @@ namespace Pica {
 
 namespace Shader {
 
-using CompiledShader = void(void* state);
+using CompiledShader = void(void* registers);
 
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64

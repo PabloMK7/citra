@@ -62,10 +62,10 @@ void RunInterpreter(UnitState& state) {
         auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
             switch (source_reg.GetRegisterType()) {
             case RegisterType::Input:
-                return &state.input_registers[source_reg.GetIndex()].x;
+                return &state.registers.input[source_reg.GetIndex()].x;
 
             case RegisterType::Temporary:
-                return &state.temporary_registers[source_reg.GetIndex()].x;
+                return &state.registers.temporary[source_reg.GetIndex()].x;
 
             case RegisterType::FloatUniform:
                 return &uniforms.f[source_reg.GetIndex()].x;
@@ -114,8 +114,8 @@ void RunInterpreter(UnitState& state) {
                 src2[3] = src2[3] * float24::FromFloat32(-1);
             }
 
-            float24* dest = (instr.common.dest.Value() < 0x10) ? &state.output_registers[instr.common.dest.Value().GetIndex()][0]
-                        : (instr.common.dest.Value() < 0x20) ? &state.temporary_registers[instr.common.dest.Value().GetIndex()][0]
+            float24* dest = (instr.common.dest.Value() < 0x10) ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
+                        : (instr.common.dest.Value() < 0x20) ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
                         : dummy_vec4_float24;
 
             state.debug.max_opdesc_id = std::max<u32>(state.debug.max_opdesc_id, 1+instr.common.operand_desc_id);
@@ -355,8 +355,8 @@ void RunInterpreter(UnitState& state) {
                     src3[3] = src3[3] * float24::FromFloat32(-1);
                 }
 
-                float24* dest = (instr.mad.dest.Value() < 0x10) ? &state.output_registers[instr.mad.dest.Value().GetIndex()][0]
-                            : (instr.mad.dest.Value() < 0x20) ? &state.temporary_registers[instr.mad.dest.Value().GetIndex()][0]
+                float24* dest = (instr.mad.dest.Value() < 0x10) ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
+                            : (instr.mad.dest.Value() < 0x20) ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
                             : dummy_vec4_float24;
 
                 for (int i = 0; i < 4; ++i) {

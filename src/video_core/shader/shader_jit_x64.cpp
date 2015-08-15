@@ -106,7 +106,7 @@ static const X64Reg COND0 = R13;
 /// Result of the previous CMP instruction for the Y-component comparison
 static const X64Reg COND1 = R14;
 /// Pointer to the UnitState instance for the current VS unit
-static const X64Reg STATE = R15;
+static const X64Reg REGISTERS = R15;
 /// SIMD scratch register
 static const X64Reg SCRATCH = XMM0;
 /// Loaded with the first swizzled source register, otherwise can be used as a scratch register
@@ -140,7 +140,7 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         src_ptr = UNIFORMS;
         src_offset = src_reg.GetIndex() * sizeof(float24) * 4;
     } else {
-        src_ptr = STATE;
+        src_ptr = REGISTERS;
         src_offset = UnitState::InputOffset(src_reg);
     }
 
@@ -217,11 +217,11 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
         // Store dest back to memory
-        MOVAPS(MDisp(STATE, UnitState::OutputOffset(dest)), src);
+        MOVAPS(MDisp(REGISTERS, UnitState::OutputOffset(dest)), src);
 
     } else {
         // Not all components are enabled, so mask the result when storing to the destination register...
-        MOVAPS(SCRATCH, MDisp(STATE, UnitState::OutputOffset(dest)));
+        MOVAPS(SCRATCH, MDisp(REGISTERS, UnitState::OutputOffset(dest)));
 
         if (Common::GetCPUCaps().sse4_1) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
@@ -240,7 +240,7 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
         }
 
         // Store dest back to memory
-        MOVAPS(MDisp(STATE, UnitState::OutputOffset(dest)), SCRATCH);
+        MOVAPS(MDisp(REGISTERS, UnitState::OutputOffset(dest)), SCRATCH);
     }
 }
 
@@ -635,7 +635,7 @@ CompiledShader* JitCompiler::Compile() {
 
     ABI_PushAllCalleeSavedRegsAndAdjustStack();
 
-    MOV(PTRBITS, R(STATE), R(ABI_PARAM1));
+    MOV(PTRBITS, R(REGISTERS), R(ABI_PARAM1));
     MOV(PTRBITS, R(UNIFORMS), ImmPtr(&g_state.vs.uniforms));
 
     // Zero address/loop  registers
