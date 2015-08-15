@@ -66,8 +66,9 @@ const char* GetLogClassName(Class log_class) {
         ALL_LOG_CLASSES()
 #undef CLS
 #undef SUB
+        case Class::Count:
+            UNREACHABLE();
     }
-    return "Unknown";
 }
 
 const char* GetLevelName(Level log_level) {
