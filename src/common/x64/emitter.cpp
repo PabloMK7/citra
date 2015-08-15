@@ -164,7 +164,7 @@ void XEmitter::WriteSIB(int scale, int index, int base)
 void OpArg::WriteRex(XEmitter *emit, int opBits, int bits, int customOp) const
 {
     if (customOp == -1)       customOp = operandReg;
-#ifdef ARCHITECTURE_X64
+#ifdef ARCHITECTURE_x86_64
     u8 op = 0x40;
     // REX.W (whether operation is a 64-bit operation)
     if (opBits == 64)         op |= 8;
@@ -236,7 +236,7 @@ void OpArg::WriteRest(XEmitter *emit, int extraBytes, X64Reg _operandReg,
         _offsetOrBaseReg = 5;
         emit->WriteModRM(0, _operandReg, _offsetOrBaseReg);
         //TODO : add some checks
-#ifdef ARCHITECTURE_X64
+#ifdef ARCHITECTURE_x86_64
         u64 ripAddr = (u64)emit->GetCodePtr() + 4 + extraBytes;
         s64 distance = (s64)offset - (s64)ripAddr;
         ASSERT_MSG(
@@ -1463,7 +1463,7 @@ void XEmitter::MOVD_xmm(const OpArg &arg, X64Reg src) {WriteSSEOp(0x66, 0x7E, sr
 
 void XEmitter::MOVQ_xmm(X64Reg dest, OpArg arg)
 {
-#ifdef ARCHITECTURE_X64
+#ifdef ARCHITECTURE_x86_64
         // Alternate encoding
         // This does not display correctly in MSVC's debugger, it thinks it's a MOVD
         arg.operandReg = dest;

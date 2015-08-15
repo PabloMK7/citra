@@ -10,9 +10,21 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/pre-commit)
         DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks)
 endif()
 
+# Platform-agnostic definition to check if we are on x86_64
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "[xX]86_64" OR
+   ${CMAKE_SYSTEM_PROCESSOR} MATCHES "[aA][mM][dD]64")
+    set(ARCHITECTURE_x86_64 1)
+    add_definitions(-DARCHITECTURE_x86_64=1)
+endif()
+
 if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes -pthread -msse4.2")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -msse4.2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes -pthread")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+
+    if (ARCHITECTURE_x86_64)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse4.1")
+    endif()
 else()
     # Silence "deprecation" warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE)
@@ -49,17 +61,6 @@ else()
 
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "/DEBUG" CACHE STRING "" FORCE)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
-endif()
-
-# Platform-agnostic definition to check if we are on x86_64
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^x86" OR
-   ${CMAKE_SYSTEM_PROCESSOR} MATCHES "i.86" OR
-   ${CMAKE_SYSTEM_PROCESSOR} MATCHES "[aA][mM][dD]64" OR
-   APPLE)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(ARCHITECTURE_X64 1)
-        add_definitions(-DARCHITECTURE_X64=1)
-    endif()
 endif()
 
 add_definitions(-DSINGLETHREADED)

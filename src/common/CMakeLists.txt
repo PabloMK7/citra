@@ -58,7 +58,7 @@ set(HEADERS
             vector_math.h
             )
 
-if(ARCHITECTURE_X64)
+if(ARCHITECTURE_x86_64)
     set(SRCS ${SRCS}
             x64/abi.cpp
             x64/cpu_detect.cpp

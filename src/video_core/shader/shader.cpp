@@ -16,20 +16,18 @@
 #include "shader.h"
 #include "shader_interpreter.h"
 
-#ifdef ARCHITECTURE_X64
+#ifdef ARCHITECTURE_x86_64
 #include "shader_jit_x64.h"
-#endif // ARCHITECTURE_X64
+#endif // ARCHITECTURE_x86_64
 
 namespace Pica {
 
 namespace Shader {
 
 #ifdef ARCHITECTURE_x86_64
-
 static std::unordered_map<u64, CompiledShader*> shader_map;
 static JitCompiler jit;
 static CompiledShader* jit_shader;
-
 #endif // ARCHITECTURE_x86_64
 
 void Setup(UnitState& state) {
@@ -46,7 +44,8 @@ void Setup(UnitState& state) {
             jit_shader = jit.Compile();
             shader_map.emplace(cache_key, jit_shader);
         }
-#endif // ARCHITECTURE_X64
+    }
+#endif // ARCHITECTURE_x86_64
 }
 
 void Shutdown() {
@@ -95,7 +94,7 @@ OutputVertex Run(UnitState& state, const InputVertex& input, int num_attributes)
         RunInterpreter(state);
 #else
     RunInterpreter(state);
-#endif // ARCHITECTURE_X64
+#endif // ARCHITECTURE_x86_64
 
 #if PICA_DUMP_SHADERS
     DebugUtils::DumpShader(setup.program_code.data(), state.debug.max_offset, setup.swizzle_data.data(),

@@ -42,7 +42,7 @@ set(HEADERS
             video_core.h
             )
 
-if(ARCHITECTURE_X64)
+if(ARCHITECTURE_x86_64)
     set(SRCS ${SRCS}
             shader/shader_jit_x64.cpp)
 

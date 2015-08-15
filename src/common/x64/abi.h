@@ -55,7 +55,7 @@
 // 32-bit bog standard cdecl, shared between linux and windows
 // MacOSX 32-bit is same as System V with a few exceptions that we probably don't care much about.
 
-#elif ARCHITECTURE_X64 // 64 bit calling convention
+#elif ARCHITECTURE_x86_64 // 64 bit calling convention
 
 #ifdef _WIN32 // 64-bit Windows - the really exotic calling convention
 

@@ -21,7 +21,7 @@
 #include "common/common_types.h"
 #include "common/code_block.h"
 
-#if defined(ARCHITECTURE_X64) && !defined(_ARCH_64)
+#if defined(ARCHITECTURE_x86_64) && !defined(_ARCH_64)
 #define _ARCH_64
 #endif
 
