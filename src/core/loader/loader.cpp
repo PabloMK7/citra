@@ -136,6 +136,10 @@ ResultStatus LoadFile(const std::string& filename) {
         break;
     }
 
+    // CIA file format...
+    case FileType::CIA:
+        return ResultStatus::ErrorNotImplemented;
+
     // Error occurred durring IdentifyFile...
     case FileType::Error:
 
