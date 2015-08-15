@@ -55,10 +55,11 @@ private slots:
 
     void DumpShader();
 
-    /** Reload widget based on the current PICA200 state
-      * @param replace_vertex_data If true, invalidate all current vertex data
-      * @param vertex_data New vertex data to use, as passed to OnBreakPointHit. May be nullptr to specify that no valid vertex data can be retrieved currently. Only used if replace_vertex_data is true.
-      */
+    /**
+     * Reload widget based on the current PICA200 state
+     * @param replace_vertex_data If true, invalidate all current vertex data
+     * @param vertex_data New vertex data to use, as passed to OnBreakPointHit. May be nullptr to specify that no valid vertex data can be retrieved currently. Only used if replace_vertex_data is true.
+     */
     void Reload(bool replace_vertex_data = false, void* vertex_data = nullptr);
 
 
@@ -71,7 +72,7 @@ private:
     QTreeView* binary_list;
     GraphicsVertexShaderModel* model;
 
-    // TODO: Move these into a single struct
+    /// TODO: Move these into a single struct
     std::array<QLineEdit*, 4*16> input_data;  // A text box for each of the 4 components of up to 16 vertex attributes
     std::array<QWidget*, 16> input_data_container; // QWidget containing the QLayout containing each vertex attribute
     std::array<QLabel*, 16> input_data_mapping; // A QLabel denoting the shader input attribute which the vertex attribute maps to
