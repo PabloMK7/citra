@@ -52,8 +52,15 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menu_recent_files">
+     <property name="title">
+      <string>Recent Files</string>
+     </property>
+    </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Load_Symbol_Map"/>
+    <addaction name="separator"/>
+    <addaction name="menu_recent_files"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
