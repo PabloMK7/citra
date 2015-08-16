@@ -25,8 +25,8 @@ const JitFunction instr_table[64] = {
     &JitCompiler::Compile_DP4,      // dp4
     nullptr,                        // dph
     nullptr,                        // unknown
-    nullptr,                        // ex2
-    nullptr,                        // lg2
+    &JitCompiler::Compile_EX2,      // ex2
+    &JitCompiler::Compile_LG2,      // lg2
     nullptr,                        // unknown
     &JitCompiler::Compile_MUL,      // mul
     nullptr,                        // lge
@@ -328,6 +328,24 @@ void JitCompiler::Compile_DP4(Instruction instr) {
         ADDPS(SRC1, R(SRC2));
     }
 
+    Compile_DestEnable(instr, SRC1);
+}
+
+void JitCompiler::Compile_EX2(Instruction instr) {
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    MOVSS(XMM0, R(SRC1));
+    ABI_CallFunction(reinterpret_cast<const void*>(exp2f));
+    SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
+    MOVAPS(SRC1, R(XMM0));
+    Compile_DestEnable(instr, SRC1);
+}
+
+void JitCompiler::Compile_LG2(Instruction instr) {
+    Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+    MOVSS(XMM0, R(SRC1));
+    ABI_CallFunction(reinterpret_cast<const void*>(log2f));
+    SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
+    MOVAPS(SRC1, R(XMM0));
     Compile_DestEnable(instr, SRC1);
 }
 
