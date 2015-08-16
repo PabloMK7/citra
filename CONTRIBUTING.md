@@ -25,6 +25,22 @@ Follow the indentation/whitespace style shown below. Do not use tabs, use 4-spac
 * For items that are both defined and declared in two separate files, put the doc-comment only next to the associated declaration. (In a header file, usually.) Otherwise, put it next to the implementation. Never duplicate doc-comments in both places.
 
 ```cpp
+// Includes should be sorted lexicographically
+// STD includes first
+#include <map>
+#include <memory>
+
+// then, library includes
+#include <nihstro/shared_binary.h>
+
+// finally, citra includes
+#include "common/math_util.h"
+#include "common/vector_math.h"
+
+// each major module is separated
+#include "video_core/pica.h"
+#include "video_core/video_core.h"
+
 namespace Example {
 
 // Namespace contents are not indented
