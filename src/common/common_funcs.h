@@ -45,14 +45,20 @@
 
 // GCC 4.8 defines all the rotate functions now
 // Small issue with GCC's lrotl/lrotr intrinsics is they are still 32bit while we require 64bit
-#ifndef _rotl
-inline u32 _rotl(u32 x, int shift) {
+#ifdef _rotl
+#define rotl _rotl
+#else
+inline u32 rotl(u32 x, int shift) {
     shift &= 31;
     if (!shift) return x;
     return (x << shift) | (x >> (32 - shift));
 }
+#endif
 
-inline u32 _rotr(u32 x, int shift) {
+#ifdef _rotr
+#define rotr _rotr
+#else
+inline u32 rotr(u32 x, int shift) {
     shift &= 31;
     if (!shift) return x;
     return (x >> shift) | (x << (32 - shift));
