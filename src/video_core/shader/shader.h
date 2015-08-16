@@ -33,7 +33,7 @@ struct OutputVertex {
 
     // VS output attributes
     Math::Vec4<float24> pos;
-    Math::Vec4<float24> dummy; // quaternions (not implemented, yet)
+    Math::Vec4<float24> quat;
     Math::Vec4<float24> color;
     Math::Vec2<float24> tc0;
     Math::Vec2<float24> tc1;
