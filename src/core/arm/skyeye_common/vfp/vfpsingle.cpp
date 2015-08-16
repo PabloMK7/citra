@@ -51,6 +51,7 @@
  * ===========================================================================
  */
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "common/common_funcs.h"
@@ -815,9 +816,7 @@ vfp_single_add(struct vfp_single *vsd, struct vfp_single *vsn,
      * This ensures that NaN propagation works correctly.
      */
     if (vsn->exponent < vsm->exponent) {
-        struct vfp_single *t = vsn;
-        vsn = vsm;
-        vsm = t;
+        std::swap(vsm, vsn);
     }
 
     /*
@@ -872,9 +871,7 @@ vfp_single_multiply(struct vfp_single *vsd, struct vfp_single *vsn, struct vfp_s
      * This ensures that NaN propagation works correctly.
      */
     if (vsn->exponent < vsm->exponent) {
-        struct vfp_single *t = vsn;
-        vsn = vsm;
-        vsm = t;
+        std::swap(vsm, vsn);
         LOG_TRACE(Core_ARM11, "swapping M <-> N");
     }
 
