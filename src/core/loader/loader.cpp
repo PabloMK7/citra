@@ -77,6 +77,8 @@ static const char* GetFileTypeString(FileType type) {
         return "NCSD";
     case FileType::CXI:
         return "NCCH";
+    case FileType::CIA:
+        return "CIA";
     case FileType::ELF:
         return "ELF";
     case FileType::THREEDSX:
@@ -133,6 +135,10 @@ ResultStatus LoadFile(const std::string& filename) {
         }
         break;
     }
+
+    // CIA file format...
+    case FileType::CIA:
+        return ResultStatus::ErrorNotImplemented;
 
     // Error occurred durring IdentifyFile...
     case FileType::Error:
