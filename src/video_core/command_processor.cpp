@@ -215,7 +215,7 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
             unsigned int vertex_cache_pos = 0;
             vertex_cache_ids.fill(-1);
 
-            Shader::UnitState shader_unit;
+            Shader::UnitState<false> shader_unit;
             Shader::Setup(shader_unit);
 
             for (unsigned int index = 0; index < regs.num_vertices; ++index)

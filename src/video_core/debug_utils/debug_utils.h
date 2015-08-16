@@ -158,7 +158,6 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 namespace DebugUtils {
 
 #define PICA_DUMP_GEOMETRY 0
-#define PICA_DUMP_SHADERS 0
 #define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
 
@@ -182,8 +181,8 @@ private:
     std::vector<Face> faces;
 };
 
-void DumpShader(const u32* binary_data, u32 binary_size, const u32* swizzle_data, u32 swizzle_size,
-                u32 main_offset, const Regs::VSOutputAttributes* output_attributes);
+void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
+                const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
 
 
 // Utility class to log Pica commands.
