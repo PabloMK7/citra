@@ -35,7 +35,15 @@ static u32 default_attr_write_buffer[3];
 
 Common::Profiling::TimingCategory category_drawing("Drawing");
 
-static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
+// Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
+static const u32 expand_bits_to_bytes[] = {
+    0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff,
+    0x00ff0000, 0x00ff00ff, 0x00ffff00, 0x00ffffff,
+    0xff000000, 0xff0000ff, 0xff00ff00, 0xff00ffff,
+    0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
+};
+
+static void WritePicaReg(u32 id, u32 value, u32 mask) {
     auto& regs = g_state.regs;
 
     if (id >= regs.NumIds())
@@ -47,12 +55,15 @@ static inline void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     // TODO: Figure out how register masking acts on e.g. vs.uniform_setup.set_value
     u32 old_value = regs[id];
-    regs[id] = (old_value & ~mask) | (value & mask);
+
+    const u32 write_mask = expand_bits_to_bytes[mask];
+
+    regs[id] = (old_value & ~write_mask) | (value & write_mask);
+
+    DebugUtils::OnPicaRegWrite({ (u16)id, (u16)mask, regs[id] });
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::PicaCommandLoaded, reinterpret_cast<void*>(&id));
-
-    DebugUtils::OnPicaRegWrite(id, regs[id]);
 
     switch(id) {
         // Trigger IRQ
@@ -469,13 +480,6 @@ void ProcessCommandList(const u32* list, u32 size) {
     g_state.cmd_list.length = size / sizeof(u32);
 
     while (g_state.cmd_list.current_ptr < g_state.cmd_list.head_ptr + g_state.cmd_list.length) {
-        // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
-        static const u32 expand_bits_to_bytes[] = {
-            0x00000000, 0x000000ff, 0x0000ff00, 0x0000ffff,
-            0x00ff0000, 0x00ff00ff, 0x00ffff00, 0x00ffffff,
-            0xff000000, 0xff0000ff, 0xff00ff00, 0xff00ffff,
-            0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
-        };
 
         // Align read pointer to 8 bytes
         if ((g_state.cmd_list.head_ptr - g_state.cmd_list.current_ptr) % 2 != 0)
@@ -483,14 +487,13 @@ void ProcessCommandList(const u32* list, u32 size) {
 
         u32 value = *g_state.cmd_list.current_ptr++;
         const CommandHeader header = { *g_state.cmd_list.current_ptr++ };
-        const u32 write_mask = expand_bits_to_bytes[header.parameter_mask];
         u32 cmd = header.cmd_id;
 
-        WritePicaReg(cmd, value, write_mask);
+        WritePicaReg(cmd, value, header.parameter_mask);
 
         for (unsigned i = 0; i < header.extra_data_length; ++i) {
             u32 cmd = header.cmd_id + (header.group_commands ? i + 1 : 0);
-            WritePicaReg(cmd, *g_state.cmd_list.current_ptr++, write_mask);
+            WritePicaReg(cmd, *g_state.cmd_list.current_ptr++, header.parameter_mask);
          }
     }
 }
