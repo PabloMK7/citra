@@ -73,7 +73,7 @@ TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo
     format_choice->addItem(tr("RGB565"));
     format_choice->addItem(tr("RGBA4"));
     format_choice->addItem(tr("IA8"));
-    format_choice->addItem(tr("UNK6"));
+    format_choice->addItem(tr("RG8"));
     format_choice->addItem(tr("I8"));
     format_choice->addItem(tr("A8"));
     format_choice->addItem(tr("IA4"));

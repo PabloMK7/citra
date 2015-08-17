@@ -69,6 +69,15 @@ inline const Math::Vec4<u8> DecodeRGB8(const u8* bytes) {
 }
 
 /**
+ * Decode a color stored in RG8 (aka HILO8) format
+ * @param bytes Pointer to encoded source color
+ * @return Result color decoded as Math::Vec4<u8>
+ */
+inline const Math::Vec4<u8> DecodeRG8(const u8* bytes) {
+    return { bytes[1], bytes[0], 0, 255 };
+}
+
+/**
  * Decode a color stored in RGB565 format
  * @param bytes Pointer to encoded source color
  * @return Result color decoded as Math::Vec4<u8>
@@ -151,6 +160,15 @@ inline void EncodeRGB8(const Math::Vec4<u8>& color, u8* bytes) {
     bytes[0] = color.b();
 }
 
+/**
+ * Encode a color as RG8 (aka HILO8) format
+ * @param color Source color to encode
+ * @param bytes Destination pointer to store encoded color
+ */
+inline void EncodeRG8(const Math::Vec4<u8>& color, u8* bytes) {
+    bytes[1] = color.r();
+    bytes[0] = color.g();
+}
 /**
  * Encode a color as RGB565 format
  * @param color Source color to encode

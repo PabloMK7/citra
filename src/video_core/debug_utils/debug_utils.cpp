@@ -410,6 +410,12 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         }
     }
 
+    case Regs::TextureFormat::RG8:
+    {
+        auto res = Color::DecodeRG8(source + VideoCore::GetMortonOffset(x, y, 2));
+        return { res.r(), res.g(), 0, 255 };
+    }
+
     case Regs::TextureFormat::I8:
     {
         const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
