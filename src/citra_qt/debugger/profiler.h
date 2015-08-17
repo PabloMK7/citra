@@ -48,3 +48,20 @@ private:
 
     QTimer update_timer;
 };
+
+class MicroProfileDialog : public QWidget {
+    Q_OBJECT
+
+public:
+    MicroProfileDialog(QWidget* parent = 0);
+
+    /// Returns a QAction that can be used to toggle visibility of this dialog.
+    QAction* toggleViewAction();
+
+protected:
+    void showEvent(QShowEvent* ev) override;
+    void hideEvent(QHideEvent* ev) override;
+
+private:
+    QAction* toggle_view_action = nullptr;
+};

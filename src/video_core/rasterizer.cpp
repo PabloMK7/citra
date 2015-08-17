@@ -7,6 +7,7 @@
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
+#include "common/microprofile.h"
 #include "common/profiler.h"
 
 #include "core/hw/gpu.h"
@@ -267,6 +268,7 @@ static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
 };
 
 static Common::Profiling::TimingCategory rasterization_category("Rasterization");
+MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 240));
 
 /**
  * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
@@ -279,6 +281,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
 {
     const auto& regs = g_state.regs;
     Common::Profiling::ScopeTimer timer(rasterization_category);
+    MICROPROFILE_SCOPE(GPU_Rasterization);
 
     // vertex positions in rasterizer coordinates
     static auto FloatToFix = [](float24 flt) {

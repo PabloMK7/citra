@@ -14,6 +14,7 @@
 #include "common/string_util.h"
 #include "common/scm_rev.h"
 #include "common/key_map.h"
+#include "common/microprofile.h"
 
 #include "core/core.h"
 #include "core/settings.h"
@@ -36,6 +37,8 @@ EmuThread::EmuThread(GRenderWindow* render_window) :
 
 void EmuThread::run() {
     render_window->MakeCurrent();
+
+    MicroProfileOnThreadCreate("EmuThread");
 
     stop_run = false;
 
@@ -68,6 +71,8 @@ void EmuThread::run() {
             running_cv.wait(lock, [this]{ return IsRunning() || exec_step || stop_run; });
         }
     }
+
+    MicroProfileOnThreadExit();
 
     render_window->moveContext();
 }

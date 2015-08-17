@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/bit_field.h"
+#include "common/microprofile.h"
 
 #include "core/memory.h"
 #include "core/hle/kernel/event.h"
@@ -229,6 +230,10 @@ void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
 
     if (Pica::g_debug_context)
         Pica::g_debug_context->OnEvent(Pica::DebugContext::Event::BufferSwapped, nullptr);
+
+    if (screen_id == 0) {
+        MicroProfileFlip();
+    }
 }
 
 /**

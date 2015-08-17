@@ -11,6 +11,7 @@ set(SRCS
             logging/text_formatter.cpp
             logging/backend.cpp
             memory_util.cpp
+            microprofile.cpp
             misc.cpp
             profiler.cpp
             scm_rev.cpp
@@ -43,6 +44,8 @@ set(HEADERS
             make_unique.h
             math_util.h
             memory_util.h
+            microprofile.h
+            microprofileui.h
             platform.h
             profiler.h
             profiler_reporting.h

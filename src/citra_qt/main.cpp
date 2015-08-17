@@ -17,6 +17,7 @@
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/make_unique.h"
+#include "common/microprofile.h"
 #include "common/platform.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
@@ -64,6 +65,9 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
     profilerWidget->hide();
 
+    microProfileDialog = new MicroProfileDialog(this);
+    microProfileDialog->hide();
+
     disasmWidget = new DisassemblerWidget(this, emu_thread.get());
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
     disasmWidget->hide();
@@ -102,6 +106,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(profilerWidget->toggleViewAction());
+    debug_menu->addAction(microProfileDialog->toggleViewAction());
     debug_menu->addAction(disasmWidget->toggleViewAction());
     debug_menu->addAction(registersWidget->toggleViewAction());
     debug_menu->addAction(callstackWidget->toggleViewAction());
@@ -128,6 +133,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("state").toByteArray());
     render_window->restoreGeometry(settings.value("geometryRenderWindow").toByteArray());
+    microProfileDialog->restoreGeometry(settings.value("microProfileDialogGeometry").toByteArray());
+    microProfileDialog->setVisible(settings.value("microProfileDialogVisible").toBool());
 
     ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
     SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
@@ -434,6 +441,8 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     settings.setValue("geometry", saveGeometry());
     settings.setValue("state", saveState());
     settings.setValue("geometryRenderWindow", render_window->saveGeometry());
+    settings.setValue("microProfileDialogGeometry", microProfileDialog->saveGeometry());
+    settings.setValue("microProfileDialogVisible", microProfileDialog->isVisible());
     settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
     settings.setValue("displayTitleBars", ui.actionDisplay_widget_title_bars->isChecked());
     settings.setValue("firstStart", false);
@@ -455,6 +464,11 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 int main(int argc, char* argv[]) {
     Log::Filter log_filter(Log::Level::Info);
     Log::SetFilter(&log_filter);
+
+    MicroProfileOnThreadCreate("Frontend");
+    SCOPE_EXIT({
+        MicroProfileShutdown();
+    });
 
     // Init settings params
     QSettings::setDefaultFormat(QSettings::IniFormat);

@@ -6,6 +6,9 @@
 #include <thread>
 #include <iostream>
 
+// This needs to be included before getopt.h because the latter #defines symbols used by it
+#include "common/microprofile.h"
+
 #ifdef _MSC_VER
 #include <getopt.h>
 #else
@@ -59,6 +62,8 @@ int main(int argc, char **argv) {
     Log::Filter log_filter(Log::Level::Debug);
     Log::SetFilter(&log_filter);
 
+    MicroProfileOnThreadCreate("EmuThread");
+
     if (boot_filename.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
@@ -88,6 +93,8 @@ int main(int argc, char **argv) {
     System::Shutdown();
 
     delete emu_window;
+
+    MicroProfileShutdown();
 
     return 0;
 }
