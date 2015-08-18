@@ -334,6 +334,42 @@ void RunInterpreter(UnitState<Debug>& state) {
                 Record<DebugDataRecord::CMP_RESULT>(state.debug, iteration, state.conditional_code);
                 break;
 
+            case OpCode::Id::EX2:
+            {
+                Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
+                Record<DebugDataRecord::DEST_IN>(state.debug, iteration, dest);
+
+                // EX2 only takes first component exp2 and writes it to all dest components
+                float24 ex2_res = float24::FromFloat32(std::exp2(src1[0].ToFloat32()));
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = ex2_res;
+                }
+
+                Record<DebugDataRecord::DEST_OUT>(state.debug, iteration, dest);
+                break;
+            }
+
+            case OpCode::Id::LG2:
+            {
+                Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
+                Record<DebugDataRecord::DEST_IN>(state.debug, iteration, dest);
+
+                // LG2 only takes the first component log2 and writes it to all dest components
+                float24 lg2_res = float24::FromFloat32(std::log2(src1[0].ToFloat32()));
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = lg2_res;
+                }
+
+                Record<DebugDataRecord::DEST_OUT>(state.debug, iteration, dest);
+                break;
+            }
+
             default:
                 LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value().EffectiveOpCode(), instr.opcode.Value().GetInfo().name, instr.hex);
