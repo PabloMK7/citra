@@ -278,6 +278,20 @@ void RunInterpreter(UnitState<Debug>& state) {
                 break;
             }
 
+            case OpCode::Id::SGE:
+            case OpCode::Id::SGEI:
+                Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
+                Record<DebugDataRecord::SRC2>(state.debug, iteration, src2);
+                Record<DebugDataRecord::DEST_IN>(state.debug, iteration, dest);
+                for (int i = 0; i < 4; ++i) {
+                    if (!swizzle.DestComponentEnabled(i))
+                        continue;
+
+                    dest[i] = (src1[i] >= src2[i]) ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
+                }
+                Record<DebugDataRecord::DEST_OUT>(state.debug, iteration, dest);
+                break;
+
             case OpCode::Id::SLT:
             case OpCode::Id::SLTI:
                 Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
