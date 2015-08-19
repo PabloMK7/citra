@@ -27,16 +27,8 @@ using nihstro::Instruction;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent): QAbstractItemModel(parent), par(parent) {
+GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent): QAbstractTableModel(parent), par(parent) {
 
-}
-
-QModelIndex GraphicsVertexShaderModel::index(int row, int column, const QModelIndex& parent) const {
-    return createIndex(row, column);
-}
-
-QModelIndex GraphicsVertexShaderModel::parent(const QModelIndex& child) const {
-    return QModelIndex();
 }
 
 int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
