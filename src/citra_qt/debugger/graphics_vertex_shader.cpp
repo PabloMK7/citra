@@ -111,8 +111,12 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 }
             };
 
-            Instruction instr = par->info.code[index.row()];
-            const SwizzlePattern& swizzle = par->info.swizzle_info[instr.common.operand_desc_id].pattern;
+            const Instruction instr = par->info.code[index.row()];
+            const OpCode opcode = instr.opcode;
+            const OpCode::Info opcode_info = opcode.GetInfo();
+            const u32 operand_desc_id = opcode_info.type == OpCode::Type::MultiplyAdd ?
+                instr.mad.operand_desc_id.Value() : instr.common.operand_desc_id.Value();
+            const SwizzlePattern swizzle = par->info.swizzle_info[operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
             int kOpcodeColumnWidth = 8;
@@ -121,9 +125,9 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             // "-rXX.xyzw  ", no attempt is made to align indexed inputs
             int kInputOperandColumnWidth = 11;
 
-            output << instr.opcode.Value().GetInfo().name;
+            output << opcode_info.name;
 
-            switch (instr.opcode.Value().GetInfo().type) {
+            switch (opcode_info.type) {
             case OpCode::Type::Trivial:
                 // Nothing to do here
                 break;
@@ -131,7 +135,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             case OpCode::Type::Arithmetic:
             {
                 // Use custom code for special instructions
-                switch (instr.opcode.Value().EffectiveOpCode()) {
+                switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::CMP:
                 {
                     AlignToColumn(kOpcodeColumnWidth);
@@ -161,24 +165,24 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 {
                     AlignToColumn(kOpcodeColumnWidth);
 
-                    bool src_is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
+                    bool src_is_inverted = 0 != (opcode_info.subtype & OpCode::Info::SrcInversed);
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Dest) {
+                    if (opcode_info.subtype & OpCode::Info::Dest) {
                         // e.g. "r12.xy__"
                         output << std::setw(3) << std::right << instr.common.dest.Value().GetName() << '.' << swizzle.DestMaskToString();
-                    } else if (instr.opcode.Value().GetInfo().subtype == OpCode::Info::MOVA) {
+                    } else if (opcode_info.subtype == OpCode::Info::MOVA) {
                         output << "  a0." << swizzle.DestMaskToString();
                     }
                     AlignToColumn(kOutputColumnWidth);
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src1) {
+                    if (opcode_info.subtype & OpCode::Info::Src1) {
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
                         print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), true, instr.common.AddressRegisterName());
                         AlignToColumn(kInputOperandColumnWidth);
                     }
 
                     // TODO: In some cases, the Address Register is used as an index for SRC2 instead of SRC1
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src2) {
+                    if (opcode_info.subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true));
                         AlignToColumn(kInputOperandColumnWidth);
@@ -194,13 +198,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             {
                 output << ' ';
 
-                switch (instr.opcode.Value().EffectiveOpCode()) {
+                switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::LOOP:
                     output << "(unknown instruction format)";
                     break;
 
                 default:
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasCondition) {
+                    if (opcode_info.subtype & OpCode::Info::HasCondition) {
                         output << '(';
 
                         if (instr.flow_control.op != instr.flow_control.JustY) {
@@ -220,23 +224,23 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         }
 
                         output << ") ";
-                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasUniformIndex) {
+                    } else if (opcode_info.subtype & OpCode::Info::HasUniformIndex) {
                         output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
                     u32 target_addr = instr.flow_control.dest_offset;
                     u32 target_addr_else = instr.flow_control.dest_offset;
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasAlternative) {
+                    if (opcode_info.subtype & OpCode::Info::HasAlternative) {
                         output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
-                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasExplicitDest) {
+                    } else if (opcode_info.subtype & OpCode::Info::HasExplicitDest) {
                         output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
                     } else {
                         // TODO: Handle other cases
                         output << "(unknown destination)";
                     }
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasFinishPoint) {
+                    if (opcode_info.subtype & OpCode::Info::HasFinishPoint) {
                         output << " (return on " << std::setw(4) << std::right << std::setfill('0')
                                << (4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions) << ')';
                     }
