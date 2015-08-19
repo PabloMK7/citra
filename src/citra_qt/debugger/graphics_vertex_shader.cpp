@@ -65,6 +65,15 @@ QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orie
     return QVariant();
 }
 
+static std::string SelectorToString(u32 selector) {
+    std::string ret;
+    for (int i = 0; i < 4; ++i) {
+        int component = (selector >> ((3 - i) * 2)) & 3;
+        ret += "xyzw"[component];
+    }
+    return ret;
+}
+
 // e.g. "-c92[a0.x].xyzw"
 static void print_input(std::ostringstream& output, const SourceRegister& input,
                         bool negate, const std::string& swizzle_mask, bool align = true,
@@ -133,6 +142,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 break;
 
             case OpCode::Type::Arithmetic:
+            case OpCode::Type::MultiplyAdd:
             {
                 // Use custom code for special instructions
                 switch (opcode.EffectiveOpCode()) {
@@ -158,6 +168,27 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     output << ' ' << instr.common.compare_op.ToString(instr.common.compare_op.y) << ' ';
                     print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1), false);
 
+                    break;
+                }
+
+                case OpCode::Id::MAD:
+                case OpCode::Id::MADI:
+                {
+                    AlignToColumn(kOpcodeColumnWidth);
+
+                    bool src_is_inverted = 0 != (opcode_info.subtype & OpCode::Info::SrcInversed);
+                    SourceRegister src1 = instr.mad.GetSrc1(src_is_inverted);
+                    SourceRegister src2 = instr.mad.GetSrc2(src_is_inverted);
+                    SourceRegister src3 = instr.mad.GetSrc3(src_is_inverted);
+
+                    output << std::setw(3) << std::right << instr.mad.dest.Value().GetName() << '.' << swizzle.DestMaskToString();
+                    AlignToColumn(kOutputColumnWidth);
+                    print_input(output, src1, swizzle.negate_src1, SelectorToString(swizzle.src1_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
+                    print_input(output, src2, swizzle.negate_src2, SelectorToString(swizzle.src2_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
+                    print_input(output, src3, swizzle.negate_src3, SelectorToString(swizzle.src3_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
                     break;
                 }
 
