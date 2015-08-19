@@ -7,6 +7,8 @@
 #include <QVBoxLayout>
 #include <QDebug>
 
+#include "citra_qt/util/util.h"
+
 extern GraphicsDebugger g_debugger;
 
 GPUCommandStreamItemModel::GPUCommandStreamItemModel(QObject* parent) : QAbstractListModel(parent), command_count(0)
@@ -79,7 +81,7 @@ GPUCommandStreamWidget::GPUCommandStreamWidget(QWidget* parent) : QDockWidget(tr
 
     QListView* command_list = new QListView;
     command_list->setModel(command_model);
-    command_list->setFont(QFont("monospace"));
+    command_list->setFont(GetMonospaceFont());
 
     setWidget(command_list);
 }

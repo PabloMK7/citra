@@ -14,6 +14,8 @@
 #include <QSpinBox>
 #include <QComboBox>
 
+#include "citra_qt/util/util.h"
+
 #include "common/vector_math.h"
 
 #include "video_core/debug_utils/debug_utils.h"
@@ -303,9 +305,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
 
     list_widget = new QTreeView;
     list_widget->setModel(model);
-    QFont font("monospace");
-    font.setStyleHint(QFont::Monospace); // Automatic fallback to a monospace font on on platforms without a font called "monospace"
-    list_widget->setFont(font);
+    list_widget->setFont(GetMonospaceFont());
     list_widget->setRootIsDecorated(false);
     list_widget->setUniformRowHeights(true);
 
