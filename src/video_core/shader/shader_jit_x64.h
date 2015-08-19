@@ -40,6 +40,8 @@ public:
     void Compile_EX2(Instruction instr);
     void Compile_LG2(Instruction instr);
     void Compile_MUL(Instruction instr);
+    void Compile_SGE(Instruction instr);
+    void Compile_SLT(Instruction instr);
     void Compile_FLR(Instruction instr);
     void Compile_MAX(Instruction instr);
     void Compile_MIN(Instruction instr);
@@ -47,7 +49,6 @@ public:
     void Compile_RSQ(Instruction instr);
     void Compile_MOVA(Instruction instr);
     void Compile_MOV(Instruction instr);
-    void Compile_SLTI(Instruction instr);
     void Compile_NOP(Instruction instr);
     void Compile_END(Instruction instr);
     void Compile_CALL(Instruction instr);

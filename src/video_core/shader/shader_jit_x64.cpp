@@ -29,8 +29,8 @@ const JitFunction instr_table[64] = {
     &JitCompiler::Compile_LG2,      // lg2
     nullptr,                        // unknown
     &JitCompiler::Compile_MUL,      // mul
-    nullptr,                        // lge
-    nullptr,                        // slt
+    &JitCompiler::Compile_SGE,      // sge
+    &JitCompiler::Compile_SLT,      // slt
     &JitCompiler::Compile_FLR,      // flr
     &JitCompiler::Compile_MAX,      // max
     &JitCompiler::Compile_MIN,      // min
@@ -46,8 +46,8 @@ const JitFunction instr_table[64] = {
     nullptr,                        // unknown
     nullptr,                        // dphi
     nullptr,                        // unknown
-    nullptr,                        // sgei
-    &JitCompiler::Compile_SLTI,     // slti
+    &JitCompiler::Compile_SGE,      // sgei
+    &JitCompiler::Compile_SLT,      // slti
     nullptr,                        // unknown
     nullptr,                        // unknown
     nullptr,                        // unknown
@@ -386,6 +386,36 @@ void JitCompiler::Compile_MUL(Instruction instr) {
     Compile_DestEnable(instr, SRC1);
 }
 
+void JitCompiler::Compile_SGE(Instruction instr) {
+    if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SGEI) {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+    } else {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    }
+
+    CMPPS(SRC1, R(SRC2), CMP_NLT);
+    ANDPS(SRC1, R(ONE));
+
+    Compile_DestEnable(instr, SRC1);
+}
+
+void JitCompiler::Compile_SLT(Instruction instr) {
+    if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::SLTI) {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+    } else {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    }
+
+    CMPPS(SRC1, R(SRC2), CMP_LT);
+    ANDPS(SRC1, R(ONE));
+
+    Compile_DestEnable(instr, SRC1);
+}
+
 void JitCompiler::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
@@ -460,16 +490,6 @@ void JitCompiler::Compile_MOVA(Instruction instr) {
 
 void JitCompiler::Compile_MOV(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    Compile_DestEnable(instr, SRC1);
-}
-
-void JitCompiler::Compile_SLTI(Instruction instr) {
-    Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
-    Compile_SwizzleSrc(instr, 1, instr.common.src2i, SRC2);
-
-    CMPSS(SRC1, R(SRC2), CMP_LT);
-    ANDPS(SRC1, R(ONE));
-
     Compile_DestEnable(instr, SRC1);
 }
 
