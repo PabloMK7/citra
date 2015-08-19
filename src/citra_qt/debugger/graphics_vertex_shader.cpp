@@ -226,6 +226,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             }
 
             case OpCode::Type::Conditional:
+            case OpCode::Type::UniformFlowControl:
             {
                 output << ' ';
 
