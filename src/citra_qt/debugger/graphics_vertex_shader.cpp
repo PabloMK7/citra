@@ -104,7 +104,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
         case 2:
         {
             std::ostringstream output;
-            output.flags(std::ios::hex | std::ios::uppercase);
+            output.flags(std::ios::uppercase);
 
             // To make the code aligning columns of assembly easier to keep track of, this function
             // keeps track of the start of the start of the previous column, allowing alignment
@@ -264,16 +264,16 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     u32 target_addr_else = instr.flow_control.dest_offset;
 
                     if (opcode_info.subtype & OpCode::Info::HasAlternative) {
-                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
+                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex << (4 * instr.flow_control.dest_offset);
                     } else if (opcode_info.subtype & OpCode::Info::HasExplicitDest) {
-                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
+                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex << (4 * instr.flow_control.dest_offset);
                     } else {
                         // TODO: Handle other cases
                         output << "(unknown destination)";
                     }
 
                     if (opcode_info.subtype & OpCode::Info::HasFinishPoint) {
-                        output << " (return on " << std::setw(4) << std::right << std::setfill('0')
+                        output << " (return on 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex
                                << (4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions) << ')';
                     }
 
