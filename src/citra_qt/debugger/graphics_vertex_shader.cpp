@@ -7,6 +7,7 @@
 
 #include <QBoxLayout>
 #include <QFileDialog>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -395,6 +396,9 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
             // Create an HBoxLayout to store the widgets used to specify a particular attribute
             // and store it in a QWidget to allow for easy hiding and unhiding.
             auto row_layout = new QHBoxLayout;
+            // Remove unecessary padding between rows
+            row_layout->setContentsMargins(0, 0, 0, 0);
+
             row_layout->addWidget(new QLabel(tr("Attribute %1").arg(i, 2)));
             for (unsigned comp = 0; comp < 4; ++comp)
                 row_layout->addWidget(input_data[4 * i + comp]);
@@ -414,20 +418,25 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
         input_data_group->setLayout(sub_layout);
         main_layout->addWidget(input_data_group);
     }
-    {
-        auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(binary_list);
-        main_layout->addLayout(sub_layout);
-    }
+
+    // Make program listing expand to fill available space in the dialog
+    binary_list->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    main_layout->addWidget(binary_list);
+
     main_layout->addWidget(dump_shader);
     {
-        auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Cycle Index:")));
-        sub_layout->addWidget(cycle_index);
+        auto sub_layout = new QFormLayout;
+        sub_layout->addRow(tr("Cycle Index:"), cycle_index);
+
         main_layout->addLayout(sub_layout);
     }
+
+    // Set a minimum height so that the size of this label doesn't cause the rest of the bottom
+    // part of the UI to keep jumping up and down when cycling through instructions.
+    instruction_description->setMinimumHeight(instruction_description->fontMetrics().lineSpacing() * 6);
+    instruction_description->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     main_layout->addWidget(instruction_description);
-    main_layout->addStretch();
+
     main_widget->setLayout(main_layout);
     setWidget(main_widget);
 
