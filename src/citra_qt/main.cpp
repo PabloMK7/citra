@@ -287,6 +287,17 @@ void GMainWindow::ShutdownGame() {
     render_window->hide();
 }
 
+void GMainWindow::StoreRecentFile(const QString& filename)
+{
+    QSettings settings;
+    QStringList recent_files = settings.value("recentFiles").toStringList();
+    recent_files.prepend(filename);
+    recent_files.removeDuplicates();
+    settings.setValue("recentFiles", recent_files);
+
+    UpdateRecentFiles();
+}
+
 void GMainWindow::UpdateRecentFiles() {
     QSettings settings;
     QStringList recent_files = settings.value("recentFiles").toStringList();
@@ -297,6 +308,7 @@ void GMainWindow::UpdateRecentFiles() {
         QString text = QString("&%1. %2").arg(i + 1).arg(QFileInfo(recent_files[i]).fileName());
         actions_recent_files[i]->setText(text);
         actions_recent_files[i]->setData(recent_files[i]);
+        actions_recent_files[i]->setToolTip(recent_files[i]);
         actions_recent_files[i]->setVisible(true);
     }
 
@@ -319,11 +331,7 @@ void GMainWindow::OnMenuLoadFile() {
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), rom_path, tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
     if (filename.size()) {
         settings.setValue("romsPath", QFileInfo(filename).path());
-        // Update recent files list
-        QStringList recent_files = settings.value("recentFiles").toStringList();
-        recent_files.prepend(filename);
-        settings.setValue("recentFiles", recent_files);
-        UpdateRecentFiles(); // Update UI
+        StoreRecentFile(filename);
 
         BootGame(filename.toLatin1().data());
     }
@@ -349,6 +357,7 @@ void GMainWindow::OnMenuRecentFile() {
     QFileInfo file_info(filename);
     if (file_info.exists()) {
         BootGame(filename.toLatin1().data());
+        StoreRecentFile(filename); // Put the filename on top of the list
     } else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, tr("File not found"), tr("File \"%1\" not found").arg(filename));
@@ -357,12 +366,7 @@ void GMainWindow::OnMenuRecentFile() {
         QStringList recent_files = settings.value("recentFiles").toStringList();
         recent_files.removeOne(filename);
         settings.setValue("recentFiles", recent_files);
-
-        action->setVisible(false);
-        // Grey out the recent files menu if the list is empty
-        if (ui.menu_recent_files->isEmpty()) {
-            ui.menu_recent_files->setEnabled(false);
-        }
+        UpdateRecentFiles();
     }
 }
 
