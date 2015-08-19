@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <numeric>
 #include <type_traits>
 
 #include "common/color.h"
@@ -158,14 +159,59 @@ inline void Write(u32 addr, const T data) {
             u8* src_pointer = Memory::GetPhysicalPointer(config.GetPhysicalInputAddress());
             u8* dst_pointer = Memory::GetPhysicalPointer(config.GetPhysicalOutputAddress());
 
+            if (config.is_texture_copy) {
+                u32 input_width = config.texture_copy.input_width * 16;
+                u32 input_gap = config.texture_copy.input_gap * 16;
+                u32 output_width = config.texture_copy.output_width * 16;
+                u32 output_gap = config.texture_copy.output_gap * 16;
+
+                size_t contiguous_input_size = config.texture_copy.size / input_width * (input_width + input_gap);
+                VideoCore::g_renderer->hw_rasterizer->NotifyPreRead(config.GetPhysicalInputAddress(), contiguous_input_size);
+
+                u32 remaining_size = config.texture_copy.size;
+                u32 remaining_input = input_width;
+                u32 remaining_output = output_width;
+                while (remaining_size > 0) {
+                    u32 copy_size = std::min({ remaining_input, remaining_output, remaining_size });
+
+                    std::memcpy(dst_pointer, src_pointer, copy_size);
+                    src_pointer += copy_size;
+                    dst_pointer += copy_size;
+
+                    remaining_input -= copy_size;
+                    remaining_output -= copy_size;
+                    remaining_size -= copy_size;
+
+                    if (remaining_input == 0) {
+                        remaining_input = input_width;
+                        src_pointer += input_gap;
+                    }
+                    if (remaining_output == 0) {
+                        remaining_output = output_width;
+                        dst_pointer += output_gap;
+                    }
+                }
+
+                LOG_TRACE(HW_GPU, "TextureCopy: 0x%X bytes from 0x%08X(%u+%u)-> 0x%08X(%u+%u), flags 0x%08X",
+                    config.texture_copy.size,
+                    config.GetPhysicalInputAddress(), input_width, input_gap,
+                    config.GetPhysicalOutputAddress(), output_width, output_gap,
+                    config.flags);
+
+                size_t contiguous_output_size = config.texture_copy.size / output_width * (output_width + output_gap);
+                VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetPhysicalOutputAddress(), contiguous_output_size);
+
+                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
+                break;
+            }
+
             if (config.scaling > config.ScaleXY) {
                 LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode %u", config.scaling.Value());
                 UNIMPLEMENTED();
                 break;
             }
 
-            if (config.output_tiled &&
-                    (config.scaling == config.ScaleXY || config.scaling == config.ScaleX)) {
+            if (config.input_linear && config.scaling != config.NoScale) {
                 LOG_CRITICAL(HW_GPU, "Scaling is only implemented on tiled input");
                 UNIMPLEMENTED();
                 break;
@@ -181,23 +227,6 @@ inline void Write(u32 addr, const T data) {
             u32 output_size = output_width * output_height * GPU::Regs::BytesPerPixel(config.output_format);
 
             VideoCore::g_renderer->hw_rasterizer->NotifyPreRead(config.GetPhysicalInputAddress(), input_size);
-
-            if (config.raw_copy) {
-                // Raw copies do not perform color conversion nor tiled->linear / linear->tiled conversions
-                // TODO(Subv): Verify if raw copies perform scaling
-                memcpy(dst_pointer, src_pointer, output_size);
-
-                LOG_TRACE(HW_GPU, "DisplayTriggerTransfer: 0x%08x bytes from 0x%08x(%ux%u)-> 0x%08x(%ux%u), output format: %x, flags 0x%08X, Raw copy",
-                    output_size,
-                    config.GetPhysicalInputAddress(), config.input_width.Value(), config.input_height.Value(),
-                    config.GetPhysicalOutputAddress(), config.output_width.Value(), config.output_height.Value(),
-                    config.output_format.Value(), config.flags);
-
-                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
-
-                VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetPhysicalOutputAddress(), output_size);
-                break;
-            }
 
             for (u32 y = 0; y < output_height; ++y) {
                 for (u32 x = 0; x < output_width; ++x) {
@@ -220,7 +249,7 @@ inline void Write(u32 addr, const T data) {
                     u32 src_offset;
                     u32 dst_offset;
 
-                    if (config.output_tiled) {
+                    if (config.input_linear) {
                         if (!config.dont_swizzle) {
                             // Interpret the input as linear and the output as tiled
                             u32 coarse_y = y & ~7;

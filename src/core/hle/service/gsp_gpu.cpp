@@ -418,7 +418,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
     case CommandId::SET_DISPLAY_TRANSFER:
     {
-        auto& params = command.image_copy;
+        auto& params = command.display_transfer;
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)),
                 Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_address)),
@@ -433,17 +433,22 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_TEXTURE_COPY:
     {
-        auto& params = command.image_copy;
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)),
+        auto& params = command.texture_copy;
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.input_address),
                 Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_address)),
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.output_address),
                 Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_size)), params.in_buffer_size);
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_size)), params.out_buffer_size);
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.flags)), params.flags);
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.size),
+                params.size);
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.input_size),
+                params.in_width_gap);
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.output_size),
+                params.out_width_gap);
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.flags),
+                params.flags);
 
-        // TODO: Should this register be set to 1 or should instead its value be OR-ed with 1?
-        WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.trigger)), 1);
+        // NOTE: Actual GSP ORs 1 with current register instead of overwriting. Doesn't seem to matter.
+        WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.trigger), 1);
         break;
     }
 

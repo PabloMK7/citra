@@ -127,7 +127,16 @@ struct Command {
             u32 in_buffer_size;
             u32 out_buffer_size;
             u32 flags;
-        } image_copy;
+        } display_transfer;
+
+        struct {
+            u32 in_buffer_address;
+            u32 out_buffer_address;
+            u32 size;
+            u32 in_width_gap;
+            u32 out_width_gap;
+            u32 flags;
+        } texture_copy;
 
         u8 raw_data[0x1C];
     };
