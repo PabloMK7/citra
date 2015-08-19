@@ -280,6 +280,22 @@ void JitCompiler::Compile_UniformCondition(Instruction instr) {
     CMP(sizeof(bool) * 8, MDisp(UNIFORMS, offset), Imm8(0));
 }
 
+void JitCompiler::Compile_PushCallerSavedXMM() {
+#ifndef _WIN32
+    SUB(64, R(RSP), Imm8(2 * 16));
+    MOVUPS(MDisp(RSP, 16), ONE);
+    MOVUPS(MDisp(RSP, 0), NEGBIT);
+#endif
+}
+
+void JitCompiler::Compile_PopCallerSavedXMM() {
+#ifndef _WIN32
+    MOVUPS(NEGBIT, MDisp(RSP, 0));
+    MOVUPS(ONE, MDisp(RSP, 16));
+    ADD(64, R(RSP), Imm8(2 * 16));
+#endif
+}
+
 void JitCompiler::Compile_ADD(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
@@ -334,7 +350,14 @@ void JitCompiler::Compile_DP4(Instruction instr) {
 void JitCompiler::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     MOVSS(XMM0, R(SRC1));
+
+    // The following will actually break the stack alignment
+    ABI_PushAllCallerSavedRegsAndAdjustStack();
+    Compile_PushCallerSavedXMM();
     ABI_CallFunction(reinterpret_cast<const void*>(exp2f));
+    Compile_PopCallerSavedXMM();
+    ABI_PopAllCallerSavedRegsAndAdjustStack();
+
     SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
     MOVAPS(SRC1, R(XMM0));
     Compile_DestEnable(instr, SRC1);
@@ -343,7 +366,14 @@ void JitCompiler::Compile_EX2(Instruction instr) {
 void JitCompiler::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     MOVSS(XMM0, R(SRC1));
+
+    // The following will actually break the stack alignment
+    ABI_PushAllCallerSavedRegsAndAdjustStack();
+    Compile_PushCallerSavedXMM();
     ABI_CallFunction(reinterpret_cast<const void*>(log2f));
+    Compile_PopCallerSavedXMM();
+    ABI_PopAllCallerSavedRegsAndAdjustStack();
+
     SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
     MOVAPS(SRC1, R(XMM0));
     Compile_DestEnable(instr, SRC1);
