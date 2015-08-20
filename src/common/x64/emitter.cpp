@@ -1376,22 +1376,22 @@ static int GetVEXmmmmm(u16 op)
     // Currently, only 0x38 and 0x3A are used as secondary escape byte.
     if ((op >> 8) == 0x3A)
         return 3;
-    else if ((op >> 8) == 0x38)
+    if ((op >> 8) == 0x38)
         return 2;
-    else
-        return 1;
+
+    return 1;
 }
 
 static int GetVEXpp(u8 opPrefix)
 {
     if (opPrefix == 0x66)
         return 1;
-    else if (opPrefix == 0xF3)
+    if (opPrefix == 0xF3)
         return 2;
-    else if (opPrefix == 0xF2)
+    if (opPrefix == 0xF2)
         return 3;
-    else
-        return 0;
+
+    return 0;
 }
 
 void XEmitter::WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg, int extrabytes)
