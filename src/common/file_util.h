@@ -244,7 +244,7 @@ private:
 template <typename T>
 void OpenFStream(T& fstream, const std::string& filename, std::ios_base::openmode openmode)
 {
-#ifdef _WIN32
+#ifdef _MSC_VER
     fstream.open(Common::UTF8ToTStr(filename).c_str(), openmode);
 #else
     fstream.open(filename.c_str(), openmode);
