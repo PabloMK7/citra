@@ -791,6 +791,12 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             }
 
             u8 old_stencil = 0;
+
+            auto UpdateStencil = [stencil_test, x, y, &old_stencil](Pica::Regs::StencilAction action) {
+                u8 new_stencil = PerformStencilAction(action, old_stencil, stencil_test.reference_value);
+                SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+            };
+
             if (stencil_action_enable) {
                 old_stencil = GetStencil(x >> 4, y >> 4);
                 u8 dest = old_stencil & stencil_test.input_mask;
@@ -832,8 +838,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
 
                 if (!pass) {
-                    u8 new_stencil = PerformStencilAction(stencil_test.action_stencil_fail, old_stencil, stencil_test.reference_value);
-                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+                    UpdateStencil(stencil_test.action_stencil_fail);
                     continue;
                 }
             }
@@ -884,8 +889,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
 
                 if (!pass) {
                     if (stencil_action_enable) {
-                        u8 new_stencil = PerformStencilAction(stencil_test.action_depth_fail, old_stencil, stencil_test.reference_value);
-                        SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+                        UpdateStencil(stencil_test.action_depth_fail);
                     }
                     continue;
                 }
@@ -895,8 +899,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
 
                 if (stencil_action_enable) {
                     // TODO: What happens if stencil testing is enabled, but depth testing is not? Will stencil get updated anyway?
-                    u8 new_stencil = PerformStencilAction(stencil_test.action_depth_pass, old_stencil, stencil_test.reference_value);
-                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+                    UpdateStencil(stencil_test.action_depth_pass);
                 }
             }
 
