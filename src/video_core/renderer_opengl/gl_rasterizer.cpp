@@ -268,7 +268,8 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Stencil test
-    case PICA_REG_INDEX(output_merger.stencil_test):
+    case PICA_REG_INDEX(output_merger.stencil_test.raw_func):
+    case PICA_REG_INDEX(output_merger.stencil_test.raw_op):
         SyncStencilTest();
         break;
 
@@ -675,7 +676,15 @@ void RasterizerOpenGL::SyncLogicOp() {
 }
 
 void RasterizerOpenGL::SyncStencilTest() {
-    // TODO: Implement stencil test, mask, and op
+    const auto& regs = Pica::g_state.regs;
+    state.stencil.test_enabled = regs.output_merger.stencil_test.enable && regs.framebuffer.depth_format == Pica::Regs::DepthFormat::D24S8;
+    state.stencil.test_func = PicaToGL::CompareFunc(regs.output_merger.stencil_test.func);
+    state.stencil.test_ref = regs.output_merger.stencil_test.reference_value;
+    state.stencil.test_mask = regs.output_merger.stencil_test.input_mask;
+    state.stencil.write_mask = regs.output_merger.stencil_test.write_mask;
+    state.stencil.action_stencil_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_stencil_fail);
+    state.stencil.action_depth_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_fail);
+    state.stencil.action_depth_pass = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_pass);
 }
 
 void RasterizerOpenGL::SyncDepthTest() {

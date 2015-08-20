@@ -152,6 +152,27 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     return compare_func_table[(unsigned)func];
 }
 
+inline GLenum StencilOp(Pica::Regs::StencilAction action) {
+    static const GLenum stencil_op_table[] = {
+        GL_KEEP,        // StencilAction::Keep
+        GL_KEEP,
+        GL_REPLACE,     // StencilAction::Replace
+        GL_INCR,        // StencilAction::Increment
+        GL_DECR,        // StencilAction::Decrement
+        GL_INVERT       // StencilAction::Invert
+    };
+
+    // Range check table for input
+    if ((unsigned)action >= ARRAY_SIZE(stencil_op_table)) {
+        LOG_CRITICAL(Render_OpenGL, "Unknown stencil op %d", action);
+        UNREACHABLE();
+
+        return GL_KEEP;
+    }
+
+    return stencil_op_table[(unsigned)action];
+}
+
 inline std::array<GLfloat, 4> ColorRGBA8(const u8* bytes) {
     return { { bytes[0] / 255.0f,
                bytes[1] / 255.0f,
