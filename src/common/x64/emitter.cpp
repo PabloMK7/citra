@@ -512,30 +512,6 @@ void XEmitter::SetJumpTarget(const FixupBranch& branch)
     }
 }
 
-// INC/DEC considered harmful on newer CPUs due to partial flag set.
-// Use ADD, SUB instead.
-
-/*
-void XEmitter::INC(int bits, OpArg arg)
-{
-    if (arg.IsImm()) ASSERT_MSG(0, "INC - Imm argument");
-    arg.operandReg = 0;
-    if (bits == 16) {Write8(0x66);}
-    arg.WriteRex(this, bits, bits);
-    Write8(bits == 8 ? 0xFE : 0xFF);
-    arg.WriteRest(this);
-}
-void XEmitter::DEC(int bits, OpArg arg)
-{
-    if (arg.IsImm()) ASSERT_MSG(0, "DEC - Imm argument");
-    arg.operandReg = 1;
-    if (bits == 16) {Write8(0x66);}
-    arg.WriteRex(this, bits, bits);
-    Write8(bits == 8 ? 0xFE : 0xFF);
-    arg.WriteRest(this);
-}
-*/
-
 //Single byte opcodes
 //There is no PUSHAD/POPAD in 64-bit mode.
 void XEmitter::INT3() {Write8(0xCC);}

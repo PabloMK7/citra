@@ -328,8 +328,6 @@ enum SSECompare
     ORD,
 };
 
-typedef const u8* JumpTarget;
-
 class XEmitter
 {
     friend struct OpArg;  // for Write8 etc
@@ -434,7 +432,6 @@ public:
     void CALLptr(OpArg arg);
 
     FixupBranch J_CC(CCFlags conditionCode, bool force5bytes = false);
-    //void J_CC(CCFlags conditionCode, JumpTarget target);
     void J_CC(CCFlags conditionCode, const u8* addr, bool force5Bytes = false);
 
     void SetJumpTarget(const FixupBranch& branch);
@@ -639,23 +636,6 @@ public:
 
     // SSE/SSE2: Useful alternative to shuffle in some cases.
     void MOVDDUP(X64Reg regOp, const OpArg& arg);
-
-    // TODO: Actually implement
-#if 0
-    // SSE3: Horizontal operations in SIMD registers. Could be useful for various VFPU things like dot products...
-    void ADDSUBPS(X64Reg dest, const OpArg& src);
-    void ADDSUBPD(X64Reg dest, const OpArg& src);
-    void HADDPD(X64Reg dest, const OpArg& src);
-    void HSUBPS(X64Reg dest, const OpArg& src);
-    void HSUBPD(X64Reg dest, const OpArg& src);
-
-    // SSE4: Further horizontal operations - dot products. These are weirdly flexible, the arg contains both a read mask and a write "mask".
-    void DPPD(X64Reg dest, const OpArg& src, u8 arg);
-
-    // These are probably useful for VFPU emulation.
-    void INSERTPS(X64Reg dest, const OpArg& src, u8 arg);
-    void EXTRACTPS(const OpArg& dest, X64Reg src, u8 arg);
-#endif
 
     // SSE3: Horizontal operations in SIMD registers. Very slow! shufps-based code beats it handily on Ivy.
     void HADDPS(X64Reg dest, const OpArg& src);
