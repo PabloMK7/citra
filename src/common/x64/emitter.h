@@ -361,10 +361,10 @@ private:
     void ABI_CalculateFrameSize(u32 mask, size_t rsp_alignment, size_t needed_frame_size, size_t* shadowp, size_t* subtractionp, size_t* xmm_offsetp);
 
 protected:
-    inline void Write8(u8 value)   {*code++ = value;}
-    inline void Write16(u16 value) {*(u16*)code = (value); code += 2;}
-    inline void Write32(u32 value) {*(u32*)code = (value); code += 4;}
-    inline void Write64(u64 value) {*(u64*)code = (value); code += 8;}
+    void Write8(u8 value)   {*code++ = value;}
+    void Write16(u16 value) {*(u16*)code = (value); code += 2;}
+    void Write32(u32 value) {*(u32*)code = (value); code += 4;}
+    void Write64(u64 value) {*(u64*)code = (value); code += 8;}
 
 public:
     XEmitter() { code = nullptr; flags_locked = false; }
@@ -496,11 +496,11 @@ public:
 
     // Extend EAX into EDX in various ways
     void CWD(int bits = 16);
-    inline void CDQ() {CWD(32);}
-    inline void CQO() {CWD(64);}
+    void CDQ() {CWD(32);}
+    void CQO() {CWD(64);}
     void CBW(int bits = 8);
-    inline void CWDE() {CBW(16);}
-    inline void CDQE() {CBW(32);}
+    void CWDE() {CBW(16);}
+    void CDQE() {CBW(32);}
 
     // Load effective address
     void LEA(int bits, X64Reg dest, OpArg src);
@@ -596,13 +596,13 @@ public:
     void CMPSS(X64Reg regOp, OpArg arg, u8 compare);
     void CMPSD(X64Reg regOp, OpArg arg, u8 compare);
 
-    inline void CMPEQSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_EQ); }
-    inline void CMPLTSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_LT); }
-    inline void CMPLESS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_LE); }
-    inline void CMPUNORDSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_UNORD); }
-    inline void CMPNEQSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_NEQ); }
-    inline void CMPNLTSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_NLT); }
-    inline void CMPORDSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_ORD); }
+    void CMPEQSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_EQ); }
+    void CMPLTSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_LT); }
+    void CMPLESS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_LE); }
+    void CMPUNORDSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_UNORD); }
+    void CMPNEQSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_NEQ); }
+    void CMPNLTSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_NLT); }
+    void CMPORDSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_ORD); }
 
     // SSE/SSE2: Floating point packed arithmetic (x4 for float, x2 for double)
     void ADDPS(X64Reg regOp, OpArg arg);
@@ -859,25 +859,25 @@ public:
     void ROUNDPS(X64Reg dest, OpArg arg, u8 mode);
     void ROUNDPD(X64Reg dest, OpArg arg, u8 mode);
 
-    inline void ROUNDNEARSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_NEAREST); }
-    inline void ROUNDFLOORSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_FLOOR); }
-    inline void ROUNDCEILSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_CEIL); }
-    inline void ROUNDZEROSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_NEAREST); }
+    void ROUNDFLOORSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_FLOOR); }
+    void ROUNDCEILSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_CEIL); }
+    void ROUNDZEROSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_ZERO); }
 
-    inline void ROUNDNEARSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_NEAREST); }
-    inline void ROUNDFLOORSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_FLOOR); }
-    inline void ROUNDCEILSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_CEIL); }
-    inline void ROUNDZEROSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_NEAREST); }
+    void ROUNDFLOORSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_FLOOR); }
+    void ROUNDCEILSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_CEIL); }
+    void ROUNDZEROSD(X64Reg dest, OpArg arg) { ROUNDSD(dest, arg, FROUND_ZERO); }
 
-    inline void ROUNDNEARPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_NEAREST); }
-    inline void ROUNDFLOORPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_FLOOR); }
-    inline void ROUNDCEILPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_CEIL); }
-    inline void ROUNDZEROPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_NEAREST); }
+    void ROUNDFLOORPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_FLOOR); }
+    void ROUNDCEILPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_CEIL); }
+    void ROUNDZEROPS(X64Reg dest, OpArg arg) { ROUNDPS(dest, arg, FROUND_ZERO); }
 
-    inline void ROUNDNEARPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_NEAREST); }
-    inline void ROUNDFLOORPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_FLOOR); }
-    inline void ROUNDCEILPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_CEIL); }
-    inline void ROUNDZEROPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_NEAREST); }
+    void ROUNDFLOORPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_FLOOR); }
+    void ROUNDCEILPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_CEIL); }
+    void ROUNDZEROPD(X64Reg dest, OpArg arg) { ROUNDPD(dest, arg, FROUND_ZERO); }
 
     // AVX
     void VADDSD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
@@ -1048,9 +1048,9 @@ public:
     void ABI_EmitEpilogue(int maxCallParams);
 
     #ifdef _M_IX86
-    inline int ABI_GetNumXMMRegs() { return 8; }
+    static int ABI_GetNumXMMRegs() { return 8; }
     #else
-    inline int ABI_GetNumXMMRegs() { return 16; }
+    static int ABI_GetNumXMMRegs() { return 16; }
     #endif
 };  // class XEmitter
 
