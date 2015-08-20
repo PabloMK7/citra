@@ -15,6 +15,7 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
+#include <cinttypes>
 #include <cstring>
 
 #include "common/assert.h"
@@ -24,11 +25,6 @@
 #include "abi.h"
 #include "cpu_detect.h"
 #include "emitter.h"
-
-#define PRIx64 "llx"
-
-// Minimize the diff against Dolphin
-#define DYNA_REC JIT
 
 namespace Gen
 {
