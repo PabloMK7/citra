@@ -888,20 +888,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
 
                 if (!pass) {
-                    if (stencil_action_enable) {
+                    if (stencil_action_enable)
                         UpdateStencil(stencil_test.action_depth_fail);
-                    }
                     continue;
                 }
 
                 if (output_merger.depth_write_enable)
                     SetDepth(x >> 4, y >> 4, z);
-
-                if (stencil_action_enable) {
-                    // TODO: What happens if stencil testing is enabled, but depth testing is not? Will stencil get updated anyway?
-                    UpdateStencil(stencil_test.action_depth_pass);
-                }
             }
+
+            // The stencil depth_pass action is executed even if depth testing is disabled
+            if (stencil_action_enable)
+                UpdateStencil(stencil_test.action_depth_pass);
 
             auto dest = GetPixel(x >> 4, y >> 4);
             Math::Vec4<u8> blend_output = combiner_output;
