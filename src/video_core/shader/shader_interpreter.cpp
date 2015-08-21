@@ -197,12 +197,19 @@ void RunInterpreter(UnitState<Debug>& state) {
 
             case OpCode::Id::DP3:
             case OpCode::Id::DP4:
+            case OpCode::Id::DPH:
+            case OpCode::Id::DPHI:
             {
                 Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
                 Record<DebugDataRecord::SRC2>(state.debug, iteration, src2);
                 Record<DebugDataRecord::DEST_IN>(state.debug, iteration, dest);
+
+                OpCode::Id opcode = instr.opcode.Value().EffectiveOpCode();
+                if (opcode == OpCode::Id::DPH || opcode == OpCode::Id::DPHI)
+                    src1[3] = float24::FromFloat32(1.0f);
+
                 float24 dot = float24::FromFloat32(0.f);
-                int num_components = (instr.opcode.Value() == OpCode::Id::DP3) ? 3 : 4;
+                int num_components = (opcode == OpCode::Id::DP3) ? 3 : 4;
                 for (int i = 0; i < num_components; ++i)
                     dot = dot + src1[i] * src2[i];
 
