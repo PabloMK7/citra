@@ -215,7 +215,6 @@ static void SetStencil(int x, int y, u8 value) {
     }
 }
 
-// TODO: Should the stencil mask be applied to the "old_stencil" or "ref" operands? Most likely not!
 static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 ref) {
     switch (action) {
     case Regs::StencilAction::Keep:
