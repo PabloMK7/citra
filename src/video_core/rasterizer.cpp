@@ -220,6 +220,9 @@ static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 re
     case Regs::StencilAction::Keep:
         return old_stencil;
 
+    case Regs::StencilAction::Zero:
+        return 0;
+
     case Regs::StencilAction::Replace:
         return ref;
 
