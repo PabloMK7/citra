@@ -159,7 +159,9 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
         GL_REPLACE,     // StencilAction::Replace
         GL_INCR,        // StencilAction::Increment
         GL_DECR,        // StencilAction::Decrement
-        GL_INVERT       // StencilAction::Invert
+        GL_INVERT,      // StencilAction::Invert
+        GL_INCR_WRAP,   // StencilAction::IncrementWrap
+        GL_DECR_WRAP    // StencilAction::DecrementWrap
     };
 
     // Range check table for input
