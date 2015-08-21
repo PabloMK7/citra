@@ -155,7 +155,7 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
 inline GLenum StencilOp(Pica::Regs::StencilAction action) {
     static const GLenum stencil_op_table[] = {
         GL_KEEP,        // StencilAction::Keep
-        GL_KEEP,
+        GL_ZERO,        // StencilAction::Zero
         GL_REPLACE,     // StencilAction::Replace
         GL_INCR,        // StencilAction::Increment
         GL_DECR,        // StencilAction::Decrement
