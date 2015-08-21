@@ -237,6 +237,12 @@ static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 re
     case Regs::StencilAction::Invert:
         return ~old_stencil;
 
+    case Regs::StencilAction::IncrementWrap:
+        return old_stencil + 1;
+
+    case Regs::StencilAction::DecrementWrap:
+        return old_stencil - 1;
+
     default:
         LOG_CRITICAL(HW_GPU, "Unknown stencil action %x", (int)action);
         UNIMPLEMENTED();
