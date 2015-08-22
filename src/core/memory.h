@@ -106,7 +106,7 @@ enum : VAddr {
     /// Area where TLS (Thread-Local Storage) buffers are allocated.
     TLS_AREA_VADDR     = 0x1FF82000,
     TLS_ENTRY_SIZE     = 0x200,
-    TLS_AREA_SIZE      = 300 * TLS_ENTRY_SIZE, // Allows for up to 300 threads
+    TLS_AREA_SIZE      = 300 * TLS_ENTRY_SIZE + 0x800, // Space for up to 300 threads + round to page size
     TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
 
 
