@@ -17,7 +17,6 @@
 
 #include "common/logging/log.h"
 
-#include "core/mem_map.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"

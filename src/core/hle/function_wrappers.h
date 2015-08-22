@@ -172,6 +172,14 @@ template<ResultCode func(u32, s64, s64)> void Wrap() {
     FuncReturn(func(PARAM(0), param1, param2).raw);
 }
 
+template<ResultCode func(s64*, Handle, u32)> void Wrap() {
+    s64 param_1 = 0;
+    u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
+    Core::g_app_core->SetReg(1, (u32)param_1);
+    Core::g_app_core->SetReg(2, (u32)(param_1 >> 32));
+    FuncReturn(retval);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 

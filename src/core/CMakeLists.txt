@@ -29,6 +29,7 @@ set(SRCS
             hle/kernel/address_arbiter.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
+            hle/kernel/memory.cpp
             hle/kernel/mutex.cpp
             hle/kernel/process.cpp
             hle/kernel/resource_limit.cpp
@@ -115,7 +116,6 @@ set(SRCS
             loader/loader.cpp
             loader/ncch.cpp
             tracer/recorder.cpp
-            mem_map.cpp
             memory.cpp
             settings.cpp
             system.cpp
@@ -157,6 +157,7 @@ set(HEADERS
             hle/kernel/address_arbiter.h
             hle/kernel/event.h
             hle/kernel/kernel.h
+            hle/kernel/memory.h
             hle/kernel/mutex.h
             hle/kernel/process.h
             hle/kernel/resource_limit.h
@@ -245,7 +246,6 @@ set(HEADERS
             loader/ncch.h
             tracer/recorder.h
             tracer/citrace.h
-            mem_map.h
             memory.h
             memory_setup.h
             settings.h

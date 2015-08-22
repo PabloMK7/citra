@@ -34,8 +34,6 @@ void Reschedule(const char *reason) {
 
 void Init() {
     Service::Init();
-    ConfigMem::Init();
-    SharedPage::Init();
 
     g_reschedule = false;
 
@@ -43,8 +41,6 @@ void Init() {
 }
 
 void Shutdown() {
-    ConfigMem::Shutdown();
-    SharedPage::Shutdown();
     Service::Shutdown();
 
     LOG_DEBUG(Kernel, "shutdown OK");

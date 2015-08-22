@@ -11,6 +11,15 @@
 
 namespace Kernel {
 
+static const char* GetMemoryStateName(MemoryState state) {
+    static const char* names[] = {
+        "Free", "Reserved", "IO", "Static", "Code", "Private", "Shared", "Continuous", "Aliased",
+        "Alias", "AliasCode", "Locked",
+    };
+
+    return names[(int)state];
+}
+
 bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     ASSERT(base + size == next.base);
     if (permissions != next.permissions ||
@@ -51,11 +60,15 @@ void VMManager::Reset() {
 }
 
 VMManager::VMAHandle VMManager::FindVMA(VAddr target) const {
-    return std::prev(vma_map.upper_bound(target));
+    if (target >= MAX_ADDRESS) {
+        return vma_map.end();
+    } else {
+        return std::prev(vma_map.upper_bound(target));
+    }
 }
 
 ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
-        std::shared_ptr<std::vector<u8>> block, u32 offset, u32 size, MemoryState state) {
+        std::shared_ptr<std::vector<u8>> block, size_t offset, u32 size, MemoryState state) {
     ASSERT(block != nullptr);
     ASSERT(offset + size <= block->size());
 
@@ -106,10 +119,8 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u3
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
-void VMManager::Unmap(VMAHandle vma_handle) {
-    VMAIter iter = StripIterConstness(vma_handle);
-
-    VirtualMemoryArea& vma = iter->second;
+VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
+    VirtualMemoryArea& vma = vma_handle->second;
     vma.type = VMAType::Free;
     vma.permissions = VMAPermission::None;
     vma.meminfo_state = MemoryState::Free;
@@ -121,26 +132,67 @@ void VMManager::Unmap(VMAHandle vma_handle) {
 
     UpdatePageTableForVMA(vma);
 
-    MergeAdjacent(iter);
+    return MergeAdjacent(vma_handle);
 }
 
-void VMManager::Reprotect(VMAHandle vma_handle, VMAPermission new_perms) {
+ResultCode VMManager::UnmapRange(VAddr target, u32 size) {
+    CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
+    VAddr target_end = target + size;
+
+    VMAIter end = vma_map.end();
+    // The comparison against the end of the range must be done using addresses since VMAs can be
+    // merged during this process, causing invalidation of the iterators.
+    while (vma != end && vma->second.base < target_end) {
+        vma = std::next(Unmap(vma));
+    }
+
+    ASSERT(FindVMA(target)->second.size >= size);
+    return RESULT_SUCCESS;
+}
+
+VMManager::VMAHandle VMManager::Reprotect(VMAHandle vma_handle, VMAPermission new_perms) {
     VMAIter iter = StripIterConstness(vma_handle);
 
     VirtualMemoryArea& vma = iter->second;
     vma.permissions = new_perms;
     UpdatePageTableForVMA(vma);
 
-    MergeAdjacent(iter);
+    return MergeAdjacent(iter);
 }
 
-void VMManager::LogLayout() const {
+ResultCode VMManager::ReprotectRange(VAddr target, u32 size, VMAPermission new_perms) {
+    CASCADE_RESULT(VMAIter vma, CarveVMARange(target, size));
+    VAddr target_end = target + size;
+
+    VMAIter end = vma_map.end();
+    // The comparison against the end of the range must be done using addresses since VMAs can be
+    // merged during this process, causing invalidation of the iterators.
+    while (vma != end && vma->second.base < target_end) {
+        vma = std::next(StripIterConstness(Reprotect(vma, new_perms)));
+    }
+
+    return RESULT_SUCCESS;
+}
+
+void VMManager::RefreshMemoryBlockMappings(const std::vector<u8>* block) {
+    // If this ever proves to have a noticeable performance impact, allow users of the function to
+    // specify a specific range of addresses to limit the scan to.
     for (const auto& p : vma_map) {
         const VirtualMemoryArea& vma = p.second;
-        LOG_DEBUG(Kernel, "%08X - %08X  size: %8X %c%c%c", vma.base, vma.base + vma.size, vma.size,
+        if (block == vma.backing_block.get()) {
+            UpdatePageTableForVMA(vma);
+        }
+    }
+}
+
+void VMManager::LogLayout(Log::Level log_level) const {
+    for (const auto& p : vma_map) {
+        const VirtualMemoryArea& vma = p.second;
+        LOG_GENERIC(Log::Class::Kernel, log_level, "%08X - %08X  size: %8X %c%c%c %s",
+            vma.base, vma.base + vma.size, vma.size,
             (u8)vma.permissions & (u8)VMAPermission::Read    ? 'R' : '-',
             (u8)vma.permissions & (u8)VMAPermission::Write   ? 'W' : '-',
-            (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-');
+            (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-', GetMemoryStateName(vma.meminfo_state));
     }
 }
 
@@ -151,21 +203,19 @@ VMManager::VMAIter VMManager::StripIterConstness(const VMAHandle & iter) {
 }
 
 ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
-    ASSERT_MSG((size & Memory::PAGE_MASK) == 0, "non-page aligned size: %8X", size);
-    ASSERT_MSG((base & Memory::PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    ASSERT_MSG((size & Memory::PAGE_MASK) == 0, "non-page aligned size: 0x%8X", size);
+    ASSERT_MSG((base & Memory::PAGE_MASK) == 0, "non-page aligned base: 0x%08X", base);
 
     VMAIter vma_handle = StripIterConstness(FindVMA(base));
     if (vma_handle == vma_map.end()) {
         // Target address is outside the range managed by the kernel
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E01BF5
+        return ERR_INVALID_ADDRESS;
     }
 
     VirtualMemoryArea& vma = vma_handle->second;
     if (vma.type != VMAType::Free) {
         // Region is already allocated
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidState, ErrorLevel::Usage); // 0xE0A01BF5
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     u32 start_in_vma = base - vma.base;
@@ -173,8 +223,7 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
 
     if (end_in_vma > vma.size) {
         // Requested allocation doesn't fit inside VMA
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidState, ErrorLevel::Usage); // 0xE0A01BF5
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     if (end_in_vma != vma.size) {
@@ -187,6 +236,35 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
     }
 
     return MakeResult<VMAIter>(vma_handle);
+}
+
+ResultVal<VMManager::VMAIter> VMManager::CarveVMARange(VAddr target, u32 size) {
+    ASSERT_MSG((size & Memory::PAGE_MASK) == 0, "non-page aligned size: 0x%8X", size);
+    ASSERT_MSG((target & Memory::PAGE_MASK) == 0, "non-page aligned base: 0x%08X", target);
+
+    VAddr target_end = target + size;
+    ASSERT(target_end >= target);
+    ASSERT(target_end <= MAX_ADDRESS);
+    ASSERT(size > 0);
+
+    VMAIter begin_vma = StripIterConstness(FindVMA(target));
+    VMAIter i_end = vma_map.lower_bound(target_end);
+    for (auto i = begin_vma; i != i_end; ++i) {
+        if (i->second.type == VMAType::Free) {
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+    }
+
+    if (target != begin_vma->second.base) {
+        begin_vma = SplitVMA(begin_vma, target - begin_vma->second.base);
+    }
+
+    VMAIter end_vma = StripIterConstness(FindVMA(target_end));
+    if (end_vma != vma_map.end() && target_end != end_vma->second.base) {
+        end_vma = SplitVMA(end_vma, target_end - end_vma->second.base);
+    }
+
+    return MakeResult<VMAIter>(begin_vma);
 }
 
 VMManager::VMAIter VMManager::SplitVMA(VMAIter vma_handle, u32 offset_in_vma) {

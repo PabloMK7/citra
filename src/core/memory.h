@@ -15,6 +15,8 @@ namespace Memory {
  * be mapped.
  */
 const u32 PAGE_SIZE = 0x1000;
+const u32 PAGE_MASK = PAGE_SIZE - 1;
+const int PAGE_BITS = 12;
 
 /// Physical memory regions as seen from the ARM11
 enum : PAddr {
@@ -103,8 +105,15 @@ enum : VAddr {
     // hardcoded value.
     /// Area where TLS (Thread-Local Storage) buffers are allocated.
     TLS_AREA_VADDR     = 0x1FF82000,
-    TLS_AREA_SIZE      = 0x00030000, // Each TLS buffer is 0x200 bytes, allows for 300 threads
+    TLS_ENTRY_SIZE     = 0x200,
+    TLS_AREA_SIZE      = 300 * TLS_ENTRY_SIZE, // Allows for up to 300 threads
     TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
+
+
+    /// Equivalent to LINEAR_HEAP_VADDR, but expanded to cover the extra memory in the New 3DS.
+    NEW_LINEAR_HEAP_VADDR     = 0x30000000,
+    NEW_LINEAR_HEAP_SIZE      = 0x10000000,
+    NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
 u8 Read8(VAddr addr);
@@ -120,6 +129,17 @@ void Write64(VAddr addr, u64 data);
 void WriteBlock(VAddr addr, const u8* data, size_t size);
 
 u8* GetPointer(VAddr virtual_address);
+
+/**
+* Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+* address. This should be used by services to translate addresses for use by the hardware.
+*/
+PAddr VirtualToPhysicalAddress(VAddr addr);
+
+/**
+* Undoes a mapping performed by VirtualToPhysicalAddress().
+*/
+VAddr PhysicalToVirtualAddress(PAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.

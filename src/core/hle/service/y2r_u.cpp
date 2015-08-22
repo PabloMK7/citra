@@ -10,7 +10,6 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
-#include "core/mem_map.h"
 
 #include "video_core/renderer_base.h"
 #include "video_core/utils.h"

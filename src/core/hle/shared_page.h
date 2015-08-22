@@ -54,6 +54,5 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE, "Shared page st
 extern SharedPageDef shared_page;
 
 void Init();
-void Shutdown();
 
 } // namespace

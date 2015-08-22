@@ -16,6 +16,7 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 
@@ -37,7 +38,7 @@ static Kernel::SharedPtr<Kernel::Mutex> lock;
 static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
 static Kernel::SharedPtr<Kernel::Event> parameter_event; ///< APT parameter event
 
-static std::vector<u8> shared_font;
+static std::shared_ptr<std::vector<u8>> shared_font;
 
 static u32 cpu_percent; ///< CPU time available to the running application
 
@@ -74,11 +75,12 @@ void Initialize(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    if (!shared_font.empty()) {
-        // TODO(bunnei): This function shouldn't copy the shared font every time it's called.
-        // Instead, it should probably map the shared font as RO memory. We don't currently have
-        // an easy way to do this, but the copy should be sufficient for now.
-        memcpy(Memory::GetPointer(SHARED_FONT_VADDR), shared_font.data(), shared_font.size());
+    if (shared_font != nullptr) {
+        // TODO(yuriks): This is a hack to keep this working right now even with our completely
+        // broken shared memory system.
+        shared_font_mem->base_address = SHARED_FONT_VADDR;
+        Kernel::g_current_process->vm_manager.MapMemoryBlock(shared_font_mem->base_address,
+                shared_font, 0, shared_font_mem->size, Kernel::MemoryState::Shared);
 
         cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
         cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -391,7 +393,6 @@ void Init() {
     // a homebrew app to do this: https://github.com/citra-emu/3dsutils. Put the resulting file
     // "shared_font.bin" in the Citra "sysdata" directory.
 
-    shared_font.clear();
     std::string filepath = FileUtil::GetUserPath(D_SYSDATA_IDX) + SHARED_FONT;
 
     FileUtil::CreateFullPath(filepath); // Create path if not already created
@@ -399,8 +400,8 @@ void Init() {
 
     if (file.IsOpen()) {
         // Read shared font data
-        shared_font.resize((size_t)file.GetSize());
-        file.ReadBytes(shared_font.data(), (size_t)file.GetSize());
+        shared_font = std::make_shared<std::vector<u8>>((size_t)file.GetSize());
+        file.ReadBytes(shared_font->data(), shared_font->size());
 
         // Create shared font memory object
         using Kernel::MemoryPermission;
@@ -424,7 +425,7 @@ void Init() {
 }
 
 void Shutdown() {
-    shared_font.clear();
+    shared_font = nullptr;
     shared_font_mem = nullptr;
     lock = nullptr;
     notification_event = nullptr;

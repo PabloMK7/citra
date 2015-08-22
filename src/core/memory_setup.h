@@ -10,9 +10,6 @@
 
 namespace Memory {
 
-const u32 PAGE_MASK = PAGE_SIZE - 1;
-const int PAGE_BITS = 12;
-
 void InitMemoryMap();
 
 /**

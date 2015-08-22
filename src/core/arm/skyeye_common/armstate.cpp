@@ -4,7 +4,6 @@
 
 #include "common/swap.h"
 #include "common/logging/log.h"
-#include "core/mem_map.h"
 #include "core/memory.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"

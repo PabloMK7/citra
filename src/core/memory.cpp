@@ -9,7 +9,7 @@
 #include "common/logging/log.h"
 #include "common/swap.h"
 
-#include "core/mem_map.h"
+#include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 
@@ -196,6 +196,44 @@ void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
 
     if (size & 1)
         Write8(addr + offset, data[offset]);
+}
+
+PAddr VirtualToPhysicalAddress(const VAddr addr) {
+    if (addr == 0) {
+        return 0;
+    } else if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
+        return addr - VRAM_VADDR + VRAM_PADDR;
+    } else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
+        return addr - LINEAR_HEAP_VADDR + FCRAM_PADDR;
+    } else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END) {
+        return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
+    } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
+        return addr - IO_AREA_VADDR + IO_AREA_PADDR;
+    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+        return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
+    }
+
+    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08X", addr);
+    // To help with debugging, set bit on address so that it's obviously invalid.
+    return addr | 0x80000000;
+}
+
+VAddr PhysicalToVirtualAddress(const PAddr addr) {
+    if (addr == 0) {
+        return 0;
+    } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
+        return addr - VRAM_PADDR + VRAM_VADDR;
+    } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
+        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapBase();
+    } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
+        return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
+    } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {
+        return addr - IO_AREA_PADDR + IO_AREA_VADDR;
+    }
+
+    LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08X", addr);
+    // To help with debugging, set bit on address so that it's obviously invalid.
+    return addr | 0x80000000;
 }
 
 } // namespace

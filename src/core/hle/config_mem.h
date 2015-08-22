@@ -52,6 +52,5 @@ static_assert(sizeof(ConfigMemDef) == Memory::CONFIG_MEMORY_SIZE, "Config Memory
 extern ConfigMemDef config_mem;
 
 void Init();
-void Shutdown();
 
 } // namespace
