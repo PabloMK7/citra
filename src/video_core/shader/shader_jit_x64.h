@@ -37,6 +37,7 @@ public:
     void Compile_ADD(Instruction instr);
     void Compile_DP3(Instruction instr);
     void Compile_DP4(Instruction instr);
+    void Compile_DPH(Instruction instr);
     void Compile_EX2(Instruction instr);
     void Compile_LG2(Instruction instr);
     void Compile_MUL(Instruction instr);

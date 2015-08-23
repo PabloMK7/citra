@@ -23,7 +23,7 @@ const JitFunction instr_table[64] = {
     &JitCompiler::Compile_ADD,      // add
     &JitCompiler::Compile_DP3,      // dp3
     &JitCompiler::Compile_DP4,      // dp4
-    nullptr,                        // dph
+    &JitCompiler::Compile_DPH,      // dph
     nullptr,                        // unknown
     &JitCompiler::Compile_EX2,      // ex2
     &JitCompiler::Compile_LG2,      // lg2
@@ -44,7 +44,7 @@ const JitFunction instr_table[64] = {
     nullptr,                        // unknown
     nullptr,                        // unknown
     nullptr,                        // unknown
-    nullptr,                        // dphi
+    &JitCompiler::Compile_DPH,      // dphi
     nullptr,                        // unknown
     &JitCompiler::Compile_SGE,      // sgei
     &JitCompiler::Compile_SLT,      // slti
@@ -333,6 +333,39 @@ void JitCompiler::Compile_DP4(Instruction instr) {
     if (Common::GetCPUCaps().sse4_1) {
         DPPS(SRC1, R(SRC2), 0xff);
     } else {
+        MULPS(SRC1, R(SRC2));
+
+        MOVAPS(SRC2, R(SRC1));
+        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+        ADDPS(SRC1, R(SRC2));
+
+        MOVAPS(SRC2, R(SRC1));
+        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+        ADDPS(SRC1, R(SRC2));
+    }
+
+    Compile_DestEnable(instr, SRC1);
+}
+
+void JitCompiler::Compile_DPH(Instruction instr) {
+    if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::DPHI) {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1i, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2i, SRC2);
+    } else {
+        Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
+        Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    }
+
+    if (Common::GetCPUCaps().sse4_1) {
+        // Set 4th component to 1.0
+        BLENDPS(SRC1, R(ONE), 0x8); // 0b1000
+        DPPS(SRC1, R(SRC2), 0xff);
+    } else {
+        // Reverse to set the 4th component to 1.0
+        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
+        MOVSS(SRC1, R(ONE));
+        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
+
         MULPS(SRC1, R(SRC2));
 
         MOVAPS(SRC2, R(SRC1));
