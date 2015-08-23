@@ -237,7 +237,7 @@ void RunInterpreter(UnitState<Debug>& state) {
             {
                 Record<DebugDataRecord::SRC1>(state.debug, iteration, src1);
                 Record<DebugDataRecord::DEST_IN>(state.debug, iteration, dest);
-                float24 rsq_res = float24::FromFloat32(1.0f / sqrt(src1[0].ToFloat32()));
+                float24 rsq_res = float24::FromFloat32(1.0f / std::sqrt(src1[0].ToFloat32()));
                 for (int i = 0; i < 4; ++i) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
