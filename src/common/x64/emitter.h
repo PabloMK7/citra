@@ -586,6 +586,7 @@ public:
     void MAXSD(X64Reg regOp, const OpArg& arg);
     void SQRTSS(X64Reg regOp, const OpArg& arg);
     void SQRTSD(X64Reg regOp, const OpArg& arg);
+    void RCPSS(X64Reg regOp, const OpArg& arg);
     void RSQRTSS(X64Reg regOp, const OpArg& arg);
 
     // SSE/SSE2: Floating point bitwise (yes)

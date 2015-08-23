@@ -1535,6 +1535,7 @@ void XEmitter::MAXSS(X64Reg regOp, const OpArg& arg)   {WriteSSEOp(0xF3, sseMAX,
 void XEmitter::MAXSD(X64Reg regOp, const OpArg& arg)   {WriteSSEOp(0xF2, sseMAX, regOp, arg);}
 void XEmitter::SQRTSS(X64Reg regOp, const OpArg& arg)  {WriteSSEOp(0xF3, sseSQRT, regOp, arg);}
 void XEmitter::SQRTSD(X64Reg regOp, const OpArg& arg)  {WriteSSEOp(0xF2, sseSQRT, regOp, arg);}
+void XEmitter::RCPSS(X64Reg regOp, const OpArg& arg)   {WriteSSEOp(0xF3, sseRCP, regOp, arg);}
 void XEmitter::RSQRTSS(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF3, sseRSQRT, regOp, arg);}
 
 void XEmitter::ADDPS(X64Reg regOp, const OpArg& arg)   {WriteSSEOp(0x00, sseADD, regOp, arg);}
