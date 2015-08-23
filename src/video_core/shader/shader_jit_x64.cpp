@@ -496,9 +496,10 @@ void JitCompiler::Compile_MOV(Instruction instr) {
 void JitCompiler::Compile_RCP(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    // TODO(bunnei): RCPPS is a pretty rough approximation, this might cause problems if Pica
+    // TODO(bunnei): RCPSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    RCPPS(SRC1, R(SRC1));
+    RCPSS(SRC1, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -506,9 +507,10 @@ void JitCompiler::Compile_RCP(Instruction instr) {
 void JitCompiler::Compile_RSQ(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    // TODO(bunnei): RSQRTPS is a pretty rough approximation, this might cause problems if Pica
+    // TODO(bunnei): RSQRTSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    RSQRTPS(SRC1, R(SRC1));
+    RSQRTSS(SRC1, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
     Compile_DestEnable(instr, SRC1);
 }
