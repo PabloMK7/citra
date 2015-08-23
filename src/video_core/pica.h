@@ -757,7 +757,12 @@ struct Regs {
     // Number of vertices to render
     u32 num_vertices;
 
-    INSERT_PADDING_WORDS(0x5);
+    INSERT_PADDING_WORDS(0x1);
+
+    // The index of the first vertex to render
+    u32 vertex_offset;
+
+    INSERT_PADDING_WORDS(0x3);
 
     // These two trigger rendering of triangles
     u32 trigger_draw;
