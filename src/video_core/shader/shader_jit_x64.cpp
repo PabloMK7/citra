@@ -246,6 +246,19 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
     }
 }
 
+void JitCompiler::Compile_SanitizedMul(Gen::X64Reg src1, Gen::X64Reg src2, Gen::X64Reg scratch) {
+    MOVAPS(scratch, R(src1));
+    CMPPS(scratch, R(src2), CMP_ORD);
+
+    MULPS(src1, R(src2));
+
+    MOVAPS(src2, R(src1));
+    CMPPS(src2, R(src2), CMP_UNORD);
+
+    XORPS(scratch, R(src2));
+    ANDPS(src1, R(scratch));
+}
+
 void JitCompiler::Compile_EvaluateCondition(Instruction instr) {
     // Note: NXOR is used below to check for equality
     switch (instr.flow_control.op) {
@@ -309,21 +322,17 @@ void JitCompiler::Compile_DP3(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::GetCPUCaps().sse4_1) {
-        DPPS(SRC1, R(SRC2), 0x7f);
-    } else {
-        MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC2, R(SRC2), _MM_SHUFFLE(1, 1, 1, 1));
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC2, R(SRC2), _MM_SHUFFLE(1, 1, 1, 1));
 
-        MOVAPS(SRC3, R(SRC1));
-        SHUFPS(SRC3, R(SRC3), _MM_SHUFFLE(2, 2, 2, 2));
+    MOVAPS(SRC3, R(SRC1));
+    SHUFPS(SRC3, R(SRC3), _MM_SHUFFLE(2, 2, 2, 2));
 
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0));
-        ADDPS(SRC1, R(SRC2));
-        ADDPS(SRC1, R(SRC3));
-    }
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0));
+    ADDPS(SRC1, R(SRC2));
+    ADDPS(SRC1, R(SRC3));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -332,19 +341,15 @@ void JitCompiler::Compile_DP4(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::GetCPUCaps().sse4_1) {
-        DPPS(SRC1, R(SRC2), 0xff);
-    } else {
-        MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        ADDPS(SRC1, R(SRC2));
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    ADDPS(SRC1, R(SRC2));
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        ADDPS(SRC1, R(SRC2));
-    }
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    ADDPS(SRC1, R(SRC2));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -361,23 +366,22 @@ void JitCompiler::Compile_DPH(Instruction instr) {
     if (Common::GetCPUCaps().sse4_1) {
         // Set 4th component to 1.0
         BLENDPS(SRC1, R(ONE), 0x8); // 0b1000
-        DPPS(SRC1, R(SRC2), 0xff);
     } else {
         // Reverse to set the 4th component to 1.0
         SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
         MOVSS(SRC1, R(ONE));
         SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
-
-        MULPS(SRC1, R(SRC2));
-
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        ADDPS(SRC1, R(SRC2));
-
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        ADDPS(SRC1, R(SRC2));
     }
+
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    ADDPS(SRC1, R(SRC2));
+
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    ADDPS(SRC1, R(SRC2));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -417,7 +421,7 @@ void JitCompiler::Compile_LG2(Instruction instr) {
 void JitCompiler::Compile_MUL(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -635,12 +639,8 @@ void JitCompiler::Compile_MAD(Instruction instr) {
         Compile_SwizzleSrc(instr, 3, instr.mad.src3, SRC3);
     }
 
-    if (Common::GetCPUCaps().fma) {
-        VFMADD213PS(SRC1, SRC2, R(SRC3));
-    } else {
-        MULPS(SRC1, R(SRC2));
-        ADDPS(SRC1, R(SRC3));
-    }
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+    ADDPS(SRC1, R(SRC3));
 
     Compile_DestEnable(instr, SRC1);
 }
