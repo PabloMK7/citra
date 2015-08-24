@@ -578,27 +578,42 @@ void JitCompiler::Compile_CALLU(Instruction instr) {
 }
 
 void JitCompiler::Compile_CMP(Instruction instr) {
+    using Op = Instruction::Common::CompareOpType::Op;
+    Op op_x = instr.common.compare_op.x;
+    Op op_y = instr.common.compare_op.y;
+
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    static const u8 cmp[] = { CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_NLE, CMP_NLT };
+    // SSE doesn't have greater-than (GT) or greater-equal (GE) comparison operators. You need to
+    // emulate them by swapping the lhs and rhs and using LT and LE. NLT and NLE can't be used here
+    // because they don't match when used with NaNs.
+    static const u8 cmp[] = { CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE };
 
-    if (instr.common.compare_op.x == instr.common.compare_op.y) {
+    bool invert_op_x = (op_x == Op::GreaterThan || op_x == Op::GreaterEqual);
+    Gen::X64Reg lhs_x = invert_op_x ? SRC2 : SRC1;
+    Gen::X64Reg rhs_x = invert_op_x ? SRC1 : SRC2;
+
+    if (op_x == op_y) {
         // Compare X-component and Y-component together
-        CMPPS(SRC1, R(SRC2), cmp[instr.common.compare_op.x]);
+        CMPPS(lhs_x, R(rhs_x), cmp[op_x]);
+        MOVQ_xmm(R(COND0), lhs_x);
 
-        MOVQ_xmm(R(COND0), SRC1);
         MOV(64, R(COND1), R(COND0));
     } else {
+        bool invert_op_y = (op_y == Op::GreaterThan || op_y == Op::GreaterEqual);
+        Gen::X64Reg lhs_y = invert_op_y ? SRC2 : SRC1;
+        Gen::X64Reg rhs_y = invert_op_y ? SRC1 : SRC2;
+
         // Compare X-component
-        MOVAPS(SCRATCH, R(SRC1));
-        CMPSS(SCRATCH, R(SRC2), cmp[instr.common.compare_op.x]);
+        MOVAPS(SCRATCH, R(lhs_x));
+        CMPSS(SCRATCH, R(rhs_x), cmp[op_x]);
 
         // Compare Y-component
-        CMPPS(SRC1, R(SRC2), cmp[instr.common.compare_op.y]);
+        CMPPS(lhs_y, R(rhs_y), cmp[op_y]);
 
         MOVQ_xmm(R(COND0), SCRATCH);
-        MOVQ_xmm(R(COND1), SRC1);
+        MOVQ_xmm(R(COND1), lhs_y);
     }
 
     SHR(32, R(COND0), Imm8(31));
