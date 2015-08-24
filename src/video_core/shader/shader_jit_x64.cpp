@@ -115,6 +115,8 @@ static const X64Reg SRC1 = XMM1;
 static const X64Reg SRC2 = XMM2;
 /// Loaded with the third swizzled source register, otherwise can be used as a scratch register
 static const X64Reg SRC3 = XMM3;
+/// Additional scratch register
+static const X64Reg SCRATCH2 = XMM4;
 /// Constant vector of [1.0f, 1.0f, 1.0f, 1.0f], used to efficiently set a vector to one
 static const X64Reg ONE = XMM14;
 /// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
@@ -227,8 +229,8 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             BLENDPS(SCRATCH, R(src), mask);
         } else {
-            MOVAPS(XMM4, R(src));
-            UNPCKHPS(XMM4, R(SCRATCH)); // Unpack X/Y components of source and destination
+            MOVAPS(SCRATCH2, R(src));
+            UNPCKHPS(SCRATCH2, R(SCRATCH)); // Unpack X/Y components of source and destination
             UNPCKLPS(SCRATCH, R(src)); // Unpack Z/W components of source and destination
 
             // Compute selector to selectively copy source components to destination for SHUFPS instruction
@@ -236,7 +238,7 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
                      ((swiz.DestComponentEnabled(1) ? 3 : 2) << 2) |
                      ((swiz.DestComponentEnabled(2) ? 0 : 1) << 4) |
                      ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6);
-            SHUFPS(SCRATCH, R(XMM4), sel);
+            SHUFPS(SCRATCH, R(SCRATCH2), sel);
         }
 
         // Store dest back to memory
