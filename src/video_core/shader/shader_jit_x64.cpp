@@ -367,10 +367,10 @@ void JitCompiler::Compile_DPH(Instruction instr) {
         // Set 4th component to 1.0
         BLENDPS(SRC1, R(ONE), 0x8); // 0b1000
     } else {
-        // Reverse to set the 4th component to 1.0
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
-        MOVSS(SRC1, R(ONE));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
+        // Set 4th component to 1.0
+        MOVAPS(SCRATCH, R(SRC1));
+        UNPCKHPS(SCRATCH, R(ONE));  // XYZW, 1111 -> Z1__
+        UNPCKLPD(SRC1, R(SCRATCH)); // XYZW, Z1__ -> XYZ1
     }
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
