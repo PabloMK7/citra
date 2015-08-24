@@ -1031,8 +1031,8 @@ struct float24 {
     }
 
     float24 operator * (const float24& flt) const {
-        if ((this->value == 0.f && flt.value == flt.value) ||
-            (flt.value == 0.f && this->value == this->value))
+        if ((this->value == 0.f && !std::isnan(flt.value)) ||
+            (flt.value == 0.f && !std::isnan(this->value)))
             // PICA gives 0 instead of NaN when multiplying by inf
             return Zero();
         return float24::FromFloat32(ToFloat32() * flt.ToFloat32());
@@ -1051,8 +1051,8 @@ struct float24 {
     }
 
     float24& operator *= (const float24& flt) {
-        if ((this->value == 0.f && flt.value == flt.value) ||
-            (flt.value == 0.f && this->value == this->value))
+        if ((this->value == 0.f && !std::isnan(flt.value)) ||
+            (flt.value == 0.f && !std::isnan(this->value)))
             // PICA gives 0 instead of NaN when multiplying by inf
             *this = Zero();
         else value *= flt.ToFloat32();
