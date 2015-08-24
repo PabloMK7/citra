@@ -749,12 +749,12 @@ CompiledShader* JitCompiler::Compile() {
     // Used to set a register to one
     static const __m128 one = { 1.f, 1.f, 1.f, 1.f };
     MOV(PTRBITS, R(RAX), ImmPtr(&one));
-    MOVAPS(ONE, MDisp(RAX, 0));
+    MOVAPS(ONE, MatR(RAX));
 
     // Used to negate registers
     static const __m128 neg = { -0.f, -0.f, -0.f, -0.f };
     MOV(PTRBITS, R(RAX), ImmPtr(&neg));
-    MOVAPS(NEGBIT, MDisp(RAX, 0));
+    MOVAPS(NEGBIT, MatR(RAX));
 
     looping = false;
 
