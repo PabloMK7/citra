@@ -467,6 +467,7 @@ void JitCompiler::Compile_FLR(Instruction instr) {
 void JitCompiler::Compile_MAX(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
     MAXPS(SRC1, R(SRC2));
     Compile_DestEnable(instr, SRC1);
 }
@@ -474,6 +475,7 @@ void JitCompiler::Compile_MAX(Instruction instr) {
 void JitCompiler::Compile_MIN(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
     MINPS(SRC1, R(SRC2));
     Compile_DestEnable(instr, SRC1);
 }

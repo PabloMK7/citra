@@ -177,7 +177,10 @@ void RunInterpreter(UnitState<Debug>& state) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
-                    dest[i] = std::max(src1[i], src2[i]);
+                    // NOTE: Exact form required to match NaN semantics to hardware:
+                    //   max(0, NaN) -> NaN
+                    //   max(NaN, 0) -> 0
+                    dest[i] = (src1[i] > src2[i]) ? src1[i] : src2[i];
                 }
                 Record<DebugDataRecord::DEST_OUT>(state.debug, iteration, dest);
                 break;
@@ -190,7 +193,10 @@ void RunInterpreter(UnitState<Debug>& state) {
                     if (!swizzle.DestComponentEnabled(i))
                         continue;
 
-                    dest[i] = std::min(src1[i], src2[i]);
+                    // NOTE: Exact form required to match NaN semantics to hardware:
+                    //   min(0, NaN) -> NaN
+                    //   min(NaN, 0) -> 0
+                    dest[i] = (src1[i] < src2[i]) ? src1[i] : src2[i];
                 }
                 Record<DebugDataRecord::DEST_OUT>(state.debug, iteration, dest);
                 break;
