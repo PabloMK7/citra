@@ -869,8 +869,15 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
     state.Apply();
 
     glActiveTexture(GL_TEXTURE0);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fb_depth_texture.width, fb_depth_texture.height,
-                    fb_depth_texture.gl_format, fb_depth_texture.gl_type, temp_fb_depth_buffer.get());
+    if (fb_depth_texture.format == Pica::Regs::DepthFormat::D24S8) {
+        // TODO(Subv): There is a bug with Intel Windows drivers that makes glTexSubImage2D not change the stencil buffer.
+        // The bug has been reported to Intel (https://communities.intel.com/message/324464)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, fb_depth_texture.width, fb_depth_texture.height, 0,
+            GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, temp_fb_depth_buffer.get());
+    } else {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, fb_depth_texture.width, fb_depth_texture.height,
+            fb_depth_texture.gl_format, fb_depth_texture.gl_type, temp_fb_depth_buffer.get());
+    }
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
