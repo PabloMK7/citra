@@ -475,6 +475,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     auto& shader_config = Pica::g_state.regs.vs;
     for (auto instr : shader_setup.program_code)
         info.code.push_back({instr});
+    int num_attributes = Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes();
 
     for (auto pattern : shader_setup.swizzle_data)
         info.swizzle_info.push_back({pattern});
@@ -483,18 +484,17 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     info.labels.insert({ entry_point, "main" });
 
     // Generate debug information
-    debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, 1, shader_config, shader_setup);
+    debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, num_attributes, shader_config, shader_setup);
 
     // Reload widget state
-
-    // Only show input attributes which are used as input to the shader
-    for (unsigned int attr = 0; attr < 16; ++attr) {
-        input_data_container[attr]->setVisible(false);
-    }
-    for (unsigned int attr = 0; attr < Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes(); ++attr) {
+    for (unsigned int attr = 0; attr < num_attributes; ++attr) {
         unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
         input_data_mapping[source_attr]->setText(QString("-> v%1").arg(attr));
         input_data_container[source_attr]->setVisible(true);
+    }
+    // Only show input attributes which are used as input to the shader
+    for (unsigned int attr = num_attributes; attr < 16; ++attr) {
+        input_data_container[attr]->setVisible(false);
     }
 
     // Initialize debug info text for current cycle count
