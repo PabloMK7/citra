@@ -65,6 +65,19 @@ QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orie
     return QVariant();
 }
 
+// e.g. "-c92[a0.x].xyzw"
+static void print_input(std::ostringstream& output, const SourceRegister& input,
+                        bool negate, const std::string& swizzle_mask, bool align = true,
+                        const std::string& address_register_name = std::string()) {
+    if (align)
+        output << std::setw(4) << std::right;
+    output << ((negate ? "-" : "") + input.GetName());
+
+    if (!address_register_name.empty())
+        output << '[' << address_register_name << ']';
+    output << '.' << swizzle_mask;
+};
+
 QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) const {
     switch (role) {
     case Qt::DisplayRole:
@@ -81,43 +94,34 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
         case 2:
         {
-            std::stringstream output;
-            output.flags(std::ios::hex);
+            std::ostringstream output;
+            output.flags(std::ios::hex | std::ios::uppercase);
+
+            // To make the code aligning columns of assembly easier to keep track of, this function
+            // keeps track of the start of the start of the previous column, allowing alignment
+            // based on desired field widths.
+            int current_column = 0;
+            auto AlignToColumn = [&](int col_width) {
+                // Prints spaces to the output to pad previous column to size and advances the
+                // column marker.
+                current_column += col_width;
+                int to_add = std::max(1, current_column - (int)output.tellp());
+                for (int i = 0; i < to_add; ++i) {
+                    output << ' ';
+                }
+            };
 
             Instruction instr = par->info.code[index.row()];
             const SwizzlePattern& swizzle = par->info.swizzle_info[instr.common.operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
-            output << std::setw(8) << std::left << instr.opcode.Value().GetInfo().name;
+            int kOpcodeColumnWidth = 8;
+            // "rXX.xyzw  "
+            int kOutputColumnWidth = 10;
+            // "-rXX.xyzw  ", no attempt is made to align indexed inputs
+            int kInputOperandColumnWidth = 11;
 
-            // e.g. "-c92.xyzw"
-            static auto print_input = [](std::stringstream& output, const SourceRegister& input,
-                                         bool negate, const std::string& swizzle_mask) {
-                output << std::setw(4) << std::right << (negate ? "-" : "") + input.GetName();
-                output << "." << swizzle_mask;
-            };
-
-            // e.g. "-c92[a0.x].xyzw"
-            static auto print_input_indexed = [](std::stringstream& output, const SourceRegister& input,
-                                                 bool negate, const std::string& swizzle_mask,
-                                                 const std::string& address_register_name) {
-                std::string relative_address;
-                if (!address_register_name.empty())
-                    relative_address = "[" + address_register_name + "]";
-
-                output << std::setw(10) << std::right << (negate ? "-" : "") + input.GetName() + relative_address;
-                output << "." << swizzle_mask;
-            };
-
-            // Use print_input or print_input_indexed depending on whether relative addressing is used or not.
-            static auto print_input_indexed_compact = [](std::stringstream& output, const SourceRegister& input,
-                                                         bool negate, const std::string& swizzle_mask,
-                                                         const std::string& address_register_name) {
-                if (address_register_name.empty())
-                    print_input(output, input, negate, swizzle_mask);
-                else
-                    print_input_indexed(output, input, negate, swizzle_mask, address_register_name);
-            };
+            output << instr.opcode.Value().GetInfo().name;
 
             switch (instr.opcode.Value().GetInfo().type) {
             case OpCode::Type::Trivial:
@@ -130,53 +134,54 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                 switch (instr.opcode.Value().EffectiveOpCode()) {
                 case OpCode::Id::CMP:
                 {
+                    AlignToColumn(kOpcodeColumnWidth);
+
                     // NOTE: CMP always writes both cc components, so we do not consider the dest mask here.
-                    output << std::setw(4) << std::right << "cc.";
-                    output << "xy    ";
+                    output << " cc.xy";
+                    AlignToColumn(kOutputColumnWidth);
 
                     SourceRegister src1 = instr.common.GetSrc1(false);
                     SourceRegister src2 = instr.common.GetSrc2(false);
 
-                    print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(0,1), instr.common.AddressRegisterName());
-                    output << " " << instr.common.compare_op.ToString(instr.common.compare_op.x) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(0,1));
+                    output << ' ';
+                    print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(0,1), false, instr.common.AddressRegisterName());
+                    output << ' ' << instr.common.compare_op.ToString(instr.common.compare_op.x) << ' ';
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(0,1), false);
 
                     output << ", ";
 
-                    print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(1,1), instr.common.AddressRegisterName());
-                    output << " " << instr.common.compare_op.ToString(instr.common.compare_op.y) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1));
+                    print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(1,1), false, instr.common.AddressRegisterName());
+                    output << ' ' << instr.common.compare_op.ToString(instr.common.compare_op.y) << ' ';
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1), false);
 
                     break;
                 }
 
                 default:
                 {
+                    AlignToColumn(kOpcodeColumnWidth);
+
                     bool src_is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
 
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Dest) {
                         // e.g. "r12.xy__"
-                        output << std::setw(4) << std::right << instr.common.dest.Value().GetName() + ".";
-                        output << swizzle.DestMaskToString();
+                        output << std::setw(3) << std::right << instr.common.dest.Value().GetName() << '.' << swizzle.DestMaskToString();
                     } else if (instr.opcode.Value().GetInfo().subtype == OpCode::Info::MOVA) {
-                        output << std::setw(4) << std::right << "a0.";
-                        output << swizzle.DestMaskToString();
-                    } else {
-                        output << "        ";
+                        output << "  a0." << swizzle.DestMaskToString();
                     }
-                    output << "  ";
+                    AlignToColumn(kOutputColumnWidth);
 
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src1) {
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
-                        print_input_indexed(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), instr.common.AddressRegisterName());
-                    } else {
-                        output << "               ";
+                        print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), true, instr.common.AddressRegisterName());
+                        AlignToColumn(kInputOperandColumnWidth);
                     }
 
                     // TODO: In some cases, the Address Register is used as an index for SRC2 instead of SRC1
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true));
+                        AlignToColumn(kInputOperandColumnWidth);
                     }
                     break;
                 }
@@ -187,45 +192,53 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
             case OpCode::Type::Conditional:
             {
+                output << ' ';
+
                 switch (instr.opcode.Value().EffectiveOpCode()) {
                 case OpCode::Id::LOOP:
                     output << "(unknown instruction format)";
                     break;
 
                 default:
-                    output << "if ";
-
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasCondition) {
-                        const char* ops[] = {
-                            " || ", " && ", "", ""
-                        };
-                        if (instr.flow_control.op != instr.flow_control.JustY)
-                            output << ((!instr.flow_control.refx) ? "!" : " ") << "cc.x";
+                        output << '(';
 
-                        output << ops[instr.flow_control.op];
+                        if (instr.flow_control.op != instr.flow_control.JustY) {
+                            if (instr.flow_control.refx) output << '!';
+                            output << "cc.x";
+                        }
 
-                        if (instr.flow_control.op != instr.flow_control.JustX)
-                            output << ((!instr.flow_control.refy) ? "!" : " ") << "cc.y";
+                        if (instr.flow_control.op == instr.flow_control.Or) {
+                            output << " || ";
+                        } else if (instr.flow_control.op == instr.flow_control.And) {
+                            output << " && ";
+                        }
 
-                        output << " ";
+                        if (instr.flow_control.op != instr.flow_control.JustX) {
+                            if (instr.flow_control.refy) output << '!';
+                            output << "cc.y";
+                        }
+
+                        output << ") ";
                     } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasUniformIndex) {
-                        output << "b" << instr.flow_control.bool_uniform_id << " ";
+                        output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
                     u32 target_addr = instr.flow_control.dest_offset;
                     u32 target_addr_else = instr.flow_control.dest_offset;
 
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasAlternative) {
-                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
+                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
                     } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasExplicitDest) {
-                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
+                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << (4 * instr.flow_control.dest_offset);
                     } else {
                         // TODO: Handle other cases
+                        output << "(unknown destination)";
                     }
 
                     if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasFinishPoint) {
-                        output << "(return on " << std::setw(4) << std::right << std::setfill('0')
-                               << 4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions << ")";
+                        output << " (return on " << std::setw(4) << std::right << std::setfill('0')
+                               << (4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions) << ')';
                     }
 
                     break;
@@ -234,7 +247,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             }
 
             default:
-                output << "(unknown instruction format)";
+                output << " (unknown instruction format)";
                 break;
             }
 
