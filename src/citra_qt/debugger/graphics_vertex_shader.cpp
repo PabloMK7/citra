@@ -361,9 +361,6 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
 
     cycle_index = new QSpinBox;
 
-    connect(this, SIGNAL(SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags)),
-            binary_list->selectionModel(), SLOT(select(const QModelIndex&, QItemSelectionModel::SelectionFlags)));
-
     connect(dump_shader, SIGNAL(clicked()), this, SLOT(DumpShader()));
 
     connect(cycle_index, SIGNAL(valueChanged(int)), this, SLOT(OnCycleIndexChanged(int)));
@@ -550,7 +547,7 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
     instruction_description->setText(text);
 
     // Scroll to current instruction
-    const QModelIndex& instr_index = model->index(record.instruction_offset, 0);
-    emit SelectCommand(instr_index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    QModelIndex instr_index = model->index(record.instruction_offset, 0);
+    binary_list->selectionModel()->select(instr_index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     binary_list->scrollTo(instr_index, QAbstractItemView::EnsureVisible);
 }

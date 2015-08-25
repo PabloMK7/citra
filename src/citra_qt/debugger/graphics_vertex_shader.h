@@ -60,11 +60,6 @@ private slots:
      */
     void Reload(bool replace_vertex_data = false, void* vertex_data = nullptr);
 
-
-signals:
-    // Call this to change the current command selection in the disassembly view
-    void SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags);
-
 private:
     QLabel* instruction_description;
     QTreeView* binary_list;
