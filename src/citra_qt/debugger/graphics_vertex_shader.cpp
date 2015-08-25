@@ -292,12 +292,23 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
         return GetMonospaceFont();
 
     case Qt::BackgroundRole:
-        // Highlight instructions which have no debug data associated to them
+    {
+        // Highlight current instruction
+        int current_record_index = par->cycle_index->value();
+        if (current_record_index < par->debug_data.records.size()) {
+            const auto& current_record = par->debug_data.records[current_record_index];
+            if (index.row() == current_record.instruction_offset) {
+                return QColor(255, 255, 63);
+            }
+        }
+
+        // Use a grey background for instructions which have no debug data associated to them
         for (const auto& record : par->debug_data.records)
             if (index.row() == record.instruction_offset)
                 return QVariant();
 
-        return QBrush(QColor(255, 255, 127));
+        return QBrush(QColor(192, 192, 192));
+    }
 
 
     // TODO: Draw arrows for each "reachable" instruction to visualize control flow
@@ -546,8 +557,8 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
 
     instruction_description->setText(text);
 
-    // Scroll to current instruction
+    // Emit model update notification and scroll to current instruction
     QModelIndex instr_index = model->index(record.instruction_offset, 0);
-    binary_list->selectionModel()->select(instr_index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    emit model->dataChanged(instr_index, model->index(record.instruction_offset, model->columnCount()));
     binary_list->scrollTo(instr_index, QAbstractItemView::EnsureVisible);
 }
