@@ -19,7 +19,7 @@ public:
     void LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config);
 
     /// Flush any cached resource that touches the flushed region
-    void NotifyFlush(PAddr addr, u32 size);
+    void NotifyFlush(PAddr addr, u32 size, bool ignore_hash = false);
 
     /// Flush all cached OpenGL resources tracked by this cache manager
     void FullFlush();
@@ -30,6 +30,8 @@ private:
         GLuint width;
         GLuint height;
         u32 size;
+        u64 hash;
+        PAddr addr;
     };
 
     std::map<PAddr, std::unique_ptr<CachedTexture>> texture_cache;

@@ -231,8 +231,8 @@ void RasterizerOpenGL::DrawTriangles() {
     u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
                             * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
-    res_cache.NotifyFlush(cur_fb_color_addr, cur_fb_color_size);
-    res_cache.NotifyFlush(cur_fb_depth_addr, cur_fb_depth_size);
+    res_cache.NotifyFlush(cur_fb_color_addr, cur_fb_color_size, true);
+    res_cache.NotifyFlush(cur_fb_depth_addr, cur_fb_depth_size, true);
 }
 
 void RasterizerOpenGL::CommitFramebuffer() {
