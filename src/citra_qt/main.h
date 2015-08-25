@@ -14,6 +14,7 @@ class GImageInfo;
 class GRenderWindow;
 class EmuThread;
 class ProfilerWidget;
+class MicroProfileDialog;
 class DisassemblerWidget;
 class RegistersWidget;
 class CallstackWidget;
@@ -104,6 +105,7 @@ private:
     std::unique_ptr<EmuThread> emu_thread;
 
     ProfilerWidget* profilerWidget;
+    MicroProfileDialog* microProfileDialog;
     DisassemblerWidget* disasmWidget;
     RegistersWidget* registersWidget;
     CallstackWidget* callstackWidget;

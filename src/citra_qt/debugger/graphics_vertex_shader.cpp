@@ -15,6 +15,8 @@
 #include <QSpinBox>
 #include <QTreeView>
 
+#include "citra_qt/util/util.h"
+
 #include "video_core/shader/shader.h"
 
 #include "graphics_vertex_shader.h"
@@ -245,7 +247,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
     }
 
     case Qt::FontRole:
-        return QFont("monospace");
+        return GetMonospaceFont();
 
     case Qt::BackgroundRole:
         // Highlight instructions which have no debug data associated to them

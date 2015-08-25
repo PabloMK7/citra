@@ -9,6 +9,7 @@
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 
 #include "core/settings.h"
@@ -85,6 +86,9 @@ static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_
     }
 }
 
+MICROPROFILE_DEFINE(GPU_DisplayTransfer, "GPU", "DisplayTransfer", MP_RGB(100, 100, 255));
+MICROPROFILE_DEFINE(GPU_CmdlistProcessing, "GPU", "Cmdlist Processing", MP_RGB(100, 255, 100));
+
 template <typename T>
 inline void Write(u32 addr, const T data) {
     addr -= HW::VADDR_GPU;
@@ -150,6 +154,8 @@ inline void Write(u32 addr, const T data) {
 
     case GPU_REG_INDEX(display_transfer_config.trigger):
     {
+        MICROPROFILE_SCOPE(GPU_DisplayTransfer);
+
         const auto& config = g_regs.display_transfer_config;
         if (config.trigger & 1) {
 
@@ -344,6 +350,8 @@ inline void Write(u32 addr, const T data) {
         const auto& config = g_regs.command_processor_config;
         if (config.trigger & 1)
         {
+            MICROPROFILE_SCOPE(GPU_CmdlistProcessing);
+
             u32* buffer = (u32*)Memory::GetPhysicalPointer(config.GetPhysicalAddress());
 
             if (Pica::g_debug_context && Pica::g_debug_context->recorder) {

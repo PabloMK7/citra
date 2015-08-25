@@ -4,6 +4,7 @@
 
 #include "common/make_unique.h"
 #include "common/math_util.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 
 #include "core/memory.h"
@@ -16,6 +17,8 @@ RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
     FullFlush();
 }
 
+MICROPROFILE_DEFINE(OpenGL_TextureUpload, "OpenGL", "Texture Upload", MP_RGB(128, 64, 192));
+
 void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config) {
     PAddr texture_addr = config.config.GetPhysicalAddress();
 
@@ -25,6 +28,8 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         state.texture_units[texture_unit].texture_2d = cached_texture->second->texture.handle;
         state.Apply();
     } else {
+        MICROPROFILE_SCOPE(OpenGL_TextureUpload);
+
         std::unique_ptr<CachedTexture> new_texture = Common::make_unique<CachedTexture>();
 
         new_texture->texture.Create();

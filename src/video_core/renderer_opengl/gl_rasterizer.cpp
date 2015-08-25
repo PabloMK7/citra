@@ -7,6 +7,7 @@
 
 #include "common/color.h"
 #include "common/math_util.h"
+#include "common/microprofile.h"
 #include "common/profiler.h"
 
 #include "core/hw/gpu.h"
@@ -777,11 +778,15 @@ void RasterizerOpenGL::SyncDrawState() {
     state.Apply();
 }
 
+MICROPROFILE_DEFINE(OpenGL_FramebufferReload, "OpenGL", "FB Reload", MP_RGB(70, 70, 200));
+
 void RasterizerOpenGL::ReloadColorBuffer() {
     u8* color_buffer = Memory::GetPhysicalPointer(Pica::g_state.regs.framebuffer.GetColorBufferPhysicalAddress());
 
     if (color_buffer == nullptr)
         return;
+
+    MICROPROFILE_SCOPE(OpenGL_FramebufferReload);
 
     u32 bytes_per_pixel = Pica::Regs::BytesPerColorPixel(fb_color_texture.format);
 
@@ -821,6 +826,8 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
 
     if (depth_buffer == nullptr)
         return;
+
+    MICROPROFILE_SCOPE(OpenGL_FramebufferReload);
 
     u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format);
 
@@ -868,6 +875,7 @@ void RasterizerOpenGL::ReloadDepthBuffer() {
 }
 
 Common::Profiling::TimingCategory buffer_commit_category("Framebuffer Commit");
+MICROPROFILE_DEFINE(OpenGL_FramebufferCommit, "OpenGL", "FB Commit", MP_RGB(70, 70, 200));
 
 void RasterizerOpenGL::CommitColorBuffer() {
     if (last_fb_color_addr != 0) {
@@ -875,6 +883,7 @@ void RasterizerOpenGL::CommitColorBuffer() {
 
         if (color_buffer != nullptr) {
             Common::Profiling::ScopeTimer timer(buffer_commit_category);
+            MICROPROFILE_SCOPE(OpenGL_FramebufferCommit);
 
             u32 bytes_per_pixel = Pica::Regs::BytesPerColorPixel(fb_color_texture.format);
 
@@ -911,6 +920,7 @@ void RasterizerOpenGL::CommitDepthBuffer() {
 
         if (depth_buffer != nullptr) {
             Common::Profiling::ScopeTimer timer(buffer_commit_category);
+            MICROPROFILE_SCOPE(OpenGL_FramebufferCommit);
 
             u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format);
 

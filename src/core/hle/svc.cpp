@@ -5,6 +5,7 @@
 #include <map>
 
 #include "common/logging/log.h"
+#include "common/microprofile.h"
 #include "common/profiler.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
@@ -969,8 +970,11 @@ static const FunctionDef* GetSVCInfo(u32 func_num) {
     return &SVC_Table[func_num];
 }
 
+MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
+
 void CallSVC(u32 immediate) {
     Common::Profiling::ScopeTimer timer_svc(profiler_svc);
+    MICROPROFILE_SCOPE(Kernel_SVC);
 
     const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {

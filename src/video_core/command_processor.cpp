@@ -4,6 +4,7 @@
 
 #include <boost/range/algorithm/fill.hpp>
 
+#include "common/microprofile.h"
 #include "common/profiler.h"
 
 #include "core/hle/service/gsp_gpu.h"
@@ -42,6 +43,8 @@ static const u32 expand_bits_to_bytes[] = {
     0xff000000, 0xff0000ff, 0xff00ff00, 0xff00ffff,
     0xffff0000, 0xffff00ff, 0xffffff00, 0xffffffff
 };
+
+MICROPROFILE_DEFINE(GPU_Drawing, "GPU", "Drawing", MP_RGB(50, 50, 240));
 
 static void WritePicaReg(u32 id, u32 value, u32 mask) {
     auto& regs = g_state.regs;
@@ -126,6 +129,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
             Common::Profiling::ScopeTimer scope_timer(category_drawing);
+            MICROPROFILE_SCOPE(GPU_Drawing);
 
 #if PICA_LOG_TEV
             DebugUtils::DumpTevStageConfig(regs.GetTevStages());
