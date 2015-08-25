@@ -301,6 +301,13 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
         : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
     setObjectName("PicaVertexShader");
 
+    // Clear input vertex data so that it contains valid float values in case a debug shader
+    // execution happens before the first Vertex Loaded breakpoint.
+    // TODO: This makes a crash in the interpreter much less likely, but not impossible. The
+    //       interpreter should guard against out-of-bounds accesses to ensure crashes in it aren't
+    //       possible.
+    std::memset(&input_vertex, 0, sizeof(input_vertex));
+
     auto input_data_mapper = new QSignalMapper(this);
 
     // TODO: Support inputting data in hexadecimal raw format
