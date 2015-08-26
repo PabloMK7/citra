@@ -52,7 +52,9 @@ void Setup(UnitState<false>& state) {
 }
 
 void Shutdown() {
+#ifdef ARCHITECTURE_x86_64
     shader_map.clear();
+#endif // ARCHITECTURE_x86_64
 }
 
 static Common::Profiling::TimingCategory shader_category("Vertex Shader");
