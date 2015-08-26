@@ -77,13 +77,13 @@ static bool CondPassed(ARMul_State* cpu, unsigned int cond) {
     case ConditionCode::LS:
         return (!c_flag || z_flag);
     case ConditionCode::GE:
-        return ((!n_flag && !v_flag) || (n_flag && v_flag));
+        return (n_flag == v_flag);
     case ConditionCode::LT:
-        return ((n_flag && !v_flag) || (!n_flag && v_flag));
+        return (n_flag != v_flag);
     case ConditionCode::GT:
-        return ((!n_flag && !v_flag && !z_flag) || (n_flag && v_flag && !z_flag));
+        return (!z_flag && (n_flag == v_flag));
     case ConditionCode::LE:
-        return ((n_flag && !v_flag) || (!n_flag && v_flag)) || z_flag;
+        return (z_flag || (n_flag != v_flag));
     case ConditionCode::AL:
     case ConditionCode::NV: // Unconditional
         return true;
