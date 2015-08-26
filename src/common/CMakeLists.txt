@@ -24,6 +24,7 @@ set(SRCS
 set(HEADERS
             assert.h
             bit_field.h
+            bit_set.h
             break_points.h
             chunk_file.h
             code_block.h
