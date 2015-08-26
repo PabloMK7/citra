@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma once
+
 #include <QFont>
 
 /// Returns a QFont object appropriate to use as a monospace font for debugging widgets, etc.
