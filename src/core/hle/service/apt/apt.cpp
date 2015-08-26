@@ -78,8 +78,8 @@ void GetSharedFont(Service::Interface* self) {
     if (shared_font != nullptr) {
         // TODO(yuriks): This is a hack to keep this working right now even with our completely
         // broken shared memory system.
-        shared_font_mem->base_address = SHARED_FONT_VADDR;
-        Kernel::g_current_process->vm_manager.MapMemoryBlock(shared_font_mem->base_address,
+        shared_font_mem->fixed_address = SHARED_FONT_VADDR;
+        Kernel::g_current_process->vm_manager.MapMemoryBlock(shared_font_mem->fixed_address,
                 shared_font, 0, shared_font_mem->size, Kernel::MemoryState::Shared);
 
         cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);

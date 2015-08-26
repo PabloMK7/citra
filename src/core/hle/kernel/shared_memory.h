@@ -61,6 +61,8 @@ public:
 
     /// Address of shared memory block in the process.
     VAddr base_address;
+    /// Fixed address to allow mapping to. Used for blocks created from the linear heap.
+    VAddr fixed_address;
     /// Size of the memory block. Page-aligned.
     u32 size;
     /// Permission restrictions applied to the process which created the block.
