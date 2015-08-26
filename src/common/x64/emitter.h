@@ -18,6 +18,7 @@
 #pragma once
 
 #include "common/assert.h"
+#include "common/bit_set.h"
 #include "common/common_types.h"
 #include "common/code_block.h"
 
@@ -356,7 +357,7 @@ private:
     void WriteFloatLoadStore(int bits, FloatOp op, FloatOp op_80b, const OpArg& arg);
     void WriteNormalOp(XEmitter *emit, int bits, NormalOp op, const OpArg& a1, const OpArg& a2);
 
-    void ABI_CalculateFrameSize(u32 mask, size_t rsp_alignment, size_t needed_frame_size, size_t* shadowp, size_t* subtractionp, size_t* xmm_offsetp);
+    void ABI_CalculateFrameSize(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size, size_t* shadowp, size_t* subtractionp, size_t* xmm_offsetp);
 
 protected:
     void Write8(u8 value);
@@ -1007,25 +1008,26 @@ public:
         ABI_CallFunctionC((const void*)func, param1);
     }
 
-    // A function that doesn't have any control over what it will do to regs,
-    // such as the dispatcher, should be surrounded by these.
-    void ABI_PushAllCalleeSavedRegsAndAdjustStack();
-    void ABI_PopAllCalleeSavedRegsAndAdjustStack();
+    /**
+     * Saves specified registers and adjusts the stack to be 16-byte aligned as required by the ABI
+     *
+     * @param mask Registers to push on the stack (high 16 bits are XMMs, low 16 bits are GPRs)
+     * @param rsp_alignment Current alignment of the stack pointer, must be 0 or 8
+     * @param needed_frame_size Additional space needed, e.g., for function arguments passed on the stack
+     * @return Size of the shadow space, i.e., offset of the frame
+     */
+    size_t ABI_PushRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size = 0);
 
-    // A function that doesn't know anything about it's surroundings, should
-    // be surrounded by these to establish a safe environment, where it can roam free.
-    // An example is a backpatch injected function.
-    void ABI_PushAllCallerSavedRegsAndAdjustStack();
-    void ABI_PopAllCallerSavedRegsAndAdjustStack();
-
-    unsigned int ABI_GetAlignedFrameSize(unsigned int frameSize);
-    void ABI_AlignStack(unsigned int frameSize);
-    void ABI_RestoreStack(unsigned int frameSize);
-
-    // Sets up a __cdecl function.
-    // Only x64 really needs the parameter count.
-    void ABI_EmitPrologue(int maxCallParams);
-    void ABI_EmitEpilogue(int maxCallParams);
+    /**
+     * Restores specified registers and adjusts the stack to its original alignment, i.e., the alignment before
+     * the matching PushRegistersAndAdjustStack.
+     *
+     * @param mask Registers to restores from the stack (high 16 bits are XMMs, low 16 bits are GPRs)
+     * @param rsp_alignment Original alignment before the matching PushRegistersAndAdjustStack, must be 0 or 8
+     * @param needed_frame_size Additional space that was needed
+     * @warning Stack must be currently 16-byte aligned
+     */
+    void ABI_PopRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size = 0);
 
     #ifdef _M_IX86
     static int ABI_GetNumXMMRegs() { return 8; }

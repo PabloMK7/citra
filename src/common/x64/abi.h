@@ -1,34 +1,14 @@
-// Copyright (C) 2003 Dolphin Project.
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 2.0 or later versions.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License 2.0 for more details.
-
-// A copy of the GPL 2.0 should have been included with the program.
-// If not, see http://www.gnu.org/licenses/
-
-// Official SVN repository and contact information can be found at
-// http://code.google.com/p/dolphin-emu/
+// Copyright 2008 Dolphin Emulator Project
+// Licensed under GPLv2+
+// Refer to the license.txt file included.
 
 #pragma once
 
-#include "common/common_types.h"
+#include "common/bit_set.h"
+#include "emitter.h"
 
-// x86/x64 ABI:s, and helpers to help follow them when JIT-ing code.
+// x64 ABI:s, and helpers to help follow them when JIT-ing code.
 // All convensions return values in EAX (+ possibly EDX).
-
-// Linux 32-bit, Windows 32-bit (cdecl, System V):
-// * Caller pushes left to right
-// * Caller fixes stack after call
-// * function subtract from stack for local storage only.
-// Scratch:      EAX ECX EDX
-// Callee-save:  EBX ESI EDI EBP
-// Parameters:   -
 
 // Windows 64-bit
 // * 4-reg "fastcall" variant, very new-skool stack handling
@@ -44,18 +24,8 @@
 // Callee-save:  RBX RBP R12 R13 R14 R15
 // Parameters:   RDI RSI RDX RCX R8 R9
 
-#ifdef _M_IX86 // 32 bit calling convention, shared by all
-
-// 32-bit don't pass parameters in regs, but these are convenient to have anyway when we have to
-// choose regs to put stuff in.
-#define ABI_PARAM1 RCX
-#define ABI_PARAM2 RDX
-
-// There are no ABI_PARAM* here, since args are pushed.
-// 32-bit bog standard cdecl, shared between linux and windows
-// MacOSX 32-bit is same as System V with a few exceptions that we probably don't care much about.
-
-#elif ARCHITECTURE_x86_64 // 64 bit calling convention
+#define ABI_ALL_FPRS BitSet32(0xffff0000)
+#define ABI_ALL_GPRS BitSet32(0x0000ffff)
 
 #ifdef _WIN32 // 64-bit Windows - the really exotic calling convention
 
@@ -64,7 +34,11 @@
 #define ABI_PARAM3 R8
 #define ABI_PARAM4 R9
 
-#else  //64-bit Unix (hopefully MacOSX too)
+// xmm0-xmm15 use the upper 16 bits in the functions that push/pop registers.
+#define ABI_ALL_CALLER_SAVED \
+    (BitSet32 { RAX, RCX, RDX, R8, R9, R10, R11, \
+                XMM0+16, XMM1+16, XMM2+16, XMM3+16, XMM4+16, XMM5+16 })
+#else //64-bit Unix / OS X
 
 #define ABI_PARAM1 RDI
 #define ABI_PARAM2 RSI
@@ -73,6 +47,13 @@
 #define ABI_PARAM5 R8
 #define ABI_PARAM6 R9
 
+// TODO: Avoid pushing all 16 XMM registers when possible. Most functions we call probably
+// don't actually clobber them.
+#define ABI_ALL_CALLER_SAVED \
+    (BitSet32 { RAX, RCX, RDX, RDI, RSI, R8, R9, R10, R11 } | \
+     ABI_ALL_FPRS)
 #endif // WIN32
 
-#endif // X86
+#define ABI_ALL_CALLEE_SAVED (~ABI_ALL_CALLER_SAVED)
+
+#define ABI_RETURN RAX
