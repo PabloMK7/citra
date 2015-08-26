@@ -49,65 +49,47 @@ enum {
 
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
-static int CondPassed(ARMul_State* cpu, unsigned int cond) {
-    const u32 NFLAG = cpu->NFlag;
-    const u32 ZFLAG = cpu->ZFlag;
-    const u32 CFLAG = cpu->CFlag;
-    const u32 VFLAG = cpu->VFlag;
-
-    int temp = 0;
+static bool CondPassed(ARMul_State* cpu, unsigned int cond) {
+    const bool n_flag = cpu->NFlag != 0;
+    const bool z_flag = cpu->ZFlag != 0;
+    const bool c_flag = cpu->CFlag != 0;
+    const bool v_flag = cpu->VFlag != 0;
 
     switch (cond) {
-    case 0x0:
-        temp = ZFLAG;
-        break;
-    case 0x1: // NE
-        temp = !ZFLAG;
-        break;
-    case 0x2: // CS
-        temp = CFLAG;
-        break;
-    case 0x3: // CC
-        temp = !CFLAG;
-        break;
-    case 0x4: // MI
-        temp = NFLAG;
-        break;
-    case 0x5: // PL
-        temp = !NFLAG;
-        break;
-    case 0x6: // VS
-        temp = VFLAG;
-        break;
-    case 0x7: // VC
-        temp = !VFLAG;
-        break;
-    case 0x8: // HI
-        temp = (CFLAG && !ZFLAG);
-        break;
-    case 0x9: // LS
-        temp = (!CFLAG || ZFLAG);
-        break;
-    case 0xa: // GE
-        temp = ((!NFLAG && !VFLAG) || (NFLAG && VFLAG));
-        break;
-    case 0xb: // LT
-        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG));
-        break;
-    case 0xc: // GT
-        temp = ((!NFLAG && !VFLAG && !ZFLAG) || (NFLAG && VFLAG && !ZFLAG));
-        break;
-    case 0xd: // LE
-        temp = ((NFLAG && !VFLAG) || (!NFLAG && VFLAG)) || ZFLAG;
-        break;
-    case 0xe: // AL
-        temp = 1;
-        break;
-    case 0xf:
-        temp = 1;
-        break;
+    case ConditionCode::EQ:
+        return z_flag;
+    case ConditionCode::NE:
+        return !z_flag;
+    case ConditionCode::CS:
+        return c_flag;
+    case ConditionCode::CC:
+        return !c_flag;
+    case ConditionCode::MI:
+        return n_flag;
+    case ConditionCode::PL:
+        return !n_flag;
+    case ConditionCode::VS:
+        return v_flag;
+    case ConditionCode::VC:
+        return !v_flag;
+    case ConditionCode::HI:
+        return (c_flag && !z_flag);
+    case ConditionCode::LS:
+        return (!c_flag || z_flag);
+    case ConditionCode::GE:
+        return (n_flag == v_flag);
+    case ConditionCode::LT:
+        return (n_flag != v_flag);
+    case ConditionCode::GT:
+        return (!z_flag && (n_flag == v_flag));
+    case ConditionCode::LE:
+        return (z_flag || (n_flag != v_flag));
+    case ConditionCode::AL:
+    case ConditionCode::NV: // Unconditional
+        return true;
     }
-    return temp;
+
+    return false;
 }
 
 static unsigned int DPO(Immediate)(ARMul_State* cpu, unsigned int sht_oper) {
