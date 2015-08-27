@@ -68,6 +68,12 @@ private:
     void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, Gen::X64Reg dest);
     void Compile_DestEnable(Instruction instr, Gen::X64Reg dest);
 
+    /**
+     * Compiles a `MUL src1, src2` operation, properly handling the PICA semantics when multiplying
+     * zero by inf. Clobbers `src2` and `scratch`.
+     */
+    void Compile_SanitizedMul(Gen::X64Reg src1, Gen::X64Reg src2, Gen::X64Reg scratch);
+
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
 

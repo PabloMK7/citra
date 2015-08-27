@@ -115,6 +115,8 @@ static const X64Reg SRC1 = XMM1;
 static const X64Reg SRC2 = XMM2;
 /// Loaded with the third swizzled source register, otherwise can be used as a scratch register
 static const X64Reg SRC3 = XMM3;
+/// Additional scratch register
+static const X64Reg SCRATCH2 = XMM4;
 /// Constant vector of [1.0f, 1.0f, 1.0f, 1.0f], used to efficiently set a vector to one
 static const X64Reg ONE = XMM14;
 /// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
@@ -227,8 +229,8 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             BLENDPS(SCRATCH, R(src), mask);
         } else {
-            MOVAPS(XMM4, R(src));
-            UNPCKHPS(XMM4, R(SCRATCH)); // Unpack X/Y components of source and destination
+            MOVAPS(SCRATCH2, R(src));
+            UNPCKHPS(SCRATCH2, R(SCRATCH)); // Unpack X/Y components of source and destination
             UNPCKLPS(SCRATCH, R(src)); // Unpack Z/W components of source and destination
 
             // Compute selector to selectively copy source components to destination for SHUFPS instruction
@@ -236,12 +238,25 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
                      ((swiz.DestComponentEnabled(1) ? 3 : 2) << 2) |
                      ((swiz.DestComponentEnabled(2) ? 0 : 1) << 4) |
                      ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6);
-            SHUFPS(SCRATCH, R(XMM4), sel);
+            SHUFPS(SCRATCH, R(SCRATCH2), sel);
         }
 
         // Store dest back to memory
         MOVAPS(MDisp(REGISTERS, UnitState<false>::OutputOffset(dest)), SCRATCH);
     }
+}
+
+void JitCompiler::Compile_SanitizedMul(Gen::X64Reg src1, Gen::X64Reg src2, Gen::X64Reg scratch) {
+    MOVAPS(scratch, R(src1));
+    CMPPS(scratch, R(src2), CMP_ORD);
+
+    MULPS(src1, R(src2));
+
+    MOVAPS(src2, R(src1));
+    CMPPS(src2, R(src2), CMP_UNORD);
+
+    XORPS(scratch, R(src2));
+    ANDPS(src1, R(scratch));
 }
 
 void JitCompiler::Compile_EvaluateCondition(Instruction instr) {
@@ -307,21 +322,17 @@ void JitCompiler::Compile_DP3(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::GetCPUCaps().sse4_1) {
-        DPPS(SRC1, R(SRC2), 0x7f);
-    } else {
-        MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC2, R(SRC2), _MM_SHUFFLE(1, 1, 1, 1));
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC2, R(SRC2), _MM_SHUFFLE(1, 1, 1, 1));
 
-        MOVAPS(SRC3, R(SRC1));
-        SHUFPS(SRC3, R(SRC3), _MM_SHUFFLE(2, 2, 2, 2));
+    MOVAPS(SRC3, R(SRC1));
+    SHUFPS(SRC3, R(SRC3), _MM_SHUFFLE(2, 2, 2, 2));
 
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0));
-        ADDPS(SRC1, R(SRC2));
-        ADDPS(SRC1, R(SRC3));
-    }
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0));
+    ADDPS(SRC1, R(SRC2));
+    ADDPS(SRC1, R(SRC3));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -330,19 +341,15 @@ void JitCompiler::Compile_DP4(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    if (Common::GetCPUCaps().sse4_1) {
-        DPPS(SRC1, R(SRC2), 0xff);
-    } else {
-        MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        ADDPS(SRC1, R(SRC2));
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    ADDPS(SRC1, R(SRC2));
 
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        ADDPS(SRC1, R(SRC2));
-    }
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    ADDPS(SRC1, R(SRC2));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -359,23 +366,22 @@ void JitCompiler::Compile_DPH(Instruction instr) {
     if (Common::GetCPUCaps().sse4_1) {
         // Set 4th component to 1.0
         BLENDPS(SRC1, R(ONE), 0x8); // 0b1000
-        DPPS(SRC1, R(SRC2), 0xff);
     } else {
-        // Reverse to set the 4th component to 1.0
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
-        MOVSS(SRC1, R(ONE));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3));
-
-        MULPS(SRC1, R(SRC2));
-
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        ADDPS(SRC1, R(SRC2));
-
-        MOVAPS(SRC2, R(SRC1));
-        SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        ADDPS(SRC1, R(SRC2));
+        // Set 4th component to 1.0
+        MOVAPS(SCRATCH, R(SRC1));
+        UNPCKHPS(SCRATCH, R(ONE));  // XYZW, 1111 -> Z1__
+        UNPCKLPD(SRC1, R(SCRATCH)); // XYZW, Z1__ -> XYZ1
     }
+
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    ADDPS(SRC1, R(SRC2));
+
+    MOVAPS(SRC2, R(SRC1));
+    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    ADDPS(SRC1, R(SRC2));
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -415,7 +421,7 @@ void JitCompiler::Compile_LG2(Instruction instr) {
 void JitCompiler::Compile_MUL(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    MULPS(SRC1, R(SRC2));
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -465,6 +471,7 @@ void JitCompiler::Compile_FLR(Instruction instr) {
 void JitCompiler::Compile_MAX(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
     MAXPS(SRC1, R(SRC2));
     Compile_DestEnable(instr, SRC1);
 }
@@ -472,6 +479,7 @@ void JitCompiler::Compile_MAX(Instruction instr) {
 void JitCompiler::Compile_MIN(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
+    // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
     MINPS(SRC1, R(SRC2));
     Compile_DestEnable(instr, SRC1);
 }
@@ -578,27 +586,42 @@ void JitCompiler::Compile_CALLU(Instruction instr) {
 }
 
 void JitCompiler::Compile_CMP(Instruction instr) {
+    using Op = Instruction::Common::CompareOpType::Op;
+    Op op_x = instr.common.compare_op.x;
+    Op op_y = instr.common.compare_op.y;
+
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
 
-    static const u8 cmp[] = { CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_NLE, CMP_NLT };
+    // SSE doesn't have greater-than (GT) or greater-equal (GE) comparison operators. You need to
+    // emulate them by swapping the lhs and rhs and using LT and LE. NLT and NLE can't be used here
+    // because they don't match when used with NaNs.
+    static const u8 cmp[] = { CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE };
 
-    if (instr.common.compare_op.x == instr.common.compare_op.y) {
+    bool invert_op_x = (op_x == Op::GreaterThan || op_x == Op::GreaterEqual);
+    Gen::X64Reg lhs_x = invert_op_x ? SRC2 : SRC1;
+    Gen::X64Reg rhs_x = invert_op_x ? SRC1 : SRC2;
+
+    if (op_x == op_y) {
         // Compare X-component and Y-component together
-        CMPPS(SRC1, R(SRC2), cmp[instr.common.compare_op.x]);
+        CMPPS(lhs_x, R(rhs_x), cmp[op_x]);
+        MOVQ_xmm(R(COND0), lhs_x);
 
-        MOVQ_xmm(R(COND0), SRC1);
         MOV(64, R(COND1), R(COND0));
     } else {
+        bool invert_op_y = (op_y == Op::GreaterThan || op_y == Op::GreaterEqual);
+        Gen::X64Reg lhs_y = invert_op_y ? SRC2 : SRC1;
+        Gen::X64Reg rhs_y = invert_op_y ? SRC1 : SRC2;
+
         // Compare X-component
-        MOVAPS(SCRATCH, R(SRC1));
-        CMPSS(SCRATCH, R(SRC2), cmp[instr.common.compare_op.x]);
+        MOVAPS(SCRATCH, R(lhs_x));
+        CMPSS(SCRATCH, R(rhs_x), cmp[op_x]);
 
         // Compare Y-component
-        CMPPS(SRC1, R(SRC2), cmp[instr.common.compare_op.y]);
+        CMPPS(lhs_y, R(rhs_y), cmp[op_y]);
 
         MOVQ_xmm(R(COND0), SCRATCH);
-        MOVQ_xmm(R(COND1), SRC1);
+        MOVQ_xmm(R(COND1), lhs_y);
     }
 
     SHR(32, R(COND0), Imm8(31));
@@ -616,12 +639,8 @@ void JitCompiler::Compile_MAD(Instruction instr) {
         Compile_SwizzleSrc(instr, 3, instr.mad.src3, SRC3);
     }
 
-    if (Common::GetCPUCaps().fma) {
-        VFMADD213PS(SRC1, SRC2, R(SRC3));
-    } else {
-        MULPS(SRC1, R(SRC2));
-        ADDPS(SRC1, R(SRC3));
-    }
+    Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
+    ADDPS(SRC1, R(SRC3));
 
     Compile_DestEnable(instr, SRC1);
 }
