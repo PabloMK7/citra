@@ -485,8 +485,8 @@ void JitCompiler::Compile_MOVA(Instruction instr) {
 
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
-    // Convert floats to integers (only care about X and Y components)
-    CVTPS2DQ(SRC1, R(SRC1));
+    // Convert floats to integers using truncation (only care about X and Y components)
+    CVTTPS2DQ(SRC1, R(SRC1));
 
     // Get result
     MOVQ_xmm(R(RAX), SRC1);
