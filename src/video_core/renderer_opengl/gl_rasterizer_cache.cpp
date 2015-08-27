@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/hash.h"
 #include "common/make_unique.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -21,7 +22,6 @@ MICROPROFILE_DEFINE(OpenGL_TextureUpload, "OpenGL", "Texture Upload", MP_RGB(128
 
 void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config) {
     PAddr texture_addr = config.config.GetPhysicalAddress();
-
     const auto cached_texture = texture_cache.find(texture_addr);
 
     if (cached_texture != texture_cache.end()) {
@@ -51,12 +51,14 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         }
 
         const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format);
+        u8* texture_src_data = Memory::GetPhysicalPointer(texture_addr);
 
         new_texture->width = info.width;
         new_texture->height = info.height;
-        new_texture->size = info.width * info.height * Pica::Regs::NibblesPerPixel(info.format);
+        new_texture->size = info.stride * info.height;
+        new_texture->addr = texture_addr;
+        new_texture->hash = Common::ComputeHash64(texture_src_data, new_texture->size);
 
-        u8* texture_src_data = Memory::GetPhysicalPointer(texture_addr);
         std::unique_ptr<Math::Vec4<u8>[]> temp_texture_buffer_rgba(new Math::Vec4<u8>[info.width * info.height]);
 
         for (int y = 0; y < info.height; ++y) {
@@ -71,12 +73,18 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
     }
 }
 
-void RasterizerCacheOpenGL::NotifyFlush(PAddr addr, u32 size) {
+void RasterizerCacheOpenGL::NotifyFlush(PAddr addr, u32 size, bool ignore_hash) {
     // Flush any texture that falls in the flushed region
     // TODO: Optimize by also inserting upper bound (addr + size) of each texture into the same map and also narrow using lower_bound
     auto cache_upper_bound = texture_cache.upper_bound(addr + size);
+
     for (auto it = texture_cache.begin(); it != cache_upper_bound;) {
-        if (MathUtil::IntervalsIntersect(addr, size, it->first, it->second->size)) {
+        const auto& info = *it->second;
+
+        // Flush the texture only if the memory region intersects and a change is detected
+        if (MathUtil::IntervalsIntersect(addr, size, info.addr, info.size) &&
+            (ignore_hash || info.hash != Common::ComputeHash64(Memory::GetPhysicalPointer(info.addr), info.size))) {
+
             it = texture_cache.erase(it);
         } else {
             ++it;
