@@ -174,6 +174,10 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
         return ERR_INVALID_ADDRESS;
     }
 
+    if (size == 0) {
+        return RESULT_SUCCESS;
+    }
+
     ResultCode result = vm_manager.UnmapRange(target, size);
     if (result.IsError()) return result;
 
@@ -224,6 +228,10 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         target + size < target) {
 
         return ERR_INVALID_ADDRESS;
+    }
+
+    if (size == 0) {
+        return RESULT_SUCCESS;
     }
 
     VAddr heap_end = GetLinearHeapBase() + (u32)linheap_memory->size();
