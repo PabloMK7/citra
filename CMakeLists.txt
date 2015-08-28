@@ -115,7 +115,7 @@ else()
     message(STATUS "libpng not found. Some debugging features have been disabled.")
 endif()
 
-find_package(Boost 1.57.0)
+find_package(Boost 1.57.0 QUIET)
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 else()
