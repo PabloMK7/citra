@@ -11,6 +11,11 @@
 #define MICROPROFILE_CONTEXT_SWITCH_TRACE 0
 #define MICROPROFILE_PER_THREAD_BUFFER_SIZE (2048<<12) // 8 MB
 
+#ifdef _WIN32
+// This isn't defined by the standard library in MSVC2015
+typedef void* HANDLE;
+#endif
+
 #include <microprofile.h>
 
 #define MP_RGB(r, g, b) ((r) << 16 | (g) << 8 | (b) << 0)
