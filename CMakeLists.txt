@@ -189,22 +189,29 @@ if (ENABLE_QT)
 
         if (DEFINED QT_VER)
             download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
-            list(APPEND CMAKE_PREFIX_PATH "${QT_PREFIX}")
         endif()
     elseif (DEFINED ENV{QTDIR})
         # Set CMAKE_PREFIX_PATH if QTDIR is defined in the environment This allows CMake to
         # automatically find the Qt packages on Windows
-        list(APPEND CMAKE_PREFIX_PATH "$ENV{QTDIR}")
+        set(QT_PREFIX "$ENV{QTDIR}")
+    endif()
+
+    # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so make
+    # sure to not pass anything if we don't have one
+    if (DEFINED QT_PREFIX)
+        set(QT_PREFIX_HINT HINTS "${QT_PREFIX}")
+    else()
+        set(QT_PREFIX_HINT)
     endif()
 
     if (NOT CITRA_FORCE_QT4)
-        find_package(Qt5 COMPONENTS Widgets OpenGL)
+        find_package(Qt5 COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
         set(CITRA_QT_LIBS Qt5::Widgets Qt5::OpenGL)
     endif()
 
     if (CITRA_FORCE_QT4 OR NOT Qt5_FOUND)
         # Try to fallback to Qt4
-        find_package(Qt4 REQUIRED COMPONENTS QtGui QtOpenGL)
+        find_package(Qt4 REQUIRED COMPONENTS QtGui QtOpenGL ${QT_PREFIX_HINT})
         set(CITRA_QT_LIBS Qt4::QtGui Qt4::QtOpenGL)
     endif()
 endif()
