@@ -2,6 +2,20 @@
 # dependent libraries.
 cmake_minimum_required(VERSION 2.8.11)
 
+function(download_bundled_external remote_path lib_name prefix_var)
+    set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
+    if (NOT EXISTS "${prefix}")
+        message(STATUS "Downloading binaries for ${lib_name}...")
+        file(DOWNLOAD
+            https://github.com/yuriks/citra-depends/raw/master/${remote_path}${lib_name}.7z
+            "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z" SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
+    endif()
+    message(STATUS "Using bundled binaries at ${prefix}")
+    set(${prefix_var} "${prefix}" PARENT_SCOPE)
+endfunction()
+
 include(CheckSymbolExists)
 function(detect_architecture symbol arch)
     if (NOT DEFINED ARCHITECTURE)
@@ -116,59 +130,29 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 option(ENABLE_GLFW "Enable the GLFW frontend" ON)
+option(CITRA_USE_BUNDLED_GLFW "Download bundled GLFW binaries" OFF)
 if (ENABLE_GLFW)
-    if (WIN32)
+    if (CITRA_USE_BUNDLED_GLFW)
         # Detect toolchain and platform
-        if (MSVC)
-            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-                set(TMP_ARCH "x64")
-            elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
-                set(TMP_ARCH "Win32")
-            else()
-                set(TMP_ARCH "UNKNOWN")
-                message(SEND_ERROR "Couldn't detect your compiler's architecture, you'll have to manually specify the GLFW library to use. (Try checking CMakeOutput.log to find out why.)")
-            endif()
-
-            if (MSVC11) # Visual C++ 2012
-                set(TMP_TOOLSET "v110")
-            elseif (MSVC12) # Visual C++ 2013
-                set(TMP_TOOLSET "v120")
-            else()
-                set(TMP_TOOLSET "UNSUPPORTED")
-                message(SEND_ERROR "We don't supply GLFW binaries for your version of MSVC, you might have to provide them yourself.")
-            endif()
-
-            set(TMP_TOOLSET "msvc_${TMP_TOOLSET}-${TMP_ARCH}")
+        if (MSVC14 AND ARCHITECTURE_x86_64)
+            set(GLFW_VER "glfw-3.1.1-msvc2015_64")
+        elseif (MSVC12 AND ARCHITECTURE_x86_64)
+            set(GLFW_VER "glfw-3.1.1-msvc2013_64")
         else()
-            # Assume mingw
-            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-                set(TMP_ARCH "x86_64")
-            elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
-                set(TMP_ARCH "i686")
-            else()
-                set(TMP_ARCH "UNKNOWN")
-                message(SEND_ERROR "Couldn't detect your compiler's architecture, you'll have to manually specify the GLFW library to use.")
-            endif()
-
-            set(TMP_TOOLSET "mingw-${TMP_ARCH}")
+            message(FATAL_ERROR "No bundled GLFW binaries for your toolchain. Disable CITRA_USE_BUNDLED_GLFW and provide your own.")
         endif()
 
-        set(GLFW_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/glfw-3.1.1.bin")
+        if (DEFINED GLFW_VER)
+            download_bundled_external("glfw/" ${GLFW_VER} GLFW_PREFIX)
+        endif()
+
         set(GLFW_INCLUDE_DIRS "${GLFW_PREFIX}/include" CACHE PATH "Path to GLFW3 headers")
-        set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib-${TMP_TOOLSET}" CACHE PATH "Path to GLFW3 libraries")
-
-        # Clean up after ourselves
-        unset(TMP_TOOLSET)
-        unset(TMP_ARCH)
-
+        set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib" CACHE PATH "Path to GLFW3 libraries")
         set(GLFW_LIBRARIES glfw3)
     else()
         find_package(PkgConfig REQUIRED)
         pkg_search_module(GLFW REQUIRED glfw3)
     endif()
-
-    include_directories(${GLFW_INCLUDE_DIRS})
-    link_directories(${GLFW_LIBRARY_DIRS})
 endif()
 
 IF (APPLE)
@@ -193,11 +177,23 @@ ELSE()
 ENDIF (APPLE)
 
 option(ENABLE_QT "Enable the Qt frontend" ON)
+option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
 option(CITRA_FORCE_QT4 "Use Qt4 even if Qt5 is available." OFF)
 if (ENABLE_QT)
-    # Set CMAKE_PREFIX_PATH if QTDIR is defined in the environment This allows CMake to
-    # automatically find the Qt packages on Windows
-    if (DEFINED ENV{QTDIR})
+    if (CITRA_USE_BUNDLED_QT)
+        if (MSVC14 AND ARCHITECTURE_x86_64)
+            set(QT_VER qt-5.5-msvc2015_64)
+        else()
+            message(FATAL_ERROR "No bundled Qt binaries for your toolchain. Disable CITRA_USE_BUNDLED_QT and provide your own.")
+        endif()
+
+        if (DEFINED QT_VER)
+            download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
+            list(APPEND CMAKE_PREFIX_PATH "${QT_PREFIX}")
+        endif()
+    elseif (DEFINED ENV{QTDIR})
+        # Set CMAKE_PREFIX_PATH if QTDIR is defined in the environment This allows CMake to
+        # automatically find the Qt packages on Windows
         list(APPEND CMAKE_PREFIX_PATH "$ENV{QTDIR}")
     endif()
 
