@@ -15,7 +15,7 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra core video_core common)
-target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih)
+target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih glad)
 if (MSVC)
     target_link_libraries(citra getopt)
 endif()

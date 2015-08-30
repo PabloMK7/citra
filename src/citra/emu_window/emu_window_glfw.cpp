@@ -7,7 +7,7 @@
 #include <string>
 
 // Let’s use our own GL header, instead of one from GLFW.
-#include "video_core/renderer_opengl/generated/gl_3_2_core.h"
+#include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 

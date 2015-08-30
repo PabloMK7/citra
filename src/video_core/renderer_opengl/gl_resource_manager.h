@@ -6,9 +6,10 @@
 
 #include <utility>
 
+#include <glad/glad.h>
+
 #include "common/common_types.h"
 
-#include "video_core/renderer_opengl/generated/gl_3_2_core.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
 

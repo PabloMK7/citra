@@ -5,6 +5,8 @@
 #include <cstring>
 #include <memory>
 
+#include <glad/glad.h>
+
 #include "common/color.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -20,8 +22,6 @@
 #include "video_core/renderer_opengl/gl_shaders.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
-
-#include "generated/gl_3_2_core.h"
 
 static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
     return (stage.color_op == Pica::Regs::TevStageConfig::Operation::Replace &&
