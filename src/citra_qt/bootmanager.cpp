@@ -72,6 +72,9 @@ void EmuThread::run() {
         }
     }
 
+    // Shutdown the core emulation
+    System::Shutdown();
+
     MicroProfileOnThreadExit();
 
     render_window->moveContext();
