@@ -32,6 +32,9 @@ public:
         GLint test_ref; // GL_STENCIL_REF
         GLuint test_mask; // GL_STENCIL_VALUE_MASK
         GLuint write_mask; // GL_STENCIL_WRITEMASK
+        GLenum action_stencil_fail; // GL_STENCIL_FAIL
+        GLenum action_depth_fail; // GL_STENCIL_PASS_DEPTH_FAIL
+        GLenum action_depth_pass; // GL_STENCIL_PASS_DEPTH_PASS
     } stencil;
 
     struct {

@@ -216,14 +216,33 @@ static void SetStencil(int x, int y, u8 value) {
     }
 }
 
-// TODO: Should the stencil mask be applied to the "dest" or "ref" operands? Most likely not!
-static u8 PerformStencilAction(Regs::StencilAction action, u8 dest, u8 ref) {
+static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 ref) {
     switch (action) {
     case Regs::StencilAction::Keep:
-        return dest;
+        return old_stencil;
 
-    case Regs::StencilAction::Xor:
-        return dest ^ ref;
+    case Regs::StencilAction::Zero:
+        return 0;
+
+    case Regs::StencilAction::Replace:
+        return ref;
+
+    case Regs::StencilAction::Increment:
+        // Saturated increment
+        return std::min<u8>(old_stencil, 254) + 1;
+
+    case Regs::StencilAction::Decrement:
+        // Saturated decrement
+        return std::max<u8>(old_stencil, 1) - 1;
+
+    case Regs::StencilAction::Invert:
+        return ~old_stencil;
+
+    case Regs::StencilAction::IncrementWrap:
+        return old_stencil + 1;
+
+    case Regs::StencilAction::DecrementWrap:
+        return old_stencil - 1;
 
     default:
         LOG_CRITICAL(HW_GPU, "Unknown stencil action %x", (int)action);
@@ -783,10 +802,16 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             }
 
             u8 old_stencil = 0;
+
+            auto UpdateStencil = [stencil_test, x, y, &old_stencil](Pica::Regs::StencilAction action) {
+                u8 new_stencil = PerformStencilAction(action, old_stencil, stencil_test.reference_value);
+                SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+            };
+
             if (stencil_action_enable) {
                 old_stencil = GetStencil(x >> 4, y >> 4);
-                u8 dest = old_stencil & stencil_test.mask;
-                u8 ref = stencil_test.reference_value & stencil_test.mask;
+                u8 dest = old_stencil & stencil_test.input_mask;
+                u8 ref = stencil_test.reference_value & stencil_test.input_mask;
 
                 bool pass = false;
                 switch (stencil_test.func) {
@@ -824,8 +849,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
 
                 if (!pass) {
-                    u8 new_stencil = PerformStencilAction(stencil_test.action_stencil_fail, old_stencil, stencil_test.replacement_value);
-                    SetStencil(x >> 4, y >> 4, new_stencil);
+                    UpdateStencil(stencil_test.action_stencil_fail);
                     continue;
                 }
             }
@@ -875,22 +899,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
 
                 if (!pass) {
-                    if (stencil_action_enable) {
-                        u8 new_stencil = PerformStencilAction(stencil_test.action_depth_fail, old_stencil, stencil_test.replacement_value);
-                        SetStencil(x >> 4, y >> 4, new_stencil);
-                    }
+                    if (stencil_action_enable)
+                        UpdateStencil(stencil_test.action_depth_fail);
                     continue;
                 }
 
                 if (output_merger.depth_write_enable)
                     SetDepth(x >> 4, y >> 4, z);
-
-                if (stencil_action_enable) {
-                    // TODO: What happens if stencil testing is enabled, but depth testing is not? Will stencil get updated anyway?
-                    u8 new_stencil = PerformStencilAction(stencil_test.action_depth_pass, old_stencil, stencil_test.replacement_value);
-                    SetStencil(x >> 4, y >> 4, new_stencil);
-                }
             }
+
+            // The stencil depth_pass action is executed even if depth testing is disabled
+            if (stencil_action_enable)
+                UpdateStencil(stencil_test.action_depth_pass);
 
             auto dest = GetPixel(x >> 4, y >> 4);
             Math::Vec4<u8> blend_output = combiner_output;

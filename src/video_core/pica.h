@@ -441,8 +441,14 @@ struct Regs {
     };
 
     enum class StencilAction : u32 {
-        Keep = 0,
-        Xor  = 5,
+        Keep           = 0,
+        Zero           = 1,
+        Replace        = 2,
+        Increment      = 3,
+        Decrement      = 4,
+        Invert         = 5,
+        IncrementWrap  = 6,
+        DecrementWrap  = 7
     };
 
     struct {
@@ -481,23 +487,29 @@ struct Regs {
 
         struct {
             union {
+                // Raw value of this register
+                u32 raw_func;
+
                 // If true, enable stencil testing
                 BitField< 0, 1, u32> enable;
 
                 // Comparison operation for stencil testing
                 BitField< 4, 3, CompareFunc> func;
 
-                // Value to calculate the new stencil value from
-                BitField< 8, 8, u32> replacement_value;
+                // Mask used to control writing to the stencil buffer
+                BitField< 8, 8, u32> write_mask;
 
                 // Value to compare against for stencil testing
                 BitField<16, 8, u32> reference_value;
 
                 // Mask to apply on stencil test inputs
-                BitField<24, 8, u32> mask;
+                BitField<24, 8, u32> input_mask;
             };
 
             union {
+                // Raw value of this register
+                u32 raw_op;
+
                 // Action to perform when the stencil test fails
                 BitField< 0, 3, StencilAction> action_stencil_fail;
 

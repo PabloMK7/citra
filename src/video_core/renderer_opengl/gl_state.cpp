@@ -26,6 +26,9 @@ OpenGLState::OpenGLState() {
     stencil.test_ref = 0;
     stencil.test_mask = -1;
     stencil.write_mask = -1;
+    stencil.action_depth_fail = GL_KEEP;
+    stencil.action_depth_pass = GL_KEEP;
+    stencil.action_stencil_fail = GL_KEEP;
 
     blend.enabled = false;
     blend.src_rgb_func = GL_ONE;
@@ -103,6 +106,12 @@ void OpenGLState::Apply() {
             stencil.test_ref != cur_state.stencil.test_ref ||
             stencil.test_mask != cur_state.stencil.test_mask) {
         glStencilFunc(stencil.test_func, stencil.test_ref, stencil.test_mask);
+    }
+
+    if (stencil.action_depth_fail != cur_state.stencil.action_depth_fail ||
+            stencil.action_depth_pass != cur_state.stencil.action_depth_pass ||
+            stencil.action_stencil_fail != cur_state.stencil.action_stencil_fail) {
+        glStencilOp(stencil.action_stencil_fail, stencil.action_depth_fail, stencil.action_depth_pass);
     }
 
     // Stencil mask
