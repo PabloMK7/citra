@@ -175,11 +175,11 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
     return stencil_op_table[(unsigned)action];
 }
 
-inline std::array<GLfloat, 4> ColorRGBA8(const u8* bytes) {
-    return { { bytes[0] / 255.0f,
-               bytes[1] / 255.0f,
-               bytes[2] / 255.0f,
-               bytes[3] / 255.0f
+inline std::array<GLfloat, 4> ColorRGBA8(const u32 color) {
+    return { { (color >>  0 & 0xFF) / 255.0f,
+               (color >>  8 & 0xFF) / 255.0f,
+               (color >> 16 & 0xFF) / 255.0f,
+               (color >> 24 & 0xFF) / 255.0f
            } };
 }
 

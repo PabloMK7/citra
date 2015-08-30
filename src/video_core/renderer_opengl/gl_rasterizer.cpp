@@ -658,7 +658,7 @@ void RasterizerOpenGL::SyncBlendFuncs() {
 }
 
 void RasterizerOpenGL::SyncBlendColor() {
-    auto blend_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.output_merger.blend_const.r);
+    auto blend_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.output_merger.blend_const.raw);
     state.blend.color.red = blend_color[0];
     state.blend.color.green = blend_color[1];
     state.blend.color.blue = blend_color[2];
@@ -728,7 +728,7 @@ void RasterizerOpenGL::SyncTevOps(unsigned stage_index, const Pica::Regs::TevSta
 }
 
 void RasterizerOpenGL::SyncTevColor(unsigned stage_index, const Pica::Regs::TevStageConfig& config) {
-    auto const_color = PicaToGL::ColorRGBA8((u8*)&config.const_r);
+    auto const_color = PicaToGL::ColorRGBA8(config.const_color);
     glUniform4fv(uniform_tev_cfgs[stage_index].const_color, 1, const_color.data());
 }
 
@@ -737,7 +737,7 @@ void RasterizerOpenGL::SyncTevMultipliers(unsigned stage_index, const Pica::Regs
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
-    auto combiner_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.tev_combiner_buffer_color.r);
+    auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
     glUniform4fv(uniform_tev_combiner_buffer_color, 1, combiner_color.data());
 }
 

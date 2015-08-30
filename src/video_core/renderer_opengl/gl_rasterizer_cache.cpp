@@ -46,7 +46,7 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t);
 
         if (wrap_s == GL_CLAMP_TO_BORDER || wrap_t == GL_CLAMP_TO_BORDER) {
-            auto border_color = PicaToGL::ColorRGBA8((u8*)&config.config.border_color.r);
+            auto border_color = PicaToGL::ColorRGBA8(config.config.border_color.raw);
             glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
         }
 
