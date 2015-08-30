@@ -235,7 +235,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
-                unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : index;
+                // Indexed rendering doesn't use the start offset
+                unsigned int vertex = is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index]) : (index + regs.vertex_offset);
 
                 // -1 is a common special value used for primitive restart. Since it's unknown if
                 // the PICA supports it, and it would mess up the caching, guard against it here.
