@@ -80,6 +80,24 @@ private:
         GLenum gl_type;
     };
 
+    struct SamplerInfo {
+        using TextureConfig = Pica::Regs::TextureConfig;
+
+        OGLSampler sampler;
+
+        /// Creates the sampler object, initializing its state so that it's in sync with the SamplerInfo struct.
+        void Create();
+        /// Syncs the sampler object with the config, updating any necessary state.
+        void SyncWithConfig(const TextureConfig& config);
+
+    private:
+        TextureConfig::TextureFilter mag_filter;
+        TextureConfig::TextureFilter min_filter;
+        TextureConfig::WrapMode wrap_s;
+        TextureConfig::WrapMode wrap_t;
+        u32 border_color;
+    };
+
     /// Structure that the hardware rendered vertices are composed of
     struct HardwareVertex {
         HardwareVertex(const Pica::Shader::OutputVertex& v) {
@@ -193,6 +211,7 @@ private:
     PAddr last_fb_depth_addr;
 
     // Hardware rasterizer
+    std::array<SamplerInfo, 3> texture_samplers;
     TextureInfo fb_color_texture;
     DepthTextureInfo fb_depth_texture;
     OGLShader shader;

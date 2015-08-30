@@ -20,9 +20,8 @@ RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
 
 MICROPROFILE_DEFINE(OpenGL_TextureUpload, "OpenGL", "Texture Upload", MP_RGB(128, 64, 192));
 
-void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config) {
-    PAddr texture_addr = config.config.GetPhysicalAddress();
-    const auto cached_texture = texture_cache.find(texture_addr);
+void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::DebugUtils::TextureInfo& info) {
+    const auto cached_texture = texture_cache.find(info.physical_address);
 
     if (cached_texture != texture_cache.end()) {
         state.texture_units[texture_unit].texture_2d = cached_texture->second->texture.handle;
@@ -37,26 +36,12 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
         state.Apply();
         glActiveTexture(GL_TEXTURE0 + texture_unit);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureFilterMode(config.config.mag_filter));
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, PicaToGL::TextureFilterMode(config.config.min_filter));
-
-        GLenum wrap_s = PicaToGL::WrapMode(config.config.wrap_s);
-        GLenum wrap_t = PicaToGL::WrapMode(config.config.wrap_t);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t);
-
-        if (wrap_s == GL_CLAMP_TO_BORDER || wrap_t == GL_CLAMP_TO_BORDER) {
-            auto border_color = PicaToGL::ColorRGBA8(config.config.border_color.raw);
-            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.data());
-        }
-
-        const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format);
-        u8* texture_src_data = Memory::GetPhysicalPointer(texture_addr);
+        u8* texture_src_data = Memory::GetPhysicalPointer(info.physical_address);
 
         new_texture->width = info.width;
         new_texture->height = info.height;
         new_texture->size = info.stride * info.height;
-        new_texture->addr = texture_addr;
+        new_texture->addr = info.physical_address;
         new_texture->hash = Common::ComputeHash64(texture_src_data, new_texture->size);
 
         std::unique_ptr<Math::Vec4<u8>[]> temp_texture_buffer_rgba(new Math::Vec4<u8>[info.width * info.height]);
@@ -69,7 +54,7 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, info.width, info.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp_texture_buffer_rgba.get());
 
-        texture_cache.emplace(texture_addr, std::move(new_texture));
+        texture_cache.emplace(info.physical_address, std::move(new_texture));
     }
 }
 
