@@ -102,7 +102,7 @@ bool DiskFile::Open() {
     mode_string += "b";
 
     file = Common::make_unique<FileUtil::IOFile>(path, mode_string.c_str());
-    return true;
+    return file->IsOpen();
 }
 
 size_t DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
