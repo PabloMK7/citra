@@ -55,6 +55,7 @@ std::string Regs::GetCommandName(int index) {
         ADD_FIELD(vs_default_attributes_setup);
         ADD_FIELD(command_buffer);
         ADD_FIELD(triangle_topology);
+        ADD_FIELD(restart_primitive);
         ADD_FIELD(gs.bool_uniforms);
         ADD_FIELD(gs.int_uniforms);
         ADD_FIELD(gs.main_offset);
