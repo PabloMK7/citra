@@ -997,6 +997,7 @@ ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);
+ASSERT_REG_POSITION(vertex_offset, 0x22a);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(vs_default_attributes_setup, 0x232);
