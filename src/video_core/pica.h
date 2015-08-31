@@ -828,7 +828,9 @@ struct Regs {
 
     BitField<8, 2, TriangleTopology> triangle_topology;
 
-    INSERT_PADDING_WORDS(0x21);
+    u32 restart_primitive;
+
+    INSERT_PADDING_WORDS(0x20);
 
     struct ShaderConfig {
         BitField<0, 16, u32> bool_uniforms;
@@ -997,11 +999,13 @@ ASSERT_REG_POSITION(framebuffer, 0x110);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);
+ASSERT_REG_POSITION(vertex_offset, 0x22a);
 ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(vs_default_attributes_setup, 0x232);
 ASSERT_REG_POSITION(command_buffer, 0x238);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
+ASSERT_REG_POSITION(restart_primitive, 0x25f);
 ASSERT_REG_POSITION(gs, 0x280);
 ASSERT_REG_POSITION(vs, 0x2b0);
 

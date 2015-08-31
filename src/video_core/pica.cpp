@@ -49,11 +49,13 @@ std::string Regs::GetCommandName(int index) {
         ADD_FIELD(vertex_attributes);
         ADD_FIELD(index_array);
         ADD_FIELD(num_vertices);
+        ADD_FIELD(vertex_offset);
         ADD_FIELD(trigger_draw);
         ADD_FIELD(trigger_draw_indexed);
         ADD_FIELD(vs_default_attributes_setup);
         ADD_FIELD(command_buffer);
         ADD_FIELD(triangle_topology);
+        ADD_FIELD(restart_primitive);
         ADD_FIELD(gs.bool_uniforms);
         ADD_FIELD(gs.int_uniforms);
         ADD_FIELD(gs.main_offset);
