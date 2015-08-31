@@ -434,10 +434,10 @@ void JitCompiler::Compile_SGE(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
-    CMPPS(SRC1, R(SRC2), CMP_NLT);
-    ANDPS(SRC1, R(ONE));
+    CMPPS(SRC2, R(SRC1), CMP_LE);
+    ANDPS(SRC2, R(ONE));
 
-    Compile_DestEnable(instr, SRC1);
+    Compile_DestEnable(instr, SRC2);
 }
 
 void JitCompiler::Compile_SLT(Instruction instr) {
