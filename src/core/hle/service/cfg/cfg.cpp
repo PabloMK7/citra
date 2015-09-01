@@ -21,28 +21,67 @@
 namespace Service {
 namespace CFG {
 
-const u64 CFG_SAVE_ID = 0x00010017;
-const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
-const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
-const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
-const char CONSOLE_USERNAME[0x14] = "CITRA";
+/// The maximum number of block entries that can exist in the config file
+static const u32 CONFIG_FILE_MAX_BLOCK_ENTRIES = 1479;
+
+namespace {
+
+/**
+ * The header of the config savedata file,
+ * contains information about the blocks in the file
+ */
+struct SaveFileConfig {
+    u16 total_entries;                        ///< The total number of set entries in the config file
+    u16 data_entries_offset;                  ///< The offset where the data for the blocks start, this is hardcoded to 0x455C as per hardware
+    SaveConfigBlockEntry block_entries[CONFIG_FILE_MAX_BLOCK_ENTRIES]; ///< The block headers, the maximum possible value is 1479 as per hardware
+    u32 unknown;                              ///< This field is unknown, possibly padding, 0 has been observed in hardware
+};
+static_assert(sizeof(SaveFileConfig) == 0x455C, "SaveFileConfig header must be exactly 0x455C bytes");
+
+struct UsernameBlock {
+    char16_t username[10]; ///< Exactly 20 bytes long, padded with zeros at the end if necessary
+    u32 zero;
+    u32 ng_word;
+};
+static_assert(sizeof(UsernameBlock) == 0x1C, "UsernameBlock must be exactly 0x1C bytes");
+
+struct ConsoleModelInfo {
+    u8 model;       ///< The console model (3DS, 2DS, etc)
+    u8 unknown[3];  ///< Unknown data
+};
+static_assert(sizeof(ConsoleModelInfo) == 4, "ConsoleModelInfo must be exactly 4 bytes");
+
+struct ConsoleCountryInfo {
+    u8 unknown[3];   ///< Unknown data
+    u8 country_code; ///< The country code of the console
+};
+static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
+
+}
+
+static const u64 CFG_SAVE_ID = 0x00010017;
+static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
+static const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
+static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
+static const char CONSOLE_USERNAME[0x14] = "CITRA";
 /// This will be initialized in Init, and will be used when creating the block
-UsernameBlock CONSOLE_USERNAME_BLOCK;
+static UsernameBlock CONSOLE_USERNAME_BLOCK;
 /// TODO(Subv): Find out what this actually is
-const u8 SOUND_OUTPUT_MODE = 2;
-const u8 UNITED_STATES_COUNTRY_ID = 49;
+static const u8 SOUND_OUTPUT_MODE = 2;
+static const u8 UNITED_STATES_COUNTRY_ID = 49;
 /// TODO(Subv): Find what the other bytes are
-const ConsoleCountryInfo COUNTRY_INFO = { { 0, 0, 0 }, UNITED_STATES_COUNTRY_ID };
+static const ConsoleCountryInfo COUNTRY_INFO = { { 0, 0, 0 }, UNITED_STATES_COUNTRY_ID };
 
 /**
  * TODO(Subv): Find out what this actually is, these values fix some NaN uniforms in some games,
  * for example Nintendo Zone
  * Thanks Normmatt for providing this information
  */
-const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
+static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
     62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
     10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
 };
+static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20, "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
 
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
 static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
