@@ -12,6 +12,7 @@
 
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
+#include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
 
@@ -58,6 +59,9 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
+
+    game_list = new GameList();
+    ui.horizontalLayout->addWidget(game_list);
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
@@ -160,6 +164,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     UpdateRecentFiles();
 
     // Setup connections
+    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
     connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
@@ -192,6 +197,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     setWindowTitle(window_title.c_str());
 
     show();
+
+    game_list->PopulateAsync(settings.value("gameListRootDir").toString(), settings.value("gameListDeepScan").toBool());
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
@@ -264,6 +271,9 @@ void GMainWindow::BootGame(const std::string& filename) {
     // Update the GUI
     registersWidget->OnDebugModeEntered();
     callstackWidget->OnDebugModeEntered();
+    if (ui.action_Single_Window_Mode->isChecked()) {
+        game_list->hide();
+    }
     render_window->show();
 
     emulation_running = true;
@@ -295,6 +305,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     render_window->hide();
+    game_list->show();
 
     emulation_running = false;
 }
@@ -340,12 +351,16 @@ void GMainWindow::UpdateRecentFiles() {
     }
 }
 
+void GMainWindow::OnGameListLoadFile(QString game_path) {
+    BootGame(game_path.toLatin1().data());
+}
+
 void GMainWindow::OnMenuLoadFile() {
     QSettings settings;
     QString rom_path = settings.value("romsPath", QString()).toString();
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), rom_path, tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
-    if (filename.size()) {
+    if (!filename.isEmpty()) {
         settings.setValue("romsPath", QFileInfo(filename).path());
         StoreRecentFile(filename);
 
@@ -358,7 +373,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
     QString symbol_path = settings.value("symbolsPath", QString()).toString();
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Load Symbol Map"), symbol_path, tr("Symbol map (*)"));
-    if (filename.size()) {
+    if (!filename.isEmpty()) {
         settings.setValue("symbolsPath", QFileInfo(filename).path());
 
         LoadSymbolMap(filename.toLatin1().data());
@@ -440,6 +455,7 @@ void GMainWindow::ToggleWindowMode() {
         if (emulation_running) {
             render_window->setVisible(true);
             render_window->RestoreGeometry();
+            game_list->show();
         }
     }
 }
