@@ -318,6 +318,12 @@ ResultCode FormatConfig() {
     config->data_entries_offset = 0x455C;
 
     // Insert the default blocks
+    u8 zero_buffer[0xC0] = {};
+
+    // 0x00030001 - Unknown
+    res = CreateConfigInfoBlk(0x00030001, 0x8, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE, STEREO_CAMERA_SETTINGS.data());
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x00070001, sizeof(SOUND_OUTPUT_MODE), 0xE, &SOUND_OUTPUT_MODE);
@@ -330,6 +336,34 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
     if (!res.IsSuccess()) return res;
+
+    char16_t country_name_buffer[16][0x40] = {};
+    for (size_t i = 0; i < 16; ++i) {
+        auto size = Common::UTF8ToUTF16("Gensokyo").copy(country_name_buffer[i], 0x40);
+    }
+    // 0x000B0001 - Localized names for the profile Country
+    res = CreateConfigInfoBlk(0x000B0001, sizeof(country_name_buffer), 0xE, country_name_buffer);
+    if (!res.IsSuccess()) return res;
+    // 0x000B0002 - Localized names for the profile State/Province
+    res = CreateConfigInfoBlk(0x000B0002, sizeof(country_name_buffer), 0xE, country_name_buffer);
+    if (!res.IsSuccess()) return res;
+
+    // 0x000B0003 - Unknown, related to country/address (zip code?)
+    res = CreateConfigInfoBlk(0x000B0003, 0x4, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
+    // 0x000C0000 - Unknown
+    res = CreateConfigInfoBlk(0x000C0000, 0xC0, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
+    // 0x000C0001 - Unknown
+    res = CreateConfigInfoBlk(0x000C0001, 0x14, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
+    // 0x000D0000 - Accepted EULA version
+    res = CreateConfigInfoBlk(0x000D0000, 0x4, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8, &CONSOLE_MODEL);
     if (!res.IsSuccess()) return res;
 
