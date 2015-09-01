@@ -278,7 +278,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output);
  * @param data A pointer containing the data we will write to the new block
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
-ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const u8* data);
+ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data);
 
 /**
  * Deletes the config savegame file from the filesystem, the buffer in memory is not affected

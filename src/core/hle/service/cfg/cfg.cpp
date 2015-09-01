@@ -212,7 +212,7 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
     return RESULT_SUCCESS;
 }
 
-ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const u8* data) {
+ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
         return ResultCode(-1); // TODO(Subv): Find the right error code
@@ -277,33 +277,23 @@ ResultCode FormatConfig() {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     // This value is hardcoded, taken from 3dbrew, verified by hardware, it's always the same value
     config->data_entries_offset = 0x455C;
+
     // Insert the default blocks
-    res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE,
-                              reinterpret_cast<const u8*>(STEREO_CAMERA_SETTINGS.data()));
-    if (!res.IsSuccess())
-        return res;
-    res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE,
-                              reinterpret_cast<const u8*>(&CONSOLE_UNIQUE_ID));
-    if (!res.IsSuccess())
-        return res;
-    res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8,
-                              reinterpret_cast<const u8*>(&CONSOLE_MODEL));
-    if (!res.IsSuccess())
-        return res;
-    res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xA, &CONSOLE_LANGUAGE);
-    if (!res.IsSuccess())
-        return res;
+    res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE, STEREO_CAMERA_SETTINGS.data());
+    if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x00070001, sizeof(SOUND_OUTPUT_MODE), 0xE, &SOUND_OUTPUT_MODE);
-    if (!res.IsSuccess())
-        return res;
-    res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE,
-                              reinterpret_cast<const u8*>(&COUNTRY_INFO));
-    if (!res.IsSuccess())
-        return res;
-    res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE,
-                              reinterpret_cast<const u8*>(&CONSOLE_USERNAME_BLOCK));
-    if (!res.IsSuccess())
-        return res;
+    if (!res.IsSuccess()) return res;
+    res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE, &CONSOLE_UNIQUE_ID);
+    if (!res.IsSuccess()) return res;
+    res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
+    if (!res.IsSuccess()) return res;
+    res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xA, &CONSOLE_LANGUAGE);
+    if (!res.IsSuccess()) return res;
+    res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
+    if (!res.IsSuccess()) return res;
+    res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8, &CONSOLE_MODEL);
+    if (!res.IsSuccess()) return res;
+
     // Save the buffer to the file
     res = UpdateConfigNANDSavegame();
     if (!res.IsSuccess())
