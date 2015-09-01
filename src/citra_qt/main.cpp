@@ -266,6 +266,7 @@ void GMainWindow::BootGame(const std::string& filename) {
     callstackWidget->OnDebugModeEntered();
     render_window->show();
 
+    emulation_running = true;
     OnStartGame();
 }
 
@@ -294,6 +295,8 @@ void GMainWindow::ShutdownGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     render_window->hide();
+
+    emulation_running = false;
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename)
@@ -423,17 +426,21 @@ void GMainWindow::ToggleWindowMode() {
         // Render in the main window...
         render_window->BackupGeometry();
         ui.horizontalLayout->addWidget(render_window);
-        render_window->setVisible(true);
         render_window->setFocusPolicy(Qt::ClickFocus);
-        render_window->setFocus();
+        if (emulation_running) {
+            render_window->setVisible(true);
+            render_window->setFocus();
+        }
 
     } else {
         // Render in a separate window...
         ui.horizontalLayout->removeWidget(render_window);
         render_window->setParent(nullptr);
-        render_window->setVisible(true);
-        render_window->RestoreGeometry();
         render_window->setFocusPolicy(Qt::NoFocus);
+        if (emulation_running) {
+            render_window->setVisible(true);
+            render_window->RestoreGeometry();
+        }
     }
 }
 

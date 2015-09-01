@@ -102,6 +102,8 @@ private:
 
     GRenderWindow* render_window;
 
+    // Whether emulation is currently running in Citra.
+    bool emulation_running = false;
     std::unique_ptr<EmuThread> emu_thread;
 
     ProfilerWidget* profilerWidget;
