@@ -33,6 +33,34 @@ enum class FileType {
     THREEDSX, //3DSX
 };
 
+/**
+ * Identifies the type of a bootable file based on the magic value in its header.
+ * @param file open file
+ * @return FileType of file
+ */
+FileType IdentifyFile(FileUtil::IOFile& file);
+
+/**
+ * Identifies the type of a bootable file based on the magic value in its header.
+ * @param file_name path to file
+ * @return FileType of file. Note: this will return FileType::Unknown if it is unable to determine
+ * a filetype, and will never return FileType::Error.
+ */
+FileType IdentifyFile(const std::string& file_name);
+
+/**
+ * Guess the type of a bootable file from its extension
+ * @param extension String extension of bootable file
+ * @return FileType of file. Note: this will return FileType::Unknown if it is unable to determine
+ * a filetype, and will never return FileType::Error.
+ */
+FileType GuessFromExtension(const std::string& extension_);
+
+/**
+ * Convert a FileType into a string which can be displayed to the user.
+ */
+const char* GetFileTypeString(FileType type);
+
 /// Return type for functions in Loader namespace
 enum class ResultStatus {
     Success,
