@@ -30,6 +30,8 @@
 
 #include "video_core/video_core.h"
 
+#include "core/gdbstub/gdbstub.h"
+
 
 static void PrintHelp()
 {
@@ -72,6 +74,7 @@ int main(int argc, char **argv) {
     Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
+    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 

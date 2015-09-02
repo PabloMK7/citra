@@ -99,6 +99,7 @@ private slots:
     void OnConfigure();
     void OnDisplayTitleBars(bool);
     void SetHardwareRendererEnabled(bool);
+    void SetGdbstubEnabled(bool);
     void SetShaderJITEnabled(bool);
     void ToggleWindowMode();
 

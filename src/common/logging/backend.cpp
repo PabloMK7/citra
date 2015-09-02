@@ -29,6 +29,7 @@ namespace Log {
         SUB(Debug, Emulated) \
         SUB(Debug, GPU) \
         SUB(Debug, Breakpoint) \
+        SUB(Debug, GDBStub) \
         CLS(Kernel) \
         SUB(Kernel, SVC) \
         CLS(Service) \

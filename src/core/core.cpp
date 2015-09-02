@@ -13,6 +13,8 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hw/hw.h"
 
+#include "core/gdbstub/gdbstub.h"
+
 namespace Core {
 
 ARM_Interface*     g_app_core = nullptr;  ///< ARM11 application core
@@ -20,6 +22,21 @@ ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
+    if (GDBStub::g_server_enabled) {
+        GDBStub::HandlePacket();
+
+        // If the loop is halted and we want to step, use a tiny (1) number of instructions to execute.
+        // Otherwise get out of the loop function.
+        if (GDBStub::GetCpuHaltFlag()) {
+            if (GDBStub::GetCpuStepFlag()) {
+                GDBStub::SetCpuStepFlag(false);
+                tight_loop = 1;
+            } else {
+                return;
+            }
+        }
+    }
+
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
     if (Kernel::GetCurrentThread() == nullptr) {

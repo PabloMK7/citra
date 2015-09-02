@@ -23,6 +23,8 @@
 #include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
+#include "core/gdbstub/gdbstub.h"
+
 Common::Profiling::TimingCategory profile_execute("DynCom::Execute");
 Common::Profiling::TimingCategory profile_decode("DynCom::Decode");
 
@@ -3548,6 +3550,7 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
             CITRA_IGNORE_EXIT(-1);
         }
         inst_base = arm_instruction_trans[idx](inst, idx);
+
 translated:
         phys_addr += inst_size;
 
@@ -3580,6 +3583,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     Common::Profiling::ScopeTimer timer_execute(profile_execute);
     MICROPROFILE_SCOPE(DynCom_Execute);
 
+    int breakpoint_offset = -1;
+
     #undef RM
     #undef RS
 
@@ -3604,15 +3609,27 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     #define INC_PC(l)   ptr += sizeof(arm_inst) + l
     #define INC_PC_STUB ptr += sizeof(arm_inst)
 
+#define GDB_BP_CHECK \
+    cpu->Cpsr &= ~(1 << 5); \
+    cpu->Cpsr |= cpu->TFlag << 5; \
+    if (GDBStub::g_server_enabled) { \
+        if (GDBStub::IsMemoryBreak() || PC == breakpoint_offset) { \
+            GDBStub::Break(); \
+            goto END; \
+        } \
+    }
+
 // GCC and Clang have a C++ extension to support a lookup table of labels. Otherwise, fallback to a
 // clunky switch statement.
 #if defined __GNUC__ || defined __clang__
 #define GOTO_NEXT_INST \
+    GDB_BP_CHECK; \
     if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
     num_instrs++; \
     goto *InstLabel[inst_base->idx]
 #else
 #define GOTO_NEXT_INST \
+    GDB_BP_CHECK; \
     if (num_instrs >= cpu->NumInstrsToExecute) goto END; \
     num_instrs++; \
     switch(inst_base->idx) { \
@@ -3878,6 +3895,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     unsigned int addr;
     unsigned int num_instrs = 0;
 
+
     int ptr;
 
     LOAD_NZCVT;
@@ -3901,6 +3919,11 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         } else {
             if (InterpreterTranslate(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
                 goto END;
+        }
+
+        // Find breakpoint if one exists within the block
+        if (GDBStub::g_server_enabled && GDBStub::IsConnected()) {
+            breakpoint_offset = GDBStub::GetNextBreakpointFromAddress(cpu->Reg[15], GDBStub::BreakpointType::Execute);
         }
 
         inst_base = (arm_inst *)&inst_buf[ptr];
@@ -4454,7 +4477,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read8(addr);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
 
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));
@@ -4472,7 +4495,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = Memory::Read8(addr);
+            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
 
             if (BITS(inst_cream->inst, 12, 15) == 15) {
                 INC_PC(sizeof(ldst_inst));
@@ -4531,7 +4554,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             cpu->SetExclusiveMemoryAddress(read_addr);
 
-            RD = Memory::Read8(read_addr);
+            RD = cpu->ReadMemory8(read_addr);
             if (inst_cream->Rd == 15) {
                 INC_PC(sizeof(generic_arm_inst));
                 goto DISPATCH;
@@ -4604,7 +4627,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
-            unsigned int value = Memory::Read8(addr);
+            unsigned int value = cpu->ReadMemory8(addr);
             if (BIT(value, 7)) {
                 value |= 0xffffff00;
             }
@@ -6027,7 +6050,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
-            Memory::Write8(addr, value);
+            cpu->WriteMemory8(addr, value);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -6040,7 +6063,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
             unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
-            Memory::Write8(addr, value);
+            cpu->WriteMemory8(addr, value);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -6091,7 +6114,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             if (cpu->IsExclusiveMemoryAccess(write_addr)) {
                 cpu->UnsetExclusiveMemoryAddress();
-                Memory::Write8(write_addr, cpu->Reg[inst_cream->Rm]);
+                cpu->WriteMemory8(write_addr, cpu->Reg[inst_cream->Rm]);
                 RD = 0;
             } else {
                 // Failed to write due to mutex access
@@ -6250,8 +6273,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             swp_inst* inst_cream = (swp_inst*)inst_base->component;
             addr = RN;
-            unsigned int value = Memory::Read8(addr);
-            Memory::Write8(addr, (RM & 0xFF));
+            unsigned int value = cpu->ReadMemory8(addr);
+            cpu->WriteMemory8(addr, (RM & 0xFF));
             RD = value;
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
