@@ -74,6 +74,7 @@
     <addaction name="separator"/>
     <addaction name="action_Use_Hardware_Renderer"/>
     <addaction name="action_Use_Shader_JIT"/>
+    <addaction name="action_Use_Gdbstub"/>
     <addaction name="action_Configure"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -168,6 +169,14 @@
    <property name="text">
     <string>Use Shader JIT</string>
    </property>
+  </action>
+  <action name="action_Use_Gdbstub">
+    <property name="checkable">
+      <bool>true</bool>
+    </property>
+    <property name="text">
+      <string>Use Gdbstub</string>
+    </property>
   </action>
   <action name="action_Configure">
    <property name="text">

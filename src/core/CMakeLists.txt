@@ -22,6 +22,7 @@ set(SRCS
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
+            gdbstub/gdbstub.cpp
             hle/config_mem.cpp
             hle/hle.cpp
             hle/applets/applet.cpp
@@ -149,6 +150,7 @@ set(HEADERS
             file_sys/disk_archive.h
             file_sys/file_backend.h
             file_sys/ivfc_archive.h
+            gdbstub/gdbstub.h
             hle/config_mem.h
             hle/function_wrappers.h
             hle/hle.h

@@ -62,6 +62,11 @@ void Config::ReadValues() {
     qt_config->beginGroup("Miscellaneous");
     Settings::values.log_filter = qt_config->value("log_filter", "*:Info").toString().toStdString();
     qt_config->endGroup();
+
+    qt_config->beginGroup("Debugging");
+    Settings::values.use_gdbstub = qt_config->value("use_gdbstub", false).toBool();
+    Settings::values.gdbstub_port = qt_config->value("gdbstub_port", 24689).toInt();
+    qt_config->endGroup();
 }
 
 void Config::SaveValues() {
@@ -96,6 +101,11 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("Miscellaneous");
     qt_config->setValue("log_filter", QString::fromStdString(Settings::values.log_filter));
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Debugging");
+    qt_config->setValue("use_gdbstub", Settings::values.use_gdbstub);
+    qt_config->setValue("gdbstub_port", Settings::values.gdbstub_port);
     qt_config->endGroup();
 }
 

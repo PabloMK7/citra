@@ -47,6 +47,12 @@
 
 #include "video_core/video_core.h"
 
+#ifdef USE_GDBSTUB
+#include "core/gdbstub/gdbstub.h"
+#endif
+
+#include "core/gdbstub/gdbstub.h"
+
 GMainWindow::GMainWindow() : emu_thread(nullptr)
 {
     Pica::g_debug_context = Pica::DebugContext::Construct();
@@ -137,6 +143,15 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     microProfileDialog->setVisible(settings.value("microProfileDialogVisible").toBool());
     settings.endGroup();
 
+#ifdef USE_GDBSTUB
+    Gdbstub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
+#endif
+
+    ui.action_Use_Gdbstub->setChecked(Settings::values.use_gdbstub);
+    SetGdbstubEnabled(ui.action_Use_Gdbstub->isChecked());
+
+    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
+
     ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
     SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
 
@@ -167,6 +182,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
     connect(ui.action_Use_Hardware_Renderer, SIGNAL(triggered(bool)), this, SLOT(SetHardwareRendererEnabled(bool)));
     connect(ui.action_Use_Shader_JIT, SIGNAL(triggered(bool)), this, SLOT(SetShaderJITEnabled(bool)));
+    connect(ui.action_Use_Gdbstub, SIGNAL(triggered(bool)), this, SLOT(SetGdbstubEnabled(bool)));
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
     connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
@@ -412,6 +428,10 @@ void GMainWindow::OnOpenHotkeysDialog() {
 
 void GMainWindow::SetHardwareRendererEnabled(bool enabled) {
     VideoCore::g_hw_renderer_enabled = enabled;
+}
+
+void GMainWindow::SetGdbstubEnabled(bool enabled) {
+    GDBStub::ToggleServer(enabled);
 }
 
 void GMainWindow::SetShaderJITEnabled(bool enabled) {

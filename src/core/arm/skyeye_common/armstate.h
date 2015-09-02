@@ -153,9 +153,11 @@ public:
 
     // Reads/writes data in big/little endian format based on the
     // state of the E (endian) bit in the APSR.
+    u8 ReadMemory8(u32 address) const;
     u16 ReadMemory16(u32 address) const;
     u32 ReadMemory32(u32 address) const;
     u64 ReadMemory64(u32 address) const;
+    void WriteMemory8(u32 address, u8 data);
     void WriteMemory16(u32 address, u16 data);
     void WriteMemory32(u32 address, u32 data);
     void WriteMemory64(u32 address, u64 data);

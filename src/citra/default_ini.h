@@ -66,6 +66,11 @@ region_value =
 # A filter which removes logs below a certain logging level.
 # Examples: *:Debug Kernel.SVC:Trace Service.*:Critical
 log_filter = *:Info
+
+[Debugging]
+# Port for listening to GDB connections.
+use_gdbstub=false
+gdbstub_port=24689
 )";
 
 }
