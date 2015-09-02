@@ -746,7 +746,8 @@ void JitCompiler::Compile_NextInstr(unsigned* offset) {
         ((*this).*instr_func)(instr);
     } else {
         // Unhandled instruction
-        LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)", instr.opcode.Value(), instr.hex);
+        LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)",
+                     instr.opcode.Value().EffectiveOpCode(), instr.hex);
     }
 }
 
