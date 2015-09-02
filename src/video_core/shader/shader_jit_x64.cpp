@@ -122,6 +122,14 @@ static const X64Reg ONE = XMM14;
 /// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
 static const X64Reg NEGBIT = XMM15;
 
+// State registers that must not be modified by external functions calls
+// Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
+static const BitSet32 persistent_regs = {
+    UNIFORMS, REGISTERS, // Pointers to register blocks
+    ADDROFFS_REG_0, ADDROFFS_REG_1, LOOPCOUNT_REG, COND0, COND1, // Cached registers
+    ONE+16, NEGBIT+16, // Constants
+};
+
 /// Raw constant for the source register selector that indicates no swizzling is performed
 static const u8 NO_SRC_REG_SWIZZLE = 0x1b;
 /// Raw constant for the destination register enable mask that indicates all components are enabled
@@ -295,20 +303,8 @@ void JitCompiler::Compile_UniformCondition(Instruction instr) {
     CMP(sizeof(bool) * 8, MDisp(UNIFORMS, offset), Imm8(0));
 }
 
-void JitCompiler::Compile_PushCallerSavedXMM() {
-#ifndef _WIN32
-    SUB(64, R(RSP), Imm8(2 * 16));
-    MOVUPS(MDisp(RSP, 16), ONE);
-    MOVUPS(MDisp(RSP, 0), NEGBIT);
-#endif
-}
-
-void JitCompiler::Compile_PopCallerSavedXMM() {
-#ifndef _WIN32
-    MOVUPS(NEGBIT, MDisp(RSP, 0));
-    MOVUPS(ONE, MDisp(RSP, 16));
-    ADD(64, R(RSP), Imm8(2 * 16));
-#endif
+BitSet32 JitCompiler::PersistentCallerSavedRegs() {
+    return persistent_regs & ABI_ALL_CALLER_SAVED;
 }
 
 void JitCompiler::Compile_ADD(Instruction instr) {
@@ -390,12 +386,9 @@ void JitCompiler::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     MOVSS(XMM0, R(SRC1));
 
-    // The following will actually break the stack alignment
-    ABI_PushAllCallerSavedRegsAndAdjustStack();
-    Compile_PushCallerSavedXMM();
+    ABI_PushRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
     ABI_CallFunction(reinterpret_cast<const void*>(exp2f));
-    Compile_PopCallerSavedXMM();
-    ABI_PopAllCallerSavedRegsAndAdjustStack();
+    ABI_PopRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
 
     SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
     MOVAPS(SRC1, R(XMM0));
@@ -406,12 +399,9 @@ void JitCompiler::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     MOVSS(XMM0, R(SRC1));
 
-    // The following will actually break the stack alignment
-    ABI_PushAllCallerSavedRegsAndAdjustStack();
-    Compile_PushCallerSavedXMM();
+    ABI_PushRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
     ABI_CallFunction(reinterpret_cast<const void*>(log2f));
-    Compile_PopCallerSavedXMM();
-    ABI_PopAllCallerSavedRegsAndAdjustStack();
+    ABI_PopRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
 
     SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
     MOVAPS(SRC1, R(XMM0));
@@ -560,7 +550,7 @@ void JitCompiler::Compile_NOP(Instruction instr) {
 }
 
 void JitCompiler::Compile_END(Instruction instr) {
-    ABI_PopAllCalleeSavedRegsAndAdjustStack();
+    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
     RET();
 }
 
@@ -756,7 +746,8 @@ CompiledShader* JitCompiler::Compile() {
     const auto& code = g_state.vs.program_code;
     unsigned offset = g_state.regs.vs.main_offset;
 
-    ABI_PushAllCalleeSavedRegsAndAdjustStack();
+    // The stack pointer is 8 modulo 16 at the entry of a procedure
+    ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
 
     MOV(PTRBITS, R(REGISTERS), R(ABI_PARAM1));
     MOV(PTRBITS, R(UNIFORMS), ImmPtr(&g_state.vs.uniforms));

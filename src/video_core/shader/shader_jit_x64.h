@@ -77,8 +77,7 @@ private:
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
 
-    void Compile_PushCallerSavedXMM();
-    void Compile_PopCallerSavedXMM();
+    BitSet32 PersistentCallerSavedRegs();
 
     /// Pointer to the variable that stores the current Pica code offset. Used to handle nested code blocks.
     unsigned* offset_ptr = nullptr;
