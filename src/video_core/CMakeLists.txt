@@ -1,5 +1,4 @@
 set(SRCS
-            renderer_opengl/generated/gl_3_2_core.c
             renderer_opengl/gl_rasterizer.cpp
             renderer_opengl/gl_rasterizer_cache.cpp
             renderer_opengl/gl_shader_util.cpp
@@ -19,7 +18,6 @@ set(SRCS
 
 set(HEADERS
             debug_utils/debug_utils.h
-            renderer_opengl/generated/gl_3_2_core.h
             renderer_opengl/gl_rasterizer.h
             renderer_opengl/gl_rasterizer_cache.h
             renderer_opengl/gl_resource_manager.h
@@ -53,6 +51,7 @@ endif()
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(video_core STATIC ${SRCS} ${HEADERS})
+target_link_libraries(video_core glad)
 
 if (PNG_FOUND)
     target_link_libraries(video_core ${PNG_LIBRARIES})

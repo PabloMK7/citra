@@ -7,7 +7,7 @@
 #include <string>
 
 // Let’s use our own GL header, instead of one from GLFW.
-#include "video_core/renderer_opengl/generated/gl_3_2_core.h"
+#include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -89,7 +89,7 @@ EmuWindow_GLFW::EmuWindow_GLFW() {
         exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     // GLFW on OSX requires these window hints to be set to create a 3.2+ GL context.
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);

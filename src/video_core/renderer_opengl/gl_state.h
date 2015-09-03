@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "generated/gl_3_2_core.h"
+#include <glad/glad.h>
 
 class OpenGLState {
 public:

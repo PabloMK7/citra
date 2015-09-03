@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include <glad/glad.h>
+
 #include "common/common_types.h"
 
 #include "video_core/pica.h"
-
-#include "generated/gl_3_2_core.h"
 
 namespace PicaToGL {
 
