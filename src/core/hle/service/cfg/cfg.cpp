@@ -332,7 +332,7 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
     if (!res.IsSuccess()) return res;
-    res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xA, &CONSOLE_LANGUAGE);
+    res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xE, &CONSOLE_LANGUAGE);
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
     if (!res.IsSuccess()) return res;
@@ -364,7 +364,7 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000D0000, 0x4, 0xE, zero_buffer);
     if (!res.IsSuccess()) return res;
 
-    res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0x8, &CONSOLE_MODEL);
+    res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0xC, &CONSOLE_MODEL);
     if (!res.IsSuccess()) return res;
 
     // Save the buffer to the file
