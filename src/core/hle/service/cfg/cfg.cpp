@@ -332,6 +332,12 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
     if (!res.IsSuccess()) return res;
+
+    // 0x000A0001 - Profile birthday
+    const u8 profile_birthday[2] = {3, 25}; // March 25th, 2014
+    res = CreateConfigInfoBlk(0x000A0001, sizeof(profile_birthday), 0xE, profile_birthday);
+    if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xE, &CONSOLE_LANGUAGE);
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
