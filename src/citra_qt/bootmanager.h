@@ -123,13 +123,12 @@ public:
 
     void OnClientAreaResized(unsigned width, unsigned height);
 
-    void OnFramebufferSizeChanged();
-
 public slots:
     void moveContext();  // overridden
 
     void OnEmulationStarting(EmuThread* emu_thread);
     void OnEmulationStopping();
+    void OnFramebufferSizeChanged();
 
 signals:
     /// Emitted when the window is closed
@@ -146,4 +145,7 @@ private:
     int keyboard_id;
 
     EmuThread* emu_thread;
+
+protected:
+    void showEvent(QShowEvent* event) override;
 };
