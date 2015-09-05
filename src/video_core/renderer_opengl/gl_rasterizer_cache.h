@@ -6,6 +6,7 @@
 
 #include "gl_state.h"
 #include "gl_resource_manager.h"
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 
 #include <memory>
@@ -16,7 +17,11 @@ public:
     ~RasterizerCacheOpenGL();
 
     /// Loads a texture from 3DS memory to OpenGL and caches it (if not already cached)
-    void LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config);
+    void LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::DebugUtils::TextureInfo& info);
+
+    void LoadAndBindTexture(OpenGLState &state, unsigned texture_unit, const Pica::Regs::FullTextureConfig& config) {
+        LoadAndBindTexture(state, texture_unit, Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format));
+    }
 
     /// Flush any cached resource that touches the flushed region
     void NotifyFlush(PAddr addr, u32 size, bool ignore_hash = false);

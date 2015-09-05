@@ -135,6 +135,7 @@ struct Regs {
         };
 
         union {
+            u32 raw;
             BitField< 0, 8, u32> r;
             BitField< 8, 8, u32> g;
             BitField<16, 8, u32> b;
@@ -339,6 +340,7 @@ struct Regs {
         };
 
         union {
+            u32 const_color;
             BitField< 0, 8, u32> const_r;
             BitField< 8, 8, u32> const_g;
             BitField<16, 8, u32> const_b;
@@ -389,6 +391,7 @@ struct Regs {
     TevStageConfig tev_stage5;
 
     union {
+        u32 raw;
         BitField< 0, 8, u32> r;
         BitField< 8, 8, u32> g;
         BitField<16, 8, u32> b;
@@ -473,6 +476,7 @@ struct Regs {
         };
 
         union {
+            u32 raw;
             BitField< 0, 8, u32> r;
             BitField< 8, 8, u32> g;
             BitField<16, 8, u32> b;

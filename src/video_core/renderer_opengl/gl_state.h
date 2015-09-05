@@ -57,6 +57,7 @@ public:
     // 3 texture units - one for each that is used in PICA fragment shader emulation
     struct {
         GLuint texture_2d; // GL_TEXTURE_BINDING_2D
+        GLuint sampler; // GL_SAMPLER_BINDING
     } texture_units[3];
 
     struct {
@@ -77,6 +78,7 @@ public:
     void Apply();
 
     static void ResetTexture(GLuint id);
+    static void ResetSampler(GLuint id);
     static void ResetProgram(GLuint id);
     static void ResetBuffer(GLuint id);
     static void ResetVertexArray(GLuint id);

@@ -37,6 +37,30 @@ public:
     GLuint handle = 0;
 };
 
+class OGLSampler : private NonCopyable {
+public:
+    OGLSampler() = default;
+    OGLSampler(OGLSampler&& o) { std::swap(handle, o.handle); }
+    ~OGLSampler() { Release(); }
+    OGLSampler& operator=(OGLSampler&& o) { std::swap(handle, o.handle); return *this; }
+
+    /// Creates a new internal OpenGL resource and stores the handle
+    void Create() {
+        if (handle != 0) return;
+        glGenSamplers(1, &handle);
+    }
+
+    /// Deletes the internal OpenGL resource
+    void Release() {
+        if (handle == 0) return;
+        glDeleteSamplers(1, &handle);
+        OpenGLState::ResetSampler(handle);
+        handle = 0;
+    }
+
+    GLuint handle = 0;
+};
+
 class OGLShader : private NonCopyable {
 public:
     OGLShader() = default;

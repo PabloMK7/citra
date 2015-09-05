@@ -283,9 +283,6 @@ void GMainWindow::ShutdownGame() {
     emu_thread->wait();
     emu_thread = nullptr;
 
-    // Shutdown the core emulation
-    System::Shutdown();
-
     // Update the GUI
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText(tr("Start"));

@@ -68,6 +68,12 @@ void RasterizerOpenGL::InitObjects() {
         uniform_tev_cfg.updates_combiner_buffer_color_alpha = glGetUniformLocation(shader.handle, (tev_ref_str + ".updates_combiner_buffer_color_alpha").c_str());
     }
 
+    // Create sampler objects
+    for (int i = 0; i < texture_samplers.size(); ++i) {
+        texture_samplers[i].Create();
+        state.texture_units[i].sampler = texture_samplers[i].sampler.handle;
+    }
+
     // Generate VBO and VAO
     vertex_buffer.Create();
     vertex_array.Create();
@@ -445,6 +451,45 @@ void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
     res_cache.NotifyFlush(addr, size);
 }
 
+void RasterizerOpenGL::SamplerInfo::Create() {
+    sampler.Create();
+    mag_filter = min_filter = TextureConfig::Linear;
+    wrap_s = wrap_t = TextureConfig::Repeat;
+    border_color = 0;
+
+    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // default is GL_LINEAR_MIPMAP_LINEAR
+    // Other attributes have correct defaults
+}
+
+void RasterizerOpenGL::SamplerInfo::SyncWithConfig(const Pica::Regs::TextureConfig& config) {
+    GLuint s = sampler.handle;
+
+    if (mag_filter != config.mag_filter) {
+        mag_filter = config.mag_filter;
+        glSamplerParameteri(s, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureFilterMode(mag_filter));
+    }
+    if (min_filter != config.min_filter) {
+        min_filter = config.min_filter;
+        glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER, PicaToGL::TextureFilterMode(min_filter));
+    }
+
+    if (wrap_s != config.wrap_s) {
+        wrap_s = config.wrap_s;
+        glSamplerParameteri(s, GL_TEXTURE_WRAP_S, PicaToGL::WrapMode(wrap_s));
+    }
+    if (wrap_t != config.wrap_t) {
+        wrap_t = config.wrap_t;
+        glSamplerParameteri(s, GL_TEXTURE_WRAP_T, PicaToGL::WrapMode(wrap_t));
+    }
+
+    if (wrap_s == TextureConfig::ClampToBorder || wrap_t == TextureConfig::ClampToBorder) {
+        if (border_color != config.border_color.raw) {
+            auto gl_color = PicaToGL::ColorRGBA8(border_color);
+            glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.data());
+        }
+    }
+}
+
 void RasterizerOpenGL::ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height) {
     GLint internal_format;
 
@@ -658,7 +703,7 @@ void RasterizerOpenGL::SyncBlendFuncs() {
 }
 
 void RasterizerOpenGL::SyncBlendColor() {
-    auto blend_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.output_merger.blend_const.r);
+    auto blend_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.output_merger.blend_const.raw);
     state.blend.color.red = blend_color[0];
     state.blend.color.green = blend_color[1];
     state.blend.color.blue = blend_color[2];
@@ -728,7 +773,7 @@ void RasterizerOpenGL::SyncTevOps(unsigned stage_index, const Pica::Regs::TevSta
 }
 
 void RasterizerOpenGL::SyncTevColor(unsigned stage_index, const Pica::Regs::TevStageConfig& config) {
-    auto const_color = PicaToGL::ColorRGBA8((u8*)&config.const_r);
+    auto const_color = PicaToGL::ColorRGBA8(config.const_color);
     glUniform4fv(uniform_tev_cfgs[stage_index].const_color, 1, const_color.data());
 }
 
@@ -737,7 +782,7 @@ void RasterizerOpenGL::SyncTevMultipliers(unsigned stage_index, const Pica::Regs
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
-    auto combiner_color = PicaToGL::ColorRGBA8((u8*)&Pica::g_state.regs.tev_combiner_buffer_color.r);
+    auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
     glUniform4fv(uniform_tev_combiner_buffer_color, 1, combiner_color.data());
 }
 
@@ -772,6 +817,7 @@ void RasterizerOpenGL::SyncDrawState() {
         const auto& texture = pica_textures[texture_index];
 
         if (texture.enabled) {
+            texture_samplers[texture_index].SyncWithConfig(texture.config);
             res_cache.LoadAndBindTexture(state, texture_index, texture);
         } else {
             state.texture_units[texture_index].texture_2d = 0;
