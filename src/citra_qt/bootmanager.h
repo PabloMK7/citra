@@ -110,6 +110,8 @@ public:
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();  // overridden
 
+    void closeEvent(QCloseEvent* event) override;
+
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
 
@@ -128,6 +130,10 @@ public slots:
 
     void OnEmulationStarting(EmuThread* emu_thread);
     void OnEmulationStopping();
+
+signals:
+    /// Emitted when the window is closed
+    void Closed();
 
 private:
     void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;

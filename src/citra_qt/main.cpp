@@ -251,6 +251,7 @@ void GMainWindow::BootGame(const std::string& filename) {
     render_window->moveContext();
     emu_thread->start();
 
+    connect(render_window, SIGNAL(Closed()), this, SLOT(OnStopGame()));
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
@@ -282,6 +283,9 @@ void GMainWindow::ShutdownGame() {
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();
     emu_thread = nullptr;
+
+    // The emulation is stopped, so closing the window or not does not matter anymore
+    disconnect(render_window, SIGNAL(Closed()), this, SLOT(OnStopGame()));
 
     // Update the GUI
     ui.action_Start->setEnabled(false);

@@ -223,6 +223,11 @@ QByteArray GRenderWindow::saveGeometry()
         return geometry;
 }
 
+void GRenderWindow::closeEvent(QCloseEvent* event) {
+    emit Closed();
+    QWidget::closeEvent(event);
+}
+
 void GRenderWindow::keyPressEvent(QKeyEvent* event)
 {
     this->KeyPressed({event->key(), keyboard_id});
