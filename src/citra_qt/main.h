@@ -92,6 +92,8 @@ private slots:
     void OnGameListLoadFile(QString game_path);
     void OnMenuLoadFile();
     void OnMenuLoadSymbolMap();
+    /// Called whenever a user selects the "File->Select Game List Root" menu item
+    void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
     void OnOpenHotkeysDialog();
     void OnConfigure();

@@ -167,6 +167,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
     connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
+    connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this, SLOT(OnMenuSelectGameListRoot()));
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
@@ -377,6 +378,16 @@ void GMainWindow::OnMenuLoadSymbolMap() {
         settings.setValue("symbolsPath", QFileInfo(filename).path());
 
         LoadSymbolMap(filename.toLatin1().data());
+    }
+}
+
+void GMainWindow::OnMenuSelectGameListRoot() {
+    QSettings settings;
+
+    QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
+    if (!dir_path.isEmpty()) {
+        settings.setValue("gameListRootDir", dir_path);
+        game_list->PopulateAsync(dir_path, settings.value("gameListDeepScan").toBool());
     }
 }
 
