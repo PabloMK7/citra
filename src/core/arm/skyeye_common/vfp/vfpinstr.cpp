@@ -37,7 +37,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMLA_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmla_inst *inst_cream = (vmla_inst *)inst_base->component;
@@ -86,7 +86,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMLS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmls_inst *inst_cream = (vmls_inst *)inst_base->component;
@@ -135,7 +135,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMLA_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vnmla_inst *inst_cream = (vnmla_inst *)inst_base->component;
@@ -185,7 +185,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMLS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vnmls_inst *inst_cream = (vnmls_inst *)inst_base->component;
@@ -234,7 +234,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNMUL_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vnmul_inst *inst_cream = (vnmul_inst *)inst_base->component;
@@ -283,7 +283,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMUL_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmul_inst *inst_cream = (vmul_inst *)inst_base->component;
@@ -332,7 +332,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VADD_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vadd_inst *inst_cream = (vadd_inst *)inst_base->component;
@@ -381,7 +381,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSUB_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vsub_inst *inst_cream = (vsub_inst *)inst_base->component;
@@ -430,7 +430,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VDIV_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vdiv_inst *inst_cream = (vdiv_inst *)inst_base->component;
@@ -485,7 +485,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVI_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovi_inst *inst_cream = (vmovi_inst *)inst_base->component;
@@ -529,7 +529,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVR_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovr_inst *inst_cream = (vmovr_inst *)inst_base->component;
@@ -571,7 +571,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VABS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vabs_inst *inst_cream = (vabs_inst *)inst_base->component;
@@ -621,7 +621,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VNEG_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vneg_inst *inst_cream = (vneg_inst *)inst_base->component;
@@ -670,7 +670,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSQRT_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vsqrt_inst *inst_cream = (vsqrt_inst *)inst_base->component;
@@ -719,7 +719,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCMP_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vcmp_inst *inst_cream = (vcmp_inst *)inst_base->component;
@@ -768,7 +768,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCMP2_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vcmp2_inst *inst_cream = (vcmp2_inst *)inst_base->component;
@@ -817,7 +817,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBDS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vcvtbds_inst *inst_cream = (vcvtbds_inst *)inst_base->component;
@@ -868,7 +868,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBFF_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vcvtbff_inst *inst_cream = (vcvtbff_inst *)inst_base->component;
@@ -917,7 +917,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VCVTBFI_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vcvtbfi_inst *inst_cream = (vcvtbfi_inst *)inst_base->component;
@@ -974,7 +974,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovbrs_inst *inst_cream = (vmovbrs_inst *)inst_base->component;
@@ -1017,7 +1017,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMSR_INST:
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled ,
            and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
@@ -1083,7 +1083,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRC_INST:
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovbrc_inst* const inst_cream = (vmovbrc_inst*)inst_base->component;
@@ -1126,7 +1126,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMRS_INST:
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         /* FIXME: special case for access to FPSID and FPEXC, VFP must be disabled,
            and in privileged mode */
         /* Exceptions must be checked, according to v7 ref manual */
@@ -1214,7 +1214,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBCR_INST:
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovbcr_inst* const inst_cream = (vmovbcr_inst*) inst_base->component;
@@ -1266,7 +1266,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int inde
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRRSS_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovbrrss_inst* const inst_cream = (vmovbrrss_inst*)inst_base->component;
@@ -1314,7 +1314,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index
 #ifdef VFP_INTERPRETER_IMPL
 VMOVBRRD_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vmovbrrd_inst *inst_cream = (vmovbrrd_inst *)inst_base->component;
@@ -1368,7 +1368,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSTR_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vstr_inst *inst_cream = (vstr_inst *)inst_base->component;
@@ -1433,7 +1433,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VPUSH_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vpush_inst *inst_cream = (vpush_inst *)inst_base->component;
@@ -1511,7 +1511,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VSTM_INST: /* encoding 1 */
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vstm_inst* inst_cream = (vstm_inst*)inst_base->component;
@@ -1593,7 +1593,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VPOP_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vpop_inst *inst_cream = (vpop_inst *)inst_base->component;
@@ -1667,7 +1667,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VLDR_INST:
 {
-    if ((inst_base->cond == 0xe) || CondPassed(cpu, inst_base->cond)) {
+    if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vldr_inst *inst_cream = (vldr_inst *)inst_base->component;
@@ -1738,7 +1738,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
 #ifdef VFP_INTERPRETER_IMPL
 VLDM_INST:
 {
-    if (inst_base->cond == 0xE || CondPassed(cpu, inst_base->cond)) {
+    if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         CHECK_VFP_ENABLED;
 
         vldm_inst* inst_cream = (vldm_inst*)inst_base->component;
