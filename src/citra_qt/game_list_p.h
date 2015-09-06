@@ -212,5 +212,5 @@ private:
     bool deep_scan;
     std::atomic_bool stop_processing;
 
-    void AddFstEntriesToGameList(const std::string& dir_path, bool deep_scan);
+    void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion = 0);
 };
