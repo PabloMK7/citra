@@ -144,7 +144,7 @@ static const u8 NO_DEST_REG_MASK = 0xf;
  */
 void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, X64Reg dest) {
     X64Reg src_ptr;
-    int src_offset;
+    size_t src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
         src_ptr = UNIFORMS;
@@ -153,6 +153,9 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         src_ptr = REGISTERS;
         src_offset = UnitState<false>::InputOffset(src_reg);
     }
+
+    int src_offset_disp = (int)src_offset;
+    ASSERT_MSG(src_offset == src_offset_disp, "Source register offset too large for int type");
 
     unsigned operand_desc_id;
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
@@ -163,7 +166,7 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         operand_desc_id = instr.mad.operand_desc_id;
 
         // Load the source
-        MOVAPS(dest, MDisp(src_ptr, src_offset));
+        MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
     } else {
         operand_desc_id = instr.common.operand_desc_id;
 
@@ -173,13 +176,13 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         if (src_num == offset_src && instr.common.address_register_index != 0) {
             switch (instr.common.address_register_index) {
             case 1: // address offset 1
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, 1, src_offset));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, 1, src_offset_disp));
                 break;
             case 2: // address offset 2
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, 1, src_offset));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, 1, src_offset_disp));
                 break;
             case 3: // adddress offet 3
-                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, 1, src_offset));
+                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, 1, src_offset_disp));
                 break;
             default:
                 UNREACHABLE();
@@ -187,7 +190,7 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
             }
         } else {
             // Load the source
-            MOVAPS(dest, MDisp(src_ptr, src_offset));
+            MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
         }
     }
 
@@ -224,14 +227,17 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
 
     SwizzlePattern swiz = { g_state.vs.swizzle_data[operand_desc_id] };
 
+    int dest_offset_disp = (int)UnitState<false>::OutputOffset(dest);
+    ASSERT_MSG(dest_offset_disp == UnitState<false>::OutputOffset(dest), "Destinaton offset too large for int type");
+
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
         // Store dest back to memory
-        MOVAPS(MDisp(REGISTERS, UnitState<false>::OutputOffset(dest)), src);
+        MOVAPS(MDisp(REGISTERS, dest_offset_disp), src);
 
     } else {
         // Not all components are enabled, so mask the result when storing to the destination register...
-        MOVAPS(SCRATCH, MDisp(REGISTERS, UnitState<false>::OutputOffset(dest)));
+        MOVAPS(SCRATCH, MDisp(REGISTERS, dest_offset_disp));
 
         if (Common::GetCPUCaps().sse4_1) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
@@ -250,7 +256,7 @@ void JitCompiler::Compile_DestEnable(Instruction instr,X64Reg src) {
         }
 
         // Store dest back to memory
-        MOVAPS(MDisp(REGISTERS, UnitState<false>::OutputOffset(dest)), SCRATCH);
+        MOVAPS(MDisp(REGISTERS, dest_offset_disp), SCRATCH);
     }
 }
 
