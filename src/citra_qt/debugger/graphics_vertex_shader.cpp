@@ -7,6 +7,7 @@
 
 #include <QBoxLayout>
 #include <QFileDialog>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -26,16 +27,8 @@ using nihstro::Instruction;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent): QAbstractItemModel(parent), par(parent) {
+GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent): QAbstractTableModel(parent), par(parent) {
 
-}
-
-QModelIndex GraphicsVertexShaderModel::index(int row, int column, const QModelIndex& parent) const {
-    return createIndex(row, column);
-}
-
-QModelIndex GraphicsVertexShaderModel::parent(const QModelIndex& child) const {
-    return QModelIndex();
 }
 
 int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
@@ -65,6 +58,28 @@ QVariant GraphicsVertexShaderModel::headerData(int section, Qt::Orientation orie
     return QVariant();
 }
 
+static std::string SelectorToString(u32 selector) {
+    std::string ret;
+    for (int i = 0; i < 4; ++i) {
+        int component = (selector >> ((3 - i) * 2)) & 3;
+        ret += "xyzw"[component];
+    }
+    return ret;
+}
+
+// e.g. "-c92[a0.x].xyzw"
+static void print_input(std::ostringstream& output, const SourceRegister& input,
+                        bool negate, const std::string& swizzle_mask, bool align = true,
+                        const std::string& address_register_name = std::string()) {
+    if (align)
+        output << std::setw(4) << std::right;
+    output << ((negate ? "-" : "") + input.GetName());
+
+    if (!address_register_name.empty())
+        output << '[' << address_register_name << ']';
+    output << '.' << swizzle_mask;
+};
+
 QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) const {
     switch (role) {
     case Qt::DisplayRole:
@@ -81,102 +96,120 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
         case 2:
         {
-            std::stringstream output;
-            output.flags(std::ios::hex);
+            std::ostringstream output;
+            output.flags(std::ios::uppercase);
 
-            Instruction instr = par->info.code[index.row()];
-            const SwizzlePattern& swizzle = par->info.swizzle_info[instr.common.operand_desc_id].pattern;
+            // To make the code aligning columns of assembly easier to keep track of, this function
+            // keeps track of the start of the start of the previous column, allowing alignment
+            // based on desired field widths.
+            int current_column = 0;
+            auto AlignToColumn = [&](int col_width) {
+                // Prints spaces to the output to pad previous column to size and advances the
+                // column marker.
+                current_column += col_width;
+                int to_add = std::max(1, current_column - (int)output.tellp());
+                for (int i = 0; i < to_add; ++i) {
+                    output << ' ';
+                }
+            };
+
+            const Instruction instr = par->info.code[index.row()];
+            const OpCode opcode = instr.opcode;
+            const OpCode::Info opcode_info = opcode.GetInfo();
+            const u32 operand_desc_id = opcode_info.type == OpCode::Type::MultiplyAdd ?
+                instr.mad.operand_desc_id.Value() : instr.common.operand_desc_id.Value();
+            const SwizzlePattern swizzle = par->info.swizzle_info[operand_desc_id].pattern;
 
             // longest known instruction name: "setemit "
-            output << std::setw(8) << std::left << instr.opcode.Value().GetInfo().name;
+            int kOpcodeColumnWidth = 8;
+            // "rXX.xyzw  "
+            int kOutputColumnWidth = 10;
+            // "-rXX.xyzw  ", no attempt is made to align indexed inputs
+            int kInputOperandColumnWidth = 11;
 
-            // e.g. "-c92.xyzw"
-            static auto print_input = [](std::stringstream& output, const SourceRegister& input,
-                                         bool negate, const std::string& swizzle_mask) {
-                output << std::setw(4) << std::right << (negate ? "-" : "") + input.GetName();
-                output << "." << swizzle_mask;
-            };
+            output << opcode_info.name;
 
-            // e.g. "-c92[a0.x].xyzw"
-            static auto print_input_indexed = [](std::stringstream& output, const SourceRegister& input,
-                                                 bool negate, const std::string& swizzle_mask,
-                                                 const std::string& address_register_name) {
-                std::string relative_address;
-                if (!address_register_name.empty())
-                    relative_address = "[" + address_register_name + "]";
-
-                output << std::setw(10) << std::right << (negate ? "-" : "") + input.GetName() + relative_address;
-                output << "." << swizzle_mask;
-            };
-
-            // Use print_input or print_input_indexed depending on whether relative addressing is used or not.
-            static auto print_input_indexed_compact = [](std::stringstream& output, const SourceRegister& input,
-                                                         bool negate, const std::string& swizzle_mask,
-                                                         const std::string& address_register_name) {
-                if (address_register_name.empty())
-                    print_input(output, input, negate, swizzle_mask);
-                else
-                    print_input_indexed(output, input, negate, swizzle_mask, address_register_name);
-            };
-
-            switch (instr.opcode.Value().GetInfo().type) {
+            switch (opcode_info.type) {
             case OpCode::Type::Trivial:
                 // Nothing to do here
                 break;
 
             case OpCode::Type::Arithmetic:
+            case OpCode::Type::MultiplyAdd:
             {
                 // Use custom code for special instructions
-                switch (instr.opcode.Value().EffectiveOpCode()) {
+                switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::CMP:
                 {
+                    AlignToColumn(kOpcodeColumnWidth);
+
                     // NOTE: CMP always writes both cc components, so we do not consider the dest mask here.
-                    output << std::setw(4) << std::right << "cc.";
-                    output << "xy    ";
+                    output << " cc.xy";
+                    AlignToColumn(kOutputColumnWidth);
 
                     SourceRegister src1 = instr.common.GetSrc1(false);
                     SourceRegister src2 = instr.common.GetSrc2(false);
 
-                    print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(0,1), instr.common.AddressRegisterName());
-                    output << " " << instr.common.compare_op.ToString(instr.common.compare_op.x) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(0,1));
+                    output << ' ';
+                    print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(0,1), false, instr.common.AddressRegisterName());
+                    output << ' ' << instr.common.compare_op.ToString(instr.common.compare_op.x) << ' ';
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(0,1), false);
 
                     output << ", ";
 
-                    print_input_indexed_compact(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(1,1), instr.common.AddressRegisterName());
-                    output << " " << instr.common.compare_op.ToString(instr.common.compare_op.y) << " ";
-                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1));
+                    print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false).substr(1,1), false, instr.common.AddressRegisterName());
+                    output << ' ' << instr.common.compare_op.ToString(instr.common.compare_op.y) << ' ';
+                    print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true).substr(1,1), false);
 
+                    break;
+                }
+
+                case OpCode::Id::MAD:
+                case OpCode::Id::MADI:
+                {
+                    AlignToColumn(kOpcodeColumnWidth);
+
+                    bool src_is_inverted = 0 != (opcode_info.subtype & OpCode::Info::SrcInversed);
+                    SourceRegister src1 = instr.mad.GetSrc1(src_is_inverted);
+                    SourceRegister src2 = instr.mad.GetSrc2(src_is_inverted);
+                    SourceRegister src3 = instr.mad.GetSrc3(src_is_inverted);
+
+                    output << std::setw(3) << std::right << instr.mad.dest.Value().GetName() << '.' << swizzle.DestMaskToString();
+                    AlignToColumn(kOutputColumnWidth);
+                    print_input(output, src1, swizzle.negate_src1, SelectorToString(swizzle.src1_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
+                    print_input(output, src2, swizzle.negate_src2, SelectorToString(swizzle.src2_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
+                    print_input(output, src3, swizzle.negate_src3, SelectorToString(swizzle.src3_selector));
+                    AlignToColumn(kInputOperandColumnWidth);
                     break;
                 }
 
                 default:
                 {
-                    bool src_is_inverted = 0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed);
+                    AlignToColumn(kOpcodeColumnWidth);
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Dest) {
+                    bool src_is_inverted = 0 != (opcode_info.subtype & OpCode::Info::SrcInversed);
+
+                    if (opcode_info.subtype & OpCode::Info::Dest) {
                         // e.g. "r12.xy__"
-                        output << std::setw(4) << std::right << instr.common.dest.Value().GetName() + ".";
-                        output << swizzle.DestMaskToString();
-                    } else if (instr.opcode.Value().GetInfo().subtype == OpCode::Info::MOVA) {
-                        output << std::setw(4) << std::right << "a0.";
-                        output << swizzle.DestMaskToString();
-                    } else {
-                        output << "        ";
+                        output << std::setw(3) << std::right << instr.common.dest.Value().GetName() << '.' << swizzle.DestMaskToString();
+                    } else if (opcode_info.subtype == OpCode::Info::MOVA) {
+                        output << "  a0." << swizzle.DestMaskToString();
                     }
-                    output << "  ";
+                    AlignToColumn(kOutputColumnWidth);
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src1) {
+                    if (opcode_info.subtype & OpCode::Info::Src1) {
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
-                        print_input_indexed(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), instr.common.AddressRegisterName());
-                    } else {
-                        output << "               ";
+                        print_input(output, src1, swizzle.negate_src1, swizzle.SelectorToString(false), true, instr.common.AddressRegisterName());
+                        AlignToColumn(kInputOperandColumnWidth);
                     }
 
                     // TODO: In some cases, the Address Register is used as an index for SRC2 instead of SRC1
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::Src2) {
+                    if (opcode_info.subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2, swizzle.SelectorToString(true));
+                        AlignToColumn(kInputOperandColumnWidth);
                     }
                     break;
                 }
@@ -186,46 +219,55 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             }
 
             case OpCode::Type::Conditional:
+            case OpCode::Type::UniformFlowControl:
             {
-                switch (instr.opcode.Value().EffectiveOpCode()) {
+                output << ' ';
+
+                switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::LOOP:
                     output << "(unknown instruction format)";
                     break;
 
                 default:
-                    output << "if ";
+                    if (opcode_info.subtype & OpCode::Info::HasCondition) {
+                        output << '(';
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasCondition) {
-                        const char* ops[] = {
-                            " || ", " && ", "", ""
-                        };
-                        if (instr.flow_control.op != instr.flow_control.JustY)
-                            output << ((!instr.flow_control.refx) ? "!" : " ") << "cc.x";
+                        if (instr.flow_control.op != instr.flow_control.JustY) {
+                            if (instr.flow_control.refx) output << '!';
+                            output << "cc.x";
+                        }
 
-                        output << ops[instr.flow_control.op];
+                        if (instr.flow_control.op == instr.flow_control.Or) {
+                            output << " || ";
+                        } else if (instr.flow_control.op == instr.flow_control.And) {
+                            output << " && ";
+                        }
 
-                        if (instr.flow_control.op != instr.flow_control.JustX)
-                            output << ((!instr.flow_control.refy) ? "!" : " ") << "cc.y";
+                        if (instr.flow_control.op != instr.flow_control.JustX) {
+                            if (instr.flow_control.refy) output << '!';
+                            output << "cc.y";
+                        }
 
-                        output << " ";
-                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasUniformIndex) {
-                        output << "b" << instr.flow_control.bool_uniform_id << " ";
+                        output << ") ";
+                    } else if (opcode_info.subtype & OpCode::Info::HasUniformIndex) {
+                        output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
                     u32 target_addr = instr.flow_control.dest_offset;
                     u32 target_addr_else = instr.flow_control.dest_offset;
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasAlternative) {
-                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
-                    } else if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasExplicitDest) {
-                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << 4 * instr.flow_control.dest_offset << " ";
+                    if (opcode_info.subtype & OpCode::Info::HasAlternative) {
+                        output << "else jump to 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex << (4 * instr.flow_control.dest_offset);
+                    } else if (opcode_info.subtype & OpCode::Info::HasExplicitDest) {
+                        output << "jump to 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex << (4 * instr.flow_control.dest_offset);
                     } else {
                         // TODO: Handle other cases
+                        output << "(unknown destination)";
                     }
 
-                    if (instr.opcode.Value().GetInfo().subtype & OpCode::Info::HasFinishPoint) {
-                        output << "(return on " << std::setw(4) << std::right << std::setfill('0')
-                               << 4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions << ")";
+                    if (opcode_info.subtype & OpCode::Info::HasFinishPoint) {
+                        output << " (return on 0x" << std::setw(4) << std::right << std::setfill('0') << std::hex
+                               << (4 * instr.flow_control.dest_offset + 4 * instr.flow_control.num_instructions) << ')';
                     }
 
                     break;
@@ -234,7 +276,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
             }
 
             default:
-                output << "(unknown instruction format)";
+                output << " (unknown instruction format)";
                 break;
             }
 
@@ -250,12 +292,23 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
         return GetMonospaceFont();
 
     case Qt::BackgroundRole:
-        // Highlight instructions which have no debug data associated to them
+    {
+        // Highlight current instruction
+        int current_record_index = par->cycle_index->value();
+        if (current_record_index < par->debug_data.records.size()) {
+            const auto& current_record = par->debug_data.records[current_record_index];
+            if (index.row() == current_record.instruction_offset) {
+                return QColor(255, 255, 63);
+            }
+        }
+
+        // Use a grey background for instructions which have no debug data associated to them
         for (const auto& record : par->debug_data.records)
             if (index.row() == record.instruction_offset)
                 return QVariant();
 
-        return QBrush(QColor(255, 255, 127));
+        return QBrush(QColor(192, 192, 192));
+    }
 
 
     // TODO: Draw arrows for each "reachable" instruction to visualize control flow
@@ -288,6 +341,13 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
         : BreakPointObserverDock(debug_context, "Pica Vertex Shader", parent) {
     setObjectName("PicaVertexShader");
 
+    // Clear input vertex data so that it contains valid float values in case a debug shader
+    // execution happens before the first Vertex Loaded breakpoint.
+    // TODO: This makes a crash in the interpreter much less likely, but not impossible. The
+    //       interpreter should guard against out-of-bounds accesses to ensure crashes in it aren't
+    //       possible.
+    std::memset(&input_vertex, 0, sizeof(input_vertex));
+
     auto input_data_mapper = new QSignalMapper(this);
 
     // TODO: Support inputting data in hexadecimal raw format
@@ -311,9 +371,6 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
     instruction_description = new QLabel;
 
     cycle_index = new QSpinBox;
-
-    connect(this, SIGNAL(SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags)),
-            binary_list->selectionModel(), SLOT(select(const QModelIndex&, QItemSelectionModel::SelectionFlags)));
 
     connect(dump_shader, SIGNAL(clicked()), this, SLOT(DumpShader()));
 
@@ -339,6 +396,9 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
             // Create an HBoxLayout to store the widgets used to specify a particular attribute
             // and store it in a QWidget to allow for easy hiding and unhiding.
             auto row_layout = new QHBoxLayout;
+            // Remove unecessary padding between rows
+            row_layout->setContentsMargins(0, 0, 0, 0);
+
             row_layout->addWidget(new QLabel(tr("Attribute %1").arg(i, 2)));
             for (unsigned comp = 0; comp < 4; ++comp)
                 row_layout->addWidget(input_data[4 * i + comp]);
@@ -358,20 +418,25 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(std::shared_ptr< Pica::De
         input_data_group->setLayout(sub_layout);
         main_layout->addWidget(input_data_group);
     }
-    {
-        auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(binary_list);
-        main_layout->addLayout(sub_layout);
-    }
+
+    // Make program listing expand to fill available space in the dialog
+    binary_list->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
+    main_layout->addWidget(binary_list);
+
     main_layout->addWidget(dump_shader);
     {
-        auto sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Cycle Index:")));
-        sub_layout->addWidget(cycle_index);
+        auto sub_layout = new QFormLayout;
+        sub_layout->addRow(tr("Cycle Index:"), cycle_index);
+
         main_layout->addLayout(sub_layout);
     }
+
+    // Set a minimum height so that the size of this label doesn't cause the rest of the bottom
+    // part of the UI to keep jumping up and down when cycling through instructions.
+    instruction_description->setMinimumHeight(instruction_description->fontMetrics().lineSpacing() * 6);
+    instruction_description->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     main_layout->addWidget(instruction_description);
-    main_layout->addStretch();
+
     main_widget->setLayout(main_layout);
     setWidget(main_widget);
 
@@ -418,6 +483,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     auto& shader_config = Pica::g_state.regs.vs;
     for (auto instr : shader_setup.program_code)
         info.code.push_back({instr});
+    int num_attributes = Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes();
 
     for (auto pattern : shader_setup.swizzle_data)
         info.swizzle_info.push_back({pattern});
@@ -426,18 +492,17 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     info.labels.insert({ entry_point, "main" });
 
     // Generate debug information
-    debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, 1, shader_config, shader_setup);
+    debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, num_attributes, shader_config, shader_setup);
 
     // Reload widget state
-
-    // Only show input attributes which are used as input to the shader
-    for (unsigned int attr = 0; attr < 16; ++attr) {
-        input_data_container[attr]->setVisible(false);
-    }
-    for (unsigned int attr = 0; attr < Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes(); ++attr) {
+    for (unsigned int attr = 0; attr < num_attributes; ++attr) {
         unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
         input_data_mapping[source_attr]->setText(QString("-> v%1").arg(attr));
         input_data_container[source_attr]->setVisible(true);
+    }
+    // Only show input attributes which are used as input to the shader
+    for (unsigned int attr = num_attributes; attr < 16; ++attr) {
+        input_data_container[attr]->setVisible(false);
     }
 
     // Initialize debug info text for current cycle count
@@ -453,6 +518,8 @@ void GraphicsVertexShaderWidget::OnResumed() {
 
 void GraphicsVertexShaderWidget::OnInputAttributeChanged(int index) {
     float value = input_data[index]->text().toFloat();
+    input_vertex.attr[index / 4][index % 4] = Pica::float24::FromFloat32(value);
+    // Re-execute shader with updated value
     Reload();
 }
 
@@ -492,8 +559,8 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
 
     instruction_description->setText(text);
 
-    // Scroll to current instruction
-    const QModelIndex& instr_index = model->index(record.instruction_offset, 0);
-    emit SelectCommand(instr_index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    // Emit model update notification and scroll to current instruction
+    QModelIndex instr_index = model->index(record.instruction_offset, 0);
+    emit model->dataChanged(instr_index, model->index(record.instruction_offset, model->columnCount()));
     binary_list->scrollTo(instr_index, QAbstractItemView::EnsureVisible);
 }

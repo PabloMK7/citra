@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <QAbstractListModel>
+#include <QAbstractTableModel>
 
 #include "graphics_breakpoint_observer.h"
 
@@ -17,14 +17,12 @@ class QSpinBox;
 
 class GraphicsVertexShaderWidget;
 
-class GraphicsVertexShaderModel : public QAbstractItemModel {
+class GraphicsVertexShaderModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
     GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent);
 
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& child) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
@@ -61,11 +59,6 @@ private slots:
      * @param vertex_data New vertex data to use, as passed to OnBreakPointHit. May be nullptr to specify that no valid vertex data can be retrieved currently. Only used if replace_vertex_data is true.
      */
     void Reload(bool replace_vertex_data = false, void* vertex_data = nullptr);
-
-
-signals:
-    // Call this to change the current command selection in the disassembly view
-    void SelectCommand(const QModelIndex&, QItemSelectionModel::SelectionFlags);
 
 private:
     QLabel* instruction_description;
