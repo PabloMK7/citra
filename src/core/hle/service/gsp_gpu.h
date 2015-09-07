@@ -31,7 +31,8 @@ enum class InterruptId : u8 {
 /// GSP command ID
 enum class CommandId : u32 {
     REQUEST_DMA            = 0x00,
-    SET_COMMAND_LIST_LAST  = 0x01,
+    /// Submits a commandlist for execution by the GPU.
+    SUBMIT_GPU_CMDLIST = 0x01,
 
     // Fills a given memory range with a particular value
     SET_MEMORY_FILL        = 0x02,
@@ -42,8 +43,8 @@ enum class CommandId : u32 {
 
     // Conceptionally similar to SET_DISPLAY_TRANSFER and presumable uses the same hardware path
     SET_TEXTURE_COPY       = 0x04,
-
-    SET_COMMAND_LIST_FIRST = 0x05,
+    /// Flushes up to 3 cache regions in a single command.
+    CACHE_FLUSH = 0x05,
 };
 
 /// GSP thread interrupt relay queue
@@ -106,7 +107,10 @@ struct Command {
         struct {
             u32 address;
             u32 size;
-        } set_command_list_last;
+            u32 flags;
+            u32 unused[3];
+            u32 do_flush;
+        } submit_gpu_cmdlist;
 
         struct {
             u32 start1;
@@ -137,6 +141,13 @@ struct Command {
             u32 out_width_gap;
             u32 flags;
         } texture_copy;
+
+        struct {
+            struct {
+                u32 address;
+                u32 size;
+            } regions[3];
+        } cache_flush;
 
         u8 raw_data[0x1C];
     };

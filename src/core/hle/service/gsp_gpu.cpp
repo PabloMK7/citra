@@ -377,12 +377,16 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
                                                           command.dma_request.size);
         break;
 
-    // ctrulib homebrew sends all relevant command list data with this command,
-    // hence we do all "interesting" stuff here and do nothing in SET_COMMAND_LIST_FIRST.
-    // TODO: This will need some rework in the future.
-    case CommandId::SET_COMMAND_LIST_LAST:
+    // TODO: This will need some rework in the future. (why?)
+    case CommandId::SUBMIT_GPU_CMDLIST:
     {
-        auto& params = command.set_command_list_last;
+        auto& params = command.submit_gpu_cmdlist;
+
+        if (params.do_flush) {
+            // This flag flushes the command list (params.address, params.size) from the cache.
+            // Command lists are not processed by the hardware renderer, so we don't need to
+            // actually flush them in Citra.
+        }
 
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)),
                 Memory::VirtualToPhysicalAddress(params.address) >> 3);
@@ -390,6 +394,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
         // TODO: Not sure if we are supposed to always write this .. seems to trigger processing though
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.trigger)), 1);
+
+        // TODO(yuriks): Figure out the meaning of the `flags` field.
 
         break;
     }
@@ -434,7 +440,6 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         break;
     }
 
-    // TODO: Check if texture copies are implemented correctly..
     case CommandId::SET_TEXTURE_COPY:
     {
         auto& params = command.texture_copy;
@@ -456,10 +461,15 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         break;
     }
 
-    // TODO: Figure out what exactly SET_COMMAND_LIST_FIRST and SET_COMMAND_LIST_LAST
-    //       are supposed to do.
-    case CommandId::SET_COMMAND_LIST_FIRST:
+    case CommandId::CACHE_FLUSH:
     {
+        for (auto& region : command.cache_flush.regions) {
+            if (region.size == 0)
+                break;
+
+            VideoCore::g_renderer->hw_rasterizer->NotifyFlush(
+                Memory::VirtualToPhysicalAddress(region.address), region.size);
+        }
         break;
     }
 

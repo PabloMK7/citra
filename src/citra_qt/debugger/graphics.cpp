@@ -30,11 +30,11 @@ QVariant GPUCommandStreamItemModel::data(const QModelIndex& index, int role) con
     {
         std::map<GSP_GPU::CommandId, const char*> command_names = {
             { GSP_GPU::CommandId::REQUEST_DMA, "REQUEST_DMA" },
-            { GSP_GPU::CommandId::SET_COMMAND_LIST_FIRST, "SET_COMMAND_LIST_FIRST" },
+            { GSP_GPU::CommandId::SUBMIT_GPU_CMDLIST, "SUBMIT_GPU_CMDLIST" },
             { GSP_GPU::CommandId::SET_MEMORY_FILL, "SET_MEMORY_FILL" },
             { GSP_GPU::CommandId::SET_DISPLAY_TRANSFER, "SET_DISPLAY_TRANSFER" },
             { GSP_GPU::CommandId::SET_TEXTURE_COPY, "SET_TEXTURE_COPY" },
-            { GSP_GPU::CommandId::SET_COMMAND_LIST_LAST, "SET_COMMAND_LIST_LAST" }
+            { GSP_GPU::CommandId::CACHE_FLUSH, "CACHE_FLUSH" },
         };
         const u32* command_data = reinterpret_cast<const u32*>(&command);
         QString str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9").arg(command_names[command.id])
