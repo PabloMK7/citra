@@ -289,13 +289,13 @@ struct UnitState {
 
     DebugData<Debug> debug;
 
-    static int InputOffset(const SourceRegister& reg) {
+    static size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
-            return (int)offsetof(UnitState::Registers, input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState::Registers, input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return (int)offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -303,13 +303,13 @@ struct UnitState {
         }
     }
 
-    static int OutputOffset(const DestRegister& reg) {
+    static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return (int)offsetof(UnitState::Registers, output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState::Registers, output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return (int)offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
