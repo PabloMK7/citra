@@ -100,6 +100,23 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan)
     current_worker = std::move(worker);
 }
 
+void GameList::SaveInterfaceLayout(QSettings& settings)
+{
+    settings.beginGroup("UILayout");
+    settings.setValue("gameListHeaderState", tree_view->header()->saveState());
+    settings.endGroup();
+}
+
+void GameList::LoadInterfaceLayout(QSettings& settings)
+{
+    auto header = tree_view->header();
+    settings.beginGroup("UILayout");
+    header->restoreState(settings.value("gameListHeaderState").toByteArray());
+    settings.endGroup();
+
+    item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
+}
+
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool deep_scan)
 {
     const auto callback = [&](const std::string& directory,

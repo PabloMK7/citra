@@ -5,6 +5,7 @@
 #pragma once
 
 #include <QModelIndex>
+#include <QSettings>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QString>
@@ -29,6 +30,9 @@ public:
     ~GameList() override;
 
     void PopulateAsync(const QString& dir_path, bool deep_scan);
+
+    void SaveInterfaceLayout(QSettings& settings);
+    void LoadInterfaceLayout(QSettings& settings);
 
 public slots:
     void AddEntry(QList<QStandardItem*> entry_items);

@@ -141,6 +141,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     microProfileDialog->setVisible(settings.value("microProfileDialogVisible").toBool());
     settings.endGroup();
 
+    game_list->LoadInterfaceLayout(settings);
+
     ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
     SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
 
@@ -490,6 +492,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
     settings.setValue("displayTitleBars", ui.actionDisplay_widget_title_bars->isChecked());
     settings.setValue("firstStart", false);
+    game_list->SaveInterfaceLayout(settings);
     SaveHotkeys(settings);
 
     // Shutdown session if the emu thread is active...
