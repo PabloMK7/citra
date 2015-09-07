@@ -9,6 +9,8 @@
 #include "../bootmanager.h"
 #include "../hotkeys.h"
 
+#include "../util/util.h"
+
 #include "core/memory.h"
 
 #include "core/core.h"
@@ -16,7 +18,6 @@
 #include "common/symbols.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"
-
 
 DisassemblerModel::DisassemblerModel(QObject* parent) :
     QAbstractListModel(parent), base_address(0), code_size(0), program_counter(0), selection(QModelIndex()) {
@@ -75,6 +76,14 @@ QVariant DisassemblerModel::data(const QModelIndex& index, int role) const {
             else if (address == program_counter)
                 return QBrush(QColor(0xC0, 0xC0, 0xFF));
 
+            break;
+        }
+
+        case Qt::FontRole:
+        {
+            if (index.column() == 0 || index.column() == 1) { // 2 is the symbols column
+                return GetMonospaceFont();
+            }
             break;
         }
 

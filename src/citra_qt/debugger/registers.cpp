@@ -4,6 +4,8 @@
 
 #include "registers.h"
 
+#include "../util/util.h"
+
 #include "core/core.h"
 #include "core/arm/arm_interface.h"
 
@@ -26,9 +28,32 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
         vfp_registers->addChild(child);
     }
 
+    QFont font = GetMonospaceFont();
+
     CreateCPSRChildren();
     CreateVFPSystemRegisterChildren();
 
+    // Set Registers to display in monospace font
+    for (int i = 0; i < core_registers->childCount(); ++i)
+        core_registers->child(i)->setFont(1, font);
+
+    for (int i = 0; i < vfp_registers->childCount(); ++i)
+        vfp_registers->child(i)->setFont(1, font);
+
+    for (int i = 0; i < vfp_system_registers->childCount(); ++i) {
+        vfp_system_registers->child(i)->setFont(1, font);
+        for (int x = 0; x < vfp_system_registers->child(i)->childCount(); ++x) {
+            vfp_system_registers->child(i)->child(x)->setFont(1, font);
+        }
+    }
+    // Set CSPR to display in monospace font
+    cpsr->setFont(1, font);
+    for (int i = 0; i < cpsr->childCount(); ++i) {
+        cpsr->child(i)->setFont(1, font);
+        for (int x = 0; x < cpsr->child(i)->childCount(); ++x) {
+            cpsr->child(i)->child(x)->setFont(1, font);
+        }
+    }
     setEnabled(false);
 }
 
