@@ -176,13 +176,13 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
         if (src_num == offset_src && instr.common.address_register_index != 0) {
             switch (instr.common.address_register_index) {
             case 1: // address offset 1
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, 1, src_offset_disp));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, SCALE_1, src_offset_disp));
                 break;
             case 2: // address offset 2
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, 1, src_offset_disp));
+                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, SCALE_1, src_offset_disp));
                 break;
-            case 3: // adddress offet 3
-                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, 1, src_offset_disp));
+            case 3: // address offset 3
+                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, SCALE_1, src_offset_disp));
                 break;
             default:
                 UNREACHABLE();
