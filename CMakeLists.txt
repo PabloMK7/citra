@@ -190,17 +190,11 @@ if (ENABLE_QT)
         if (DEFINED QT_VER)
             download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
         endif()
-    elseif (DEFINED ENV{QTDIR})
-        # Set CMAKE_PREFIX_PATH if QTDIR is defined in the environment This allows CMake to
-        # automatically find the Qt packages on Windows
-        set(QT_PREFIX "$ENV{QTDIR}")
-    endif()
 
-    # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so make
-    # sure to not pass anything if we don't have one
-    if (DEFINED QT_PREFIX)
         set(QT_PREFIX_HINT HINTS "${QT_PREFIX}")
     else()
+        # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so
+        # make sure to not pass anything if we don't have one.
         set(QT_PREFIX_HINT)
     endif()
 
