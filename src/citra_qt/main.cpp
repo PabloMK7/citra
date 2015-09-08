@@ -297,6 +297,10 @@ void GMainWindow::StoreRecentFile(const QString& filename)
     QStringList recent_files = settings.value("recentFiles").toStringList();
     recent_files.prepend(filename);
     recent_files.removeDuplicates();
+    while (recent_files.size() > max_recent_files_item) {
+        recent_files.removeLast();
+    }
+
     settings.setValue("recentFiles", recent_files);
 
     UpdateRecentFiles();
