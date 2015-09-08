@@ -13,6 +13,9 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 
+include_directories(${GLFW_INCLUDE_DIRS})
+link_directories(${GLFW_LIBRARY_DIRS})
+
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra core video_core common)
 target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih glad)
