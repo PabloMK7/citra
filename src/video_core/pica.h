@@ -16,6 +16,8 @@
 #include "common/vector_math.h"
 #include "common/logging/log.h"
 
+#include "pica_types.h"
+
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name
@@ -1025,118 +1027,6 @@ static_assert(sizeof(Regs::ShaderConfig) == 0x30 * sizeof(u32), "ShaderConfig st
 // The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value anyway.
 static_assert(sizeof(Regs) <= 0x300 * sizeof(u32), "Register set structure larger than it should be");
 static_assert(sizeof(Regs) >= 0x300 * sizeof(u32), "Register set structure smaller than it should be");
-
-struct float24 {
-    static float24 FromFloat32(float val) {
-        float24 ret;
-        ret.value = val;
-        return ret;
-    }
-
-    // 16 bit mantissa, 7 bit exponent, 1 bit sign
-    // TODO: No idea if this works as intended
-    static float24 FromRawFloat24(u32 hex) {
-        float24 ret;
-        if ((hex & 0xFFFFFF) == 0) {
-            ret.value = 0;
-        } else {
-            u32 mantissa = hex & 0xFFFF;
-            u32 exponent = (hex >> 16) & 0x7F;
-            u32 sign = hex >> 23;
-            ret.value = std::pow(2.0f, (float)exponent-63.0f) * (1.0f + mantissa * std::pow(2.0f, -16.f));
-            if (sign)
-                ret.value = -ret.value;
-        }
-        return ret;
-    }
-
-    static float24 Zero() {
-        return FromFloat32(0.f);
-    }
-
-    // Not recommended for anything but logging
-    float ToFloat32() const {
-        return value;
-    }
-
-    float24 operator * (const float24& flt) const {
-        if ((this->value == 0.f && !std::isnan(flt.value)) ||
-            (flt.value == 0.f && !std::isnan(this->value)))
-            // PICA gives 0 instead of NaN when multiplying by inf
-            return Zero();
-        return float24::FromFloat32(ToFloat32() * flt.ToFloat32());
-    }
-
-    float24 operator / (const float24& flt) const {
-        return float24::FromFloat32(ToFloat32() / flt.ToFloat32());
-    }
-
-    float24 operator + (const float24& flt) const {
-        return float24::FromFloat32(ToFloat32() + flt.ToFloat32());
-    }
-
-    float24 operator - (const float24& flt) const {
-        return float24::FromFloat32(ToFloat32() - flt.ToFloat32());
-    }
-
-    float24& operator *= (const float24& flt) {
-        if ((this->value == 0.f && !std::isnan(flt.value)) ||
-            (flt.value == 0.f && !std::isnan(this->value)))
-            // PICA gives 0 instead of NaN when multiplying by inf
-            *this = Zero();
-        else value *= flt.ToFloat32();
-        return *this;
-    }
-
-    float24& operator /= (const float24& flt) {
-        value /= flt.ToFloat32();
-        return *this;
-    }
-
-    float24& operator += (const float24& flt) {
-        value += flt.ToFloat32();
-        return *this;
-    }
-
-    float24& operator -= (const float24& flt) {
-        value -= flt.ToFloat32();
-        return *this;
-    }
-
-    float24 operator - () const {
-        return float24::FromFloat32(-ToFloat32());
-    }
-
-    bool operator < (const float24& flt) const {
-        return ToFloat32() < flt.ToFloat32();
-    }
-
-    bool operator > (const float24& flt) const {
-        return ToFloat32() > flt.ToFloat32();
-    }
-
-    bool operator >= (const float24& flt) const {
-        return ToFloat32() >= flt.ToFloat32();
-    }
-
-    bool operator <= (const float24& flt) const {
-        return ToFloat32() <= flt.ToFloat32();
-    }
-
-    bool operator == (const float24& flt) const {
-        return ToFloat32() == flt.ToFloat32();
-    }
-
-    bool operator != (const float24& flt) const {
-        return ToFloat32() != flt.ToFloat32();
-    }
-
-private:
-    // Stored as a regular float, merely for convenience
-    // TODO: Perform proper arithmetic on this!
-    float value;
-};
-static_assert(sizeof(float24) == sizeof(float), "Shader JIT assumes float24 is implemented as a 32-bit float");
 
 /// Struct used to describe current Pica state
 struct State {
