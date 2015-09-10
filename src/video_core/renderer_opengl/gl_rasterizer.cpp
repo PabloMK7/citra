@@ -212,9 +212,9 @@ void RasterizerOpenGL::Reset() {
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
                                    const Pica::Shader::OutputVertex& v1,
                                    const Pica::Shader::OutputVertex& v2) {
-    vertex_batch.push_back(HardwareVertex(v0));
-    vertex_batch.push_back(HardwareVertex(v1));
-    vertex_batch.push_back(HardwareVertex(v2));
+    vertex_batch.emplace_back(v0);
+    vertex_batch.emplace_back(v1);
+    vertex_batch.emplace_back(v2);
 }
 
 void RasterizerOpenGL::DrawTriangles() {
