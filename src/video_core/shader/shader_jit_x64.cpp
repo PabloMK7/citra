@@ -749,7 +749,6 @@ void JitCompiler::Compile_NextInstr(unsigned* offset) {
 
 CompiledShader* JitCompiler::Compile() {
     const u8* start = GetCodePtr();
-    const auto& code = g_state.vs.program_code;
     unsigned offset = g_state.regs.vs.main_offset;
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure

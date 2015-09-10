@@ -298,7 +298,6 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     }
 
     // Write data to file
-    static int dump_index = 0;
     std::ofstream file(filename, std::ios_base::out | std::ios_base::binary);
 
     for (auto& chunk : writing_queue) {
@@ -695,7 +694,6 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     for (unsigned y = 0; y < texture_config.height; ++y)
     {
         u8* row_ptr = (u8*)buf + y * row_stride;
-        u8* ptr = row_ptr;
         png_write_row(png_ptr, row_ptr);
     }
 
