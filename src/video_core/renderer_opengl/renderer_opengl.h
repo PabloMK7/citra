@@ -64,9 +64,6 @@ private:
     void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
                                     const TextureInfo& texture);
 
-    /// Computes the viewport rectangle
-    MathUtil::Rectangle<unsigned> GetViewportExtent();
-
     EmuWindow*  render_window;                    ///< Handle to render window
     u32         last_mode;                        ///< Last render mode
 
