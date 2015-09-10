@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <cstring>
 
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -95,7 +96,9 @@ template <typename T>
 T Read(const VAddr vaddr) {
     const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
-        return *reinterpret_cast<const T*>(page_pointer + (vaddr & PAGE_MASK));
+        T value;
+        std::memcpy(&value, &page_pointer[vaddr & PAGE_MASK], sizeof(T));
+        return value;
     }
 
     PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
@@ -117,7 +120,7 @@ template <typename T>
 void Write(const VAddr vaddr, const T data) {
     u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
-        *reinterpret_cast<T*>(page_pointer + (vaddr & PAGE_MASK)) = data;
+        std::memcpy(&page_pointer[vaddr & PAGE_MASK], &data, sizeof(T));
         return;
     }
 
@@ -183,19 +186,9 @@ void Write64(const VAddr addr, const u64 data) {
 }
 
 void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
-    u32 offset = 0;
-    while (offset < (size & ~3)) {
-        Write32(addr + offset, *(u32*)&data[offset]);
-        offset += 4;
-    }
-
-    if (size & 2) {
-        Write16(addr + offset, *(u16*)&data[offset]);
-        offset += 2;
-    }
-
-    if (size & 1)
+    for (u32 offset = 0; offset < size; offset++) {
         Write8(addr + offset, data[offset]);
+    }
 }
 
 PAddr VirtualToPhysicalAddress(const VAddr addr) {
