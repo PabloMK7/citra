@@ -33,7 +33,9 @@ static void ConvertYUVToRGB(InputFormat input_format,
 
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
-            s32 Y, U, V;
+            s32 Y = 0;
+            s32 U = 0;
+            s32 V = 0;
             switch (input_format) {
             case InputFormat::YUV422_Indiv8:
             case InputFormat::YUV422_Indiv16:
@@ -269,7 +271,7 @@ void PerformConversion(ConversionConfiguration& cvt) {
 
     // LUT used to remap writes to a tile. Used to allow linear or swizzled output without
     // requiring two different code paths.
-    const u8* tile_remap;
+    const u8* tile_remap = nullptr;
     switch (cvt.block_alignment) {
     case BlockAlignment::Linear:
         tile_remap = linear_lut; break;
@@ -323,7 +325,8 @@ void PerformConversion(ConversionConfiguration& cvt) {
         u32* output_buffer = reinterpret_cast<u32*>(data_buffer.get());
 
         for (int i = 0; i < num_tiles; ++i) {
-            int image_strip_width, output_stride;
+            int image_strip_width = 0;
+            int output_stride = 0;
 
             switch (cvt.rotation) {
             case Rotation::None:
