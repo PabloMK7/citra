@@ -241,7 +241,8 @@ struct Regs {
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
-    INSERT_PADDING_WORDS(0x2);
+    BitField<0, 1, u32> fragment_lighting_enable;
+    INSERT_PADDING_WORDS(0x1);
     TextureConfig texture1;
     BitField<0, 4, TextureFormat> texture1_format;
     INSERT_PADDING_WORDS(0x2);
@@ -645,6 +646,22 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x20);
 
+    enum class LightingSampler {
+        Distribution0 = 0,
+        Distribution1 = 1,
+        Fresnel = 3,
+        Blue = 4,
+        Green = 5,
+        Red = 6,
+        SpotlightAttenuation = 8,
+        DistanceAttenuation = 16,
+    };
+
+    enum class LightingLutInput {
+        NH = 0, // Cosine of the angle between the normal and half-angle vectors
+        LN = 3, // Cosine of the angle between the light and the normal vectors
+    };
+
     struct {
         union LightColor {
             BitField< 0, 10, u32> b;
@@ -664,17 +681,21 @@ struct Regs {
 
             struct {
                 // Encoded as 16-bit floating point
-                u16 x;
-                u16 y;
-                u16 z;
-                u16 unk;
+                union {
+                    BitField< 0, 16, u32> x;
+                    BitField<16, 16, u32> y;
+                };
+                union {
+                    BitField< 0, 16, u32> z;
+                };
 
                 INSERT_PADDING_WORDS(0x3);
 
-                // 1.f if 0, otherwise 0.f
-                BitField<0, 1, u32> w;
-            } position;
-
+                union {
+                    BitField<0, 1, u32> w; // 1.f if 0, otherwise 0.f
+                    BitField<1, 1, u32> two_sided_diffuse; // when disabled, clamp dot-product to 0
+                };
+            };
 
             BitField<0, 20, u32> dist_atten_bias;
             BitField<0, 20, u32> dist_atten_scale;
@@ -722,7 +743,27 @@ struct Regs {
         // registers is written to, the behavior will be the same.
         u32 lut_data[8];
 
-        INSERT_PADDING_WORDS(0x9);
+        union {
+            BitField< 1, 1, u32> d0;
+            BitField< 5, 1, u32> d1;
+            BitField< 9, 1, u32> sp;
+            BitField<13, 1, u32> fr;
+            BitField<17, 1, u32> rb;
+            BitField<21, 1, u32> rg;
+            BitField<25, 1, u32> rr;
+        } abs_lut_input;
+
+        union {
+            BitField< 0, 3, u32> d0;
+            BitField< 4, 3, u32> d1;
+            BitField< 8, 3, u32> sp;
+            BitField<12, 3, u32> fr;
+            BitField<16, 3, u32> rb;
+            BitField<20, 3, u32> rg;
+            BitField<24, 3, u32> rr;
+        } lut_input;
+
+        INSERT_PADDING_WORDS(0x7);
 
         union {
             // There are 8 light enable "slots", corresponding to the total number of lights
@@ -1095,6 +1136,7 @@ ASSERT_REG_POSITION(viewport_corner, 0x68);
 ASSERT_REG_POSITION(texture0_enable, 0x80);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
+ASSERT_REG_POSITION(fragment_lighting_enable, 0x8f);
 ASSERT_REG_POSITION(texture1, 0x91);
 ASSERT_REG_POSITION(texture1_format, 0x96);
 ASSERT_REG_POSITION(texture2, 0x99);
@@ -1109,6 +1151,7 @@ ASSERT_REG_POSITION(tev_stage5, 0xf8);
 ASSERT_REG_POSITION(tev_combiner_buffer_color, 0xfd);
 ASSERT_REG_POSITION(output_merger, 0x100);
 ASSERT_REG_POSITION(framebuffer, 0x110);
+ASSERT_REG_POSITION(lighting, 0x140);
 ASSERT_REG_POSITION(vertex_attributes, 0x200);
 ASSERT_REG_POSITION(index_array, 0x227);
 ASSERT_REG_POSITION(num_vertices, 0x228);

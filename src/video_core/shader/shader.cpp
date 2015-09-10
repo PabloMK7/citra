@@ -134,11 +134,13 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
             std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
     }
 
-    LOG_TRACE(Render_Software, "Output vertex: pos (%.2f, %.2f, %.2f, %.2f), quat (%.2f, %.2f, %.2f, %.2f), col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f)",
+    LOG_TRACE(Render_Software, "Output vertex: pos(%.2f, %.2f, %.2f, %.2f), quat(%.2f, %.2f, %.2f, %.2f), "
+        "col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f), view(%.2f, %.2f, %.2f)",
         ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
         ret.quat.x.ToFloat32(), ret.quat.y.ToFloat32(), ret.quat.z.ToFloat32(), ret.quat.w.ToFloat32(),
         ret.color.x.ToFloat32(), ret.color.y.ToFloat32(), ret.color.z.ToFloat32(), ret.color.w.ToFloat32(),
-        ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32());
+        ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32(),
+        ret.view.x.ToFloat32(), ret.view.y.ToFloat32(), ret.view.z.ToFloat32());
 
     return ret;
 }

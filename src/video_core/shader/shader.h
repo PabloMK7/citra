@@ -37,17 +37,19 @@ struct OutputVertex {
     Math::Vec4<float24> color;
     Math::Vec2<float24> tc0;
     Math::Vec2<float24> tc1;
-    float24 pad[6];
+    INSERT_PADDING_WORDS(2);
+    Math::Vec3<float24> view;
+    INSERT_PADDING_WORDS(1);
     Math::Vec2<float24> tc2;
 
     // Padding for optimal alignment
-    float24 pad2[4];
+    INSERT_PADDING_WORDS(4);
 
     // Attributes used to store intermediate results
 
     // position after perspective divide
     Math::Vec3<float24> screenpos;
-    float24 pad3;
+    INSERT_PADDING_WORDS(1);
 
     // Linear interpolation
     // factor: 0=this, 1=vtx

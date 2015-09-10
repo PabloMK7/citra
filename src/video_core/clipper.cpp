@@ -68,6 +68,8 @@ static void InitScreenCoordinates(OutputVertex& vtx)
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
     vtx.color *= inv_w;
+    vtx.view *= inv_w;
+    vtx.quat *= inv_w;
     vtx.tc0 *= inv_w;
     vtx.tc1 *= inv_w;
     vtx.tc2 *= inv_w;
