@@ -146,7 +146,6 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
 DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup) {
     UnitState<true> state;
 
-    const auto& shader_memory = setup.program_code;
     state.program_counter = config.main_offset;
     state.debug.max_offset = 0;
     state.debug.max_opdesc_id = 0;
