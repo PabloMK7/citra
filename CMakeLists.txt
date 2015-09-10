@@ -35,6 +35,13 @@ endfunction()
 
 project(citra)
 
+option(ENABLE_GLFW "Enable the GLFW frontend" ON)
+option(CITRA_USE_BUNDLED_GLFW "Download bundled GLFW binaries" OFF)
+
+option(ENABLE_QT "Enable the Qt frontend" ON)
+option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
+option(CITRA_FORCE_QT4 "Use Qt4 even if Qt5 is available." OFF)
+
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
@@ -129,8 +136,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
-option(ENABLE_GLFW "Enable the GLFW frontend" ON)
-option(CITRA_USE_BUNDLED_GLFW "Download bundled GLFW binaries" OFF)
 if (ENABLE_GLFW)
     if (CITRA_USE_BUNDLED_GLFW)
         # Detect toolchain and platform
@@ -176,9 +181,6 @@ ELSE()
     set(PLATFORM_LIBRARIES rt)
 ENDIF (APPLE)
 
-option(ENABLE_QT "Enable the Qt frontend" ON)
-option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
-option(CITRA_FORCE_QT4 "Use Qt4 even if Qt5 is available." OFF)
 if (ENABLE_QT)
     if (CITRA_USE_BUNDLED_QT)
         if (MSVC14 AND ARCHITECTURE_x86_64)
