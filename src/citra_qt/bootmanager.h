@@ -111,6 +111,8 @@ public:
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();  // overridden
 
+    qreal windowPixelRatio();
+
     void closeEvent(QCloseEvent* event) override;
 
     void keyPressEvent(QKeyEvent* event) override;

@@ -181,16 +181,9 @@ void GRenderWindow::PollEvents() {
 void GRenderWindow::OnFramebufferSizeChanged()
 {
     // Screen changes potentially incur a change in screen DPI, hence we should update the framebuffer size
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-    // windowHandle() might not be accessible until the window is displayed to screen.
-    auto pixel_ratio = windowHandle() ? (windowHandle()->screen()->devicePixelRatio()) : 1.0;
-
-    unsigned width = child->QPaintDevice::width() * pixel_ratio;
-    unsigned height = child->QPaintDevice::height() * pixel_ratio;
-#else
-    unsigned width = child->QPaintDevice::width();
-    unsigned height = child->QPaintDevice::height();
-#endif
+    qreal pixelRatio = windowPixelRatio();
+    unsigned width = child->QPaintDevice::width() * pixelRatio;
+    unsigned height = child->QPaintDevice::height() * pixelRatio;
 
     NotifyFramebufferLayoutChanged(EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
 }
@@ -223,6 +216,16 @@ QByteArray GRenderWindow::saveGeometry()
         return geometry;
 }
 
+qreal GRenderWindow::windowPixelRatio()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    // windowHandle() might not be accessible until the window is displayed to screen.
+    return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
+#else
+    return 1.0f;
+#endif
+}
+
 void GRenderWindow::closeEvent(QCloseEvent* event) {
     emit Closed();
     QWidget::closeEvent(event);
@@ -243,14 +246,18 @@ void GRenderWindow::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton)
     {
         auto pos = event->pos();
-        this->TouchPressed(static_cast<unsigned>(pos.x()), static_cast<unsigned>(pos.y()));
+        qreal pixelRatio = windowPixelRatio();
+        this->TouchPressed(static_cast<unsigned>(pos.x() * pixelRatio),
+                           static_cast<unsigned>(pos.y() * pixelRatio));
     }
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent *event)
 {
     auto pos = event->pos();
-    this->TouchMoved(static_cast<unsigned>(std::max(pos.x(), 0)), static_cast<unsigned>(std::max(pos.y(), 0)));
+    qreal pixelRatio = windowPixelRatio();
+    this->TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixelRatio), 0u),
+                     std::max(static_cast<unsigned>(pos.y() * pixelRatio), 0u));
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent *event)
