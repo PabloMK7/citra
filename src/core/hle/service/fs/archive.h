@@ -87,7 +87,7 @@ ResultCode CloseArchive(ArchiveHandle handle);
 
 /**
  * Registers an Archive type, instances of which can later be opened using its IdCode.
- * @param backend File system backend interface to the archive
+ * @param factory File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
 ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory, ArchiveIdCode id_code);

@@ -38,10 +38,9 @@ public:
     void Acquire() override;
 
     /**
-    * Acquires the specified mutex for the specified thread
-    * @param mutex Mutex that is to be acquired
-    * @param thread Thread that will acquire the mutex
-    */
+     * Acquires the specified mutex for the specified thread
+     * @param thread Thread that will acquire the mutex
+     */
     void Acquire(SharedPtr<Thread> thread);
     void Release();
 

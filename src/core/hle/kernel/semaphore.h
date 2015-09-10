@@ -17,7 +17,6 @@ class Semaphore final : public WaitObject {
 public:
     /**
      * Creates a semaphore.
-     * @param handle Pointer to the handle of the newly created object
      * @param initial_count Number of slots reserved for other threads
      * @param max_count Maximum number of slots the semaphore can have
      * @param name Optional name of semaphore
