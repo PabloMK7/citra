@@ -51,7 +51,6 @@ protected:
 
 class DiskFile : public FileBackend {
 public:
-    DiskFile();
     DiskFile(const DiskArchive& archive, const Path& path, const Mode mode);
 
     bool Open() override;
@@ -73,7 +72,6 @@ protected:
 
 class DiskDirectory : public DirectoryBackend {
 public:
-    DiskDirectory();
     DiskDirectory(const DiskArchive& archive, const Path& path);
 
     ~DiskDirectory() override {
