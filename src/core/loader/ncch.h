@@ -209,7 +209,9 @@ public:
 
     /**
      * Get the RomFS of the application
-     * @param buffer Reference to buffer to store data
+     * @param romfs_file Reference to buffer to store data
+     * @param offset     Offset in the file to the RomFS
+     * @param size       Size of the RomFS in bytes
      * @return ResultStatus result of function
      */
     ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) override;

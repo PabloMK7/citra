@@ -50,7 +50,7 @@ static FileType IdentifyFile(FileUtil::IOFile& file) {
 
 /**
  * Guess the type of a bootable file from its extension
- * @param extension String extension of bootable file
+ * @param extension_ String extension of bootable file
  * @return FileType of file
  */
 static FileType GuessFromExtension(const std::string& extension_) {

@@ -57,7 +57,6 @@ public:
      * @param arg User data to pass to the thread
      * @param processor_id The ID(s) of the processors on which the thread is desired to be run
      * @param stack_top The address of the thread's stack top
-     * @param stack_size The size of the thread's stack
      * @return A shared pointer to the newly created thread
      */
     static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, s32 priority,

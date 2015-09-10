@@ -32,8 +32,7 @@ public:
 
     /**
      * Recorder constructor
-     * @param default_attributes Pointer to an array of 32-bit-aligned 24-bit floating point values.
-     * @param vs_float_uniforms Pointer to an array of 32-bit-aligned 24-bit floating point values.
+     * @param initial_state Initial recorder state
      */
     Recorder(const InitialState& initial_state);
 
