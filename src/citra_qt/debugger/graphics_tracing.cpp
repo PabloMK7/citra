@@ -4,26 +4,25 @@
 
 #include <memory>
 
+#include <boost/range/algorithm/copy.hpp>
+
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QFileDialog>
-#include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QSpinBox>
 
-#include <boost/range/algorithm/copy.hpp>
+#include "citra_qt/debugger/graphics_tracing.h"
 
 #include "common/common_types.h"
 
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 
-#include "video_core/pica.h"
-
 #include "nihstro/float24.h"
 
-#include "graphics_tracing.h"
+#include "video_core/pica.h"
+
 
 GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,
                                              QWidget* parent)

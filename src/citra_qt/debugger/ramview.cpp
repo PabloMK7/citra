@@ -2,8 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "ramview.h"
-
+#include "citra_qt/debugger/ramview.h"
 
 GRamView::GRamView(QWidget* parent) : QHexEdit(parent)
 {

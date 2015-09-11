@@ -4,9 +4,7 @@
 
 #pragma once
 
-#include <QDockWidget>
-
-#include "graphics_breakpoint_observer.h"
+#include "citra_qt/debugger/graphics_breakpoint_observer.h"
 
 class QComboBox;
 class QLabel;

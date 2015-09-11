@@ -4,50 +4,48 @@
 
 #include <thread>
 
-#include <QtGui>
 #include <QDesktopWidget>
+#include <QtGui>
 #include <QFileDialog>
 #include <QMessageBox>
 #include "qhexedit.h"
-#include "main.h"
 
-#include "common/string_util.h"
-#include "common/logging/text_formatter.h"
-#include "common/logging/log.h"
-#include "common/logging/backend.h"
-#include "common/logging/filter.h"
+#include "citra_qt/bootmanager.h"
+#include "citra_qt/config.h"
+#include "citra_qt/hotkeys.h"
+#include "citra_qt/main.h"
+
+// Debugger
+#include "citra_qt/debugger/callstack.h"
+#include "citra_qt/debugger/disassembler.h"
+#include "citra_qt/debugger/graphics.h"
+#include "citra_qt/debugger/graphics_breakpoints.h"
+#include "citra_qt/debugger/graphics_cmdlists.h"
+#include "citra_qt/debugger/graphics_framebuffer.h"
+#include "citra_qt/debugger/graphics_tracing.h"
+#include "citra_qt/debugger/graphics_vertex_shader.h"
+#include "citra_qt/debugger/profiler.h"
+#include "citra_qt/debugger/ramview.h"
+#include "citra_qt/debugger/registers.h"
+
 #include "common/make_unique.h"
 #include "common/microprofile.h"
 #include "common/platform.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
+#include "common/string_util.h"
+#include "common/logging/backend.h"
+#include "common/logging/filter.h"
+#include "common/logging/log.h"
+#include "common/logging/text_formatter.h"
 
-#include "bootmanager.h"
-#include "hotkeys.h"
-
-//debugger
-#include "debugger/disassembler.h"
-#include "debugger/registers.h"
-#include "debugger/callstack.h"
-#include "debugger/ramview.h"
-#include "debugger/graphics.h"
-#include "debugger/graphics_breakpoints.h"
-#include "debugger/graphics_cmdlists.h"
-#include "debugger/graphics_framebuffer.h"
-#include "debugger/graphics_tracing.h"
-#include "debugger/graphics_vertex_shader.h"
-#include "debugger/profiler.h"
-
+#include "core/core.h"
 #include "core/settings.h"
 #include "core/system.h"
-#include "core/core.h"
-#include "core/loader/loader.h"
 #include "core/arm/disassembler/load_symbol_map.h"
-#include "citra_qt/config.h"
+#include "core/loader/loader.h"
 
 #include "video_core/video_core.h"
-
-#include "version.h"
 
 GMainWindow::GMainWindow() : emu_thread(nullptr)
 {

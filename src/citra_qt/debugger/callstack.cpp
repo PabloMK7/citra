@@ -4,14 +4,14 @@
 
 #include <QStandardItemModel>
 
+#include "citra_qt/debugger/callstack.h"
+
 #include "common/common_types.h"
 #include "common/symbols.h"
 
-#include "callstack.h"
-
 #include "core/core.h"
-#include "core/arm/arm_interface.h"
 #include "core/memory.h"
+#include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"
 
 CallstackWidget::CallstackWidget(QWidget* parent): QDockWidget(parent)

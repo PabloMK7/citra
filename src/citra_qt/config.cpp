@@ -6,10 +6,10 @@
 #include <QString>
 #include <QStringList>
 
-#include "core/settings.h"
-#include "common/file_util.h"
+#include "citra_qt/config.h"
 
-#include "config.h"
+#include "common/file_util.h"
+#include "core/settings.h"
 
 Config::Config() {
 
