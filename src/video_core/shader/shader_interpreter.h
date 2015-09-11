@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "video_core/pica.h"
-
 #include "shader.h"
 
 namespace Pica {
