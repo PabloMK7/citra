@@ -32,7 +32,6 @@ set(HEADERS
             common_funcs.h
             common_paths.h
             common_types.h
-            debug_interface.h
             emu_window.h
             file_util.h
             hash.h

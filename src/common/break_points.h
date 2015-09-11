@@ -18,31 +18,6 @@ struct TBreakPoint
     bool bTemporary;
 };
 
-struct TMemCheck
-{
-    TMemCheck():
-        StartAddress(0), EndAddress(0),
-        bRange(false), OnRead(false), OnWrite(false),
-        Log(false), Break(false), numHits(0)
-    { }
-
-    u32  StartAddress;
-    u32  EndAddress;
-
-    bool bRange;
-
-    bool OnRead;
-    bool OnWrite;
-
-    bool Log;
-    bool Break;
-
-    u32  numHits;
-
-    void Action(DebugInterface *dbg_interface, u32 iValue, u32 addr,
-                bool write, int size, u32 pc);
-};
-
 // Code breakpoints.
 class BreakPoints
 {
@@ -72,28 +47,4 @@ public:
 private:
     TBreakPoints m_BreakPoints;
     u32          m_iBreakOnCount;
-};
-
-
-// Memory breakpoints
-class MemChecks
-{
-public:
-    typedef std::vector<TMemCheck> TMemChecks;
-    typedef std::vector<std::string> TMemChecksStr;
-
-    TMemChecks m_MemChecks;
-
-    const TMemChecks& GetMemChecks() { return m_MemChecks; }
-
-    TMemChecksStr GetStrings() const;
-    void AddFromStrings(const TMemChecksStr& mcs);
-
-    void Add(const TMemCheck& rMemoryCheck);
-
-    // memory breakpoint
-    TMemCheck *GetMemCheck(u32 address);
-    void Remove(u32 _Address);
-
-    void Clear() { m_MemChecks.clear(); };
 };
