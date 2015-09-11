@@ -4,10 +4,10 @@
 
 #include <boost/container/static_vector.hpp>
 
-#include "clipper.h"
-#include "pica.h"
-#include "rasterizer.h"
-#include "shader/shader_interpreter.h"
+#include "video_core/clipper.h"
+#include "video_core/pica.h"
+#include "video_core/rasterizer.h"
+#include "video_core/shader/shader_interpreter.h"
 
 namespace Pica {
 

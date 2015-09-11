@@ -9,10 +9,9 @@
 #include "common/common_types.h"
 
 #include "video_core/hwrasterizer_base.h"
+#include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/shader/shader_interpreter.h"
-
-#include "gl_state.h"
-#include "gl_rasterizer_cache.h"
 
 class RasterizerOpenGL : public HWRasterizer {
 public:

@@ -11,11 +11,11 @@
 #include "common/logging/log.h"
 #include "common/profiler_reporting.h"
 
+#include "core/memory.h"
+#include "core/settings.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
-#include "core/memory.h"
-#include "core/settings.h"
 
 #include "video_core/video_core.h"
 #include "video_core/debug_utils/debug_utils.h"

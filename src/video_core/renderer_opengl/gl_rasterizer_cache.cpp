@@ -10,9 +10,9 @@
 
 #include "core/memory.h"
 
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
-#include "video_core/debug_utils/debug_utils.h"
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
     FullFlush();
