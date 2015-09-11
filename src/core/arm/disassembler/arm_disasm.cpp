@@ -206,7 +206,7 @@ static const char *opcode_names[] = {
     "swi",
     "tst",
 
-    NULL
+    nullptr
 };
 
 // Indexed by the shift type (bits 6-5)
@@ -399,7 +399,7 @@ std::string ARM_Disasm::Disassemble(u32 addr, u32 insn)
         default:
             return "Error";
     }
-    return NULL;
+    return nullptr;
 }
 
 std::string ARM_Disasm::DisassembleALU(Opcode opcode, u32 insn)

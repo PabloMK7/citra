@@ -37,7 +37,7 @@ class GPUCommandStreamWidget : public QDockWidget
     Q_OBJECT
 
 public:
-    GPUCommandStreamWidget(QWidget* parent = 0);
+    GPUCommandStreamWidget(QWidget* parent = nullptr);
 
 private:
 };

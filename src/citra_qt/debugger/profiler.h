@@ -37,7 +37,7 @@ class ProfilerWidget : public QDockWidget
     Q_OBJECT
 
 public:
-    ProfilerWidget(QWidget* parent = 0);
+    ProfilerWidget(QWidget* parent = nullptr);
 
 private slots:
     void setProfilingInfoUpdateEnabled(bool enable);

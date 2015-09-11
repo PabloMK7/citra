@@ -299,7 +299,7 @@ static u32 vfp_double_fsqrt(ARMul_State* state, int dd, int unused, int dm, u32 
         vdp = &vdd;
 
         if (tm & VFP_NAN)
-            ret = vfp_propagate_nan(vdp, &vdm, NULL, fpscr);
+            ret = vfp_propagate_nan(vdp, &vdm, nullptr, fpscr);
         else if (vdm.sign == 0) {
 sqrt_copy:
             vdp = &vdm;
@@ -700,26 +700,26 @@ static struct op fops_ext[] = {
     { vfp_double_fabs,   0 },                 //0x00000001 - FEXT_FABS
     { vfp_double_fneg,   0 },                 //0x00000002 - FEXT_FNEG
     { vfp_double_fsqrt,  0 },                 //0x00000003 - FEXT_FSQRT
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
     { vfp_double_fcmp,   OP_SCALAR },         //0x00000008 - FEXT_FCMP
     { vfp_double_fcmpe,  OP_SCALAR },         //0x00000009 - FEXT_FCMPE
     { vfp_double_fcmpz,  OP_SCALAR },         //0x0000000A - FEXT_FCMPZ
     { vfp_double_fcmpez, OP_SCALAR },         //0x0000000B - FEXT_FCMPEZ
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
     { vfp_double_fcvts,  OP_SCALAR|OP_DD },   //0x0000000F - FEXT_FCVT
     { vfp_double_fuito,  OP_SCALAR|OP_SM },   //0x00000010 - FEXT_FUITO
     { vfp_double_fsito,  OP_SCALAR|OP_SM },   //0x00000011 - FEXT_FSITO
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
-    { NULL, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
+    { nullptr, 0 },
     { vfp_double_ftoui,  OP_SCALAR|OP_SD },   //0x00000018 - FEXT_FTOUI
     { vfp_double_ftouiz, OP_SCALAR|OP_SD },   //0x00000019 - FEXT_FTOUIZ
     { vfp_double_ftosi,  OP_SCALAR|OP_SD },   //0x0000001A - FEXT_FTOSI

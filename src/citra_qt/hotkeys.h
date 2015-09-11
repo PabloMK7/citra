@@ -47,7 +47,7 @@ class GHotkeysDialog : public QDialog
     Q_OBJECT
 
 public:
-    GHotkeysDialog(QWidget* parent = NULL);
+    GHotkeysDialog(QWidget* parent = nullptr);
 
 private:
     Ui::hotkeys ui;
