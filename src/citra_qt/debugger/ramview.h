@@ -9,7 +9,7 @@ class GRamView : public QHexEdit
     Q_OBJECT
 
 public:
-    GRamView(QWidget* parent = NULL);
+    GRamView(QWidget* parent = nullptr);
 
 public slots:
     void OnCPUStepped();

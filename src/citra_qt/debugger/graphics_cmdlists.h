@@ -41,7 +41,7 @@ class GPUCommandListWidget : public QDockWidget
     Q_OBJECT
 
 public:
-    GPUCommandListWidget(QWidget* parent = 0);
+    GPUCommandListWidget(QWidget* parent = nullptr);
 
 public slots:
     void OnToggleTracing();

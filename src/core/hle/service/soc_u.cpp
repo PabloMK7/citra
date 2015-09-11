@@ -485,7 +485,7 @@ static void GetHostId(Service::Interface* self) {
     addrinfo* res;
 
     hints.ai_family = AF_INET;
-    getaddrinfo(name, NULL, &hints, &res);
+    getaddrinfo(name, nullptr, &hints, &res);
     sockaddr_in* sock_addr = reinterpret_cast<sockaddr_in*>(res->ai_addr);
     in_addr* addr = &sock_addr->sin_addr;
 
