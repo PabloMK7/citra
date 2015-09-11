@@ -148,7 +148,7 @@ struct swap_struct_t {
     typedef swap_struct_t<T, F> swapped_t;
 
 protected:
-    T value;
+    T value = T();
 
     static T swap(T v) {
         return F::swap(v);
@@ -158,7 +158,7 @@ public:
         return swap(value);
 
     }
-    swap_struct_t() : value((T)0) {}
+    swap_struct_t() = default;
     swap_struct_t(const T &v): value(swap(v)) {}
 
     template <typename S>
