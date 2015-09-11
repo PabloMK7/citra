@@ -4,13 +4,13 @@
 
 #pragma once
 
-#include "gl_state.h"
-#include "gl_resource_manager.h"
-#include "video_core/debug_utils/debug_utils.h"
-#include "video_core/pica.h"
-
-#include <memory>
 #include <map>
+#include <memory>
+
+#include "video_core/pica.h"
+#include "video_core/debug_utils/debug_utils.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
+#include "video_core/renderer_opengl/gl_state.h"
 
 class RasterizerCacheOpenGL : NonCopyable {
 public:

@@ -2,25 +2,24 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cmath>
 #include <boost/range/algorithm/fill.hpp>
 
 #include "common/microprofile.h"
 #include "common/profiler.h"
 
+#include "core/settings.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hw/gpu.h"
-#include "core/settings.h"
 
-#include "debug_utils/debug_utils.h"
-
-#include "clipper.h"
-#include "command_processor.h"
-#include "math.h"
-#include "pica.h"
-#include "primitive_assembly.h"
-#include "renderer_base.h"
-#include "shader/shader_interpreter.h"
-#include "video_core.h"
+#include "video_core/clipper.h"
+#include "video_core/command_processor.h"
+#include "video_core/pica.h"
+#include "video_core/primitive_assembly.h"
+#include "video_core/renderer_base.h"
+#include "video_core/video_core.h"
+#include "video_core/debug_utils/debug_utils.h"
+#include "video_core/shader/shader_interpreter.h"
 
 namespace Pica {
 

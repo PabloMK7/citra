@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "gl_shader_util.h"
-#include "common/logging/log.h"
-
-#include <vector>
 #include <algorithm>
+#include <vector>
+
+#include "common/logging/log.h"
+#include "video_core/renderer_opengl/gl_shader_util.h"
 
 namespace ShaderUtil {
 

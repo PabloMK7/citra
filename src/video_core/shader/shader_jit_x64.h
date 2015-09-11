@@ -9,8 +9,7 @@
 #include "common/x64/emitter.h"
 
 #include "video_core/pica.h"
-
-#include "shader.h"
+#include "video_core/shader/shader.h"
 
 using nihstro::Instruction;
 using nihstro::OpCode;

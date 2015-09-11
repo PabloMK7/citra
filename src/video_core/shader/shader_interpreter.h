@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "shader.h"
+#include "video_core/shader/shader.h"
 
 namespace Pica {
 

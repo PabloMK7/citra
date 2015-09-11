@@ -13,8 +13,8 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/logging/log.h"
 #include "common/vector_math.h"
+#include "common/logging/log.h"
 
 namespace Pica {
 

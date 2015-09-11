@@ -12,9 +12,9 @@
 #include "common/microprofile.h"
 #include "common/profiler.h"
 
-#include "core/hw/gpu.h"
 #include "core/memory.h"
 #include "core/settings.h"
+#include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
 #include "video_core/utils.h"
