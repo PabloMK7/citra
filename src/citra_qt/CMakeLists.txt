@@ -24,6 +24,7 @@ set(SRCS
             hotkeys.cpp
             main.cpp
             citra-qt.rc
+            Info.plist
             )
 
 set(HEADERS
@@ -72,6 +73,7 @@ endif()
 
 if (APPLE)
     add_executable(citra-qt MACOSX_BUNDLE ${SRCS} ${HEADERS} ${UI_HDRS})
+    set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
 else()
     add_executable(citra-qt ${SRCS} ${HEADERS} ${UI_HDRS})
 endif()
