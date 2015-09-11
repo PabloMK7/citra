@@ -6,7 +6,7 @@
 
 #include <QAbstractTableModel>
 
-#include "graphics_breakpoint_observer.h"
+#include "citra_qt/debugger/graphics_breakpoint_observer.h"
 
 #include "nihstro/parser_shbin.h"
 

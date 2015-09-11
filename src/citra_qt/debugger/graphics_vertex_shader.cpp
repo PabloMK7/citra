@@ -16,11 +16,10 @@
 #include <QSpinBox>
 #include <QTreeView>
 
+#include "citra_qt/debugger/graphics_vertex_shader.h"
 #include "citra_qt/util/util.h"
 
 #include "video_core/shader/shader.h"
-
-#include "graphics_vertex_shader.h"
 
 using nihstro::OpCode;
 using nihstro::Instruction;

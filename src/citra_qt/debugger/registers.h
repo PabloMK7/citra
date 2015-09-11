@@ -5,9 +5,9 @@
 #include "ui_registers.h"
 
 #include <QDockWidget>
-#include <QTreeWidgetItem>
 
 class QTreeWidget;
+class QTreeWidgetItem;
 class EmuThread;
 
 class RegistersWidget : public QDockWidget

@@ -2,11 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "graphics.h"
 #include <QListView>
-#include <QVBoxLayout>
-#include <QDebug>
 
+#include "citra_qt/debugger/graphics.h"
 #include "citra_qt/util/util.h"
 
 extern GraphicsDebugger g_debugger;

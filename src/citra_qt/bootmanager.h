@@ -6,8 +6,8 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <QThread>
 #include <QGLWidget>
+#include <QThread>
 
 #include "common/emu_window.h"
 #include "common/thread.h"

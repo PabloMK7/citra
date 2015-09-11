@@ -8,7 +8,7 @@
 #include <QSettings>
 #include <QShortcut>
 
-#include "hotkeys.h"
+#include "citra_qt/hotkeys.h"
 
 struct Hotkey
 {

@@ -6,12 +6,11 @@
 #include <QPainter>
 #include <QString>
 
-#include "profiler.h"
-
+#include "citra_qt/debugger/profiler.h"
 #include "citra_qt/util/util.h"
 
-#include "common/profiler_reporting.h"
 #include "common/microprofile.h"
+#include "common/profiler_reporting.h"
 
 // Include the implementation of the UI in this file. This isn't in microprofile.cpp because the
 // non-Qt frontends don't need it (and don't implement the UI drawing hooks either).

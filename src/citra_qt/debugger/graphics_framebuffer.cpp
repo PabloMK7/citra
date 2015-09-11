@@ -9,17 +9,16 @@
 #include <QPushButton>
 #include <QSpinBox>
 
+#include "citra_qt/debugger/graphics_framebuffer.h"
+#include "citra_qt/util/spinbox.h"
+
 #include "common/color.h"
 
-#include "core/hw/gpu.h"
 #include "core/memory.h"
+#include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
 #include "video_core/utils.h"
-
-#include "graphics_framebuffer.h"
-
-#include "util/spinbox.h"
 
 GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::DebugContext> debug_context,
                                                      QWidget* parent)

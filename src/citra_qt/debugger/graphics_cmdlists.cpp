@@ -4,26 +4,24 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QComboBox>
+#include <QHeaderView>
 #include <QLabel>
 #include <QListView>
 #include <QMainWindow>
 #include <QPushButton>
-#include <QVBoxLayout>
-#include <QTreeView>
-#include <QHeaderView>
 #include <QSpinBox>
-#include <QComboBox>
+#include <QTreeView>
+#include <QVBoxLayout>
 
+#include "citra_qt/debugger/graphics_cmdlists.h"
+#include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
 
 #include "common/vector_math.h"
 
-#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
-
-#include "graphics_cmdlists.h"
-
-#include "util/spinbox.h"
+#include "video_core/debug_utils/debug_utils.h"
 
 QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);

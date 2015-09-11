@@ -1,6 +1,6 @@
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QKeyEvent>
-#include <QApplication>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
 // Required for screen DPI information
@@ -8,23 +8,19 @@
 #include <QWindow>
 #endif
 
-#include "bootmanager.h"
-#include "main.h"
+#include "citra_qt/bootmanager.h"
 
-#include "common/string_util.h"
-#include "common/scm_rev.h"
 #include "common/key_map.h"
 #include "common/microprofile.h"
+#include "common/scm_rev.h"
+#include "common/string_util.h"
 
 #include "core/core.h"
 #include "core/settings.h"
 #include "core/system.h"
 
-#include "video_core/debug_utils/debug_utils.h"
-
 #include "video_core/video_core.h"
-
-#include "citra_qt/version.h"
+#include "video_core/debug_utils/debug_utils.h"
 
 #define APP_NAME        "citra"
 #define APP_VERSION     "0.1-" VERSION
