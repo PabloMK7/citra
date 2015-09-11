@@ -18,11 +18,11 @@
 #include "core/settings.h"
 
 #include "video_core/video_core.h"
-#include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/debug_utils/debug_utils.h"
+#include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_shaders.h"
-
-#include "video_core/debug_utils/debug_utils.h"
+#include "video_core/renderer_opengl/renderer_opengl.h"
 
 /**
  * Vertex structure that the drawn screen rectangles are composed of.

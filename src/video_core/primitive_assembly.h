@@ -8,8 +8,6 @@
 
 #include "video_core/pica.h"
 
-#include "video_core/shader/shader_interpreter.h"
-
 namespace Pica {
 
 /*

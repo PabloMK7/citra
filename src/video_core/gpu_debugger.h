@@ -10,9 +10,6 @@
 
 #include "core/hle/service/gsp_gpu.h"
 
-#include "command_processor.h"
-#include "pica.h"
-
 class GraphicsDebugger
 {
 public:
