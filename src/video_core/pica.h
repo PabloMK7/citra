@@ -643,7 +643,110 @@ struct Regs {
         }
     }
 
-    INSERT_PADDING_WORDS(0xe0);
+    INSERT_PADDING_WORDS(0x20);
+
+    struct {
+        union LightColor {
+            BitField< 0, 10, u32> b;
+            BitField<10, 10, u32> g;
+            BitField<20, 10, u32> r;
+
+            Math::Vec3f ToVec3f() const {
+                return Math::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
+            }
+        };
+
+        struct LightSrc {
+            LightColor specular_0;  // material.specular_0 * light.specular_0
+            LightColor specular_1;  // material.specular_1 * light.specular_1
+            LightColor diffuse;     // material.diffuse * light.diffuse
+            LightColor ambient;     // material.ambient * light.ambient
+
+            struct {
+                // Encoded as 16-bit floating point
+                u16 x;
+                u16 y;
+                u16 z;
+                u16 unk;
+
+                INSERT_PADDING_WORDS(0x3);
+
+                // 1.f if 0, otherwise 0.f
+                BitField<0, 1, u32> w;
+            } position;
+
+
+            BitField<0, 20, u32> dist_atten_bias;
+            BitField<0, 20, u32> dist_atten_scale;
+
+            INSERT_PADDING_WORDS(0x4);
+        };
+        static_assert(sizeof(LightSrc) == 0x10 * sizeof(u32), "LightSrc structure must be 0x10 words");
+
+        LightSrc light[8];
+        LightColor global_ambient; // emission + (material.ambient * lighting.ambient)
+        INSERT_PADDING_WORDS(0x1);
+        BitField<0, 3, u32> src_num; // number of enabled lights - 1
+        INSERT_PADDING_WORDS(0x1);
+
+        union {
+            // Each bit specifies whether distance attenuation should be applied for the
+            // corresponding light
+
+            BitField<24, 1, u32> light_0;
+            BitField<25, 1, u32> light_1;
+            BitField<26, 1, u32> light_2;
+            BitField<27, 1, u32> light_3;
+            BitField<28, 1, u32> light_4;
+            BitField<29, 1, u32> light_5;
+            BitField<30, 1, u32> light_6;
+            BitField<31, 1, u32> light_7;
+
+            bool IsEnabled(unsigned index) const {
+                const unsigned enable[] = { light_0, light_1, light_2, light_3, light_4, light_5, light_6, light_7 };
+                return enable[index] == 0;
+            }
+        } dist_atten_enable;
+
+        union {
+            BitField<0, 8, u32> index;      ///< Index at which to set data in the LUT
+            BitField<8, 5, u32> type;       ///< Type of LUT for which to set data
+        } lut_config;
+
+        BitField<0, 1, u32> disable;
+        INSERT_PADDING_WORDS(0x1);
+
+        // When data is written to any of these registers, it gets written to the lookup table of
+        // the selected type at the selected index, specified above in the `lut_config` register.
+        // With each write, `lut_config.index` is incremented. It does not matter which of these
+        // registers is written to, the behavior will be the same.
+        u32 lut_data[8];
+
+        INSERT_PADDING_WORDS(0x9);
+
+        union {
+            // There are 8 light enable "slots", corresponding to the total number of lights
+            // supported by Pica. For N enabled lights (specified by register 0x1c2, or 'src_num'
+            // above), the first N slots below will be set to integers within the range of 0-7,
+            // corresponding to the actual light that is enabled for each slot.
+
+            BitField< 0, 3, u32> slot_0;
+            BitField< 4, 3, u32> slot_1;
+            BitField< 8, 3, u32> slot_2;
+            BitField<12, 3, u32> slot_3;
+            BitField<16, 3, u32> slot_4;
+            BitField<20, 3, u32> slot_5;
+            BitField<24, 3, u32> slot_6;
+            BitField<28, 3, u32> slot_7;
+
+            unsigned GetNum(unsigned index) const {
+                const unsigned enable_slots[] = { slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7 };
+                return enable_slots[index];
+            }
+        } light_enable;
+    } lighting;
+
+    INSERT_PADDING_WORDS(0x26);
 
     enum class VertexAttributeFormat : u64 {
         BYTE = 0,
