@@ -121,11 +121,8 @@ void FreeMemoryPages(void* ptr, size_t size)
     if (ptr)
     {
 #ifdef _WIN32
-
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
             LOG_ERROR(Common_Memory, "FreeMemoryPages failed!\n%s", GetLastErrorMsg());
-        ptr = nullptr; // Is this our responsibility?
-
 #else
         munmap(ptr, size);
 #endif
