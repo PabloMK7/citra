@@ -150,7 +150,7 @@ void ProfilerWidget::setProfilingInfoUpdateEnabled(bool enable)
 
 class MicroProfileWidget : public QWidget {
 public:
-    MicroProfileWidget(QWidget* parent = 0);
+    MicroProfileWidget(QWidget* parent = nullptr);
 
 protected:
     void paintEvent(QPaintEvent* ev) override;
