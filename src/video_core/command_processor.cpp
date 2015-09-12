@@ -464,6 +464,21 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
         }
 
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[0], 0x1c8):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[1], 0x1c9):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[2], 0x1ca):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[3], 0x1cb):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
+        case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf):
+        {
+            auto& lut_config = regs.lighting.lut_config;
+            g_state.lighting.luts[lut_config.type][lut_config.index].raw = value;
+            lut_config.index = lut_config.index + 1;
+            break;
+        }
+
         default:
             break;
     }

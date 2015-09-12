@@ -1156,6 +1156,25 @@ struct State {
     ShaderSetup vs;
     ShaderSetup gs;
 
+    struct {
+        union LutEntry {
+            // Used for raw access
+            u32 raw;
+
+            // LUT value, encoded as 12-bit fixed point, with 12 fraction bits
+            BitField< 0, 12, u32> value;
+
+            // Used by HW for efficient interpolation, Citra does not use these
+            BitField<12, 12, u32> difference;
+
+            float ToFloat() {
+                return static_cast<float>(value) / 4095.f;
+            }
+        };
+
+        std::array<LutEntry, 256> luts[24];
+    } lighting;
+
     /// Current Pica command list
     struct {
         const u32* head_ptr;
