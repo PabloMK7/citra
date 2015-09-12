@@ -49,9 +49,6 @@ void* AllocateExecutableMemory(size_t size, bool low)
         , -1, 0);
 #endif /* defined(_WIN32) */
 
-    // printf("Mapped executable memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
-
 #ifdef _WIN32
     if (ptr == nullptr)
     {
@@ -69,7 +66,6 @@ void* AllocateExecutableMemory(size_t size, bool low)
         {
             map_hint += size;
             map_hint = (char*)round_page(map_hint); /* round up to the next page */
-            // printf("Next map will (hopefully) be at %p\n", map_hint);
         }
     }
 #endif
@@ -94,9 +90,6 @@ void* AllocateMemoryPages(size_t size)
         ptr = nullptr;
 #endif
 
-    // printf("Mapped memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
-
     if (ptr == nullptr)
         LOG_ERROR(Common_Memory, "Failed to allocate raw memory");
 
@@ -116,9 +109,6 @@ void* AllocateAlignedMemory(size_t size,size_t alignment)
         LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 #endif
 #endif
-
-    // printf("Mapped memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
 
     if (ptr == nullptr)
         LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
