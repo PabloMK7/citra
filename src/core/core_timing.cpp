@@ -207,7 +207,7 @@ void ScheduleEvent_Threadsafe(s64 cycles_into_future, int event_type, u64 userda
     Event* new_event = GetNewTsEvent();
     new_event->time = GetTicks() + cycles_into_future;
     new_event->type = event_type;
-    new_event->next = 0;
+    new_event->next = nullptr;
     new_event->userdata = userdata;
     if (!ts_first)
         ts_first = new_event;

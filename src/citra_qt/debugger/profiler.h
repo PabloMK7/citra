@@ -53,7 +53,7 @@ class MicroProfileDialog : public QWidget {
     Q_OBJECT
 
 public:
-    MicroProfileDialog(QWidget* parent = 0);
+    MicroProfileDialog(QWidget* parent = nullptr);
 
     /// Returns a QAction that can be used to toggle visibility of this dialog.
     QAction* toggleViewAction();

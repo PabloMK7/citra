@@ -575,10 +575,10 @@ public:
     }
 
     template<class T, LinkedListItem<T>* (*TNew)(), void (*TFree)(LinkedListItem<T>*), void (*TDo)(PointerWrap&, T*)>
-    void DoLinkedList(LinkedListItem<T>*& list_start, LinkedListItem<T>** list_end=0)
+    void DoLinkedList(LinkedListItem<T>*& list_start, LinkedListItem<T>** list_end = nullptr)
     {
         LinkedListItem<T>* list_cur = list_start;
-        LinkedListItem<T>* prev = 0;
+        LinkedListItem<T>* prev = nullptr;
 
         while (true)
         {

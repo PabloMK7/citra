@@ -28,9 +28,9 @@
 void* AllocateExecutableMemory(size_t size, bool low)
 {
 #if defined(_WIN32)
-    void* ptr = VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
-    static char *map_hint = 0;
+    static char* map_hint = nullptr;
 #if defined(ARCHITECTURE_X64) && !defined(MAP_32BIT)
     // This OS has no flag to enforce allocation below the 4 GB boundary,
     // but if we hint that we want a low address it is very likely we will
@@ -49,9 +49,6 @@ void* AllocateExecutableMemory(size_t size, bool low)
         , -1, 0);
 #endif /* defined(_WIN32) */
 
-    // printf("Mapped executable memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
-
 #ifdef _WIN32
     if (ptr == nullptr)
     {
@@ -69,7 +66,6 @@ void* AllocateExecutableMemory(size_t size, bool low)
         {
             map_hint += size;
             map_hint = (char*)round_page(map_hint); /* round up to the next page */
-            // printf("Next map will (hopefully) be at %p\n", map_hint);
         }
     }
 #endif
@@ -85,17 +81,14 @@ void* AllocateExecutableMemory(size_t size, bool low)
 void* AllocateMemoryPages(size_t size)
 {
 #ifdef _WIN32
-    void* ptr = VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+    void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #else
-    void* ptr = mmap(0, size, PROT_READ | PROT_WRITE,
+    void* ptr = mmap(nullptr, size, PROT_READ | PROT_WRITE,
             MAP_ANON | MAP_PRIVATE, -1, 0);
 
     if (ptr == MAP_FAILED)
         ptr = nullptr;
 #endif
-
-    // printf("Mapped memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
 
     if (ptr == nullptr)
         LOG_ERROR(Common_Memory, "Failed to allocate raw memory");
@@ -117,9 +110,6 @@ void* AllocateAlignedMemory(size_t size,size_t alignment)
 #endif
 #endif
 
-    // printf("Mapped memory at %p (size %ld)\n", ptr,
-    //    (unsigned long)size);
-
     if (ptr == nullptr)
         LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 
@@ -131,11 +121,8 @@ void FreeMemoryPages(void* ptr, size_t size)
     if (ptr)
     {
 #ifdef _WIN32
-
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
             LOG_ERROR(Common_Memory, "FreeMemoryPages failed!\n%s", GetLastErrorMsg());
-        ptr = nullptr; // Is this our responsibility?
-
 #else
         munmap(ptr, size);
 #endif
