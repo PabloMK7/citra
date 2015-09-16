@@ -17,27 +17,11 @@ namespace Common {
 
 // Block read - if your platform needs to do endian-swapping or can only handle aligned reads, do
 // the conversion here
-
-static FORCE_INLINE u32 getblock32(const u32* p, int i) {
-    return p[i];
-}
-
 static FORCE_INLINE u64 getblock64(const u64* p, int i) {
     return p[i];
 }
 
 // Finalization mix - force all bits of a hash block to avalanche
-
-static FORCE_INLINE u32 fmix32(u32 h) {
-    h ^= h >> 16;
-    h *= 0x85ebca6b;
-    h ^= h >> 13;
-    h *= 0xc2b2ae35;
-    h ^= h >> 16;
-
-    return h;
-}
-
 static FORCE_INLINE u64 fmix64(u64 k) {
     k ^= k >> 33;
     k *= 0xff51afd7ed558ccdllu;
