@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <atomic>
+#include <cinttypes>
 #include <mutex>
 #include <vector>
 
@@ -530,7 +531,7 @@ void Idle(int max_idle) {
         }
     }
 
-    LOG_TRACE(Core_Timing, "Idle for %i cycles! (%f ms)", cycles_down, cycles_down / (float)(g_clock_rate_arm11 * 0.001f));
+    LOG_TRACE(Core_Timing, "Idle for %" PRId64 " cycles! (%f ms)", cycles_down, cycles_down / (float)(g_clock_rate_arm11 * 0.001f));
 
     idled_cycles += cycles_down;
     Core::g_app_core->down_count -= cycles_down;

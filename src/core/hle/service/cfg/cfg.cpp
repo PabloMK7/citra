@@ -77,10 +77,10 @@ static const ConsoleCountryInfo COUNTRY_INFO = { { 0, 0, 0 }, UNITED_STATES_COUN
  * for example Nintendo Zone
  * Thanks Normmatt for providing this information
  */
-static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
+static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {{
     62.0f, 289.0f, 76.80000305175781f, 46.08000183105469f,
     10.0f, 5.0f, 55.58000183105469f, 21.56999969482422f
-};
+}};
 static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20, "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
 
 static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;

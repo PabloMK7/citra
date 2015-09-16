@@ -314,12 +314,12 @@ void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
  * Draws a single texture to the emulator window, rotating the texture to correct for the 3DS's LCD rotation.
  */
 void RendererOpenGL::DrawSingleScreenRotated(const TextureInfo& texture, float x, float y, float w, float h) {
-    std::array<ScreenRectVertex, 4> vertices = {
+    std::array<ScreenRectVertex, 4> vertices = {{
         ScreenRectVertex(x,   y,   1.f, 0.f),
         ScreenRectVertex(x+w, y,   1.f, 1.f),
         ScreenRectVertex(x,   y+h, 0.f, 0.f),
         ScreenRectVertex(x+w, y+h, 0.f, 1.f),
-    };
+    }};
 
     state.texture_units[0].texture_2d = texture.handle;
     state.Apply();
