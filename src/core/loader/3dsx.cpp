@@ -62,6 +62,10 @@ struct THREEDSX_Header
     // Sizes of the code, rodata and data segments +
     // size of the BSS section (uninitialized latter half of the data segment)
     u32 code_seg_size, rodata_seg_size, data_seg_size, bss_size;
+    // offset and size of smdh
+    u32 smdh_offset, smdh_size;
+    // offset to filesystem
+    u32 fs_offset;
 };
 
 // Relocation header: all fields (even extra unknown fields) are guaranteed to be relocation counts.
@@ -265,6 +269,42 @@ ResultStatus AppLoader_THREEDSX::Load() {
 
     is_loaded = true;
     return ResultStatus::Success;
+}
+
+ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) {
+    if (!file.IsOpen())
+        return ResultStatus::Error;
+
+    // Reset read pointer in case this file has been read before.
+    file.Seek(0, SEEK_SET);
+
+    THREEDSX_Header hdr;
+    if (file.ReadBytes(&hdr, sizeof(THREEDSX_Header)) != sizeof(THREEDSX_Header))
+        return ResultStatus::Error;
+
+    if (hdr.header_size != sizeof(THREEDSX_Header))
+        return ResultStatus::Error;
+
+    // Check if the 3DSX has a RomFS...
+    if (hdr.fs_offset != 0) {
+        u32 romfs_offset = hdr.fs_offset;
+        u32 romfs_size = file.GetSize() - hdr.fs_offset;
+
+        LOG_DEBUG(Loader, "RomFS offset:           0x%08X", romfs_offset);
+        LOG_DEBUG(Loader, "RomFS size:             0x%08X", romfs_size);
+
+        // We reopen the file, to allow its position to be independent from file's
+        romfs_file = std::make_shared<FileUtil::IOFile>(filepath, "rb");
+        if (!romfs_file->IsOpen())
+            return ResultStatus::Error;
+
+        offset = romfs_offset;
+        size = romfs_size;
+
+        return ResultStatus::Success;
+    }
+    LOG_DEBUG(Loader, "3DSX has no RomFS");
+    return ResultStatus::ErrorNotUsed;
 }
 
 } // namespace Loader
