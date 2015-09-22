@@ -116,7 +116,15 @@ ResultStatus LoadFile(const std::string& filename) {
 
     //3DSX file format...
     case FileType::THREEDSX:
-        return AppLoader_THREEDSX(std::move(file), filename_filename).Load();
+    {
+        AppLoader_THREEDSX app_loader(std::move(file), filename_filename, filename);
+        // Load application and RomFS
+        if (ResultStatus::Success == app_loader.Load()) {
+            Service::FS::RegisterArchiveType(Common::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
+            return ResultStatus::Success;
+        }
+        break;
+    }
 
     // Standard ELF file format...
     case FileType::ELF:

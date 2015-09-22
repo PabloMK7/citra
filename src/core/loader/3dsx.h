@@ -17,8 +17,8 @@ namespace Loader {
 /// Loads an 3DSX file
 class AppLoader_THREEDSX final : public AppLoader {
 public:
-    AppLoader_THREEDSX(FileUtil::IOFile&& file, std::string filename)
-        : AppLoader(std::move(file)), filename(std::move(filename)) {}
+    AppLoader_THREEDSX(FileUtil::IOFile&& file, std::string filename, const std::string& filepath)
+        : AppLoader(std::move(file)), filename(std::move(filename)), filepath(filepath) {}
 
     /**
      * Returns the type of the file
@@ -33,8 +33,18 @@ public:
      */
     ResultStatus Load() override;
 
+    /**
+     * Get the RomFS of the application
+     * @param romfs_file Reference to buffer to store data
+     * @param offset     Offset in the file to the RomFS
+     * @param size       Size of the RomFS in bytes
+     * @return ResultStatus result of function
+     */
+    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) override;
+
 private:
     std::string filename;
+    std::string filepath;
 };
 
 } // namespace Loader
