@@ -128,9 +128,6 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
 
     BackupGeometry();
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-    connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this, SLOT(OnFramebufferSizeChanged()));
-#endif
 }
 
 void GRenderWindow::moveContext()
@@ -277,4 +274,13 @@ void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
 
 void GRenderWindow::OnEmulationStopping() {
     emu_thread = nullptr;
+}
+
+void GRenderWindow::showEvent(QShowEvent * event) {
+    QWidget::showEvent(event);
+
+    // windowHandle() is not initialized until the Window is shown, so we connect it here.
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this, SLOT(OnFramebufferSizeChanged()), Qt::UniqueConnection);
+    #endif
 }
