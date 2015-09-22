@@ -44,7 +44,7 @@ struct SaveConfigBlockEntry {
 // TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
 #define C(code) (u16)((code)[0] | ((code)[1] << 8))
 
-static const std::array<u16, 187> country_codes = {
+static const std::array<u16, 187> country_codes = {{
     0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
     C("AI"), C("AG"), C("AR"), C("AW"), C("BS"), C("BB"), C("BZ"), C("BO"), // 8-15
     C("BR"), C("VG"), C("CA"), C("KY"), C("CL"), C("CO"), C("CR"), C("DM"), // 16-23
@@ -69,7 +69,7 @@ static const std::array<u16, 187> country_codes = {
     C("AE"), C("IN"), C("EG"), C("OM"), C("QA"), C("KW"), C("SA"), C("SY"), // 168-175
     C("BH"), C("JO"), 0,       0,       0,       0,       0,       0,       // 176-183
     C("SM"), C("VA"), C("BM")                                               // 184-186
-};
+}};
 
 #undef C
 

@@ -247,6 +247,5 @@ private:
     static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
 
     u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
-    u32 exclusive_result;
     bool exclusive_state;
 };

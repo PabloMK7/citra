@@ -35,14 +35,14 @@ static Kernel::SharedPtr<Kernel::Event> event_debug_pad;
 static u32 next_pad_index;
 static u32 next_touch_index;
 
-const std::array<Service::HID::PadState, Settings::NativeInput::NUM_INPUTS> pad_mapping = {
+const std::array<Service::HID::PadState, Settings::NativeInput::NUM_INPUTS> pad_mapping = {{
     Service::HID::PAD_A, Service::HID::PAD_B, Service::HID::PAD_X, Service::HID::PAD_Y,
     Service::HID::PAD_L, Service::HID::PAD_R, Service::HID::PAD_ZL, Service::HID::PAD_ZR,
     Service::HID::PAD_START, Service::HID::PAD_SELECT, Service::HID::PAD_NONE,
     Service::HID::PAD_UP, Service::HID::PAD_DOWN, Service::HID::PAD_LEFT, Service::HID::PAD_RIGHT,
     Service::HID::PAD_CIRCLE_UP, Service::HID::PAD_CIRCLE_DOWN, Service::HID::PAD_CIRCLE_LEFT, Service::HID::PAD_CIRCLE_RIGHT,
     Service::HID::PAD_C_UP, Service::HID::PAD_C_DOWN, Service::HID::PAD_C_LEFT, Service::HID::PAD_C_RIGHT
-};
+}};
 
 
 // TODO(peachum):

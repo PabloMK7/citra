@@ -735,11 +735,11 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 auto color_output = ColorCombine(tev_stage.color_op, color_result);
 
                 // alpha combiner
-                std::array<u8,3> alpha_result = {
+                std::array<u8,3> alpha_result = {{
                     GetAlphaModifier(tev_stage.alpha_modifier1, GetSource(tev_stage.alpha_source1)),
                     GetAlphaModifier(tev_stage.alpha_modifier2, GetSource(tev_stage.alpha_source2)),
                     GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3))
-                };
+                }};
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
                 combiner_output[0] = std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());

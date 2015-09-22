@@ -212,10 +212,10 @@ static void ReadPipeIfPossible(Service::Interface* self) {
 
     // Canned DSP responses that games expect. These were taken from HW by 3dmoo team.
     // TODO: Remove this hack :)
-    static const std::array<u16, 16> canned_read_pipe = {
+    static const std::array<u16, 16> canned_read_pipe = {{
         0x000F, 0xBFFF, 0x9E8E, 0x8680, 0xA78E, 0x9430, 0x8400, 0x8540,
         0x948E, 0x8710, 0x8410, 0xA90E, 0xAA0E, 0xAACE, 0xAC4E, 0xAC58
-    };
+    }};
 
     u32 initial_size = read_pipe_count;
 
