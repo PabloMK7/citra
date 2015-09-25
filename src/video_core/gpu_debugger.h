@@ -45,7 +45,6 @@ public:
 
     private:
         GraphicsDebugger* observed;
-        bool in_destruction;
 
         friend class GraphicsDebugger;
     };

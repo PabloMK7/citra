@@ -967,6 +967,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         UNIMPLEMENTED();
                         break;
                     }
+
+                    return {};
                 };
 
                 auto LookupFactorA = [&](Regs::BlendFactor factor) -> u8 {
@@ -1000,6 +1002,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         UNIMPLEMENTED();
                         break;
                     }
+
+                    return {};
                 };
 
                 static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,

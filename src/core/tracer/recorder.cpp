@@ -143,11 +143,11 @@ void Recorder::Finish(const std::string& filename) {
 }
 
 void Recorder::FrameFinished() {
-    stream.push_back( { FrameMarker } );
+    stream.push_back( { { FrameMarker } } );
 }
 
 void Recorder::MemoryAccessed(const u8* data, u32 size, u32 physical_address) {
-    StreamElement element = { MemoryLoad };
+    StreamElement element = { { MemoryLoad } };
     element.data.memory_load.size = size;
     element.data.memory_load.physical_address = physical_address;
 
@@ -168,7 +168,7 @@ void Recorder::MemoryAccessed(const u8* data, u32 size, u32 physical_address) {
 
 template<typename T>
 void Recorder::RegisterWritten(u32 physical_address, T value) {
-    StreamElement element = { RegisterWrite };
+    StreamElement element = { { RegisterWrite } };
     element.data.register_write.size = (sizeof(T) == 1) ? CTRegisterWrite::SIZE_8
                                      : (sizeof(T) == 2) ? CTRegisterWrite::SIZE_16
                                      : (sizeof(T) == 4) ? CTRegisterWrite::SIZE_32
