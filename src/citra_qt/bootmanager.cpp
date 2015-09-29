@@ -19,8 +19,8 @@
 #include "core/settings.h"
 #include "core/system.h"
 
-#include "video_core/video_core.h"
 #include "video_core/debug_utils/debug_utils.h"
+#include "video_core/video_core.h"
 
 #define APP_NAME        "citra"
 #define APP_VERSION     "0.1-" VERSION
@@ -86,6 +86,9 @@ public:
     }
 
     void paintEvent(QPaintEvent* ev) override {
+        if (do_painting) {
+            QPainter painter(this);
+        }
     }
 
     void resizeEvent(QResizeEvent* ev) override {
@@ -93,8 +96,12 @@ public:
         parent->OnFramebufferSizeChanged();
     }
 
+    void DisablePainting() { do_painting = false; }
+    void EnablePainting() { do_painting = true; }
+
 private:
     GRenderWindow* parent;
+    bool do_painting;
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
@@ -270,10 +277,12 @@ void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,un
 
 void GRenderWindow::OnEmulationStarting(EmuThread* emu_thread) {
     this->emu_thread = emu_thread;
+    child->DisablePainting();
 }
 
 void GRenderWindow::OnEmulationStopping() {
     emu_thread = nullptr;
+    child->EnablePainting();
 }
 
 void GRenderWindow::showEvent(QShowEvent * event) {
