@@ -41,8 +41,9 @@ struct SaveConfigBlockEntry {
     u16 flags;          ///< The flags of the block, possibly used for access control
 };
 
-// TODO(Link Mauve): use a constexpr once MSVC starts supporting it.
-#define C(code) (u16)((code)[0] | ((code)[1] << 8))
+static constexpr u16 C(const char code[2]) {
+    return code[0] | (code[1] << 8);
+}
 
 static const std::array<u16, 187> country_codes = {{
     0,       C("JP"), 0,       0,       0,       0,       0,       0,       // 0-7
@@ -70,8 +71,6 @@ static const std::array<u16, 187> country_codes = {{
     C("BH"), C("JO"), 0,       0,       0,       0,       0,       0,       // 176-183
     C("SM"), C("VA"), C("BM")                                               // 184-186
 }};
-
-#undef C
 
 /**
  * CFG::GetCountryCodeString service function
