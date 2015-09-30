@@ -62,7 +62,6 @@ private:
                                     const TextureInfo& texture);
 
     EmuWindow*  render_window;                    ///< Handle to render window
-    u32         last_mode;                        ///< Last render mode
 
     int resolution_width;                         ///< Current resolution width
     int resolution_height;                        ///< Current resolution height

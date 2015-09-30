@@ -345,7 +345,7 @@ ResultCode FormatConfig() {
 
     char16_t country_name_buffer[16][0x40] = {};
     for (size_t i = 0; i < 16; ++i) {
-        auto size = Common::UTF8ToUTF16("Gensokyo").copy(country_name_buffer[i], 0x40);
+        Common::UTF8ToUTF16("Gensokyo").copy(country_name_buffer[i], 0x40);
     }
     // 0x000B0001 - Localized names for the profile Country
     res = CreateConfigInfoBlk(0x000B0001, sizeof(country_name_buffer), 0xE, country_name_buffer);
