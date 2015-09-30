@@ -12,15 +12,10 @@
 
 struct TSymbol
 {
-    TSymbol() :
-        address(0),
-        size(0),
-        type(0)
-    {}
-    u32     address;
+    u32     address = 0;
     std::string name;
-    u32     size;
-    u32     type;
+    u32     size = 0;
+    u32     type = 0;
 };
 
 typedef std::map<u32, TSymbol> TSymbolsMap;
