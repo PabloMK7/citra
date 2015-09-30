@@ -29,17 +29,14 @@ namespace Symbols
 
     TSymbol GetSymbol(u32 _address)
     {
-        TSymbolsMap::iterator foundSymbolItr;
-        TSymbol symbol;
+        const auto iter = g_symbols.find(_address);
 
-        foundSymbolItr = g_symbols.find(_address);
-        if (foundSymbolItr != g_symbols.end())
-        {
-            symbol = (*foundSymbolItr).second;
-        }
+        if (iter != g_symbols.end())
+            return iter->second;
 
-        return symbol;
+        return {};
     }
+
     const std::string GetName(u32 _address)
     {
         return GetSymbol(_address).name;
