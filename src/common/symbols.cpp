@@ -23,7 +23,7 @@ namespace Symbols
             symbol.size = size;
             symbol.type = type;
 
-            g_symbols.insert(TSymbolsPair(address, symbol));
+            g_symbols.emplace(address, symbol);
         }
     }
 
