@@ -12,15 +12,10 @@
 
 struct TSymbol
 {
-    TSymbol() :
-        address(0),
-        size(0),
-        type(0)
-    {}
-    u32     address;
+    u32     address = 0;
     std::string name;
-    u32     size;
-    u32     type;
+    u32     size = 0;
+    u32     type = 0;
 };
 
 typedef std::map<u32, TSymbol> TSymbolsMap;
@@ -28,12 +23,12 @@ typedef std::pair<u32, TSymbol> TSymbolsPair;
 
 namespace Symbols
 {
-    bool HasSymbol(u32 _address);
+    bool HasSymbol(u32 address);
 
-    void Add(u32 _address, const std::string& _name, u32 _size, u32 _type);
-    TSymbol GetSymbol(u32 _address);
-    const std::string GetName(u32 _address);
-    void Remove(u32 _address);
+    void Add(u32 address, const std::string& name, u32 size, u32 type);
+    TSymbol GetSymbol(u32 address);
+    const std::string GetName(u32 address);
+    void Remove(u32 address);
     void Clear();
 }
 

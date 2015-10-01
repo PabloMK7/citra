@@ -8,46 +8,43 @@ TSymbolsMap g_symbols;
 
 namespace Symbols
 {
-    bool HasSymbol(u32 _address)
+    bool HasSymbol(u32 address)
     {
-        return g_symbols.find(_address) != g_symbols.end();
+        return g_symbols.find(address) != g_symbols.end();
     }
 
-    void Add(u32 _address, const std::string& _name, u32 _size, u32 _type)
+    void Add(u32 address, const std::string& name, u32 size, u32 type)
     {
-        if (!HasSymbol(_address))
+        if (!HasSymbol(address))
         {
             TSymbol symbol;
-            symbol.address = _address;
-            symbol.name = _name;
-            symbol.size = _size;
-            symbol.type = _type;
+            symbol.address = address;
+            symbol.name = name;
+            symbol.size = size;
+            symbol.type = type;
 
-            g_symbols.insert(TSymbolsPair(_address, symbol));
+            g_symbols.emplace(address, symbol);
         }
     }
 
-    TSymbol GetSymbol(u32 _address)
+    TSymbol GetSymbol(u32 address)
     {
-        TSymbolsMap::iterator foundSymbolItr;
-        TSymbol symbol;
+        const auto iter = g_symbols.find(address);
 
-        foundSymbolItr = g_symbols.find(_address);
-        if (foundSymbolItr != g_symbols.end())
-        {
-            symbol = (*foundSymbolItr).second;
-        }
+        if (iter != g_symbols.end())
+            return iter->second;
 
-        return symbol;
-    }
-    const std::string GetName(u32 _address)
-    {
-        return GetSymbol(_address).name;
+        return {};
     }
 
-    void Remove(u32 _address)
+    const std::string GetName(u32 address)
     {
-        g_symbols.erase(_address);
+        return GetSymbol(address).name;
+    }
+
+    void Remove(u32 address)
+    {
+        g_symbols.erase(address);
     }
 
     void Clear()
