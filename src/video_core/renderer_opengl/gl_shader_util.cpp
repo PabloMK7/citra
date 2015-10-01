@@ -336,22 +336,22 @@ void AppendAlphaTestCondition(std::string& shader, Pica::Regs::CompareFunc func)
             shader += "false";
             break;
         case CompareFunc::Equal:
-            shader += "g_last_tex_env_out.a != alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) != alphatest_ref";
             break;
         case CompareFunc::NotEqual:
-            shader += "g_last_tex_env_out.a == alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) == alphatest_ref";
             break;
         case CompareFunc::LessThan:
-            shader += "g_last_tex_env_out.a >= alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) >= alphatest_ref";
             break;
         case CompareFunc::LessThanOrEqual:
-            shader += "g_last_tex_env_out.a > alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) > alphatest_ref";
             break;
         case CompareFunc::GreaterThan:
-            shader += "g_last_tex_env_out.a <= alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) <= alphatest_ref";
             break;
         case CompareFunc::GreaterThanOrEqual:
-            shader += "g_last_tex_env_out.a < alphatest_ref";
+            shader += "int(g_last_tex_env_out.a * 255.0f) < alphatest_ref";
             break;
         default:
             shader += "false";
@@ -370,7 +370,7 @@ std::string GenerateFragmentShader(const ShaderCacheKey& config) {
 in vec4 o[NUM_VTX_ATTR];
 out vec4 color;
 
-uniform float alphatest_ref;
+uniform int alphatest_ref;
 uniform vec4 const_color[NUM_TEV_STAGES];
 uniform sampler2D tex[3];
 

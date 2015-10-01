@@ -195,7 +195,7 @@ void RasterizerOpenGL::RegenerateShaders() {
 
     // Sync alpha reference
     if (current_shader->uniform_alphatest_ref != -1)
-        glUniform1f(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref / 255.0f);
+        glUniform1i(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref);
 
     // Sync combiner buffer color
     if (current_shader->uniform_tev_combiner_buffer_color != -1) {
@@ -655,7 +655,7 @@ void RasterizerOpenGL::SyncBlendColor() {
 void RasterizerOpenGL::SyncAlphaTest() {
     const auto& regs = Pica::g_state.regs;
     if (current_shader->uniform_alphatest_ref != -1)
-        glUniform1f(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref / 255.0f);
+        glUniform1i(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref);
 }
 
 void RasterizerOpenGL::SyncLogicOp() {
