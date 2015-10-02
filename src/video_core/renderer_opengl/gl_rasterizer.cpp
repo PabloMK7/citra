@@ -324,19 +324,19 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncTevConstColor(0, regs.tev_stage0);
         break;
     case PICA_REG_INDEX(tev_stage1.const_r):
-        SyncTevConstColor(1, regs.tev_stage0);
+        SyncTevConstColor(1, regs.tev_stage1);
         break;
     case PICA_REG_INDEX(tev_stage2.const_r):
-        SyncTevConstColor(2, regs.tev_stage0);
+        SyncTevConstColor(2, regs.tev_stage2);
         break;
     case PICA_REG_INDEX(tev_stage3.const_r):
-        SyncTevConstColor(3, regs.tev_stage0);
+        SyncTevConstColor(3, regs.tev_stage3);
         break;
     case PICA_REG_INDEX(tev_stage4.const_r):
-        SyncTevConstColor(4, regs.tev_stage0);
+        SyncTevConstColor(4, regs.tev_stage4);
         break;
     case PICA_REG_INDEX(tev_stage5.const_r):
-        SyncTevConstColor(5, regs.tev_stage0);
+        SyncTevConstColor(5, regs.tev_stage5);
         break;
 
     // TEV combiner buffer color
