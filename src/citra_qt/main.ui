@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -60,6 +60,7 @@
     <addaction name="action_Load_File"/>
     <addaction name="action_Load_Symbol_Map"/>
     <addaction name="separator"/>
+    <addaction name="action_Select_Game_List_Root"/>
     <addaction name="menu_recent_files"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
@@ -180,6 +181,14 @@
    </property>
    <property name="text">
     <string>Display Dock Widget Headers</string>
+   </property>
+  </action>
+  <action name="action_Select_Game_List_Root">
+   <property name="text">
+    <string>Select Game Directory...</string>
+   </property>
+   <property name="toolTip">
+    <string>Selects a folder to display in the game list</string>
    </property>
   </action>
  </widget>

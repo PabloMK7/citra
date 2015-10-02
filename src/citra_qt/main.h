@@ -10,6 +10,7 @@
 
 #include "ui_main.h"
 
+class GameList;
 class GImageInfo;
 class GRenderWindow;
 class EmuThread;
@@ -87,8 +88,12 @@ private slots:
     void OnStartGame();
     void OnPauseGame();
     void OnStopGame();
+    /// Called whenever a user selects a game in the game list widget.
+    void OnGameListLoadFile(QString game_path);
     void OnMenuLoadFile();
     void OnMenuLoadSymbolMap();
+    /// Called whenever a user selects the "File->Select Game List Root" menu item
+    void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
     void OnOpenHotkeysDialog();
     void OnConfigure();
@@ -101,7 +106,10 @@ private:
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
+    GameList* game_list;
 
+    // Whether emulation is currently running in Citra.
+    bool emulation_running = false;
     std::unique_ptr<EmuThread> emu_thread;
 
     ProfilerWidget* profilerWidget;

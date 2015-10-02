@@ -26,12 +26,7 @@ const std::initializer_list<Kernel::AddressMapping> default_address_mappings = {
     { 0x1F000000, 0x600000, false }, // entire VRAM
 };
 
-/**
- * Identifies the type of a bootable file
- * @param file open file
- * @return FileType of file
- */
-static FileType IdentifyFile(FileUtil::IOFile& file) {
+FileType IdentifyFile(FileUtil::IOFile& file) {
     FileType type;
 
 #define CHECK_TYPE(loader) \
@@ -48,12 +43,17 @@ static FileType IdentifyFile(FileUtil::IOFile& file) {
     return FileType::Unknown;
 }
 
-/**
- * Guess the type of a bootable file from its extension
- * @param extension_ String extension of bootable file
- * @return FileType of file
- */
-static FileType GuessFromExtension(const std::string& extension_) {
+FileType IdentifyFile(const std::string& file_name) {
+    FileUtil::IOFile file(file_name, "rb");
+    if (!file.IsOpen()) {
+        LOG_ERROR(Loader, "Failed to load file %s", file_name.c_str());
+        return FileType::Unknown;
+    }
+
+    return IdentifyFile(file);
+}
+
+FileType GuessFromExtension(const std::string& extension_) {
     std::string extension = Common::ToLower(extension_);
 
     if (extension == ".elf" || extension == ".axf")
@@ -71,7 +71,7 @@ static FileType GuessFromExtension(const std::string& extension_) {
     return FileType::Unknown;
 }
 
-static const char* GetFileTypeString(FileType type) {
+const char* GetFileTypeString(FileType type) {
     switch (type) {
     case FileType::CCI:
         return "NCSD";
