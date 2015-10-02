@@ -268,25 +268,25 @@ void AppendColorCombiner(std::string& shader, Pica::Regs::TevStageConfig::Operat
             shader += variable_name + "[0] * " + variable_name + "[1]";
             break;
         case Operation::Add:
-            shader += "min(" + variable_name + "[0] + " + variable_name + "[1], 1.0)";
+            shader += "min(" + variable_name + "[0] + " + variable_name + "[1], vec3(1.0))";
             break;
         case Operation::AddSigned:
-            shader += "clamp(" + variable_name + "[0] + " + variable_name + "[1] - vec3(0.5), 0.0, 1.0)";
+            shader += "clamp(" + variable_name + "[0] + " + variable_name + "[1] - vec3(0.5), vec3(0.0), vec3(1.0))";
             break;
         case Operation::Lerp:
             shader += variable_name + "[0] * " + variable_name + "[2] + " + variable_name + "[1] * (vec3(1.0) - " + variable_name + "[2])";
             break;
         case Operation::Subtract:
-            shader += "max(" + variable_name + "[0] - " + variable_name + "[1], 0.0)";
+            shader += "max(" + variable_name + "[0] - " + variable_name + "[1], vec3(0.0))";
             break;
         case Operation::MultiplyThenAdd:
-            shader += "min(" + variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2], 1.0)";
+            shader += "min(" + variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2], vec3(1.0))";
             break;
         case Operation::AddThenMultiply:
-            shader += "min(" + variable_name + "[0] + " + variable_name + "[1], 1.0) * " + variable_name + "[2]";
+            shader += "min(" + variable_name + "[0] + " + variable_name + "[1], vec3(1.0)) * " + variable_name + "[2]";
             break;
         default:
-            shader += "0.0";
+            shader += "vec3(0.0)";
             LOG_CRITICAL(Render_OpenGL, "Unknown color comb op %u", operation);
             break;
     }
