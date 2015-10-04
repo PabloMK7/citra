@@ -18,6 +18,11 @@ enum class BreakpointType {
     Access    ///< Access (R/W) Breakpoint
 };
 
+struct BreakpointAddress {
+    PAddr address;
+    BreakpointType type;
+};
+
 /// If set to false, the server will never be started and no gdbstub-related functions will be executed.
 extern std::atomic<bool> g_server_enabled;
 
@@ -63,7 +68,7 @@ void HandlePacket();
  * @param addr Address to search from.
  * @param type Type of breakpoint.
  */
-PAddr GetNextBreakpointFromAddress(u32 addr, GDBStub::BreakpointType type);
+BreakpointAddress GetNextBreakpointFromAddress(u32 addr, GDBStub::BreakpointType type);
 
 /**
  * Check if a breakpoint of the specified type exists at the given address.

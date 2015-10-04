@@ -3583,7 +3583,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     Common::Profiling::ScopeTimer timer_execute(profile_execute);
     MICROPROFILE_SCOPE(DynCom_Execute);
 
-    int breakpoint_offset = -1;
+    GDBStub::BreakpointAddress breakpoint_data;
 
     #undef RM
     #undef RS
@@ -3613,7 +3613,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     cpu->Cpsr &= ~(1 << 5); \
     cpu->Cpsr |= cpu->TFlag << 5; \
     if (GDBStub::g_server_enabled) { \
-        if (GDBStub::IsMemoryBreak() || PC == breakpoint_offset) { \
+        if (GDBStub::IsMemoryBreak() || (breakpoint_data.type != GDBStub::BreakpointType::None && PC == breakpoint_data.address)) { \
             GDBStub::Break(); \
             goto END; \
         } \
@@ -3923,7 +3923,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
         // Find breakpoint if one exists within the block
         if (GDBStub::g_server_enabled && GDBStub::IsConnected()) {
-            breakpoint_offset = GDBStub::GetNextBreakpointFromAddress(cpu->Reg[15], GDBStub::BreakpointType::Execute);
+            breakpoint_data = GDBStub::GetNextBreakpointFromAddress(cpu->Reg[15], GDBStub::BreakpointType::Execute);
         }
 
         inst_base = (arm_inst *)&inst_buf[ptr];

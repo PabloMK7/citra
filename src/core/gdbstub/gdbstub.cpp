@@ -231,13 +231,18 @@ static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
     }
 }
 
-PAddr GetNextBreakpointFromAddress(PAddr addr, BreakpointType type) {
+BreakpointAddress GetNextBreakpointFromAddress(PAddr addr, BreakpointType type) {
     std::map<u32, Breakpoint>& p = GetBreakpointList(type);
     auto next_breakpoint = p.lower_bound(addr);
-    u32 breakpoint = -1;
+    BreakpointAddress breakpoint;
 
-    if (next_breakpoint != p.end())
-        breakpoint = next_breakpoint->first;
+    if (next_breakpoint != p.end()) {
+        breakpoint.address = next_breakpoint->first;
+        breakpoint.type = type;
+    } else {
+        breakpoint.address = 0;
+        breakpoint.type = BreakpointType::None;
+    }
 
     return breakpoint;
 }
