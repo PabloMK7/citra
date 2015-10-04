@@ -74,6 +74,7 @@ int main(int argc, char **argv) {
     Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
+    GDBStub::ToggleServer(Settings::values.use_gdbstub);
     GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
