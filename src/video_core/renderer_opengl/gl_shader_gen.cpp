@@ -11,6 +11,7 @@ using TevStageConfig = Regs::TevStageConfig;
 
 namespace GLShader {
 
+/// Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
 static bool IsPassThroughTevStage(const TevStageConfig& stage) {
     return (stage.color_op             == TevStageConfig::Operation::Replace &&
             stage.alpha_op             == TevStageConfig::Operation::Replace &&
@@ -22,6 +23,7 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
             stage.GetAlphaMultiplier() == 1);
 }
 
+/// Writes the specified TEV stage source component(s)
 static void AppendSource(std::string& out, TevStageConfig::Source source,
         const std::string& index_name) {
     using Source = TevStageConfig::Source;
@@ -62,6 +64,7 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
     }
 }
 
+/// Writes the color components to use for the specified TEV stage color modifier
 static void AppendColorModifier(std::string& out, TevStageConfig::ColorModifier modifier,
         TevStageConfig::Source source, const std::string& index_name) {
     using ColorModifier = TevStageConfig::ColorModifier;
@@ -118,6 +121,7 @@ static void AppendColorModifier(std::string& out, TevStageConfig::ColorModifier 
     }
 }
 
+/// Writes the alpha component to use for the specified TEV stage alpha modifier
 static void AppendAlphaModifier(std::string& out, TevStageConfig::AlphaModifier modifier,
         TevStageConfig::Source source, const std::string& index_name) {
     using AlphaModifier = TevStageConfig::AlphaModifier;
@@ -165,6 +169,7 @@ static void AppendAlphaModifier(std::string& out, TevStageConfig::AlphaModifier 
     }
 }
 
+/// Writes the combiner function for the color components for the specified TEV stage operation
 static void AppendColorCombiner(std::string& out, TevStageConfig::Operation operation,
         const std::string& variable_name) {
     using Operation = TevStageConfig::Operation;
@@ -201,6 +206,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
     }
 }
 
+/// Writes the combiner function for the alpha component for the specified TEV stage operation
 static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation operation,
         const std::string& variable_name) {
     using Operation = TevStageConfig::Operation;
@@ -236,6 +242,7 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
     }
 }
 
+/// Writes the if-statement condition used to evaluate alpha testing
 static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
     using CompareFunc = Regs::CompareFunc;
     switch (func) {
@@ -270,6 +277,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
     }
 }
 
+/// Writes the code to emulate the specified TEV stage
 static void WriteTevStage(std::string& out, const ShaderCacheKey& config, unsigned index) {
     auto& stage = config.tev_stages[index];
     if (!IsPassThroughTevStage(stage)) {

@@ -10,8 +10,18 @@
 
 namespace GLShader {
 
+/**
+ * Generates the GLSL vertex shader program source code for the current Pica state
+ * @returns String of the shader source code
+ */
 std::string GenerateVertexShader();
 
+/**
+ * Generates the GLSL fragment shader program source code for the current Pica state
+ * @param config ShaderCacheKey object generated for the current Pica state, used for the shader
+ *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
+ * @returns String of the shader source code
+ */
 std::string GenerateFragmentShader(const ShaderCacheKey& config);
 
 } // namespace GLShader
