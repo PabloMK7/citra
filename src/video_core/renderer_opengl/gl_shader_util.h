@@ -6,7 +6,7 @@
 
 #include <glad/glad.h>
 
-namespace ShaderUtil {
+namespace GLShader {
 
 enum Attributes {
     ATTRIBUTE_POSITION  = 0,
@@ -14,6 +14,6 @@ enum Attributes {
     ATTRIBUTE_TEXCOORDS = 2,
 };
 
-GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path);
+GLuint LoadProgram(const char* vertex_file_path, const char* fragment_file_path);
 
-}
+} // namespace

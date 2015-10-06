@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstddef>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 
@@ -14,21 +16,6 @@
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/shader/shader_interpreter.h"
-
-template <typename T>
-inline size_t hash(const T& o) {
-    return std::hash<T>()(o);
-}
-
-template <typename T>
-inline size_t combine_hash(const T& o) {
-    return hash(o);
-}
-
-template <typename T, typename... Args>
-inline size_t combine_hash(const T& o, const Args&... args) {
-    return hash(o) * 3 + combine_hash(args...);
-}
 
 struct ShaderCacheKey {
     using Regs = Pica::Regs;
@@ -49,7 +36,7 @@ struct ShaderCacheKey {
         return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
     }
 
-    static ShaderCacheKey CurrentShaderConfig() {
+    static ShaderCacheKey CurrentConfig() {
         const auto& regs = Pica::g_state.regs;
         ShaderCacheKey config;
 
@@ -94,8 +81,14 @@ struct ShaderCacheKey {
 
 namespace std {
 
+template<> struct hash<::Pica::Regs::CompareFunc> {
+    std::size_t operator()(const ::Pica::Regs::CompareFunc& o) {
+        return ::hash((unsigned)o);
+    }
+};
+
 template<> struct hash<::Pica::Regs::TevStageConfig> {
-    size_t operator()(const ::Pica::Regs::TevStageConfig& o) {
+    std::size_t operator()(const ::Pica::Regs::TevStageConfig& o) {
         return ::combine_hash(
             ::hash(o.source_raw), ::hash(o.modifier_raw),
             ::hash(o.op_raw), ::hash(o.scale_raw));
@@ -103,13 +96,14 @@ template<> struct hash<::Pica::Regs::TevStageConfig> {
 };
 
 template<> struct hash<::ShaderCacheKey> {
-    size_t operator()(const ::ShaderCacheKey& o) const {
+    std::size_t operator()(const ::ShaderCacheKey& o) const {
         return ::combine_hash(o.alpha_test_func, o.combiner_buffer_input,
             o.tev_stages[0], o.tev_stages[1], o.tev_stages[2],
             o.tev_stages[3], o.tev_stages[4], o.tev_stages[5]);
     }
 };
-}
+
+} // namespace std
 
 class RasterizerOpenGL : public HWRasterizer {
 public:
@@ -130,8 +124,6 @@ public:
 
     /// Draw the current batch of triangles
     void DrawTriangles() override;
-
-    void RegenerateShaders();
 
     /// Commit the rasterizer's framebuffer contents immediately to the current 3DS memory framebuffer
     void CommitFramebuffer() override;
@@ -245,6 +237,9 @@ private:
     /// Reconfigure the OpenGL depth texture to use the given format and dimensions
     void ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::Regs::DepthFormat format, u32 width, u32 height);
 
+    /// Sets the OpenGL shader in accordance with the current PICA register state
+    void SetShader();
+
     /// Syncs the state and contents of the OpenGL framebuffer to match the current PICA framebuffer
     void SyncFramebuffer();
 
@@ -315,8 +310,8 @@ private:
     TextureInfo fb_color_texture;
     DepthTextureInfo fb_depth_texture;
 
-    std::unordered_map<ShaderCacheKey, TEVShader> shader_cache;
-    TEVShader* current_shader = nullptr;
+    std::unordered_map<ShaderCacheKey, std::unique_ptr<TEVShader>> shader_cache;
+    const TEVShader* current_shader = nullptr;
 
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;

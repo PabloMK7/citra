@@ -71,7 +71,7 @@ public:
     /// Creates a new internal OpenGL resource and stores the handle
     void Create(const char* vert_shader, const char* frag_shader) {
         if (handle != 0) return;
-        handle = ShaderUtil::LoadShaders(vert_shader, frag_shader);
+        handle = GLShader::LoadProgram(vert_shader, frag_shader);
     }
 
     /// Deletes the internal OpenGL resource

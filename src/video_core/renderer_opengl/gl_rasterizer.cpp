@@ -9,6 +9,7 @@
 
 #include "common/color.h"
 #include "common/file_util.h"
+#include "common/make_unique.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/profiler.h"
@@ -20,7 +21,7 @@
 #include "video_core/pica.h"
 #include "video_core/utils.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
-#include "video_core/renderer_opengl/gl_shaders.h"
+#include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
@@ -54,20 +55,20 @@ void RasterizerOpenGL::InitObjects() {
     state.Apply();
 
     // Set vertex attributes
-    glVertexAttribPointer(ShaderUtil::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
-    glEnableVertexAttribArray(ShaderUtil::ATTRIBUTE_POSITION);
+    glVertexAttribPointer(GLShader::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_POSITION);
 
-    glVertexAttribPointer(ShaderUtil::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, color));
-    glEnableVertexAttribArray(ShaderUtil::ATTRIBUTE_COLOR);
+    glVertexAttribPointer(GLShader::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, color));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_COLOR);
 
-    glVertexAttribPointer(ShaderUtil::ATTRIBUTE_TEXCOORDS, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
-    glVertexAttribPointer(ShaderUtil::ATTRIBUTE_TEXCOORDS + 1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
-    glVertexAttribPointer(ShaderUtil::ATTRIBUTE_TEXCOORDS + 2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
-    glEnableVertexAttribArray(ShaderUtil::ATTRIBUTE_TEXCOORDS);
-    glEnableVertexAttribArray(ShaderUtil::ATTRIBUTE_TEXCOORDS + 1);
-    glEnableVertexAttribArray(ShaderUtil::ATTRIBUTE_TEXCOORDS + 2);
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 0, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 0);
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 1);
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 2);
 
-    RegenerateShaders();
+    SetShader();
 
     // Create textures for OGL framebuffer that will be rendered to, initially 1x1 to succeed in framebuffer creation
     fb_color_texture.texture.Create();
@@ -117,8 +118,6 @@ void RasterizerOpenGL::InitObjects() {
 }
 
 void RasterizerOpenGL::Reset() {
-    const auto& regs = Pica::g_state.regs;
-
     SyncCullMode();
     SyncBlendEnabled();
     SyncBlendFuncs();
@@ -127,7 +126,7 @@ void RasterizerOpenGL::Reset() {
     SyncStencilTest();
     SyncDepthTest();
 
-    RegenerateShaders();
+    SetShader();
 
     res_cache.FullFlush();
 }
@@ -140,70 +139,12 @@ void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
     vertex_batch.emplace_back(v2);
 }
 
-namespace ShaderCache {
-extern std::string GenerateFragmentShader(const ShaderCacheKey& config);
-}
-
-void RasterizerOpenGL::RegenerateShaders() {
-    ShaderCacheKey config = ShaderCacheKey::CurrentShaderConfig();
-
-    auto cached_shader = shader_cache.find(config);
-    if (cached_shader != shader_cache.end()) {
-        current_shader = &cached_shader->second;
-        state.draw.shader_program = current_shader->shader.handle;
-        state.Apply();
-    } else {
-        LOG_CRITICAL(Render_OpenGL, "Creating new shader: %08X", hash(config));
-
-        TEVShader shader;
-
-        std::string fragShader = ShaderCache::GenerateFragmentShader(config);
-        shader.shader.Create(GLShaders::g_vertex_shader_hw, fragShader.c_str());
-
-        shader.uniform_alphatest_ref = glGetUniformLocation(shader.shader.handle, "alphatest_ref");
-        shader.uniform_tex = glGetUniformLocation(shader.shader.handle, "tex");
-        shader.uniform_tev_combiner_buffer_color = glGetUniformLocation(shader.shader.handle, "tev_combiner_buffer_color");
-        shader.uniform_tev_const_colors = glGetUniformLocation(shader.shader.handle, "const_color");
-
-        current_shader = &shader_cache.emplace(config, std::move(shader)).first->second;
-
-        state.draw.shader_program = current_shader->shader.handle;
-        state.Apply();
-
-        // Set the texture samplers to correspond to different texture units
-        if (shader.uniform_tex != -1) {
-            glUniform1i(shader.uniform_tex, 0);
-            glUniform1i(shader.uniform_tex + 1, 1);
-            glUniform1i(shader.uniform_tex + 2, 2);
-        }
-    }
-
-    // Sync alpha reference
-    if (current_shader->uniform_alphatest_ref != -1)
-        glUniform1i(current_shader->uniform_alphatest_ref, Pica::g_state.regs.output_merger.alpha_test.ref);
-
-    // Sync combiner buffer color
-    if (current_shader->uniform_tev_combiner_buffer_color != -1) {
-        auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
-        glUniform4fv(current_shader->uniform_tev_combiner_buffer_color, 1, combiner_color.data());
-    }
-
-    // Sync TEV const colors
-    if (current_shader->uniform_tev_const_colors != -1) {
-        auto& tev_stages = Pica::g_state.regs.GetTevStages();
-        for (int tev_index = 0; tev_index < tev_stages.size(); ++tev_index) {
-            auto const_color = PicaToGL::ColorRGBA8(tev_stages[tev_index].const_color);
-            glUniform4fv(current_shader->uniform_tev_const_colors + tev_index, 1, const_color.data());
-        }
-    }
-}
-
 void RasterizerOpenGL::DrawTriangles() {
     SyncFramebuffer();
     SyncDrawState();
 
     if (state.draw.shader_dirty) {
-        RegenerateShaders();
+        SetShader();
         state.draw.shader_dirty = false;
     }
 
@@ -517,6 +458,48 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
+}
+
+void RasterizerOpenGL::SetShader() {
+    ShaderCacheKey config = ShaderCacheKey::CurrentConfig();
+
+    // Find (or generate) the GLSL shader for the current TEV state
+    auto cached_shader = shader_cache.find(config);
+    if (cached_shader != shader_cache.end()) {
+        current_shader = cached_shader->second.get();
+
+        state.draw.shader_program = current_shader->shader.handle;
+        state.Apply();
+    } else {
+        LOG_DEBUG(Render_OpenGL, "Creating new shader: %08X", hash(config));
+
+        std::unique_ptr<TEVShader> shader = Common::make_unique<TEVShader>();
+
+        shader->shader.Create(GLShader::GenerateVertexShader().c_str(), GLShader::GenerateFragmentShader(config).c_str());
+        shader->uniform_alphatest_ref = glGetUniformLocation(shader->shader.handle, "alphatest_ref");
+        shader->uniform_tex = glGetUniformLocation(shader->shader.handle, "tex");
+        shader->uniform_tev_combiner_buffer_color = glGetUniformLocation(shader->shader.handle, "tev_combiner_buffer_color");
+        shader->uniform_tev_const_colors = glGetUniformLocation(shader->shader.handle, "const_color");
+
+        state.draw.shader_program = shader->shader.handle;
+        state.Apply();
+
+        // Set the texture samplers to correspond to different texture units
+        if (shader->uniform_tex != -1) {
+            glUniform1i(shader->uniform_tex, 0);
+            glUniform1i(shader->uniform_tex + 1, 1);
+            glUniform1i(shader->uniform_tex + 2, 2);
+        }
+
+        current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
+    }
+
+    // Update uniforms
+    SyncAlphaTest();
+    SyncCombinerColor();
+    auto& tev_stages = Pica::g_state.regs.GetTevStages();
+    for (int index = 0; index < tev_stages.size(); ++index)
+        SyncTevConstColor(index, tev_stages[index]);
 }
 
 void RasterizerOpenGL::SyncFramebuffer() {
