@@ -458,6 +458,7 @@ void GMainWindow::ToggleWindowMode() {
         if (emulation_running) {
             render_window->setVisible(true);
             render_window->setFocus();
+            game_list->hide();
         }
 
     } else {
