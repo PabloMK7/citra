@@ -17,6 +17,14 @@
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/shader/shader_interpreter.h"
 
+/**
+ * This struct contains all state used to generate the GLSL shader program that emulates the current
+ * Pica register configuration. This struct is used as a cache key for generated GLSL shader
+ * programs. The functions in gl_shader_gen.cpp should retrieve state from this struct only, not by
+ * directly accessing Pica registers. This should reduce the risk of bugs in shader generation where
+ * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
+ * two separate shaders sharing the same key.
+ */
 struct ShaderCacheKey {
     using Regs = Pica::Regs;
 
@@ -36,12 +44,20 @@ struct ShaderCacheKey {
         return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
     }
 
+    /**
+     * This function is used to construct a ShaderCacheKey with the current Pica register
+     * configuration. Don't construct a ShaderCacheKey manually, instead call this function (and
+     * extend it as additional state needs to be captured to generate shaders).
+     */
     static ShaderCacheKey CurrentConfig() {
         const auto& regs = Pica::g_state.regs;
         ShaderCacheKey config;
 
         config.alpha_test_func = regs.output_merger.alpha_test.enable ?
             regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
+
+        // Copy relevant TevStageConfig fields only. We're doing this manually (instead of calling
+        // the GetTevStages() function) because BitField explicitly disables copies.
 
         config.tev_stages[0].source_raw = regs.tev_stage0.source_raw;
         config.tev_stages[1].source_raw = regs.tev_stage1.source_raw;
