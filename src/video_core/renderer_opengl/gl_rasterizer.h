@@ -9,6 +9,7 @@
 
 #include "common/common_types.h"
 
+#include "video_core/pica.h"
 #include "video_core/hwrasterizer_base.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
@@ -37,7 +38,7 @@ struct ShaderCacheKey {
     };
 
     Regs::CompareFunc alpha_test_func;
-    std::array<Regs::TevStageConfig, 6> tev_stages;
+    std::array<Regs::TevStageConfig, 6> tev_stages = {};
     u8 combiner_buffer_input;
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
@@ -46,6 +47,48 @@ struct ShaderCacheKey {
 
     bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
         return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
+    }
+
+    static ShaderCacheKey CurrentShaderConfig() {
+        const auto& regs = Pica::g_state.regs;
+        ShaderCacheKey config;
+
+        config.alpha_test_func = regs.output_merger.alpha_test.enable ?
+            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
+
+        config.tev_stages[0].source_raw = regs.tev_stage0.source_raw;
+        config.tev_stages[1].source_raw = regs.tev_stage1.source_raw;
+        config.tev_stages[2].source_raw = regs.tev_stage2.source_raw;
+        config.tev_stages[3].source_raw = regs.tev_stage3.source_raw;
+        config.tev_stages[4].source_raw = regs.tev_stage4.source_raw;
+        config.tev_stages[5].source_raw = regs.tev_stage5.source_raw;
+
+        config.tev_stages[0].modifier_raw = regs.tev_stage0.modifier_raw;
+        config.tev_stages[1].modifier_raw = regs.tev_stage1.modifier_raw;
+        config.tev_stages[2].modifier_raw = regs.tev_stage2.modifier_raw;
+        config.tev_stages[3].modifier_raw = regs.tev_stage3.modifier_raw;
+        config.tev_stages[4].modifier_raw = regs.tev_stage4.modifier_raw;
+        config.tev_stages[5].modifier_raw = regs.tev_stage5.modifier_raw;
+
+        config.tev_stages[0].op_raw = regs.tev_stage0.op_raw;
+        config.tev_stages[1].op_raw = regs.tev_stage1.op_raw;
+        config.tev_stages[2].op_raw = regs.tev_stage2.op_raw;
+        config.tev_stages[3].op_raw = regs.tev_stage3.op_raw;
+        config.tev_stages[4].op_raw = regs.tev_stage4.op_raw;
+        config.tev_stages[5].op_raw = regs.tev_stage5.op_raw;
+
+        config.tev_stages[0].scale_raw = regs.tev_stage0.scale_raw;
+        config.tev_stages[1].scale_raw = regs.tev_stage1.scale_raw;
+        config.tev_stages[2].scale_raw = regs.tev_stage2.scale_raw;
+        config.tev_stages[3].scale_raw = regs.tev_stage3.scale_raw;
+        config.tev_stages[4].scale_raw = regs.tev_stage4.scale_raw;
+        config.tev_stages[5].scale_raw = regs.tev_stage5.scale_raw;
+
+        config.combiner_buffer_input =
+            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
+            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+
+        return config;
     }
 };
 

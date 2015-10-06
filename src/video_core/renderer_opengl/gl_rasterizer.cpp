@@ -145,21 +145,7 @@ extern std::string GenerateFragmentShader(const ShaderCacheKey& config);
 }
 
 void RasterizerOpenGL::RegenerateShaders() {
-    const auto& regs = Pica::g_state.regs;
-
-    ShaderCacheKey config;
-    config.alpha_test_func = regs.output_merger.alpha_test.enable ?
-            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
-    config.tev_stages = regs.GetTevStages();
-    for (auto& tev : config.tev_stages) {
-        tev.const_r = 0;
-        tev.const_g = 0;
-        tev.const_b = 0;
-        tev.const_a = 0;
-    }
-    config.combiner_buffer_input =
-            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
-            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+    ShaderCacheKey config = ShaderCacheKey::CurrentShaderConfig();
 
     auto cached_shader = shader_cache.find(config);
     if (cached_shader != shader_cache.end()) {
@@ -192,10 +178,9 @@ void RasterizerOpenGL::RegenerateShaders() {
         }
     }
 
-
     // Sync alpha reference
     if (current_shader->uniform_alphatest_ref != -1)
-        glUniform1i(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref);
+        glUniform1i(current_shader->uniform_alphatest_ref, Pica::g_state.regs.output_merger.alpha_test.ref);
 
     // Sync combiner buffer color
     if (current_shader->uniform_tev_combiner_buffer_color != -1) {
