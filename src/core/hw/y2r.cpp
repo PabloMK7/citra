@@ -324,7 +324,7 @@ void PerformConversion(ConversionConfiguration& cvt) {
 
         u32* output_buffer = reinterpret_cast<u32*>(data_buffer.get());
 
-        for (int i = 0; i < num_tiles; ++i) {
+        for (size_t i = 0; i < num_tiles; ++i) {
             int image_strip_width = 0;
             int output_stride = 0;
 

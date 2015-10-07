@@ -220,7 +220,7 @@ static void SwitchContext(Thread* new_thread) {
 
         // Clean up the thread's wait_objects, they'll be restored if needed during
         // the svcWaitSynchronization call
-        for (int i = 0; i < new_thread->wait_objects.size(); ++i) {
+        for (size_t i = 0; i < new_thread->wait_objects.size(); ++i) {
             SharedPtr<WaitObject> object = new_thread->wait_objects[i];
             object->RemoveWaitingThread(new_thread);
         }
