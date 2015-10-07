@@ -294,16 +294,16 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
     {
         // Highlight current instruction
         int current_record_index = par->cycle_index->value();
-        if (current_record_index < par->debug_data.records.size()) {
+        if (current_record_index < static_cast<int>(par->debug_data.records.size())) {
             const auto& current_record = par->debug_data.records[current_record_index];
-            if (index.row() == current_record.instruction_offset) {
+            if (index.row() == static_cast<int>(current_record.instruction_offset)) {
                 return QColor(255, 255, 63);
             }
         }
 
         // Use a grey background for instructions which have no debug data associated to them
         for (const auto& record : par->debug_data.records)
-            if (index.row() == record.instruction_offset)
+            if (index.row() == static_cast<int>(record.instruction_offset))
                 return QVariant();
 
         return QBrush(QColor(192, 192, 192));
@@ -494,7 +494,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     debug_data = Pica::Shader::ProduceDebugInfo(input_vertex, num_attributes, shader_config, shader_setup);
 
     // Reload widget state
-    for (unsigned int attr = 0; attr < num_attributes; ++attr) {
+    for (int attr = 0; attr < num_attributes; ++attr) {
         unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
         input_data_mapping[source_attr]->setText(QString("-> v%1").arg(attr));
         input_data_container[source_attr]->setVisible(true);

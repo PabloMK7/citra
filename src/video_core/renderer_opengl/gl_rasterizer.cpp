@@ -69,7 +69,7 @@ void RasterizerOpenGL::InitObjects() {
     }
 
     // Create sampler objects
-    for (int i = 0; i < texture_samplers.size(); ++i) {
+    for (size_t i = 0; i < texture_samplers.size(); ++i) {
         texture_samplers[i].Create();
         state.texture_units[i].sampler = texture_samplers[i].sampler.handle;
     }
@@ -601,8 +601,8 @@ void RasterizerOpenGL::SyncFramebuffer() {
     PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
     Pica::Regs::DepthFormat new_fb_depth_format = regs.framebuffer.depth_format;
 
-    bool fb_size_changed = fb_color_texture.width != regs.framebuffer.GetWidth() ||
-                           fb_color_texture.height != regs.framebuffer.GetHeight();
+    bool fb_size_changed = fb_color_texture.width != static_cast<GLsizei>(regs.framebuffer.GetWidth()) ||
+                           fb_color_texture.height != static_cast<GLsizei>(regs.framebuffer.GetHeight());
 
     bool color_fb_prop_changed = fb_color_texture.format != new_fb_color_format ||
                                  fb_size_changed;
