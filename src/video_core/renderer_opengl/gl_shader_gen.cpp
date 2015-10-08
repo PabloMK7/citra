@@ -29,24 +29,24 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
-        out += "o[2]";
+        out += "attr[2]";
         break;
     case Source::PrimaryFragmentColor:
         // HACK: Until we implement fragment lighting, use primary_color
-        out += "o[2]";
+        out += "attr[2]";
         break;
     case Source::SecondaryFragmentColor:
         // HACK: Until we implement fragment lighting, use zero
         out += "vec4(0.0, 0.0, 0.0, 0.0)";
         break;
     case Source::Texture0:
-        out += "texture(tex[0], o[3].xy)";
+        out += "texture(tex[0], attr[3].xy)";
         break;
     case Source::Texture1:
-        out += "texture(tex[1], o[3].zw)";
+        out += "texture(tex[1], attr[3].zw)";
         break;
     case Source::Texture2: // TODO: Unverified
-        out += "texture(tex[2], o[5].zw)";
+        out += "texture(tex[2], attr[5].zw)";
         break;
     case Source::PreviousBuffer:
         out += "g_combiner_buffer";
@@ -326,7 +326,7 @@ std::string GenerateFragmentShader(const ShaderCacheKey& config) {
 #define NUM_VTX_ATTR 7
 #define NUM_TEV_STAGES 6
 
-in vec4 o[NUM_VTX_ATTR];
+in vec4 attr[NUM_VTX_ATTR];
 out vec4 color;
 
 uniform int alphatest_ref;
@@ -342,7 +342,7 @@ vec4 g_last_tex_env_out = vec4(0.0, 0.0, 0.0, 0.0);
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.alpha_test_func == Regs::CompareFunc::Never) {
-        out += "discard;";
+        out += "discard; }";
         return out;
     }
 
@@ -372,12 +372,12 @@ in vec2 vert_texcoords0;
 in vec2 vert_texcoords1;
 in vec2 vert_texcoords2;
 
-out vec4 o[NUM_VTX_ATTR];
+out vec4 attr[NUM_VTX_ATTR];
 
 void main() {
-    o[2] = vert_color;
-    o[3] = vec4(vert_texcoords0.xy, vert_texcoords1.xy);
-    o[5] = vec4(0.0, 0.0, vert_texcoords2.xy);
+    attr[2] = vert_color;
+    attr[3] = vec4(vert_texcoords0.xy, vert_texcoords1.xy);
+    attr[5] = vec4(0.0, 0.0, vert_texcoords2.xy);
 
     gl_Position = vec4(vert_position.x, -vert_position.y, -vert_position.z, vert_position.w);
 }
