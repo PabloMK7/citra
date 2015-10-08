@@ -307,9 +307,9 @@ static void WriteTevStage(std::string& out, const ShaderCacheKey& config, unsign
         AppendAlphaCombiner(out, stage.alpha_op, "alpha_results_" + index_name);
         out += ";\n";
 
-        out += "g_last_tex_env_out = vec4(min(color_output_" + index_name + " * " +
-            std::to_string(stage.GetColorMultiplier()) + ".0, 1.0), min(alpha_output_" + index_name + " * " +
-            std::to_string(stage.GetAlphaMultiplier()) + ".0, 1.0));\n";
+        out += "g_last_tex_env_out = vec4("
+            "clamp(color_output_" + index_name + " * " + std::to_string(stage.GetColorMultiplier()) + ".0, 0.0, 1.0),"
+            "clamp(alpha_output_" + index_name + " * " + std::to_string(stage.GetAlphaMultiplier()) + ".0, 0.0, 1.0));\n";
     }
 
     if (config.TevStageUpdatesCombinerBufferColor(index))
