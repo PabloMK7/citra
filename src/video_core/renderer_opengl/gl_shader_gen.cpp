@@ -163,7 +163,7 @@ static void AppendAlphaModifier(std::string& out, TevStageConfig::AlphaModifier 
         out += ".b";
         break;
     default:
-        out += "vec3(0.0)";
+        out += "0.0";
         LOG_CRITICAL(Render_OpenGL, "Unknown alpha modifier op %u", modifier);
         break;
     }
