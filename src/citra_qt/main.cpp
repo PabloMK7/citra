@@ -240,7 +240,7 @@ void GMainWindow::OnDisplayTitleBars(bool show)
 }
 
 void GMainWindow::BootGame(const std::string& filename) {
-    LOG_INFO(Frontend, "Citra starting...\n");
+    LOG_INFO(Frontend, "Citra starting...");
 
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)

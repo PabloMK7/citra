@@ -462,7 +462,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         }
 
                         default:
-                            LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x\n", (int)mode);
+                            LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x", (int)mode);
                             UNIMPLEMENTED();
                             return 0;
                     }
@@ -541,7 +541,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return combiner_output;
 
                     default:
-                        LOG_ERROR(HW_GPU, "Unknown color combiner source %d\n", (int)source);
+                        LOG_ERROR(HW_GPU, "Unknown color combiner source %d", (int)source);
                         UNIMPLEMENTED();
                         return {0, 0, 0, 0};
                     }
@@ -679,7 +679,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return { (u8)result, (u8)result, (u8)result };
                     }
                     default:
-                        LOG_ERROR(HW_GPU, "Unknown color combiner operation %d\n", (int)op);
+                        LOG_ERROR(HW_GPU, "Unknown color combiner operation %d", (int)op);
                         UNIMPLEMENTED();
                         return {0, 0, 0};
                     }
@@ -716,7 +716,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
 
                     default:
-                        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d\n", (int)op);
+                        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d", (int)op);
                         UNIMPLEMENTED();
                         return 0;
                     }

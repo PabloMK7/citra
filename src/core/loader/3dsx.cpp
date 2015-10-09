@@ -181,14 +181,14 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr, Shared
 
                 for (unsigned current_inprogress = 0; current_inprogress < remaining && pos < end_pos; current_inprogress++) {
                     const auto& table = reloc_table[current_inprogress];
-                    LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)\n", current_segment_reloc_table,
+                    LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)", current_segment_reloc_table,
                               (u32)table.skip, (u32)table.patch);
                     pos += table.skip;
                     s32 num_patches = table.patch;
                     while (0 < num_patches && pos < end_pos) {
                         u32 in_addr = (u8*)pos - program_image.data();
                         u32 addr = TranslateAddr(*pos, &loadinfo, offsets);
-                        LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)\n",
+                        LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)",
                                   base_addr + in_addr, addr, current_segment_reloc_table, *pos);
                         switch (current_segment_reloc_table) {
                         case 0:
