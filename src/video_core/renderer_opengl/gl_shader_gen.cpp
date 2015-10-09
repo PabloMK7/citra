@@ -321,24 +321,25 @@ static void WriteTevStage(std::string& out, const ShaderCacheKey& config, unsign
 
 std::string GenerateFragmentShader(const ShaderCacheKey& config) {
     std::string out = R"(
-#version 150 core
+#version 330
+#extension GL_ARB_explicit_uniform_location : require
 
 #define NUM_VTX_ATTR 7
 #define NUM_TEV_STAGES 6
 
 in vec4 attr[NUM_VTX_ATTR];
 out vec4 color;
-
-uniform int alphatest_ref;
-uniform vec4 const_color[NUM_TEV_STAGES];
-uniform sampler2D tex[3];
-
-uniform vec4 tev_combiner_buffer_color;
-
-void main(void) {
-vec4 g_combiner_buffer = tev_combiner_buffer_color;
-vec4 g_last_tex_env_out = vec4(0.0, 0.0, 0.0, 0.0);
 )";
+
+    using Uniform = RasterizerOpenGL::PicaShader::Uniform;
+    out += "layout(location = " + std::to_string(Uniform::AlphaTestRef) + ") uniform int alphatest_ref;\n";
+    out += "layout(location = " + std::to_string(Uniform::TevConstColors) + ") uniform vec4 const_color[NUM_TEV_STAGES];\n";
+    out += "layout(location = " + std::to_string(Uniform::Texture0) + ") uniform sampler2D tex[3];\n";
+    out += "layout(location = " + std::to_string(Uniform::TevCombinerBufferColor) + ") uniform vec4 tev_combiner_buffer_color;\n";
+
+    out += "void main() {\n";
+    out += "vec4 combiner_buffer = tev_combiner_buffer_color;\n";
+    out += "vec4 last_tex_env_out = vec4(0.0);\n";
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.alpha_test_func == Regs::CompareFunc::Never) {
@@ -362,7 +363,7 @@ vec4 g_last_tex_env_out = vec4(0.0, 0.0, 0.0, 0.0);
 
 std::string GenerateVertexShader() {
     static const std::string out = R"(
-#version 150 core
+#version 330
 
 #define NUM_VTX_ATTR 7
 

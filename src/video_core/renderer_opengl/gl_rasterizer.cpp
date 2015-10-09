@@ -476,20 +476,14 @@ void RasterizerOpenGL::SetShader() {
         std::unique_ptr<TEVShader> shader = Common::make_unique<TEVShader>();
 
         shader->shader.Create(GLShader::GenerateVertexShader().c_str(), GLShader::GenerateFragmentShader(config).c_str());
-        shader->uniform_alphatest_ref = glGetUniformLocation(shader->shader.handle, "alphatest_ref");
-        shader->uniform_tex = glGetUniformLocation(shader->shader.handle, "tex");
-        shader->uniform_tev_combiner_buffer_color = glGetUniformLocation(shader->shader.handle, "tev_combiner_buffer_color");
-        shader->uniform_tev_const_colors = glGetUniformLocation(shader->shader.handle, "const_color");
 
         state.draw.shader_program = shader->shader.handle;
         state.Apply();
 
         // Set the texture samplers to correspond to different texture units
-        if (shader->uniform_tex != -1) {
-            glUniform1i(shader->uniform_tex, 0);
-            glUniform1i(shader->uniform_tex + 1, 1);
-            glUniform1i(shader->uniform_tex + 2, 2);
-        }
+        glUniform1i(PicaShader::Uniform::Texture0, 0);
+        glUniform1i(PicaShader::Uniform::Texture1, 1);
+        glUniform1i(PicaShader::Uniform::Texture2, 2);
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
     }
@@ -622,8 +616,7 @@ void RasterizerOpenGL::SyncBlendColor() {
 
 void RasterizerOpenGL::SyncAlphaTest() {
     const auto& regs = Pica::g_state.regs;
-    if (current_shader->uniform_alphatest_ref != -1)
-        glUniform1i(current_shader->uniform_alphatest_ref, regs.output_merger.alpha_test.ref);
+    glUniform1i(PicaShader::Uniform::AlphaTestRef, regs.output_merger.alpha_test.ref);
 }
 
 void RasterizerOpenGL::SyncLogicOp() {
@@ -654,17 +647,13 @@ void RasterizerOpenGL::SyncDepthTest() {
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
-    if (current_shader->uniform_tev_combiner_buffer_color != -1) {
-        auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
-        glUniform4fv(current_shader->uniform_tev_combiner_buffer_color, 1, combiner_color.data());
-    }
+    auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
+    glUniform4fv(PicaShader::Uniform::TevCombinerBufferColor, 1, combiner_color.data());
 }
 
 void RasterizerOpenGL::SyncTevConstColor(int stage_index, const Pica::Regs::TevStageConfig& tev_stage) {
-    if (current_shader->uniform_tev_const_colors != -1) {
-        auto const_color = PicaToGL::ColorRGBA8(tev_stage.const_color);
-        glUniform4fv(current_shader->uniform_tev_const_colors + stage_index, 1, const_color.data());
-    }
+    auto const_color = PicaToGL::ColorRGBA8(tev_stage.const_color);
+    glUniform4fv(PicaShader::Uniform::TevConstColors + stage_index, 1, const_color.data());
 }
 
 void RasterizerOpenGL::SyncDrawState() {

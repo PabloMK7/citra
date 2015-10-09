@@ -153,35 +153,23 @@ public:
     /// Notify rasterizer that a 3DS memory region has been changed
     void NotifyFlush(PAddr addr, u32 size) override;
 
-private:
-    /// Structure used for managing texture environment states
-    struct TEVConfigUniforms {
-        GLuint enabled;
-        GLuint color_sources;
-        GLuint alpha_sources;
-        GLuint color_modifiers;
-        GLuint alpha_modifiers;
-        GLuint color_alpha_op;
-        GLuint color_alpha_multiplier;
-        GLuint const_color;
-        GLuint updates_combiner_buffer_color_alpha;
-    };
-
-    struct TEVShader {
+    /// OpenGL shader generated for a given Pica register state
+    struct PicaShader {
+        /// OpenGL shader resource
         OGLShader shader;
 
-        // Hardware fragment shader
-        GLuint uniform_alphatest_ref;
-        GLuint uniform_tex;
-        GLuint uniform_tev_combiner_buffer_color;
-        GLuint uniform_tev_const_colors;
-
-        TEVShader() = default;
-        TEVShader(TEVShader&& o) : shader(std::move(o.shader)),
-            uniform_alphatest_ref(o.uniform_alphatest_ref), uniform_tex(o.uniform_tex),
-            uniform_tev_combiner_buffer_color(o.uniform_tev_combiner_buffer_color),
-            uniform_tev_const_colors(o.uniform_tev_const_colors) {}
+        /// Fragment shader uniforms
+        enum Uniform : GLuint {
+            AlphaTestRef = 0,
+            TevConstColors = 1,
+            Texture0 = 7,
+            Texture1 = 8,
+            Texture2 = 9,
+            TevCombinerBufferColor = 10,
+        };
     };
+
+private:
 
     /// Structure used for storing information about color textures
     struct TextureInfo {
