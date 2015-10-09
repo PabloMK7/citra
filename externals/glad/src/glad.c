@@ -595,6 +595,29 @@ PFNGLGETUNIFORMBLOCKINDEXPROC glad_glGetUniformBlockIndex;
 PFNGLTEXIMAGE2DMULTISAMPLEPROC glad_glTexImage2DMultisample;
 PFNGLGETACTIVEUNIFORMPROC glad_glGetActiveUniform;
 PFNGLFRONTFACEPROC glad_glFrontFace;
+int GLAD_GL_KHR_debug;
+PFNGLDEBUGMESSAGECONTROLPROC glad_glDebugMessageControl;
+PFNGLDEBUGMESSAGEINSERTPROC glad_glDebugMessageInsert;
+PFNGLDEBUGMESSAGECALLBACKPROC glad_glDebugMessageCallback;
+PFNGLGETDEBUGMESSAGELOGPROC glad_glGetDebugMessageLog;
+PFNGLPUSHDEBUGGROUPPROC glad_glPushDebugGroup;
+PFNGLPOPDEBUGGROUPPROC glad_glPopDebugGroup;
+PFNGLOBJECTLABELPROC glad_glObjectLabel;
+PFNGLGETOBJECTLABELPROC glad_glGetObjectLabel;
+PFNGLOBJECTPTRLABELPROC glad_glObjectPtrLabel;
+PFNGLGETOBJECTPTRLABELPROC glad_glGetObjectPtrLabel;
+PFNGLGETPOINTERVPROC glad_glGetPointerv;
+PFNGLDEBUGMESSAGECONTROLKHRPROC glad_glDebugMessageControlKHR;
+PFNGLDEBUGMESSAGEINSERTKHRPROC glad_glDebugMessageInsertKHR;
+PFNGLDEBUGMESSAGECALLBACKKHRPROC glad_glDebugMessageCallbackKHR;
+PFNGLGETDEBUGMESSAGELOGKHRPROC glad_glGetDebugMessageLogKHR;
+PFNGLPUSHDEBUGGROUPKHRPROC glad_glPushDebugGroupKHR;
+PFNGLPOPDEBUGGROUPKHRPROC glad_glPopDebugGroupKHR;
+PFNGLOBJECTLABELKHRPROC glad_glObjectLabelKHR;
+PFNGLGETOBJECTLABELKHRPROC glad_glGetObjectLabelKHR;
+PFNGLOBJECTPTRLABELKHRPROC glad_glObjectPtrLabelKHR;
+PFNGLGETOBJECTPTRLABELKHRPROC glad_glGetObjectPtrLabelKHR;
+PFNGLGETPOINTERVKHRPROC glad_glGetPointervKHR;
 static void load_GL_VERSION_1_0(GLADloadproc load) {
 	if(!GLAD_GL_VERSION_1_0) return;
 	glad_glCullFace = (PFNGLCULLFACEPROC)load("glCullFace");
@@ -1008,8 +1031,34 @@ static void load_GL_VERSION_3_3(GLADloadproc load) {
 	glad_glSecondaryColorP3ui = (PFNGLSECONDARYCOLORP3UIPROC)load("glSecondaryColorP3ui");
 	glad_glSecondaryColorP3uiv = (PFNGLSECONDARYCOLORP3UIVPROC)load("glSecondaryColorP3uiv");
 }
+static void load_GL_KHR_debug(GLADloadproc load) {
+	if(!GLAD_GL_KHR_debug) return;
+	glad_glDebugMessageControl = (PFNGLDEBUGMESSAGECONTROLPROC)load("glDebugMessageControl");
+	glad_glDebugMessageInsert = (PFNGLDEBUGMESSAGEINSERTPROC)load("glDebugMessageInsert");
+	glad_glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)load("glDebugMessageCallback");
+	glad_glGetDebugMessageLog = (PFNGLGETDEBUGMESSAGELOGPROC)load("glGetDebugMessageLog");
+	glad_glPushDebugGroup = (PFNGLPUSHDEBUGGROUPPROC)load("glPushDebugGroup");
+	glad_glPopDebugGroup = (PFNGLPOPDEBUGGROUPPROC)load("glPopDebugGroup");
+	glad_glObjectLabel = (PFNGLOBJECTLABELPROC)load("glObjectLabel");
+	glad_glGetObjectLabel = (PFNGLGETOBJECTLABELPROC)load("glGetObjectLabel");
+	glad_glObjectPtrLabel = (PFNGLOBJECTPTRLABELPROC)load("glObjectPtrLabel");
+	glad_glGetObjectPtrLabel = (PFNGLGETOBJECTPTRLABELPROC)load("glGetObjectPtrLabel");
+	glad_glGetPointerv = (PFNGLGETPOINTERVPROC)load("glGetPointerv");
+	glad_glDebugMessageControlKHR = (PFNGLDEBUGMESSAGECONTROLKHRPROC)load("glDebugMessageControlKHR");
+	glad_glDebugMessageInsertKHR = (PFNGLDEBUGMESSAGEINSERTKHRPROC)load("glDebugMessageInsertKHR");
+	glad_glDebugMessageCallbackKHR = (PFNGLDEBUGMESSAGECALLBACKKHRPROC)load("glDebugMessageCallbackKHR");
+	glad_glGetDebugMessageLogKHR = (PFNGLGETDEBUGMESSAGELOGKHRPROC)load("glGetDebugMessageLogKHR");
+	glad_glPushDebugGroupKHR = (PFNGLPUSHDEBUGGROUPKHRPROC)load("glPushDebugGroupKHR");
+	glad_glPopDebugGroupKHR = (PFNGLPOPDEBUGGROUPKHRPROC)load("glPopDebugGroupKHR");
+	glad_glObjectLabelKHR = (PFNGLOBJECTLABELKHRPROC)load("glObjectLabelKHR");
+	glad_glGetObjectLabelKHR = (PFNGLGETOBJECTLABELKHRPROC)load("glGetObjectLabelKHR");
+	glad_glObjectPtrLabelKHR = (PFNGLOBJECTPTRLABELKHRPROC)load("glObjectPtrLabelKHR");
+	glad_glGetObjectPtrLabelKHR = (PFNGLGETOBJECTPTRLABELKHRPROC)load("glGetObjectPtrLabelKHR");
+	glad_glGetPointervKHR = (PFNGLGETPOINTERVKHRPROC)load("glGetPointervKHR");
+}
 static void find_extensionsGL(void) {
 	get_exts();
+	GLAD_GL_KHR_debug = has_ext("GL_KHR_debug");
 }
 
 static void find_coreGL(void) {
@@ -1086,6 +1135,7 @@ int gladLoadGLLoader(GLADloadproc load) {
 	load_GL_VERSION_3_3(load);
 
 	find_extensionsGL();
+	load_GL_KHR_debug(load);
 	return GLVersion.major != 0 || GLVersion.minor != 0;
 }
 
@@ -1343,6 +1393,7 @@ static void load_GL_ES_VERSION_3_0(GLADloadproc load) {
 }
 static void find_extensionsGLES2(void) {
 	get_exts();
+	GLAD_GL_KHR_debug = has_ext("GL_KHR_debug");
 }
 
 static void find_coreGLES2(void) {
@@ -1399,6 +1450,7 @@ int gladLoadGLES2Loader(GLADloadproc load) {
 	load_GL_ES_VERSION_3_0(load);
 
 	find_extensionsGLES2();
+	load_GL_KHR_debug(load);
 	return GLVersion.major != 0 || GLVersion.minor != 0;
 }
 
