@@ -113,26 +113,26 @@ void VMOVR(ARMul_State* state, u32 single, u32 d, u32 m)
 /* Miscellaneous functions */
 s32 vfp_get_float(ARMul_State* state, unsigned int reg)
 {
-    LOG_TRACE(Core_ARM11, "VFP get float: s%d=[%08x]\n", reg, state->ExtReg[reg]);
+    LOG_TRACE(Core_ARM11, "VFP get float: s%d=[%08x]", reg, state->ExtReg[reg]);
     return state->ExtReg[reg];
 }
 
 void vfp_put_float(ARMul_State* state, s32 val, unsigned int reg)
 {
-    LOG_TRACE(Core_ARM11, "VFP put float: s%d <= [%08x]\n", reg, val);
+    LOG_TRACE(Core_ARM11, "VFP put float: s%d <= [%08x]", reg, val);
     state->ExtReg[reg] = val;
 }
 
 u64 vfp_get_double(ARMul_State* state, unsigned int reg)
 {
     u64 result = ((u64) state->ExtReg[reg*2+1])<<32 | state->ExtReg[reg*2];
-    LOG_TRACE(Core_ARM11, "VFP get double: s[%d-%d]=[%016llx]\n", reg * 2 + 1, reg * 2, result);
+    LOG_TRACE(Core_ARM11, "VFP get double: s[%d-%d]=[%016llx]", reg * 2 + 1, reg * 2, result);
     return result;
 }
 
 void vfp_put_double(ARMul_State* state, u64 val, unsigned int reg)
 {
-    LOG_TRACE(Core_ARM11, "VFP put double: s[%d-%d] <= [%08x-%08x]\n", reg * 2 + 1, reg * 2, (u32)(val >> 32), (u32)(val & 0xffffffff));
+    LOG_TRACE(Core_ARM11, "VFP put double: s[%d-%d] <= [%08x-%08x]", reg * 2 + 1, reg * 2, (u32)(val >> 32), (u32)(val & 0xffffffff));
     state->ExtReg[reg*2] = (u32) (val & 0xffffffff);
     state->ExtReg[reg*2+1] = (u32) (val>>32);
 }
@@ -142,10 +142,10 @@ void vfp_put_double(ARMul_State* state, u64 val, unsigned int reg)
  */
 void vfp_raise_exceptions(ARMul_State* state, u32 exceptions, u32 inst, u32 fpscr)
 {
-    LOG_TRACE(Core_ARM11, "VFP: raising exceptions %08x\n", exceptions);
+    LOG_TRACE(Core_ARM11, "VFP: raising exceptions %08x", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {
-        LOG_CRITICAL(Core_ARM11, "unhandled bounce %x\n", inst);
+        LOG_CRITICAL(Core_ARM11, "unhandled bounce %x", inst);
         Crash();
     }
 

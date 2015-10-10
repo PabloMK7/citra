@@ -641,7 +641,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize write structure
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (png_ptr == nullptr) {
-        LOG_ERROR(Debug_GPU, "Could not allocate write struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate write struct");
         goto finalise;
 
     }
@@ -649,13 +649,13 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     // Initialize info structure
     info_ptr = png_create_info_struct(png_ptr);
     if (info_ptr == nullptr) {
-        LOG_ERROR(Debug_GPU, "Could not allocate info struct\n");
+        LOG_ERROR(Debug_GPU, "Could not allocate info struct");
         goto finalise;
     }
 
     // Setup Exception handling
     if (setjmp(png_jmpbuf(png_ptr))) {
-        LOG_ERROR(Debug_GPU, "Error during png creation\n");
+        LOG_ERROR(Debug_GPU, "Error during png creation");
         goto finalise;
     }
 
