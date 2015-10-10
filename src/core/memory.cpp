@@ -26,9 +26,9 @@ enum class PageType {
 };
 
 /**
- * A (reasonably) fast way of allowing switchable and remmapable process address spaces. It loosely
+ * A (reasonably) fast way of allowing switchable and remappable process address spaces. It loosely
  * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
- * fetching requirements when acessing. In the usual case of an access to regular memory, it only
+ * fetching requirements when accessing. In the usual case of an access to regular memory, it only
  * requires an indexed fetch and a check for NULL.
  */
 struct PageTable {
