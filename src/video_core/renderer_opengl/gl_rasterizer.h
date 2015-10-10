@@ -5,11 +5,13 @@
 #pragma once
 
 #include <cstddef>
+#include <cstring>
 #include <memory>
 #include <vector>
 #include <unordered_map>
 
 #include "common/common_types.h"
+#include "common/hash.h"
 
 #include "video_core/pica.h"
 #include "video_core/hwrasterizer_base.h"
@@ -25,16 +27,52 @@
  * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
  * two separate shaders sharing the same key.
  */
-struct ShaderCacheKey {
-    using Regs = Pica::Regs;
+struct PicaShaderConfig {
+    /// Construct a PicaShaderConfig with the current Pica register configuration.
+    static PicaShaderConfig CurrentConfig() {
+        PicaShaderConfig res;
+        const auto& regs = Pica::g_state.regs;
 
-    bool operator ==(const ShaderCacheKey& o) const {
-        return hash(*this) == hash(o);
-    };
+        res.alpha_test_func = regs.output_merger.alpha_test.enable ?
+            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
 
-    Regs::CompareFunc alpha_test_func;
-    std::array<Regs::TevStageConfig, 6> tev_stages = {};
-    u8 combiner_buffer_input;
+        // Copy relevant TevStageConfig fields only. We're doing this manually (instead of calling
+        // the GetTevStages() function) because BitField explicitly disables copies.
+
+        res.tev_stages[0].sources_raw = regs.tev_stage0.sources_raw;
+        res.tev_stages[1].sources_raw = regs.tev_stage1.sources_raw;
+        res.tev_stages[2].sources_raw = regs.tev_stage2.sources_raw;
+        res.tev_stages[3].sources_raw = regs.tev_stage3.sources_raw;
+        res.tev_stages[4].sources_raw = regs.tev_stage4.sources_raw;
+        res.tev_stages[5].sources_raw = regs.tev_stage5.sources_raw;
+
+        res.tev_stages[0].modifiers_raw = regs.tev_stage0.modifiers_raw;
+        res.tev_stages[1].modifiers_raw = regs.tev_stage1.modifiers_raw;
+        res.tev_stages[2].modifiers_raw = regs.tev_stage2.modifiers_raw;
+        res.tev_stages[3].modifiers_raw = regs.tev_stage3.modifiers_raw;
+        res.tev_stages[4].modifiers_raw = regs.tev_stage4.modifiers_raw;
+        res.tev_stages[5].modifiers_raw = regs.tev_stage5.modifiers_raw;
+
+        res.tev_stages[0].ops_raw = regs.tev_stage0.ops_raw;
+        res.tev_stages[1].ops_raw = regs.tev_stage1.ops_raw;
+        res.tev_stages[2].ops_raw = regs.tev_stage2.ops_raw;
+        res.tev_stages[3].ops_raw = regs.tev_stage3.ops_raw;
+        res.tev_stages[4].ops_raw = regs.tev_stage4.ops_raw;
+        res.tev_stages[5].ops_raw = regs.tev_stage5.ops_raw;
+
+        res.tev_stages[0].scales_raw = regs.tev_stage0.scales_raw;
+        res.tev_stages[1].scales_raw = regs.tev_stage1.scales_raw;
+        res.tev_stages[2].scales_raw = regs.tev_stage2.scales_raw;
+        res.tev_stages[3].scales_raw = regs.tev_stage3.scales_raw;
+        res.tev_stages[4].scales_raw = regs.tev_stage4.scales_raw;
+        res.tev_stages[5].scales_raw = regs.tev_stage5.scales_raw;
+
+        res.combiner_buffer_input =
+            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
+            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+
+        return res;
+    }
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
         return (stage_index < 4) && (combiner_buffer_input & (1 << stage_index));
@@ -44,78 +82,21 @@ struct ShaderCacheKey {
         return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
     }
 
-    /**
-     * This function is used to construct a ShaderCacheKey with the current Pica register
-     * configuration. Don't construct a ShaderCacheKey manually, instead call this function (and
-     * extend it as additional state needs to be captured to generate shaders).
-     */
-    static ShaderCacheKey CurrentConfig() {
-        const auto& regs = Pica::g_state.regs;
-        ShaderCacheKey config;
+    bool operator ==(const PicaShaderConfig& o) const {
+        return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
+    };
 
-        config.alpha_test_func = regs.output_merger.alpha_test.enable ?
-            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
-
-        // Copy relevant TevStageConfig fields only. We're doing this manually (instead of calling
-        // the GetTevStages() function) because BitField explicitly disables copies.
-
-        config.tev_stages[0].source_raw = regs.tev_stage0.source_raw;
-        config.tev_stages[1].source_raw = regs.tev_stage1.source_raw;
-        config.tev_stages[2].source_raw = regs.tev_stage2.source_raw;
-        config.tev_stages[3].source_raw = regs.tev_stage3.source_raw;
-        config.tev_stages[4].source_raw = regs.tev_stage4.source_raw;
-        config.tev_stages[5].source_raw = regs.tev_stage5.source_raw;
-
-        config.tev_stages[0].modifier_raw = regs.tev_stage0.modifier_raw;
-        config.tev_stages[1].modifier_raw = regs.tev_stage1.modifier_raw;
-        config.tev_stages[2].modifier_raw = regs.tev_stage2.modifier_raw;
-        config.tev_stages[3].modifier_raw = regs.tev_stage3.modifier_raw;
-        config.tev_stages[4].modifier_raw = regs.tev_stage4.modifier_raw;
-        config.tev_stages[5].modifier_raw = regs.tev_stage5.modifier_raw;
-
-        config.tev_stages[0].op_raw = regs.tev_stage0.op_raw;
-        config.tev_stages[1].op_raw = regs.tev_stage1.op_raw;
-        config.tev_stages[2].op_raw = regs.tev_stage2.op_raw;
-        config.tev_stages[3].op_raw = regs.tev_stage3.op_raw;
-        config.tev_stages[4].op_raw = regs.tev_stage4.op_raw;
-        config.tev_stages[5].op_raw = regs.tev_stage5.op_raw;
-
-        config.tev_stages[0].scale_raw = regs.tev_stage0.scale_raw;
-        config.tev_stages[1].scale_raw = regs.tev_stage1.scale_raw;
-        config.tev_stages[2].scale_raw = regs.tev_stage2.scale_raw;
-        config.tev_stages[3].scale_raw = regs.tev_stage3.scale_raw;
-        config.tev_stages[4].scale_raw = regs.tev_stage4.scale_raw;
-        config.tev_stages[5].scale_raw = regs.tev_stage5.scale_raw;
-
-        config.combiner_buffer_input =
-            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
-            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
-
-        return config;
-    }
+    Pica::Regs::CompareFunc alpha_test_func;
+    std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
+    u8 combiner_buffer_input;
 };
 
 namespace std {
 
-template<> struct hash<::Pica::Regs::CompareFunc> {
-    std::size_t operator()(const ::Pica::Regs::CompareFunc& o) {
-        return ::hash((unsigned)o);
-    }
-};
-
-template<> struct hash<::Pica::Regs::TevStageConfig> {
-    std::size_t operator()(const ::Pica::Regs::TevStageConfig& o) {
-        return ::combine_hash(
-            ::hash(o.source_raw), ::hash(o.modifier_raw),
-            ::hash(o.op_raw), ::hash(o.scale_raw));
-    }
-};
-
-template<> struct hash<::ShaderCacheKey> {
-    std::size_t operator()(const ::ShaderCacheKey& o) const {
-        return ::combine_hash(o.alpha_test_func, o.combiner_buffer_input,
-            o.tev_stages[0], o.tev_stages[1], o.tev_stages[2],
-            o.tev_stages[3], o.tev_stages[4], o.tev_stages[5]);
+template <>
+struct hash<PicaShaderConfig> {
+    std::size_t operator()(const PicaShaderConfig& k) const {
+        return Common::ComputeHash64(&k, sizeof(PicaShaderConfig));
     }
 };
 
@@ -314,8 +295,8 @@ private:
     TextureInfo fb_color_texture;
     DepthTextureInfo fb_depth_texture;
 
-    std::unordered_map<ShaderCacheKey, std::unique_ptr<TEVShader>> shader_cache;
-    const TEVShader* current_shader = nullptr;
+    std::unordered_map<PicaShaderConfig, std::unique_ptr<PicaShader>> shader_cache;
+    const PicaShader* current_shader = nullptr;
 
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;

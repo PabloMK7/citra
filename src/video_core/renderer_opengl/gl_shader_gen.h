@@ -22,6 +22,6 @@ std::string GenerateVertexShader();
  *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
  * @returns String of the shader source code
  */
-std::string GenerateFragmentShader(const ShaderCacheKey& config);
+std::string GenerateFragmentShader(const PicaShaderConfig& config);
 
 } // namespace GLShader

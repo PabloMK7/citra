@@ -278,7 +278,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
 }
 
 /// Writes the code to emulate the specified TEV stage
-static void WriteTevStage(std::string& out, const ShaderCacheKey& config, unsigned index) {
+static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
     auto& stage = config.tev_stages[index];
     if (!IsPassThroughTevStage(stage)) {
         std::string index_name = std::to_string(index);
@@ -319,7 +319,7 @@ static void WriteTevStage(std::string& out, const ShaderCacheKey& config, unsign
         out += "g_combiner_buffer.a = g_last_tex_env_out.a;\n";
 }
 
-std::string GenerateFragmentShader(const ShaderCacheKey& config) {
+std::string GenerateFragmentShader(const PicaShaderConfig& config) {
     std::string out = R"(
 #version 330
 #extension GL_ARB_explicit_uniform_location : require

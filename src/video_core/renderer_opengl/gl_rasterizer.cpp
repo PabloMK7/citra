@@ -461,7 +461,8 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
 }
 
 void RasterizerOpenGL::SetShader() {
-    ShaderCacheKey config = ShaderCacheKey::CurrentConfig();
+    PicaShaderConfig config = PicaShaderConfig::CurrentConfig();
+    std::unique_ptr<PicaShader> shader = Common::make_unique<PicaShader>();
 
     // Find (or generate) the GLSL shader for the current TEV state
     auto cached_shader = shader_cache.find(config);
@@ -471,9 +472,7 @@ void RasterizerOpenGL::SetShader() {
         state.draw.shader_program = current_shader->shader.handle;
         state.Apply();
     } else {
-        LOG_DEBUG(Render_OpenGL, "Creating new shader: %08X", hash(config));
-
-        std::unique_ptr<TEVShader> shader = Common::make_unique<TEVShader>();
+        LOG_DEBUG(Render_OpenGL, "Creating new shader");
 
         shader->shader.Create(GLShader::GenerateVertexShader().c_str(), GLShader::GenerateFragmentShader(config).c_str());
 

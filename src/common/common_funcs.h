@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include <cstddef>
-#include <functional>
-
 #include "common_types.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -98,18 +95,3 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 // This function might change the error code.
 // Defined in Misc.cpp.
 const char* GetLastErrorMsg();
-
-template <typename T>
-inline std::size_t hash(const T& o) {
-    return std::hash<T>()(o);
-}
-
-template <typename T>
-inline std::size_t combine_hash(const T& o) {
-    return hash(o);
-}
-
-template <typename T, typename... Args>
-inline std::size_t combine_hash(const T& o, const Args&... args) {
-    return hash(o) * 3 + combine_hash(args...);
-}
