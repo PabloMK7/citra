@@ -23,7 +23,7 @@ struct NCCH_Header {
     u16 maker_code;
     u16 version;
     u8 reserved_0[4];
-    u8 program_id[8];
+    u64_le program_id;
     u8 reserved_1[0x10];
     u8 logo_region_hash[0x20];
     u8 product_code[0x10];
@@ -109,7 +109,7 @@ struct ExHeader_StorageInfo {
 };
 
 struct ExHeader_ARM11_SystemLocalCaps {
-    u8 program_id[8];
+    u64_le program_id;
     u32 core_version;
     u8 reserved_flags[2];
     union {

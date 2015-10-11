@@ -71,6 +71,7 @@ enum class ResultStatus {
     ErrorNotUsed,
     ErrorAlreadyLoaded,
     ErrorMemoryAllocationFailed,
+    ErrorEncrypted,
 };
 
 static inline u32 MakeMagic(char a, char b, char c, char d) {

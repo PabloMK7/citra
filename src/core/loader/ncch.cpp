@@ -266,6 +266,11 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "Thread priority:             0x%X"  , priority);
     LOG_DEBUG(Loader, "Resource limit category:     %d"    , resource_limit_category);
 
+    if (exheader_header.arm11_system_local_caps.program_id != ncch_header.program_id) {
+        LOG_ERROR(Loader, "ExHeader Program ID mismatch: the ROM is probably encrypted.");
+        return ResultStatus::ErrorEncrypted;
+    }
+
     // Read ExeFS...
 
     exefs_offset = ncch_header.exefs_offset * kBlockSize;
