@@ -3895,7 +3895,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     unsigned int addr;
     unsigned int num_instrs = 0;
 
-
     int ptr;
 
     LOAD_NZCVT;

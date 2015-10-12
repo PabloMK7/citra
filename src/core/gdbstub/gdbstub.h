@@ -44,7 +44,7 @@ void ToggleServer(bool status);
 void Init();
 
 /// Stop gdbstub server.
-void Deinit();
+void Shutdown();
 
 /// Returns true if there is an active socket connection.
 bool IsConnected();

@@ -76,7 +76,7 @@ void Config::ReadValues() {
     // Miscellaneous
     Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
 
-    // GDBStubebugging
+    // Debugging
     Settings::values.use_gdbstub = glfw_config->GetBoolean("Debugging", "use_gdbstub", false);
     Settings::values.gdbstub_port = glfw_config->GetInteger("Debugging", "gdbstub_port", 24689);
 }

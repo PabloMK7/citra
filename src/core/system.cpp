@@ -24,13 +24,11 @@ void Init(EmuWindow* emu_window) {
     Kernel::Init();
     HLE::Init();
     VideoCore::Init(emu_window);
-
     GDBStub::Init();
 }
 
 void Shutdown() {
-    GDBStub::Deinit();
-
+    GDBStub::Shutdown();
     VideoCore::Shutdown();
     HLE::Shutdown();
     Kernel::Shutdown();

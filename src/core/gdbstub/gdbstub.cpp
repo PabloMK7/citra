@@ -186,7 +186,7 @@ static u8 ReadByte() {
     size_t received_size = recv(gdbserver_socket, reinterpret_cast<char*>(&c), 1, MSG_WAITALL);
     if (received_size != 1) {
         LOG_ERROR(Debug_GDBStub, "recv failed : %ld", received_size);
-        Deinit();
+        Shutdown();
     }
 
     return c;
@@ -322,7 +322,7 @@ static void SendReply(const char* reply) {
         int sent_size = send(gdbserver_socket, reinterpret_cast<char*>(ptr), left, 0);
         if (sent_size < 0) {
             LOG_ERROR(Debug_GDBStub, "gdb: send failed");
-            return Deinit();
+            return Shutdown();
         }
 
         left -= sent_size;
@@ -773,7 +773,7 @@ void HandlePacket() {
         HandleSignal();
         break;
     case 'k':
-        Deinit();
+        Shutdown();
         LOG_INFO(Debug_GDBStub, "killed by gdb");
         return;
     case 'g':
@@ -829,7 +829,7 @@ void ToggleServer(bool status) {
     else {
         // Stop server
         if (IsConnected()) {
-            Deinit();
+            Shutdown();
         }
 
         g_server_enabled = status;
@@ -908,7 +908,7 @@ void Init() {
     Init(gdbstub_port);
 }
 
-void Deinit() {
+void Shutdown() {
     if (!g_server_enabled) {
         return;
     }
