@@ -29,33 +29,33 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
-        out += "attr[2]";
+        out += "primary_color";
         break;
     case Source::PrimaryFragmentColor:
         // HACK: Until we implement fragment lighting, use primary_color
-        out += "attr[2]";
+        out += "primary_color";
         break;
     case Source::SecondaryFragmentColor:
         // HACK: Until we implement fragment lighting, use zero
-        out += "vec4(0.0, 0.0, 0.0, 0.0)";
+        out += "vec4(0.0)";
         break;
     case Source::Texture0:
-        out += "texture(tex[0], attr[3].xy)";
+        out += "texture(tex[0], texcoord[0])";
         break;
     case Source::Texture1:
-        out += "texture(tex[1], attr[3].zw)";
+        out += "texture(tex[1], texcoord[1])";
         break;
-    case Source::Texture2: // TODO: Unverified
-        out += "texture(tex[2], attr[5].zw)";
+    case Source::Texture2:
+        out += "texture(tex[2], texcoord[2])";
         break;
     case Source::PreviousBuffer:
-        out += "g_combiner_buffer";
+        out += "combiner_buffer";
         break;
     case Source::Constant:
-        out += "const_color[" + index_name + "]";
+        ((out += "const_color[") += index_name) += ']';
         break;
     case Source::Previous:
-        out += "g_last_tex_env_out";
+        out += "last_tex_env_out";
         break;
     default:
         out += "vec4(0.0)";
@@ -172,8 +172,8 @@ static void AppendAlphaModifier(std::string& out, TevStageConfig::AlphaModifier 
 /// Writes the combiner function for the color components for the specified TEV stage operation
 static void AppendColorCombiner(std::string& out, TevStageConfig::Operation operation,
         const std::string& variable_name) {
+    out += "clamp(";
     using Operation = TevStageConfig::Operation;
-
     switch (operation) {
     case Operation::Replace:
         out += variable_name + "[0]";
@@ -182,19 +182,20 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         out += variable_name + "[0] * " + variable_name + "[1]";
         break;
     case Operation::Add:
-        out += "min(" + variable_name + "[0] + " + variable_name + "[1], vec3(1.0))";
+        out += variable_name + "[0] + " + variable_name + "[1]";
         break;
     case Operation::AddSigned:
-        out += "clamp(" + variable_name + "[0] + " + variable_name + "[1] - vec3(0.5), vec3(0.0), vec3(1.0))";
+        out += variable_name + "[0] + " + variable_name + "[1] - vec3(0.5)";
         break;
     case Operation::Lerp:
+        // TODO(bunnei): Verify if HW actually does this per-component, otherwise we can just use builtin lerp
         out += variable_name + "[0] * " + variable_name + "[2] + " + variable_name + "[1] * (vec3(1.0) - " + variable_name + "[2])";
         break;
     case Operation::Subtract:
-        out += "max(" + variable_name + "[0] - " + variable_name + "[1], vec3(0.0))";
+        out += variable_name + "[0] - " + variable_name + "[1]";
         break;
     case Operation::MultiplyThenAdd:
-        out += "min(" + variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2], vec3(1.0))";
+        out += variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2]";
         break;
     case Operation::AddThenMultiply:
         out += "min(" + variable_name + "[0] + " + variable_name + "[1], vec3(1.0)) * " + variable_name + "[2]";
@@ -204,11 +205,13 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: %u", operation);
         break;
     }
+    out += ", vec3(0.0), vec3(1.0))";
 }
 
 /// Writes the combiner function for the alpha component for the specified TEV stage operation
 static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation operation,
         const std::string& variable_name) {
+    out += "clamp(";
     using Operation = TevStageConfig::Operation;
     switch (operation) {
     case Operation::Replace:
@@ -218,19 +221,19 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
         out += variable_name + "[0] * " + variable_name + "[1]";
         break;
     case Operation::Add:
-        out += "min(" + variable_name + "[0] + " + variable_name + "[1], 1.0)";
+        out += variable_name + "[0] + " + variable_name + "[1]";
         break;
     case Operation::AddSigned:
-        out += "clamp(" + variable_name + "[0] + " + variable_name + "[1] - 0.5, 0.0, 1.0)";
+        out += variable_name + "[0] + " + variable_name + "[1] - 0.5";
         break;
     case Operation::Lerp:
         out += variable_name + "[0] * " + variable_name + "[2] + " + variable_name + "[1] * (1.0 - " + variable_name + "[2])";
         break;
     case Operation::Subtract:
-        out += "max(" + variable_name + "[0] - " + variable_name + "[1], 0.0)";
+        out += variable_name + "[0] - " + variable_name + "[1]";
         break;
     case Operation::MultiplyThenAdd:
-        out += "min(" + variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2], 1.0)";
+        out += variable_name + "[0] * " + variable_name + "[1] + " + variable_name + "[2]";
         break;
     case Operation::AddThenMultiply:
         out += "min(" + variable_name + "[0] + " + variable_name + "[1], 1.0) * " + variable_name + "[2]";
@@ -240,6 +243,7 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
         LOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: %u", operation);
         break;
     }
+    out += ", 0.0, 1.0)";
 }
 
 /// Writes the if-statement condition used to evaluate alpha testing
@@ -253,22 +257,22 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
         out += "false";
         break;
     case CompareFunc::Equal:
-        out += "int(g_last_tex_env_out.a * 255.0f) != alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) != alphatest_ref";
         break;
     case CompareFunc::NotEqual:
-        out += "int(g_last_tex_env_out.a * 255.0f) == alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) == alphatest_ref";
         break;
     case CompareFunc::LessThan:
-        out += "int(g_last_tex_env_out.a * 255.0f) >= alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) >= alphatest_ref";
         break;
     case CompareFunc::LessThanOrEqual:
-        out += "int(g_last_tex_env_out.a * 255.0f) > alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) > alphatest_ref";
         break;
     case CompareFunc::GreaterThan:
-        out += "int(g_last_tex_env_out.a * 255.0f) <= alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) <= alphatest_ref";
         break;
     case CompareFunc::GreaterThanOrEqual:
-        out += "int(g_last_tex_env_out.a * 255.0f) < alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0f) < alphatest_ref";
         break;
     default:
         out += "false";
@@ -307,16 +311,16 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
         AppendAlphaCombiner(out, stage.alpha_op, "alpha_results_" + index_name);
         out += ";\n";
 
-        out += "g_last_tex_env_out = vec4("
-            "clamp(color_output_" + index_name + " * " + std::to_string(stage.GetColorMultiplier()) + ".0, 0.0, 1.0),"
+        out += "last_tex_env_out = vec4("
+            "clamp(color_output_" + index_name + " * " + std::to_string(stage.GetColorMultiplier()) + ".0, vec3(0.0), vec3(1.0)),"
             "clamp(alpha_output_" + index_name + " * " + std::to_string(stage.GetAlphaMultiplier()) + ".0, 0.0, 1.0));\n";
     }
 
     if (config.TevStageUpdatesCombinerBufferColor(index))
-        out += "g_combiner_buffer.rgb = g_last_tex_env_out.rgb;\n";
+        out += "combiner_buffer.rgb = last_tex_env_out.rgb;\n";
 
     if (config.TevStageUpdatesCombinerBufferAlpha(index))
-        out += "g_combiner_buffer.a = g_last_tex_env_out.a;\n";
+        out += "combiner_buffer.a = last_tex_env_out.a;\n";
 }
 
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
@@ -324,10 +328,11 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #version 330
 #extension GL_ARB_explicit_uniform_location : require
 
-#define NUM_VTX_ATTR 7
 #define NUM_TEV_STAGES 6
 
-in vec4 attr[NUM_VTX_ATTR];
+in vec4 primary_color;
+in vec2 texcoord[3];
+
 out vec4 color;
 )";
 
@@ -347,16 +352,16 @@ out vec4 color;
         return out;
     }
 
-    for (std::size_t index = 0; index < config.tev_stages.size(); ++index)
+    for (size_t index = 0; index < config.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
 
     if (config.alpha_test_func != Regs::CompareFunc::Always) {
         out += "if (";
         AppendAlphaTestCondition(out, config.alpha_test_func);
-        out += ") {\n discard;\n }\n";
+        out += ") discard;\n";
     }
 
-    out += "color = g_last_tex_env_out;\n}";
+    out += "color = last_tex_env_out;\n}";
 
     return out;
 }
@@ -365,21 +370,20 @@ std::string GenerateVertexShader() {
     static const std::string out = R"(
 #version 330
 
-#define NUM_VTX_ATTR 7
-
 in vec4 vert_position;
 in vec4 vert_color;
-in vec2 vert_texcoords0;
-in vec2 vert_texcoords1;
-in vec2 vert_texcoords2;
+in vec2 vert_texcoord0;
+in vec2 vert_texcoord1;
+in vec2 vert_texcoord2;
 
-out vec4 attr[NUM_VTX_ATTR];
+out vec4 primary_color;
+out vec2 texcoord[3];
 
 void main() {
-    attr[2] = vert_color;
-    attr[3] = vec4(vert_texcoords0.xy, vert_texcoords1.xy);
-    attr[5] = vec4(0.0, 0.0, vert_texcoords2.xy);
-
+    primary_color = vert_color;
+    texcoord[0] = vert_texcoord0;
+    texcoord[1] = vert_texcoord1;
+    texcoord[2] = vert_texcoord2;
     gl_Position = vec4(vert_position.x, -vert_position.y, -vert_position.z, vert_position.w);
 }
 )";

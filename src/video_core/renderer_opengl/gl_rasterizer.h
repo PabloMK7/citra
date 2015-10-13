@@ -95,7 +95,7 @@ namespace std {
 
 template <>
 struct hash<PicaShaderConfig> {
-    std::size_t operator()(const PicaShaderConfig& k) const {
+    size_t operator()(const PicaShaderConfig& k) const {
         return Common::ComputeHash64(&k, sizeof(PicaShaderConfig));
     }
 };
