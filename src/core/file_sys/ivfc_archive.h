@@ -42,6 +42,7 @@ public:
     bool CreateDirectory(const Path& path) const override;
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
+    u64 GetFreeBytes() const override;
 
 protected:
     std::shared_ptr<FileUtil::IOFile> romfs_file;

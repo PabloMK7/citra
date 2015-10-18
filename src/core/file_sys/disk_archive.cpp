@@ -74,6 +74,11 @@ std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) c
     return std::move(directory);
 }
 
+u64 DiskArchive::GetFreeBytes() const {
+    // TODO: Stubbed to return 1GiB
+    return 1024 * 1024 * 1024;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DiskFile::DiskFile(const DiskArchive& archive, const Path& path, const Mode mode) {

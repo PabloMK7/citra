@@ -403,6 +403,13 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
     return MakeResult<Kernel::SharedPtr<Directory>>(std::move(directory));
 }
 
+ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle) {
+    ArchiveBackend* archive = GetArchive(archive_handle);
+    if (archive == nullptr)
+        return ERR_INVALID_HANDLE;
+    return MakeResult<u64>(archive->GetFreeBytes());
+}
+
 ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path) {
     auto archive_itr = id_code_map.find(id_code);
     if (archive_itr == id_code_map.end()) {

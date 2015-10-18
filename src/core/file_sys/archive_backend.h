@@ -131,6 +131,12 @@ public:
      * @return Opened directory, or nullptr
      */
     virtual std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const = 0;
+
+    /**
+     * Get the free space
+     * @return The number of free bytes in the archive
+     */
+    virtual u64 GetFreeBytes() const = 0;
 };
 
 class ArchiveFactory : NonCopyable {

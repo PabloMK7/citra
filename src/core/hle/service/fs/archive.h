@@ -167,6 +167,13 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
         const FileSys::Path& path);
 
 /**
+ * Get the free space in an Archive
+ * @param archive_handle Handle to an open Archive object
+ * @return The number of free bytes in the archive
+ */
+ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle);
+
+/**
  * Erases the contents of the physical folder that contains the archive
  * identified by the specified id code and path
  * @param id_code The id of the archive to format

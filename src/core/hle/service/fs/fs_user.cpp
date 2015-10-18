@@ -497,6 +497,33 @@ static void FormatThisUserSaveData(Service::Interface* self) {
 }
 
 /**
+ * FS_User::GetFreeBytes service function
+ *  Inputs:
+ *      0: 0x08120080
+ *      1: Archive handle low word
+ *      2: Archive handle high word
+ *  Outputs:
+ *      1: Result of function, 0 on success, otherwise error code
+ *      2: Free byte count low word
+ *      3: Free byte count high word
+ */
+static void GetFreeBytes(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
+    ResultVal<u64> bytes_res = GetFreeBytesInArchive(archive_handle);
+
+    cmd_buff[1] = bytes_res.Code().raw;
+    if (bytes_res.Succeeded()) {
+        cmd_buff[2] = (u32)*bytes_res;
+        cmd_buff[3] = *bytes_res >> 32;
+    } else {
+        cmd_buff[2] = 0;
+        cmd_buff[3] = 0;
+    }
+}
+
+/**
  * FS_User::CreateExtSaveData service function
  *  Inputs:
  *      0 : 0x08510242
@@ -700,7 +727,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080F0180, FormatThisUserSaveData,"FormatThisUserSaveData"},
     {0x08100200, nullptr,               "CreateSystemSaveData"},
     {0x08110040, nullptr,               "DeleteSystemSaveData"},
-    {0x08120080, nullptr,               "GetFreeBytes"},
+    {0x08120080, GetFreeBytes,          "GetFreeBytes"},
     {0x08130000, nullptr,               "GetCardType"},
     {0x08140000, nullptr,               "GetSdmcArchiveResource"},
     {0x08150000, nullptr,               "GetNandArchiveResource"},
