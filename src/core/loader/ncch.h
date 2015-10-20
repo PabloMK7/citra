@@ -17,31 +17,31 @@
 
 struct NCCH_Header {
     u8 signature[0x100];
-    u32 magic;
-    u32 content_size;
+    u32_le magic;
+    u32_le content_size;
     u8 partition_id[8];
-    u16 maker_code;
-    u16 version;
+    u16_le maker_code;
+    u16_le version;
     u8 reserved_0[4];
-    u8 program_id[8];
+    u64_le program_id;
     u8 reserved_1[0x10];
     u8 logo_region_hash[0x20];
     u8 product_code[0x10];
     u8 extended_header_hash[0x20];
-    u32 extended_header_size;
+    u32_le extended_header_size;
     u8 reserved_2[4];
     u8 flags[8];
-    u32 plain_region_offset;
-    u32 plain_region_size;
-    u32 logo_region_offset;
-    u32 logo_region_size;
-    u32 exefs_offset;
-    u32 exefs_size;
-    u32 exefs_hash_region_size;
+    u32_le plain_region_offset;
+    u32_le plain_region_size;
+    u32_le logo_region_offset;
+    u32_le logo_region_size;
+    u32_le exefs_offset;
+    u32_le exefs_size;
+    u32_le exefs_hash_region_size;
     u8 reserved_3[4];
-    u32 romfs_offset;
-    u32 romfs_size;
-    u32 romfs_hash_region_size;
+    u32_le romfs_offset;
+    u32_le romfs_size;
+    u32_le romfs_hash_region_size;
     u8 reserved_4[4];
     u8 exefs_super_block_hash[0x20];
     u8 romfs_super_block_hash[0x20];
@@ -109,8 +109,8 @@ struct ExHeader_StorageInfo {
 };
 
 struct ExHeader_ARM11_SystemLocalCaps {
-    u8 program_id[8];
-    u32 core_version;
+    u64_le program_id;
+    u32_le core_version;
     u8 reserved_flags[2];
     union {
         u8 flags0;

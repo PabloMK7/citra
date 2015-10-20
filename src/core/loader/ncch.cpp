@@ -128,9 +128,8 @@ ResultStatus AppLoader_NCCH::LoadExec() {
     if (ResultStatus::Success == ReadCode(code)) {
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
                 (const char*)exheader_header.codeset_info.name, 8);
-        u64 program_id = *reinterpret_cast<u64_le const*>(&ncch_header.program_id[0]);
 
-        SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, program_id);
+        SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, ncch_header.program_id);
 
         codeset->code.offset = 0;
         codeset->code.addr = exheader_header.codeset_info.text.address;
@@ -265,6 +264,11 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_DEBUG(Loader, "Core version:                %d"    , core_version);
     LOG_DEBUG(Loader, "Thread priority:             0x%X"  , priority);
     LOG_DEBUG(Loader, "Resource limit category:     %d"    , resource_limit_category);
+
+    if (exheader_header.arm11_system_local_caps.program_id != ncch_header.program_id) {
+        LOG_ERROR(Loader, "ExHeader Program ID mismatch: the ROM is probably encrypted.");
+        return ResultStatus::ErrorEncrypted;
+    }
 
     // Read ExeFS...
 
