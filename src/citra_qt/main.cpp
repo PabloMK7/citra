@@ -443,10 +443,18 @@ void GMainWindow::OnOpenHotkeysDialog() {
 
 void GMainWindow::SetHardwareRendererEnabled(bool enabled) {
     VideoCore::g_hw_renderer_enabled = enabled;
+
+    Config config;
+    Settings::values.use_hw_renderer = enabled;
+    config.Save();
 }
 
 void GMainWindow::SetShaderJITEnabled(bool enabled) {
     VideoCore::g_shader_jit_enabled = enabled;
+
+    Config config;
+    Settings::values.use_shader_jit = enabled;
+    config.Save();
 }
 
 void GMainWindow::ToggleWindowMode() {
