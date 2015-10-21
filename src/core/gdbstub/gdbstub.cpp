@@ -57,6 +57,7 @@ const u32 R0_REGISTER = 0;
 const u32 R15_REGISTER = 15;
 const u32 CSPR_REGISTER = 25;
 const u32 FPSCR_REGISTER = 58;
+const u32 MAX_REGISTERS = 90;
 
 namespace GDBStub {
 
@@ -487,7 +488,7 @@ static void ReadRegisters() {
     memset(buffer, 0, sizeof(buffer));
 
     u8* bufptr = buffer;
-    for (int i = 0; i <= FPSCR_REGISTER; i++) {
+    for (int i = 0; i <= MAX_REGISTERS; i++) {
         if (i <= R15_REGISTER) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetReg(i));
         } else if (i == CSPR_REGISTER) {
@@ -496,11 +497,11 @@ static void ReadRegisters() {
             IntToHex(bufptr + i * 8, 0);
             IntToHex(bufptr + (i + 1) * 8, 0);
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
-        } else if (i > CSPR_REGISTER && i < FPSCR_REGISTER) {
+        } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPReg(i - CSPR_REGISTER - 1));
             IntToHex(bufptr + (i + 1) * 8, 0);
             i++;
-        } else if (i == FPSCR_REGISTER) {
+        } else if (i == MAX_REGISTERS) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
         }
     }
@@ -541,16 +542,16 @@ static void WriteRegisters() {
     if (command_buffer[0] != 'G')
         return SendReply("E01");
 
-    for (int i = 0; i <= FPSCR_REGISTER; i++) {
+    for (int i = 0; i <= MAX_REGISTERS; i++) {
         if (i <= R15_REGISTER) {
             Core::g_app_core->SetReg(i, HexToInt(buffer_ptr + i * 8));
         } else if (i == CSPR_REGISTER) {
             Core::g_app_core->SetCPSR(HexToInt(buffer_ptr + i * 8));
         } else if (i < CSPR_REGISTER) {
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
-        } else if (i > CSPR_REGISTER && i < FPSCR_REGISTER) {
+        } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
             Core::g_app_core->SetVFPReg(i - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * 8));
-        } else if (i == FPSCR_REGISTER) {
+        } else if (i == MAX_REGISTERS) {
             Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr + i * 8));
         }
     }
