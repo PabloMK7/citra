@@ -205,7 +205,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: %u", operation);
         break;
     }
-    out += ", vec3(0.0), vec3(1.0))";
+    out += ", vec3(0.0), vec3(1.0))"; // Clamp result to 0.0, 1.0
 }
 
 /// Writes the combiner function for the alpha component for the specified TEV stage operation
@@ -257,23 +257,18 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
         out += "false";
         break;
     case CompareFunc::Equal:
-        out += "int(last_tex_env_out.a * 255.0f) != alphatest_ref";
-        break;
     case CompareFunc::NotEqual:
-        out += "int(last_tex_env_out.a * 255.0f) == alphatest_ref";
-        break;
     case CompareFunc::LessThan:
-        out += "int(last_tex_env_out.a * 255.0f) >= alphatest_ref";
-        break;
     case CompareFunc::LessThanOrEqual:
-        out += "int(last_tex_env_out.a * 255.0f) > alphatest_ref";
-        break;
     case CompareFunc::GreaterThan:
-        out += "int(last_tex_env_out.a * 255.0f) <= alphatest_ref";
-        break;
     case CompareFunc::GreaterThanOrEqual:
-        out += "int(last_tex_env_out.a * 255.0f) < alphatest_ref";
+    {
+        static const char* op[] = { "!=", "==", ">=", ">", "<=", "<", };
+        unsigned index = (unsigned)func - (unsigned)CompareFunc::Equal;
+        out += "int(last_tex_env_out.a * 255.0f) " + std::string(op[index]) + " alphatest_ref";
         break;
+    }
+
     default:
         out += "false";
         LOG_CRITICAL(Render_OpenGL, "Unknown alpha test condition %u", func);
@@ -337,10 +332,10 @@ out vec4 color;
 )";
 
     using Uniform = RasterizerOpenGL::PicaShader::Uniform;
-    out += "layout(location = " + std::to_string(Uniform::AlphaTestRef) + ") uniform int alphatest_ref;\n";
-    out += "layout(location = " + std::to_string(Uniform::TevConstColors) + ") uniform vec4 const_color[NUM_TEV_STAGES];\n";
-    out += "layout(location = " + std::to_string(Uniform::Texture0) + ") uniform sampler2D tex[3];\n";
-    out += "layout(location = " + std::to_string(Uniform::TevCombinerBufferColor) + ") uniform vec4 tev_combiner_buffer_color;\n";
+    out += "layout(location = " + std::to_string((int)Uniform::AlphaTestRef) + ") uniform int alphatest_ref;\n";
+    out += "layout(location = " + std::to_string((int)Uniform::TevConstColors) + ") uniform vec4 const_color[NUM_TEV_STAGES];\n";
+    out += "layout(location = " + std::to_string((int)Uniform::Texture0) + ") uniform sampler2D tex[3];\n";
+    out += "layout(location = " + std::to_string((int)Uniform::TevCombinerBufferColor) + ") uniform vec4 tev_combiner_buffer_color;\n";
 
     out += "void main() {\n";
     out += "vec4 combiner_buffer = tev_combiner_buffer_color;\n";
