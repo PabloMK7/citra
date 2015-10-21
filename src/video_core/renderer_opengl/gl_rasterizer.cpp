@@ -61,12 +61,12 @@ void RasterizerOpenGL::InitObjects() {
     glVertexAttribPointer(GLShader::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, color));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_COLOR);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 0, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORDS + 2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 0);
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 1);
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORDS + 2);
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0);
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD1);
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD2);
 
     SetShader();
 
