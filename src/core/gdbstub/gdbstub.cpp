@@ -473,6 +473,7 @@ static void ReadRegister() {
         IntToHex(reply, Core::g_app_core->GetVFPReg(id - CSPR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
     } else if (id == FPSCR_REGISTER) {
         IntToHex(reply, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
+        IntToHex(reply + 8, 0);
     } else {
         return SendReply("E01");
     }
@@ -497,6 +498,8 @@ static void ReadRegisters() {
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
         } else if (i > CSPR_REGISTER && i < FPSCR_REGISTER) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPReg(i - CSPR_REGISTER - 1));
+            IntToHex(bufptr + (i + 1) * 8, 0);
+            i++;
         } else if (i == FPSCR_REGISTER) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
         }
