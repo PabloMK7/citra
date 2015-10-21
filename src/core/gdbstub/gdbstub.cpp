@@ -306,6 +306,7 @@ static void SendReply(const char* reply) {
     command_length = strlen(reply);
     if (command_length + 4 > sizeof(command_buffer)) {
         LOG_ERROR(Debug_GDBStub, "command_buffer overflow in SendReply");
+        return;
     }
 
     memcpy(command_buffer + 1, reply, command_length);
@@ -403,12 +404,12 @@ static void ReadCommand() {
     }
 
     while ((c = ReadByte()) != GDB_STUB_END) {
-        command_buffer[command_length++] = c;
-        if (command_length == sizeof(command_buffer)) {
+        if (command_length >= sizeof(command_buffer)) {
             LOG_ERROR(Debug_GDBStub, "gdb: command_buffer overflow\n");
             SendPacket(GDB_STUB_NACK);
             return;
         }
+        command_buffer[command_length++] = c;
     }
 
     u8 checksum_received = HexCharToValue(ReadByte()) << 4;
