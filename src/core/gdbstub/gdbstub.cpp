@@ -488,17 +488,18 @@ static void ReadRegisters() {
     memset(buffer, 0, sizeof(buffer));
 
     u8* bufptr = buffer;
-    for (int i = 0; i <= MAX_REGISTERS; i++) {
+    for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetReg(i));
+            IntToHex(bufptr + i * 8, Core::g_app_core->GetReg(reg));
         } else if (i == CSPR_REGISTER) {
             IntToHex(bufptr + i * 8, Core::g_app_core->GetCPSR());
         } else if (i < CSPR_REGISTER) {
             IntToHex(bufptr + i * 8, 0);
             IntToHex(bufptr + (i + 1) * 8, 0);
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
+            reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPReg(i - CSPR_REGISTER - 1));
+            IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
             IntToHex(bufptr + (i + 1) * 8, 0);
             i++;
         } else if (i == MAX_REGISTERS) {
@@ -542,15 +543,17 @@ static void WriteRegisters() {
     if (command_buffer[0] != 'G')
         return SendReply("E01");
 
-    for (int i = 0; i <= MAX_REGISTERS; i++) {
+    for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            Core::g_app_core->SetReg(i, HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetReg(reg, HexToInt(buffer_ptr + i * 8));
         } else if (i == CSPR_REGISTER) {
             Core::g_app_core->SetCPSR(HexToInt(buffer_ptr + i * 8));
         } else if (i < CSPR_REGISTER) {
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
+            reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            Core::g_app_core->SetVFPReg(i - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * 8));
+            i++; // Skip padding
         } else if (i == MAX_REGISTERS) {
             Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr + i * 8));
         }
