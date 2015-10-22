@@ -23,14 +23,13 @@
 #include "core/settings.h"
 #include "core/system.h"
 #include "core/core.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_glfw.h"
 
 #include "video_core/video_core.h"
-
-#include "core/gdbstub/gdbstub.h"
 
 
 static void PrintHelp()

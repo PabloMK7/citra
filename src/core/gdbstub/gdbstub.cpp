@@ -20,18 +20,18 @@
 #include <iphlpapi.h>
 #define SHUT_RDWR 2
 #else
+#include <unistd.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #endif
 
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include <core/arm/arm_interface.h>
 #include "core/core.h"
 #include "core/memory.h"
+#include "core/arm/arm_interface.h"
 #include "gdbstub.h"
 
 const int GDB_BUFFER_SIZE = 10000;
@@ -67,8 +67,7 @@ static u8 command_buffer[GDB_BUFFER_SIZE];
 static u32 command_length;
 
 static u32 latest_signal = 0;
-static u32 send_signal = 0;
-static u32 step_break = 0;
+static bool step_break = false;
 static bool memory_break = false;
 
 // Binding to a port within the reserved ports range (0-1023) requires root permissions,
@@ -356,33 +355,21 @@ static void HandleSetThread() {
     SendReply("E01");
 }
 
-/// Create and send signal packet.
-static void HandleSignal() {
-    std::string buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;", latest_signal, 15, htonl(Core::g_app_core->GetPC()), 13, htonl(Core::g_app_core->GetReg(13)));
-
-    LOG_DEBUG(Debug_GDBStub, "Response: %s", buffer.c_str());
-
-    SendReply(buffer.c_str());
-}
-
 /**
- * Set signal and send packet to client through HandleSignal if signal flag is set using SendSignal.
+ * Send signal packet to client.
  *
  * @param signal Signal to be sent to client.
  */
-int SendSignal(u32 signal) {
+void SendSignal(u32 signal) {
     if (gdbserver_socket == -1) {
-        return 1;
+        return;
     }
 
     latest_signal = signal;
 
-    if (send_signal) {
-        HandleSignal();
-        send_signal = 0;
-    }
-
-    return 0;
+    std::string buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;", latest_signal, 15, htonl(Core::g_app_core->GetPC()), 13, htonl(Core::g_app_core->GetReg(13)));
+    LOG_DEBUG(Debug_GDBStub, "Response: %s", buffer.c_str());
+    SendReply(buffer.c_str());
 }
 
 /// Read command from gdb client.
@@ -397,7 +384,6 @@ static void ReadCommand() {
     } else if (c == 0x03) {
         LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
         halt_loop = true;
-        send_signal = 1;
         SendSignal(SIGTRAP);
         return;
     } else if (c != GDB_STUB_START) {
@@ -566,17 +552,14 @@ static void WriteRegisters() {
 static void ReadMemory() {
     static u8 reply[GDB_BUFFER_SIZE - 4];
 
-    int i = 1;
+    auto start_offset = command_buffer+1;
+    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
     PAddr addr = 0;
-    while (command_buffer[i] != ',') {
-        addr = (addr << 4) | HexCharToValue(command_buffer[i++]);
-    }
-    i++;
+    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
 
+    start_offset = addr_pos+1;
     u32 len = 0;
-    while (i < command_length) {
-        len = (len << 4) | HexCharToValue(command_buffer[i++]);
-    }
+    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
 
     if (len * 2 > sizeof(reply)) {
         SendReply("E01");
@@ -594,31 +577,28 @@ static void ReadMemory() {
 
 /// Modify location in memory with data received from the gdb client.
 static void WriteMemory() {
-    int i = 1;
+    auto start_offset = command_buffer+1;
+    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
     PAddr addr = 0;
-    while (command_buffer[i] != ',') {
-        addr = (addr << 4) | HexCharToValue(command_buffer[i++]);
-    }
-    i++;
+    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
 
+    start_offset = addr_pos+1;
+    auto len_pos = std::find(start_offset, command_buffer+command_length, ':');
     u32 len = 0;
-    while (command_buffer[i] != ':') {
-        len = (len << 4) | HexCharToValue(command_buffer[i++]);
-    }
+    HexToMem((u8*)&len, start_offset, (len_pos - start_offset) / 2);
 
     u8* dst = Memory::GetPointer(addr);
     if (!dst) {
         return SendReply("E00");
     }
 
-    HexToMem(dst, command_buffer + i + 1, len);
+    HexToMem(dst, len_pos + 1, len);
     SendReply("OK");
 }
 
 void Break(bool is_memory_break) {
     if (!halt_loop) {
         halt_loop = true;
-        send_signal = 1;
         SendSignal(SIGTRAP);
     }
 
@@ -629,8 +609,7 @@ void Break(bool is_memory_break) {
 static void Step() {
     step_loop = true;
     halt_loop = true;
-    send_signal = 1;
-    step_break = 1;
+    step_break = true;
     SendSignal(SIGTRAP);
 }
 
@@ -645,7 +624,7 @@ bool IsMemoryBreak() {
 /// Tell the CPU to continue executing.
 static void Continue() {
     memory_break = false;
-    step_break = 0;
+    step_break = false;
     step_loop = false;
     halt_loop = false;
 }
@@ -694,17 +673,14 @@ static void AddBreakpoint() {
         return SendReply("E01");
     }
 
-    int i = 3;
+    auto start_offset = command_buffer+3;
+    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
     PAddr addr = 0;
-    while (command_buffer[i] != ',') {
-        addr = addr << 4 | HexCharToValue(command_buffer[i++]);
-    }
-    i++;
+    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
 
+    start_offset = addr_pos+1;
     u32 len = 0;
-    while (i < command_length) {
-        len = len << 4 | HexCharToValue(command_buffer[i++]);
-    }
+    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -747,17 +723,14 @@ static void RemoveBreakpoint() {
         return SendReply("E01");
     }
 
-    int i = 3;
+    auto start_offset = command_buffer+3;
+    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
     PAddr addr = 0;
-    while (command_buffer[i] != ',') {
-        addr = (addr << 4) | HexCharToValue(command_buffer[i++]);
-    }
-    i++;
+    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
 
+    start_offset = addr_pos+1;
     u32 len = 0;
-    while (i < command_length) {
-        len = (len << 4) | HexCharToValue(command_buffer[i++]);
-    }
+    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -795,7 +768,7 @@ void HandlePacket() {
         HandleSetThread();
         break;
     case '?':
-        HandleSignal();
+        SendSignal(latest_signal);
         break;
     case 'k':
         Shutdown();

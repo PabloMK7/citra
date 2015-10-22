@@ -44,11 +44,10 @@
 #include "core/settings.h"
 #include "core/system.h"
 #include "core/arm/disassembler/load_symbol_map.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 
 #include "video_core/video_core.h"
-
-#include "core/gdbstub/gdbstub.h"
 
 GMainWindow::GMainWindow() : emu_thread(nullptr)
 {
