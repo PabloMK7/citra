@@ -66,12 +66,6 @@ GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
 
-    glBindAttribLocation(program_id, Attributes::ATTRIBUTE_POSITION, "vert_position");
-    glBindAttribLocation(program_id, Attributes::ATTRIBUTE_COLOR, "vert_color");
-    glBindAttribLocation(program_id, Attributes::ATTRIBUTE_TEXCOORD0, "vert_texcoord0");
-    glBindAttribLocation(program_id, Attributes::ATTRIBUTE_TEXCOORD1, "vert_texcoord1");
-    glBindAttribLocation(program_id, Attributes::ATTRIBUTE_TEXCOORD2, "vert_texcoord2");
-
     glLinkProgram(program_id);
 
     // Check the program

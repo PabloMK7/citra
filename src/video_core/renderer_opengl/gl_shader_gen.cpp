@@ -362,15 +362,14 @@ out vec4 color;
 }
 
 std::string GenerateVertexShader() {
-    static const std::string out = R"(
-#version 330
+    std::string out = "#version 330\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION)  + ") in vec4 vert_position;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_COLOR)     + ") in vec4 vert_color;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0) + ") in vec2 vert_texcoord0;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD1) + ") in vec2 vert_texcoord1;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD2) + ") in vec2 vert_texcoord2;\n";
 
-in vec4 vert_position;
-in vec4 vert_color;
-in vec2 vert_texcoord0;
-in vec2 vert_texcoord1;
-in vec2 vert_texcoord2;
-
+    out += R"(
 out vec4 primary_color;
 out vec2 texcoord[3];
 
@@ -382,6 +381,7 @@ void main() {
     gl_Position = vec4(vert_position.x, -vert_position.y, -vert_position.z, vert_position.w);
 }
 )";
+
     return out;
 }
 
