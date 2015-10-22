@@ -4,11 +4,13 @@
 
 // Originally written by Sven Peter <sven@fail0verflow.com> for anergistic.
 
+#include <algorithm>
 #include <csignal>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <fcntl.h>
+#include <limits.h>
 #include <map>
 #include <numeric>
 
