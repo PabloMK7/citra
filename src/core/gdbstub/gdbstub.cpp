@@ -476,20 +476,20 @@ static void ReadRegisters() {
     u8* bufptr = buffer;
     for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetReg(reg));
+            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetReg(reg));
         } else if (i == CSPR_REGISTER) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetCPSR());
+            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetCPSR());
         } else if (i < CSPR_REGISTER) {
-            IntToHex(bufptr + i * 8, 0);
-            IntToHex(bufptr + (i + 1) * 8, 0);
+            IntToHex(bufptr + i * CHAR_BIT, 0);
+            IntToHex(bufptr + (i + 1) * CHAR_BIT, 0);
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
             reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
-            IntToHex(bufptr + (i + 1) * 8, 0);
+            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
+            IntToHex(bufptr + (i + 1) * CHAR_BIT, 0);
             i++;
         } else if (i == MAX_REGISTERS) {
-            IntToHex(bufptr + i * 8, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
+            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
         }
     }
 
@@ -531,17 +531,17 @@ static void WriteRegisters() {
 
     for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            Core::g_app_core->SetReg(reg, HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetReg(reg, HexToInt(buffer_ptr + i * CHAR_BIT));
         } else if (i == CSPR_REGISTER) {
-            Core::g_app_core->SetCPSR(HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetCPSR(HexToInt(buffer_ptr + i * CHAR_BIT));
         } else if (i < CSPR_REGISTER) {
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
             reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * CHAR_BIT));
             i++; // Skip padding
         } else if (i == MAX_REGISTERS) {
-            Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr + i * 8));
+            Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr + i * CHAR_BIT));
         }
     }
 
