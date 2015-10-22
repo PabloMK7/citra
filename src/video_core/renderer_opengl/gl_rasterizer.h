@@ -4,14 +4,103 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstring>
+#include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include "common/common_types.h"
+#include "common/hash.h"
 
+#include "video_core/pica.h"
 #include "video_core/hwrasterizer_base.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/shader/shader_interpreter.h"
+
+/**
+ * This struct contains all state used to generate the GLSL shader program that emulates the current
+ * Pica register configuration. This struct is used as a cache key for generated GLSL shader
+ * programs. The functions in gl_shader_gen.cpp should retrieve state from this struct only, not by
+ * directly accessing Pica registers. This should reduce the risk of bugs in shader generation where
+ * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
+ * two separate shaders sharing the same key.
+ */
+struct PicaShaderConfig {
+    /// Construct a PicaShaderConfig with the current Pica register configuration.
+    static PicaShaderConfig CurrentConfig() {
+        PicaShaderConfig res;
+        const auto& regs = Pica::g_state.regs;
+
+        res.alpha_test_func = regs.output_merger.alpha_test.enable ?
+            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
+
+        // Copy relevant TevStageConfig fields only. We're doing this manually (instead of calling
+        // the GetTevStages() function) because BitField explicitly disables copies.
+
+        res.tev_stages[0].sources_raw = regs.tev_stage0.sources_raw;
+        res.tev_stages[1].sources_raw = regs.tev_stage1.sources_raw;
+        res.tev_stages[2].sources_raw = regs.tev_stage2.sources_raw;
+        res.tev_stages[3].sources_raw = regs.tev_stage3.sources_raw;
+        res.tev_stages[4].sources_raw = regs.tev_stage4.sources_raw;
+        res.tev_stages[5].sources_raw = regs.tev_stage5.sources_raw;
+
+        res.tev_stages[0].modifiers_raw = regs.tev_stage0.modifiers_raw;
+        res.tev_stages[1].modifiers_raw = regs.tev_stage1.modifiers_raw;
+        res.tev_stages[2].modifiers_raw = regs.tev_stage2.modifiers_raw;
+        res.tev_stages[3].modifiers_raw = regs.tev_stage3.modifiers_raw;
+        res.tev_stages[4].modifiers_raw = regs.tev_stage4.modifiers_raw;
+        res.tev_stages[5].modifiers_raw = regs.tev_stage5.modifiers_raw;
+
+        res.tev_stages[0].ops_raw = regs.tev_stage0.ops_raw;
+        res.tev_stages[1].ops_raw = regs.tev_stage1.ops_raw;
+        res.tev_stages[2].ops_raw = regs.tev_stage2.ops_raw;
+        res.tev_stages[3].ops_raw = regs.tev_stage3.ops_raw;
+        res.tev_stages[4].ops_raw = regs.tev_stage4.ops_raw;
+        res.tev_stages[5].ops_raw = regs.tev_stage5.ops_raw;
+
+        res.tev_stages[0].scales_raw = regs.tev_stage0.scales_raw;
+        res.tev_stages[1].scales_raw = regs.tev_stage1.scales_raw;
+        res.tev_stages[2].scales_raw = regs.tev_stage2.scales_raw;
+        res.tev_stages[3].scales_raw = regs.tev_stage3.scales_raw;
+        res.tev_stages[4].scales_raw = regs.tev_stage4.scales_raw;
+        res.tev_stages[5].scales_raw = regs.tev_stage5.scales_raw;
+
+        res.combiner_buffer_input =
+            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
+            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+
+        return res;
+    }
+
+    bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
+        return (stage_index < 4) && (combiner_buffer_input & (1 << stage_index));
+    }
+
+    bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
+        return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
+    }
+
+    bool operator ==(const PicaShaderConfig& o) const {
+        return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
+    };
+
+    Pica::Regs::CompareFunc alpha_test_func;
+    std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
+    u8 combiner_buffer_input;
+};
+
+namespace std {
+
+template <>
+struct hash<PicaShaderConfig> {
+    size_t operator()(const PicaShaderConfig& k) const {
+        return Common::ComputeHash64(&k, sizeof(PicaShaderConfig));
+    }
+};
+
+} // namespace std
 
 class RasterizerOpenGL : public HWRasterizer {
 public:
@@ -45,19 +134,23 @@ public:
     /// Notify rasterizer that a 3DS memory region has been changed
     void NotifyFlush(PAddr addr, u32 size) override;
 
-private:
-    /// Structure used for managing texture environment states
-    struct TEVConfigUniforms {
-        GLuint enabled;
-        GLuint color_sources;
-        GLuint alpha_sources;
-        GLuint color_modifiers;
-        GLuint alpha_modifiers;
-        GLuint color_alpha_op;
-        GLuint color_alpha_multiplier;
-        GLuint const_color;
-        GLuint updates_combiner_buffer_color_alpha;
+    /// OpenGL shader generated for a given Pica register state
+    struct PicaShader {
+        /// OpenGL shader resource
+        OGLShader shader;
+
+        /// Fragment shader uniforms
+        enum Uniform : GLuint {
+            AlphaTestRef = 0,
+            TevConstColors = 1,
+            Texture0 = 7,
+            Texture1 = 8,
+            Texture2 = 9,
+            TevCombinerBufferColor = 10,
+        };
     };
+
+private:
 
     /// Structure used for storing information about color textures
     struct TextureInfo {
@@ -129,6 +222,9 @@ private:
     /// Reconfigure the OpenGL depth texture to use the given format and dimensions
     void ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::Regs::DepthFormat format, u32 width, u32 height);
 
+    /// Sets the OpenGL shader in accordance with the current PICA register state
+    void SetShader();
+
     /// Syncs the state and contents of the OpenGL framebuffer to match the current PICA framebuffer
     void SyncFramebuffer();
 
@@ -156,26 +252,11 @@ private:
     /// Syncs the depth test states to match the PICA register
     void SyncDepthTest();
 
-    /// Syncs the specified TEV stage's color and alpha sources to match the PICA register
-    void SyncTevSources(unsigned stage_index, const Pica::Regs::TevStageConfig& config);
-
-    /// Syncs the specified TEV stage's color and alpha modifiers to match the PICA register
-    void SyncTevModifiers(unsigned stage_index, const Pica::Regs::TevStageConfig& config);
-
-    /// Syncs the specified TEV stage's color and alpha combiner operations to match the PICA register
-    void SyncTevOps(unsigned stage_index, const Pica::Regs::TevStageConfig& config);
-
-    /// Syncs the specified TEV stage's constant color to match the PICA register
-    void SyncTevColor(unsigned stage_index, const Pica::Regs::TevStageConfig& config);
-
-    /// Syncs the specified TEV stage's color and alpha multipliers to match the PICA register
-    void SyncTevMultipliers(unsigned stage_index, const Pica::Regs::TevStageConfig& config);
+    /// Syncs the TEV constant color to match the PICA register
+    void SyncTevConstColor(int tev_index, const Pica::Regs::TevStageConfig& tev_stage);
 
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
-
-    /// Syncs the TEV combiner write flags to match the PICA register
-    void SyncCombinerWriteFlags();
 
     /// Syncs the remaining OpenGL drawing state to match the current PICA state
     void SyncDrawState();
@@ -213,21 +294,11 @@ private:
     std::array<SamplerInfo, 3> texture_samplers;
     TextureInfo fb_color_texture;
     DepthTextureInfo fb_depth_texture;
-    OGLShader shader;
+
+    std::unordered_map<PicaShaderConfig, std::unique_ptr<PicaShader>> shader_cache;
+    const PicaShader* current_shader = nullptr;
+
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
     OGLFramebuffer framebuffer;
-
-    // Hardware vertex shader
-    GLuint attrib_position;
-    GLuint attrib_color;
-    GLuint attrib_texcoords;
-
-    // Hardware fragment shader
-    GLuint uniform_alphatest_enabled;
-    GLuint uniform_alphatest_func;
-    GLuint uniform_alphatest_ref;
-    GLuint uniform_tex;
-    GLuint uniform_tev_combiner_buffer_color;
-    TEVConfigUniforms uniform_tev_cfgs[6];
 };

@@ -6,8 +6,22 @@
 
 #include <glad/glad.h>
 
-namespace ShaderUtil {
+namespace GLShader {
 
-GLuint LoadShaders(const char* vertex_file_path, const char* fragment_file_path);
+enum Attributes {
+    ATTRIBUTE_POSITION,
+    ATTRIBUTE_COLOR,
+    ATTRIBUTE_TEXCOORD0,
+    ATTRIBUTE_TEXCOORD1,
+    ATTRIBUTE_TEXCOORD2,
+};
 
-}
+/**
+ * Utility function to create and compile an OpenGL GLSL shader program (vertex + fragment shader)
+ * @param vertex_shader String of the GLSL vertex shader program
+ * @param fragment_shader String of the GLSL fragment shader program
+ * @returns Handle of the newly created OpenGL shader object
+ */
+GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader);
+
+} // namespace

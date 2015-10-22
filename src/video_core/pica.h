@@ -317,6 +317,7 @@ struct Regs {
         };
 
         union {
+            u32 sources_raw;
             BitField< 0, 4, Source> color_source1;
             BitField< 4, 4, Source> color_source2;
             BitField< 8, 4, Source> color_source3;
@@ -326,6 +327,7 @@ struct Regs {
         };
 
         union {
+            u32 modifiers_raw;
             BitField< 0, 4, ColorModifier> color_modifier1;
             BitField< 4, 4, ColorModifier> color_modifier2;
             BitField< 8, 4, ColorModifier> color_modifier3;
@@ -335,6 +337,7 @@ struct Regs {
         };
 
         union {
+            u32 ops_raw;
             BitField< 0, 4, Operation> color_op;
             BitField<16, 4, Operation> alpha_op;
         };
@@ -348,6 +351,7 @@ struct Regs {
         };
 
         union {
+            u32 scales_raw;
             BitField< 0, 2, u32> color_scale;
             BitField<16, 2, u32> alpha_scale;
         };

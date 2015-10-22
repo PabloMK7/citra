@@ -8,9 +8,9 @@
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
-namespace ShaderUtil {
+namespace GLShader {
 
-GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
+GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
 
     // Create the shaders
     GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
@@ -65,6 +65,7 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
     GLuint program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
+
     glLinkProgram(program_id);
 
     // Check the program
@@ -87,4 +88,4 @@ GLuint LoadShaders(const char* vertex_shader, const char* fragment_shader) {
     return program_id;
 }
 
-}
+} // namespace GLShader
