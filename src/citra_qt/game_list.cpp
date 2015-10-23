@@ -80,7 +80,7 @@ void GameList::DonePopulating()
 void GameList::PopulateAsync(const QString& dir_path, bool deep_scan)
 {
     if (!FileUtil::Exists(dir_path.toStdString()) || !FileUtil::IsDirectory(dir_path.toStdString())) {
-        LOG_ERROR(Frontend, "Could not find game list folder at %s", dir_path.toLatin1().data());
+        LOG_ERROR(Frontend, "Could not find game list folder at %s", dir_path.toLocal8Bit().data());
         return;
     }
 

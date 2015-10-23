@@ -355,7 +355,7 @@ void GMainWindow::UpdateRecentFiles() {
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
-    BootGame(game_path.toLatin1().data());
+    BootGame(game_path.toLocal8Bit().data());
 }
 
 void GMainWindow::OnMenuLoadFile() {
@@ -367,7 +367,7 @@ void GMainWindow::OnMenuLoadFile() {
         settings.setValue("romsPath", QFileInfo(filename).path());
         StoreRecentFile(filename);
 
-        BootGame(filename.toLatin1().data());
+        BootGame(filename.toLocal8Bit().data());
     }
 }
 
@@ -379,7 +379,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
     if (!filename.isEmpty()) {
         settings.setValue("symbolsPath", QFileInfo(filename).path());
 
-        LoadSymbolMap(filename.toLatin1().data());
+        LoadSymbolMap(filename.toLocal8Bit().data());
     }
 }
 
@@ -400,7 +400,7 @@ void GMainWindow::OnMenuRecentFile() {
     QString filename = action->data().toString();
     QFileInfo file_info(filename);
     if (file_info.exists()) {
-        BootGame(filename.toLatin1().data());
+        BootGame(filename.toLocal8Bit().data());
         StoreRecentFile(filename); // Put the filename on top of the list
     } else {
         // Display an error message and remove the file from the list.
