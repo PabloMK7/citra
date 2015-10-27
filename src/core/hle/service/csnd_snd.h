@@ -20,4 +20,17 @@ public:
     }
 };
 
+struct Type0Command {
+    // command id and next command offset
+    u32 command_id;
+    u32 finished;
+    u32 flags;
+    u8  parameters[20];
+};
+
+void Initialize(Service::Interface* self);
+void ExecuteType0Commands(Service::Interface* self);
+void AcquireSoundChannels(Service::Interface* self);
+void Shutdown(Service::Interface* self);
+
 } // namespace
