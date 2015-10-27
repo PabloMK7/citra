@@ -23,7 +23,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00090000, nullptr,               "GetPedometerState"},
     {0x000A0042, nullptr,               "GetStepHistoryEntry"},
     {0x000B00C2, nullptr,               "GetStepHistory"},
-    {0x000C0000, nullptr,               "GetTotalStepCount"},
+    {0x000C0000, GetTotalStepCount,     "GetTotalStepCount"},
     {0x000D0040, nullptr,               "SetPedometerRecordingMode"},
     {0x000E0000, nullptr,               "GetPedometerRecordingMode"},
     {0x000F0084, nullptr,               "GetStepHistoryAll"},

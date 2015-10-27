@@ -68,6 +68,18 @@ void GetBatteryChargeState(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
+void GetTotalStepCount(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    // TODO: This function is only a stub,
+    // it returns 0 as the total step count
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 0;
+
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
+}
+
 void IsLegacyPowerOff(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 

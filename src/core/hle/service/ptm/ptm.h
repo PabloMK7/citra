@@ -72,6 +72,14 @@ void GetBatteryLevel(Interface* self);
 void GetBatteryChargeState(Interface* self);
 
 /**
+ * PTM::GetTotalStepCount service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Output of function, * = total step count
+ */
+void GetTotalStepCount(Interface* self);
+
+/**
  * PTM::IsLegacyPowerOff service function
  *  Outputs:
  *      1: Result code, 0 on success, otherwise error code
