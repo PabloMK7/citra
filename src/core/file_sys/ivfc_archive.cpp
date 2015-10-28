@@ -59,6 +59,11 @@ std::unique_ptr<DirectoryBackend> IVFCArchive::OpenDirectory(const Path& path) c
     return Common::make_unique<IVFCDirectory>();
 }
 
+u64 IVFCArchive::GetFreeBytes() const {
+    LOG_WARNING(Service_FS, "Attempted to get the free space in an IVFC archive");
+    return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 size_t IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
