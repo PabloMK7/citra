@@ -5,12 +5,12 @@
 // Originally written by Sven Peter <sven@fail0verflow.com> for anergistic.
 
 #include <algorithm>
+#include <climits>
 #include <csignal>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <fcntl.h>
-#include <limits.h>
 #include <map>
 #include <numeric>
 
@@ -34,7 +34,7 @@
 #include "core/core.h"
 #include "core/memory.h"
 #include "core/arm/arm_interface.h"
-#include "gdbstub.h"
+#include "core/gdbstub/gdbstub.h"
 
 const int GDB_BUFFER_SIZE = 10000;
 
