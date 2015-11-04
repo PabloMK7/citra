@@ -9,7 +9,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
     export CXX=g++-4.9
     mkdir -p $HOME/.local
 
-    curl http://www.cmake.org/files/v2.8/cmake-2.8.11-Linux-i386.tar.gz \
+    curl -L http://www.cmake.org/files/v2.8/cmake-2.8.11-Linux-i386.tar.gz \
         | tar -xz -C $HOME/.local --strip-components=1
 
     (
