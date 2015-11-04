@@ -25,6 +25,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update > /dev/null # silence the very verbose output
-    brew install qt5 glfw3 pkgconfig
+    brew install qt5 glfw3
     gem install xcpretty
 fi
