@@ -127,13 +127,29 @@ static u8 NibbleToHex(u8 n) {
 }
 
 /**
+* Converts input hex string characters into an array of equivalent of u8 bytes.
+*
+* @param dest Pointer to buffer to store u8 bytes.
+* @param src Pointer to array of output hex string characters.
+* @param len Length of src array.
+*/
+static u32 HexToInt(u8* src, u32 len) {
+    u32 output = 0;
+    while (len-- > 0) {
+        output = (output << 4) | HexCharToValue(src[0]);
+        src++;
+    }
+    return output;
+}
+
+/**
  * Converts input array of u8 bytes into their equivalent hex string characters.
  *
  * @param dest Pointer to buffer to store output hex string characters.
  * @param src Pointer to array of u8 bytes.
  * @param len Length of src array.
  */
-static void MemToHex(u8* dest, u8* src, u32 len) {
+static void MemToGdbHex(u8* dest, u8* src, u32 len) {
     while (len-- > 0) {
         u8 tmp = *src++;
         *dest++ = NibbleToHex(tmp >> 4);
@@ -142,13 +158,13 @@ static void MemToHex(u8* dest, u8* src, u32 len) {
 }
 
 /**
- * Converts input hex string characters into an array of equivalent of u8 bytes.
+ * Converts input gdb-formatted hex string characters into an array of equivalent of u8 bytes.
  *
  * @param dest Pointer to buffer to store u8 bytes.
  * @param src Pointer to array of output hex string characters.
  * @param len Length of src array.
  */
-static void HexToMem(u8* dest, u8* src, u32 len) {
+static void GdbHexToMem(u8* dest, u8* src, u32 len) {
     while (len-- > 0) {
         *dest++ = (HexCharToValue(src[0]) << 4) | HexCharToValue(src[1]);
         src += 2;
@@ -156,11 +172,11 @@ static void HexToMem(u8* dest, u8* src, u32 len) {
 }
 
 /**
- * Convert a u32 into a hex string.
+ * Convert a u32 into a gdb-formatted hex string.
  *
  * @param dest Pointer to buffer to store output hex string characters.
  */
-static void IntToHex(u8* dest, u32 v) {
+static void IntToGdbHex(u8* dest, u32 v) {
     for (int i = 0; i < 8; i += 2) {
         dest[i + 1] = NibbleToHex(v >> (4 * i));
         dest[i] = NibbleToHex(v >> (4 * (i + 1)));
@@ -168,11 +184,11 @@ static void IntToHex(u8* dest, u32 v) {
 }
 
 /**
- * Convert a hex string into a u32.
+ * Convert a gdb-formatted hex string into a u32.
  *
  * @param src Pointer to hex string.
  */
-static u32 HexToInt(u8* src) {
+static u32 GdbHexToInt(u8* src) {
     u32 output = 0;
 
     for (int i = 0; i < 8; i += 2) {
@@ -455,14 +471,14 @@ static void ReadRegister() {
     }
 
     if (id >= R0_REGISTER && id <= R15_REGISTER) {
-        IntToHex(reply, Core::g_app_core->GetReg(id));
+        IntToGdbHex(reply, Core::g_app_core->GetReg(id));
     } else if (id == CSPR_REGISTER) {
-        IntToHex(reply, Core::g_app_core->GetCPSR());
+        IntToGdbHex(reply, Core::g_app_core->GetCPSR());
     } else if (id > CSPR_REGISTER && id < FPSCR_REGISTER) {
-        IntToHex(reply, Core::g_app_core->GetVFPReg(id - CSPR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
+        IntToGdbHex(reply, Core::g_app_core->GetVFPReg(id - CSPR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
     } else if (id == FPSCR_REGISTER) {
-        IntToHex(reply, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
-        IntToHex(reply + 8, 0);
+        IntToGdbHex(reply, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
+        IntToGdbHex(reply + 8, 0);
     } else {
         return SendReply("E01");
     }
@@ -478,20 +494,20 @@ static void ReadRegisters() {
     u8* bufptr = buffer;
     for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetReg(reg));
+            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetReg(reg));
         } else if (i == CSPR_REGISTER) {
-            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetCPSR());
+            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetCPSR());
         } else if (i < CSPR_REGISTER) {
-            IntToHex(bufptr + i * CHAR_BIT, 0);
-            IntToHex(bufptr + (i + 1) * CHAR_BIT, 0);
+            IntToGdbHex(bufptr + i * CHAR_BIT, 0);
+            IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
             reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
-            IntToHex(bufptr + (i + 1) * CHAR_BIT, 0);
+            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
+            IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
             i++;
         } else if (i == MAX_REGISTERS) {
-            IntToHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
+            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
         }
     }
 
@@ -510,13 +526,13 @@ static void WriteRegister() {
     }
 
     if (id >= R0_REGISTER && id <= R15_REGISTER) {
-        Core::g_app_core->SetReg(id, HexToInt(buffer_ptr));
+        Core::g_app_core->SetReg(id, GdbHexToInt(buffer_ptr));
     } else if (id == CSPR_REGISTER) {
-        Core::g_app_core->SetCPSR(HexToInt(buffer_ptr));
+        Core::g_app_core->SetCPSR(GdbHexToInt(buffer_ptr));
     } else if (id > CSPR_REGISTER && id < FPSCR_REGISTER) {
-        Core::g_app_core->SetVFPReg(id - CSPR_REGISTER - 1, HexToInt(buffer_ptr));
+        Core::g_app_core->SetVFPReg(id - CSPR_REGISTER - 1, GdbHexToInt(buffer_ptr));
     } else if (id == FPSCR_REGISTER) {
-        Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr));
+        Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr));
     } else {
         return SendReply("E01");
     }
@@ -533,17 +549,17 @@ static void WriteRegisters() {
 
     for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
         if (i <= R15_REGISTER) {
-            Core::g_app_core->SetReg(reg, HexToInt(buffer_ptr + i * CHAR_BIT));
+            Core::g_app_core->SetReg(reg, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
         } else if (i == CSPR_REGISTER) {
-            Core::g_app_core->SetCPSR(HexToInt(buffer_ptr + i * CHAR_BIT));
+            Core::g_app_core->SetCPSR(GdbHexToInt(buffer_ptr + i * CHAR_BIT));
         } else if (i < CSPR_REGISTER) {
             i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
             reg++;
         } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, HexToInt(buffer_ptr + i * CHAR_BIT));
+            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
             i++; // Skip padding
         } else if (i == MAX_REGISTERS) {
-            Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, HexToInt(buffer_ptr + i * CHAR_BIT));
+            Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
         }
     }
 
@@ -556,12 +572,12 @@ static void ReadMemory() {
 
     auto start_offset = command_buffer+1;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = 0;
-    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
+    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
 
     start_offset = addr_pos+1;
-    u32 len = 0;
-    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
+    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
+
+    LOG_DEBUG(Debug_GDBStub, "gdb: addr: %08x len: %08x\n", addr, len);
 
     if (len * 2 > sizeof(reply)) {
         SendReply("E01");
@@ -572,7 +588,7 @@ static void ReadMemory() {
         return SendReply("E0");
     }
 
-    MemToHex(reply, data, len);
+    MemToGdbHex(reply, data, len);
     reply[len * 2] = '\0';
     SendReply(reinterpret_cast<char*>(reply));
 }
@@ -581,20 +597,18 @@ static void ReadMemory() {
 static void WriteMemory() {
     auto start_offset = command_buffer+1;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = 0;
-    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
+    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
 
     start_offset = addr_pos+1;
     auto len_pos = std::find(start_offset, command_buffer+command_length, ':');
-    u32 len = 0;
-    HexToMem((u8*)&len, start_offset, (len_pos - start_offset) / 2);
+    u32 len = HexToInt(start_offset, len_pos - start_offset);
 
     u8* dst = Memory::GetPointer(addr);
     if (!dst) {
         return SendReply("E00");
     }
 
-    HexToMem(dst, len_pos + 1, len);
+    GdbHexToMem(dst, len_pos + 1, len);
     SendReply("OK");
 }
 
@@ -677,12 +691,10 @@ static void AddBreakpoint() {
 
     auto start_offset = command_buffer+3;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = 0;
-    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
+    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
 
     start_offset = addr_pos+1;
-    u32 len = 0;
-    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
+    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -727,12 +739,10 @@ static void RemoveBreakpoint() {
 
     auto start_offset = command_buffer+3;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = 0;
-    HexToMem((u8*)&addr, start_offset, (addr_pos - start_offset) / 2);
+    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
 
     start_offset = addr_pos+1;
-    u32 len = 0;
-    HexToMem((u8*)&len, start_offset, ((command_buffer + command_length) - start_offset) / 2);
+    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
