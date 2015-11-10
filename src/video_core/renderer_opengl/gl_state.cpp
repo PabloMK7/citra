@@ -180,6 +180,11 @@ void OpenGLState::Apply() {
         glBindBuffer(GL_ARRAY_BUFFER, draw.vertex_buffer);
     }
 
+    // Uniform buffer
+    if (draw.uniform_buffer != cur_state.draw.uniform_buffer) {
+        glBindBuffer(GL_UNIFORM_BUFFER, draw.uniform_buffer);
+    }
+
     // Shader program
     if (draw.shader_program != cur_state.draw.shader_program) {
         glUseProgram(draw.shader_program);
@@ -213,6 +218,9 @@ void OpenGLState::ResetProgram(GLuint id) {
 void OpenGLState::ResetBuffer(GLuint id) {
     if (cur_state.draw.vertex_buffer == id) {
         cur_state.draw.vertex_buffer = 0;
+    }
+    if (cur_state.draw.uniform_buffer == id) {
+        cur_state.draw.uniform_buffer = 0;
     }
 }
 

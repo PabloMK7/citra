@@ -141,12 +141,9 @@ public:
 
         /// Fragment shader uniforms
         enum Uniform : GLuint {
-            AlphaTestRef = 0,
-            TevConstColors = 1,
-            Texture0 = 7,
-            Texture1 = 8,
-            Texture2 = 9,
-            TevCombinerBufferColor = 10,
+            Texture0 = 0,
+            Texture1 = 1,
+            Texture2 = 2,
         };
     };
 
@@ -215,6 +212,18 @@ private:
         GLfloat tex_coord1[2];
         GLfloat tex_coord2[2];
     };
+
+    /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
+    struct UniformData {
+        // A vec4 color for each of the six tev stages
+        std::array<GLfloat, 4> const_color[6];
+        std::array<GLfloat, 4> tev_combiner_buffer_color;
+        GLint alphatest_ref;
+        INSERT_PADDING_BYTES(12);
+    };
+
+    static_assert(sizeof(UniformData) == 0x80, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 16000, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Reconfigure the OpenGL color texture to use the given format and dimensions
     void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
@@ -298,7 +307,13 @@ private:
     std::unordered_map<PicaShaderConfig, std::unique_ptr<PicaShader>> shader_cache;
     const PicaShader* current_shader = nullptr;
 
+    struct {
+        UniformData data;
+        bool dirty;
+    } uniform_block_data;
+
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
+    OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
 };
