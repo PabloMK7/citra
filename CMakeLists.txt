@@ -92,9 +92,8 @@ else()
     # /Zi - Output debugging information
     # /Zo - enahnced debug info for optimized builds
     set(CMAKE_C_FLAGS   "/W3 /MP /Zi /Zo" CACHE STRING "" FORCE)
-    # /GR- - Disable RTTI
     # /EHsc - C++-only exception handling semantics
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /GR- /EHsc" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc" CACHE STRING "" FORCE)
 
     # /MDd - Multi-threaded Debug Runtime DLL
     set(CMAKE_C_FLAGS_DEBUG   "/Od /MDd" CACHE STRING "" FORCE)
