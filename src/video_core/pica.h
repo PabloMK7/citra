@@ -662,17 +662,18 @@ struct Regs {
         LN = 3, // Cosine of the angle between the light and the normal vectors
     };
 
+    union LightColor {
+        BitField< 0, 10, u32> b;
+        BitField<10, 10, u32> g;
+        BitField<20, 10, u32> r;
+
+        Math::Vec3f ToVec3f() const {
+            // These fields are 10 bits wide, however 255 corresponds to 1.0f for each color component
+            return Math::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
+        }
+    };
+
     struct {
-        union LightColor {
-            BitField< 0, 10, u32> b;
-            BitField<10, 10, u32> g;
-            BitField<20, 10, u32> r;
-
-            Math::Vec3f ToVec3f() const {
-                return Math::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
-            }
-        };
-
         struct LightSrc {
             LightColor specular_0;  // material.specular_0 * light.specular_0
             LightColor specular_1;  // material.specular_1 * light.specular_1

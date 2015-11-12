@@ -183,4 +183,11 @@ inline std::array<GLfloat, 4> ColorRGBA8(const u32 color) {
            } };
 }
 
+inline std::array<GLfloat, 3> LightColor(const Pica::Regs::LightColor& color) {
+    return { { color.r / 255.0f,
+               color.g / 255.0f,
+               color.b / 255.0f
+           } };
+}
+
 } // namespace

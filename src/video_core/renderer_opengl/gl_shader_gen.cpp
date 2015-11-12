@@ -32,8 +32,7 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
         out += "primary_color";
         break;
     case Source::PrimaryFragmentColor:
-        // HACK: Until we implement fragment lighting, use primary_color
-        out += "primary_color";
+        out += "primary_fragment_color";
         break;
     case Source::SecondaryFragmentColor:
         // HACK: Until we implement fragment lighting, use zero
@@ -324,23 +323,66 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
     std::string out = R"(
 #version 330 core
 #define NUM_TEV_STAGES 6
+#define NUM_LIGHTS 8
 
 in vec4 primary_color;
 in vec2 texcoord[3];
+in vec4 normquat;
+in vec3 view;
 
 out vec4 color;
+
+struct LightSrc {
+    vec3 diffuse;
+    vec3 ambient;
+    vec3 position;
+};
 
 layout (std140) uniform shader_data {
     vec4 const_color[NUM_TEV_STAGES];
     vec4 tev_combiner_buffer_color;
     int alphatest_ref;
     float depth_offset;
+    vec3 lighting_global_ambient;
+    LightSrc light_src[NUM_LIGHTS];
 };
 
 uniform sampler2D tex[3];
 
 void main() {
+vec4 primary_fragment_color = vec4(0.0);
 )";
+
+    if (config.lighting_enabled) {
+        out += "vec3 normal = normalize(vec3(\n";
+        out += "          2.f*(normquat.x*normquat.z + normquat.y*normquat.w),\n";
+        out += "          2.f*(normquat.y*normquat.z + normquat.x*normquat.w),\n";
+        out += "    1.f - 2.f*(normquat.x*normquat.x + normquat.y*normquat.y)));\n";
+        out += "vec4 secondary_color = vec4(0.0);\n";
+        out += "vec3 diffuse_sum = vec3(0.0);\n";
+        out += "vec3 fragment_position = -view;\n";
+
+        for (unsigned light_index = 0; light_index < config.num_lights; ++light_index) {
+            unsigned num = config.light_src[light_index].num;
+
+            std::string light_vector;
+            if (config.light_src[light_index].directional)
+                light_vector = "normalize(-light_src[" + std::to_string(num) + "].position)";
+            else
+                light_vector = "normalize(light_src[" + std::to_string(num) + "].position - fragment_position)";
+
+            std::string dot_product;
+            if (config.light_src[light_index].two_sided_diffuse)
+                dot_product = "abs(dot(" + light_vector + ", normal))";
+            else
+                dot_product = "max(dot(" + light_vector + ", normal), 0.0)";
+
+            out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * 1.0;\n";
+        }
+
+        out += "diffuse_sum += lighting_global_ambient;\n";
+        out += "primary_fragment_color = vec4(clamp(diffuse_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
+    }
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.alpha_test_func == Regs::CompareFunc::Never) {
@@ -369,21 +411,28 @@ void main() {
 
 std::string GenerateVertexShader() {
     std::string out = "#version 330 core\n";
+
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION)  + ") in vec4 vert_position;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_COLOR)     + ") in vec4 vert_color;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0) + ") in vec2 vert_texcoord0;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD1) + ") in vec2 vert_texcoord1;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD2) + ") in vec2 vert_texcoord2;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_NORMQUAT)  + ") in vec4 vert_normquat;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_VIEW)      + ") in vec3 vert_view;\n";
 
     out += R"(
 out vec4 primary_color;
 out vec2 texcoord[3];
+out vec4 normquat;
+out vec3 view;
 
 void main() {
     primary_color = vert_color;
     texcoord[0] = vert_texcoord0;
     texcoord[1] = vert_texcoord1;
     texcoord[2] = vert_texcoord2;
+    normquat = vert_normquat;
+    view = vert_view;
     gl_Position = vec4(vert_position.x, vert_position.y, -vert_position.z, vert_position.w);
 }
 )";

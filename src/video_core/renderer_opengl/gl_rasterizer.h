@@ -71,6 +71,18 @@ struct PicaShaderConfig {
             regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
             regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
 
+        // Fragment lighting
+
+        res.lighting_enabled = !regs.lighting.disable;
+        res.num_lights = regs.lighting.src_num + 1;
+
+        for (unsigned light_index = 0; light_index < res.num_lights; ++light_index) {
+            unsigned num = regs.lighting.light_enable.GetNum(light_index);
+            res.light_src[light_index].num = num;
+            res.light_src[light_index].directional = regs.lighting.light[num].w;
+            res.light_src[light_index].two_sided_diffuse = regs.lighting.light[num].two_sided_diffuse;
+        }
+
         return res;
     }
 
@@ -89,6 +101,16 @@ struct PicaShaderConfig {
     Pica::Regs::CompareFunc alpha_test_func;
     std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
     u8 combiner_buffer_input;
+
+    struct {
+        unsigned num;
+        bool directional;
+        bool two_sided_diffuse;
+        bool dist_atten_enabled;
+    } light_src[8];
+
+    bool lighting_enabled;
+    unsigned num_lights;
 };
 
 namespace std {
@@ -182,6 +204,13 @@ private:
             tex_coord1[1] = v.tc1.y.ToFloat32();
             tex_coord2[0] = v.tc2.x.ToFloat32();
             tex_coord2[1] = v.tc2.y.ToFloat32();
+            normquat[0] = v.quat.x.ToFloat32();
+            normquat[1] = v.quat.y.ToFloat32();
+            normquat[2] = v.quat.z.ToFloat32();
+            normquat[3] = v.quat.w.ToFloat32();
+            view[0] = v.view.x.ToFloat32();
+            view[1] = v.view.y.ToFloat32();
+            view[2] = v.view.z.ToFloat32();
         }
 
         GLfloat position[4];
@@ -189,6 +218,17 @@ private:
         GLfloat tex_coord0[2];
         GLfloat tex_coord1[2];
         GLfloat tex_coord2[2];
+        GLfloat normquat[4];
+        GLfloat view[3];
+    };
+
+    struct LightSrc {
+        std::array<GLfloat, 3> diffuse;
+        INSERT_PADDING_WORDS(1);
+        std::array<GLfloat, 3> ambient;
+        INSERT_PADDING_WORDS(1);
+        std::array<GLfloat, 3> position;
+        INSERT_PADDING_WORDS(1);
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
@@ -198,11 +238,14 @@ private:
         std::array<GLfloat, 4> tev_combiner_buffer_color;
         GLint alphatest_ref;
         GLfloat depth_offset;
-        INSERT_PADDING_BYTES(8);
+        INSERT_PADDING_WORDS(2);
+        std::array<GLfloat, 3> lighting_global_ambient;
+        INSERT_PADDING_WORDS(1);
+        LightSrc light_src[8];
     };
 
-    static_assert(sizeof(UniformData) == 0x80, "The size of the UniformData structure has changed, update the structure in the shader");
-    static_assert(sizeof(UniformData) < 16000, "UniformData structure must be less than 16kb as per the OpenGL spec");
+    static_assert(sizeof(UniformData) == 0x210, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Reconfigure the OpenGL color texture to use the given format and dimensions
     void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
@@ -248,6 +291,18 @@ private:
 
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
+
+    /// Syncs the lighting global ambient color to match the PICA register
+    void SyncGlobalAmbient();
+
+    /// Syncs the specified light's diffuse color to match the PICA register
+    void SyncLightDiffuse(int light_index);
+
+    /// Syncs the specified light's ambient color to match the PICA register
+    void SyncLightAmbient(int light_index);
+
+    /// Syncs the specified light's position to match the PICA register
+    void SyncLightPosition(int light_index);
 
     /// Syncs the remaining OpenGL drawing state to match the current PICA state
     void SyncDrawState();
