@@ -91,7 +91,7 @@ public:
     {
         x-=other.x; y-=other.y;
     }
-    template<class = typename std::enable_if<std::is_signed<T>::value>::type>
+    template<typename Q = T,class = typename std::enable_if<std::is_signed<Q>::value>::type>
     Vec2<decltype(-T{})> operator -() const
     {
         return MakeVec(-x,-y);
@@ -222,7 +222,7 @@ public:
     {
         x-=other.x; y-=other.y; z-=other.z;
     }
-    template<class = typename std::enable_if<std::is_signed<T>::value>::type>
+    template<typename Q = T,class = typename std::enable_if<std::is_signed<Q>::value>::type>
     Vec3<decltype(-T{})> operator -() const
     {
         return MakeVec(-x,-y,-z);
@@ -393,7 +393,7 @@ public:
     {
         x-=other.x; y-=other.y; z-=other.z; w-=other.w;
     }
-    template<class = typename std::enable_if<std::is_signed<T>::value>::type>
+    template<typename Q = T,class = typename std::enable_if<std::is_signed<Q>::value>::type>
     Vec4<decltype(-T{})> operator -() const
     {
         return MakeVec(-x,-y,-z,-w);
