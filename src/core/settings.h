@@ -6,6 +6,7 @@
 
 #include <string>
 #include <array>
+#include <common/file_util.h>
 
 namespace Settings {
 
@@ -60,6 +61,10 @@ struct Values {
     float bg_blue;
 
     std::string log_filter;
+
+    // Debugging
+    bool use_gdbstub;
+    u16 gdbstub_port;
 } extern values;
 
 }

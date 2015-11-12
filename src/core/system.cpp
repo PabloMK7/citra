@@ -12,6 +12,8 @@
 
 #include "video_core/video_core.h"
 
+#include "core/gdbstub/gdbstub.h"
+
 namespace System {
 
 void Init(EmuWindow* emu_window) {
@@ -22,9 +24,11 @@ void Init(EmuWindow* emu_window) {
     Kernel::Init();
     HLE::Init();
     VideoCore::Init(emu_window);
+    GDBStub::Init();
 }
 
 void Shutdown() {
+    GDBStub::Shutdown();
     VideoCore::Shutdown();
     HLE::Shutdown();
     Kernel::Shutdown();

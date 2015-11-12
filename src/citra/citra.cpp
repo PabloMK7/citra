@@ -23,6 +23,7 @@
 #include "core/settings.h"
 #include "core/system.h"
 #include "core/core.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 
 #include "citra/config.h"
@@ -72,6 +73,8 @@ int main(int argc, char **argv) {
     Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
+    GDBStub::ToggleServer(Settings::values.use_gdbstub);
+    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
     EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
 
