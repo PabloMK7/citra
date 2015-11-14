@@ -371,12 +371,13 @@ vec4 primary_fragment_color = vec4(0.0);
 
         for (unsigned light_index = 0; light_index < config.num_lights; ++light_index) {
             unsigned num = config.light_src[light_index].num;
+            std::string light_src = "light_src[" + std::to_string(num) + "]";
 
             std::string light_vector;
             if (config.light_src[light_index].directional)
-                light_vector = "normalize(-light_src[" + std::to_string(num) + "].position)";
+                light_vector = "normalize(-" + light_src + ".position)";
             else
-                light_vector = "normalize(light_src[" + std::to_string(num) + "].position - fragment_position)";
+                light_vector = "normalize(" + light_src + ".position - fragment_position)";
 
             std::string dot_product;
             if (config.light_src[light_index].two_sided_diffuse)
@@ -384,7 +385,19 @@ vec4 primary_fragment_color = vec4(0.0);
             else
                 dot_product = "max(dot(" + light_vector + ", normal), 0.0)";
 
-            out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * 1.0;\n";
+            std::string dist_atten = "1.0";
+            if (config.light_src[light_index].dist_atten_enabled) {
+                std::string scale = std::to_string(config.light_src[light_index].dist_atten_scale);
+                std::string bias = std::to_string(config.light_src[light_index].dist_atten_bias);
+                std::string lut_index = "(" + scale + " * length(fragment_position - " + light_src + ".position) + " + bias + ")";
+                std::string clamped_lut_index = "((clamp(int(" + lut_index + " * 256.0), 0, 255)))";
+
+                unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + num);
+
+                dist_atten = "lighting_lut_" + std::to_string(lut_num /4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "]";
+            }
+
+            out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * " + dist_atten + ";\n";
         }
 
         out += "diffuse_sum += lighting_global_ambient;\n";

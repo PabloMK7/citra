@@ -78,9 +78,13 @@ struct PicaShaderConfig {
 
         for (unsigned light_index = 0; light_index < res.num_lights; ++light_index) {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
+            const auto& light = regs.lighting.light[num];
             res.light_src[light_index].num = num;
-            res.light_src[light_index].directional = regs.lighting.light[num].w;
-            res.light_src[light_index].two_sided_diffuse = regs.lighting.light[num].two_sided_diffuse;
+            res.light_src[light_index].directional = light.w;
+            res.light_src[light_index].two_sided_diffuse = light.two_sided_diffuse;
+            res.light_src[light_index].dist_atten_enabled = regs.lighting.dist_atten_enable.IsEnabled(num);
+            res.light_src[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
+            res.light_src[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
         }
 
         return res;
@@ -98,19 +102,23 @@ struct PicaShaderConfig {
         return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
     };
 
-    Pica::Regs::CompareFunc alpha_test_func;
-    std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
-    u8 combiner_buffer_input;
-
     struct {
-        unsigned num;
-        bool directional;
-        bool two_sided_diffuse;
-        bool dist_atten_enabled;
-    } light_src[8];
+        Pica::Regs::CompareFunc alpha_test_func = Pica::Regs::CompareFunc::Never;
+        std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
+        u8 combiner_buffer_input = 0;
 
-    bool lighting_enabled;
-    unsigned num_lights;
+        struct {
+            unsigned num = 0;
+            bool directional = false;
+            bool two_sided_diffuse = false;
+            bool dist_atten_enabled = false;
+            GLfloat dist_atten_scale = 0.0f;
+            GLfloat dist_atten_bias = 0.0f;
+        } light_src[8];
+
+        bool lighting_enabled = false;
+        unsigned num_lights = 0;
+    };
 };
 
 namespace std {
