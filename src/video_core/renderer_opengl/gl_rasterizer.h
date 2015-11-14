@@ -242,10 +242,11 @@ private:
         std::array<GLfloat, 3> lighting_global_ambient;
         INSERT_PADDING_WORDS(1);
         LightSrc light_src[8];
+        std::array<std::array<std::array<GLfloat, 4>, 256>, 6> lighting_lut;
     };
 
-    static_assert(sizeof(UniformData) == 0x210, "The size of the UniformData structure has changed, update the structure in the shader");
-    static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
+    static_assert(sizeof(UniformData) == 0x6210, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 32768, "UniformData structure must be less than 32kb");
 
     /// Reconfigure the OpenGL color texture to use the given format and dimensions
     void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
@@ -294,6 +295,9 @@ private:
 
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();
+
+    /// Syncs the lighting lookup tables
+    void SyncLightingLUT(unsigned index);
 
     /// Syncs the specified light's diffuse color to match the PICA register
     void SyncLightDiffuse(int light_index);
@@ -346,6 +350,7 @@ private:
 
     struct {
         UniformData data;
+        bool lut_dirty[24];
         bool dirty;
     } uniform_block_data;
 

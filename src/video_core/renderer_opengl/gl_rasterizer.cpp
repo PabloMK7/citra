@@ -162,6 +162,13 @@ void RasterizerOpenGL::DrawTriangles() {
         state.draw.shader_dirty = false;
     }
 
+    for (unsigned index = 0; index < Pica::g_state.lighting.luts.size(); index++) {
+        if (uniform_block_data.lut_dirty[index]) {
+            SyncLightingLUT(index);
+            uniform_block_data.lut_dirty[index] = false;
+        }
+    }
+
     if (uniform_block_data.dirty) {
         glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformData), &uniform_block_data.data, GL_STATIC_DRAW);
         uniform_block_data.dirty = false;
@@ -381,6 +388,21 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncGlobalAmbient();
         break;
 
+    // Fragment lighting lookup tables
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[0], 0x1c8):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[1], 0x1c9):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[2], 0x1ca):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[3], 0x1cb):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf):
+    {
+        auto& lut_config = regs.lighting.lut_config;
+        uniform_block_data.lut_dirty[lut_config.type] = true;
+        break;
+    }
+
     }
 }
 
@@ -593,20 +615,23 @@ void RasterizerOpenGL::SetShader() {
 
         unsigned int block_index = glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
         glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
-    }
 
-    // Update uniforms
-    SyncAlphaTest();
-    SyncCombinerColor();
-    auto& tev_stages = Pica::g_state.regs.GetTevStages();
-    for (int index = 0; index < tev_stages.size(); ++index)
-        SyncTevConstColor(index, tev_stages[index]);
+        // Update uniforms
+        SyncAlphaTest();
+        SyncCombinerColor();
+        auto& tev_stages = Pica::g_state.regs.GetTevStages();
+        for (int index = 0; index < tev_stages.size(); ++index)
+            SyncTevConstColor(index, tev_stages[index]);
 
-    SyncGlobalAmbient();
-    for (int light_index = 0; light_index < 8; light_index++) {
-        SyncLightDiffuse(light_index);
-        SyncLightAmbient(light_index);
-        SyncLightPosition(light_index);
+        for (unsigned index = 0; index < Pica::g_state.lighting.luts.size(); ++index)
+            SyncLightingLUT(index);
+
+        SyncGlobalAmbient();
+        for (int light_index = 0; light_index < 8; light_index++) {
+            SyncLightDiffuse(light_index);
+            SyncLightAmbient(light_index);
+            SyncLightPosition(light_index);
+        }
     }
 }
 
@@ -792,6 +817,20 @@ void RasterizerOpenGL::SyncGlobalAmbient() {
     auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.global_ambient);
     if (color != uniform_block_data.data.lighting_global_ambient) {
         uniform_block_data.data.lighting_global_ambient = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
+    auto& lut = uniform_block_data.data.lighting_lut[lut_index / 4];
+    std::array<std::array<GLfloat, 4>, 256> new_lut;
+
+    for (int offset = 0; offset < new_lut.size(); ++offset) {
+        new_lut[offset][lut_index & 3] = Pica::g_state.lighting.luts[lut_index][offset].ToFloat();
+    }
+
+    if (new_lut != lut) {
+        lut = new_lut;
         uniform_block_data.dirty = true;
     }
 }

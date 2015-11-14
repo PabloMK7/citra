@@ -324,6 +324,7 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #version 330 core
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
+#define LIGHTING_LUT_SIZE 256
 
 in vec4 primary_color;
 in vec2 texcoord[3];
@@ -345,6 +346,12 @@ layout (std140) uniform shader_data {
     float depth_offset;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
+    vec4 lighting_lut_0[LIGHTING_LUT_SIZE];
+    vec4 lighting_lut_1[LIGHTING_LUT_SIZE];
+    vec4 lighting_lut_2[LIGHTING_LUT_SIZE];
+    vec4 lighting_lut_3[LIGHTING_LUT_SIZE];
+    vec4 lighting_lut_4[LIGHTING_LUT_SIZE];
+    vec4 lighting_lut_5[LIGHTING_LUT_SIZE];
 };
 
 uniform sampler2D tex[3];

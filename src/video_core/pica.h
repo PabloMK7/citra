@@ -1216,7 +1216,7 @@ struct State {
             }
         };
 
-        std::array<LutEntry, 256> luts[24];
+        std::array<std::array<LutEntry, 256>, 24> luts;
     } lighting;
 
     /// Current Pica command list
