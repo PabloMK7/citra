@@ -264,11 +264,10 @@ private:
         std::array<GLfloat, 3> lighting_global_ambient;
         INSERT_PADDING_WORDS(1);
         LightSrc light_src[8];
-        std::array<std::array<std::array<GLfloat, 4>, 256>, 6> lighting_lut;
     };
 
-    static_assert(sizeof(UniformData) == 0x6210, "The size of the UniformData structure has changed, update the structure in the shader");
-    static_assert(sizeof(UniformData) < 32768, "UniformData structure must be less than 32kb");
+    static_assert(sizeof(UniformData) == 0x310, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Reconfigure the OpenGL color texture to use the given format and dimensions
     void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
@@ -378,7 +377,7 @@ private:
 
     struct {
         UniformData data;
-        bool lut_dirty[24];
+        bool lut_dirty[6];
         bool dirty;
     } uniform_block_data;
 
@@ -386,4 +385,7 @@ private:
     OGLBuffer vertex_buffer;
     OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
+
+    std::array<OGLTexture, 6> lighting_lut;
+    std::array<std::array<std::array<GLfloat, 4>, 256>, 6> lighting_lut_data;
 };

@@ -324,6 +324,7 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
 #define LIGHTING_LUT_SIZE 256
+#define FLOAT_255 0.99609375
 
 in vec4 primary_color;
 in vec2 texcoord[3];
@@ -347,15 +348,10 @@ layout (std140) uniform shader_data {
     float depth_offset;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
-    vec4 lighting_lut_0[LIGHTING_LUT_SIZE];
-    vec4 lighting_lut_1[LIGHTING_LUT_SIZE];
-    vec4 lighting_lut_2[LIGHTING_LUT_SIZE];
-    vec4 lighting_lut_3[LIGHTING_LUT_SIZE];
-    vec4 lighting_lut_4[LIGHTING_LUT_SIZE];
-    vec4 lighting_lut_5[LIGHTING_LUT_SIZE];
 };
 
 uniform sampler2D tex[3];
+uniform sampler1D lut[6];
 
 void main() {
 vec4 primary_fragment_color = vec4(0.0);
@@ -404,11 +400,11 @@ vec4 secondary_fragment_color = vec4(0.0);
             if (abs) {
                 // In the range of [ 0.f, 1.f]
                 index = config.light_src[light_num].two_sided_diffuse ? "abs(" + index + ")" : "max(" + index + ", 0.f)";
-                return "clamp(int(" + index + " * 256.0), 0, 255)";
+                return "clamp(" + index + ", 0.0, FLOAT_255)";
             } else {
                 // In the range of [-1.f, 1.f]
                 index = "clamp(" + index + ", -1.0, 1.0)";
-                return std::string("uint(int(" + index + " * 127.f) & 0xff)");
+                return "clamp(((" + index + " < 0) ? " + index + " + 2.0 : " + index + ") / 2.0, 0.0, FLOAT_255)";
             }
 
             return std::string();
@@ -435,10 +431,10 @@ vec4 secondary_fragment_color = vec4(0.0);
                 std::string scale = std::to_string(config.light_src[light_index].dist_atten_scale);
                 std::string bias = std::to_string(config.light_src[light_index].dist_atten_bias);
                 std::string lut_index = "(" + scale + " * length(fragment_position - " + light_src + ".position) + " + bias + ")";
-                std::string clamped_lut_index = "((clamp(int(" + lut_index + " * 256.0), 0, 255)))";
+                std::string clamped_lut_index = "((clamp(" + lut_index + ", 0.0, FLOAT_255)))";
 
                 const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + num);
-                out += "dist_atten = lighting_lut_" + std::to_string(lut_num / 4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "];\n";
+                out += "dist_atten = texture(lut[" + std::to_string(lut_num / 4) + "], " + clamped_lut_index + ")[" + std::to_string(lut_num & 3) + "];\n";
             }
 
             // Compute primary fragment color (diffuse lighting) function
@@ -447,7 +443,7 @@ vec4 secondary_fragment_color = vec4(0.0);
             // Compute secondary fragment color (specular lighting) function
             std::string clamped_lut_index = GetLutIndex(num, config.lighting_lut.d0_type, config.lighting_lut.d0_abs);
             const unsigned lut_num = (unsigned)Regs::LightingSampler::Distribution0;
-            std::string lut_lookup = "lighting_lut_" + std::to_string(lut_num / 4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "]";
+            std::string lut_lookup = "texture(lut[" + std::to_string(lut_num / 4) + "], " + clamped_lut_index + ")[" + std::to_string(lut_num & 3) + "]";
 
             out += "specular_sum += (" + lut_lookup + " * light_src[" + std::to_string(num) + "].specular_0 * dist_atten);\n";
         }

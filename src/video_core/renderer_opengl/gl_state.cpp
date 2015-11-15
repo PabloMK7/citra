@@ -170,6 +170,14 @@ void OpenGLState::Apply() {
         }
     }
 
+    // Lighting LUTs
+    for (unsigned i = 0; i < ARRAY_SIZE(lighting_lut); ++i) {
+        if (lighting_lut[i].texture_1d != cur_state.lighting_lut[i].texture_1d) {
+            glActiveTexture(GL_TEXTURE3 + i);
+            glBindTexture(GL_TEXTURE_1D, lighting_lut[i].texture_1d);
+        }
+    }
+
     // Framebuffer
     if (draw.framebuffer != cur_state.draw.framebuffer) {
         glBindFramebuffer(GL_FRAMEBUFFER, draw.framebuffer);
