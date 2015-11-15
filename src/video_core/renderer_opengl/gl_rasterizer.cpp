@@ -297,6 +297,58 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncCombinerColor();
         break;
 
+    // Fragment lighting specular 0 color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_0, 0x140 + 0 * 0x10):
+        SyncLightSpecular0(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_0, 0x140 + 1 * 0x10):
+        SyncLightSpecular0(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_0, 0x140 + 2 * 0x10):
+        SyncLightSpecular0(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_0, 0x140 + 3 * 0x10):
+        SyncLightSpecular0(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_0, 0x140 + 4 * 0x10):
+        SyncLightSpecular0(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_0, 0x140 + 5 * 0x10):
+        SyncLightSpecular0(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_0, 0x140 + 6 * 0x10):
+        SyncLightSpecular0(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_0, 0x140 + 7 * 0x10):
+        SyncLightSpecular0(7);
+        break;
+
+    // Fragment lighting specular 1 color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_1, 0x141 + 0 * 0x10):
+        SyncLightSpecular1(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_1, 0x141 + 1 * 0x10):
+        SyncLightSpecular1(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_1, 0x141 + 2 * 0x10):
+        SyncLightSpecular1(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_1, 0x141 + 3 * 0x10):
+        SyncLightSpecular1(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_1, 0x141 + 4 * 0x10):
+        SyncLightSpecular1(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_1, 0x141 + 5 * 0x10):
+        SyncLightSpecular1(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_1, 0x141 + 6 * 0x10):
+        SyncLightSpecular1(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_1, 0x141 + 7 * 0x10):
+        SyncLightSpecular1(7);
+        break;
+
     // Fragment lighting diffuse color
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].diffuse, 0x142 + 0 * 0x10):
         SyncLightDiffuse(0);
@@ -831,6 +883,22 @@ void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
 
     if (new_lut != lut) {
         lut = new_lut;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightSpecular0(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].specular_0);
+    if (color != uniform_block_data.data.light_src[light_index].specular_0) {
+        uniform_block_data.data.light_src[light_index].specular_0 = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightSpecular1(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].specular_1);
+    if (color != uniform_block_data.data.light_src[light_index].specular_1) {
+        uniform_block_data.data.light_src[light_index].specular_1 = color;
         uniform_block_data.dirty = true;
     }
 }

@@ -659,6 +659,8 @@ struct Regs {
 
     enum class LightingLutInput {
         NH = 0, // Cosine of the angle between the normal and half-angle vectors
+        VH = 1, // Cosine of the angle between the view and half-angle vectors
+        NV = 2, // Cosine of the angle between the normal and the view vector
         LN = 3, // Cosine of the angle between the light and the normal vectors
     };
 
@@ -709,7 +711,11 @@ struct Regs {
         LightColor global_ambient; // emission + (material.ambient * lighting.ambient)
         INSERT_PADDING_WORDS(0x1);
         BitField<0, 3, u32> src_num; // number of enabled lights - 1
-        INSERT_PADDING_WORDS(0x1);
+
+        union {
+            BitField< 4, 4, u32> config;
+            BitField<27, 1, u32> clamp_highlights;
+        } light_env;
 
         union {
             // Each bit specifies whether distance attenuation should be applied for the

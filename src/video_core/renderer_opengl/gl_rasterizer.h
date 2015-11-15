@@ -87,6 +87,10 @@ struct PicaShaderConfig {
             res.light_src[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
         }
 
+        res.lighting_lut.d0_abs = (regs.lighting.abs_lut_input.d0 == 0);
+        res.lighting_lut.d0_type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
+        res.clamp_highlights = regs.lighting.light_env.clamp_highlights;
+
         return res;
     }
 
@@ -118,6 +122,12 @@ struct PicaShaderConfig {
 
         bool lighting_enabled = false;
         unsigned num_lights = 0;
+        bool clamp_highlights = false;
+
+        struct {
+            bool d0_abs = false;
+            Pica::Regs::LightingLutInput d0_type = Pica::Regs::LightingLutInput::NH;
+        } lighting_lut;
     };
 };
 
@@ -231,6 +241,10 @@ private:
     };
 
     struct LightSrc {
+        std::array<GLfloat, 3> specular_0;
+        INSERT_PADDING_WORDS(1);
+        std::array<GLfloat, 3> specular_1;
+        INSERT_PADDING_WORDS(1);
         std::array<GLfloat, 3> diffuse;
         INSERT_PADDING_WORDS(1);
         std::array<GLfloat, 3> ambient;
@@ -315,6 +329,12 @@ private:
 
     /// Syncs the specified light's position to match the PICA register
     void SyncLightPosition(int light_index);
+
+    /// Syncs the specified light's specular 0 color to match the PICA register
+    void SyncLightSpecular0(int light_index);
+
+    /// Syncs the specified light's specular 1 color to match the PICA register
+    void SyncLightSpecular1(int light_index);
 
     /// Syncs the remaining OpenGL drawing state to match the current PICA state
     void SyncDrawState();

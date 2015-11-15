@@ -35,8 +35,7 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
         out += "primary_fragment_color";
         break;
     case Source::SecondaryFragmentColor:
-        // HACK: Until we implement fragment lighting, use zero
-        out += "vec4(0.0)";
+        out += "secondary_fragment_color";
         break;
     case Source::Texture0:
         out += "texture(tex[0], texcoord[0])";
@@ -334,6 +333,8 @@ in vec3 view;
 out vec4 color;
 
 struct LightSrc {
+    vec3 specular_0;
+    vec3 specular_1;
     vec3 diffuse;
     vec3 ambient;
     vec3 position;
@@ -358,6 +359,7 @@ uniform sampler2D tex[3];
 
 void main() {
 vec4 primary_fragment_color = vec4(0.0);
+vec4 secondary_fragment_color = vec4(0.0);
 )";
 
     if (config.lighting_enabled) {
@@ -367,41 +369,97 @@ vec4 primary_fragment_color = vec4(0.0);
         out += "    1.f - 2.f*(normquat.x*normquat.x + normquat.y*normquat.y)));\n";
         out += "vec4 secondary_color = vec4(0.0);\n";
         out += "vec3 diffuse_sum = vec3(0.0);\n";
+        out += "vec3 specular_sum = vec3(0.0);\n";
         out += "vec3 fragment_position = -view;\n";
+        out += "vec3 light_vector = vec3(0.0);\n";
+        out += "float dist_atten = 1.0;\n";
+
+        // Gets the index into the specified lookup table for specular lighting
+        auto GetLutIndex = [&](unsigned light_num, Regs::LightingLutInput input, bool abs) {
+            const std::string half_angle = "normalize(view + light_vector)";
+            std::string index;
+            switch (input) {
+            case Regs::LightingLutInput::NH:
+                index  = "dot(normal, " + half_angle + ")";
+                break;
+
+            case Regs::LightingLutInput::VH:
+                index = std::string("dot(view, " + half_angle + ")");
+                break;
+
+            case Regs::LightingLutInput::NV:
+                index = std::string("dot(normal, view)");
+                break;
+
+            case Regs::LightingLutInput::LN:
+                index  = std::string("dot(light_vector, normal)");
+                break;
+
+            default:
+                LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %d\n", (int)input);
+                UNIMPLEMENTED();
+                break;
+            }
+
+            if (abs) {
+                // In the range of [ 0.f, 1.f]
+                index = config.light_src[light_num].two_sided_diffuse ? "abs(" + index + ")" : "max(" + index + ", 0.f)";
+                return "clamp(int(" + index + " * 256.0), 0, 255)";
+            } else {
+                // In the range of [-1.f, 1.f]
+                index = "clamp(" + index + ", -1.0, 1.0)";
+                return std::string("uint(int(" + index + " * 127.f) & 0xff)");
+            }
+
+            return std::string();
+        };
 
         for (unsigned light_index = 0; light_index < config.num_lights; ++light_index) {
             unsigned num = config.light_src[light_index].num;
             std::string light_src = "light_src[" + std::to_string(num) + "]";
 
-            std::string light_vector;
             if (config.light_src[light_index].directional)
-                light_vector = "normalize(-" + light_src + ".position)";
+                out += "light_vector = normalize(-" + light_src + ".position);\n";
             else
-                light_vector = "normalize(" + light_src + ".position - fragment_position)";
+                out += "light_vector = normalize(" + light_src + ".position - fragment_position);\n";
 
             std::string dot_product;
             if (config.light_src[light_index].two_sided_diffuse)
-                dot_product = "abs(dot(" + light_vector + ", normal))";
+                dot_product = "abs(dot(light_vector, normal))";
             else
-                dot_product = "max(dot(" + light_vector + ", normal), 0.0)";
+                dot_product = "max(dot(light_vector, normal), 0.0)";
 
-            std::string dist_atten = "1.0";
+            // Compute distance attenuation value
+            out += "dist_atten = 1.0;\n";
             if (config.light_src[light_index].dist_atten_enabled) {
                 std::string scale = std::to_string(config.light_src[light_index].dist_atten_scale);
                 std::string bias = std::to_string(config.light_src[light_index].dist_atten_bias);
                 std::string lut_index = "(" + scale + " * length(fragment_position - " + light_src + ".position) + " + bias + ")";
                 std::string clamped_lut_index = "((clamp(int(" + lut_index + " * 256.0), 0, 255)))";
 
-                unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + num);
-
-                dist_atten = "lighting_lut_" + std::to_string(lut_num /4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "]";
+                const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + num);
+                out += "dist_atten = lighting_lut_" + std::to_string(lut_num / 4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "];\n";
             }
 
-            out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * " + dist_atten + ";\n";
+            // Compute primary fragment color (diffuse lighting) function
+            out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * dist_atten;\n";
+
+            // Compute secondary fragment color (specular lighting) function
+            std::string clamped_lut_index = GetLutIndex(num, config.lighting_lut.d0_type, config.lighting_lut.d0_abs);
+            const unsigned lut_num = (unsigned)Regs::LightingSampler::Distribution0;
+            std::string lut_lookup = "lighting_lut_" + std::to_string(lut_num / 4) + "[" + clamped_lut_index + "][" + std::to_string(lut_num & 3) + "]";
+
+            out += "specular_sum += (" + lut_lookup + " * light_src[" + std::to_string(num) + "].specular_0 * dist_atten);\n";
+        }
+
+        out += "float clamp_highlights = 1.0;\n";
+        if (config.clamp_highlights) {
+            out += "if (dot(light_vector, normal) <= 0.0) clamp_highlights = 0.0;\n";
         }
 
         out += "diffuse_sum += lighting_global_ambient;\n";
         out += "primary_fragment_color = vec4(clamp(diffuse_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
+        out += "secondary_fragment_color = vec4(clamp(clamp_highlights * specular_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
     }
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
