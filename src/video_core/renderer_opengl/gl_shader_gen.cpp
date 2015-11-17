@@ -368,19 +368,19 @@ vec4 secondary_fragment_color = vec4(0.0);
         out += "vec3 specular_sum = vec3(0.0);\n";
         out += "vec3 fragment_position = -view;\n";
         out += "vec3 light_vector = vec3(0.0);\n";
+        out += "vec3 half_angle_vector = vec3(0.0);\n";
         out += "float dist_atten = 1.0;\n";
 
         // Gets the index into the specified lookup table for specular lighting
         auto GetLutIndex = [&](unsigned light_num, Regs::LightingLutInput input, bool abs) {
-            const std::string half_angle = "normalize(view + light_vector)";
             std::string index;
             switch (input) {
             case Regs::LightingLutInput::NH:
-                index  = "dot(normal, " + half_angle + ")";
+                index  = "dot(normal, half_angle_vector)";
                 break;
 
             case Regs::LightingLutInput::VH:
-                index = std::string("dot(view, " + half_angle + ")");
+                index = std::string("dot(view, half_angle_vector)");
                 break;
 
             case Regs::LightingLutInput::NV:
@@ -441,6 +441,7 @@ vec4 secondary_fragment_color = vec4(0.0);
             out += "diffuse_sum += ((light_src[" + std::to_string(num) + "].diffuse * " + dot_product + ") + light_src[" + std::to_string(num) + "].ambient) * dist_atten;\n";
 
             // Compute secondary fragment color (specular lighting) function
+            out += "half_angle_vector = normalize(normalize(view) + light_vector);\n";
             std::string clamped_lut_index = GetLutIndex(num, config.lighting_lut.d0_type, config.lighting_lut.d0_abs);
             const unsigned lut_num = (unsigned)Regs::LightingSampler::Distribution0;
             std::string lut_lookup = "texture(lut[" + std::to_string(lut_num / 4) + "], " + clamped_lut_index + ")[" + std::to_string(lut_num & 3) + "]";
