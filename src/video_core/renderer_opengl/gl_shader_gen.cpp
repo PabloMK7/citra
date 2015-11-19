@@ -369,6 +369,7 @@ vec4 secondary_fragment_color = vec4(0.0);
         out += "vec3 fragment_position = -view;\n";
         out += "vec3 light_vector = vec3(0.0);\n";
         out += "vec3 half_angle_vector = vec3(0.0);\n";
+        out += "float clamp_highlights = 1.0;\n";
         out += "float dist_atten = 1.0;\n";
 
         // Gets the index into the specified lookup table for specular lighting
@@ -446,17 +447,16 @@ vec4 secondary_fragment_color = vec4(0.0);
             const unsigned lut_num = (unsigned)Regs::LightingSampler::Distribution0;
             std::string lut_lookup = "texture(lut[" + std::to_string(lut_num / 4) + "], " + clamped_lut_index + ")[" + std::to_string(lut_num & 3) + "]";
 
-            out += "specular_sum += (" + lut_lookup + " * light_src[" + std::to_string(num) + "].specular_0 * dist_atten);\n";
-        }
+            if (config.clamp_highlights) {
+                out += "clamp_highlights = (dot(light_vector, normal) <= 0.0) ? 0.0 : 1.0;\n";
+            }
 
-        out += "float clamp_highlights = 1.0;\n";
-        if (config.clamp_highlights) {
-            out += "if (dot(light_vector, normal) <= 0.0) clamp_highlights = 0.0;\n";
+            out += "specular_sum += clamp_highlights * " + lut_lookup + " * light_src[" + std::to_string(num) + "].specular_0 * dist_atten;\n";
         }
 
         out += "diffuse_sum += lighting_global_ambient;\n";
         out += "primary_fragment_color = vec4(clamp(diffuse_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
-        out += "secondary_fragment_color = vec4(clamp(clamp_highlights * specular_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
+        out += "secondary_fragment_color = vec4(clamp(specular_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
     }
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
