@@ -695,8 +695,8 @@ struct Regs {
                 INSERT_PADDING_WORDS(0x3);
 
                 union {
-                    BitField<0, 1, u32> w; // 1.f if 0, otherwise 0.f
-                    BitField<1, 1, u32> two_sided_diffuse; // when disabled, clamp dot-product to 0
+                    BitField<0, 1, u32> directional;
+                    BitField<1, 1, u32> two_sided_diffuse; // 1: GL_TRUE, 0: GL_FALSE; when disabled, clamp dot-product to 0
                 };
             };
 
@@ -714,21 +714,21 @@ struct Regs {
 
         union {
             BitField< 4, 4, u32> config;
-            BitField<27, 1, u32> clamp_highlights;
+            BitField<27, 1, u32> clamp_highlights; // 1: GL_TRUE, 0: GL_FALSE
         };
 
         union {
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light
 
-            BitField<24, 1, u32> dist_atten_enable_light_0;
-            BitField<25, 1, u32> dist_atten_enable_light_1;
-            BitField<26, 1, u32> dist_atten_enable_light_2;
-            BitField<27, 1, u32> dist_atten_enable_light_3;
-            BitField<28, 1, u32> dist_atten_enable_light_4;
-            BitField<29, 1, u32> dist_atten_enable_light_5;
-            BitField<30, 1, u32> dist_atten_enable_light_6;
-            BitField<31, 1, u32> dist_atten_enable_light_7;
+            BitField<24, 1, u32> dist_atten_enable_light_0; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<25, 1, u32> dist_atten_enable_light_1; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<26, 1, u32> dist_atten_enable_light_2; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<27, 1, u32> dist_atten_enable_light_3; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<28, 1, u32> dist_atten_enable_light_4; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<29, 1, u32> dist_atten_enable_light_5; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<30, 1, u32> dist_atten_enable_light_6; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<31, 1, u32> dist_atten_enable_light_7; // 0: GL_TRUE, 1: GL_FALSE
         };
 
         bool IsDistAttenEnabled(unsigned index) const {
@@ -754,13 +754,13 @@ struct Regs {
         u32 lut_data[8];
 
         union {
-            BitField< 1, 1, u32> d0;
-            BitField< 5, 1, u32> d1;
-            BitField< 9, 1, u32> sp;
-            BitField<13, 1, u32> fr;
-            BitField<17, 1, u32> rb;
-            BitField<21, 1, u32> rg;
-            BitField<25, 1, u32> rr;
+            BitField< 1, 1, u32> d0; // 0: GL_TRUE, 1: GL_FALSE
+            BitField< 5, 1, u32> d1; // 0: GL_TRUE, 1: GL_FALSE
+            BitField< 9, 1, u32> sp; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<13, 1, u32> fr; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<17, 1, u32> rb; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<21, 1, u32> rg; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<25, 1, u32> rr; // 0: GL_TRUE, 1: GL_FALSE
         } abs_lut_input;
 
         union {

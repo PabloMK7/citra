@@ -80,7 +80,7 @@ struct PicaShaderConfig {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
             res.light_src[light_index].num = num;
-            res.light_src[light_index].directional = light.w != 0;
+            res.light_src[light_index].directional = light.directional != 0;
             res.light_src[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
             res.light_src[light_index].dist_atten_enabled = regs.lighting.IsDistAttenEnabled(num);
             res.light_src[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
