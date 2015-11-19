@@ -256,6 +256,7 @@ void RendererOpenGL::InitOpenGLObjects() {
 
     state.draw.vertex_array = vertex_array_handle;
     state.draw.vertex_buffer = vertex_buffer_handle;
+    state.draw.uniform_buffer = 0;
     state.Apply();
 
     // Attach vertex data to VAO

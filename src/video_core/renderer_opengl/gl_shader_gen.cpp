@@ -329,13 +329,17 @@ in vec4 primary_color;
 in vec2 texcoord[3];
 
 out vec4 color;
+
+layout (std140) uniform shader_data {
+    vec4 const_color[NUM_TEV_STAGES];
+    vec4 tev_combiner_buffer_color;
+    int alphatest_ref;
+};
+
 )";
 
     using Uniform = RasterizerOpenGL::PicaShader::Uniform;
-    out += "layout(location = " + std::to_string((int)Uniform::AlphaTestRef) + ") uniform int alphatest_ref;\n";
-    out += "layout(location = " + std::to_string((int)Uniform::TevConstColors) + ") uniform vec4 const_color[NUM_TEV_STAGES];\n";
     out += "layout(location = " + std::to_string((int)Uniform::Texture0) + ") uniform sampler2D tex[3];\n";
-    out += "layout(location = " + std::to_string((int)Uniform::TevCombinerBufferColor) + ") uniform vec4 tev_combiner_buffer_color;\n";
 
     out += "void main() {\n";
     out += "vec4 combiner_buffer = tev_combiner_buffer_color;\n";

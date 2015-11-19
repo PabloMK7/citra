@@ -46,13 +46,20 @@ void RasterizerOpenGL::InitObjects() {
         state.texture_units[i].sampler = texture_samplers[i].sampler.handle;
     }
 
-    // Generate VBO and VAO
+    // Generate VBO, VAO and UBO
     vertex_buffer.Create();
     vertex_array.Create();
+    uniform_buffer.Create();
 
     state.draw.vertex_array = vertex_array.handle;
     state.draw.vertex_buffer = vertex_buffer.handle;
+    state.draw.uniform_buffer = uniform_buffer.handle;
     state.Apply();
+
+    // Bind the UBO to binding point 0
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, uniform_buffer.handle);
+
+    uniform_block_data.dirty = true;
 
     // Set vertex attributes
     glVertexAttribPointer(GLShader::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
@@ -146,6 +153,11 @@ void RasterizerOpenGL::DrawTriangles() {
     if (state.draw.shader_dirty) {
         SetShader();
         state.draw.shader_dirty = false;
+    }
+
+    if (uniform_block_data.dirty) {
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformData), &uniform_block_data.data, GL_STATIC_DRAW);
+        uniform_block_data.dirty = false;
     }
 
     glBufferData(GL_ARRAY_BUFFER, vertex_batch.size() * sizeof(HardwareVertex), vertex_batch.data(), GL_STREAM_DRAW);
@@ -485,6 +497,9 @@ void RasterizerOpenGL::SetShader() {
         glUniform1i(PicaShader::Uniform::Texture2, 2);
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
+
+        unsigned int block_index = glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
+        glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
     }
 
     // Update uniforms
@@ -615,7 +630,10 @@ void RasterizerOpenGL::SyncBlendColor() {
 
 void RasterizerOpenGL::SyncAlphaTest() {
     const auto& regs = Pica::g_state.regs;
-    glUniform1i(PicaShader::Uniform::AlphaTestRef, regs.output_merger.alpha_test.ref);
+    if (regs.output_merger.alpha_test.ref != uniform_block_data.data.alphatest_ref) {
+        uniform_block_data.data.alphatest_ref = regs.output_merger.alpha_test.ref;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncLogicOp() {
@@ -647,12 +665,18 @@ void RasterizerOpenGL::SyncDepthTest() {
 
 void RasterizerOpenGL::SyncCombinerColor() {
     auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
-    glUniform4fv(PicaShader::Uniform::TevCombinerBufferColor, 1, combiner_color.data());
+    if (combiner_color != uniform_block_data.data.tev_combiner_buffer_color) {
+        uniform_block_data.data.tev_combiner_buffer_color = combiner_color;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncTevConstColor(int stage_index, const Pica::Regs::TevStageConfig& tev_stage) {
     auto const_color = PicaToGL::ColorRGBA8(tev_stage.const_color);
-    glUniform4fv(PicaShader::Uniform::TevConstColors + stage_index, 1, const_color.data());
+    if (const_color != uniform_block_data.data.const_color[stage_index]) {
+        uniform_block_data.data.const_color[stage_index] = const_color;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncDrawState() {
@@ -683,6 +707,7 @@ void RasterizerOpenGL::SyncDrawState() {
         }
     }
 
+    state.draw.uniform_buffer = uniform_buffer.handle;
     state.Apply();
 }
 

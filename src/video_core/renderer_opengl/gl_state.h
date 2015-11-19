@@ -64,6 +64,7 @@ public:
         GLuint framebuffer; // GL_DRAW_FRAMEBUFFER_BINDING
         GLuint vertex_array; // GL_VERTEX_ARRAY_BINDING
         GLuint vertex_buffer; // GL_ARRAY_BUFFER_BINDING
+        GLuint uniform_buffer; // GL_UNIFORM_BUFFER_BINDING
         GLuint shader_program; // GL_CURRENT_PROGRAM
         bool shader_dirty;
     } draw;
