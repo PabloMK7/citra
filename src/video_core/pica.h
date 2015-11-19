@@ -715,26 +715,29 @@ struct Regs {
         union {
             BitField< 4, 4, u32> config;
             BitField<27, 1, u32> clamp_highlights;
-        } light_env;
+        };
 
         union {
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light
 
-            BitField<24, 1, u32> light_0;
-            BitField<25, 1, u32> light_1;
-            BitField<26, 1, u32> light_2;
-            BitField<27, 1, u32> light_3;
-            BitField<28, 1, u32> light_4;
-            BitField<29, 1, u32> light_5;
-            BitField<30, 1, u32> light_6;
-            BitField<31, 1, u32> light_7;
+            BitField<24, 1, u32> dist_atten_enable_light_0;
+            BitField<25, 1, u32> dist_atten_enable_light_1;
+            BitField<26, 1, u32> dist_atten_enable_light_2;
+            BitField<27, 1, u32> dist_atten_enable_light_3;
+            BitField<28, 1, u32> dist_atten_enable_light_4;
+            BitField<29, 1, u32> dist_atten_enable_light_5;
+            BitField<30, 1, u32> dist_atten_enable_light_6;
+            BitField<31, 1, u32> dist_atten_enable_light_7;
+        };
 
-            bool IsEnabled(unsigned index) const {
-                const unsigned enable[] = { light_0, light_1, light_2, light_3, light_4, light_5, light_6, light_7 };
-                return enable[index] == 0;
-            }
-        } dist_atten_enable;
+        bool IsDistAttenEnabled(unsigned index) const {
+            const unsigned enable[] = { dist_atten_enable_light_0, dist_atten_enable_light_1,
+                                        dist_atten_enable_light_2, dist_atten_enable_light_3,
+                                        dist_atten_enable_light_4, dist_atten_enable_light_5,
+                                        dist_atten_enable_light_6, dist_atten_enable_light_7 };
+            return enable[index] == 0;
+        }
 
         union {
             BitField<0, 8, u32> index;      ///< Index at which to set data in the LUT

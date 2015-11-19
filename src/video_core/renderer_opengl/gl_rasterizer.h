@@ -80,16 +80,16 @@ struct PicaShaderConfig {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
             res.light_src[light_index].num = num;
-            res.light_src[light_index].directional = light.w;
-            res.light_src[light_index].two_sided_diffuse = light.two_sided_diffuse;
-            res.light_src[light_index].dist_atten_enabled = regs.lighting.dist_atten_enable.IsEnabled(num);
+            res.light_src[light_index].directional = light.w != 0;
+            res.light_src[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            res.light_src[light_index].dist_atten_enabled = regs.lighting.IsDistAttenEnabled(num);
             res.light_src[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
             res.light_src[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
         }
 
-        res.lighting_lut.d0_abs = (regs.lighting.abs_lut_input.d0 == 0);
+        res.lighting_lut.d0_abs = regs.lighting.abs_lut_input.d0 == 0;
         res.lighting_lut.d0_type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
-        res.clamp_highlights = regs.lighting.light_env.clamp_highlights;
+        res.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;
     }
