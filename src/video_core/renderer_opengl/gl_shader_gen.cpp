@@ -416,7 +416,7 @@ vec4 secondary_fragment_color = vec4(0.0);
             std::string light_src = "light_src[" + std::to_string(num) + "]";
 
             if (config.light_src[light_index].directional)
-                out += "light_vector = normalize(-" + light_src + ".position);\n";
+                out += "light_vector = normalize(" + light_src + ".position);\n";
             else
                 out += "light_vector = normalize(" + light_src + ".position - fragment_position);\n";
 
