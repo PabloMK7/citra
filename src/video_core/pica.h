@@ -718,6 +718,8 @@ struct Regs {
         };
 
         union {
+            BitField<16, 1, u32> lut_enable_d0; // 0: GL_TRUE, 1: GL_FALSE
+
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light
 

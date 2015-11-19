@@ -73,23 +73,24 @@ struct PicaShaderConfig {
 
         // Fragment lighting
 
-        res.lighting_enabled = !regs.lighting.disable;
-        res.num_lights = regs.lighting.src_num + 1;
+        res.lighting.enable = !regs.lighting.disable;
+        res.lighting.src_num = regs.lighting.src_num + 1;
 
-        for (unsigned light_index = 0; light_index < res.num_lights; ++light_index) {
+        for (unsigned light_index = 0; light_index < res.lighting.src_num; ++light_index) {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
-            res.light_src[light_index].num = num;
-            res.light_src[light_index].directional = light.directional != 0;
-            res.light_src[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
-            res.light_src[light_index].dist_atten_enabled = regs.lighting.IsDistAttenEnabled(num);
-            res.light_src[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
-            res.light_src[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
+            res.lighting.light[light_index].num = num;
+            res.lighting.light[light_index].directional = light.directional != 0;
+            res.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            res.lighting.light[light_index].dist_atten_enable = regs.lighting.IsDistAttenEnabled(num);
+            res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
+            res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
         }
 
-        res.lighting_lut.d0_abs = regs.lighting.abs_lut_input.d0 == 0;
-        res.lighting_lut.d0_type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
-        res.clamp_highlights = regs.lighting.clamp_highlights != 0;
+        res.lighting.lut_d0.enable = regs.lighting.lut_enable_d0 == 0;
+        res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.d0 == 0;
+        res.lighting.lut_d0.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
+        res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;
     }
@@ -112,22 +113,25 @@ struct PicaShaderConfig {
         u8 combiner_buffer_input = 0;
 
         struct {
-            unsigned num = 0;
-            bool directional = false;
-            bool two_sided_diffuse = false;
-            bool dist_atten_enabled = false;
-            GLfloat dist_atten_scale = 0.0f;
-            GLfloat dist_atten_bias = 0.0f;
-        } light_src[8];
+            struct {
+                unsigned num = 0;
+                bool directional = false;
+                bool two_sided_diffuse = false;
+                bool dist_atten_enable = false;
+                GLfloat dist_atten_scale = 0.0f;
+                GLfloat dist_atten_bias = 0.0f;
+            } light[8];
 
-        bool lighting_enabled = false;
-        unsigned num_lights = 0;
-        bool clamp_highlights = false;
+            bool enable = false;
+            unsigned src_num = 0;
+            bool clamp_highlights = false;
 
-        struct {
-            bool d0_abs = false;
-            Pica::Regs::LightingLutInput d0_type = Pica::Regs::LightingLutInput::NH;
-        } lighting_lut;
+            struct {
+                bool enable = false;
+                bool abs_input = false;
+                Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
+            } lut_d0;
+        } lighting;
     };
 };
 

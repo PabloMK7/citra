@@ -360,7 +360,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         if (abs) {
             // LUT index is in the range of (0.0, 1.0)
-            index = config.light_src[light_num].two_sided_diffuse ? "abs(" + index + ")" : "max(" + index + ", 0.f)";
+            index = config.lighting.light[light_num].two_sided_diffuse ? "abs(" + index + ")" : "max(" + index + ", 0.f)";
             return "clamp(" + index + ", 0.0, FLOAT_255)";
         } else {
             // LUT index is in the range of (-1.0, 1.0)
@@ -378,10 +378,9 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     };
 
     // Write the code to emulate each enabled light
-    for (unsigned light_index = 0; light_index < config.num_lights; ++light_index) {
-        unsigned num = config.light_src[light_index].num;
-        const auto& light_config = config.light_src[light_index];
-        std::string light_src = "light_src[" + std::to_string(num) + "]";
+    for (unsigned light_index = 0; light_index < config.lighting.src_num; ++light_index) {
+        const auto& light_config = config.lighting.light[light_index];
+        std::string light_src = "light_src[" + std::to_string(light_config.num) + "]";
 
         // Compute light vector (directional or positional)
         if (light_config.directional)
@@ -394,12 +393,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // If enabled, compute distance attenuation value
         std::string dist_atten = "1.0";
-        if (light_config.dist_atten_enabled) {
+        if (light_config.dist_atten_enable) {
             std::string scale = std::to_string(light_config.dist_atten_scale);
             std::string bias = std::to_string(light_config.dist_atten_bias);
             std::string lut_index = "(" + scale + " * length(-view - " + light_src + ".position) + " + bias + ")";
             lut_index = "((clamp(" + lut_index + ", 0.0, FLOAT_255)))";
-            const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + num);
+            const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + light_config.num);
             dist_atten = GetLutValue((Regs::LightingSampler)lut_num, lut_index);
         }
 
@@ -407,11 +406,14 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         out += "diffuse_sum += ((" + light_src + ".diffuse * " + dot_product + ") + " + light_src + ".ambient) * " + dist_atten + ";\n";
 
         // If enabled, clamp specular component if lighting result is negative
-        std::string clamp_highlights = config.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
+        std::string clamp_highlights = config.lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
 
-        // Lookup specular distribution 0 LUT value
-        std::string d0_lut_index = GetLutIndex(num, config.lighting_lut.d0_type, config.lighting_lut.d0_abs);
-        std::string d0_lut_value = GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index);
+        // Lookup specular "distribution 0" LUT value
+        std::string d0_lut_value = "1.0";
+        if (config.lighting.lut_d0.enable) {
+            std::string d0_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d0.type, config.lighting.lut_d0.abs_input);
+            d0_lut_value = GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index);
+        }
 
         // Compute secondary fragment color (specular lighting) function
         out += "specular_sum += " + clamp_highlights + " * " + d0_lut_value + " * " + light_src + ".specular_0 * " + dist_atten + ";\n";
@@ -463,14 +465,14 @@ vec4 primary_fragment_color = vec4(0.0);
 vec4 secondary_fragment_color = vec4(0.0);
 )";
 
-    if (config.lighting_enabled)
-        WriteLighting(out, config);
-
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.alpha_test_func == Regs::CompareFunc::Never) {
         out += "discard; }";
         return out;
     }
+
+    if (config.lighting.enable)
+        WriteLighting(out, config);
 
     out += "vec4 combiner_buffer = vec4(0.0);\n";
     out += "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n";
