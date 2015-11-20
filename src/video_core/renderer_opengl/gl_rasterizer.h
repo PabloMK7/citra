@@ -90,6 +90,7 @@ struct PicaShaderConfig {
         res.lighting.lut_d0.enable = regs.lighting.lut_enable_d0 == 0;
         res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.d0 == 0;
         res.lighting.lut_d0.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
+        res.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
         res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;
@@ -130,7 +131,8 @@ struct PicaShaderConfig {
                 bool enable = false;
                 bool abs_input = false;
                 Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
-            } lut_d0;
+                float scale = 1.0f;
+            } lut_d0, lut_d1, lut_fr;
         } lighting;
     };
 };

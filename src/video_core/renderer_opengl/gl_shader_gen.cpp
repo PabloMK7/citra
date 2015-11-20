@@ -412,7 +412,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         std::string d0_lut_value = "1.0";
         if (config.lighting.lut_d0.enable) {
             std::string d0_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d0.type, config.lighting.lut_d0.abs_input);
-            d0_lut_value = GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index);
+            d0_lut_value = "(" + std::to_string(config.lighting.lut_d0.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index) + ")";
         }
 
         // Compute secondary fragment color (specular lighting) function

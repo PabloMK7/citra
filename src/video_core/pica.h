@@ -657,6 +657,44 @@ struct Regs {
         DistanceAttenuation = 16,
     };
 
+    /**
+     * Pica fragment lighting supports using different LUTs for each lighting component:
+     * Reflectance R, G, and B channels, distribution function for specular components 0 and 1,
+     * fresnel factor, and spotlight attenuation. Furthermore, which LUTs are used for each channel
+     * (or whether a channel is enabled at all) is specified by various pre-defined lighting
+     * configurations. With configurations that require more LUTs, more cycles are required on HW to
+     * perform lighting computations.
+     */
+    enum class LightingConfig {
+        Config0 = 0, ///< Reflect Red, Distribution 0, Spotlight
+        Config1 = 1, ///< Reflect Red, Fresnel, Spotlight
+        Config2 = 2, ///< Reflect Red, Distribution 0/1
+        Config3 = 3, ///< Distribution 0/1, Fresnel
+        Config4 = 4, ///< Reflect Red/Green/Blue, Distribution 0/1, Spotlight
+        Config5 = 5, ///< Reflect Red/Green/Blue, Distribution 0, Fresnel, Spotlight
+        Config6 = 6, ///< Reflect Red, Distribution 0/1, Fresnel, Spotlight
+        Config7 = 8, ///< Reflect Red/Green/Blue, Distribution 0/1, Fresnel, Spotlight
+                     ///< NOTE: '8' is intentional, '7' does not appear to be a valid configuration
+    };
+
+    /// Selects which lighting components are affected by fresnel
+    enum class LightingFresnelSelector {
+        None = 0,                             ///< Fresnel is disabled
+        PrimaryAlpha = 1,                     ///< Primary (diffuse) lighting alpha is affected by fresnel
+        SecondaryAlpha = 2,                   ///< Secondary (specular) lighting alpha is affected by fresnel
+        Both = PrimaryAlpha | SecondaryAlpha, ///< Both primary and secondary lighting alphas are affected by fresnel
+    };
+
+    /// Factor used to scale the output of a lighting LUT
+    enum class LightingScale {
+        Scale1 = 0,   ///< Scale is 1x
+        Scale2 = 1,   ///< Scale is 2x
+        Scale4 = 2,   ///< Scale is 4x
+        Scale8 = 3,   ///< Scale is 8x
+        Scale1_4 = 6, ///< Scale is 0.25x
+        Scale1_2 = 7, ///< Scale is 0.5x
+    };
+
     enum class LightingLutInput {
         NH = 0, // Cosine of the angle between the normal and half-angle vectors
         VH = 1, // Cosine of the angle between the view and half-angle vectors
@@ -775,7 +813,35 @@ struct Regs {
             BitField<24, 3, u32> rr;
         } lut_input;
 
-        INSERT_PADDING_WORDS(0x7);
+        union {
+            BitField< 0, 3, LightingScale> d0;
+            BitField< 4, 3, LightingScale> d1;
+            BitField< 8, 3, LightingScale> sp;
+            BitField<12, 3, LightingScale> fr;
+            BitField<16, 3, LightingScale> rb;
+            BitField<20, 3, LightingScale> rg;
+            BitField<24, 3, LightingScale> rr;
+
+            static float GetScale(LightingScale scale) {
+                switch (scale) {
+                case LightingScale::Scale1:
+                    return 1.0f;
+                case LightingScale::Scale2:
+                    return 2.0f;
+                case LightingScale::Scale4:
+                    return 4.0f;
+                case LightingScale::Scale8:
+                    return 8.0f;
+                case LightingScale::Scale1_4:
+                    return 0.25f;
+                case LightingScale::Scale1_2:
+                    return 0.5f;
+                }
+                return 0.0f;
+            }
+        } lut_scale;
+
+        INSERT_PADDING_WORDS(0x6);
 
         union {
             // There are 8 light enable "slots", corresponding to the total number of lights
