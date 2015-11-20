@@ -408,15 +408,26 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         // If enabled, clamp specular component if lighting result is negative
         std::string clamp_highlights = config.lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
 
-        // Lookup specular "distribution 0" LUT value
+        // Specular 0 component
         std::string d0_lut_value = "1.0";
-        if (config.lighting.lut_d0.enable) {
+        if (config.lighting.lut_d0.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Distribution0)) {
+            // Lookup specular "distribution 0" LUT value
             std::string d0_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d0.type, config.lighting.lut_d0.abs_input);
             d0_lut_value = "(" + std::to_string(config.lighting.lut_d0.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index) + ")";
         }
+        std::string specular_0 = "(" + d0_lut_value + " * " + light_src + ".specular_0)";
+
+        // Specular 1 component
+        std::string d1_lut_value = "1.0";
+        if (config.lighting.lut_d1.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Distribution1)) {
+            // Lookup specular "distribution 1" LUT value
+            std::string d1_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d1.type, config.lighting.lut_d1.abs_input);
+            d1_lut_value = "(" + std::to_string(config.lighting.lut_d1.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution1, d1_lut_index) + ")";
+        }
+        std::string specular_1 = "(" + d1_lut_value + " * " + light_src + ".specular_1)";
 
         // Compute secondary fragment color (specular lighting) function
-        out += "specular_sum += " + clamp_highlights + " * " + d0_lut_value + " * " + light_src + ".specular_0 * " + dist_atten + ";\n";
+        out += "specular_sum += (" + specular_0 + " + " + specular_1 + ") * " + clamp_highlights + " * " + dist_atten + ";\n";
     }
 
     // Sum final lighting result

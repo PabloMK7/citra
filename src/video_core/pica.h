@@ -713,6 +713,16 @@ struct Regs {
         }
     };
 
+    static bool IsLightingSamplerSupported(LightingConfig config, LightingSampler sampler) {
+        switch (sampler) {
+        case LightingSampler::Distribution0:
+            return (config != LightingConfig::Config1);
+        case LightingSampler::Distribution1:
+            return (config != LightingConfig::Config0) && (config != LightingConfig::Config1) && (config != LightingConfig::Config5);
+        }
+        return false;
+    }
+
     struct {
         struct LightSrc {
             LightColor specular_0;  // material.specular_0 * light.specular_0
@@ -751,12 +761,13 @@ struct Regs {
         BitField<0, 3, u32> src_num; // number of enabled lights - 1
 
         union {
-            BitField< 4, 4, u32> config;
+            BitField< 4, 4, LightingConfig> config;
             BitField<27, 1, u32> clamp_highlights; // 1: GL_TRUE, 0: GL_FALSE
         };
 
         union {
             BitField<16, 1, u32> lut_enable_d0; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<17, 1, u32> lut_enable_d1; // 0: GL_TRUE, 1: GL_FALSE
 
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light
@@ -804,13 +815,13 @@ struct Regs {
         } abs_lut_input;
 
         union {
-            BitField< 0, 3, u32> d0;
-            BitField< 4, 3, u32> d1;
-            BitField< 8, 3, u32> sp;
-            BitField<12, 3, u32> fr;
-            BitField<16, 3, u32> rb;
-            BitField<20, 3, u32> rg;
-            BitField<24, 3, u32> rr;
+            BitField< 0, 3, LightingLutInput> d0;
+            BitField< 4, 3, LightingLutInput> d1;
+            BitField< 8, 3, LightingLutInput> sp;
+            BitField<12, 3, LightingLutInput> fr;
+            BitField<16, 3, LightingLutInput> rb;
+            BitField<20, 3, LightingLutInput> rg;
+            BitField<24, 3, LightingLutInput> rr;
         } lut_input;
 
         union {
