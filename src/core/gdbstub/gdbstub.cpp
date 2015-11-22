@@ -57,9 +57,8 @@ const u32 MSG_WAITALL = 8;
 
 const u32 R0_REGISTER = 0;
 const u32 R15_REGISTER = 15;
-const u32 CSPR_REGISTER = 25;
+const u32 CPSR_REGISTER = 25;
 const u32 FPSCR_REGISTER = 58;
-const u32 MAX_REGISTERS = 90;
 
 namespace GDBStub {
 
@@ -472,10 +471,10 @@ static void ReadRegister() {
 
     if (id >= R0_REGISTER && id <= R15_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetReg(id));
-    } else if (id == CSPR_REGISTER) {
+    } else if (id == CPSR_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetCPSR());
-    } else if (id > CSPR_REGISTER && id < FPSCR_REGISTER) {
-        IntToGdbHex(reply, Core::g_app_core->GetVFPReg(id - CSPR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
+    } else if (id > CPSR_REGISTER && id < FPSCR_REGISTER) {
+        IntToGdbHex(reply, Core::g_app_core->GetVFPReg(id - CPSR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
     } else if (id == FPSCR_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
         IntToGdbHex(reply + 8, 0);
@@ -492,21 +491,25 @@ static void ReadRegisters() {
     memset(buffer, 0, sizeof(buffer));
 
     u8* bufptr = buffer;
-    for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
-        if (i <= R15_REGISTER) {
+    for (int i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
+        if (reg <= R15_REGISTER) {
             IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetReg(reg));
-        } else if (i == CSPR_REGISTER) {
+        } else if (reg == CPSR_REGISTER) {
             IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetCPSR());
-        } else if (i < CSPR_REGISTER) {
+        } else if (reg == CPSR_REGISTER - 1) {
+            // Dummy FPA register, ignore
+            IntToGdbHex(bufptr + i * CHAR_BIT, 0);
+        } else if (reg < CPSR_REGISTER) {
+            // Dummy FPA registers, ignore
             IntToGdbHex(bufptr + i * CHAR_BIT, 0);
             IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
-            i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
-            reg++;
-        } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CSPR_REGISTER - 1));
+            IntToGdbHex(bufptr + (i + 2) * CHAR_BIT, 0);
+            i += 2;
+        } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
+            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CPSR_REGISTER - 1));
             IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
             i++;
-        } else if (i == MAX_REGISTERS) {
+        } else if (reg == FPSCR_REGISTER) {
             IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
         }
     }
@@ -527,10 +530,10 @@ static void WriteRegister() {
 
     if (id >= R0_REGISTER && id <= R15_REGISTER) {
         Core::g_app_core->SetReg(id, GdbHexToInt(buffer_ptr));
-    } else if (id == CSPR_REGISTER) {
+    } else if (id == CPSR_REGISTER) {
         Core::g_app_core->SetCPSR(GdbHexToInt(buffer_ptr));
-    } else if (id > CSPR_REGISTER && id < FPSCR_REGISTER) {
-        Core::g_app_core->SetVFPReg(id - CSPR_REGISTER - 1, GdbHexToInt(buffer_ptr));
+    } else if (id > CPSR_REGISTER && id < FPSCR_REGISTER) {
+        Core::g_app_core->SetVFPReg(id - CPSR_REGISTER - 1, GdbHexToInt(buffer_ptr));
     } else if (id == FPSCR_REGISTER) {
         Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr));
     } else {
@@ -547,18 +550,20 @@ static void WriteRegisters() {
     if (command_buffer[0] != 'G')
         return SendReply("E01");
 
-    for (int i = 0, reg = 0; i <= MAX_REGISTERS; i++, reg++) {
-        if (i <= R15_REGISTER) {
+    for (int i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
+        if (reg <= R15_REGISTER) {
             Core::g_app_core->SetReg(reg, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
-        } else if (i == CSPR_REGISTER) {
+        } else if (reg == CPSR_REGISTER) {
             Core::g_app_core->SetCPSR(GdbHexToInt(buffer_ptr + i * CHAR_BIT));
-        } else if (i < CSPR_REGISTER) {
-            i++; // These registers seem to be all 64bit instead of 32bit, so skip two instead of one
-            reg++;
-        } else if (i > CSPR_REGISTER && i < MAX_REGISTERS) {
-            Core::g_app_core->SetVFPReg(reg - CSPR_REGISTER - 1, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+        } else if (reg == CPSR_REGISTER - 1) {
+            // Dummy FPA register, ignore
+        } else if (reg < CPSR_REGISTER) {
+            // Dummy FPA registers, ignore
+            i += 2;
+        } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
+            Core::g_app_core->SetVFPReg(reg - CPSR_REGISTER - 1, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
             i++; // Skip padding
-        } else if (i == MAX_REGISTERS) {
+        } else if (reg == FPSCR_REGISTER) {
             Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
         }
     }
