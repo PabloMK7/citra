@@ -11,8 +11,10 @@
 namespace SSL_C {
 
 const Interface::FunctionInfo FunctionTable[] = {
+    {0x00010002, nullptr,               "Initialize"},
     {0x000200C2, nullptr,               "CreateContext"},
     {0x00050082, nullptr,               "AddTrustedRootCA"},
+    {0x00110042, nullptr,               "GenerateRandomData"},
     {0x00150082, nullptr,               "Read"},
     {0x00170082, nullptr,               "Write"},
 };
