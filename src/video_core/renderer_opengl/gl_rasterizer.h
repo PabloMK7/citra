@@ -97,7 +97,13 @@ struct PicaShaderConfig {
         res.lighting.lut_d1.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d1.Value();
         res.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
+        res.lighting.lut_fr.enable = regs.lighting.lut_enable_fr == 0;
+        res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.fr == 0;
+        res.lighting.lut_fr.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.fr.Value();
+        res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
+
         res.lighting.config = regs.lighting.config;
+        res.lighting.fresnel_selector = regs.lighting.fresnel_selector;
         res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;
@@ -134,6 +140,7 @@ struct PicaShaderConfig {
             unsigned src_num = 0;
             bool clamp_highlights = false;
             Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
+            Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
 
             struct {
                 bool enable = false;

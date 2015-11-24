@@ -321,8 +321,8 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
 /// Writes the code to emulate fragment lighting
 static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     // Define lighting globals
-    out += "vec3 diffuse_sum = vec3(0.0);\n";
-    out += "vec3 specular_sum = vec3(0.0);\n";
+    out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n";
+    out += "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n";
     out += "vec3 light_vector = vec3(0.0);\n";
 
     // Convert interpolated quaternion to a GL fragment normal
@@ -402,9 +402,6 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             dist_atten = GetLutValue((Regs::LightingSampler)lut_num, lut_index);
         }
 
-        // Compute primary fragment color (diffuse lighting) function
-        out += "diffuse_sum += ((" + light_src + ".diffuse * " + dot_product + ") + " + light_src + ".ambient) * " + dist_atten + ";\n";
-
         // If enabled, clamp specular component if lighting result is negative
         std::string clamp_highlights = config.lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
 
@@ -426,14 +423,34 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         }
         std::string specular_1 = "(" + d1_lut_value + " * " + light_src + ".specular_1)";
 
+        // Fresnel
+        if (config.lighting.lut_fr.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Fresnel)) {
+            // Lookup fresnel LUT value
+            std::string fr_lut_index = GetLutIndex(light_config.num, config.lighting.lut_fr.type, config.lighting.lut_fr.abs_input);
+            std::string fr_lut_value = "(" + std::to_string(config.lighting.lut_fr.scale) + " * " + GetLutValue(Regs::LightingSampler::Fresnel, fr_lut_index) + ")";
+
+            // Enabled for difffuse lighting alpha component
+            if (config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::PrimaryAlpha ||
+                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::BothAlpha)
+                out += "diffuse_sum.a  *= " + fr_lut_value + ";\n";
+
+            // Enabled for the specular lighting alpha component
+            if (config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::SecondaryAlpha ||
+                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::BothAlpha)
+                out += "specular_sum.a *= " + fr_lut_value + ";\n";
+        }
+
+        // Compute primary fragment color (diffuse lighting) function
+        out += "diffuse_sum.rgb += ((" + light_src + ".diffuse * " + dot_product + ") + " + light_src + ".ambient) * " + dist_atten + ";\n";
+
         // Compute secondary fragment color (specular lighting) function
-        out += "specular_sum += (" + specular_0 + " + " + specular_1 + ") * " + clamp_highlights + " * " + dist_atten + ";\n";
+        out += "specular_sum.rgb += (" + specular_0 + " + " + specular_1 + ") * " + clamp_highlights + " * " + dist_atten + ";\n";
     }
 
     // Sum final lighting result
-    out += "diffuse_sum += lighting_global_ambient;\n";
-    out += "primary_fragment_color = vec4(clamp(diffuse_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
-    out += "secondary_fragment_color = vec4(clamp(specular_sum, vec3(0.0), vec3(1.0)), 1.0);\n";
+    out += "diffuse_sum.rgb += lighting_global_ambient;\n";
+    out += "primary_fragment_color = clamp(diffuse_sum, vec4(0.0), vec4(1.0));\n";
+    out += "secondary_fragment_color = clamp(specular_sum, vec4(0.0), vec4(1.0));\n";
 }
 
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
