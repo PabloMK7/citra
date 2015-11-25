@@ -341,11 +341,11 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             break;
 
         case Regs::LightingLutInput::VH:
-            index = std::string("dot(view, " + half_angle + ")");
+            index = std::string("dot(normalize(view), " + half_angle + ")");
             break;
 
         case Regs::LightingLutInput::NV:
-            index = std::string("dot(normal, view)");
+            index = std::string("dot(normal, normalize(view))");
             break;
 
         case Regs::LightingLutInput::LN:
