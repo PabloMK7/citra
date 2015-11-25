@@ -138,13 +138,6 @@ public:
     struct PicaShader {
         /// OpenGL shader resource
         OGLShader shader;
-
-        /// Fragment shader uniforms
-        enum Uniform : GLuint {
-            Texture0 = 0,
-            Texture1 = 1,
-            Texture2 = 2,
-        };
     };
 
 private:
