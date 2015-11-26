@@ -321,9 +321,10 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
 /// Writes the code to emulate fragment lighting
 static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     // Define lighting globals
-    out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n";
-    out += "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n";
-    out += "vec3 light_vector = vec3(0.0);\n";
+    out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
+           "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
+           "vec3 light_vector = vec3(0.0);\n"
+           "vec3 refl_value = vec3(0.0);\n";
 
     // Convert interpolated quaternion to a GL fragment normal
     out += "vec3 normal = normalize(vec3(\n";
@@ -396,10 +397,10 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         if (light_config.dist_atten_enable) {
             std::string scale = std::to_string(light_config.dist_atten_scale);
             std::string bias = std::to_string(light_config.dist_atten_bias);
-            std::string lut_index = "(" + scale + " * length(-view - " + light_src + ".position) + " + bias + ")";
-            lut_index = "((clamp(" + lut_index + ", 0.0, FLOAT_255)))";
+            std::string index = "(" + scale + " * length(-view - " + light_src + ".position) + " + bias + ")";
+            index = "((clamp(" + index + ", 0.0, FLOAT_255)))";
             const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + light_config.num);
-            dist_atten = GetLutValue((Regs::LightingSampler)lut_num, lut_index);
+            dist_atten = GetLutValue((Regs::LightingSampler)lut_num, index);
         }
 
         // If enabled, clamp specular component if lighting result is negative
@@ -409,35 +410,62 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         std::string d0_lut_value = "1.0";
         if (config.lighting.lut_d0.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Distribution0)) {
             // Lookup specular "distribution 0" LUT value
-            std::string d0_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d0.type, config.lighting.lut_d0.abs_input);
-            d0_lut_value = "(" + std::to_string(config.lighting.lut_d0.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution0, d0_lut_index) + ")";
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_d0.type, config.lighting.lut_d0.abs_input);
+            d0_lut_value = "(" + std::to_string(config.lighting.lut_d0.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution0, index) + ")";
         }
         std::string specular_0 = "(" + d0_lut_value + " * " + light_src + ".specular_0)";
+
+        // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
+        if (config.lighting.lut_rr.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::ReflectRed)) {
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_rr.type, config.lighting.lut_rr.abs_input);
+            std::string value = "(" + std::to_string(config.lighting.lut_rr.scale) + " * " + GetLutValue(Regs::LightingSampler::ReflectRed, index) + ")";
+            out += "refl_value.r = " + value + ";\n";
+        } else {
+            out += "refl_value.r = 1.0;\n";
+        }
+
+        // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
+        if (config.lighting.lut_rg.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::ReflectGreen)) {
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_rg.type, config.lighting.lut_rg.abs_input);
+            std::string value = "(" + std::to_string(config.lighting.lut_rg.scale) + " * " + GetLutValue(Regs::LightingSampler::ReflectGreen, index) + ")";
+            out += "refl_value.g = " + value + ";\n";
+        } else {
+            out += "refl_value.g = refl_value.r;\n";
+        }
+
+        // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
+        if (config.lighting.lut_rb.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::ReflectBlue)) {
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_rb.type, config.lighting.lut_rb.abs_input);
+            std::string value = "(" + std::to_string(config.lighting.lut_rb.scale) + " * " + GetLutValue(Regs::LightingSampler::ReflectBlue, index) + ")";
+            out += "refl_value.b = " + value + ";\n";
+        } else {
+            out += "refl_value.b = refl_value.r;\n";
+        }
 
         // Specular 1 component
         std::string d1_lut_value = "1.0";
         if (config.lighting.lut_d1.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Distribution1)) {
             // Lookup specular "distribution 1" LUT value
-            std::string d1_lut_index = GetLutIndex(light_config.num, config.lighting.lut_d1.type, config.lighting.lut_d1.abs_input);
-            d1_lut_value = "(" + std::to_string(config.lighting.lut_d1.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution1, d1_lut_index) + ")";
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_d1.type, config.lighting.lut_d1.abs_input);
+            d1_lut_value = "(" + std::to_string(config.lighting.lut_d1.scale) + " * " + GetLutValue(Regs::LightingSampler::Distribution1, index) + ")";
         }
-        std::string specular_1 = "(" + d1_lut_value + " * " + light_src + ".specular_1)";
+        std::string specular_1 = "(" + d1_lut_value + " * refl_value * " + light_src + ".specular_1)";
 
         // Fresnel
         if (config.lighting.lut_fr.enable && Pica::Regs::IsLightingSamplerSupported(config.lighting.config, Pica::Regs::LightingSampler::Fresnel)) {
             // Lookup fresnel LUT value
-            std::string fr_lut_index = GetLutIndex(light_config.num, config.lighting.lut_fr.type, config.lighting.lut_fr.abs_input);
-            std::string fr_lut_value = "(" + std::to_string(config.lighting.lut_fr.scale) + " * " + GetLutValue(Regs::LightingSampler::Fresnel, fr_lut_index) + ")";
+            std::string index = GetLutIndex(light_config.num, config.lighting.lut_fr.type, config.lighting.lut_fr.abs_input);
+            std::string value = "(" + std::to_string(config.lighting.lut_fr.scale) + " * " + GetLutValue(Regs::LightingSampler::Fresnel, index) + ")";
 
             // Enabled for difffuse lighting alpha component
             if (config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::PrimaryAlpha ||
-                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::BothAlpha)
-                out += "diffuse_sum.a  *= " + fr_lut_value + ";\n";
+                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::Both)
+                out += "diffuse_sum.a  *= " + value + ";\n";
 
             // Enabled for the specular lighting alpha component
             if (config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::SecondaryAlpha ||
-                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::BothAlpha)
-                out += "specular_sum.a *= " + fr_lut_value + ";\n";
+                config.lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::Both)
+                out += "specular_sum.a *= " + value + ";\n";
         }
 
         // Compute primary fragment color (diffuse lighting) function

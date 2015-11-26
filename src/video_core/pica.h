@@ -650,9 +650,9 @@ struct Regs {
         Distribution0 = 0,
         Distribution1 = 1,
         Fresnel = 3,
-        Blue = 4,
-        Green = 5,
-        Red = 6,
+        ReflectBlue = 4,
+        ReflectGreen = 5,
+        ReflectRed = 6,
         SpotlightAttenuation = 8,
         DistanceAttenuation = 16,
     };
@@ -718,10 +718,19 @@ struct Regs {
         switch (sampler) {
         case LightingSampler::Distribution0:
             return (config != LightingConfig::Config1);
+
         case LightingSampler::Distribution1:
             return (config != LightingConfig::Config0) && (config != LightingConfig::Config1) && (config != LightingConfig::Config5);
+
         case LightingSampler::Fresnel:
             return (config != LightingConfig::Config0) && (config != LightingConfig::Config2) && (config != LightingConfig::Config4);
+
+        case LightingSampler::ReflectRed:
+            return (config != LightingConfig::Config3);
+
+        case LightingSampler::ReflectGreen:
+        case LightingSampler::ReflectBlue:
+            return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) || (config == LightingConfig::Config7);
         }
         return false;
     }
@@ -773,6 +782,9 @@ struct Regs {
             BitField<16, 1, u32> lut_enable_d0; // 0: GL_TRUE, 1: GL_FALSE
             BitField<17, 1, u32> lut_enable_d1; // 0: GL_TRUE, 1: GL_FALSE
             BitField<19, 1, u32> lut_enable_fr; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<20, 1, u32> lut_enable_rr; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<21, 1, u32> lut_enable_rg; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<22, 1, u32> lut_enable_rb; // 0: GL_TRUE, 1: GL_FALSE
 
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light

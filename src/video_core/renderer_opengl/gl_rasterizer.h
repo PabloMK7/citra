@@ -102,6 +102,21 @@ struct PicaShaderConfig {
         res.lighting.lut_fr.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.fr.Value();
         res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
+        res.lighting.lut_rr.enable = regs.lighting.lut_enable_rr == 0;
+        res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.rr == 0;
+        res.lighting.lut_rr.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rr.Value();
+        res.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
+
+        res.lighting.lut_rg.enable = regs.lighting.lut_enable_rg == 0;
+        res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.rg == 0;
+        res.lighting.lut_rg.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rg.Value();
+        res.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
+
+        res.lighting.lut_rb.enable = regs.lighting.lut_enable_rb == 0;
+        res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.rb == 0;
+        res.lighting.lut_rb.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rb.Value();
+        res.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
+
         res.lighting.config = regs.lighting.config;
         res.lighting.fresnel_selector = regs.lighting.fresnel_selector;
         res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
@@ -139,6 +154,7 @@ struct PicaShaderConfig {
             bool enable = false;
             unsigned src_num = 0;
             bool clamp_highlights = false;
+
             Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
             Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
 
@@ -147,7 +163,7 @@ struct PicaShaderConfig {
                 bool abs_input = false;
                 Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
                 float scale = 1.0f;
-            } lut_d0, lut_d1, lut_fr;
+            } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
         } lighting;
     };
 };
