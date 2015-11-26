@@ -420,11 +420,13 @@ bool CreateEmptyFile(const std::string &filename)
 }
 
 
-int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int(const std::string&, const std::string&)> callback)
+bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directory, DirectoryEntryCallable callback)
 {
     LOG_TRACE(Common_Filesystem, "directory %s", directory.c_str());
+
     // How many files + directories we found
-    int found_entries = 0;
+    unsigned found_entries = 0;
+
 #ifdef _WIN32
     // Find the first file in the directory.
     WIN32_FIND_DATA ffd;
@@ -432,7 +434,7 @@ int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int
     HANDLE handle_find = FindFirstFile(Common::UTF8ToTStr(directory + "\\*").c_str(), &ffd);
     if (handle_find == INVALID_HANDLE_VALUE) {
         FindClose(handle_find);
-        return found_entries;
+        return false;
     }
     // windows loop
     do {
@@ -442,25 +444,20 @@ int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int
 
     DIR *dirp = opendir(directory.c_str());
     if (!dirp)
-        return 0;
+        return false;
 
     // non windows loop
     while (!readdir_r(dirp, &dirent, &result) && result) {
         const std::string virtual_name(result->d_name);
 #endif
-        // check for "." and ".."
-        if (((virtual_name[0] == '.') && (virtual_name[1] == '\0')) ||
-                ((virtual_name[0] == '.') && (virtual_name[1] == '.') &&
-                 (virtual_name[2] == '\0')))
+
+        if (virtual_name == "." || virtual_name == "..")
             continue;
 
-        int ret = callback(directory, virtual_name);
-        if (ret < 0) {
-            if (ret != -1)
-                found_entries = ret;
+        unsigned ret_entries;
+        if (!callback(&ret_entries, directory, virtual_name))
             break;
-        }
-        found_entries += ret;
+        found_entries += ret_entries;
 
 #ifdef _WIN32
     } while (FindNextFile(handle_find, &ffd) != 0);
@@ -469,16 +466,18 @@ int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int
     }
     closedir(dirp);
 #endif
-    // Return number of entries found.
-    return found_entries;
+
+    // num_entries_out is allowed to be specified nullptr, in which case we shouldn't try to set it
+    if (num_entries_out != nullptr)
+        *num_entries_out = found_entries;
 }
 
-int ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry)
+unsigned ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry)
 {
-    const auto callback = [&parent_entry](const std::string& directory,
-                                          const std::string& virtual_name) -> int {
+    const auto callback = [&parent_entry](unsigned* num_entries_out,
+                                          const std::string& directory,
+                                          const std::string& virtual_name) -> bool {
         FSTEntry entry;
-        int found_entries = 0;
         entry.virtualName = virtual_name;
         entry.physicalName = directory + DIR_SEP + virtual_name;
 
@@ -486,41 +485,40 @@ int ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry)
             entry.isDirectory = true;
             // is a directory, lets go inside
             entry.size = ScanDirectoryTree(entry.physicalName, entry);
-            found_entries += (int)entry.size;
+            *num_entries_out += (int)entry.size;
         } else { // is a file
             entry.isDirectory = false;
             entry.size = GetSize(entry.physicalName);
         }
-        ++found_entries;
+        (*num_entries_out)++;
+
         // Push into the tree
         parent_entry.children.push_back(entry);
-        return found_entries;
+        return true;
     };
 
-    return ScanDirectoryTreeAndCallback(directory, callback);
+    unsigned num_entries;
+    return ForeachDirectoryEntry(&num_entries, directory, callback) ? num_entries : 0;
 }
 
 
 bool DeleteDirRecursively(const std::string &directory)
 {
-    const static auto callback = [](const std::string& directory,
-                                    const std::string& virtual_name) -> int {
+    const static auto callback = [](unsigned* num_entries_out,
+                                    const std::string& directory,
+                                    const std::string& virtual_name) -> bool {
         std::string new_path = directory + DIR_SEP_CHR + virtual_name;
-        if (IsDirectory(new_path)) {
-            if (!DeleteDirRecursively(new_path)) {
-                return -2;
-            }
-        } else if (!Delete(new_path)) {
-            return -2;
-        }
-        return 0;
+        if (IsDirectory(new_path))
+            return DeleteDirRecursively(new_path);
+
+        return Delete(new_path);
     };
 
-    if (ScanDirectoryTreeAndCallback(directory, callback) == -2) {
+    if (!ForeachDirectoryEntry(nullptr, directory, callback))
         return false;
-    }
-    FileUtil::DeleteDir(directory);
 
+    // Delete the outermost directory
+    FileUtil::DeleteDir(directory);
     return true;
 }
 
