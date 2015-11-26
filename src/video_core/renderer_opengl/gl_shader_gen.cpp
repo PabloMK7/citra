@@ -326,11 +326,28 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 light_vector = vec3(0.0);\n"
            "vec3 refl_value = vec3(0.0);\n";
 
-    // Convert interpolated quaternion to a GL fragment normal
-    out += "vec3 normal = normalize(vec3(\n";
-    out += "          2.f*(normquat.x*normquat.z + normquat.y*normquat.w),\n";
-    out += "          2.f*(normquat.y*normquat.z + normquat.x*normquat.w),\n";
-    out += "    1.f - 2.f*(normquat.x*normquat.x + normquat.y*normquat.y)));\n";
+    // Compute fragment normals
+    if (config.lighting.bump_mode == Pica::Regs::LightingBumpMode::NormalMap) {
+        // Bump mapping is enabled using a normal map, read perturbation vector from the selected texture
+        std::string bump_selector = std::to_string(config.lighting.bump_selector);
+        out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], texcoord[" + bump_selector + "]).rgb - 1.0;\n";
+
+        // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher precision result
+        if (config.lighting.bump_renorm) {
+            std::string val = "(1.0 - (surface_normal.x*surface_normal.x + surface_normal.y*surface_normal.y))";
+            out += "surface_normal.z = sqrt(max(" + val + ", 0.0));\n";
+        }
+    } else if (config.lighting.bump_mode == Pica::Regs::LightingBumpMode::TangentMap) {
+        // Bump mapping is enabled using a tangent map
+        LOG_CRITICAL(HW_GPU, "unimplemented bump mapping mode (tangent mapping)");
+        UNIMPLEMENTED();
+    } else {
+        // No bump mapping - surface local normal is just a unit normal
+        out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
+    }
+
+    // Rotate the surface-local normal by the interpolated normal quaternion to convert it to eyespace
+    out += "vec3 normal = normalize(quaternion_rotate(normquat, surface_normal));\n";
 
     // Gets the index into the specified lookup table for specular lighting
     auto GetLutIndex = [config](unsigned light_num, Regs::LightingLutInput input, bool abs) {
@@ -515,6 +532,11 @@ layout (std140) uniform shader_data {
 
 uniform sampler2D tex[3];
 uniform sampler1D lut[6];
+
+// Rotate the vector v by the quaternion q
+vec3 quaternion_rotate(vec4 q, vec3 v) {
+    return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+}
 
 void main() {
 vec4 primary_fragment_color = vec4(0.0);

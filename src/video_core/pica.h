@@ -702,6 +702,12 @@ struct Regs {
         LN = 3, // Cosine of the angle between the light and the normal vectors
     };
 
+    enum class LightingBumpMode : u32 {
+        None = 0,
+        NormalMap = 1,
+        TangentMap = 2,
+    };
+
     union LightColor {
         BitField< 0, 10, u32> b;
         BitField<10, 10, u32> g;
@@ -775,7 +781,10 @@ struct Regs {
         union {
             BitField< 2, 2, LightingFresnelSelector> fresnel_selector;
             BitField< 4, 4, LightingConfig> config;
+            BitField<22, 2, u32> bump_selector; // 0: Texture 0, 1: Texture 1, 2: Texture 2
             BitField<27, 1, u32> clamp_highlights; // 1: GL_TRUE, 0: GL_FALSE
+            BitField<28, 2, LightingBumpMode> bump_mode; // 1: GL_TRUE, 0: GL_FALSE
+            BitField<30, 1, u32> bump_renorm; // 0: GL_TRUE, 1: GL_FALSE
         };
 
         union {
