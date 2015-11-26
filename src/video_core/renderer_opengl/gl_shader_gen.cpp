@@ -362,11 +362,11 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         if (abs) {
             // LUT index is in the range of (0.0, 1.0)
             index = config.lighting.light[light_num].two_sided_diffuse ? "abs(" + index + ")" : "max(" + index + ", 0.f)";
-            return "clamp(" + index + ", 0.0, FLOAT_255)";
+            return "(FLOAT_255 * clamp(" + index + ", 0.0, 1.0))";
         } else {
             // LUT index is in the range of (-1.0, 1.0)
             index = "clamp(" + index + ", -1.0, 1.0)";
-            return "clamp(((" + index + " < 0) ? " + index + " + 2.0 : " + index + ") / 2.0, 0.0, FLOAT_255)";
+            return "(FLOAT_255 * ((" + index + " < 0) ? " + index + " + 2.0 : " + index + ") / 2.0)";
         }
 
         return std::string();
@@ -487,7 +487,7 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
 #define LIGHTING_LUT_SIZE 256
-#define FLOAT_255 0.99609375
+#define FLOAT_255 (255.0 / 256.0)
 
 in vec4 primary_color;
 in vec2 texcoord[3];
