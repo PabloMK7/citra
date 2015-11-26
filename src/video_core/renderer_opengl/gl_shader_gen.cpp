@@ -320,7 +320,7 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
 
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
     std::string out = R"(
-#version 330
+#version 330 core
 #define NUM_TEV_STAGES 6
 
 in vec4 primary_color;
@@ -362,7 +362,7 @@ layout (std140) uniform shader_data {
 }
 
 std::string GenerateVertexShader() {
-    std::string out = "#version 330\n";
+    std::string out = "#version 330 core\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION)  + ") in vec4 vert_position;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_COLOR)     + ") in vec4 vert_color;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0) + ") in vec2 vert_texcoord0;\n";
