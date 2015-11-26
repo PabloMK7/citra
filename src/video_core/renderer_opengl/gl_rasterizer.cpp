@@ -492,9 +492,10 @@ void RasterizerOpenGL::SetShader() {
         state.Apply();
 
         // Set the texture samplers to correspond to different texture units
-        glUniform1i(PicaShader::Uniform::Texture0, 0);
-        glUniform1i(PicaShader::Uniform::Texture1, 1);
-        glUniform1i(PicaShader::Uniform::Texture2, 2);
+        GLuint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex");
+        glUniform1i(uniform_tex,     0);
+        glUniform1i(uniform_tex + 1, 1);
+        glUniform1i(uniform_tex + 2, 2);
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
 

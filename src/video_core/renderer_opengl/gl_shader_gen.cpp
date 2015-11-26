@@ -321,8 +321,6 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
     std::string out = R"(
 #version 330
-#extension GL_ARB_explicit_uniform_location : require
-
 #define NUM_TEV_STAGES 6
 
 in vec4 primary_color;
@@ -338,9 +336,7 @@ layout (std140) uniform shader_data {
 
 )";
 
-    using Uniform = RasterizerOpenGL::PicaShader::Uniform;
-    out += "layout(location = " + std::to_string((int)Uniform::Texture0) + ") uniform sampler2D tex[3];\n";
-
+    out += "uniform sampler2D tex[3];\n";
     out += "void main() {\n";
     out += "vec4 combiner_buffer = tev_combiner_buffer_color;\n";
     out += "vec4 last_tex_env_out = vec4(0.0);\n";
