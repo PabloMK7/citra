@@ -20,6 +20,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -118,6 +119,7 @@ void Thread::Stop() {
 
     Kernel::g_current_process->used_tls_slots[tls_index] = false;
     g_current_process->misc_memory_used -= Memory::TLS_ENTRY_SIZE;
+    g_current_process->memory_region->used -= Memory::TLS_ENTRY_SIZE;
 
     HLE::Reschedule(__func__);
 }
@@ -416,6 +418,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     ASSERT_MSG(thread->tls_index != -1, "Out of TLS space");
     g_current_process->misc_memory_used += Memory::TLS_ENTRY_SIZE;
+    g_current_process->memory_region->used += Memory::TLS_ENTRY_SIZE;
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context

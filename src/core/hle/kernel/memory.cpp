@@ -51,6 +51,7 @@ void MemoryInit(u32 mem_type) {
     for (int i = 0; i < 3; ++i) {
         memory_regions[i].base = base;
         memory_regions[i].size = memory_region_sizes[mem_type][i];
+        memory_regions[i].used = 0;
         memory_regions[i].linear_heap_memory = std::make_shared<std::vector<u8>>();
 
         base += memory_regions[i].size;
@@ -72,6 +73,7 @@ void MemoryShutdown() {
     for (auto& region : memory_regions) {
         region.base = 0;
         region.size = 0;
+        region.used = 0;
         region.linear_heap_memory = nullptr;
     }
 }

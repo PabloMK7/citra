@@ -778,6 +778,51 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     return RESULT_SUCCESS;
 }
 
+static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
+    using Kernel::MemoryRegion;
+
+    LOG_TRACE(Kernel_SVC, "called process=0x%08X type=%u param=%d", process_handle, type, param);
+
+    switch ((SystemInfoType)type) {
+    case SystemInfoType::REGION_MEMORY_USAGE:
+        switch ((SystemInfoMemUsageRegion)param) {
+        case SystemInfoMemUsageRegion::ALL:
+            *out = Kernel::GetMemoryRegion(Kernel::MemoryRegion::APPLICATION)->used
+                 + Kernel::GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->used
+                 + Kernel::GetMemoryRegion(Kernel::MemoryRegion::BASE)->used;
+            break;
+        case SystemInfoMemUsageRegion::APPLICATION:
+            *out = Kernel::GetMemoryRegion(Kernel::MemoryRegion::APPLICATION)->used;
+            break;
+        case SystemInfoMemUsageRegion::SYSTEM:
+            *out = Kernel::GetMemoryRegion(Kernel::MemoryRegion::SYSTEM)->used;
+            break;
+        case SystemInfoMemUsageRegion::BASE:
+            *out = Kernel::GetMemoryRegion(Kernel::MemoryRegion::BASE)->used;
+            break;
+        default:
+            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0 region: param=%d", param);
+            *out = 0;
+            break;
+        }
+        break;
+    case SystemInfoType::KERNEL_ALLOCATED_PAGES:
+        LOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=2 param=%d", type, param);
+        *out = 0;
+        break;
+    case SystemInfoType::KERNEL_SPAWNED_PIDS:
+        *out = 5;
+        break;
+    default:
+        LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=%u param=%d", type, param);
+        *out = 0;
+        break;
+    }
+
+    // This function never returns an error, even if invalid parameters were passed.
+    return RESULT_SUCCESS;
+}
+
 static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     LOG_TRACE(Kernel_SVC, "called process=0x%08X type=%u", process_handle, type);
 
@@ -877,7 +922,7 @@ static const FunctionDef SVC_Table[] = {
     {0x27, HLE::Wrap<DuplicateHandle>,      "DuplicateHandle"},
     {0x28, HLE::Wrap<GetSystemTick>,        "GetSystemTick"},
     {0x29, nullptr,                         "GetHandleInfo"},
-    {0x2A, nullptr,                         "GetSystemInfo"},
+    {0x2A, HLE::Wrap<GetSystemInfo>,        "GetSystemInfo"},
     {0x2B, HLE::Wrap<GetProcessInfo>,       "GetProcessInfo"},
     {0x2C, nullptr,                         "GetThreadInfo"},
     {0x2D, HLE::Wrap<ConnectToPort>,        "ConnectToPort"},
