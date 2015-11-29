@@ -119,13 +119,14 @@ void GameList::LoadInterfaceLayout(QSettings& settings)
 
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool deep_scan)
 {
-    const auto callback = [&](const std::string& directory,
-                                     const std::string& virtual_name) -> int {
+    const auto callback = [&](unsigned* num_entries_out,
+                              const std::string& directory,
+                              const std::string& virtual_name) -> bool {
 
         std::string physical_name = directory + DIR_SEP + virtual_name;
 
         if (stop_processing)
-            return -1; // A negative return value breaks the callback loop.
+            return false; // Breaks the callback loop.
 
         if (deep_scan && FileUtil::IsDirectory(physical_name)) {
             AddFstEntriesToGameList(physical_name, true);
@@ -135,11 +136,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool d
 
             Loader::FileType guessed_filetype = Loader::GuessFromExtension(filename_extension);
             if (guessed_filetype == Loader::FileType::Unknown)
-                return 0;
+                return true;
             Loader::FileType filetype = Loader::IdentifyFile(physical_name);
             if (filetype == Loader::FileType::Unknown) {
                 LOG_WARNING(Frontend, "File %s is of indeterminate type and is possibly corrupted.", physical_name.c_str());
-                return 0;
+                return true;
             }
             if (guessed_filetype != filetype) {
                 LOG_WARNING(Frontend, "Filetype and extension of file %s do not match.", physical_name.c_str());
@@ -152,9 +153,10 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool d
             });
         }
 
-        return 0; // We don't care about the found entries
+        return true;
     };
-    FileUtil::ScanDirectoryTreeAndCallback(dir_path, callback);
+
+    FileUtil::ForeachDirectoryEntry(nullptr, dir_path, callback);
 }
 
 void GameListWorker::run()

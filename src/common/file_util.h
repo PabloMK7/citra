@@ -98,19 +98,24 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename);
 bool CreateEmptyFile(const std::string &filename);
 
 /**
- * Scans the directory tree, calling the callback for each file/directory found.
- * The callback must return the number of files and directories which the provided path contains.
- * If the callback's return value is -1, the callback loop is broken immediately.
- * If the callback's return value is otherwise negative, the callback loop is broken immediately
- * and the callback's return value is returned from this function (to allow for error handling).
- * @param directory the parent directory to start scanning from
- * @param callback The callback which will be called for each file/directory. It is called
- *     with the arguments (const std::string& directory, const std::string& virtual_name).
- *     The `directory `parameter is the path to the directory which contains the file/directory.
- *     The `virtual_name` parameter is the incomplete file path, without any directory info.
- * @return the total number of files/directories found
+ * @param num_entries_out to be assigned by the callable with the number of iterated directory entries, never null
+ * @param directory the path to the enclosing directory
+ * @param virtual_name the entry name, without any preceding directory info
+ * @return whether handling the entry succeeded
  */
-int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int(const std::string&, const std::string&)> callback);
+using DirectoryEntryCallable = std::function<bool(unsigned* num_entries_out,
+                                                 const std::string& directory,
+                                                 const std::string& virtual_name)>;
+
+/**
+ * Scans a directory, calling the callback for each file/directory contained within.
+ * If the callback returns failure, scanning halts and this function returns failure as well
+ * @param num_entries_out assigned by the function with the number of iterated directory entries, can be null
+ * @param directory the directory to scan
+ * @param callback The callback which will be called for each entry
+ * @return whether scanning the directory succeeded
+ */
+bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directory, DirectoryEntryCallable callback);
 
 /**
  * Scans the directory tree, storing the results.
@@ -118,7 +123,7 @@ int ScanDirectoryTreeAndCallback(const std::string &directory, std::function<int
  * @param parent_entry FSTEntry where the filesystem tree results will be stored.
  * @return the total number of files/directories found
  */
-int ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry);
+unsigned ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry);
 
 // deletes the given directory and anything under it. Returns true on success.
 bool DeleteDirRecursively(const std::string &directory);
