@@ -18,7 +18,7 @@ struct ThreadContext {
     u32 lr;
     u32 pc;
     u32 cpsr;
-    u32 fpu_registers[32];
+    u32 fpu_registers[64];
     u32 fpscr;
     u32 fpexc;
 };
