@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
 #include "core/hle/hle.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -52,19 +53,19 @@ void Initialize(Service::Interface* self) {
 }
 
 void ExecuteType0Commands(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32* const cmd_buff = Kernel::GetCommandBuffer();
+    u8*  const ptr = shared_memory->GetPointer(cmd_buff[1]);
 
-    if (shared_memory != nullptr) {
-        struct Type0Command* command = reinterpret_cast<struct Type0Command*>(
-                shared_memory->GetPointer(cmd_buff[1]));
-        if (command == nullptr) {
-            cmd_buff[1] = 1;
-        }else{
-            LOG_WARNING(Service, "(STUBBED) CSND_SND::ExecuteType0Commands");
-            command->finished |= 1;
-            cmd_buff[1] = 0;
-        }
-    }else{
+    if (shared_memory != nullptr && ptr != nullptr) {
+        Type0Command command;
+        std::memcpy(&command, ptr, sizeof(Type0Command));
+
+        LOG_WARNING(Service, "(STUBBED) CSND_SND::ExecuteType0Commands");
+        command.finished |= 1;
+        cmd_buff[1] = 0;
+
+        std::memcpy(ptr, &command, sizeof(Type0Command));
+    } else {
         cmd_buff[1] = 1;
     }
 }
