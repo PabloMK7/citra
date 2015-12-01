@@ -111,6 +111,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
                 segment.offset, segment.size, memory_state).Unwrap();
         vm_manager.Reprotect(vma, permissions);
         misc_memory_used += segment.size;
+        memory_region->used += segment.size;
     };
 
     // Map CodeSet segments
@@ -123,6 +124,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
             std::make_shared<std::vector<u8>>(stack_size, 0), 0, stack_size, MemoryState::Locked
             ).Unwrap();
     misc_memory_used += stack_size;
+    memory_region->used += stack_size;
 
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
@@ -165,6 +167,7 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
     vm_manager.Reprotect(vma, perms);
 
     heap_used += size;
+    memory_region->used += size;
 
     return MakeResult<VAddr>(heap_end - size);
 }
@@ -182,6 +185,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     if (result.IsError()) return result;
 
     heap_used -= size;
+    memory_region->used -= size;
 
     return RESULT_SUCCESS;
 }
@@ -217,6 +221,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     vm_manager.Reprotect(vma, perms);
 
     linear_heap_used += size;
+    memory_region->used += size;
 
     return MakeResult<VAddr>(target);
 }
@@ -243,6 +248,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     if (result.IsError()) return result;
 
     linear_heap_used -= size;
+    memory_region->used -= size;
 
     if (target + size == heap_end) {
         // End of linear heap has been freed, so check what's the last allocated block in it and

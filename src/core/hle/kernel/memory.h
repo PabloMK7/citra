@@ -17,6 +17,7 @@ class VMManager;
 struct MemoryRegionInfo {
     u32 base; // Not an address, but offset from start of FCRAM
     u32 size;
+    u32 used;
 
     std::shared_ptr<std::vector<u8>> linear_heap_memory;
 };
