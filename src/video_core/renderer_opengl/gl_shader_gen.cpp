@@ -311,11 +311,13 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
             "clamp(alpha_output_" + index_name + " * " + std::to_string(stage.GetAlphaMultiplier()) + ".0, 0.0, 1.0));\n";
     }
 
+    out += "combiner_buffer = next_combiner_buffer;\n";
+
     if (config.TevStageUpdatesCombinerBufferColor(index))
-        out += "combiner_buffer.rgb = last_tex_env_out.rgb;\n";
+        out += "next_combiner_buffer.rgb = last_tex_env_out.rgb;\n";
 
     if (config.TevStageUpdatesCombinerBufferAlpha(index))
-        out += "combiner_buffer.a = last_tex_env_out.a;\n";
+        out += "next_combiner_buffer.a = last_tex_env_out.a;\n";
 }
 
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
@@ -334,18 +336,20 @@ layout (std140) uniform shader_data {
     int alphatest_ref;
 };
 
-)";
+uniform sampler2D tex[3];
 
-    out += "uniform sampler2D tex[3];\n";
-    out += "void main() {\n";
-    out += "vec4 combiner_buffer = tev_combiner_buffer_color;\n";
-    out += "vec4 last_tex_env_out = vec4(0.0);\n";
+void main() {
+)";
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
     if (config.alpha_test_func == Regs::CompareFunc::Never) {
         out += "discard; }";
         return out;
     }
+
+    out += "vec4 combiner_buffer = vec4(0.0);\n";
+    out += "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n";
+    out += "vec4 last_tex_env_out = vec4(0.0);\n";
 
     for (size_t index = 0; index < config.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
