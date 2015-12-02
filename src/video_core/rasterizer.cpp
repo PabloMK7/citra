@@ -498,7 +498,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             // with some basic arithmetic. Alpha combiners can be configured separately but work
             // analogously.
             Math::Vec4<u8> combiner_output;
-            Math::Vec4<u8> combiner_buffer = {
+            Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
+            Math::Vec4<u8> next_combiner_buffer = {
                 regs.tev_combiner_buffer_color.r, regs.tev_combiner_buffer_color.g,
                 regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a
             };
@@ -747,14 +748,16 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 combiner_output[2] = std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
                 combiner_output[3] = std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
 
+                combiner_buffer = next_combiner_buffer;
+
                 if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
-                    combiner_buffer.r() = combiner_output.r();
-                    combiner_buffer.g() = combiner_output.g();
-                    combiner_buffer.b() = combiner_output.b();
+                    next_combiner_buffer.r() = combiner_output.r();
+                    next_combiner_buffer.g() = combiner_output.g();
+                    next_combiner_buffer.b() = combiner_output.b();
                 }
 
                 if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
-                    combiner_buffer.a() = combiner_output.a();
+                    next_combiner_buffer.a() = combiner_output.a();
                 }
             }
 
