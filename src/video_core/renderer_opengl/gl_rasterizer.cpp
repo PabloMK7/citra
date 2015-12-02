@@ -353,6 +353,15 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncColorWriteMask();
         break;
 
+    // Scissor test
+    case PICA_REG_INDEX(scissor_test.mode):
+        shader_dirty = true;
+        break;
+    case PICA_REG_INDEX(scissor_test.right):
+    case PICA_REG_INDEX(scissor_test.left_minus_1):
+        SyncScissorTest();
+        break;
+
     // Logic op
     case PICA_REG_INDEX(output_merger.logic_op):
         SyncLogicOp();
@@ -1002,6 +1011,7 @@ void RasterizerOpenGL::SetShader() {
         SyncDepthOffset();
         SyncAlphaTest();
         SyncCombinerColor();
+        SyncScissorTest();
         auto& tev_stages = Pica::g_state.regs.GetTevStages();
         for (int index = 0; index < tev_stages.size(); ++index)
             SyncTevConstColor(index, tev_stages[index]);
@@ -1164,6 +1174,22 @@ void RasterizerOpenGL::SyncDepthTest() {
                                regs.output_merger.depth_write_enable == 1;
     state.depth.test_func = regs.output_merger.depth_test_enable == 1 ?
                             PicaToGL::CompareFunc(regs.output_merger.depth_test_func) : GL_ALWAYS;
+}
+
+void RasterizerOpenGL::SyncScissorTest() {
+    const auto& regs = Pica::g_state.regs;
+
+    if (uniform_block_data.data.scissor_right != regs.scissor_test.right ||
+        uniform_block_data.data.scissor_bottom != regs.scissor_test.bottom ||
+        uniform_block_data.data.scissor_left != regs.scissor_test.GetLeft() ||
+        uniform_block_data.data.scissor_top != regs.scissor_test.GetTop()) {
+
+        uniform_block_data.data.scissor_right = regs.scissor_test.right;
+        uniform_block_data.data.scissor_bottom = regs.scissor_test.bottom;
+        uniform_block_data.data.scissor_left = regs.scissor_test.GetLeft();
+        uniform_block_data.data.scissor_top = regs.scissor_test.GetTop();
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {

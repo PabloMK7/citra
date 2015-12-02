@@ -56,6 +56,8 @@ union PicaShaderConfig {
 
         const auto& regs = Pica::g_state.regs;
 
+        state.scissor_test_mode = regs.scissor_test.mode;
+
         state.depthmap_enable = regs.depthmap_enable;
 
         state.alpha_test_func = regs.output_merger.alpha_test.enable ?
@@ -172,6 +174,7 @@ union PicaShaderConfig {
 
     struct State {
         Pica::Regs::CompareFunc alpha_test_func;
+        Pica::Regs::ScissorMode scissor_test_mode;
         Pica::Regs::TextureConfig::TextureType texture0_type;
         std::array<TevStageConfigRaw, 6> tev_stages;
         u8 combiner_buffer_input;
@@ -328,6 +331,10 @@ private:
         GLint alphatest_ref;
         GLfloat depth_scale;
         GLfloat depth_offset;
+        GLint scissor_right;
+        GLint scissor_bottom;
+        GLint scissor_left;
+        GLint scissor_top;
         alignas(16) GLvec3 fog_color;
         alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
@@ -335,7 +342,7 @@ private:
         alignas(16) GLvec4 tev_combiner_buffer_color;
     };
 
-    static_assert(sizeof(UniformData) == 0x3A0, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) == 0x3B0, "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
@@ -383,6 +390,9 @@ private:
 
     /// Syncs the depth test states to match the PICA register
     void SyncDepthTest();
+
+    /// Syncs the scissor test state to match the PICA register
+    void SyncScissorTest();
 
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
