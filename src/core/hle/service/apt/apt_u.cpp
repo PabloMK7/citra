@@ -17,7 +17,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00030040, Enable,                          "Enable"},
     {0x00040040, nullptr,                         "Finalize"},
     {0x00050040, GetAppletManInfo,                "GetAppletManInfo"},
-    {0x00060040, nullptr,                         "GetAppletInfo"},
+    {0x00060040, GetAppletInfo,                   "GetAppletInfo"},
     {0x00070000, nullptr,                         "GetLastSignaledAppletId"},
     {0x00080000, nullptr,                         "CountRegisteredApplet"},
     {0x00090040, IsRegistered,                    "IsRegistered"},

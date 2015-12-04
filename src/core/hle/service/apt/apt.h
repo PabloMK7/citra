@@ -54,7 +54,7 @@ enum class AppletId : u32 {
     Notifications      = 0x116,
     Miiverse           = 0x117,
     SoftwareKeyboard1  = 0x201,
-    Ed                 = 0x202,
+    Ed1                = 0x202,
     PnoteApp           = 0x204,
     SnoteApp           = 0x205,
     Error              = 0x206,
@@ -64,6 +64,7 @@ enum class AppletId : u32 {
     Application        = 0x300,
     AnyLibraryApplet   = 0x400,
     SoftwareKeyboard2  = 0x401,
+    Ed2                = 0x402,
 };
 
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
@@ -131,6 +132,20 @@ void Enable(Service::Interface* self);
  *      5 : AppID of currently active app
  */
 void GetAppletManInfo(Service::Interface* self);
+
+/**
+ * APT::GetAppletInfo service function.
+ *  Inputs:
+ *      1 : AppId
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2-3 : Title ID
+ *      4 : Media Type
+ *      5 : Registered
+ *      6 : Loaded
+ *      7 : Attributes
+ */
+void GetAppletInfo(Service::Interface* self);
 
 /**
  * APT::IsRegistered service function. This returns whether the specified AppID is registered with NS yet.
