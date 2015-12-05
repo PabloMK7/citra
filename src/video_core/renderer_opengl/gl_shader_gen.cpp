@@ -382,7 +382,7 @@ void main() {
     texcoord[0] = vert_texcoord0;
     texcoord[1] = vert_texcoord1;
     texcoord[2] = vert_texcoord2;
-    gl_Position = vec4(vert_position.x, -vert_position.y, -vert_position.z, vert_position.w);
+    gl_Position = vec4(vert_position.x, vert_position.y, -vert_position.z, vert_position.w);
 }
 )";
 
