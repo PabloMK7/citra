@@ -39,13 +39,12 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandl
 
             buffer[buffer_index] = vtx;
 
-            if (topology == Regs::TriangleTopology::Strip) {
-                strip_ready |= (buffer_index == 1);
+            strip_ready |= (buffer_index == 1);
+
+            if (topology == Regs::TriangleTopology::Strip)
                 buffer_index = !buffer_index;
-            } else if (topology == Regs::TriangleTopology::Fan) {
+            else if (topology == Regs::TriangleTopology::Fan)
                 buffer_index = 1;
-                strip_ready = true;
-            }
             break;
 
         default:
