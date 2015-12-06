@@ -142,7 +142,7 @@ public:
     virtual void PrepareReschedule() = 0;
 
     /// Getter for num_instructions
-    u64 GetNumInstructions() {
+    u64 GetNumInstructions() const {
         return num_instructions;
     }
 
