@@ -14,10 +14,6 @@ namespace Core {
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
-    ARM_Interface() {
-        num_instructions = 0;
-    }
-
     virtual ~ARM_Interface() {
     }
 
@@ -150,7 +146,7 @@ public:
         return num_instructions;
     }
 
-    s64 down_count; ///< A decreasing counter of remaining cycles before the next event, decreased by the cpu run loop
+    s64 down_count = 0; ///< A decreasing counter of remaining cycles before the next event, decreased by the cpu run loop
 
 protected:
 
@@ -162,6 +158,5 @@ protected:
 
 private:
 
-    u64 num_instructions; ///< Number of instructions executed
-
+    u64 num_instructions = 0; ///< Number of instructions executed
 };
