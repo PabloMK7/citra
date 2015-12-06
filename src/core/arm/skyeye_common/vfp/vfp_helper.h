@@ -249,7 +249,7 @@ enum : u32 {
     VFP_SNAN       = (VFP_NAN|VFP_NAN_SIGNAL)
 };
 
-static inline int vfp_single_type(vfp_single* s)
+static inline int vfp_single_type(const vfp_single* s)
 {
     int type = VFP_NUMBER;
     if (s->exponent == 255) {
@@ -293,7 +293,7 @@ static inline void vfp_single_unpack(vfp_single* s, s32 val, u32* fpscr)
 
 // Re-pack a single-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-static inline s32 vfp_single_pack(vfp_single* s)
+static inline s32 vfp_single_pack(const vfp_single* s)
 {
     u32 val = (s->sign << 16) +
               (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
@@ -335,7 +335,7 @@ struct vfp_double {
 #define vfp_double_packed_exponent(v) (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
 #define vfp_double_packed_mantissa(v) ((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
 
-static inline int vfp_double_type(vfp_double* s)
+static inline int vfp_double_type(const vfp_double* s)
 {
     int type = VFP_NUMBER;
     if (s->exponent == 2047) {
@@ -379,7 +379,7 @@ static inline void vfp_double_unpack(vfp_double* s, s64 val, u32* fpscr)
 
 // Re-pack a double-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-static inline s64 vfp_double_pack(vfp_double* s)
+static inline s64 vfp_double_pack(const vfp_double* s)
 {
     u64 val = ((u64)s->sign << 48) +
               ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +

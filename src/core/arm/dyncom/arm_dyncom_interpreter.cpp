@@ -51,7 +51,7 @@ enum {
 
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
-static bool CondPassed(ARMul_State* cpu, unsigned int cond) {
+static bool CondPassed(const ARMul_State* cpu, unsigned int cond) {
     const bool n_flag = cpu->NFlag != 0;
     const bool z_flag = cpu->ZFlag != 0;
     const bool c_flag = cpu->CFlag != 0;
