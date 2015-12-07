@@ -123,16 +123,16 @@ public:
     void DrawTriangles() override;
 
     /// Commit the rasterizer's framebuffer contents immediately to the current 3DS memory framebuffer
-    void CommitFramebuffer() override;
+    void FlushFramebuffer() override;
 
     /// Notify rasterizer that the specified PICA register has been changed
     void NotifyPicaRegisterChanged(u32 id) override;
 
     /// Notify rasterizer that the specified 3DS memory region will be read from after this notification
-    void NotifyPreRead(PAddr addr, u32 size) override;
+    void FlushRegion(PAddr addr, u32 size) override;
 
     /// Notify rasterizer that a 3DS memory region has been changed
-    void NotifyFlush(PAddr addr, u32 size) override;
+    void InvalidateRegion(PAddr addr, u32 size) override;
 
     /// OpenGL shader generated for a given Pica register state
     struct PicaShader {

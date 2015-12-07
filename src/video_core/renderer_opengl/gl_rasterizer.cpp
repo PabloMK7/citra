@@ -180,7 +180,7 @@ void RasterizerOpenGL::DrawTriangles() {
     res_cache.InvalidateInRange(cur_fb_depth_addr, cur_fb_depth_size, true);
 }
 
-void RasterizerOpenGL::CommitFramebuffer() {
+void RasterizerOpenGL::FlushFramebuffer() {
     CommitColorBuffer();
     CommitDepthBuffer();
 }
@@ -284,7 +284,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     }
 }
 
-void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
+void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
 
     if (!Settings::values.use_hw_renderer)
@@ -306,7 +306,7 @@ void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
         CommitDepthBuffer();
 }
 
-void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
+void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
 
     if (!Settings::values.use_hw_renderer)

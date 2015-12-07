@@ -48,7 +48,7 @@ void DebugContext::OnEvent(Event event, void* data) {
 
         if (Settings::values.use_hw_renderer) {
             // Commit the hardware renderer's framebuffer so it will show on debug widgets
-            VideoCore::g_renderer->hw_rasterizer->CommitFramebuffer();
+            VideoCore::g_renderer->hw_rasterizer->FlushFramebuffer();
         }
 
         // TODO: Should stop the CPU thread here once we multithread emulation.
