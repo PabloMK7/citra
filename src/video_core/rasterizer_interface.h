@@ -12,10 +12,11 @@ struct OutputVertex;
 }
 }
 
-class HWRasterizer {
+namespace VideoCore {
+
+class RasterizerInterface {
 public:
-    virtual ~HWRasterizer() {
-    }
+    virtual ~RasterizerInterface() {}
 
     /// Initialize API-specific GPU objects
     virtual void InitObjects() = 0;
@@ -43,3 +44,5 @@ public:
     /// Notify rasterizer that any caches of the specified region should be discraded and reloaded from 3DS memory.
     virtual void InvalidateRegion(PAddr addr, u32 size) = 0;
 };
+
+}

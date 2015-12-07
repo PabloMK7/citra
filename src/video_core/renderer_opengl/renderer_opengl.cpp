@@ -93,7 +93,6 @@ static std::array<GLfloat, 3*2> MakeOrthographicMatrix(const float width, const 
 
 /// RendererOpenGL constructor
 RendererOpenGL::RendererOpenGL() {
-    hw_rasterizer.reset(new RasterizerOpenGL());
     resolution_width  = std::max(VideoCore::kScreenTopWidth, VideoCore::kScreenBottomWidth);
     resolution_height = VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight;
 }
@@ -157,15 +156,7 @@ void RendererOpenGL::SwapBuffers() {
 
     profiler.BeginFrame();
 
-    bool hw_renderer_enabled = VideoCore::g_hw_renderer_enabled;
-    if (Settings::values.use_hw_renderer != hw_renderer_enabled) {
-        // TODO: Save new setting value to config file for next startup
-        Settings::values.use_hw_renderer = hw_renderer_enabled;
-
-        if (Settings::values.use_hw_renderer) {
-            hw_rasterizer->Reset();
-        }
-    }
+    RefreshRasterizerSetting();
 
     if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
         Pica::g_debug_context->recorder->FrameFinished();
@@ -286,8 +277,6 @@ void RendererOpenGL::InitOpenGLObjects() {
 
     state.texture_units[0].texture_2d = 0;
     state.Apply();
-
-    hw_rasterizer->InitObjects();
 }
 
 void RendererOpenGL::ConfigureFramebufferTexture(TextureInfo& texture,
@@ -419,6 +408,8 @@ void RendererOpenGL::Init() {
     LOG_INFO(Render_OpenGL, "GL_VENDOR: %s", glGetString(GL_VENDOR));
     LOG_INFO(Render_OpenGL, "GL_RENDERER: %s", glGetString(GL_RENDERER));
     InitOpenGLObjects();
+
+    RefreshRasterizerSetting();
 }
 
 /// Shutdown the renderer

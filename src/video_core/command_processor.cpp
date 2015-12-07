@@ -336,19 +336,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     }
                 }
 
-                if (Settings::values.use_hw_renderer) {
-                    // Send to hardware renderer
-                    static auto AddHWTriangle = [](const Pica::Shader::OutputVertex& v0,
-                                                   const Pica::Shader::OutputVertex& v1,
-                                                   const Pica::Shader::OutputVertex& v2) {
-                        VideoCore::g_renderer->hw_rasterizer->AddTriangle(v0, v1, v2);
-                    };
+                // Send to renderer
+                using Pica::Shader::OutputVertex;
+                auto AddTriangle = [](
+                        const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
+                    VideoCore::g_renderer->rasterizer->AddTriangle(v0, v1, v2);
+                };
 
-                    primitive_assembler.SubmitVertex(output, AddHWTriangle);
-                } else {
-                    // Send to triangle clipper
-                    primitive_assembler.SubmitVertex(output, Clipper::ProcessTriangle);
-                }
+                primitive_assembler.SubmitVertex(output, AddTriangle);
             }
 
             for (auto& range : memory_accesses.ranges) {
@@ -356,9 +351,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                           range.second, range.first);
             }
 
-            if (Settings::values.use_hw_renderer) {
-                VideoCore::g_renderer->hw_rasterizer->DrawTriangles();
-            }
+            VideoCore::g_renderer->rasterizer->DrawTriangles();
 
 #if PICA_DUMP_GEOMETRY
             geometry_dumper.Dump();
@@ -475,7 +468,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
     }
 
-    VideoCore::g_renderer->hw_rasterizer->NotifyPicaRegisterChanged(id);
+    VideoCore::g_renderer->rasterizer->NotifyPicaRegisterChanged(id);
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, reinterpret_cast<void*>(&id));

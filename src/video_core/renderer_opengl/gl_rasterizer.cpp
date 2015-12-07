@@ -188,9 +188,6 @@ void RasterizerOpenGL::FlushFramebuffer() {
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     const auto& regs = Pica::g_state.regs;
 
-    if (!Settings::values.use_hw_renderer)
-        return;
-
     switch(id) {
     // Culling
     case PICA_REG_INDEX(cull_mode):
@@ -287,9 +284,6 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
 
-    if (!Settings::values.use_hw_renderer)
-        return;
-
     PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
     u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
                             * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
@@ -308,9 +302,6 @@ void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
 
 void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
-
-    if (!Settings::values.use_hw_renderer)
-        return;
 
     PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
     u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)

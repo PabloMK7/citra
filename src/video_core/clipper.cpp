@@ -78,7 +78,7 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     vtx.screenpos[2] = viewport.offset_z + vtx.pos.z * inv_w * viewport.zscale;
 }
 
-void ProcessTriangle(OutputVertex &v0, OutputVertex &v1, OutputVertex &v2) {
+void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const OutputVertex &v2) {
     using boost::container::static_vector;
 
     // Clipping a planar n-gon against a plane will remove at least 1 vertex and introduces 2 at
