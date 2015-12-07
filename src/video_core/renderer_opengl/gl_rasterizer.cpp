@@ -135,7 +135,7 @@ void RasterizerOpenGL::Reset() {
 
     SetShader();
 
-    res_cache.FullFlush();
+    res_cache.InvalidateAll();
 }
 
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
@@ -176,8 +176,8 @@ void RasterizerOpenGL::DrawTriangles() {
     u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
                             * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
-    res_cache.NotifyFlush(cur_fb_color_addr, cur_fb_color_size, true);
-    res_cache.NotifyFlush(cur_fb_depth_addr, cur_fb_depth_size, true);
+    res_cache.InvalidateInRange(cur_fb_color_addr, cur_fb_color_size, true);
+    res_cache.InvalidateInRange(cur_fb_depth_addr, cur_fb_depth_size, true);
 }
 
 void RasterizerOpenGL::CommitFramebuffer() {
@@ -328,7 +328,7 @@ void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
         ReloadDepthBuffer();
 
     // Notify cache of flush in case the region touches a cached resource
-    res_cache.NotifyFlush(addr, size);
+    res_cache.InvalidateInRange(addr, size);
 }
 
 void RasterizerOpenGL::SamplerInfo::Create() {

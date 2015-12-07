@@ -23,11 +23,11 @@ public:
         LoadAndBindTexture(state, texture_unit, Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format));
     }
 
-    /// Flush any cached resource that touches the flushed region
-    void NotifyFlush(PAddr addr, u32 size, bool ignore_hash = false);
+    /// Invalidate any cached resource intersecting the specified region.
+    void InvalidateInRange(PAddr addr, u32 size, bool ignore_hash = false);
 
-    /// Flush all cached OpenGL resources tracked by this cache manager
-    void FullFlush();
+    /// Invalidate all cached OpenGL resources tracked by this cache manager
+    void InvalidateAll();
 
 private:
     struct CachedTexture {
