@@ -275,7 +275,7 @@ static void FlushDataCache(Service::Interface* self) {
     u32 size    = cmd_buff[2];
     u32 process = cmd_buff[4];
 
-    VideoCore::g_renderer->hw_rasterizer->NotifyFlush(Memory::VirtualToPhysicalAddress(address), size);
+    VideoCore::g_renderer->rasterizer->InvalidateRegion(Memory::VirtualToPhysicalAddress(address), size);
 
     // TODO(purpasmart96): Verify return header on HW
 
@@ -365,7 +365,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case CommandId::REQUEST_DMA:
-        VideoCore::g_renderer->hw_rasterizer->NotifyPreRead(Memory::VirtualToPhysicalAddress(command.dma_request.source_address),
+        VideoCore::g_renderer->rasterizer->FlushRegion(Memory::VirtualToPhysicalAddress(command.dma_request.source_address),
                                                             command.dma_request.size);
 
         memcpy(Memory::GetPointer(command.dma_request.dest_address),
@@ -373,7 +373,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
                command.dma_request.size);
         SignalInterrupt(InterruptId::DMA);
 
-        VideoCore::g_renderer->hw_rasterizer->NotifyFlush(Memory::VirtualToPhysicalAddress(command.dma_request.dest_address),
+        VideoCore::g_renderer->rasterizer->InvalidateRegion(Memory::VirtualToPhysicalAddress(command.dma_request.dest_address),
                                                           command.dma_request.size);
         break;
 
@@ -467,7 +467,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
             if (region.size == 0)
                 break;
 
-            VideoCore::g_renderer->hw_rasterizer->NotifyFlush(
+            VideoCore::g_renderer->rasterizer->InvalidateRegion(
                 Memory::VirtualToPhysicalAddress(region.address), region.size);
         }
         break;

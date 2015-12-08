@@ -8,7 +8,7 @@
 
 #include "common/common_types.h"
 
-#include "video_core/hwrasterizer_base.h"
+#include "video_core/rasterizer_interface.h"
 
 class EmuWindow;
 
@@ -54,10 +54,14 @@ public:
         return m_current_frame;
     }
 
-    std::unique_ptr<HWRasterizer> hw_rasterizer;
+    void RefreshRasterizerSetting();
+
+    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
 
 protected:
     f32 m_current_fps;              ///< Current framerate, should be set by the renderer
     int m_current_frame;            ///< Current frame, should be set by the renderer
 
+private:
+    bool opengl_rasterizer_active = false;
 };

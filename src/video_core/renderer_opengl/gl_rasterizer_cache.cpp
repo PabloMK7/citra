@@ -15,7 +15,7 @@
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
 RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
-    FullFlush();
+    InvalidateAll();
 }
 
 MICROPROFILE_DEFINE(OpenGL_TextureUpload, "OpenGL", "Texture Upload", MP_RGB(128, 64, 192));
@@ -58,8 +58,7 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
     }
 }
 
-void RasterizerCacheOpenGL::NotifyFlush(PAddr addr, u32 size, bool ignore_hash) {
-    // Flush any texture that falls in the flushed region
+void RasterizerCacheOpenGL::InvalidateInRange(PAddr addr, u32 size, bool ignore_hash) {
     // TODO: Optimize by also inserting upper bound (addr + size) of each texture into the same map and also narrow using lower_bound
     auto cache_upper_bound = texture_cache.upper_bound(addr + size);
 
@@ -77,6 +76,6 @@ void RasterizerCacheOpenGL::NotifyFlush(PAddr addr, u32 size, bool ignore_hash) 
     }
 }
 
-void RasterizerCacheOpenGL::FullFlush() {
+void RasterizerCacheOpenGL::InvalidateAll() {
     texture_cache.clear();
 }

@@ -135,7 +135,7 @@ void RasterizerOpenGL::Reset() {
 
     SetShader();
 
-    res_cache.FullFlush();
+    res_cache.InvalidateAll();
 }
 
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
@@ -176,20 +176,17 @@ void RasterizerOpenGL::DrawTriangles() {
     u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
                             * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
 
-    res_cache.NotifyFlush(cur_fb_color_addr, cur_fb_color_size, true);
-    res_cache.NotifyFlush(cur_fb_depth_addr, cur_fb_depth_size, true);
+    res_cache.InvalidateInRange(cur_fb_color_addr, cur_fb_color_size, true);
+    res_cache.InvalidateInRange(cur_fb_depth_addr, cur_fb_depth_size, true);
 }
 
-void RasterizerOpenGL::CommitFramebuffer() {
+void RasterizerOpenGL::FlushFramebuffer() {
     CommitColorBuffer();
     CommitDepthBuffer();
 }
 
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     const auto& regs = Pica::g_state.regs;
-
-    if (!Settings::values.use_hw_renderer)
-        return;
 
     switch(id) {
     // Culling
@@ -284,11 +281,8 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     }
 }
 
-void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
+void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
-
-    if (!Settings::values.use_hw_renderer)
-        return;
 
     PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
     u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
@@ -306,11 +300,8 @@ void RasterizerOpenGL::NotifyPreRead(PAddr addr, u32 size) {
         CommitDepthBuffer();
 }
 
-void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
+void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
-
-    if (!Settings::values.use_hw_renderer)
-        return;
 
     PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
     u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
@@ -328,7 +319,7 @@ void RasterizerOpenGL::NotifyFlush(PAddr addr, u32 size) {
         ReloadDepthBuffer();
 
     // Notify cache of flush in case the region touches a cached resource
-    res_cache.NotifyFlush(addr, size);
+    res_cache.InvalidateInRange(addr, size);
 }
 
 void RasterizerOpenGL::SamplerInfo::Create() {

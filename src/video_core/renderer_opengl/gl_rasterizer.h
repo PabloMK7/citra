@@ -14,7 +14,7 @@
 #include "common/hash.h"
 
 #include "video_core/pica.h"
-#include "video_core/hwrasterizer_base.h"
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/shader/shader_interpreter.h"
@@ -102,37 +102,22 @@ struct hash<PicaShaderConfig> {
 
 } // namespace std
 
-class RasterizerOpenGL : public HWRasterizer {
+class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
 
     RasterizerOpenGL();
     ~RasterizerOpenGL() override;
 
-    /// Initialize API-specific GPU objects
     void InitObjects() override;
-
-    /// Reset the rasterizer, such as flushing all caches and updating all state
     void Reset() override;
-
-    /// Queues the primitive formed by the given vertices for rendering
     void AddTriangle(const Pica::Shader::OutputVertex& v0,
                      const Pica::Shader::OutputVertex& v1,
                      const Pica::Shader::OutputVertex& v2) override;
-
-    /// Draw the current batch of triangles
     void DrawTriangles() override;
-
-    /// Commit the rasterizer's framebuffer contents immediately to the current 3DS memory framebuffer
-    void CommitFramebuffer() override;
-
-    /// Notify rasterizer that the specified PICA register has been changed
+    void FlushFramebuffer() override;
     void NotifyPicaRegisterChanged(u32 id) override;
-
-    /// Notify rasterizer that the specified 3DS memory region will be read from after this notification
-    void NotifyPreRead(PAddr addr, u32 size) override;
-
-    /// Notify rasterizer that a 3DS memory region has been changed
-    void NotifyFlush(PAddr addr, u32 size) override;
+    void FlushRegion(PAddr addr, u32 size) override;
+    void InvalidateRegion(PAddr addr, u32 size) override;
 
     /// OpenGL shader generated for a given Pica register state
     struct PicaShader {

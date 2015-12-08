@@ -26,7 +26,7 @@
 #include "core/tracer/recorder.h"
 
 #include "video_core/command_processor.h"
-#include "video_core/hwrasterizer_base.h"
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
@@ -141,7 +141,7 @@ inline void Write(u32 addr, const T data) {
                     GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
                 }
 
-                VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetStartAddress(), config.GetEndAddress() - config.GetStartAddress());
+                VideoCore::g_renderer->rasterizer->InvalidateRegion(config.GetStartAddress(), config.GetEndAddress() - config.GetStartAddress());
             }
 
             // Reset "trigger" flag and set the "finish" flag
@@ -172,7 +172,7 @@ inline void Write(u32 addr, const T data) {
                 u32 output_gap = config.texture_copy.output_gap * 16;
 
                 size_t contiguous_input_size = config.texture_copy.size / input_width * (input_width + input_gap);
-                VideoCore::g_renderer->hw_rasterizer->NotifyPreRead(config.GetPhysicalInputAddress(), contiguous_input_size);
+                VideoCore::g_renderer->rasterizer->FlushRegion(config.GetPhysicalInputAddress(), contiguous_input_size);
 
                 u32 remaining_size = config.texture_copy.size;
                 u32 remaining_input = input_width;
@@ -205,7 +205,7 @@ inline void Write(u32 addr, const T data) {
                     config.flags);
 
                 size_t contiguous_output_size = config.texture_copy.size / output_width * (output_width + output_gap);
-                VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetPhysicalOutputAddress(), contiguous_output_size);
+                VideoCore::g_renderer->rasterizer->InvalidateRegion(config.GetPhysicalOutputAddress(), contiguous_output_size);
 
                 GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
                 break;
@@ -232,7 +232,7 @@ inline void Write(u32 addr, const T data) {
             u32 input_size = config.input_width * config.input_height * GPU::Regs::BytesPerPixel(config.input_format);
             u32 output_size = output_width * output_height * GPU::Regs::BytesPerPixel(config.output_format);
 
-            VideoCore::g_renderer->hw_rasterizer->NotifyPreRead(config.GetPhysicalInputAddress(), input_size);
+            VideoCore::g_renderer->rasterizer->FlushRegion(config.GetPhysicalInputAddress(), input_size);
 
             for (u32 y = 0; y < output_height; ++y) {
                 for (u32 x = 0; x < output_width; ++x) {
@@ -339,7 +339,7 @@ inline void Write(u32 addr, const T data) {
             g_regs.display_transfer_config.trigger = 0;
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
 
-            VideoCore::g_renderer->hw_rasterizer->NotifyFlush(config.GetPhysicalOutputAddress(), output_size);
+            VideoCore::g_renderer->rasterizer->InvalidateRegion(config.GetPhysicalOutputAddress(), output_size);
         }
         break;
     }

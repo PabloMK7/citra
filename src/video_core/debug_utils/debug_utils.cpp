@@ -46,10 +46,8 @@ void DebugContext::OnEvent(Event event, void* data) {
     {
         std::unique_lock<std::mutex> lock(breakpoint_mutex);
 
-        if (Settings::values.use_hw_renderer) {
-            // Commit the hardware renderer's framebuffer so it will show on debug widgets
-            VideoCore::g_renderer->hw_rasterizer->CommitFramebuffer();
-        }
+        // Commit the hardware renderer's framebuffer so it will show on debug widgets
+        VideoCore::g_renderer->rasterizer->FlushFramebuffer();
 
         // TODO: Should stop the CPU thread here once we multithread emulation.
 
