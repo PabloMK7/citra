@@ -11,6 +11,7 @@ OpenGLState::OpenGLState() {
     // These all match default OpenGL values
     cull.enabled = false;
     cull.mode = GL_BACK;
+    cull.front_face = GL_CCW;
 
     depth.test_enabled = false;
     depth.test_func = GL_LESS;
@@ -65,6 +66,10 @@ void OpenGLState::Apply() {
 
     if (cull.mode != cur_state.cull.mode) {
         glCullFace(cull.mode);
+    }
+
+    if (cull.front_face != cur_state.cull.front_face) {
+        glFrontFace(cull.front_face);
     }
 
     // Depth test

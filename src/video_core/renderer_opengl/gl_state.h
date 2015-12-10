@@ -11,6 +11,7 @@ public:
     struct {
         bool enabled; // GL_CULL_FACE
         GLenum mode; // GL_CULL_FACE_MODE
+        GLenum front_face; // GL_FRONT_FACE
     } cull;
 
     struct {
