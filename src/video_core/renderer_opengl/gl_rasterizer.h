@@ -89,32 +89,32 @@ struct PicaShaderConfig {
 
         res.lighting.lut_d0.enable = regs.lighting.lut_enable_d0 == 0;
         res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.d0 == 0;
-        res.lighting.lut_d0.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d0.Value();
+        res.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
         res.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
 
         res.lighting.lut_d1.enable = regs.lighting.lut_enable_d1 == 0;
         res.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.d1 == 0;
-        res.lighting.lut_d1.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.d1.Value();
+        res.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
         res.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
         res.lighting.lut_fr.enable = regs.lighting.lut_enable_fr == 0;
         res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.fr == 0;
-        res.lighting.lut_fr.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.fr.Value();
+        res.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
         res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
         res.lighting.lut_rr.enable = regs.lighting.lut_enable_rr == 0;
         res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.rr == 0;
-        res.lighting.lut_rr.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rr.Value();
+        res.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
         res.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
 
         res.lighting.lut_rg.enable = regs.lighting.lut_enable_rg == 0;
         res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.rg == 0;
-        res.lighting.lut_rg.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rg.Value();
+        res.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
         res.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
 
         res.lighting.lut_rb.enable = regs.lighting.lut_enable_rb == 0;
         res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.rb == 0;
-        res.lighting.lut_rb.type = (Pica::Regs::LightingLutInput)regs.lighting.lut_input.rb.Value();
+        res.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
         res.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
         res.lighting.config = regs.lighting.config;
