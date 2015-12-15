@@ -139,39 +139,37 @@ struct PicaShaderConfig {
         return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
     };
 
+    Pica::Regs::CompareFunc alpha_test_func = Pica::Regs::CompareFunc::Never;
+    std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
+    u8 combiner_buffer_input = 0;
+
     struct {
-        Pica::Regs::CompareFunc alpha_test_func = Pica::Regs::CompareFunc::Never;
-        std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
-        u8 combiner_buffer_input = 0;
+        struct {
+            unsigned num = 0;
+            bool directional = false;
+            bool two_sided_diffuse = false;
+            bool dist_atten_enable = false;
+            GLfloat dist_atten_scale = 0.0f;
+            GLfloat dist_atten_bias = 0.0f;
+        } light[8];
+
+        bool enable = false;
+        unsigned src_num = 0;
+        Pica::Regs::LightingBumpMode bump_mode = Pica::Regs::LightingBumpMode::None;
+        unsigned bump_selector = 0;
+        bool bump_renorm = false;
+        bool clamp_highlights = false;
+
+        Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
+        Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
 
         struct {
-            struct {
-                unsigned num = 0;
-                bool directional = false;
-                bool two_sided_diffuse = false;
-                bool dist_atten_enable = false;
-                GLfloat dist_atten_scale = 0.0f;
-                GLfloat dist_atten_bias = 0.0f;
-            } light[8];
-
             bool enable = false;
-            unsigned src_num = 0;
-            Pica::Regs::LightingBumpMode bump_mode = Pica::Regs::LightingBumpMode::None;
-            unsigned bump_selector = 0;
-            bool bump_renorm = false;
-            bool clamp_highlights = false;
-
-            Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
-            Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
-
-            struct {
-                bool enable = false;
-                bool abs_input = false;
-                Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
-                float scale = 1.0f;
-            } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
-        } lighting;
-    };
+            bool abs_input = false;
+            Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
+            float scale = 1.0f;
+        } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
+    } lighting;
 };
 
 namespace std {
