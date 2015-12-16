@@ -474,6 +474,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf):
         {
             auto& lut_config = regs.lighting.lut_config;
+
+            ASSERT_MSG(lut_config.index < 256, "lut_config.index exceeded maximum value of 255!");
+
             g_state.lighting.luts[lut_config.type][lut_config.index].raw = value;
             lut_config.index = lut_config.index + 1;
             break;
