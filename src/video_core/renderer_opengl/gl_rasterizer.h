@@ -83,8 +83,8 @@ struct PicaShaderConfig {
             res.lighting.light[light_index].directional = light.directional != 0;
             res.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
             res.lighting.light[light_index].dist_atten_enable = regs.lighting.IsDistAttenEnabled(num);
-            res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRawFloat20(light.dist_atten_bias).ToFloat32();
-            res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRawFloat20(light.dist_atten_scale).ToFloat32();
+            res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
+            res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
         }
 
         res.lighting.lut_d0.enable = regs.lighting.lut_enable_d0 == 0;

@@ -810,8 +810,8 @@ void RasterizerOpenGL::SyncCullMode() {
 }
 
 void RasterizerOpenGL::SyncDepthModifiers() {
-    float depth_scale = -Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_range).ToFloat32();
-    float depth_offset = Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
+    float depth_scale = -Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
+    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
 
     // TODO: Implement scale modifier
     uniform_block_data.data.depth_offset = depth_offset;
@@ -948,9 +948,9 @@ void RasterizerOpenGL::SyncLightAmbient(int light_index) {
 
 void RasterizerOpenGL::SyncLightPosition(int light_index) {
     std::array<GLfloat, 3> position = {
-        Pica::float16::FromRawFloat16(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
-        Pica::float16::FromRawFloat16(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
-        Pica::float16::FromRawFloat16(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32() };
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32() };
 
     if (position != uniform_block_data.data.light_src[light_index].position) {
         uniform_block_data.data.light_src[light_index].position = position;
@@ -962,8 +962,8 @@ void RasterizerOpenGL::SyncDrawState() {
     const auto& regs = Pica::g_state.regs;
 
     // Sync the viewport
-    GLsizei viewport_width = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_x).ToFloat32() * 2;
-    GLsizei viewport_height = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_y).ToFloat32() * 2;
+    GLsizei viewport_width = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_x).ToFloat32() * 2;
+    GLsizei viewport_height = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_y).ToFloat32() * 2;
 
     // OpenGL uses different y coordinates, so negate corner offset and flip origin
     // TODO: Ensure viewport_corner.x should not be negated or origin flipped

@@ -98,10 +98,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 Math::Vec4<float24>& attribute = g_state.vs.default_attributes[setup.index];
 
                 // NOTE: The destination component order indeed is "backwards"
-                attribute.w = float24::FromRawFloat24(default_attr_write_buffer[0] >> 8);
-                attribute.z = float24::FromRawFloat24(((default_attr_write_buffer[0] & 0xFF) << 16) | ((default_attr_write_buffer[1] >> 16) & 0xFFFF));
-                attribute.y = float24::FromRawFloat24(((default_attr_write_buffer[1] & 0xFFFF) << 8) | ((default_attr_write_buffer[2] >> 24) & 0xFF));
-                attribute.x = float24::FromRawFloat24(default_attr_write_buffer[2] & 0xFFFFFF);
+                attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
+                attribute.z = float24::FromRaw(((default_attr_write_buffer[0] & 0xFF) << 16) | ((default_attr_write_buffer[1] >> 16) & 0xFFFF));
+                attribute.y = float24::FromRaw(((default_attr_write_buffer[1] & 0xFFFF) << 8) | ((default_attr_write_buffer[2] >> 24) & 0xFF));
+                attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
 
                 LOG_TRACE(HW_GPU, "Set default VS attribute %x to (%f %f %f %f)", (int)setup.index,
                           attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
@@ -418,10 +418,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         uniform[3 - i] = float24::FromFloat32(*(float*)(&uniform_write_buffer[i]));
                 } else {
                     // TODO: Untested
-                    uniform.w = float24::FromRawFloat24(uniform_write_buffer[0] >> 8);
-                    uniform.z = float24::FromRawFloat24(((uniform_write_buffer[0] & 0xFF)<<16) | ((uniform_write_buffer[1] >> 16) & 0xFFFF));
-                    uniform.y = float24::FromRawFloat24(((uniform_write_buffer[1] & 0xFFFF)<<8) | ((uniform_write_buffer[2] >> 24) & 0xFF));
-                    uniform.x = float24::FromRawFloat24(uniform_write_buffer[2] & 0xFFFFFF);
+                    uniform.w = float24::FromRaw(uniform_write_buffer[0] >> 8);
+                    uniform.z = float24::FromRaw(((uniform_write_buffer[0] & 0xFF) << 16) | ((uniform_write_buffer[1] >> 16) & 0xFFFF));
+                    uniform.y = float24::FromRaw(((uniform_write_buffer[1] & 0xFFFF) << 8) | ((uniform_write_buffer[2] >> 24) & 0xFF));
+                    uniform.x = float24::FromRaw(uniform_write_buffer[2] & 0xFFFFFF);
                 }
 
                 LOG_TRACE(HW_GPU, "Set uniform %x to (%f %f %f %f)", (int)uniform_setup.index,
