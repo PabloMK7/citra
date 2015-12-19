@@ -4494,9 +4494,16 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
+            const u32 dest_index = BITS(inst_cream->inst, 12, 15);
+            const u32 previous_mode = cpu->Mode;
 
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
+            cpu->ChangePrivilegeMode(USER32MODE);
+            const u8 value = cpu->ReadMemory8(addr);
+            cpu->ChangePrivilegeMode(previous_mode);
+
+            cpu->Reg[dest_index] = value;
+
+            if (dest_index == 15) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
             }
@@ -4668,10 +4675,16 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            unsigned int value = cpu->ReadMemory32(addr);
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+            const u32 dest_index = BITS(inst_cream->inst, 12, 15);
+            const u32 previous_mode = cpu->Mode;
 
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
+            cpu->ChangePrivilegeMode(USER32MODE);
+            const u32 value = cpu->ReadMemory32(addr);
+            cpu->ChangePrivilegeMode(previous_mode);
+
+            cpu->Reg[dest_index] = value;
+
+            if (dest_index == 15) {
                 INC_PC(sizeof(ldst_inst));
                 goto DISPATCH;
             }
@@ -6061,8 +6074,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
+
+            const u32 previous_mode = cpu->Mode;
+            const u32 value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
+
+            cpu->ChangePrivilegeMode(USER32MODE);
             cpu->WriteMemory8(addr, value);
+            cpu->ChangePrivilegeMode(previous_mode);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -6196,8 +6214,16 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
+            const u32 previous_mode = cpu->Mode;
+            const u32 rt_index = BITS(inst_cream->inst, 12, 15);
+
+            u32 value = cpu->Reg[rt_index];
+            if (rt_index == 15)
+                value += 2 * cpu->GetInstructionSize();
+
+            cpu->ChangePrivilegeMode(USER32MODE);
             cpu->WriteMemory32(addr, value);
+            cpu->ChangePrivilegeMode(previous_mode);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
