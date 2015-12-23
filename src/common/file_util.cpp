@@ -427,6 +427,9 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
     // How many files + directories we found
     unsigned found_entries = 0;
 
+    // Save the status of callback function
+    bool callback_error = false;
+
 #ifdef _WIN32
     // Find the first file in the directory.
     WIN32_FIND_DATA ffd;
@@ -455,8 +458,10 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
             continue;
 
         unsigned ret_entries;
-        if (!callback(&ret_entries, directory, virtual_name))
+        if (!callback(&ret_entries, directory, virtual_name)) {
+            callback_error = true;
             break;
+        }
         found_entries += ret_entries;
 
 #ifdef _WIN32
@@ -467,9 +472,14 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
     closedir(dirp);
 #endif
 
-    // num_entries_out is allowed to be specified nullptr, in which case we shouldn't try to set it
-    if (num_entries_out != nullptr)
-        *num_entries_out = found_entries;
+    if (!callback_error) {
+        // num_entries_out is allowed to be specified nullptr, in which case we shouldn't try to set it
+        if (num_entries_out != nullptr)
+            *num_entries_out = found_entries;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 unsigned ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry)
