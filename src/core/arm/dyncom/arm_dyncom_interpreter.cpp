@@ -1623,9 +1623,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrb)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
@@ -1646,9 +1643,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
         DEBUG_MSG;
     }
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index)
@@ -1703,9 +1697,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrh)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsb)(unsigned int inst, int index)
@@ -1720,9 +1711,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsb)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsh)(unsigned int inst, int index)
@@ -1737,9 +1725,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsh)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrt)(unsigned int inst, int index)
@@ -2597,9 +2582,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(str)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(uxtb)(unsigned int inst, int index)
@@ -2645,9 +2627,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strb)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(strbt)(unsigned int inst, int index)
@@ -2669,9 +2648,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strbt)(unsigned int inst, int index)
         DEBUG_MSG;
     }
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){
@@ -2685,9 +2661,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(strex)(unsigned int inst, int index)
@@ -2729,9 +2702,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strh)(unsigned int inst, int index)
     inst_cream->inst = inst;
     inst_cream->get_addr = get_calc_addr_op(inst);
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(strt)(unsigned int inst, int index)
@@ -2757,9 +2727,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strt)(unsigned int inst, int index)
         DEBUG_MSG;
     }
 
-    if (BITS(inst, 12, 15) == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(sub)(unsigned int inst, int index)
@@ -2808,9 +2775,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(swp)(unsigned int inst, int index)
     inst_cream->Rd  = BITS(inst, 12, 15);
     inst_cream->Rm  = BITS(inst,  0,  3);
 
-    if (inst_cream->Rd == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(swpb)(unsigned int inst, int index){
@@ -2825,9 +2789,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(swpb)(unsigned int inst, int index){
     inst_cream->Rd  = BITS(inst, 12, 15);
     inst_cream->Rm  = BITS(inst,  0,  3);
 
-    if (inst_cream->Rd == 15) {
-        inst_base->br = INDIRECT_BRANCH;
-    }
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtab)(unsigned int inst, int index){
@@ -2914,9 +2875,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
     inst_cream->shtop_func = get_shtop(inst);
-
-    if (inst_cream->Rd == 15)
-        inst_base->br = INDIRECT_BRANCH;
 
     return inst_base;
 }
@@ -4477,11 +4435,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
-
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4494,12 +4447,14 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory8(addr);
+            const u32 dest_index = BITS(inst_cream->inst, 12, 15);
+            const u32 previous_mode = cpu->Mode;
 
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
+            cpu->ChangePrivilegeMode(USER32MODE);
+            const u8 value = cpu->ReadMemory8(addr);
+            cpu->ChangePrivilegeMode(previous_mode);
+
+            cpu->Reg[dest_index] = value;
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4535,10 +4490,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory32(read_addr);
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(generic_arm_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(generic_arm_inst));
@@ -4554,10 +4505,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory8(read_addr);
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(generic_arm_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(generic_arm_inst));
@@ -4573,10 +4520,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             cpu->SetExclusiveMemoryAddress(read_addr);
 
             RD = cpu->ReadMemory16(read_addr);
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(generic_arm_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(generic_arm_inst));
@@ -4593,11 +4536,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             RD  = cpu->ReadMemory32(read_addr);
             RD2 = cpu->ReadMemory32(read_addr + 4);
-
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(generic_arm_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(generic_arm_inst));
@@ -4611,10 +4549,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = cpu->ReadMemory16(addr);
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4631,10 +4565,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                 value |= 0xffffff00;
             }
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4652,10 +4582,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                 value |= 0xffff0000;
             }
             cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4668,13 +4594,14 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            unsigned int value = cpu->ReadMemory32(addr);
-            cpu->Reg[BITS(inst_cream->inst, 12, 15)] = value;
+            const u32 dest_index = BITS(inst_cream->inst, 12, 15);
+            const u32 previous_mode = cpu->Mode;
 
-            if (BITS(inst_cream->inst, 12, 15) == 15) {
-                INC_PC(sizeof(ldst_inst));
-                goto DISPATCH;
-            }
+            cpu->ChangePrivilegeMode(USER32MODE);
+            const u32 value = cpu->ReadMemory32(addr);
+            cpu->ChangePrivilegeMode(previous_mode);
+
+            cpu->Reg[dest_index] = value;
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -4730,10 +4657,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             if (inst_cream->S) {
                 UPDATE_NFLAG(RD);
                 UPDATE_ZFLAG(RD);
-            }
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(mla_inst));
-                goto DISPATCH;
             }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
@@ -4882,10 +4805,6 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             if (inst_cream->S) {
                 UPDATE_NFLAG(RD);
                 UPDATE_ZFLAG(RD);
-            }
-            if (inst_cream->Rd == 15) {
-                INC_PC(sizeof(mul_inst));
-                goto DISPATCH;
             }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
@@ -6061,8 +5980,13 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
+
+            const u32 previous_mode = cpu->Mode;
+            const u32 value = cpu->Reg[BITS(inst_cream->inst, 12, 15)] & 0xff;
+
+            cpu->ChangePrivilegeMode(USER32MODE);
             cpu->WriteMemory8(addr, value);
+            cpu->ChangePrivilegeMode(previous_mode);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
@@ -6196,8 +6120,16 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             ldst_inst* inst_cream = (ldst_inst*)inst_base->component;
             inst_cream->get_addr(cpu, inst_cream->inst, addr);
 
-            unsigned int value = cpu->Reg[BITS(inst_cream->inst, 12, 15)];
+            const u32 previous_mode = cpu->Mode;
+            const u32 rt_index = BITS(inst_cream->inst, 12, 15);
+
+            u32 value = cpu->Reg[rt_index];
+            if (rt_index == 15)
+                value += 2 * cpu->GetInstructionSize();
+
+            cpu->ChangePrivilegeMode(USER32MODE);
             cpu->WriteMemory32(addr, value);
+            cpu->ChangePrivilegeMode(previous_mode);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(ldst_inst));
