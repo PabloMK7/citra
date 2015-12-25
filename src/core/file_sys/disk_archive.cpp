@@ -139,7 +139,7 @@ bool DiskFile::Close() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DiskDirectory::DiskDirectory(const DiskArchive& archive, const Path& path) {
+DiskDirectory::DiskDirectory(const DiskArchive& archive, const Path& path) : directory() {
     // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
     // the root directory we set while opening the archive.
     // For example, opening /../../usr/bin can give the emulated program your installed programs.
@@ -149,7 +149,9 @@ DiskDirectory::DiskDirectory(const DiskArchive& archive, const Path& path) {
 bool DiskDirectory::Open() {
     if (!FileUtil::IsDirectory(path))
         return false;
-    FileUtil::ScanDirectoryTree(path, directory);
+    unsigned size = FileUtil::ScanDirectoryTree(path, directory);
+    directory.size = size;
+    directory.isDirectory = true;
     children_iterator = directory.children.begin();
     return true;
 }
