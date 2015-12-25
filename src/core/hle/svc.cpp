@@ -807,7 +807,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
         }
         break;
     case SystemInfoType::KERNEL_ALLOCATED_PAGES:
-        LOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=2 param=%d", type, param);
+        LOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=2 param=%d", param);
         *out = 0;
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
