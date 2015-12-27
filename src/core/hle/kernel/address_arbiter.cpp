@@ -45,30 +45,32 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
-        if ((s32)Memory::Read32(address) <= value) {
+        if ((s32)Memory::Read32(address) < value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
-        if ((s32)Memory::Read32(address) <= value) {
+        if ((s32)Memory::Read32(address) < value) {
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
             GetCurrentThread()->WakeAfterDelay(nanoseconds);
         }
         break;
     case ArbitrationType::DecrementAndWaitIfLessThan:
     {
-        s32 memory_value = Memory::Read32(address) - 1;
-        Memory::Write32(address, memory_value);
-        if (memory_value <= value) {
+        s32 memory_value = Memory::Read32(address);
+        if (memory_value < value) {
+            // Only change the memory value if the thread should wait
+            Memory::Write32(address, (s32)memory_value - 1);
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
         }
         break;
     }
     case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout:
     {
-        s32 memory_value = Memory::Read32(address) - 1;
-        Memory::Write32(address, memory_value);
-        if (memory_value <= value) {
+        s32 memory_value = Memory::Read32(address);
+        if (memory_value < value) {
+            // Only change the memory value if the thread should wait
+            Memory::Write32(address, (s32)memory_value - 1);
             Kernel::WaitCurrentThread_ArbitrateAddress(address);
             GetCurrentThread()->WakeAfterDelay(nanoseconds);
         }
@@ -82,6 +84,13 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
 
     HLE::Reschedule(__func__);
 
+    // The calls that use a timeout seem to always return a Timeout error even if they did not put the thread to sleep
+    if (type == ArbitrationType::WaitIfLessThanWithTimeout ||
+        type == ArbitrationType::DecrementAndWaitIfLessThanWithTimeout) {
+
+        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
+                          ErrorSummary::StatusChanged, ErrorLevel::Info);
+    }
     return RESULT_SUCCESS;
 }
 
