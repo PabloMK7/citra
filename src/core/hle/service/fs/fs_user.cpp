@@ -443,17 +443,22 @@ static void IsSdmcWriteable(Service::Interface* self) {
  *  Inputs:
  *      0  : 0x084C0242
  *      1  : Archive ID
- *      2  : Archive low path type
- *      3  : Archive low path size
- *      10 : (LowPathSize << 14) | 2
+ *      2  : Archive path type
+ *      3  : Archive path size
+ *      4  : Size in Blocks (1 block = 512 bytes)
+ *      5  : Number of directories
+ *      6  : Number of files
+ *      7  : Directory bucket count
+ *      8  : File bucket count
+ *      9  : Duplicate data
+ *      10 : (PathSize << 14) | 2
  *      11 : Archive low path
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void FormatSaveData(Service::Interface* self) {
-    // TODO(Subv): Find out what the other inputs and outputs of this function are
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    LOG_DEBUG(Service_FS, "(STUBBED)");
+    LOG_WARNING(Service_FS, "(STUBBED)");
 
     auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
     auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
@@ -464,9 +469,9 @@ static void FormatSaveData(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
 
     if (archive_id != FS::ArchiveIdCode::SaveData) {
-        // TODO(Subv): What should happen if somebody attempts to format a different archive?
-        LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, %u", cmd_buff[1]);
-        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
+        LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, %u", archive_id);
+        cmd_buff[1] = ResultCode(ErrorDescription::FS_InvalidPath, ErrorModule::FS,
+                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage).raw;
         return;
     }
 
@@ -477,23 +482,40 @@ static void FormatSaveData(Service::Interface* self) {
         return;
     }
 
-    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
+    FileSys::ArchiveFormatInfo format_info;
+    format_info.duplicate_data = cmd_buff[9] & 0xFF;
+    format_info.number_directories = cmd_buff[5];
+    format_info.number_files = cmd_buff[6];
+    format_info.total_size = cmd_buff[4] * 512;
+
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData, format_info).raw;
 }
 
 /**
  * FS_User::FormatThisUserSaveData service function
  *  Inputs:
  *      0: 0x080F0180
+ *      1  : Size in Blocks (1 block = 512 bytes)
+ *      2  : Number of directories
+ *      3  : Number of files
+ *      4  : Directory bucket count
+ *      5  : File bucket count
+ *      6  : Duplicate data
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void FormatThisUserSaveData(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    LOG_DEBUG(Service_FS, "(STUBBED)");
 
-    // TODO(Subv): Find out what the inputs and outputs of this function are
+    FileSys::ArchiveFormatInfo format_info;
+    format_info.duplicate_data = cmd_buff[6] & 0xFF;
+    format_info.number_directories = cmd_buff[2];
+    format_info.number_files = cmd_buff[3];
+    format_info.total_size = cmd_buff[1] * 512;
 
-    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData).raw;
+    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData, format_info).raw;
+
+    LOG_TRACE(Service_FS, "called");
 }
 
 /**
@@ -531,10 +553,9 @@ static void GetFreeBytes(Service::Interface* self) {
  *      2 : Low word of the saveid to create
  *      3 : High word of the saveid to create
  *      4 : Unknown
- *      5 : Unknown
- *      6 : Unknown
- *      7 : Unknown
- *      8 : Unknown
+ *      5 : Number of directories
+ *      6 : Number of files
+ *      7-8 : Size limit
  *      9 : Size of the SMDH icon
  *      10: (SMDH Size << 4) | 0x0000000A
  *      11: Pointer to the SMDH icon for the new ExtSaveData
@@ -556,7 +577,12 @@ static void CreateExtSaveData(Service::Interface* self) {
             cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6], cmd_buff[7], cmd_buff[8], icon_size,
             cmd_buff[10], icon_buffer);
 
-    cmd_buff[1] = CreateExtSaveData(media_type, save_high, save_low, icon_buffer, icon_size).raw;
+    FileSys::ArchiveFormatInfo format_info;
+    format_info.number_directories = cmd_buff[5];
+    format_info.number_files = cmd_buff[6];
+    format_info.duplicate_data = false;
+    format_info.total_size = 0;
+    cmd_buff[1] = CreateExtSaveData(media_type, save_high, save_low, icon_buffer, icon_size, format_info).raw;
 }
 
 /**
@@ -731,6 +757,51 @@ static void GetArchiveResource(Service::Interface* self) {
     cmd_buff[5] = 0x80000; // 8GiB free
 }
 
+/**
+ * FS_User::GetFormatInfo service function.
+ *  Inputs:
+ *      0 : 0x084500C2
+ *      1 : Archive ID
+ *      2 : Archive path type
+ *      3 : Archive path size
+ *      4 : (PathSize << 14) | 2
+ *      5 : Archive low path
+ *  Outputs:
+ *      0 : 0x08450140
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Total size
+ *      3 : Number of directories
+ *      4 : Number of files
+ *      5 : Duplicate data
+ */
+static void GetFormatInfo(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
+    auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
+    u32 archivename_size = cmd_buff[3];
+    u32 archivename_ptr = cmd_buff[5];
+    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+
+    LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
+
+    cmd_buff[0] = IPC::MakeHeader(0x0845, 5, 0);
+
+    auto format_info = GetArchiveFormatInfo(archive_id, archive_path);
+
+    if (format_info.Failed()) {
+        LOG_ERROR(Service_FS, "Failed to retrieve the format info");
+        cmd_buff[1] = format_info.Code().raw;
+        return;
+    }
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = format_info->total_size;
+    cmd_buff[3] = format_info->number_directories;
+    cmd_buff[4] = format_info->number_files;
+    cmd_buff[5] = format_info->duplicate_data;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,                  "Dummy1"},
     {0x040100C4, nullptr,                  "Control"},
@@ -802,7 +873,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08420040, nullptr,                  "DeleteAllExtSaveDataOnNand"},
     {0x08430000, nullptr,                  "InitializeCtrFileSystem"},
     {0x08440000, nullptr,                  "CreateSeed"},
-    {0x084500C2, nullptr,                  "GetFormatInfo"},
+    {0x084500C2, GetFormatInfo,            "GetFormatInfo"},
     {0x08460102, nullptr,                  "GetLegacyRomHeader2"},
     {0x08470180, nullptr,                  "FormatCtrCardUserSaveData"},
     {0x08480042, nullptr,                  "GetSdmcCtrRootPath"},

@@ -177,10 +177,20 @@ ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle);
  * Erases the contents of the physical folder that contains the archive
  * identified by the specified id code and path
  * @param id_code The id of the archive to format
+ * @param format_info Format information about the new archive
  * @param path The path to the archive, if relevant.
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = FileSys::Path());
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info, const FileSys::Path& path = FileSys::Path());
+
+/*
+ * Retrieves the format info about the archive of the specified type and path.
+ * The format info is supplied by the client code when creating archives.
+ * @param id_code The id of the archive
+ * @param archive_path The path of the archive, if relevant
+ * @return The format info of the archive, or the corresponding error code if failed.
+ */
+ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code, FileSys::Path& archive_path);
 
 /**
  * Creates a blank SharedExtSaveData archive for the specified extdata ID
@@ -189,9 +199,10 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path = File
  * @param low The low word of the extdata id to create
  * @param icon_buffer VAddr of the SMDH icon for this ExtSaveData
  * @param icon_size Size of the SMDH icon
+ * @param format_info Format information about the new archive
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size);
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size, const FileSys::ArchiveFormatInfo& format_info);
 
 /**
  * Deletes the SharedExtSaveData archive for the specified extdata ID

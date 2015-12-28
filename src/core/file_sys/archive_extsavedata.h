@@ -31,9 +31,18 @@ public:
     std::string GetName() const override { return "ExtSaveData"; }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
-    ResultCode Format(const Path& path) override;
+    ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
+    ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
     const std::string& GetMountPoint() const { return mount_point; }
+
+    /*
+     * Writes the SMDH icon of the ExtSaveData to file
+     * @param path Path of this ExtSaveData
+     * @param icon_data Binary data of the icon
+     * @param icon_size Size of the icon data
+     */
+    void WriteIcon(const Path& path, u8* icon_data, u32 icon_size);
 
 private:
     /**

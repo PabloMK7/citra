@@ -62,6 +62,14 @@ private:
     std::u16string u16str;
 };
 
+struct ArchiveFormatInfo {
+    u32 total_size; ///< The pre-defined size of the archive, as specified in the Create or Format call
+    u32 number_directories; ///< The pre-defined number of directories in the archive, as specified in the Create or Format call
+    u32 number_files; ///< The pre-defined number of files in the archive, as specified in the Create or Format call
+    u8 duplicate_data; ///< Whether the archive should duplicate the data, as specified in the Create or Format call
+};
+static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");
+
 class ArchiveBackend : NonCopyable {
 public:
     virtual ~ArchiveBackend() {
@@ -159,9 +167,17 @@ public:
     /**
      * Deletes the archive contents and then re-creates the base folder
      * @param path Path to the archive
+     * @param format_info Format information for the new archive
      * @return ResultCode of the operation, 0 on success
      */
-    virtual ResultCode Format(const Path& path) = 0;
+    virtual ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) = 0;
+
+    /*
+     * Retrieves the format info about the archive with the specified path
+     * @param path Path to the archive
+     * @return Format information about the archive or error code
+     */
+    virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const = 0;
 };
 
 } // namespace FileSys

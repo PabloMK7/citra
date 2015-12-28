@@ -82,13 +82,45 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path) {
+ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     // These folders are always created with the ExtSaveData
     std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
     std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
     FileUtil::CreateFullPath(user_path);
     FileUtil::CreateFullPath(boss_path);
-    return RESULT_SUCCESS;
+
+    // Write the format metadata
+    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    FileUtil::IOFile file(metadata_path, "wb");
+
+    if (file.IsOpen()) {
+        file.WriteBytes(&format_info, sizeof(format_info));
+        return RESULT_SUCCESS;
+    }
+
+    // TODO(Subv): Find the correct error code
+    return ResultCode(-1);
+}
+
+ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path) const {
+    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    FileUtil::IOFile file(metadata_path, "rb");
+
+    if (file.IsOpen()) {
+        ArchiveFormatInfo info;
+        file.ReadBytes(&info, sizeof(info));
+        return MakeResult<ArchiveFormatInfo>(info);
+    }
+
+    LOG_ERROR(Service_FS, "Could not open metadata information for archive");
+    // TODO(Subv): Verify error code
+    return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
+}
+
+void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, u8* icon_data, u32 icon_size) {
+    std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
+    FileUtil::IOFile icon_file(game_path + "icon", "wb+");
+    icon_file.WriteBytes(icon_data, icon_size);
 }
 
 } // namespace FileSys

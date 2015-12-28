@@ -63,11 +63,17 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path) {
+ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     FileUtil::DeleteDirRecursively(fullpath);
     FileUtil::CreateFullPath(fullpath);
     return RESULT_SUCCESS;
+}
+
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SystemSaveData::GetFormatInfo(const Path& path) const {
+    // TODO(Subv): Implement
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive %s", GetName().c_str());
+    return ResultCode(-1);
 }
 
 } // namespace FileSys
