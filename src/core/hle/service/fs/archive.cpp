@@ -309,10 +309,7 @@ ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Pa
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    if (archive->DeleteFile(path))
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return archive->DeleteFile(path);
 }
 
 ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,

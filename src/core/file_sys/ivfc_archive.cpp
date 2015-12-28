@@ -24,9 +24,11 @@ std::unique_ptr<FileBackend> IVFCArchive::OpenFile(const Path& path, const Mode 
     return Common::make_unique<IVFCFile>(romfs_file, data_offset, data_size);
 }
 
-bool IVFCArchive::DeleteFile(const Path& path) const {
+ResultCode IVFCArchive::DeleteFile(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a file from an IVFC archive (%s).", GetName().c_str());
-    return false;
+    // TODO(Subv): Verify error code
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS,
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
 bool IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {

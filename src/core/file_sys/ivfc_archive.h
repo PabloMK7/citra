@@ -35,7 +35,7 @@ public:
     std::string GetName() const override;
 
     std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
-    bool DeleteFile(const Path& path) const override;
+    ResultCode DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
     bool DeleteDirectory(const Path& path) const override;
     ResultCode CreateFile(const Path& path, u64 size) const override;

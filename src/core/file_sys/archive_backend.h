@@ -83,9 +83,9 @@ public:
     /**
      * Delete a file specified by its path
      * @param path Path relative to the archive
-     * @return Whether the file could be deleted
+     * @return Result of the operation
      */
-    virtual bool DeleteFile(const Path& path) const = 0;
+    virtual ResultCode DeleteFile(const Path& path) const = 0;
 
     /**
      * Rename a File specified by its path

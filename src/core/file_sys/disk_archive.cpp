@@ -25,8 +25,19 @@ std::unique_ptr<FileBackend> DiskArchive::OpenFile(const Path& path, const Mode 
     return std::move(file);
 }
 
-bool DiskArchive::DeleteFile(const Path& path) const {
-    return FileUtil::Delete(mount_point + path.AsString());
+ResultCode DiskArchive::DeleteFile(const Path& path) const {
+    std::string file_path = mount_point + path.AsString();
+
+    if (FileUtil::IsDirectory(file_path))
+        return ResultCode(ErrorDescription::FS_NotAFile, ErrorModule::FS, ErrorSummary::Canceled, ErrorLevel::Status);
+
+    if (!FileUtil::Exists(file_path))
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound, ErrorLevel::Status);
+
+    if (FileUtil::Delete(file_path))
+        return RESULT_SUCCESS;
+
+    return ResultCode(ErrorDescription::FS_NotAFile, ErrorModule::FS, ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
 bool DiskArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
