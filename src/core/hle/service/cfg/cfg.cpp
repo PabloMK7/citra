@@ -310,7 +310,7 @@ ResultCode UpdateConfigNANDSavegame() {
 
 ResultCode FormatConfig() {
     ResultCode res = DeleteConfigNANDSaveFile();
-    if (!res.IsSuccess())
+    if (!res.IsSuccess() && res.description != ErrorDescription::FS_NotFound)
         return res;
     // Delete the old data
     cfg_config_file_buffer.fill(0);
