@@ -405,7 +405,7 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
 
     std::unique_ptr<FileSys::DirectoryBackend> backend = archive->OpenDirectory(path);
     if (backend == nullptr) {
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
