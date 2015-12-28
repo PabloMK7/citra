@@ -484,7 +484,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     // Delete all directories (/user, /boss) and the icon file.
     std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
     std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
-    if (!FileUtil::DeleteDirRecursively(extsavedata_path))
+    if (FileUtil::Exists(extsavedata_path) && !FileUtil::DeleteDirRecursively(extsavedata_path))
         return ResultCode(-1); // TODO(Subv): Find the right error code
     return RESULT_SUCCESS;
 }
