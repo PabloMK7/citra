@@ -20,8 +20,8 @@ std::string IVFCArchive::GetName() const {
     return "IVFC";
 }
 
-std::unique_ptr<FileBackend> IVFCArchive::OpenFile(const Path& path, const Mode mode) const {
-    return Common::make_unique<IVFCFile>(romfs_file, data_offset, data_size);
+ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path, const Mode mode) const {
+    return MakeResult<std::unique_ptr<FileBackend>>(Common::make_unique<IVFCFile>(romfs_file, data_offset, data_size));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {

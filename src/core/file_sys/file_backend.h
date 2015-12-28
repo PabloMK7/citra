@@ -21,9 +21,9 @@ public:
 
     /**
      * Open the file
-     * @return true if the file opened correctly
+     * @return Result of the file operation
      */
-    virtual bool Open() = 0;
+    virtual ResultCode Open() = 0;
 
     /**
      * Read data from the file

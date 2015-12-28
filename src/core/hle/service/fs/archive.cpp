@@ -307,13 +307,14 @@ ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_han
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    std::unique_ptr<FileSys::FileBackend> backend = archive->OpenFile(path, mode);
-    if (backend == nullptr) {
+    auto backend = archive->OpenFile(path, mode);
+    if (backend.Failed()) {
+        return backend.Code();
         return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Status);
     }
 
-    auto file = Kernel::SharedPtr<File>(new File(std::move(backend), path));
+    auto file = Kernel::SharedPtr<File>(new File(backend.MoveFrom(), path));
     return MakeResult<Kernel::SharedPtr<File>>(std::move(file));
 }
 

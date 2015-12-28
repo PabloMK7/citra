@@ -76,9 +76,9 @@ public:
      * Open a file specified by its path, using the specified mode
      * @param path Path relative to the archive
      * @param mode Mode to open the file with
-     * @return Opened file, or nullptr
+     * @return Opened file, or error code
      */
-    virtual std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const = 0;
+    virtual ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Delete a file specified by its path
