@@ -37,7 +37,7 @@ bool DiskArchive::DeleteDirectory(const Path& path) const {
     return FileUtil::DeleteDir(mount_point + path.AsString());
 }
 
-ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u32 size) const {
+ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     std::string full_path = mount_point + path.AsString();
 
     if (FileUtil::Exists(full_path))

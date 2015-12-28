@@ -39,7 +39,7 @@ bool IVFCArchive::DeleteDirectory(const Path& path) const {
     return false;
 }
 
-ResultCode IVFCArchive::CreateFile(const Path& path, u32 size) const {
+ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a file in an IVFC archive (%s).", GetName().c_str());
     // TODO: Verify error code
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported, ErrorLevel::Permanent);

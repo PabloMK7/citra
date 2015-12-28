@@ -234,7 +234,7 @@ static void DeleteDirectory(Service::Interface* self) {
  *      3 : Archive handle upper word
  *      4 : File path string type
  *      5 : File path string size
- *      7 : File size (filled with zeroes)
+ *      7-8 : File size
  *      10: File path string data
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
@@ -245,12 +245,12 @@ static void CreateFile(Service::Interface* self) {
     ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
     auto filename_type    = static_cast<FileSys::LowPathType>(cmd_buff[4]);
     u32 filename_size     = cmd_buff[5];
-    u32 file_size         = cmd_buff[7];
+    u64 file_size         = ((u64)cmd_buff[8] << 32) | cmd_buff[7];
     u32 filename_ptr      = cmd_buff[10];
 
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", filename_type, filename_size, file_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "type=%d size=%lld data=%s", filename_type, filename_size, file_path.DebugStr().c_str());
 
     cmd_buff[1] = CreateFileInArchive(archive_handle, file_path, file_size).raw;
 }

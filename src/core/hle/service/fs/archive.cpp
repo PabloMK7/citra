@@ -347,7 +347,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u64 file_size) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;

@@ -108,7 +108,7 @@ public:
      * @param size The size of the new file, filled with zeroes
      * @return File creation result code
      */
-    virtual ResultCode CreateFile(const Path& path, u32 size) const = 0;
+    virtual ResultCode CreateFile(const Path& path, u64 size) const = 0;
 
     /**
      * Create a directory specified by its path
