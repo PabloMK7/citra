@@ -40,8 +40,11 @@ bool DiskArchive::DeleteDirectory(const Path& path) const {
 ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     std::string full_path = mount_point + path.AsString();
 
+    if (FileUtil::IsDirectory(full_path))
+        return ResultCode(ErrorDescription::FS_NotAFile, ErrorModule::FS, ErrorSummary::Canceled, ErrorLevel::Status);
+
     if (FileUtil::Exists(full_path))
-        return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::FS, ErrorSummary::NothingHappened, ErrorLevel::Info);
+        return ResultCode(ErrorDescription::FS_AlreadyExists, ErrorModule::FS, ErrorSummary::NothingHappened, ErrorLevel::Status);
 
     if (size == 0) {
         FileUtil::CreateEmptyFile(full_path);
