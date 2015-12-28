@@ -7,6 +7,7 @@
 #include <cstddef>
 
 #include "common/common_types.h"
+#include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -29,9 +30,9 @@ public:
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from file
      * @param buffer Buffer to read data into
-     * @return Number of bytes read
+     * @return Number of bytes read, or error code
      */
-    virtual size_t Read(u64 offset, size_t length, u8* buffer) const = 0;
+    virtual ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const = 0;
 
     /**
      * Write data to the file
@@ -39,9 +40,9 @@ public:
      * @param length Length in bytes of data to write to file
      * @param flush The flush parameters (0 == do not flush)
      * @param buffer Buffer to read data from
-     * @return Number of bytes written
+     * @return Number of bytes written, or error code
      */
-    virtual size_t Write(u64 offset, size_t length, bool flush, const u8* buffer) const = 0;
+    virtual ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const = 0;
 
     /**
      * Get the size of the file in bytes

@@ -124,17 +124,23 @@ bool DiskFile::Open() {
     return file->IsOpen();
 }
 
-size_t DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
+ResultVal<size_t> DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
+    if (!mode.read_flag && !mode.write_flag)
+        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS, ErrorSummary::Canceled, ErrorLevel::Status);
+
     file->Seek(offset, SEEK_SET);
-    return file->ReadBytes(buffer, length);
+    return MakeResult<size_t>(file->ReadBytes(buffer, length));
 }
 
-size_t DiskFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
+ResultVal<size_t> DiskFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
+    if (!mode.write_flag)
+        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS, ErrorSummary::Canceled, ErrorLevel::Status);
+
     file->Seek(offset, SEEK_SET);
     size_t written = file->WriteBytes(buffer, length);
     if (flush)
         file->Flush();
-    return written;
+    return MakeResult<size_t>(written);
 }
 
 u64 DiskFile::GetSize() const {

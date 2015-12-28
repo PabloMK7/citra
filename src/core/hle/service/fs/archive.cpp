@@ -103,7 +103,14 @@ ResultVal<bool> File::SyncRequest() {
             u32 address = cmd_buff[5];
             LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address);
-            cmd_buff[2] = static_cast<u32>(backend->Read(offset, length, Memory::GetPointer(address)));
+            if (offset + length > backend->GetSize())
+                LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%llX length=0x%08X file_size=0x%llX", offset, length, backend->GetSize());
+            ResultVal<size_t> read = backend->Read(offset, length, Memory::GetPointer(address));
+            if (read.Failed()) {
+                cmd_buff[1] = read.Code().raw;
+                return read.Code();
+            }
+            cmd_buff[2] = static_cast<u32>(read.MoveFrom());
             break;
         }
 
@@ -116,7 +123,13 @@ ResultVal<bool> File::SyncRequest() {
             u32 address = cmd_buff[6];
             LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
-            cmd_buff[2] = static_cast<u32>(backend->Write(offset, length, flush != 0, Memory::GetPointer(address)));
+
+            ResultVal<size_t> written = backend->Write(offset, length, flush != 0, Memory::GetPointer(address));
+            if (written.Failed()) {
+                cmd_buff[1] = written.Code().raw;
+                return written.Code();
+            }
+            cmd_buff[2] = static_cast<u32>(written.MoveFrom());
             break;
         }
 

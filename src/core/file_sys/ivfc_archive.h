@@ -56,8 +56,8 @@ public:
         : romfs_file(file), data_offset(offset), data_size(size) {}
 
     bool Open() override { return true; }
-    size_t Read(u64 offset, size_t length, u8* buffer) const override;
-    size_t Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
+    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override { return false; }

@@ -68,17 +68,18 @@ u64 IVFCArchive::GetFreeBytes() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
+ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%llu, length=%zu", offset, length);
     romfs_file->Seek(data_offset + offset, SEEK_SET);
     size_t read_length = (size_t)std::min((u64)length, data_size - offset);
 
-    return romfs_file->ReadBytes(buffer, read_length);
+    return MakeResult<size_t>(romfs_file->ReadBytes(buffer, read_length));
 }
 
-size_t IVFCFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
+ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const bool flush, const u8* buffer) const {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
-    return 0;
+    // TODO(Subv): Find error code
+    return MakeResult<size_t>(0);
 }
 
 u64 IVFCFile::GetSize() const {
