@@ -4696,18 +4696,15 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             mrc_inst* inst_cream = (mrc_inst*)inst_base->component;
 
-            unsigned int inst = inst_cream->inst;
-            if (inst_cream->Rd == 15) {
-                DEBUG_MSG;
-            }
-            if (inst_cream->inst == 0xeef04a10) {
-                // Undefined instruction fmrx
-                RD = 0x20000000;
-                CITRA_IGNORE_EXIT(-1);
-                goto END;
-            } else {
-                if (inst_cream->cp_num == 15)
-                     RD = cpu->ReadCP15Register(CRn, OPCODE_1, CRm, OPCODE_2);
+            if (inst_cream->cp_num == 15) {
+                const uint32_t value = cpu->ReadCP15Register(CRn, OPCODE_1, CRm, OPCODE_2);
+
+                if (inst_cream->Rd == 15) {
+                    cpu->Cpsr = (cpu->Cpsr & ~0xF0000000) | (value & 0xF0000000);
+                    LOAD_NZCVT;
+                } else {
+                    RD = value;
+                }
             }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
