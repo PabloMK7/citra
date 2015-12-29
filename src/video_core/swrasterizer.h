@@ -15,7 +15,7 @@ class SWRasterizer : public RasterizerInterface {
     void Reset() override {}
     void AddTriangle(const Pica::Shader::OutputVertex& v0,
             const Pica::Shader::OutputVertex& v1,
-            const Pica::Shader::OutputVertex& v2);
+            const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override {}
     void FlushFramebuffer() override {}
     void NotifyPicaRegisterChanged(u32 id) override {}
