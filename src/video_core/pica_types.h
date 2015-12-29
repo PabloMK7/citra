@@ -19,7 +19,7 @@ namespace Pica {
  *  - The next `E` bits are the exponent
  *  - The last bit is the sign bit
  *
- * @todo Verify on HW if this conversion is sufficently accurate.
+ * @todo Verify on HW if this conversion is sufficiently accurate.
  */
 template<unsigned M, unsigned E>
 struct Float {
