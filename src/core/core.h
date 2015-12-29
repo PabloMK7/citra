@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "common/common_types.h"
 
 class ARM_Interface;
@@ -23,8 +24,8 @@ struct ThreadContext {
     u32 fpexc;
 };
 
-extern ARM_Interface*   g_app_core;     ///< ARM11 application core
-extern ARM_Interface*   g_sys_core;     ///< ARM11 system (OS) core
+extern std::unique_ptr<ARM_Interface> g_app_core; ///< ARM11 application core
+extern std::unique_ptr<ARM_Interface> g_sys_core; ///< ARM11 system (OS) core
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
