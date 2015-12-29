@@ -300,7 +300,7 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
 
     thread->waitsynch_waited = false;
 
-    if (thread->status == THREADSTATUS_WAIT_SYNCH) {
+    if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
         thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                                                         ErrorSummary::StatusChanged, ErrorLevel::Info));
 
