@@ -2,7 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "common/emu_window.h"
+#include "common/make_unique.h"
 #include "common/logging/log.h"
 
 #include "core/core.h"
@@ -18,8 +21,8 @@
 
 namespace VideoCore {
 
-EmuWindow*      g_emu_window    = nullptr;     ///< Frontend emulator window
-RendererBase*   g_renderer      = nullptr;     ///< Renderer plugin
+EmuWindow*                    g_emu_window = nullptr; ///< Frontend emulator window
+std::unique_ptr<RendererBase> g_renderer;             ///< Renderer plugin
 
 std::atomic<bool> g_hw_renderer_enabled;
 std::atomic<bool> g_shader_jit_enabled;
@@ -29,7 +32,7 @@ void Init(EmuWindow* emu_window) {
     Pica::Init();
 
     g_emu_window = emu_window;
-    g_renderer = new RendererOpenGL();
+    g_renderer = Common::make_unique<RendererOpenGL>();
     g_renderer->SetWindow(g_emu_window);
     g_renderer->Init();
 
@@ -40,7 +43,7 @@ void Init(EmuWindow* emu_window) {
 void Shutdown() {
     Pica::Shutdown();
 
-    delete g_renderer;
+    g_renderer.reset();
 
     LOG_DEBUG(Render, "shutdown OK");
 }
