@@ -42,6 +42,9 @@ bool Timer::ShouldWait() {
 
 void Timer::Acquire() {
     ASSERT_MSG( !ShouldWait(), "object unavailable!");
+
+    if (reset_type == RESETTYPE_ONESHOT)
+        signaled = false;
 }
 
 void Timer::Set(s64 initial, s64 interval) {
@@ -83,9 +86,6 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
 
     // Resume all waiting threads
     timer->WakeupAllWaitingThreads();
-
-    if (timer->reset_type == RESETTYPE_ONESHOT)
-        timer->signaled = false;
 
     if (timer->interval_delay != 0) {
         // Reschedule the timer with the interval delay
