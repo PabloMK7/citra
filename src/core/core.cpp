@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
+#include "common/make_unique.h"
 #include "common/logging/log.h"
 
 #include "core/core.h"
@@ -17,8 +20,8 @@
 
 namespace Core {
 
-ARM_Interface*     g_app_core = nullptr;  ///< ARM11 application core
-ARM_Interface*     g_sys_core = nullptr;  ///< ARM11 system (OS) core
+std::unique_ptr<ARM_Interface> g_app_core; ///< ARM11 application core
+std::unique_ptr<ARM_Interface> g_sys_core; ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
@@ -71,16 +74,16 @@ void Stop() {
 
 /// Initialize the core
 int Init() {
-    g_sys_core = new ARM_DynCom(USER32MODE);
-    g_app_core = new ARM_DynCom(USER32MODE);
+    g_sys_core = Common::make_unique<ARM_DynCom>(USER32MODE);
+    g_app_core = Common::make_unique<ARM_DynCom>(USER32MODE);
 
     LOG_DEBUG(Core, "Initialized OK");
     return 0;
 }
 
 void Shutdown() {
-    delete g_app_core;
-    delete g_sys_core;
+    g_app_core.reset();
+    g_sys_core.reset();
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

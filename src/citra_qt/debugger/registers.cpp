@@ -59,16 +59,14 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
 }
 
 void RegistersWidget::OnDebugModeEntered() {
-    ARM_Interface* app_core = Core::g_app_core;
-
-    if (app_core == nullptr)
+    if (!Core::g_app_core)
         return;
 
     for (int i = 0; i < core_registers->childCount(); ++i)
-        core_registers->child(i)->setText(1, QString("0x%1").arg(app_core->GetReg(i), 8, 16, QLatin1Char('0')));
+        core_registers->child(i)->setText(1, QString("0x%1").arg(Core::g_app_core->GetReg(i), 8, 16, QLatin1Char('0')));
 
     for (int i = 0; i < vfp_registers->childCount(); ++i)
-        vfp_registers->child(i)->setText(1, QString("0x%1").arg(app_core->GetVFPReg(i), 8, 16, QLatin1Char('0')));
+        vfp_registers->child(i)->setText(1, QString("0x%1").arg(Core::g_app_core->GetVFPReg(i), 8, 16, QLatin1Char('0')));
 
     UpdateCPSRValues();
     UpdateVFPSystemRegisterValues();
