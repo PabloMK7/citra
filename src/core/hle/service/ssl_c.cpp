@@ -62,10 +62,14 @@ static void GenerateRandomData(Service::Interface* self) {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010002, Initialize,            "Initialize"},
     {0x000200C2, nullptr,               "CreateContext"},
+    {0x00030000, nullptr,               "CreateRootCertChain"},
+    {0x00040040, nullptr,               "DestroyRootCertChain"},
     {0x00050082, nullptr,               "AddTrustedRootCA"},
+    {0x00060080, nullptr,               "RootCertChainAddDefaultCert"},
     {0x00110042, GenerateRandomData,    "GenerateRandomData"},
     {0x00150082, nullptr,               "Read"},
     {0x00170082, nullptr,               "Write"},
+    {0x00180080, nullptr,               "ContextSetRootCertChain"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

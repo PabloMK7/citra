@@ -106,14 +106,32 @@ static void Initialize(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
+    {0x00020000, nullptr,                   "Scrap"},
     {0x00030000, Shutdown,                  "Shutdown"},
+    {0x00040402, nullptr,                   "CreateNetwork"},
+    {0x00050040, nullptr,                   "EjectClient"},
+    {0x00060000, nullptr,                   "EjectSpectator"},
+    {0x00070080, nullptr,                   "UpdateNetworkAttribute"},
+    {0x00080000, nullptr,                   "DestroyNetwork"},
+    {0x000A0000, nullptr,                   "DisconnectNetwork"},
+    {0x000B0000, nullptr,                   "GetConnectionStatus"},
+    {0x000D0040, nullptr,                   "GetNodeInformation"},
     {0x000F0404, RecvBeaconBroadcastData,   "RecvBeaconBroadcastData"},
     {0x00100042, nullptr,                   "SetBeaconAdditionalData"},
+    {0x00110040, nullptr,                   "GetApplicationData"},
+    {0x00120100, nullptr,                   "Bind"},
+    {0x00130040, nullptr,                   "Unbind"},
     {0x001400C0, nullptr,                   "RecvBroadcastDataFrame"},
+    {0x00150080, nullptr,                   "SetMaxSendDelay"},
+    {0x00170182, nullptr,                   "SendTo"},
+    {0x001A0000, nullptr,                   "GetChannel"},
     {0x001B0302, Initialize,                "Initialize"},
     {0x001D0044, nullptr,                   "BeginHostingNetwork"},
     {0x001E0084, nullptr,                   "ConnectToNetwork"},
     {0x001F0006, nullptr,                   "DecryptBeaconData"},
+    {0x00200040, nullptr,                   "Flush"},
+    {0x00210080, nullptr,                   "SetProbeResponseParam"},
+    {0x00220402, nullptr,                   "ScanOnConnection"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

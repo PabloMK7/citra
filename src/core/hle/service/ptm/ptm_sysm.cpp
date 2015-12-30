@@ -39,7 +39,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08110000, nullptr,             "GetShellStatus"},
     {0x08120000, nullptr,             "IsShutdownByBatteryEmpty"},
     {0x08130000, nullptr,             "FormatSavedata"},
-    {0x08140000, nullptr,             "GetLegacyJumpProhibitedFlag"}
+    {0x08140000, nullptr,             "GetLegacyJumpProhibitedFlag"},
+    {0x08180040, nullptr,             "ConfigureNew3DSCPU"},
 };
 
 PTM_Sysm_Interface::PTM_Sysm_Interface() {
