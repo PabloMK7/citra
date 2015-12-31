@@ -10,14 +10,15 @@
 
 namespace ACT_U {
 
-// Empty arrays are illegal -- commented out until an entry is added.
-//const Interface::FunctionInfo FunctionTable[] = { };
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x000600C2, nullptr, "GetAccountDataBlock"},
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
 Interface::Interface() {
-    //Register(FunctionTable);
+    Register(FunctionTable);
 }
 
 } // namespace

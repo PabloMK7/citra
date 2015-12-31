@@ -11,14 +11,18 @@
 
 namespace GSP_LCD {
 
-/*const Interface::FunctionInfo FunctionTable[] = {
-};*/
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x000F0000, nullptr, "PowerOnAllBacklights"},
+    {0x00100000, nullptr, "PowerOffAllBacklights"},
+    {0x00110040, nullptr, "PowerOnBacklight"},
+    {0x00120040, nullptr, "PowerOffBacklight"},
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class
 
 Interface::Interface() {
-    //Register(FunctionTable);
+    Register(FunctionTable);
 }
 
 } // namespace

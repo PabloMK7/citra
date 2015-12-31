@@ -92,6 +92,12 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x004E0000, nullptr,                         "HardwareResetAsync"},
     {0x004F0080, SetAppCpuTimeLimit,              "SetAppCpuTimeLimit"},
     {0x00500040, GetAppCpuTimeLimit,              "GetAppCpuTimeLimit"},
+    {0x00510080, nullptr,                         "GetStartupArgument"},
+    {0x00520104, nullptr,                         "Wrap1"},
+    {0x00530104, nullptr,                         "Unwrap1"},
+    {0x00580002, nullptr,                         "GetProgramID"},
+    {0x01010000, nullptr,                         "CheckNew3DSApp"},
+    {0x01020000, nullptr,                         "CheckNew3DS"}
 };
 
 APT_U_Interface::APT_U_Interface() {

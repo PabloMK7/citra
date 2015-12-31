@@ -22,9 +22,10 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00060000, nullptr,               "ReleaseSoundChannels"},
     {0x00070000, nullptr,               "AcquireCaptureDevice"},
     {0x00080040, nullptr,               "ReleaseCaptureDevice"},
-    {0x00090082, nullptr,               "FlushDCache"},
-    {0x000A0082, nullptr,               "StoreDCache"},
-    {0x000B0082, nullptr,               "InvalidateDCache"},
+    {0x00090082, nullptr,               "FlushDataCache"},
+    {0x000A0082, nullptr,               "StoreDataCache"},
+    {0x000B0082, nullptr,               "InvalidateDataCache"},
+    {0x000C0000, nullptr,               "Reset"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

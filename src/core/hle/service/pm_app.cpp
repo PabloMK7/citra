@@ -19,6 +19,10 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00070042, nullptr,                 "GetFIRMLaunchParams"},
     {0x00080100, nullptr,                 "GetTitleExheaderFlags"},
     {0x00090042, nullptr,                 "SetFIRMLaunchParams"},
+    {0x000A0140, nullptr,                 "SetResourceLimit"},
+    {0x000B0140, nullptr,                 "GetResourceLimitMax"},
+    {0x000C0080, nullptr,                 "UnregisterProcess"},
+    {0x000D0240, nullptr,                 "LaunchTitleUpdate"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

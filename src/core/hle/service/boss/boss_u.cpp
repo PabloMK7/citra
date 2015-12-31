@@ -11,6 +11,9 @@ namespace BOSS {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00020100, nullptr,               "GetStorageInfo"},
+    {0x000C0082, nullptr,               "UnregisterTask"},
+    {0x001E0042, nullptr,               "CancelTask"},
+    {0x00330042, nullptr,               "StartBgImmediate"},
 };
 
 BOSS_U_Interface::BOSS_U_Interface() {
