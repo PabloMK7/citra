@@ -188,6 +188,10 @@ template<ResultCode func(s64*, Handle, u32)> void Wrap() {
     FuncReturn(retval);
 }
 
+template<ResultCode func(Handle, u32)> void Wrap() {
+    FuncReturn(func(PARAM(0), PARAM(1)).raw);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 

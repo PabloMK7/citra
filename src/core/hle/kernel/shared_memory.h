@@ -53,6 +53,13 @@ public:
     ResultCode Map(VAddr address, MemoryPermission permissions, MemoryPermission other_permissions);
 
     /**
+     * Unmaps a shared memory block from the specified address in system memory
+     * @param address Address in system memory where the shared memory block is mapped
+     * @return Result code of the unmap operation
+     */
+    ResultCode Unmap(VAddr address);
+
+    /**
     * Gets a pointer to the shared memory block
     * @param offset Offset from the start of the shared memory block to get pointer
     * @return Pointer to the shared memory block from the specified offset

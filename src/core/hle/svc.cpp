@@ -161,6 +161,8 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d",
         handle, addr, permissions, other_permissions);
 
+    // TODO(Subv): The same process that created a SharedMemory object can not map it in its own address space
+
     SharedPtr<SharedMemory> shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr)
         return ERR_INVALID_HANDLE;
@@ -175,13 +177,27 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     case MemoryPermission::WriteExecute:
     case MemoryPermission::ReadWriteExecute:
     case MemoryPermission::DontCare:
-        shared_memory->Map(addr, permissions_type,
+        return shared_memory->Map(addr, permissions_type,
                 static_cast<MemoryPermission>(other_permissions));
-        break;
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x%08X", permissions);
     }
-    return RESULT_SUCCESS;
+
+    return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+}
+
+static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
+    using Kernel::SharedMemory;
+
+    LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X", handle, addr);
+
+    // TODO(Subv): Return E0A01BF5 if the address is not in the application's heap
+
+    SharedPtr<SharedMemory> shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
+    if (shared_memory == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    return shared_memory->Unmap(addr);
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
@@ -765,7 +781,13 @@ static s64 GetSystemTick() {
 static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_permission,
         u32 other_permission) {
     using Kernel::SharedMemory;
-    // TODO(Subv): Implement this function
+
+    if (size % Memory::PAGE_SIZE != 0)
+        return ResultCode(ErrorDescription::MisalignedSize, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+
+    // TODO(Subv): Return E0A01BF5 if the address is not in the application's heap
+
+    // TODO(Subv): Implement this function properly
 
     using Kernel::MemoryPermission;
     SharedPtr<SharedMemory> shared_memory = SharedMemory::Create(size,
@@ -912,7 +934,7 @@ static const FunctionDef SVC_Table[] = {
     {0x1D, HLE::Wrap<ClearTimer>,           "ClearTimer"},
     {0x1E, HLE::Wrap<CreateMemoryBlock>,    "CreateMemoryBlock"},
     {0x1F, HLE::Wrap<MapMemoryBlock>,       "MapMemoryBlock"},
-    {0x20, nullptr,                         "UnmapMemoryBlock"},
+    {0x20, HLE::Wrap<UnmapMemoryBlock>,     "UnmapMemoryBlock"},
     {0x21, HLE::Wrap<CreateAddressArbiter>, "CreateAddressArbiter"},
     {0x22, HLE::Wrap<ArbitrateAddress>,     "ArbitrateAddress"},
     {0x23, HLE::Wrap<CloseHandle>,          "CloseHandle"},
