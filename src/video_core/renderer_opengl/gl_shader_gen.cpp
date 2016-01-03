@@ -334,6 +334,7 @@ layout (std140) uniform shader_data {
     vec4 const_color[NUM_TEV_STAGES];
     vec4 tev_combiner_buffer_color;
     int alphatest_ref;
+    float depth_offset;
 };
 
 uniform sampler2D tex[3];
@@ -360,7 +361,8 @@ void main() {
         out += ") discard;\n";
     }
 
-    out += "color = last_tex_env_out;\n}";
+    out += "color = last_tex_env_out;\n";
+    out += "gl_FragDepth = gl_FragCoord.z + depth_offset;\n}";
 
     return out;
 }

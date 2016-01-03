@@ -197,7 +197,8 @@ private:
         std::array<GLfloat, 4> const_color[6];
         std::array<GLfloat, 4> tev_combiner_buffer_color;
         GLint alphatest_ref;
-        INSERT_PADDING_BYTES(12);
+        GLfloat depth_offset;
+        INSERT_PADDING_BYTES(8);
     };
 
     static_assert(sizeof(UniformData) == 0x80, "The size of the UniformData structure has changed, update the structure in the shader");
@@ -217,6 +218,9 @@ private:
 
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
+
+    /// Syncs the depth scale and offset to match the PICA registers
+    void SyncDepthModifiers();
 
     /// Syncs the blend enabled status to match the PICA register
     void SyncBlendEnabled();

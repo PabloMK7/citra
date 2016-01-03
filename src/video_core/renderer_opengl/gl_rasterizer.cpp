@@ -126,6 +126,7 @@ void RasterizerOpenGL::InitObjects() {
 
 void RasterizerOpenGL::Reset() {
     SyncCullMode();
+    SyncDepthModifiers();
     SyncBlendEnabled();
     SyncBlendFuncs();
     SyncBlendColor();
@@ -192,6 +193,12 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     // Culling
     case PICA_REG_INDEX(cull_mode):
         SyncCullMode();
+        break;
+
+    // Depth modifiers
+    case PICA_REG_INDEX(viewport_depth_range):
+    case PICA_REG_INDEX(viewport_depth_far_plane):
+        SyncDepthModifiers();
         break;
 
     // Blending
@@ -600,6 +607,15 @@ void RasterizerOpenGL::SyncCullMode() {
         UNIMPLEMENTED();
         break;
     }
+}
+
+void RasterizerOpenGL::SyncDepthModifiers() {
+    float depth_scale = -Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_range).ToFloat32();
+    float depth_offset = Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
+
+    // TODO: Implement scale modifier
+    uniform_block_data.data.depth_offset = depth_offset;
+    uniform_block_data.dirty = true;
 }
 
 void RasterizerOpenGL::SyncBlendEnabled() {
