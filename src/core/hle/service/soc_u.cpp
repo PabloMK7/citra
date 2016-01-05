@@ -552,13 +552,23 @@ static void RecvFrom(Service::Interface* self) {
     u32 flags = cmd_buffer[3];
     socklen_t addr_len = static_cast<socklen_t>(cmd_buffer[4]);
 
-    u8* output_buff = Memory::GetPointer(cmd_buffer[0x104 >> 2]);
+    struct
+    {
+        u32 output_buffer_descriptor;
+        u32 output_buffer_addr;
+        u32 address_buffer_descriptor;
+        u32 output_src_address_buffer;
+    } buffer_parameters;
+
+    std::memcpy(&buffer_parameters, &cmd_buffer[64], sizeof(buffer_parameters));
+
+    u8* output_buff = Memory::GetPointer(buffer_parameters.output_buffer_addr);
     sockaddr src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
     int ret = ::recvfrom(socket_handle, (char*)output_buff, len, flags, &src_addr, &src_addr_len);
 
-    if (cmd_buffer[0x1A0 >> 2] != 0) {
-        CTRSockAddr* ctr_src_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(cmd_buffer[0x1A0 >> 2]));
+    if (buffer_parameters.output_src_address_buffer != 0) {
+        CTRSockAddr* ctr_src_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(buffer_parameters.output_src_address_buffer));
         *ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
     }
 
