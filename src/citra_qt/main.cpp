@@ -208,7 +208,7 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     show();
 
-    game_list->PopulateAsync(settings.value("gameListRootDir", "").toString(), settings.value("gameListDeepScan", false).toBool());
+    game_list->PopulateAsync(settings.value("gameListRootDir", ".").toString(), settings.value("gameListDeepScan", false).toBool());
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
