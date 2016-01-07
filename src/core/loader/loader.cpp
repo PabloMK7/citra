@@ -137,11 +137,12 @@ ResultStatus LoadFile(const std::string& filename) {
         AppLoader_NCCH app_loader(std::move(file), filename);
 
         // Load application and RomFS
-        if (ResultStatus::Success == app_loader.Load()) {
+        ResultStatus result = app_loader.Load();
+        if (ResultStatus::Success == result) {
             Service::FS::RegisterArchiveType(Common::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
-        break;
+        return result;
     }
 
     // CIA file format...

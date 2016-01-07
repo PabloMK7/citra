@@ -259,9 +259,34 @@ void GMainWindow::BootGame(const std::string& filename) {
     System::Init(render_window);
 
     // Load the game
-    if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
+    Loader::ResultStatus result = Loader::LoadFile(filename);
+    if (Loader::ResultStatus::Success != result) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
         System::Shutdown();
+
+        switch (result) {
+        case Loader::ResultStatus::ErrorEncrypted: {
+            // Build the MessageBox ourselves to have clickable link
+            QMessageBox popup_error;
+            popup_error.setTextFormat(Qt::RichText);
+            popup_error.setWindowTitle(tr("Error while loading ROM !"));
+            popup_error.setText(tr("The ROM is probably encrypted !<br/><br/>"
+                                  "Please check: <a href='https://github.com/citra-emu/citra/wiki/Dumping-Game-Cartridges'>https://github.com/citra-emu/citra/wiki/Dumping-Game-Cartridges</a>"));
+            popup_error.setIcon(QMessageBox::Critical);
+            popup_error.exec();
+            break;
+        }
+        case Loader::ResultStatus::ErrorInvalidFormat:
+            QMessageBox::critical(this, tr("Error while loading ROM !"),
+                                  tr("The ROM format is not supported."));
+            break;
+        case Loader::ResultStatus::Error:
+
+        default:
+            QMessageBox::critical(this, tr("Error while loading ROM !"),
+                                  tr("Unknown error !"));
+            break;
+        }
         return;
     }
 
