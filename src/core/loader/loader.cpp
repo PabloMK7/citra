@@ -140,7 +140,6 @@ ResultStatus LoadFile(const std::string& filename) {
         ResultStatus result = app_loader.Load();
         if (ResultStatus::Success == result) {
             Service::FS::RegisterArchiveType(Common::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
-            return ResultStatus::Success;
         }
         return result;
     }

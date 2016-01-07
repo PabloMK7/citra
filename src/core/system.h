@@ -8,7 +8,14 @@ class EmuWindow;
 
 namespace System {
 
-void Init(EmuWindow* emu_window);
+enum class Result {
+    Success,                ///< Everything is fine
+    Error,                  ///< Something went wrong (no module specified)
+    ErrorInitCore,          ///< Something went wrong during core init
+    ErrorInitVideoCore,     ///< Something went wrong during video core init
+};
+
+Result Init(EmuWindow* emu_window);
 void Shutdown();
 
 }

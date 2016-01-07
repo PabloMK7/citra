@@ -28,15 +28,19 @@ std::atomic<bool> g_hw_renderer_enabled;
 std::atomic<bool> g_shader_jit_enabled;
 
 /// Initialize the video core
-void Init(EmuWindow* emu_window) {
+bool Init(EmuWindow* emu_window) {
     Pica::Init();
 
     g_emu_window = emu_window;
     g_renderer = Common::make_unique<RendererOpenGL>();
     g_renderer->SetWindow(g_emu_window);
-    g_renderer->Init();
-
-    LOG_DEBUG(Render, "initialized OK");
+    if (g_renderer->Init()) {
+        LOG_DEBUG(Render, "initialized OK");
+    } else {
+        LOG_ERROR(Render, "initialization failed !");
+        return false;
+    }
+    return true;
 }
 
 /// Shutdown the video core
