@@ -497,7 +497,25 @@ void GMainWindow::OnConfigure() {
     //GControllerConfigDialog* dialog = new GControllerConfigDialog(controller_ports, this);
 }
 
+bool GMainWindow::ConfirmClose() {
+    if (emu_thread != nullptr) {
+        auto answer = QMessageBox::question(this, tr("Citra"),
+                                            tr("Are you sure you want to close Citra?"),
+                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+        if (answer == QMessageBox::No) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void GMainWindow::closeEvent(QCloseEvent* event) {
+    if (!ConfirmClose()) {
+        event->ignore();
+        return;
+    }
+
     // Save window layout
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Citra team", "Citra");
 

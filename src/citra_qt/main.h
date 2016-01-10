@@ -82,6 +82,13 @@ private:
      */
     void UpdateRecentFiles();
 
+    /**
+     * If the emulation is running,
+     * asks the user if he really want to close the emulator
+     *
+     * @return true if the user confirmed
+     */
+    bool ConfirmClose();
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
