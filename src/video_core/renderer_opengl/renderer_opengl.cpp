@@ -394,6 +394,58 @@ void RendererOpenGL::SetWindow(EmuWindow* window) {
     render_window = window;
 }
 
+static const char* GetSource(GLenum source) {
+#define RET(s) case GL_DEBUG_SOURCE_##s: return #s
+    switch (source) {
+    RET(API);
+    RET(WINDOW_SYSTEM);
+    RET(SHADER_COMPILER);
+    RET(THIRD_PARTY);
+    RET(APPLICATION);
+    RET(OTHER);
+    default:
+        UNREACHABLE();
+    }
+#undef RET
+}
+
+static const char* GetType(GLenum type) {
+#define RET(t) case GL_DEBUG_TYPE_##t: return #t
+    switch (type) {
+    RET(ERROR);
+    RET(DEPRECATED_BEHAVIOR);
+    RET(UNDEFINED_BEHAVIOR);
+    RET(PORTABILITY);
+    RET(PERFORMANCE);
+    RET(OTHER);
+    RET(MARKER);
+    default:
+        UNREACHABLE();
+    }
+#undef RET
+}
+
+static void DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                         const GLchar* message, const void* user_param) {
+    Log::Level level;
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        level = Log::Level::Error;
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        level = Log::Level::Warning;
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        level = Log::Level::Info;
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        level = Log::Level::Debug;
+        break;
+    }
+    LOG_GENERIC(Log::Class::Render_OpenGL, level, "%s %s %d: %s",
+                GetSource(source), GetType(type), id, message);
+}
+
 /// Initialize the renderer
 void RendererOpenGL::Init() {
     render_window->MakeCurrent();
@@ -402,6 +454,11 @@ void RendererOpenGL::Init() {
     if (!gladLoadGL()) {
         LOG_CRITICAL(Render_OpenGL, "Failed to initialize GL functions! Exiting...");
         exit(-1);
+    }
+
+    if (GLAD_GL_KHR_debug) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(DebugHandler, nullptr);
     }
 
     LOG_INFO(Render_OpenGL, "GL_VERSION: %s", glGetString(GL_VERSION));
