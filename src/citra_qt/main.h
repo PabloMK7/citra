@@ -129,6 +129,7 @@ private:
     GPUCommandListWidget* graphicsCommandsWidget;
 
     QAction* actions_recent_files[max_recent_files_item];
+    bool confirm_before_closing;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_

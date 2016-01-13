@@ -171,6 +171,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
     }
     UpdateRecentFiles();
 
+    confirm_before_closing = settings.value("confirmClose", true).toBool();
+
     // Setup connections
     connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
@@ -498,16 +500,13 @@ void GMainWindow::OnConfigure() {
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (emu_thread != nullptr) {
-        auto answer = QMessageBox::question(this, tr("Citra"),
-                                            tr("Are you sure you want to close Citra?"),
-                                            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if (emu_thread == nullptr || !confirm_before_closing)
+        return true;
 
-        if (answer == QMessageBox::No) {
-            return false;
-        }
-    }
-    return true;
+    auto answer = QMessageBox::question(this, tr("Citra"),
+                                        tr("Are you sure you want to close Citra?"),
+                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    return answer != QMessageBox::No;
 }
 
 void GMainWindow::closeEvent(QCloseEvent* event) {
@@ -530,6 +529,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     settings.setValue("singleWindowMode", ui.action_Single_Window_Mode->isChecked());
     settings.setValue("displayTitleBars", ui.actionDisplay_widget_title_bars->isChecked());
     settings.setValue("firstStart", false);
+    settings.setValue("confirmClose", confirm_before_closing);
     game_list->SaveInterfaceLayout(settings);
     SaveHotkeys(settings);
 
