@@ -39,6 +39,12 @@ ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,
             ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
+    // TODO(Subv): Return E0E01BEE when permissions and other_permissions don't
+    // match what was specified when the memory block was created.
+
+    // TODO(Subv): Return E0E01BEE when address should be 0.
+    // Note: Find out when that's the case.
+
     if (fixed_address != 0) {
          if (address != 0 && address != fixed_address) {
             LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s: fixed_addres is 0x%08X!",
@@ -70,6 +76,21 @@ ResultCode SharedMemory::Map(VAddr address, MemoryPermission permissions,
     }
 
     this->base_address = address;
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode SharedMemory::Unmap(VAddr address) {
+    if (base_address == 0) {
+        // TODO(Subv): Verify what actually happens when you want to unmap a memory block that
+        // was originally mapped with address = 0
+        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    if (base_address != address)
+        return ResultCode(ErrorDescription::WrongAddress, ErrorModule::OS, ErrorSummary::InvalidState, ErrorLevel::Usage);
+
+    base_address = 0;
 
     return RESULT_SUCCESS;
 }
