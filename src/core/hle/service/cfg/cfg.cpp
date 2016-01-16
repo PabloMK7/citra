@@ -310,6 +310,7 @@ ResultCode UpdateConfigNANDSavegame() {
 
 ResultCode FormatConfig() {
     ResultCode res = DeleteConfigNANDSaveFile();
+    // The delete command fails if the file doesn't exist, so we have to check that too
     if (!res.IsSuccess() && res.description != ErrorDescription::FS_NotFound)
         return res;
     // Delete the old data

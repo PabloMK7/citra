@@ -26,14 +26,14 @@ static std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
 }
 
 static std::string GetSaveDataPath(const std::string& mount_location, u64 program_id) {
-    u32 high = program_id >> 32;
-    u32 low = program_id & 0xFFFFFFFF;
+    u32 high = (u32)(program_id >> 32);
+    u32 low = (u32)(program_id & 0xFFFFFFFF);
     return Common::StringFromFormat("%s%08x/%08x/data/00000001/", mount_location.c_str(), high, low);
 }
 
 static std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 program_id) {
-    u32 high = program_id >> 32;
-    u32 low = program_id & 0xFFFFFFFF;
+    u32 high = (u32)(program_id >> 32);
+    u32 low = (u32)(program_id & 0xFFFFFFFF);
     return Common::StringFromFormat("%s%08x/%08x/data/00000001.metadata", mount_location.c_str(), high, low);
 }
 

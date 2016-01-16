@@ -183,7 +183,7 @@ ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle);
  */
 ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info, const FileSys::Path& path = FileSys::Path());
 
-/*
+/**
  * Retrieves the format info about the archive of the specified type and path.
  * The format info is supplied by the client code when creating archives.
  * @param id_code The id of the archive

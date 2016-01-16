@@ -36,13 +36,13 @@ public:
 
     const std::string& GetMountPoint() const { return mount_point; }
 
-    /*
+    /**
      * Writes the SMDH icon of the ExtSaveData to file
      * @param path Path of this ExtSaveData
      * @param icon_data Binary data of the icon
      * @param icon_size Size of the icon data
      */
-    void WriteIcon(const Path& path, u8* icon_data, u32 icon_size);
+    void WriteIcon(const Path& path, const u8* icon_data, u32 icon_size);
 
 private:
     /**

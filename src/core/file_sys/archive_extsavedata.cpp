@@ -117,7 +117,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
 }
 
-void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, u8* icon_data, u32 icon_size) {
+void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data, u32 icon_size) {
     std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
     FileUtil::IOFile icon_file(game_path + "icon", "wb+");
     icon_file.WriteBytes(icon_data, icon_size);

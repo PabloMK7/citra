@@ -172,7 +172,7 @@ public:
      */
     virtual ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) = 0;
 
-    /*
+    /**
      * Retrieves the format info about the archive with the specified path
      * @param path Path to the archive
      * @return Format information about the archive or error code
