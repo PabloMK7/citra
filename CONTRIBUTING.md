@@ -1,3 +1,11 @@
+# Reporting Issues
+
+**The issue tracker is not a support forum.** Unless you can provide precise *technical information* regarding an issue, you *should not post in it*. If you need support, first read the [FAQ](https://github.com/citra-emu/citra/wiki/FAQ) and then either visit our IRC channel or ask in a general emulation forum such as [/r/emulation](https://www.reddit.com/r/emulation/). If you post support questions, generic messages to the developers or vague reports without technical details, they will be closed and locked.
+
+If you believe you have a valid issue report, please post text or a screenshot from the log (the console window that opens alongside Citra) and build version (hex string visible in the titlebar and zip filename), as well as your hardware and software information if applicable.
+
+While issues about specific games not booting are valid bugs, we are currently not interested in them unless you have several games which fail with the same or similar messages. (In which case please file only a single issue about it.) There are too many non-working games right now to file individual issues for every one of them.
+
 # Contributing
 Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits. They aren't very strict rules since we want to be flexible and we understand that under certain circumstances some of them can be counterproductive. Just try to follow as many of them as possible:
 
