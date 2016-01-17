@@ -486,9 +486,8 @@ void ProcessCommandList(const u32* list, u32 size) {
 
         u32 value = *g_state.cmd_list.current_ptr++;
         const CommandHeader header = { *g_state.cmd_list.current_ptr++ };
-        u32 cmd = header.cmd_id;
 
-        WritePicaReg(cmd, value, header.parameter_mask);
+        WritePicaReg(header.cmd_id, value, header.parameter_mask);
 
         for (unsigned i = 0; i < header.extra_data_length; ++i) {
             u32 cmd = header.cmd_id + (header.group_commands ? i + 1 : 0);
