@@ -738,23 +738,23 @@ std::string ARM_Disasm::DisassembleMemHalf(u32 insn)
     if (is_immed) {
         if (is_pre) {
             if (offset == 0) {
-                return Common::StringFromFormat("%s%sh\tr%d, [r%d]", opname, cond_to_str(cond), rd, rn);
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d]", opname, cond_to_str(cond), width, rd, rn);
             } else {
-                return Common::StringFromFormat("%s%sh\tr%d, [r%d, #%s%u]%s",
-                        opname, cond_to_str(cond), rd, rn, minus, offset, bang);
+                return Common::StringFromFormat("%s%s%s\tr%d, [r%d, #%s%u]%s",
+                        opname, cond_to_str(cond), width, rd, rn, minus, offset, bang);
             }
         } else {
-            return Common::StringFromFormat("%s%sh\tr%d, [r%d], #%s%u",
-                    opname, cond_to_str(cond), rd, rn, minus, offset);
+            return Common::StringFromFormat("%s%s%s\tr%d, [r%d], #%s%u",
+                    opname, cond_to_str(cond), width, rd, rn, minus, offset);
         }
     }
 
     if (is_pre) {
-        return Common::StringFromFormat("%s%sh\tr%d, [r%d, %sr%d]%s",
-                opname, cond_to_str(cond), rd, rn, minus, rm, bang);
+        return Common::StringFromFormat("%s%s%s\tr%d, [r%d, %sr%d]%s",
+                opname, cond_to_str(cond), width, rd, rn, minus, rm, bang);
     } else {
-        return Common::StringFromFormat("%s%sh\tr%d, [r%d], %sr%d",
-                opname, cond_to_str(cond), rd, rn, minus, rm);
+        return Common::StringFromFormat("%s%s%s\tr%d, [r%d], %sr%d",
+                opname, cond_to_str(cond), width, rd, rn, minus, rm);
     }
 }
 
