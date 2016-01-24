@@ -42,7 +42,7 @@ void SaveHotkeys(QSettings& settings);
  */
 void LoadHotkeys(QSettings& settings);
 
-class GHotkeysDialog : public QDialog
+class GHotkeysDialog : public QWidget
 {
     Q_OBJECT
 

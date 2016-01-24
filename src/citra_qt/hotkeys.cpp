@@ -94,7 +94,7 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
 }
 
 
-GHotkeysDialog::GHotkeysDialog(QWidget* parent): QDialog(parent)
+GHotkeysDialog::GHotkeysDialog(QWidget* parent): QWidget(parent)
 {
     ui.setupUi(this);
 

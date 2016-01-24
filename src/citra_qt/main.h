@@ -104,12 +104,8 @@ private slots:
     /// Called whenever a user selects the "File->Select Game List Root" menu item
     void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
-    void OnOpenHotkeysDialog();
     void OnConfigure();
     void OnDisplayTitleBars(bool);
-    void SetHardwareRendererEnabled(bool);
-    void SetGdbstubEnabled(bool);
-    void SetShaderJITEnabled(bool);
     void ToggleWindowMode();
 
 private:

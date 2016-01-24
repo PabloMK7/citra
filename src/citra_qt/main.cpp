@@ -13,6 +13,7 @@
 
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
+#include "citra_qt/configure_dialog.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
@@ -145,16 +146,8 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     game_list->LoadInterfaceLayout(settings);
 
-    ui.action_Use_Gdbstub->setChecked(Settings::values.use_gdbstub);
-    SetGdbstubEnabled(ui.action_Use_Gdbstub->isChecked());
-
+    GDBStub::ToggleServer(Settings::values.use_gdbstub);
     GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
-
-    ui.action_Use_Hardware_Renderer->setChecked(Settings::values.use_hw_renderer);
-    SetHardwareRendererEnabled(ui.action_Use_Hardware_Renderer->isChecked());
-
-    ui.action_Use_Shader_JIT->setChecked(Settings::values.use_shader_jit);
-    SetShaderJITEnabled(ui.action_Use_Shader_JIT->isChecked());
 
     ui.action_Single_Window_Mode->setChecked(settings.value("singleWindowMode", true).toBool());
     ToggleWindowMode();
@@ -176,17 +169,14 @@ GMainWindow::GMainWindow() : emu_thread(nullptr)
 
     // Setup connections
     connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
+    connect(ui.action_Configure, SIGNAL(triggered()), this, SLOT(OnConfigure()));
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()));
     connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
     connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this, SLOT(OnMenuSelectGameListRoot()));
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
-    connect(ui.action_Use_Hardware_Renderer, SIGNAL(triggered(bool)), this, SLOT(SetHardwareRendererEnabled(bool)));
-    connect(ui.action_Use_Shader_JIT, SIGNAL(triggered(bool)), this, SLOT(SetShaderJITEnabled(bool)));
-    connect(ui.action_Use_Gdbstub, SIGNAL(triggered(bool)), this, SLOT(SetGdbstubEnabled(bool)));
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
-    connect(ui.action_Hotkeys, SIGNAL(triggered()), this, SLOT(OnOpenHotkeysDialog()));
 
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget, SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), disasmWidget, SLOT(OnEmulationStopping()));
@@ -496,31 +486,6 @@ void GMainWindow::OnStopGame() {
     ShutdownGame();
 }
 
-void GMainWindow::OnOpenHotkeysDialog() {
-    GHotkeysDialog dialog(this);
-    dialog.exec();
-}
-
-void GMainWindow::SetHardwareRendererEnabled(bool enabled) {
-    VideoCore::g_hw_renderer_enabled = enabled;
-
-    Config config;
-    Settings::values.use_hw_renderer = enabled;
-    config.Save();
-}
-
-void GMainWindow::SetGdbstubEnabled(bool enabled) {
-    GDBStub::ToggleServer(enabled);
-}
-
-void GMainWindow::SetShaderJITEnabled(bool enabled) {
-    VideoCore::g_shader_jit_enabled = enabled;
-
-    Config config;
-    Settings::values.use_shader_jit = enabled;
-    config.Save();
-}
-
 void GMainWindow::ToggleWindowMode() {
     if (ui.action_Single_Window_Mode->isChecked()) {
         // Render in the main window...
@@ -547,7 +512,12 @@ void GMainWindow::ToggleWindowMode() {
 }
 
 void GMainWindow::OnConfigure() {
-    //GControllerConfigDialog* dialog = new GControllerConfigDialog(controller_ports, this);
+    ConfigureDialog configureDialog(this);
+    auto result = configureDialog.exec();
+    if ( result == QDialog::Accepted)
+    {
+        configureDialog.applyConfiguration();
+    }
 }
 
 bool GMainWindow::ConfirmClose() {

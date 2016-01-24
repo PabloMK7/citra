@@ -17,12 +17,16 @@ set(SRCS
             debugger/profiler.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
-            game_list.cpp
             util/spinbox.cpp
             util/util.cpp
             bootmanager.cpp
+            configure_debug.cpp
+            configure_dialog.cpp
+            configure_general.cpp
+            game_list.cpp
             hotkeys.cpp
             main.cpp
+            ui_settings.cpp
             citra-qt.rc
             Info.plist
             )
@@ -44,12 +48,16 @@ set(HEADERS
             debugger/profiler.h
             debugger/ramview.h
             debugger/registers.h
-            game_list.h
             util/spinbox.h
             util/util.h
             bootmanager.h
+            configure_debug.h
+            configure_dialog.h
+            configure_general.h
+            game_list.h
             hotkeys.h
             main.h
+            ui_settings.h
             version.h
             )
 
@@ -59,6 +67,9 @@ set(UIS
             debugger/disassembler.ui
             debugger/profiler.ui
             debugger/registers.ui
+            configure.ui
+            configure_debug.ui
+            configure_general.ui
             hotkeys.ui
             main.ui
             )
