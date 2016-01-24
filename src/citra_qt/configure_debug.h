@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#ifndef CONFIGURE_DEBUG_H
-#define CONFIGURE_DEBUG_H
+#pragma once
 
+#include <memory>
 #include <QWidget>
 
 namespace Ui {
@@ -16,7 +16,7 @@ class ConfigureDebug : public QWidget
     Q_OBJECT
 
 public:
-    explicit ConfigureDebug(QWidget *parent = 0);
+    explicit ConfigureDebug(QWidget *parent = nullptr);
     ~ConfigureDebug();
 
     void applyConfiguration();
@@ -25,7 +25,5 @@ private:
     void setConfiguration();
 
 private:
-    Ui::ConfigureDebug *ui;
+    std::unique_ptr<Ui::ConfigureDebug> ui;
 };
-
-#endif // CONFIGURE_DEBUG_H

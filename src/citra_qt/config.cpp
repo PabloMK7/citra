@@ -82,24 +82,23 @@ void Config::ReadValues() {
     qt_config->beginGroup("Paths");
     UISettings::values.roms_path = qt_config->value("romsPath").toString();
     UISettings::values.symbols_path = qt_config->value("symbolsPath").toString();
-    UISettings::values.gamedir_path = qt_config->value("gameListRootDir", ".").toString();
+    UISettings::values.gamedir = qt_config->value("gameListRootDir", ".").toString();
     UISettings::values.gamedir_deepscan = qt_config->value("gameListDeepScan", false).toBool();
     UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
     QStringList groups = qt_config->childGroups();
-    for (auto group : groups)
-    {
+    for (auto group : groups) {
         qt_config->beginGroup(group);
 
         QStringList hotkeys = qt_config->childGroups();
-        for (auto hotkey : hotkeys)
-        {
+        for (auto hotkey : hotkeys) {
             qt_config->beginGroup(hotkey);
-            UISettings::values.shortcuts.push_back(UISettings::Shortcut(group + "/" + hotkey,
-                                                                        UISettings::ContextedShortcut(qt_config->value("KeySeq").toString(),
-                                                                                                      qt_config->value("Context").toInt())));
+            UISettings::values.shortcuts.emplace_back(
+                        UISettings::Shortcut(group + "/" + hotkey,
+                                             UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
+                                                                           qt_config->value("Context").toInt())));
             qt_config->endGroup();
         }
 
@@ -109,6 +108,7 @@ void Config::ReadValues() {
 
     UISettings::values.single_window_mode = qt_config->value("singleWindowMode", true).toBool();
     UISettings::values.display_titlebar = qt_config->value("displayTitleBars", true).toBool();
+    UISettings::values.confirm_before_closing = qt_config->value("confirmClose",true).toBool();
     UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
 
     qt_config->endGroup();
@@ -167,14 +167,13 @@ void Config::SaveValues() {
     qt_config->beginGroup("Paths");
     qt_config->setValue("romsPath", UISettings::values.roms_path);
     qt_config->setValue("symbolsPath", UISettings::values.symbols_path);
-    qt_config->setValue("gameListRootDir", UISettings::values.gamedir_path);
+    qt_config->setValue("gameListRootDir", UISettings::values.gamedir);
     qt_config->setValue("gameListDeepScan", UISettings::values.gamedir_deepscan);
     qt_config->setValue("recentFiles", UISettings::values.recent_files);
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
-    for (auto shortcut : UISettings::values.shortcuts )
-    {
+    for (auto shortcut : UISettings::values.shortcuts ) {
         qt_config->setValue(shortcut.first + "/KeySeq", shortcut.second.first);
         qt_config->setValue(shortcut.first + "/Context", shortcut.second.second);
     }
@@ -182,6 +181,7 @@ void Config::SaveValues() {
 
     qt_config->setValue("singleWindowMode", UISettings::values.single_window_mode);
     qt_config->setValue("displayTitleBars", UISettings::values.display_titlebar);
+    qt_config->setValue("confirmClose", UISettings::values.confirm_before_closing);
     qt_config->setValue("firstStart", UISettings::values.first_start);
 
     qt_config->endGroup();

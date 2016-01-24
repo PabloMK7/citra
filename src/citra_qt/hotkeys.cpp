@@ -32,9 +32,10 @@ void SaveHotkeys()
     {
         for (auto hotkey : group.second)
         {
-            UISettings::values.shortcuts.push_back(UISettings::Shortcut(group.first + "/" + hotkey.first,
-                                                                        UISettings::ContextedShortcut(hotkey.second.keyseq.toString(),
-                                                                                                      hotkey.second.context)));
+            UISettings::values.shortcuts.emplace_back(
+                        UISettings::Shortcut(group.first + "/" + hotkey.first,
+                                             UISettings::ContextualShortcut(hotkey.second.keyseq.toString(),
+                                                                           hotkey.second.context)));
         }
     }
 }

@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#ifndef CONFIGURE_DIALOG_H
-#define CONFIGURE_DIALOG_H
+#pragma once
 
+#include <memory>
 #include <QDialog>
 
 namespace Ui {
@@ -16,7 +16,7 @@ class ConfigureDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget *parent = 0);
+    explicit ConfigureDialog(QWidget *parent = nullptr);
     ~ConfigureDialog();
 
     void applyConfiguration();
@@ -25,7 +25,5 @@ private:
     void setConfiguration();
 
 private:
-    Ui::ConfigureDialog *ui;
+    std::unique_ptr<Ui::ConfigureDialog> ui;
 };
-
-#endif // CONFIGURE_DIALOG_H

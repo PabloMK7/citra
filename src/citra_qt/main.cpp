@@ -194,7 +194,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
 
     show();
 
-    game_list->PopulateAsync(UISettings::values.gamedir_path, UISettings::values.gamedir_deepscan);
+    game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
@@ -416,7 +416,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
 void GMainWindow::OnMenuSelectGameListRoot() {
     QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
     if (!dir_path.isEmpty()) {
-        UISettings::values.gamedir_path = dir_path;
+        UISettings::values.gamedir = dir_path;
         game_list->PopulateAsync(dir_path, UISettings::values.gamedir_deepscan);
     }
 }
@@ -488,14 +488,15 @@ void GMainWindow::ToggleWindowMode() {
 void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this);
     auto result = configureDialog.exec();
-    if ( result == QDialog::Accepted)
+    if (result == QDialog::Accepted)
     {
         configureDialog.applyConfiguration();
+        config->Save();
     }
 }
 
 bool GMainWindow::ConfirmClose() {
-    if (emu_thread == nullptr || !confirm_before_closing)
+    if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
         return true;
 
     auto answer = QMessageBox::question(this, tr("Citra"),

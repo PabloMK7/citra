@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "citra_qt/configure_general.h"
-#include "citra_qt/ui_configure_general.h"
 #include "citra_qt/ui_settings.h"
+#include "ui_configure_general.h"
 
 #include "core/settings.h"
 
@@ -18,23 +18,26 @@ ConfigureGeneral::ConfigureGeneral(QWidget *parent) :
     this->setConfiguration();
 }
 
-ConfigureGeneral::~ConfigureGeneral()
-{
-    delete ui;
+ConfigureGeneral::~ConfigureGeneral() {
 }
 
 void ConfigureGeneral::setConfiguration() {
-    ui->toogleCheckExit->setChecked(UISettings::values.check_closure);
-    ui->toogleHWRenderer->setChecked(Settings::values.use_hw_renderer);
-    ui->toogleShaderJIT->setChecked(Settings::values.use_shader_jit);
+    ui->toogle_deepscan->setChecked(UISettings::values.gamedir_deepscan);
+    ui->toogle_check_exit->setChecked(UISettings::values.confirm_before_closing);
+    ui->region_combobox->setCurrentIndex(Settings::values.region_value);
+    ui->toogle_hw_renderer->setChecked(Settings::values.use_hw_renderer);
+    ui->toogle_shader_jit->setChecked(Settings::values.use_shader_jit);
 }
 
 void ConfigureGeneral::applyConfiguration() {
-    UISettings::values.check_closure = ui->toogleCheckExit->isChecked();
+    UISettings::values.gamedir_deepscan = ui->toogle_deepscan->isChecked();
+    UISettings::values.confirm_before_closing = ui->toogle_check_exit->isChecked();
+
+    Settings::values.region_value = ui->region_combobox->currentIndex();
 
     VideoCore::g_hw_renderer_enabled =
-    Settings::values.use_hw_renderer = ui->toogleHWRenderer->isChecked();
+    Settings::values.use_hw_renderer = ui->toogle_hw_renderer->isChecked();
 
     VideoCore::g_shader_jit_enabled =
-    Settings::values.use_shader_jit = ui->toogleShaderJIT->isChecked();
+    Settings::values.use_shader_jit = ui->toogle_shader_jit->isChecked();
 }

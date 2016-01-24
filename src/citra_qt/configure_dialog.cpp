@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "configure_dialog.h"
+#include "citra_qt/config.h"
+#include "citra_qt/configure_dialog.h"
 #include "ui_configure.h"
 
-#include "config.h"
 
 #include "core/settings.h"
 
@@ -18,15 +18,12 @@ ConfigureDialog::ConfigureDialog(QWidget *parent) :
 }
 
 ConfigureDialog::~ConfigureDialog() {
-    delete ui;
 }
 
 void ConfigureDialog::setConfiguration() {
 }
 
 void ConfigureDialog::applyConfiguration() {
-    Config config;
     ui->generalTab->applyConfiguration();
     ui->debugTab->applyConfiguration();
-    config.Save();
 }
