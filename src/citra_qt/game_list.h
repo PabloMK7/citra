@@ -31,8 +31,8 @@ public:
 
     void PopulateAsync(const QString& dir_path, bool deep_scan);
 
-    void SaveInterfaceLayout(QSettings& settings);
-    void LoadInterfaceLayout(QSettings& settings);
+    void SaveInterfaceLayout();
+    void LoadInterfaceLayout();
 
 public slots:
     void AddEntry(QList<QStandardItem*> entry_items);
