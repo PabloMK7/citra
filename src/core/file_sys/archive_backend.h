@@ -49,11 +49,11 @@ public:
      * Gets the string representation of the path for debugging
      * @return String representation of the path for debugging
      */
-    const std::string DebugStr() const;
+    std::string DebugStr() const;
 
-    const std::string AsString() const;
-    const std::u16string AsU16Str() const;
-    const std::vector<u8> AsBinary() const;
+    std::string AsString() const;
+    std::u16string AsU16Str() const;
+    std::vector<u8> AsBinary() const;
 
 private:
     LowPathType type;
