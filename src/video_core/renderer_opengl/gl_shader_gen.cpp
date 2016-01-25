@@ -557,10 +557,10 @@ layout (std140) uniform shader_data {
     int alphatest_ref;
     float depth_scale;
     float depth_offset;
-    int scissor_right;
-    int scissor_bottom;
-    int scissor_left;
-    int scissor_top;
+    int scissor_x1;
+    int scissor_y1;
+    int scissor_x2;
+    int scissor_y2;
     vec3 fog_color;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
@@ -589,13 +589,14 @@ vec4 secondary_fragment_color = vec4(0.0);
     }
 
     // Append the scissor test
-    if (state.scissor_test_mode == Regs::ScissorMode::Include || state.scissor_test_mode == Regs::ScissorMode::Exclude) {
-        out += "if (scissor_left <= scissor_right || scissor_top <= scissor_bottom) discard;\n";
+    if (state.scissor_test_mode != Regs::ScissorMode::Disabled) {
         out += "if (";
         // Negate the condition if we have to keep only the pixels outside the scissor box
         if (state.scissor_test_mode == Regs::ScissorMode::Include)
             out += "!";
-        out += "(gl_FragCoord.x >= scissor_right && gl_FragCoord.x <= scissor_left && gl_FragCoord.y >= scissor_bottom && gl_FragCoord.y <= scissor_top)) discard;\n";
+        // x2,y2 have +1 added to cover the entire pixel area
+        out += "(gl_FragCoord.x >= scissor_x1 && gl_FragCoord.x < scissor_x2 + 1 && "
+                "gl_FragCoord.y >= scissor_y1 && gl_FragCoord.y < scissor_y2 + 1)) discard;\n";
     }
 
     out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";

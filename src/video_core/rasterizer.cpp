@@ -344,17 +344,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
 
     // Convert the scissor box coordinates to 12.4 fixed point
-    u16 scissor_left = (u16)(regs.scissor_test.GetLeft() << 4);
-    u16 scissor_top = (u16)(regs.scissor_test.GetTop() << 4);
-    u16 scissor_right = (u16)(regs.scissor_test.right << 4);
-    u16 scissor_bottom = (u16)(regs.scissor_test.bottom << 4);
+    u16 scissor_x1 = (u16)( regs.scissor_test.x1      << 4);
+    u16 scissor_y1 = (u16)( regs.scissor_test.y1      << 4);
+    // x2,y2 have +1 added to cover the entire sub-pixel area
+    u16 scissor_x2 = (u16)((regs.scissor_test.x2 + 1) << 4);
+    u16 scissor_y2 = (u16)((regs.scissor_test.y2 + 1) << 4);
 
     if (regs.scissor_test.mode == Regs::ScissorMode::Include) {
         // Calculate the new bounds
-        min_x = std::max(min_x, scissor_right);
-        min_y = std::max(min_y, scissor_bottom);
-        max_x = std::min(max_x, scissor_left);
-        max_y = std::min(max_y, scissor_top);
+        min_x = std::max(min_x, scissor_x1);
+        min_y = std::max(min_y, scissor_y1);
+        max_x = std::min(max_x, scissor_x2);
+        max_y = std::min(max_y, scissor_y2);
     }
 
     min_x &= Fix12P4::IntMask();
@@ -397,10 +398,10 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
         for (u16 x = min_x + 8; x < max_x; x += 0x10) {
 
             // Do not process the pixel if it's inside the scissor box and the scissor mode is set to Exclude
-            if (regs.scissor_test.mode == Regs::ScissorMode::Exclude &&
-                x >= scissor_right && x <= scissor_left &&
-                y >= scissor_bottom && y <= scissor_top) {
-                continue;
+            if (regs.scissor_test.mode == Regs::ScissorMode::Exclude) {
+                if (x >= scissor_x1 && x < scissor_x2 &&
+                    y >= scissor_y1 && y < scissor_y2)
+                    continue;
             }
 
             // Calculate the barycentric coordinates w0, w1 and w2

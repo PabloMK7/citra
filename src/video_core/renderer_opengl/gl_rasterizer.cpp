@@ -357,8 +357,8 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(scissor_test.mode):
         shader_dirty = true;
         break;
-    case PICA_REG_INDEX(scissor_test.right):
-    case PICA_REG_INDEX(scissor_test.left_minus_1):
+    case PICA_REG_INDEX(scissor_test.x1): // and y1
+    case PICA_REG_INDEX(scissor_test.x2): // and y2
         SyncScissorTest();
         break;
 
@@ -1179,15 +1179,15 @@ void RasterizerOpenGL::SyncDepthTest() {
 void RasterizerOpenGL::SyncScissorTest() {
     const auto& regs = Pica::g_state.regs;
 
-    if (uniform_block_data.data.scissor_right != regs.scissor_test.right ||
-        uniform_block_data.data.scissor_bottom != regs.scissor_test.bottom ||
-        uniform_block_data.data.scissor_left != regs.scissor_test.GetLeft() ||
-        uniform_block_data.data.scissor_top != regs.scissor_test.GetTop()) {
+    if (uniform_block_data.data.scissor_x1 != regs.scissor_test.x1 ||
+        uniform_block_data.data.scissor_y1 != regs.scissor_test.y1 ||
+        uniform_block_data.data.scissor_x2 != regs.scissor_test.x2 ||
+        uniform_block_data.data.scissor_y2 != regs.scissor_test.y2) {
 
-        uniform_block_data.data.scissor_right = regs.scissor_test.right;
-        uniform_block_data.data.scissor_bottom = regs.scissor_test.bottom;
-        uniform_block_data.data.scissor_left = regs.scissor_test.GetLeft();
-        uniform_block_data.data.scissor_top = regs.scissor_test.GetTop();
+        uniform_block_data.data.scissor_x1 = regs.scissor_test.x1;
+        uniform_block_data.data.scissor_y1 = regs.scissor_test.y1;
+        uniform_block_data.data.scissor_x2 = regs.scissor_test.x2;
+        uniform_block_data.data.scissor_y2 = regs.scissor_test.y2;
         uniform_block_data.dirty = true;
     }
 }

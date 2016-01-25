@@ -128,22 +128,14 @@ struct Regs {
         BitField<0, 2, ScissorMode> mode;
 
         union {
-            BitField< 0, 16, u32> right;
-            BitField<16, 16, u32> bottom;
+            BitField< 0, 16, u32> x1;
+            BitField<16, 16, u32> y1;
         };
 
         union {
-            BitField< 0, 16, u32> left_minus_1;
-            BitField<16, 16, u32> top_minus_1;
+            BitField< 0, 16, u32> x2;
+            BitField<16, 16, u32> y2;
         };
-
-        u32 GetTop() const {
-            return top_minus_1 + 1;
-        }
-
-        u32 GetLeft() const {
-            return left_minus_1 + 1;
-        }
     } scissor_test;
 
     union {

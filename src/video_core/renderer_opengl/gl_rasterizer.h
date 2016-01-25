@@ -331,10 +331,10 @@ private:
         GLint alphatest_ref;
         GLfloat depth_scale;
         GLfloat depth_offset;
-        GLint scissor_right;
-        GLint scissor_bottom;
-        GLint scissor_left;
-        GLint scissor_top;
+        GLint scissor_x1;
+        GLint scissor_y1;
+        GLint scissor_x2;
+        GLint scissor_y2;
         alignas(16) GLvec3 fog_color;
         alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
