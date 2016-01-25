@@ -250,7 +250,7 @@ const char *ElfReader::GetSectionName(int section) const {
         return nullptr;
 
     int name_offset = sections[section].sh_name;
-    const char* ptr = (char*)GetSectionDataPtr(header->e_shstrndx);
+    const char* ptr = reinterpret_cast<const char*>(GetSectionDataPtr(header->e_shstrndx));
 
     if (ptr)
         return ptr + name_offset;
@@ -347,10 +347,10 @@ bool ElfReader::LoadSymbols() {
     SectionID sec = GetSectionByName(".symtab");
     if (sec != -1) {
         int stringSection = sections[sec].sh_link;
-        const char *stringBase = (const char *)GetSectionDataPtr(stringSection);
+        const char *stringBase = reinterpret_cast<const char*>(GetSectionDataPtr(stringSection));
 
         //We have a symbol table!
-        Elf32_Sym* symtab = (Elf32_Sym *)(GetSectionDataPtr(sec));
+        const Elf32_Sym* symtab = reinterpret_cast<const Elf32_Sym*>(GetSectionDataPtr(sec));
         unsigned int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
         for (unsigned sym = 0; sym < numSymbols; sym++) {
             int size = symtab[sym].st_size;
