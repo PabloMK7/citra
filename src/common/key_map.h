@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <tuple>
 #include "core/hle/service/hid/hid.h"
 
 namespace KeyMap {
@@ -15,15 +16,14 @@ struct HostDeviceKey {
     int key_code;
     int device_id; ///< Uniquely identifies a host device
 
-    bool operator < (const HostDeviceKey &other) const {
-        if (device_id == other.device_id) {
-            return key_code < other.key_code;
-        }
-        return device_id < other.device_id;
+    bool operator<(const HostDeviceKey &other) const {
+        return std::tie(key_code, device_id) <
+               std::tie(other.key_code, other.device_id);
     }
 
-    bool operator == (const HostDeviceKey &other) const {
-        return device_id == other.device_id && key_code == other.key_code;
+    bool operator==(const HostDeviceKey &other) const {
+        return std::tie(key_code, device_id) ==
+               std::tie(other.key_code, other.device_id);
     }
 };
 
