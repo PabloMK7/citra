@@ -710,7 +710,9 @@ void JitCompiler::Compile_JMP(Instruction instr) {
     else
         UNREACHABLE();
 
-    FixupBranch b = J_CC(CC_NZ, true);
+    bool inverted_condition = (instr.opcode.Value() == OpCode::Id::JMPU) &&
+        (instr.flow_control.num_instructions & 1);
+    FixupBranch b = J_CC(inverted_condition ? CC_Z : CC_NZ, true);
 
     Compile_Block(instr.flow_control.dest_offset);
 

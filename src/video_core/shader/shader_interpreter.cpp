@@ -515,7 +515,8 @@ void RunInterpreter(UnitState<Debug>& state) {
 
             case OpCode::Id::JMPU:
                 Record<DebugDataRecord::COND_BOOL_IN>(state.debug, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
-                if (uniforms.b[instr.flow_control.bool_uniform_id]) {
+
+                if (uniforms.b[instr.flow_control.bool_uniform_id] == !(instr.flow_control.num_instructions & 1)) {
                     state.program_counter = instr.flow_control.dest_offset - 1;
                 }
                 break;
