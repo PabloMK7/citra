@@ -61,7 +61,7 @@ public:
     void Compile_MAD(Instruction instr);
 
 private:
-    void Compile_Block(unsigned stop);
+    void Compile_Block(unsigned end);
     void Compile_NextInstr(unsigned* offset);
 
     void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, Gen::X64Reg dest);

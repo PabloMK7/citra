@@ -653,7 +653,7 @@ void JitCompiler::Compile_IF(Instruction instr) {
     FixupBranch b = J_CC(CC_Z, true);
 
     // Compile the code that corresponds to the condition evaluating as true
-    Compile_Block(instr.flow_control.dest_offset - 1);
+    Compile_Block(instr.flow_control.dest_offset);
 
     // If there isn't an "ELSE" condition, we are done here
     if (instr.flow_control.num_instructions == 0) {
@@ -667,7 +667,7 @@ void JitCompiler::Compile_IF(Instruction instr) {
 
     // This code corresponds to the "ELSE" condition
     // Comple the code that corresponds to the condition evaluating as false
-    Compile_Block(instr.flow_control.dest_offset + instr.flow_control.num_instructions - 1);
+    Compile_Block(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
 
     SetJumpTarget(b2);
 }
@@ -691,7 +691,7 @@ void JitCompiler::Compile_LOOP(Instruction instr) {
 
     auto loop_start = GetCodePtr();
 
-    Compile_Block(instr.flow_control.dest_offset);
+    Compile_Block(instr.flow_control.dest_offset + 1);
 
     ADD(32, R(LOOPCOUNT_REG), R(LOOPINC)); // Increment LOOPCOUNT_REG by Z-component
     SUB(32, R(LOOPCOUNT), Imm8(1)); // Increment loop count by 1
@@ -719,12 +719,12 @@ void JitCompiler::Compile_JMP(Instruction instr) {
     SetJumpTarget(b);
 }
 
-void JitCompiler::Compile_Block(unsigned stop) {
+void JitCompiler::Compile_Block(unsigned end) {
     // Save current offset pointer
     unsigned* prev_offset_ptr = offset_ptr;
     unsigned offset = *prev_offset_ptr;
 
-    while (offset <= stop)
+    while (offset < end)
         Compile_NextInstr(&offset);
 
     // Restore current offset pointer
