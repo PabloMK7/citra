@@ -158,12 +158,34 @@ void RasterizerOpenGL::Reset() {
     res_cache.InvalidateAll();
 }
 
+/**
+ * This is a helper function to resolve an issue with opposite quaternions being interpolated by
+ * OpenGL. See below for a detailed description of this issue (yuriks):
+ *
+ * For any rotation, there are two quaternions Q, and -Q, that represent the same rotation. If you
+ * interpolate two quaternions that are opposite, instead of going from one rotation to another
+ * using the shortest path, you'll go around the longest path. You can test if two quaternions are
+ * opposite by checking if Dot(Q1, W2) < 0. In that case, you can flip either of them, therefore
+ * making Dot(-Q1, W2) positive.
+ *
+ * NOTE: This solution corrects this issue per-vertex before passing the quaternions to OpenGL. This
+ * should be correct for nearly all cases, however a more correct implementation (but less trivial
+ * and perhaps unnecessary) would be to handle this per-fragment, by interpolating the quaternions
+ * manually using two Lerps, and doing this correction before each Lerp.
+ */
+static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
+    Math::Vec4f a{ qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32() };
+    Math::Vec4f b{ qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32() };
+
+    return (Math::Dot(a, b) < 0.f);
+}
+
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
                                    const Pica::Shader::OutputVertex& v1,
                                    const Pica::Shader::OutputVertex& v2) {
-    vertex_batch.emplace_back(v0);
-    vertex_batch.emplace_back(v1);
-    vertex_batch.emplace_back(v2);
+    vertex_batch.emplace_back(v0, false);
+    vertex_batch.emplace_back(v1, AreQuaternionsOpposite(v0.quat, v1.quat));
+    vertex_batch.emplace_back(v2, AreQuaternionsOpposite(v0.quat, v2.quat));
 }
 
 void RasterizerOpenGL::DrawTriangles() {

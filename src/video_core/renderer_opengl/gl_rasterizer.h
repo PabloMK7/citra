@@ -248,7 +248,7 @@ private:
 
     /// Structure that the hardware rendered vertices are composed of
     struct HardwareVertex {
-        HardwareVertex(const Pica::Shader::OutputVertex& v) {
+        HardwareVertex(const Pica::Shader::OutputVertex& v, bool flip_quaternion) {
             position[0] = v.pos.x.ToFloat32();
             position[1] = v.pos.y.ToFloat32();
             position[2] = v.pos.z.ToFloat32();
@@ -270,6 +270,12 @@ private:
             view[0] = v.view.x.ToFloat32();
             view[1] = v.view.y.ToFloat32();
             view[2] = v.view.z.ToFloat32();
+
+            if (flip_quaternion) {
+                for (float& x : normquat) {
+                    x = -x;
+                }
+            }
         }
 
         GLfloat position[4];
