@@ -23,10 +23,11 @@ void MapMemoryRegion(VAddr base, u32 size, u8* target);
 
 /**
  * Maps a region of the emulated process address space as a IO region.
- * @note Currently this can only be used to mark a region as being IO, since actual memory-mapped
- *       IO isn't yet supported.
+ * @param base The address to start mapping at. Must be page-aligned.
+ * @param size The amount of bytes to map. Must be page-aligned.
+ * @param mmio_handler The handler that backs the mapping.
  */
-void MapIoRegion(VAddr base, u32 size);
+void MapIoRegion(VAddr base, u32 size, MMIORegionPointer mmio_handler);
 
 void UnmapRegion(VAddr base, u32 size);
 

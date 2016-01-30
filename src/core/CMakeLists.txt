@@ -250,6 +250,7 @@ set(HEADERS
             tracer/citrace.h
             memory.h
             memory_setup.h
+            mmio.h
             settings.h
             system.h
             )

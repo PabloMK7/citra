@@ -13,6 +13,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
+#include "core/mmio.h"
 
 namespace Memory {
 
@@ -23,6 +24,12 @@ enum class PageType {
     Memory,
     /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
     Special,
+};
+
+struct SpecialRegion {
+    VAddr base;
+    u32 size;
+    MMIORegionPointer handler;
 };
 
 /**
@@ -41,8 +48,13 @@ struct PageTable {
     std::array<u8*, NUM_ENTRIES> pointers;
 
     /**
+     * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of type `Special`.
+     */
+    std::vector<SpecialRegion> special_regions;
+
+    /**
      * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
-     * the corresponding entry in `pointer` MUST be set to null.
+     * the corresponding entry in `pointers` MUST be set to null.
      */
     std::array<PageType, NUM_ENTRIES> attributes;
 };
@@ -80,10 +92,12 @@ void MapMemoryRegion(VAddr base, u32 size, u8* target) {
     MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
-void MapIoRegion(VAddr base, u32 size) {
+void MapIoRegion(VAddr base, u32 size, MMIORegionPointer mmio_handler) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
     MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
+
+    current_page_table->special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
 void UnmapRegion(VAddr base, u32 size) {
@@ -91,6 +105,22 @@ void UnmapRegion(VAddr base, u32 size) {
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
     MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
+
+/**
+ * This function should only be called for virtual addreses with attribute `PageType::Special`.
+ */
+static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
+    for (const auto& region : current_page_table->special_regions) {
+        if (vaddr >= region.base && vaddr < (region.base + region.size)) {
+            return region.handler;
+        }
+    }
+    ASSERT_MSG(false, "Mapped IO page without a handler @ %08X", vaddr);
+    return nullptr; // Should never happen
+}
+
+template<typename T>
+T ReadMMIO(MMIORegionPointer mmio_handler, VAddr addr);
 
 template <typename T>
 T Read(const VAddr vaddr) {
@@ -108,13 +138,16 @@ T Read(const VAddr vaddr) {
         return 0;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+        break;
     case PageType::Special:
-        LOG_ERROR(HW_Memory, "I/O reads aren't implemented yet @ %08X", vaddr);
-        return 0;
+        return ReadMMIO<T>(GetMMIOHandler(vaddr), vaddr);
     default:
         UNREACHABLE();
     }
 }
+
+template<typename T>
+void WriteMMIO(MMIORegionPointer mmio_handler, VAddr addr, const T data);
 
 template <typename T>
 void Write(const VAddr vaddr, const T data) {
@@ -131,9 +164,10 @@ void Write(const VAddr vaddr, const T data) {
         return;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+        break;
     case PageType::Special:
-        LOG_ERROR(HW_Memory, "I/O writes aren't implemented yet @ %08X", vaddr);
-        return;
+        WriteMMIO<T>(GetMMIOHandler(vaddr), vaddr, data);
+        break;
     default:
         UNREACHABLE();
     }
@@ -189,6 +223,46 @@ void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
     for (u32 offset = 0; offset < size; offset++) {
         Write8(addr + offset, data[offset]);
     }
+}
+
+template<>
+u8 ReadMMIO<u8>(MMIORegionPointer mmio_handler, VAddr addr) {
+    return mmio_handler->Read8(addr);
+}
+
+template<>
+u16 ReadMMIO<u16>(MMIORegionPointer mmio_handler, VAddr addr) {
+    return mmio_handler->Read16(addr);
+}
+
+template<>
+u32 ReadMMIO<u32>(MMIORegionPointer mmio_handler, VAddr addr) {
+    return mmio_handler->Read32(addr);
+}
+
+template<>
+u64 ReadMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr) {
+    return mmio_handler->Read64(addr);
+}
+
+template<>
+void WriteMMIO<u8>(MMIORegionPointer mmio_handler, VAddr addr, const u8 data) {
+    mmio_handler->Write8(addr, data);
+}
+
+template<>
+void WriteMMIO<u16>(MMIORegionPointer mmio_handler, VAddr addr, const u16 data) {
+    mmio_handler->Write16(addr, data);
+}
+
+template<>
+void WriteMMIO<u32>(MMIORegionPointer mmio_handler, VAddr addr, const u32 data) {
+    mmio_handler->Write32(addr, data);
+}
+
+template<>
+void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) {
+    mmio_handler->Write64(addr, data);
 }
 
 PAddr VirtualToPhysicalAddress(const VAddr addr) {
