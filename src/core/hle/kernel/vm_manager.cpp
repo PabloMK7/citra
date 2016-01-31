@@ -8,6 +8,7 @@
 
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory_setup.h"
+#include "core/mmio.h"
 
 namespace Kernel {
 
@@ -104,7 +105,7 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, u8 * m
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
-ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state) {
+ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state, Memory::MMIORegionPointer mmio_handler) {
     // This is the appropriately sized VMA that will turn into our allocation.
     CASCADE_RESULT(VMAIter vma_handle, CarveVMA(target, size));
     VirtualMemoryArea& final_vma = vma_handle->second;
@@ -114,6 +115,7 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u3
     final_vma.permissions = VMAPermission::ReadWrite;
     final_vma.meminfo_state = state;
     final_vma.paddr = paddr;
+    final_vma.mmio_handler = mmio_handler;
     UpdatePageTableForVMA(final_vma);
 
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
@@ -330,8 +332,7 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         Memory::MapMemoryRegion(vma.base, vma.size, vma.backing_memory);
         break;
     case VMAType::MMIO:
-        // TODO(yuriks): Add support for MMIO handlers.
-        Memory::MapIoRegion(vma.base, vma.size);
+        Memory::MapIoRegion(vma.base, vma.size, vma.mmio_handler);
         break;
     }
 }
