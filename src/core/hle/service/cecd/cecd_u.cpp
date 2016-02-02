@@ -9,11 +9,12 @@
 namespace Service {
 namespace CECD {
 
-// Empty arrays are illegal -- commented out until an entry is added.
-//const Interface::FunctionInfo FunctionTable[] = { };
+static const Interface::FunctionInfo FunctionTable[] = {
+    { 0x00120104, nullptr, "ReadSavedData" },
+};
 
 CECD_U_Interface::CECD_U_Interface() {
-    //Register(FunctionTable);
+    Register(FunctionTable);
 }
 
 } // namespace CECD
