@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include "core/hle/kernel/kernel.h"
-#include "core/hle/service/service.h"
-
 namespace Service {
 namespace CECD {
 

@@ -9,10 +9,6 @@
 #include "core/hle/service/news/news_s.h"
 #include "core/hle/service/news/news_u.h"
 
-#include "core/hle/hle.h"
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/shared_memory.h"
-
 namespace Service {
 namespace NEWS {
 

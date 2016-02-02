@@ -4,11 +4,12 @@
 
 #pragma once
 
-#include <array>
-#include "core/hle/service/service.h"
-#include "core/hle/result.h"
+#include "common/common_types.h"
 
 namespace Service {
+
+class Interface;
+
 namespace PTM {
 
 /// Charge levels used by PTM functions

@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/hle.h"
-#include "core/hle/service/news/news.h"
 #include "core/hle/service/news/news_u.h"
 
 namespace Service {

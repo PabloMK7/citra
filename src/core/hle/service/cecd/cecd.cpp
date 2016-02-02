@@ -9,10 +9,6 @@
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
 
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/shared_memory.h"
-#include "core/hle/hle.h"
-
 namespace Service {
 namespace CECD {
 

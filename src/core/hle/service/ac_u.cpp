@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
-#include "core/hle/hle.h"
 #include "core/hle/service/ac_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

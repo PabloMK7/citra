@@ -8,7 +8,6 @@
 #include "core/hle/service/ir/ir_u.h"
 #include "core/hle/service/ir/ir_user.h"
 
-#include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 

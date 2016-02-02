@@ -13,12 +13,10 @@
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 
-#include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/shared_memory.h"
-#include "core/hle/kernel/thread.h"
 
 namespace Service {
 namespace APT {
