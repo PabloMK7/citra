@@ -278,8 +278,8 @@ private:
 
     OpenGLState state;
 
-    PAddr last_fb_color_addr;
-    PAddr last_fb_depth_addr;
+    PAddr cached_fb_color_addr;
+    PAddr cached_fb_depth_addr;
 
     // Hardware rasterizer
     std::array<SamplerInfo, 3> texture_samplers;
