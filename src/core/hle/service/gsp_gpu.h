@@ -194,7 +194,7 @@ public:
  */
 void SignalInterrupt(InterruptId interrupt_id);
 
-void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
+ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
 
 /**
  * Retrieves the framebuffer info stored in the GSP shared memory for the

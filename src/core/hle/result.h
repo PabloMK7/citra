@@ -24,6 +24,7 @@ enum class ErrorDescription : u32 {
     FS_InvalidOpenFlags = 230,
     FS_NotAFile = 250,
     FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
+    OutofRangeOrMisalignedAddress = 513, // TODO(purpasmart): Check if this name fits its actual usage
     FS_InvalidPath = 702,
     InvalidSection = 1000,
     TooLarge = 1001,

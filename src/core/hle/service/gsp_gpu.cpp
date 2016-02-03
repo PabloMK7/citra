@@ -31,6 +31,13 @@ const static u32 REGS_BEGIN = 0x1EB00000;
 
 namespace GSP_GPU {
 
+const ResultCode ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED(ErrorDescription::OutofRangeOrMisalignedAddress, ErrorModule::GX,
+    ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E02A01
+const ResultCode ERR_GSP_REGS_MISALIGNED(ErrorDescription::MisalignedSize, ErrorModule::GX,
+    ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E02BF2
+const ResultCode ERR_GSP_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorModule::GX,
+    ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E02BEC
+
 /// Event triggered when GSP interrupt has been signalled
 Kernel::SharedPtr<Kernel::Event> g_interrupt_event;
 /// GSP shared memoryings
@@ -59,47 +66,87 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
 }
 
 /**
- * Checks if the parameters in a register write call are valid and logs in the case that
- * they are not
- * @param base_address The first address in the sequence of registers that will be written
- * @param size_in_bytes The number of registers that will be written
- * @return true if the parameters are valid, false otherwise
- */
-static bool CheckWriteParameters(u32 base_address, u32 size_in_bytes) {
-    // TODO: Return proper error codes
-    if (base_address + size_in_bytes >= 0x420000) {
-        LOG_ERROR(Service_GSP, "Write address out of range! (address=0x%08x, size=0x%08x)",
-                  base_address, size_in_bytes);
-        return false;
-    }
-
-    // size should be word-aligned
-    if ((size_in_bytes % 4) != 0) {
-        LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size_in_bytes);
-        return false;
-    }
-
-    return true;
-}
-
-/**
  * Writes sequential GSP GPU hardware registers using an array of source data
  *
  * @param base_address The address of the first register in the sequence
  * @param size_in_bytes The number of registers to update (size of data)
  * @param data A pointer to the source data
+ * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static void WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
-    // TODO: Return proper error codes
-    if (!CheckWriteParameters(base_address, size_in_bytes))
-        return;
+static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+    // This magic number is verified to be done by the gsp module
+    const u32 max_size_in_bytes = 0x80;
 
-    while (size_in_bytes > 0) {
-        HW::Write<u32>(base_address + REGS_BEGIN, *data);
+    if (base_address & 3 || base_address >= 0x420000) {
+        LOG_ERROR(Service_GSP, "Write address was out of range or misaligned! (address=0x%08x, size=0x%08x)",
+                  base_address, size_in_bytes);
+        return ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED;
+    } else if (size_in_bytes <= max_size_in_bytes) {
+        if (size_in_bytes & 3) {
+            LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
+            return ERR_GSP_REGS_MISALIGNED;
+        } else {
+            while (size_in_bytes > 0) {
+                HW::Write<u32>(base_address + REGS_BEGIN, *data);
 
-        size_in_bytes -= 4;
-        ++data;
-        base_address += 4;
+                size_in_bytes -= 4;
+                ++data;
+                base_address += 4;
+            }
+            return RESULT_SUCCESS;
+        }
+
+    } else {
+        LOG_ERROR(Service_GSP, "Out of range size 0x%08x", size_in_bytes);
+        return ERR_GSP_REGS_INVALID_SIZE;
+    }
+}
+
+/**
+ * Updates sequential GSP GPU hardware registers using parallel arrays of source data and masks.
+ * For each register, the value is updated only where the mask is high
+ *
+ * @param base_address The address of the first register in the sequence
+ * @param size_in_bytes The number of registers to update (size of data)
+ * @param data A pointer to the source data to use for updates
+ * @param masks A pointer to the masks
+ * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
+ */
+static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* data, const u32* masks) {
+    // This magic number is verified to be done by the gsp module
+    const u32 max_size_in_bytes = 0x80;
+
+    if (base_address & 3 || base_address >= 0x420000) {
+        LOG_ERROR(Service_GSP, "Write address was out of range or misaligned! (address=0x%08x, size=0x%08x)",
+                  base_address, size_in_bytes);
+        return ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED;
+    } else if (size_in_bytes <= max_size_in_bytes) {
+        if (size_in_bytes & 3) {
+            LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
+            return ERR_GSP_REGS_MISALIGNED;
+        } else {
+            while (size_in_bytes > 0) {
+                const u32 reg_address = base_address + REGS_BEGIN;
+
+                u32 reg_value;
+                HW::Read<u32>(reg_value, reg_address);
+
+                // Update the current value of the register only for set mask bits
+                reg_value = (reg_value & ~*masks) | (*data | *masks);
+
+                HW::Write<u32>(reg_address, reg_value);
+
+                size_in_bytes -= 4;
+                ++data;
+                ++masks;
+                base_address += 4;
+            }
+            return RESULT_SUCCESS;
+        }
+
+    } else {
+        LOG_ERROR(Service_GSP, "Out of range size 0x%08x", size_in_bytes);
+        return ERR_GSP_REGS_INVALID_SIZE;
     }
 }
 
@@ -120,39 +167,7 @@ static void WriteHWRegs(Service::Interface* self) {
 
     u32* src = (u32*)Memory::GetPointer(cmd_buff[4]);
 
-    WriteHWRegs(reg_addr, size, src);
-}
-
-/**
- * Updates sequential GSP GPU hardware registers using parallel arrays of source data and masks.
- * For each register, the value is updated only where the mask is high
- *
- * @param base_address The address of the first register in the sequence
- * @param size_in_bytes The number of registers to update (size of data)
- * @param data A pointer to the source data to use for updates
- * @param masks A pointer to the masks
- */
-static void WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* data, const u32* masks) {
-    // TODO: Return proper error codes
-    if (!CheckWriteParameters(base_address, size_in_bytes))
-        return;
-
-    while (size_in_bytes > 0) {
-        const u32 reg_address = base_address + REGS_BEGIN;
-
-        u32 reg_value;
-        HW::Read<u32>(reg_value, reg_address);
-
-        // Update the current value of the register only for set mask bits
-        reg_value = (reg_value & ~*masks) | (*data | *masks);
-
-        HW::Write<u32>(reg_address, reg_value);
-
-        size_in_bytes -= 4;
-        ++data;
-        ++masks;
-        base_address += 4;
-    }
+    cmd_buff[1] = WriteHWRegs(reg_addr, size, src).raw;
 }
 
 /**
@@ -174,7 +189,7 @@ static void WriteHWRegsWithMask(Service::Interface* self) {
     u32* src_data = (u32*)Memory::GetPointer(cmd_buff[4]);
     u32* mask_data = (u32*)Memory::GetPointer(cmd_buff[6]);
 
-    WriteHWRegsWithMask(reg_addr, size, src_data, mask_data);
+    cmd_buff[1] = WriteHWRegsWithMask(reg_addr, size, src_data, mask_data).raw;
 }
 
 /// Read a GSP GPU hardware register
@@ -206,27 +221,27 @@ static void ReadHWRegs(Service::Interface* self) {
     }
 }
 
-void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
+ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address = 0x400000;
     PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
     PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);
     if (info.active_fb == 0) {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)), 4,
-                &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)), 4,
-                &phys_address_right);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)),
+                    4, &phys_address_left);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)),
+                    4, &phys_address_right);
     } else {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)), 4,
-                &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)), 4,
-                &phys_address_right);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)),
+                    4, &phys_address_left);
+        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)),
+                    4, &phys_address_right);
     }
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)), 4,
-            &info.stride);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)), 4,
-            &info.format);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)), 4,
-            &info.shown_fb);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)),
+                4, &info.stride);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)),
+                4, &info.format);
+    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
+                4, &info.shown_fb);
 
     if (Pica::g_debug_context)
         Pica::g_debug_context->OnEvent(Pica::DebugContext::Event::BufferSwapped, nullptr);
@@ -234,6 +249,8 @@ void SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     if (screen_id == 0) {
         MicroProfileFlip();
     }
+
+    return RESULT_SUCCESS;
 }
 
 /**
@@ -251,9 +268,8 @@ static void SetBufferSwap(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 screen_id = cmd_buff[1];
     FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
-    SetBufferSwap(screen_id, *fb_info);
 
-    cmd_buff[1] = 0; // No error
+    cmd_buff[1] = SetBufferSwap(screen_id, *fb_info).raw;
 }
 
 /**
