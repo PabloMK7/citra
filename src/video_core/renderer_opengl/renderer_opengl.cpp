@@ -436,8 +436,6 @@ static void DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity,
         level = Log::Level::Warning;
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        level = Log::Level::Info;
-        break;
     case GL_DEBUG_SEVERITY_LOW:
         level = Log::Level::Debug;
         break;
