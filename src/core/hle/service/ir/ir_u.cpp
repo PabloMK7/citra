@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/hle.h"
-#include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_u.h"
 
 namespace Service {

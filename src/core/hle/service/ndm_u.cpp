@@ -2,8 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/hle.h"
-#include "ndm_u.h"
+#include "core/hle/service/ndm_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace NDM_U

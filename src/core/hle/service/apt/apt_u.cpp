@@ -2,9 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-
-#include "common/file_util.h"
-
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_u.h"
 

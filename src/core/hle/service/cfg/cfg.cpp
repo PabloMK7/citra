@@ -11,6 +11,7 @@
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/file_backend.h"
 #include "core/settings.h"
+#include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"

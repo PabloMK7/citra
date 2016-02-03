@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/hle.h"
-#include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cam/cam_q.h"
 
 namespace Service {

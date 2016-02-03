@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/common_types.h"
 #include "common/logging/log.h"
 
 #include "core/hle/service/service.h"
@@ -9,10 +10,6 @@
 #include "core/hle/service/nim/nim_aoc.h"
 #include "core/hle/service/nim/nim_s.h"
 #include "core/hle/service/nim/nim_u.h"
-
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/shared_memory.h"
-#include "core/hle/hle.h"
 
 namespace Service {
 namespace NIM {

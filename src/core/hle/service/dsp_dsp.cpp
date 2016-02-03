@@ -4,7 +4,6 @@
 
 #include "common/logging/log.h"
 
-#include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/dsp_dsp.h"
 

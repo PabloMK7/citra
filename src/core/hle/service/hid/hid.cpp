@@ -13,7 +13,6 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
-#include "core/hle/hle.h"
 
 #include "video_core/video_core.h"
 

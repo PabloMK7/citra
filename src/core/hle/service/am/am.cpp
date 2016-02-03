@@ -10,10 +10,6 @@
 #include "core/hle/service/am/am_net.h"
 #include "core/hle/service/am/am_sys.h"
 
-#include "core/hle/hle.h"
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/shared_memory.h"
-
 namespace Service {
 namespace AM {
 

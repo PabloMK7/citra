@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/hle.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/am/am_net.h"
 

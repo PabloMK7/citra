@@ -5,10 +5,15 @@
 #pragma once
 
 #include <array>
-#include "core/hle/result.h"
-#include "core/hle/service/service.h"
+
+#include "common/common_types.h"
+
+union ResultCode;
 
 namespace Service {
+
+class Interface;
+
 namespace CFG {
 
 enum SystemModel {

@@ -4,15 +4,15 @@
 
 #include <cstring>
 
+#include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "core/hle/hle.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
 
 #include "video_core/renderer_base.h"
-#include "video_core/utils.h"
 #include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

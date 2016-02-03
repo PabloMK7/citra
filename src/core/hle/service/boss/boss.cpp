@@ -7,10 +7,6 @@
 #include "core/hle/service/boss/boss_p.h"
 #include "core/hle/service/boss/boss_u.h"
 
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/shared_memory.h"
-#include "core/hle/hle.h"
-
 namespace Service {
 namespace BOSS {
 
