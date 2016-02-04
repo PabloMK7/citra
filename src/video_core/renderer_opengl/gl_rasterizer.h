@@ -17,6 +17,7 @@
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/shader/shader_interpreter.h"
 
 /**
@@ -288,27 +289,27 @@ private:
     };
 
     struct LightSrc {
-        std::array<GLfloat, 3> specular_0;
+        GLvec3 specular_0;
         INSERT_PADDING_WORDS(1);
-        std::array<GLfloat, 3> specular_1;
+        GLvec3 specular_1;
         INSERT_PADDING_WORDS(1);
-        std::array<GLfloat, 3> diffuse;
+        GLvec3 diffuse;
         INSERT_PADDING_WORDS(1);
-        std::array<GLfloat, 3> ambient;
+        GLvec3 ambient;
         INSERT_PADDING_WORDS(1);
-        std::array<GLfloat, 3> position;
+        GLvec3 position;
         INSERT_PADDING_WORDS(1);
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
     struct UniformData {
         // A vec4 color for each of the six tev stages
-        std::array<GLfloat, 4> const_color[6];
-        std::array<GLfloat, 4> tev_combiner_buffer_color;
+        GLvec4 const_color[6];
+        GLvec4 tev_combiner_buffer_color;
         GLint alphatest_ref;
         GLfloat depth_offset;
         INSERT_PADDING_WORDS(2);
-        std::array<GLfloat, 3> lighting_global_ambient;
+        GLvec3 lighting_global_ambient;
         INSERT_PADDING_WORDS(1);
         LightSrc light_src[8];
     };
@@ -434,5 +435,5 @@ private:
     OGLFramebuffer framebuffer;
 
     std::array<OGLTexture, 6> lighting_lut;
-    std::array<std::array<std::array<GLfloat, 4>, 256>, 6> lighting_lut_data;
+    std::array<std::array<GLvec4, 256>, 6> lighting_lut_data;
 };

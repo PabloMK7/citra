@@ -920,7 +920,7 @@ void RasterizerOpenGL::SyncGlobalAmbient() {
 }
 
 void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
-    std::array<std::array<GLfloat, 4>, 256> new_data;
+    std::array<GLvec4, 256> new_data;
 
     for (unsigned offset = 0; offset < new_data.size(); ++offset) {
         new_data[offset][0] = Pica::g_state.lighting.luts[(lut_index * 4) + 0][offset].ToFloat();
@@ -969,7 +969,7 @@ void RasterizerOpenGL::SyncLightAmbient(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightPosition(int light_index) {
-    std::array<GLfloat, 3> position = {
+    GLvec3 position = {
         Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
         Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
         Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32() };
