@@ -289,16 +289,11 @@ private:
     };
 
     struct LightSrc {
-        GLvec3 specular_0;
-        INSERT_PADDING_WORDS(1);
-        GLvec3 specular_1;
-        INSERT_PADDING_WORDS(1);
-        GLvec3 diffuse;
-        INSERT_PADDING_WORDS(1);
-        GLvec3 ambient;
-        INSERT_PADDING_WORDS(1);
-        GLvec3 position;
-        INSERT_PADDING_WORDS(1);
+        alignas(16) GLvec3 specular_0;
+        alignas(16) GLvec3 specular_1;
+        alignas(16) GLvec3 diffuse;
+        alignas(16) GLvec3 ambient;
+        alignas(16) GLvec3 position;
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
@@ -308,9 +303,7 @@ private:
         GLvec4 tev_combiner_buffer_color;
         GLint alphatest_ref;
         GLfloat depth_offset;
-        INSERT_PADDING_WORDS(2);
-        GLvec3 lighting_global_ambient;
-        INSERT_PADDING_WORDS(1);
+        alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
     };
 
