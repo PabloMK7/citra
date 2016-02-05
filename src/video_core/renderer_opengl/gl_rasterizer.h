@@ -75,7 +75,7 @@ struct PicaShaderConfig {
         // Fragment lighting
 
         res.lighting.enable = !regs.lighting.disable;
-        res.lighting.src_num = regs.lighting.src_num + 1;
+        res.lighting.src_num = regs.lighting.num_lights + 1;
 
         for (unsigned light_index = 0; light_index < res.lighting.src_num; ++light_index) {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
@@ -83,38 +83,38 @@ struct PicaShaderConfig {
             res.lighting.light[light_index].num = num;
             res.lighting.light[light_index].directional = light.directional != 0;
             res.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
-            res.lighting.light[light_index].dist_atten_enable = regs.lighting.IsDistAttenEnabled(num);
+            res.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
             res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
             res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
         }
 
-        res.lighting.lut_d0.enable = regs.lighting.lut_enable_d0 == 0;
-        res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.d0 == 0;
+        res.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
+        res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
         res.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
         res.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
 
-        res.lighting.lut_d1.enable = regs.lighting.lut_enable_d1 == 0;
-        res.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.d1 == 0;
+        res.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
+        res.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
         res.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
         res.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
-        res.lighting.lut_fr.enable = regs.lighting.lut_enable_fr == 0;
-        res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.fr == 0;
+        res.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
+        res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
         res.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
         res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
-        res.lighting.lut_rr.enable = regs.lighting.lut_enable_rr == 0;
-        res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.rr == 0;
+        res.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
+        res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
         res.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
         res.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
 
-        res.lighting.lut_rg.enable = regs.lighting.lut_enable_rg == 0;
-        res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.rg == 0;
+        res.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
+        res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
         res.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
         res.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
 
-        res.lighting.lut_rb.enable = regs.lighting.lut_enable_rb == 0;
-        res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.rb == 0;
+        res.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
+        res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
         res.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
         res.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
@@ -122,7 +122,7 @@ struct PicaShaderConfig {
         res.lighting.fresnel_selector = regs.lighting.fresnel_selector;
         res.lighting.bump_mode = regs.lighting.bump_mode;
         res.lighting.bump_selector = regs.lighting.bump_selector;
-        res.lighting.bump_renorm = regs.lighting.bump_renorm == 0;
+        res.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
         res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;

@@ -762,7 +762,7 @@ struct Regs {
 
                 union {
                     BitField<0, 1, u32> directional;
-                    BitField<1, 1, u32> two_sided_diffuse; // 1: GL_TRUE, 0: GL_FALSE; when disabled, clamp dot-product to 0
+                    BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
                 };
             };
 
@@ -774,46 +774,46 @@ struct Regs {
         static_assert(sizeof(LightSrc) == 0x10 * sizeof(u32), "LightSrc structure must be 0x10 words");
 
         LightSrc light[8];
-        LightColor global_ambient; // emission + (material.ambient * lighting.ambient)
+        LightColor global_ambient; // Emission + (material.ambient * lighting.ambient)
         INSERT_PADDING_WORDS(0x1);
-        BitField<0, 3, u32> src_num; // number of enabled lights - 1
+        BitField<0, 3, u32> num_lights; // Number of enabled lights - 1
 
         union {
             BitField< 2, 2, LightingFresnelSelector> fresnel_selector;
             BitField< 4, 4, LightingConfig> config;
             BitField<22, 2, u32> bump_selector; // 0: Texture 0, 1: Texture 1, 2: Texture 2
-            BitField<27, 1, u32> clamp_highlights; // 1: GL_TRUE, 0: GL_FALSE
-            BitField<28, 2, LightingBumpMode> bump_mode; // 1: GL_TRUE, 0: GL_FALSE
-            BitField<30, 1, u32> bump_renorm; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<27, 1, u32> clamp_highlights;
+            BitField<28, 2, LightingBumpMode> bump_mode;
+            BitField<30, 1, u32> disable_bump_renorm;
         };
 
         union {
-            BitField<16, 1, u32> lut_enable_d0; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<17, 1, u32> lut_enable_d1; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<19, 1, u32> lut_enable_fr; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<20, 1, u32> lut_enable_rr; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<21, 1, u32> lut_enable_rg; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<22, 1, u32> lut_enable_rb; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<16, 1, u32> disable_lut_d0;
+            BitField<17, 1, u32> disable_lut_d1;
+            BitField<19, 1, u32> disable_lut_fr;
+            BitField<20, 1, u32> disable_lut_rr;
+            BitField<21, 1, u32> disable_lut_rg;
+            BitField<22, 1, u32> disable_lut_rb;
 
             // Each bit specifies whether distance attenuation should be applied for the
             // corresponding light
 
-            BitField<24, 1, u32> dist_atten_enable_light_0; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<25, 1, u32> dist_atten_enable_light_1; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<26, 1, u32> dist_atten_enable_light_2; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<27, 1, u32> dist_atten_enable_light_3; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<28, 1, u32> dist_atten_enable_light_4; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<29, 1, u32> dist_atten_enable_light_5; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<30, 1, u32> dist_atten_enable_light_6; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<31, 1, u32> dist_atten_enable_light_7; // 0: GL_TRUE, 1: GL_FALSE
+            BitField<24, 1, u32> disable_dist_atten_light_0;
+            BitField<25, 1, u32> disable_dist_atten_light_1;
+            BitField<26, 1, u32> disable_dist_atten_light_2;
+            BitField<27, 1, u32> disable_dist_atten_light_3;
+            BitField<28, 1, u32> disable_dist_atten_light_4;
+            BitField<29, 1, u32> disable_dist_atten_light_5;
+            BitField<30, 1, u32> disable_dist_atten_light_6;
+            BitField<31, 1, u32> disable_dist_atten_light_7;
         };
 
-        bool IsDistAttenEnabled(unsigned index) const {
-            const unsigned enable[] = { dist_atten_enable_light_0, dist_atten_enable_light_1,
-                                        dist_atten_enable_light_2, dist_atten_enable_light_3,
-                                        dist_atten_enable_light_4, dist_atten_enable_light_5,
-                                        dist_atten_enable_light_6, dist_atten_enable_light_7 };
-            return enable[index] == 0;
+        bool IsDistAttenDisabled(unsigned index) const {
+            const unsigned disable[] = { disable_dist_atten_light_0, disable_dist_atten_light_1,
+                                         disable_dist_atten_light_2, disable_dist_atten_light_3,
+                                         disable_dist_atten_light_4, disable_dist_atten_light_5,
+                                         disable_dist_atten_light_6, disable_dist_atten_light_7 };
+            return disable[index] != 0;
         }
 
         union {
@@ -830,14 +830,17 @@ struct Regs {
         // registers is written to, the behavior will be the same.
         u32 lut_data[8];
 
+        // These are used to specify if absolute (abs) value should be used for each LUT index. When
+        // abs mode is disabled, LUT indexes are in the range of (-1.0, 1.0). Otherwise, they are in
+        // the range of (0.0, 1.0).
         union {
-            BitField< 1, 1, u32> d0; // 0: GL_TRUE, 1: GL_FALSE
-            BitField< 5, 1, u32> d1; // 0: GL_TRUE, 1: GL_FALSE
-            BitField< 9, 1, u32> sp; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<13, 1, u32> fr; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<17, 1, u32> rb; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<21, 1, u32> rg; // 0: GL_TRUE, 1: GL_FALSE
-            BitField<25, 1, u32> rr; // 0: GL_TRUE, 1: GL_FALSE
+            BitField< 1, 1, u32> disable_d0;
+            BitField< 5, 1, u32> disable_d1;
+            BitField< 9, 1, u32> disable_sp;
+            BitField<13, 1, u32> disable_fr;
+            BitField<17, 1, u32> disable_rb;
+            BitField<21, 1, u32> disable_rg;
+            BitField<25, 1, u32> disable_rr;
         } abs_lut_input;
 
         union {
