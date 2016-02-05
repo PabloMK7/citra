@@ -36,7 +36,7 @@ static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
             stage.GetAlphaMultiplier() == 1);
 }
 
-RasterizerOpenGL::RasterizerOpenGL() : last_fb_color_addr(0), last_fb_depth_addr(0) { }
+RasterizerOpenGL::RasterizerOpenGL() : cached_fb_color_addr(0), cached_fb_depth_addr(0) { }
 RasterizerOpenGL::~RasterizerOpenGL() { }
 
 void RasterizerOpenGL::InitObjects() {
@@ -169,16 +169,14 @@ void RasterizerOpenGL::DrawTriangles() {
     // Flush the resource cache at the current depth and color framebuffer addresses for render-to-texture
     const auto& regs = Pica::g_state.regs;
 
-    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
-    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_color_size = Pica::Regs::BytesPerColorPixel(fb_color_texture.format)
+                               * fb_color_texture.width * fb_color_texture.height;
 
-    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
-    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_depth_size = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format)
+                               * fb_depth_texture.width * fb_depth_texture.height;
 
-    res_cache.InvalidateInRange(cur_fb_color_addr, cur_fb_color_size, true);
-    res_cache.InvalidateInRange(cur_fb_depth_addr, cur_fb_depth_size, true);
+    res_cache.InvalidateInRange(cached_fb_color_addr, cached_fb_color_size, true);
+    res_cache.InvalidateInRange(cached_fb_depth_addr, cached_fb_depth_size, true);
 }
 
 void RasterizerOpenGL::FlushFramebuffer() {
@@ -291,38 +289,34 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
 
-    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
-    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_color_size = Pica::Regs::BytesPerColorPixel(fb_color_texture.format)
+                               * fb_color_texture.width * fb_color_texture.height;
 
-    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
-    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_depth_size = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format)
+                               * fb_depth_texture.width * fb_depth_texture.height;
 
     // If source memory region overlaps 3DS framebuffers, commit them before the copy happens
-    if (MathUtil::IntervalsIntersect(addr, size, cur_fb_color_addr, cur_fb_color_size))
+    if (MathUtil::IntervalsIntersect(addr, size, cached_fb_color_addr, cached_fb_color_size))
         CommitColorBuffer();
 
-    if (MathUtil::IntervalsIntersect(addr, size, cur_fb_depth_addr, cur_fb_depth_size))
+    if (MathUtil::IntervalsIntersect(addr, size, cached_fb_depth_addr, cached_fb_depth_size))
         CommitDepthBuffer();
 }
 
 void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
     const auto& regs = Pica::g_state.regs;
 
-    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
-    u32 cur_fb_color_size = Pica::Regs::BytesPerColorPixel(regs.framebuffer.color_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_color_size = Pica::Regs::BytesPerColorPixel(fb_color_texture.format)
+                               * fb_color_texture.width * fb_color_texture.height;
 
-    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
-    u32 cur_fb_depth_size = Pica::Regs::BytesPerDepthPixel(regs.framebuffer.depth_format)
-                            * regs.framebuffer.GetWidth() * regs.framebuffer.GetHeight();
+    u32 cached_fb_depth_size = Pica::Regs::BytesPerDepthPixel(fb_depth_texture.format)
+                               * fb_depth_texture.width * fb_depth_texture.height;
 
     // If modified memory region overlaps 3DS framebuffers, reload their contents into OpenGL
-    if (MathUtil::IntervalsIntersect(addr, size, cur_fb_color_addr, cur_fb_color_size))
+    if (MathUtil::IntervalsIntersect(addr, size, cached_fb_color_addr, cached_fb_color_size))
         ReloadColorBuffer();
 
-    if (MathUtil::IntervalsIntersect(addr, size, cur_fb_depth_addr, cur_fb_depth_size))
+    if (MathUtil::IntervalsIntersect(addr, size, cached_fb_depth_addr, cached_fb_depth_size))
         ReloadDepthBuffer();
 
     // Notify cache of flush in case the region touches a cached resource
@@ -514,10 +508,10 @@ void RasterizerOpenGL::SetShader() {
 void RasterizerOpenGL::SyncFramebuffer() {
     const auto& regs = Pica::g_state.regs;
 
-    PAddr cur_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
+    PAddr new_fb_color_addr = regs.framebuffer.GetColorBufferPhysicalAddress();
     Pica::Regs::ColorFormat new_fb_color_format = regs.framebuffer.color_format;
 
-    PAddr cur_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
+    PAddr new_fb_depth_addr = regs.framebuffer.GetDepthBufferPhysicalAddress();
     Pica::Regs::DepthFormat new_fb_depth_format = regs.framebuffer.depth_format;
 
     bool fb_size_changed = fb_color_texture.width != static_cast<GLsizei>(regs.framebuffer.GetWidth()) ||
@@ -529,10 +523,10 @@ void RasterizerOpenGL::SyncFramebuffer() {
     bool depth_fb_prop_changed = fb_depth_texture.format != new_fb_depth_format ||
                                  fb_size_changed;
 
-    bool color_fb_modified = last_fb_color_addr != cur_fb_color_addr ||
+    bool color_fb_modified = cached_fb_color_addr != new_fb_color_addr ||
                              color_fb_prop_changed;
 
-    bool depth_fb_modified = last_fb_depth_addr != cur_fb_depth_addr ||
+    bool depth_fb_modified = cached_fb_depth_addr != new_fb_depth_addr ||
                              depth_fb_prop_changed;
 
     // Commit if framebuffer modified in any way
@@ -572,13 +566,13 @@ void RasterizerOpenGL::SyncFramebuffer() {
 
     // Load buffer data again if fb modified in any way
     if (color_fb_modified) {
-        last_fb_color_addr = cur_fb_color_addr;
+        cached_fb_color_addr = new_fb_color_addr;
 
         ReloadColorBuffer();
     }
 
     if (depth_fb_modified) {
-        last_fb_depth_addr = cur_fb_depth_addr;
+        cached_fb_depth_addr = new_fb_depth_addr;
 
         ReloadDepthBuffer();
     }
@@ -723,7 +717,7 @@ void RasterizerOpenGL::SyncDrawState() {
 MICROPROFILE_DEFINE(OpenGL_FramebufferReload, "OpenGL", "FB Reload", MP_RGB(70, 70, 200));
 
 void RasterizerOpenGL::ReloadColorBuffer() {
-    u8* color_buffer = Memory::GetPhysicalPointer(Pica::g_state.regs.framebuffer.GetColorBufferPhysicalAddress());
+    u8* color_buffer = Memory::GetPhysicalPointer(cached_fb_color_addr);
 
     if (color_buffer == nullptr)
         return;
@@ -758,13 +752,11 @@ void RasterizerOpenGL::ReloadColorBuffer() {
 }
 
 void RasterizerOpenGL::ReloadDepthBuffer() {
-    PAddr depth_buffer_addr = Pica::g_state.regs.framebuffer.GetDepthBufferPhysicalAddress();
-
-    if (depth_buffer_addr == 0)
+    if (cached_fb_depth_addr == 0)
         return;
 
     // TODO: Appears to work, but double-check endianness of depth values and order of depth-stencil
-    u8* depth_buffer = Memory::GetPhysicalPointer(depth_buffer_addr);
+    u8* depth_buffer = Memory::GetPhysicalPointer(cached_fb_depth_addr);
 
     if (depth_buffer == nullptr)
         return;
@@ -827,8 +819,8 @@ Common::Profiling::TimingCategory buffer_commit_category("Framebuffer Commit");
 MICROPROFILE_DEFINE(OpenGL_FramebufferCommit, "OpenGL", "FB Commit", MP_RGB(70, 70, 200));
 
 void RasterizerOpenGL::CommitColorBuffer() {
-    if (last_fb_color_addr != 0) {
-        u8* color_buffer = Memory::GetPhysicalPointer(last_fb_color_addr);
+    if (cached_fb_color_addr != 0) {
+        u8* color_buffer = Memory::GetPhysicalPointer(cached_fb_color_addr);
 
         if (color_buffer != nullptr) {
             Common::Profiling::ScopeTimer timer(buffer_commit_category);
@@ -863,9 +855,9 @@ void RasterizerOpenGL::CommitColorBuffer() {
 }
 
 void RasterizerOpenGL::CommitDepthBuffer() {
-    if (last_fb_depth_addr != 0) {
+    if (cached_fb_depth_addr != 0) {
         // TODO: Output seems correct visually, but doesn't quite match sw renderer output. One of them is wrong.
-        u8* depth_buffer = Memory::GetPhysicalPointer(last_fb_depth_addr);
+        u8* depth_buffer = Memory::GetPhysicalPointer(cached_fb_depth_addr);
 
         if (depth_buffer != nullptr) {
             Common::Profiling::ScopeTimer timer(buffer_commit_category);
