@@ -27,25 +27,9 @@ struct Entry {
     std::string message;
 
     Entry() = default;
+    Entry(Entry&& o) = default;
 
-    // TODO(yuriks) Use defaulted move constructors once MSVC supports them
-#define MOVE(member) member(std::move(o.member))
-    Entry(Entry&& o)
-        : MOVE(timestamp), MOVE(log_class), MOVE(log_level),
-        MOVE(location), MOVE(message)
-    {}
-#undef MOVE
-
-    Entry& operator=(const Entry&& o) {
-#define MOVE(member) member = std::move(o.member)
-        MOVE(timestamp);
-        MOVE(log_class);
-        MOVE(log_level);
-        MOVE(location);
-        MOVE(message);
-#undef MOVE
-        return *this;
-    }
+    Entry& operator=(Entry&& o) = default;
 };
 
 /**
