@@ -75,6 +75,12 @@ void RasterizerOpenGL::InitObjects() {
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD1);
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD2);
 
+    glVertexAttribPointer(GLShader::ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, normquat));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_NORMQUAT);
+
+    glVertexAttribPointer(GLShader::ATTRIBUTE_VIEW, 3, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, view));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_VIEW);
+
     SetShader();
 
     // Create textures for OGL framebuffer that will be rendered to, initially 1x1 to succeed in framebuffer creation
@@ -120,6 +126,19 @@ void RasterizerOpenGL::InitObjects() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fb_color_texture.texture.handle, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, fb_depth_texture.texture.handle, 0);
 
+    for (size_t i = 0; i < lighting_lut.size(); ++i) {
+        lighting_lut[i].Create();
+        state.lighting_lut[i].texture_1d = lighting_lut[i].handle;
+
+        glActiveTexture(GL_TEXTURE3 + i);
+        glBindTexture(GL_TEXTURE_1D, state.lighting_lut[i].texture_1d);
+
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    state.Apply();
+
     ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
                "OpenGL rasterizer framebuffer setup failed, status %X", glCheckFramebufferStatus(GL_FRAMEBUFFER));
 }
@@ -139,12 +158,34 @@ void RasterizerOpenGL::Reset() {
     res_cache.InvalidateAll();
 }
 
+/**
+ * This is a helper function to resolve an issue with opposite quaternions being interpolated by
+ * OpenGL. See below for a detailed description of this issue (yuriks):
+ *
+ * For any rotation, there are two quaternions Q, and -Q, that represent the same rotation. If you
+ * interpolate two quaternions that are opposite, instead of going from one rotation to another
+ * using the shortest path, you'll go around the longest path. You can test if two quaternions are
+ * opposite by checking if Dot(Q1, W2) < 0. In that case, you can flip either of them, therefore
+ * making Dot(-Q1, W2) positive.
+ *
+ * NOTE: This solution corrects this issue per-vertex before passing the quaternions to OpenGL. This
+ * should be correct for nearly all cases, however a more correct implementation (but less trivial
+ * and perhaps unnecessary) would be to handle this per-fragment, by interpolating the quaternions
+ * manually using two Lerps, and doing this correction before each Lerp.
+ */
+static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
+    Math::Vec4f a{ qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32() };
+    Math::Vec4f b{ qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32() };
+
+    return (Math::Dot(a, b) < 0.f);
+}
+
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
                                    const Pica::Shader::OutputVertex& v1,
                                    const Pica::Shader::OutputVertex& v2) {
-    vertex_batch.emplace_back(v0);
-    vertex_batch.emplace_back(v1);
-    vertex_batch.emplace_back(v2);
+    vertex_batch.emplace_back(v0, false);
+    vertex_batch.emplace_back(v1, AreQuaternionsOpposite(v0.quat, v1.quat));
+    vertex_batch.emplace_back(v2, AreQuaternionsOpposite(v0.quat, v2.quat));
 }
 
 void RasterizerOpenGL::DrawTriangles() {
@@ -154,6 +195,13 @@ void RasterizerOpenGL::DrawTriangles() {
     if (state.draw.shader_dirty) {
         SetShader();
         state.draw.shader_dirty = false;
+    }
+
+    for (unsigned index = 0; index < lighting_lut.size(); index++) {
+        if (uniform_block_data.lut_dirty[index]) {
+            SyncLightingLUT(index);
+            uniform_block_data.lut_dirty[index] = false;
+        }
     }
 
     if (uniform_block_data.dirty) {
@@ -283,6 +331,165 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(tev_combiner_buffer_color):
         SyncCombinerColor();
         break;
+
+    // Fragment lighting specular 0 color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_0, 0x140 + 0 * 0x10):
+        SyncLightSpecular0(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_0, 0x140 + 1 * 0x10):
+        SyncLightSpecular0(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_0, 0x140 + 2 * 0x10):
+        SyncLightSpecular0(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_0, 0x140 + 3 * 0x10):
+        SyncLightSpecular0(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_0, 0x140 + 4 * 0x10):
+        SyncLightSpecular0(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_0, 0x140 + 5 * 0x10):
+        SyncLightSpecular0(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_0, 0x140 + 6 * 0x10):
+        SyncLightSpecular0(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_0, 0x140 + 7 * 0x10):
+        SyncLightSpecular0(7);
+        break;
+
+    // Fragment lighting specular 1 color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_1, 0x141 + 0 * 0x10):
+        SyncLightSpecular1(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].specular_1, 0x141 + 1 * 0x10):
+        SyncLightSpecular1(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].specular_1, 0x141 + 2 * 0x10):
+        SyncLightSpecular1(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].specular_1, 0x141 + 3 * 0x10):
+        SyncLightSpecular1(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].specular_1, 0x141 + 4 * 0x10):
+        SyncLightSpecular1(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].specular_1, 0x141 + 5 * 0x10):
+        SyncLightSpecular1(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].specular_1, 0x141 + 6 * 0x10):
+        SyncLightSpecular1(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].specular_1, 0x141 + 7 * 0x10):
+        SyncLightSpecular1(7);
+        break;
+
+    // Fragment lighting diffuse color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].diffuse, 0x142 + 0 * 0x10):
+        SyncLightDiffuse(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].diffuse, 0x142 + 1 * 0x10):
+        SyncLightDiffuse(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].diffuse, 0x142 + 2 * 0x10):
+        SyncLightDiffuse(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].diffuse, 0x142 + 3 * 0x10):
+        SyncLightDiffuse(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].diffuse, 0x142 + 4 * 0x10):
+        SyncLightDiffuse(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].diffuse, 0x142 + 5 * 0x10):
+        SyncLightDiffuse(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].diffuse, 0x142 + 6 * 0x10):
+        SyncLightDiffuse(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].diffuse, 0x142 + 7 * 0x10):
+        SyncLightDiffuse(7);
+        break;
+
+    // Fragment lighting ambient color
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].ambient, 0x143 + 0 * 0x10):
+        SyncLightAmbient(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].ambient, 0x143 + 1 * 0x10):
+        SyncLightAmbient(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].ambient, 0x143 + 2 * 0x10):
+        SyncLightAmbient(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].ambient, 0x143 + 3 * 0x10):
+        SyncLightAmbient(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].ambient, 0x143 + 4 * 0x10):
+        SyncLightAmbient(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].ambient, 0x143 + 5 * 0x10):
+        SyncLightAmbient(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].ambient, 0x143 + 6 * 0x10):
+        SyncLightAmbient(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].ambient, 0x143 + 7 * 0x10):
+        SyncLightAmbient(7);
+        break;
+
+     // Fragment lighting position
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].x, 0x144 + 0 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].z, 0x145 + 0 * 0x10):
+        SyncLightPosition(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].x, 0x144 + 1 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].z, 0x145 + 1 * 0x10):
+        SyncLightPosition(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].x, 0x144 + 2 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].z, 0x145 + 2 * 0x10):
+        SyncLightPosition(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].x, 0x144 + 3 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].z, 0x145 + 3 * 0x10):
+        SyncLightPosition(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].x, 0x144 + 4 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].z, 0x145 + 4 * 0x10):
+        SyncLightPosition(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].x, 0x144 + 5 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].z, 0x145 + 5 * 0x10):
+        SyncLightPosition(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].x, 0x144 + 6 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].z, 0x145 + 6 * 0x10):
+        SyncLightPosition(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].x, 0x144 + 7 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].z, 0x145 + 7 * 0x10):
+        SyncLightPosition(7);
+        break;
+
+    // Fragment lighting global ambient color (emission + ambient * ambient)
+    case PICA_REG_INDEX_WORKAROUND(lighting.global_ambient, 0x1c0):
+        SyncGlobalAmbient();
+        break;
+
+    // Fragment lighting lookup tables
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[0], 0x1c8):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[1], 0x1c9):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[2], 0x1ca):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[3], 0x1cb):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf):
+    {
+        auto& lut_config = regs.lighting.lut_config;
+        uniform_block_data.lut_dirty[lut_config.type / 4] = true;
+        break;
+    }
+
     }
 }
 
@@ -491,18 +698,39 @@ void RasterizerOpenGL::SetShader() {
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[2]");
         if (uniform_tex != -1) { glUniform1i(uniform_tex, 2); }
 
+        // Set the texture samplers to correspond to different lookup table texture units
+        GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[0]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 3); }
+        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[1]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 4); }
+        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[2]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 5); }
+        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[3]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 6); }
+        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[4]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 7); }
+        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[5]");
+        if (uniform_lut != -1) { glUniform1i(uniform_lut, 8); }
+
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
 
         unsigned int block_index = glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
         glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
-    }
 
-    // Update uniforms
-    SyncAlphaTest();
-    SyncCombinerColor();
-    auto& tev_stages = Pica::g_state.regs.GetTevStages();
-    for (int index = 0; index < tev_stages.size(); ++index)
-        SyncTevConstColor(index, tev_stages[index]);
+        // Update uniforms
+        SyncAlphaTest();
+        SyncCombinerColor();
+        auto& tev_stages = Pica::g_state.regs.GetTevStages();
+        for (int index = 0; index < tev_stages.size(); ++index)
+            SyncTevConstColor(index, tev_stages[index]);
+
+        SyncGlobalAmbient();
+        for (int light_index = 0; light_index < 8; light_index++) {
+            SyncLightDiffuse(light_index);
+            SyncLightAmbient(light_index);
+            SyncLightPosition(light_index);
+        }
+    }
 }
 
 void RasterizerOpenGL::SyncFramebuffer() {
@@ -604,8 +832,8 @@ void RasterizerOpenGL::SyncCullMode() {
 }
 
 void RasterizerOpenGL::SyncDepthModifiers() {
-    float depth_scale = -Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_range).ToFloat32();
-    float depth_offset = Pica::float24::FromRawFloat24(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
+    float depth_scale = -Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
+    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
 
     // TODO: Implement scale modifier
     uniform_block_data.data.depth_offset = depth_offset;
@@ -683,12 +911,81 @@ void RasterizerOpenGL::SyncTevConstColor(int stage_index, const Pica::Regs::TevS
     }
 }
 
+void RasterizerOpenGL::SyncGlobalAmbient() {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.global_ambient);
+    if (color != uniform_block_data.data.lighting_global_ambient) {
+        uniform_block_data.data.lighting_global_ambient = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
+    std::array<GLvec4, 256> new_data;
+
+    for (unsigned offset = 0; offset < new_data.size(); ++offset) {
+        new_data[offset][0] = Pica::g_state.lighting.luts[(lut_index * 4) + 0][offset].ToFloat();
+        new_data[offset][1] = Pica::g_state.lighting.luts[(lut_index * 4) + 1][offset].ToFloat();
+        new_data[offset][2] = Pica::g_state.lighting.luts[(lut_index * 4) + 2][offset].ToFloat();
+        new_data[offset][3] = Pica::g_state.lighting.luts[(lut_index * 4) + 3][offset].ToFloat();
+    }
+
+    if (new_data != lighting_lut_data[lut_index]) {
+        lighting_lut_data[lut_index] = new_data;
+        glActiveTexture(GL_TEXTURE3 + lut_index);
+        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, lighting_lut_data[lut_index].data());
+    }
+}
+
+void RasterizerOpenGL::SyncLightSpecular0(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].specular_0);
+    if (color != uniform_block_data.data.light_src[light_index].specular_0) {
+        uniform_block_data.data.light_src[light_index].specular_0 = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightSpecular1(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].specular_1);
+    if (color != uniform_block_data.data.light_src[light_index].specular_1) {
+        uniform_block_data.data.light_src[light_index].specular_1 = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightDiffuse(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].diffuse);
+    if (color != uniform_block_data.data.light_src[light_index].diffuse) {
+        uniform_block_data.data.light_src[light_index].diffuse = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightAmbient(int light_index) {
+    auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].ambient);
+    if (color != uniform_block_data.data.light_src[light_index].ambient) {
+        uniform_block_data.data.light_src[light_index].ambient = color;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightPosition(int light_index) {
+    GLvec3 position = {
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32() };
+
+    if (position != uniform_block_data.data.light_src[light_index].position) {
+        uniform_block_data.data.light_src[light_index].position = position;
+        uniform_block_data.dirty = true;
+    }
+}
+
 void RasterizerOpenGL::SyncDrawState() {
     const auto& regs = Pica::g_state.regs;
 
     // Sync the viewport
-    GLsizei viewport_width = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_x).ToFloat32() * 2;
-    GLsizei viewport_height = (GLsizei)Pica::float24::FromRawFloat24(regs.viewport_size_y).ToFloat32() * 2;
+    GLsizei viewport_width = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_x).ToFloat32() * 2;
+    GLsizei viewport_height = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_y).ToFloat32() * 2;
 
     // OpenGL uses different y coordinates, so negate corner offset and flip origin
     // TODO: Ensure viewport_corner.x should not be negated or origin flipped

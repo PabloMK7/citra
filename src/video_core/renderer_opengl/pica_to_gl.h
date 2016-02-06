@@ -10,6 +10,9 @@
 
 #include "video_core/pica.h"
 
+using GLvec3 = std::array<GLfloat, 3>;
+using GLvec4 = std::array<GLfloat, 4>;
+
 namespace PicaToGL {
 
 inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
@@ -175,11 +178,18 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
     return stencil_op_table[(unsigned)action];
 }
 
-inline std::array<GLfloat, 4> ColorRGBA8(const u32 color) {
+inline GLvec4 ColorRGBA8(const u32 color) {
     return { { (color >>  0 & 0xFF) / 255.0f,
                (color >>  8 & 0xFF) / 255.0f,
                (color >> 16 & 0xFF) / 255.0f,
                (color >> 24 & 0xFF) / 255.0f
+           } };
+}
+
+inline std::array<GLfloat, 3> LightColor(const Pica::Regs::LightColor& color) {
+    return { { color.r / 255.0f,
+               color.g / 255.0f,
+               color.b / 255.0f
            } };
 }
 

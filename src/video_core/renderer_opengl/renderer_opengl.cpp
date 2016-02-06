@@ -81,8 +81,8 @@ struct ScreenRectVertex {
  * The projection part of the matrix is trivial, hence these operations are represented
  * by a 3x2 matrix.
  */
-static std::array<GLfloat, 3*2> MakeOrthographicMatrix(const float width, const float height) {
-    std::array<GLfloat, 3*2> matrix;
+static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, const float height) {
+    std::array<GLfloat, 3 * 2> matrix;
 
     matrix[0] = 2.f / width; matrix[2] = 0.f;           matrix[4] = -1.f;
     matrix[1] = 0.f;         matrix[3] = -2.f / height; matrix[5] = 1.f;

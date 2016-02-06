@@ -59,15 +59,17 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     } viewport;
 
     const auto& regs = g_state.regs;
-    viewport.halfsize_x = float24::FromRawFloat24(regs.viewport_size_x);
-    viewport.halfsize_y = float24::FromRawFloat24(regs.viewport_size_y);
+    viewport.halfsize_x = float24::FromRaw(regs.viewport_size_x);
+    viewport.halfsize_y = float24::FromRaw(regs.viewport_size_y);
     viewport.offset_x   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.x));
     viewport.offset_y   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.y));
-    viewport.zscale     = float24::FromRawFloat24(regs.viewport_depth_range);
-    viewport.offset_z   = float24::FromRawFloat24(regs.viewport_depth_far_plane);
+    viewport.zscale     = float24::FromRaw(regs.viewport_depth_range);
+    viewport.offset_z   = float24::FromRaw(regs.viewport_depth_far_plane);
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
     vtx.color *= inv_w;
+    vtx.view *= inv_w;
+    vtx.quat *= inv_w;
     vtx.tc0 *= inv_w;
     vtx.tc1 *= inv_w;
     vtx.tc2 *= inv_w;

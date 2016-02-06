@@ -62,6 +62,10 @@ public:
     } texture_units[3];
 
     struct {
+        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+    } lighting_lut[6];
+
+    struct {
         GLuint framebuffer; // GL_DRAW_FRAMEBUFFER_BINDING
         GLuint vertex_array; // GL_VERTEX_ARRAY_BINDING
         GLuint vertex_buffer; // GL_ARRAY_BUFFER_BINDING

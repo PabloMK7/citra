@@ -17,6 +17,7 @@
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/shader/shader_interpreter.h"
 
 /**
@@ -71,6 +72,59 @@ struct PicaShaderConfig {
             regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
             regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
 
+        // Fragment lighting
+
+        res.lighting.enable = !regs.lighting.disable;
+        res.lighting.src_num = regs.lighting.num_lights + 1;
+
+        for (unsigned light_index = 0; light_index < res.lighting.src_num; ++light_index) {
+            unsigned num = regs.lighting.light_enable.GetNum(light_index);
+            const auto& light = regs.lighting.light[num];
+            res.lighting.light[light_index].num = num;
+            res.lighting.light[light_index].directional = light.directional != 0;
+            res.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            res.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
+            res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
+            res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
+        }
+
+        res.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
+        res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
+        res.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
+        res.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
+
+        res.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
+        res.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
+        res.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
+        res.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+
+        res.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
+        res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
+        res.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
+        res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
+
+        res.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
+        res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
+        res.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
+        res.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
+
+        res.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
+        res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
+        res.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
+        res.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
+
+        res.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
+        res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
+        res.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
+        res.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
+
+        res.lighting.config = regs.lighting.config;
+        res.lighting.fresnel_selector = regs.lighting.fresnel_selector;
+        res.lighting.bump_mode = regs.lighting.bump_mode;
+        res.lighting.bump_selector = regs.lighting.bump_selector;
+        res.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
+        res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
+
         return res;
     }
 
@@ -86,9 +140,37 @@ struct PicaShaderConfig {
         return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
     };
 
-    Pica::Regs::CompareFunc alpha_test_func;
+    Pica::Regs::CompareFunc alpha_test_func = Pica::Regs::CompareFunc::Never;
     std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
-    u8 combiner_buffer_input;
+    u8 combiner_buffer_input = 0;
+
+    struct {
+        struct {
+            unsigned num = 0;
+            bool directional = false;
+            bool two_sided_diffuse = false;
+            bool dist_atten_enable = false;
+            GLfloat dist_atten_scale = 0.0f;
+            GLfloat dist_atten_bias = 0.0f;
+        } light[8];
+
+        bool enable = false;
+        unsigned src_num = 0;
+        Pica::Regs::LightingBumpMode bump_mode = Pica::Regs::LightingBumpMode::None;
+        unsigned bump_selector = 0;
+        bool bump_renorm = false;
+        bool clamp_highlights = false;
+
+        Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
+        Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
+
+        struct {
+            bool enable = false;
+            bool abs_input = false;
+            Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
+            float scale = 1.0f;
+        } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
+    } lighting;
 };
 
 namespace std {
@@ -167,7 +249,7 @@ private:
 
     /// Structure that the hardware rendered vertices are composed of
     struct HardwareVertex {
-        HardwareVertex(const Pica::Shader::OutputVertex& v) {
+        HardwareVertex(const Pica::Shader::OutputVertex& v, bool flip_quaternion) {
             position[0] = v.pos.x.ToFloat32();
             position[1] = v.pos.y.ToFloat32();
             position[2] = v.pos.z.ToFloat32();
@@ -182,6 +264,19 @@ private:
             tex_coord1[1] = v.tc1.y.ToFloat32();
             tex_coord2[0] = v.tc2.x.ToFloat32();
             tex_coord2[1] = v.tc2.y.ToFloat32();
+            normquat[0] = v.quat.x.ToFloat32();
+            normquat[1] = v.quat.y.ToFloat32();
+            normquat[2] = v.quat.z.ToFloat32();
+            normquat[3] = v.quat.w.ToFloat32();
+            view[0] = v.view.x.ToFloat32();
+            view[1] = v.view.y.ToFloat32();
+            view[2] = v.view.z.ToFloat32();
+
+            if (flip_quaternion) {
+                for (float& x : normquat) {
+                    x = -x;
+                }
+            }
         }
 
         GLfloat position[4];
@@ -189,20 +284,31 @@ private:
         GLfloat tex_coord0[2];
         GLfloat tex_coord1[2];
         GLfloat tex_coord2[2];
+        GLfloat normquat[4];
+        GLfloat view[3];
+    };
+
+    struct LightSrc {
+        alignas(16) GLvec3 specular_0;
+        alignas(16) GLvec3 specular_1;
+        alignas(16) GLvec3 diffuse;
+        alignas(16) GLvec3 ambient;
+        alignas(16) GLvec3 position;
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
     struct UniformData {
         // A vec4 color for each of the six tev stages
-        std::array<GLfloat, 4> const_color[6];
-        std::array<GLfloat, 4> tev_combiner_buffer_color;
+        GLvec4 const_color[6];
+        GLvec4 tev_combiner_buffer_color;
         GLint alphatest_ref;
         GLfloat depth_offset;
-        INSERT_PADDING_BYTES(8);
+        alignas(16) GLvec3 lighting_global_ambient;
+        LightSrc light_src[8];
     };
 
-    static_assert(sizeof(UniformData) == 0x80, "The size of the UniformData structure has changed, update the structure in the shader");
-    static_assert(sizeof(UniformData) < 16000, "UniformData structure must be less than 16kb as per the OpenGL spec");
+    static_assert(sizeof(UniformData) == 0x310, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Reconfigure the OpenGL color texture to use the given format and dimensions
     void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
@@ -249,6 +355,27 @@ private:
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
 
+    /// Syncs the lighting global ambient color to match the PICA register
+    void SyncGlobalAmbient();
+
+    /// Syncs the lighting lookup tables
+    void SyncLightingLUT(unsigned index);
+
+    /// Syncs the specified light's diffuse color to match the PICA register
+    void SyncLightDiffuse(int light_index);
+
+    /// Syncs the specified light's ambient color to match the PICA register
+    void SyncLightAmbient(int light_index);
+
+    /// Syncs the specified light's position to match the PICA register
+    void SyncLightPosition(int light_index);
+
+    /// Syncs the specified light's specular 0 color to match the PICA register
+    void SyncLightSpecular0(int light_index);
+
+    /// Syncs the specified light's specular 1 color to match the PICA register
+    void SyncLightSpecular1(int light_index);
+
     /// Syncs the remaining OpenGL drawing state to match the current PICA state
     void SyncDrawState();
 
@@ -291,6 +418,7 @@ private:
 
     struct {
         UniformData data;
+        bool lut_dirty[6];
         bool dirty;
     } uniform_block_data;
 
@@ -298,4 +426,7 @@ private:
     OGLBuffer vertex_buffer;
     OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
+
+    std::array<OGLTexture, 6> lighting_lut;
+    std::array<std::array<GLvec4, 256>, 6> lighting_lut_data;
 };
