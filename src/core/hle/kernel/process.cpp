@@ -35,7 +35,7 @@ SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
 
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
-    process->flags.memory_region = MemoryRegion::APPLICATION;
+    process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
     Memory::InitLegacyAddressSpace(process->vm_manager);
 
     return process;

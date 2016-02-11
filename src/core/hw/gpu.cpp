@@ -146,8 +146,8 @@ inline void Write(u32 addr, const T data) {
 
             // Reset "trigger" flag and set the "finish" flag
             // NOTE: This was confirmed to happen on hardware even if "address_start" is zero.
-            config.trigger = 0;
-            config.finished = 1;
+            config.trigger.Assign(0);
+            config.finished.Assign(1);
         }
         break;
     }
@@ -444,16 +444,16 @@ void Init() {
     framebuffer_sub.address_left1  = 0x1848F000;
     framebuffer_sub.address_left2  = 0x184C7800;
 
-    framebuffer_top.width = 240;
-    framebuffer_top.height = 400;
+    framebuffer_top.width.Assign(240);
+    framebuffer_top.height.Assign(400);
     framebuffer_top.stride = 3 * 240;
-    framebuffer_top.color_format = Regs::PixelFormat::RGB8;
+    framebuffer_top.color_format.Assign(Regs::PixelFormat::RGB8);
     framebuffer_top.active_fb = 0;
 
-    framebuffer_sub.width = 240;
-    framebuffer_sub.height = 320;
+    framebuffer_sub.width.Assign(240);
+    framebuffer_sub.height.Assign(320);
     framebuffer_sub.stride = 3 * 240;
-    framebuffer_sub.color_format = Regs::PixelFormat::RGB8;
+    framebuffer_sub.color_format.Assign(Regs::PixelFormat::RGB8);
     framebuffer_sub.active_fb = 0;
 
     last_skip_frame = false;

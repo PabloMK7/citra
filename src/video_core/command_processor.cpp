@@ -429,7 +429,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                           uniform.w.ToFloat32());
 
                 // TODO: Verify that this actually modifies the register!
-                uniform_setup.index = uniform_setup.index + 1;
+                uniform_setup.index.Assign(uniform_setup.index + 1);
             }
             break;
         }
@@ -478,7 +478,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             ASSERT_MSG(lut_config.index < 256, "lut_config.index exceeded maximum value of 255!");
 
             g_state.lighting.luts[lut_config.type][lut_config.index].raw = value;
-            lut_config.index = lut_config.index + 1;
+            lut_config.index.Assign(lut_config.index + 1);
             break;
         }
 

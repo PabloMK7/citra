@@ -201,11 +201,11 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
 
                     if (it == output_info_table.end()) {
                         output_info_table.emplace_back();
-                        output_info_table.back().type = type;
-                        output_info_table.back().component_mask = component_mask;
-                        output_info_table.back().id = i;
+                        output_info_table.back().type.Assign(type);
+                        output_info_table.back().component_mask.Assign(component_mask);
+                        output_info_table.back().id.Assign(i);
                     } else {
-                        it->component_mask = it->component_mask | component_mask;
+                        it->component_mask.Assign(it->component_mask | component_mask);
                     }
                 } catch (const std::out_of_range& ) {
                     DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");

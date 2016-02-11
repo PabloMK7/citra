@@ -347,7 +347,7 @@ void SignalInterrupt(InterruptId interrupt_id) {
             FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
             if (info->is_dirty) {
                 SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
-                info->is_dirty = false;
+                info->is_dirty.Assign(false);
             }
         }
     }
@@ -499,7 +499,7 @@ static void SetLcdForceBlack(Service::Interface* self) {
 
     // Since data is already zeroed, there is no need to explicitly set
     // the color to black (all zero).
-    data.is_enabled = enable_black;
+    data.is_enabled.Assign(enable_black);
 
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw); // Top LCD
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
@@ -521,7 +521,7 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
             ExecuteCommand(command_buffer->commands[i], thread_id);
 
             // Indicates that command has completed
-            command_buffer->number_commands = command_buffer->number_commands - 1;
+            command_buffer->number_commands.Assign(command_buffer->number_commands - 1);
         }
     }
 

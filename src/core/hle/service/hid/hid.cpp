@@ -105,7 +105,7 @@ void Update() {
     bool pressed = false;
 
     std::tie(touch_entry->x, touch_entry->y, pressed) = VideoCore::g_emu_window->GetTouchState();
-    touch_entry->valid = pressed ? 1 : 0;
+    touch_entry->valid.Assign(pressed ? 1 : 0);
 
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being

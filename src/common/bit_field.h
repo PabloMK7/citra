@@ -115,29 +115,24 @@ template<std::size_t position, std::size_t bits, typename T>
 struct BitField
 {
 private:
-    // This constructor might be considered ambiguous:
-    // Would it initialize the storage or just the bitfield?
-    // Hence, delete it. Use the assignment operator to set bitfield values!
-    BitField(T val) = delete;
+    // We hide the copy assigment operator here, because the default copy
+    // assignment would copy the full storage value, rather than just the bits
+    // relevant to this particular bit field.
+    // We don't delete it because we want BitField to be trivially copyable.
+    BitField& operator=(const BitField&) = default;
 
 public:
+    // This constructor and assignment operator might be considered ambiguous:
+    // Would they initialize the storage or just the bitfield?
+    // Hence, delete them. Use the Assign method to set bitfield values!
+    BitField(T val) = delete;
+    BitField& operator=(T val) = delete;
+
     // Force default constructor to be created
     // so that we can use this within unions
     BitField() = default;
 
-    // We explicitly delete the copy assigment operator here, because the
-    // default copy assignment would copy the full storage value, rather than
-    // just the bits relevant to this particular bit field.
-    BitField& operator=(const BitField&) = delete;
-
-    FORCE_INLINE BitField& operator=(T val)
-    {
-        Assign(val);
-        return *this;
-    }
-
-    FORCE_INLINE operator T() const
-    {
+    FORCE_INLINE operator T() const {
         return Value();
     }
 
@@ -145,8 +140,7 @@ public:
         storage = (storage & ~GetMask()) | (((StorageType)value << position) & GetMask());
     }
 
-    FORCE_INLINE T Value() const
-    {
+    FORCE_INLINE T Value() const {
         if (std::numeric_limits<T>::is_signed)
         {
             std::size_t shift = 8 * sizeof(T)-bits;
@@ -159,8 +153,7 @@ public:
     }
 
     // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
-    FORCE_INLINE bool ToBool() const
-    {
+    FORCE_INLINE bool ToBool() const {
         return Value() != 0;
     }
 
@@ -176,8 +169,7 @@ private:
     // Unsigned version of StorageType
     typedef typename std::make_unsigned<StorageType>::type StorageTypeU;
 
-    FORCE_INLINE StorageType GetMask() const
-    {
+    FORCE_INLINE StorageType GetMask() const {
         return (((StorageTypeU)~0) >> (8 * sizeof(T)-bits)) << position;
     }
 
@@ -189,6 +181,10 @@ private:
     static_assert(position < 8 * sizeof(T), "Invalid position");
     static_assert(bits <= 8 * sizeof(T), "Invalid number of bits");
     static_assert(bits > 0, "Invalid number of bits");
-    static_assert(std::is_standard_layout<T>::value, "Invalid base type");
+    static_assert(std::is_pod<T>::value, "Invalid base type");
 };
 #pragma pack()
+
+#if (__GNUC__ >= 5) || defined __clang__ || defined _MSC_VER
+static_assert(std::is_trivially_copyable<BitField<0, 1, u32>>::value, "BitField must be trivially copyable");
+#endif
