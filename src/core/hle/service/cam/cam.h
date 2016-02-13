@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/swap.h"
+
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace CAM {
@@ -140,6 +145,26 @@ enum class OutputFormat : u8 {
     RGB565 = 1
 };
 
+/// Stereo camera calibration data.
+struct StereoCameraCalibrationData {
+    u8 isValidRotationXY;      ///< Bool indicating whether the X and Y rotation data is valid.
+    INSERT_PADDING_BYTES(3);
+    float_le scale;            ///< Scale to match the left camera image with the right.
+    float_le rotationZ;        ///< Z axis rotation to match the left camera image with the right.
+    float_le translationX;     ///< X axis translation to match the left camera image with the right.
+    float_le translationY;     ///< Y axis translation to match the left camera image with the right.
+    float_le rotationX;        ///< X axis rotation to match the left camera image with the right.
+    float_le rotationY;        ///< Y axis rotation to match the left camera image with the right.
+    float_le angleOfViewRight; ///< Right camera angle of view.
+    float_le angleOfViewLeft;  ///< Left camera angle of view.
+    float_le distanceToChart;  ///< Distance between cameras and measurement chart.
+    float_le distanceCameras;  ///< Distance between left and right cameras.
+    s16_le imageWidth;         ///< Image width.
+    s16_le imageHeight;        ///< Image height.
+    INSERT_PADDING_BYTES(16);
+};
+static_assert(sizeof(StereoCameraCalibrationData) == 64, "StereoCameraCalibrationData structure size is wrong");
+
 struct PackageParameterCameraSelect {
     CameraSelect camera;
     s8 exposure;
@@ -164,6 +189,26 @@ struct PackageParameterCameraSelect {
 };
 
 static_assert(sizeof(PackageParameterCameraSelect) == 28, "PackageParameterCameraSelect structure size is wrong");
+
+void StartCapture(Service::Interface* self);
+void StopCapture(Service::Interface* self);
+void GetVsyncInterruptEvent(Service::Interface* self);
+void GetBufferErrorInterruptEvent(Service::Interface* self);
+void SetReceiving(Service::Interface* self);
+void SetTransferLines(Service::Interface* self);
+void GetMaxLines(Service::Interface* self);
+void GetTransferBytes(Service::Interface* self);
+void SetTrimming(Service::Interface* self);
+void SetTrimmingParamsCenter(Service::Interface* self);
+void Activate(Service::Interface* self);
+void FlipImage(Service::Interface* self);
+void SetSize(Service::Interface* self);
+void SetFrameRate(Service::Interface* self);
+void GetStereoCameraCalibrationData(Service::Interface* self);
+void GetSuitableY2rStandardCoefficient(Service::Interface* self);
+void PlayShutterSound(Service::Interface* self);
+void DriverInitialize(Service::Interface* self);
+void DriverFinalize(Service::Interface* self);
 
 /// Initialize CAM service(s)
 void Init();
