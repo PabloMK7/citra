@@ -6,20 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NDM
+namespace Service {
+namespace NDM {
 
-// No idea what this is
-
-namespace NDM_U {
-
-class Interface : public Service::Interface {
+class NDM_U_Interface : public Service::Interface {
 public:
-    Interface();
+    NDM_U_Interface();
 
     std::string GetPortName() const override {
         return "ndm:u";
     }
 };
 
-} // namespace
+} // namespace NDM
+} // namespace Service

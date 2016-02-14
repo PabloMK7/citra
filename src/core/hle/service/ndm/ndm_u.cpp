@@ -2,12 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ndm_u.h"
+#include "core/hle/service/ndm/ndm.h"
+#include "core/hle/service/ndm/ndm_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NDM_U
-
-namespace NDM_U {
+namespace Service {
+namespace NDM {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010042, nullptr,                 "EnterExclusiveState"},
@@ -15,8 +14,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00030000, nullptr,                 "QueryExclusiveMode"},
     {0x00040002, nullptr,                 "LockState"},
     {0x00050002, nullptr,                 "UnlockState"},
-    {0x00060040, nullptr,                 "SuspendDaemons"},
-    {0x00070040, nullptr,                 "ResumeDaemons"},
+    {0x00060040, SuspendDaemons,          "SuspendDaemons"},
+    {0x00070040, ResumeDaemons,           "ResumeDaemons"},
     {0x00080040, nullptr,                 "DisableWifiUsage"},
     {0x00090000, nullptr,                 "EnableWifiUsage"},
     {0x000A0000, nullptr,                 "GetCurrentState"},
@@ -29,17 +28,15 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00110000, nullptr,                 "GetScanInterval"},
     {0x00120040, nullptr,                 "SetRetryInterval"},
     {0x00130000, nullptr,                 "GetRetryInterval"},
-    {0x00140040, nullptr,                 "OverrideDefaultDaemons"},
+    {0x00140040, OverrideDefaultDaemons,  "OverrideDefaultDaemons"},
     {0x00150000, nullptr,                 "ResetDefaultDaemons"},
     {0x00160000, nullptr,                 "GetDefaultDaemons"},
     {0x00170000, nullptr,                 "ClearHalfAwakeMacFilter"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+NDM_U_Interface::NDM_U_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace NDM
+} // namespace Service

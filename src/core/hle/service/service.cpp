@@ -16,7 +16,6 @@
 #include "core/hle/service/http_c.h"
 #include "core/hle/service/ldr_ro.h"
 #include "core/hle/service/mic_u.h"
-#include "core/hle/service/ndm_u.h"
 #include "core/hle/service/ns_s.h"
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
@@ -35,6 +34,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir.h"
+#include "core/hle/service/ndm/ndm.h"
 #include "core/hle/service/news/news.h"
 #include "core/hle/service/nim/nim.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -114,6 +114,7 @@ void Init() {
     Service::HID::Init();
     Service::IR::Init();
     Service::NEWS::Init();
+    Service::NDM::Init();
     Service::NIM::Init();
     Service::PTM::Init();
 
@@ -126,7 +127,6 @@ void Init() {
     AddService(new HTTP_C::Interface);
     AddService(new LDR_RO::Interface);
     AddService(new MIC_U::Interface);
-    AddService(new NDM_U::Interface);
     AddService(new NS_S::Interface);
     AddService(new NWM_UDS::Interface);
     AddService(new PM_APP::Interface);
@@ -141,6 +141,7 @@ void Init() {
 void Shutdown() {
 
     Service::PTM::Shutdown();
+    Service::NDM::Shutdown();
     Service::NIM::Shutdown();
     Service::NEWS::Shutdown();
     Service::IR::Shutdown();
