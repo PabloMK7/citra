@@ -110,8 +110,8 @@ void Init() {
 
         FileSys::Path gamecoin_path("gamecoin.dat");
         FileSys::Mode open_mode = {};
-        open_mode.write_flag = 1;
-        open_mode.create_flag = 1;
+        open_mode.write_flag.Assign(1);
+        open_mode.create_flag.Assign(1);
         // Open the file and write the default gamecoin information
         auto gamecoin_result = Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
         if (gamecoin_result.Succeeded()) {

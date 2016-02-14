@@ -178,17 +178,17 @@ struct CTRPollFD {
         static Events TranslateTo3DS(u32 input_event) {
             Events ev = {};
             if (input_event & POLLIN)
-                ev.pollin = 1;
+                ev.pollin.Assign(1);
             if (input_event & POLLPRI)
-                ev.pollpri = 1;
+                ev.pollpri.Assign(1);
             if (input_event & POLLHUP)
-                ev.pollhup = 1;
+                ev.pollhup.Assign(1);
             if (input_event & POLLERR)
-                ev.pollerr = 1;
+                ev.pollerr.Assign(1);
             if (input_event & POLLOUT)
-                ev.pollout = 1;
+                ev.pollout.Assign(1);
             if (input_event & POLLNVAL)
-                ev.pollnval = 1;
+                ev.pollnval.Assign(1);
             return ev;
         }
 

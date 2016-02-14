@@ -293,8 +293,8 @@ ResultCode DeleteConfigNANDSaveFile() {
 
 ResultCode UpdateConfigNANDSavegame() {
     FileSys::Mode mode = {};
-    mode.write_flag = 1;
-    mode.create_flag = 1;
+    mode.write_flag.Assign(1);
+    mode.create_flag.Assign(1);
 
     FileSys::Path path("config");
 
@@ -405,7 +405,7 @@ void Init() {
 
     FileSys::Path config_path("config");
     FileSys::Mode open_mode = {};
-    open_mode.read_flag = 1;
+    open_mode.read_flag.Assign(1);
 
     auto config_result = Service::FS::OpenFileFromArchive(*archive_result, config_path, open_mode);
 
