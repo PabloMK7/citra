@@ -64,6 +64,7 @@ enum class Class : ClassType {
     Service_DSP,                ///< The DSP (DSP control) service
     Service_HID,                ///< The HID (Human interface device) service
     Service_SOC,                ///< The SOC (Socket) service
+    Service_IR,                 ///< The IR service
     Service_Y2R,                ///< The Y2R (YUV to RGB conversion) service
     HW,                         ///< Low-level hardware emulation
     HW_Memory,                  ///< Memory-map and address translation
