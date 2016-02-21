@@ -157,8 +157,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 // TODO: What happens if a loader overwrites a previous one's data?
                 for (unsigned component = 0; component < loader_config.component_count; ++component) {
-                    if (component >= 12)
+                    if (component >= 12) {
                         LOG_ERROR(HW_GPU, "Overflow in the vertex attribute loader %u trying to load component %u", loader, component);
+                        continue;
+                    }
+
                     u32 attribute_index = loader_config.GetComponent(component);
                     if (attribute_index < 12) {
                         vertex_attribute_sources[attribute_index] = load_address;
