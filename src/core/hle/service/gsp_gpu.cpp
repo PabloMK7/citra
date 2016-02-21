@@ -286,6 +286,22 @@ static void FlushDataCache(Service::Interface* self) {
 }
 
 /**
+ * GSP_GPU::SetAxiConfigQoSMode service function
+ *  Inputs:
+ *      1 : Mode, unused in emulator
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void SetAxiConfigQoSMode(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 mode = cmd_buff[1];
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    LOG_WARNING(Service_GSP, "(STUBBED) called mode=0x%08X", mode);
+}
+
+/**
  * GSP_GPU::RegisterInterruptRelayQueue service function
  *  Inputs:
  *      1 : "Flags" field, purpose is unknown
@@ -302,6 +318,12 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
     ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
 
+    g_interrupt_event->name = "GSP_GPU::interrupt_event";
+
+    using Kernel::MemoryPermission;
+    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
+        MemoryPermission::ReadWrite, "GSPSharedMem");
+
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 
     // This specific code is required for a successful initialization, rather than 0
@@ -311,6 +333,22 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     cmd_buff[4] = shmem_handle; // GSP shared memory
 
     g_interrupt_event->Signal(); // TODO(bunnei): Is this correct?
+}
+
+/**
+ * GSP_GPU::UnregisterInterruptRelayQueue service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void UnregisterInterruptRelayQueue(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    g_shared_memory = nullptr;
+    g_interrupt_event = nullptr;
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_GSP, "called");
 }
 
 /**
@@ -591,11 +629,11 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0140, nullptr,                       "SetDisplayTransfer"},
     {0x000E0180, nullptr,                       "SetTextureCopy"},
     {0x000F0200, nullptr,                       "SetMemoryFill"},
-    {0x00100040, nullptr,                       "SetAxiConfigQoSMode"},
+    {0x00100040, SetAxiConfigQoSMode,           "SetAxiConfigQoSMode"},
     {0x00110040, nullptr,                       "SetPerfLogMode"},
     {0x00120000, nullptr,                       "GetPerfLog"},
     {0x00130042, RegisterInterruptRelayQueue,   "RegisterInterruptRelayQueue"},
-    {0x00140000, nullptr,                       "UnregisterInterruptRelayQueue"},
+    {0x00140000, UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
     {0x00150002, nullptr,                       "TryAcquireRight"},
     {0x00160042, nullptr,                       "AcquireRight"},
     {0x00170000, nullptr,                       "ReleaseRight"},
@@ -616,10 +654,7 @@ Interface::Interface() {
     Register(FunctionTable);
 
     g_interrupt_event = nullptr;
-
-    using Kernel::MemoryPermission;
-    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
-            MemoryPermission::ReadWrite, "GSPSharedMem");
+    g_shared_memory = nullptr;
 
     g_thread_id = 0;
 }
