@@ -157,15 +157,25 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 // TODO: What happens if a loader overwrites a previous one's data?
                 for (unsigned component = 0; component < loader_config.component_count; ++component) {
-                    if (component >= 12)
+                    if (component >= 12) {
                         LOG_ERROR(HW_GPU, "Overflow in the vertex attribute loader %u trying to load component %u", loader, component);
+                        continue;
+                    }
+
                     u32 attribute_index = loader_config.GetComponent(component);
-                    vertex_attribute_sources[attribute_index] = load_address;
-                    vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
-                    vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
-                    vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
-                    vertex_attribute_element_size[attribute_index] = attribute_config.GetElementSizeInBytes(attribute_index);
-                    load_address += attribute_config.GetStride(attribute_index);
+                    if (attribute_index < 12) {
+                        vertex_attribute_sources[attribute_index] = load_address;
+                        vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
+                        vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
+                        vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
+                        vertex_attribute_element_size[attribute_index] = attribute_config.GetElementSizeInBytes(attribute_index);
+                        load_address += attribute_config.GetStride(attribute_index);
+                    } else if (attribute_index < 16) {
+                        // Attribute ids 12, 13, 14 and 15 signify 4, 8, 12 and 16-byte paddings, respectively
+                        load_address += (attribute_index - 11) * 4;
+                    } else {
+                        UNREACHABLE(); // This is truly unreachable due to the number of bits for each component
+                    }
                 }
             }
 
