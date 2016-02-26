@@ -82,6 +82,13 @@ private:
      */
     void UpdateRecentFiles();
 
+    /**
+     * If the emulation is running,
+     * asks the user if he really want to close the emulator
+     *
+     * @return true if the user confirmed
+     */
+    bool ConfirmClose();
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
@@ -122,6 +129,7 @@ private:
     GPUCommandListWidget* graphicsCommandsWidget;
 
     QAction* actions_recent_files[max_recent_files_item];
+    bool confirm_before_closing;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_
