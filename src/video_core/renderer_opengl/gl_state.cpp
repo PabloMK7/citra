@@ -48,6 +48,10 @@ OpenGLState::OpenGLState() {
         texture_unit.sampler = 0;
     }
 
+    for (auto& lut : lighting_lut) {
+        lut.texture_1d = 0;
+    }
+
     draw.framebuffer = 0;
     draw.vertex_array = 0;
     draw.vertex_buffer = 0;
