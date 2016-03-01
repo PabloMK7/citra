@@ -4,9 +4,10 @@
 
 #include <algorithm>
 
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "common/file_util.h"
+#include "common/swap.h"
 
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/file_backend.h"
@@ -334,6 +335,18 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
     if (!res.IsSuccess()) return res;
 
+    // 0x000A0000 - Profile username
+    struct {
+        u16_le username[10];
+        u8 unused[4];
+        u32_le wordfilter_version; // Unused by Citra
+    } profile_username = {};
+
+    std::u16string username_string = Common::UTF8ToUTF16("Citra");
+    std::copy(username_string.cbegin(), username_string.cend(), profile_username.username);
+    res = CreateConfigInfoBlk(0x000A0000, sizeof(profile_username), 0xE, &profile_username);
+    if (!res.IsSuccess()) return res;
+
     // 0x000A0001 - Profile birthday
     const u8 profile_birthday[2] = {3, 25}; // March 25th, 2014
     res = CreateConfigInfoBlk(0x000A0001, sizeof(profile_birthday), 0xE, profile_birthday);
@@ -344,9 +357,10 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
     if (!res.IsSuccess()) return res;
 
-    char16_t country_name_buffer[16][0x40] = {};
+    u16_le country_name_buffer[16][0x40] = {};
+    std::u16string region_name = Common::UTF8ToUTF16("Gensokyo");
     for (size_t i = 0; i < 16; ++i) {
-        Common::UTF8ToUTF16("Gensokyo").copy(country_name_buffer[i], 0x40);
+        std::copy(region_name.cbegin(), region_name.cend(), country_name_buffer[i]);
     }
     // 0x000B0001 - Localized names for the profile Country
     res = CreateConfigInfoBlk(0x000B0001, sizeof(country_name_buffer), 0xE, country_name_buffer);
