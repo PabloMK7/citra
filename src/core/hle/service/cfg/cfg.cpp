@@ -357,9 +357,10 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
     if (!res.IsSuccess()) return res;
 
-    char16_t country_name_buffer[16][0x40] = {};
+    u16_le country_name_buffer[16][0x40] = {};
+    std::u16string region_name = Common::UTF8ToUTF16("Gensokyo");
     for (size_t i = 0; i < 16; ++i) {
-        Common::UTF8ToUTF16("Gensokyo").copy(country_name_buffer[i], 0x40);
+        std::copy(region_name.cbegin(), region_name.cend(), country_name_buffer[i]);
     }
     // 0x000B0001 - Localized names for the profile Country
     res = CreateConfigInfoBlk(0x000B0001, sizeof(country_name_buffer), 0xE, country_name_buffer);
