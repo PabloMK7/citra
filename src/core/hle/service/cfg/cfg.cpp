@@ -4,9 +4,10 @@
 
 #include <algorithm>
 
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "common/file_util.h"
+#include "common/swap.h"
 
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/file_backend.h"
@@ -332,6 +333,18 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE, &CONSOLE_UNIQUE_ID);
     if (!res.IsSuccess()) return res;
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
+    if (!res.IsSuccess()) return res;
+
+    // 0x000A0000 - Profile username
+    struct {
+        u16_le username[10];
+        u8 unused[4];
+        u32_le wordfilter_version; // Unused by Citra
+    } profile_username = {};
+
+    std::u16string username_string = Common::UTF8ToUTF16("Citra");
+    std::copy(username_string.cbegin(), username_string.cend(), profile_username.username);
+    res = CreateConfigInfoBlk(0x000A0000, sizeof(profile_username), 0xE, &profile_username);
     if (!res.IsSuccess()) return res;
 
     // 0x000A0001 - Profile birthday
