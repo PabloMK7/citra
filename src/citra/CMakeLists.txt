@@ -1,11 +1,11 @@
 set(SRCS
-            emu_window/emu_window_glfw.cpp
+            emu_window/emu_window_sdl2.cpp
             citra.cpp
             config.cpp
             citra.rc
             )
 set(HEADERS
-            emu_window/emu_window_glfw.h
+            emu_window/emu_window_sdl2.h
             config.h
             default_ini.h
             resource.h
@@ -13,12 +13,11 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 
-include_directories(${GLFW_INCLUDE_DIRS})
-link_directories(${GLFW_LIBRARY_DIRS})
+include_directories(${SDL2_INCLUDE_DIR})
 
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra core video_core audio_core common)
-target_link_libraries(citra ${GLFW_LIBRARIES} ${OPENGL_gl_LIBRARY} inih glad)
+target_link_libraries(citra ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} inih glad)
 if (MSVC)
     target_link_libraries(citra getopt)
 endif()
@@ -26,4 +25,14 @@ target_link_libraries(citra ${PLATFORM_LIBRARIES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
     install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
+
+if (MSVC)
+    include(WindowsCopyFiles)
+
+    set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
+
+    windows_copy_files(citra ${SDL2_DLL_DIR} ${DLL_DEST} SDL2.dll)
+
+    unset(DLL_DEST)
 endif()

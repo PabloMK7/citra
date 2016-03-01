@@ -6,7 +6,7 @@
 
 namespace DefaultINI {
 
-const char* glfw_config_file = R"(
+const char* sdl2_config_file = R"(
 [Controls]
 pad_start =
 pad_select =

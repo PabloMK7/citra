@@ -9,8 +9,8 @@
 class INIReader;
 
 class Config {
-    INIReader* glfw_config;
-    std::string glfw_config_loc;
+    INIReader* sdl2_config;
+    std::string sdl2_config_loc;
 
     bool LoadINI(INIReader* config, const char* location, const std::string& default_contents="", bool retry=true);
     void ReadValues();

@@ -13,18 +13,13 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
         | tar -xz -C $HOME/.local --strip-components=1
 
     (
-        git clone https://github.com/glfw/glfw.git --branch 3.1.1 --depth 1
-        mkdir glfw/build && cd glfw/build
-        cmake -DBUILD_SHARED_LIBS=ON \
-              -DGLFW_BUILD_EXAMPLES=OFF \
-              -DGLFW_BUILD_TESTS=OFF \
-              -DCMAKE_INSTALL_PREFIX=$HOME/.local \
-              ..
+        wget http://libsdl.org/release/SDL2-2.0.4.tar.gz -O - | tar xz
+        cd SDL2-2.0.4
+        ./configure --prefix=$HOME/.local
         make -j4 && make install
     )
-
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update > /dev/null # silence the very verbose output
-    brew install qt5 glfw3
+    brew install qt5 sdl2
     gem install xcpretty
 fi

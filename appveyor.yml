@@ -19,7 +19,7 @@ install:
 before_build:
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 14 2015 Win64" -DCITRA_USE_BUNDLED_GLFW=1 -DCITRA_USE_BUNDLED_QT=1 ..
+  - cmake -G "Visual Studio 14 2015 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 ..
   - cd ..
 
 after_build:

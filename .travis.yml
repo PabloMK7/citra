@@ -18,8 +18,6 @@ addons:
       - gcc-4.9
       - g++-4.9
       - xorg-dev
-      - libglu1-mesa-dev
-      - libxcursor-dev
       - lib32stdc++6 # For CMake
       - lftp # To upload builds
 
