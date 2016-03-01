@@ -457,7 +457,7 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
         if (virtual_name == "." || virtual_name == "..")
             continue;
 
-        unsigned ret_entries;
+        unsigned ret_entries = 0;
         if (!callback(&ret_entries, directory, virtual_name)) {
             callback_error = true;
             break;
