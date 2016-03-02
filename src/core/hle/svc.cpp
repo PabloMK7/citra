@@ -486,6 +486,7 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
     }
 
     switch (processor_id) {
+    case THREADPROCESSORID_ALL:
     case THREADPROCESSORID_DEFAULT:
     case THREADPROCESSORID_0:
     case THREADPROCESSORID_1:
