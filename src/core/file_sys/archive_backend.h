@@ -11,6 +11,7 @@
 
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/swap.h"
 
 #include "core/hle/result.h"
 
@@ -63,9 +64,9 @@ private:
 };
 
 struct ArchiveFormatInfo {
-    u32 total_size; ///< The pre-defined size of the archive, as specified in the Create or Format call
-    u32 number_directories; ///< The pre-defined number of directories in the archive, as specified in the Create or Format call
-    u32 number_files; ///< The pre-defined number of files in the archive, as specified in the Create or Format call
+    u32_le total_size; ///< The pre-defined size of the archive, as specified in the Create or Format call
+    u32_le number_directories; ///< The pre-defined number of directories in the archive, as specified in the Create or Format call
+    u32_le number_files; ///< The pre-defined number of files in the archive, as specified in the Create or Format call
     u8 duplicate_data; ///< Whether the archive should duplicate the data, as specified in the Create or Format call
 };
 static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");

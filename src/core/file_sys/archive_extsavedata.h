@@ -42,7 +42,7 @@ public:
      * @param icon_data Binary data of the icon
      * @param icon_size Size of the icon data
      */
-    void WriteIcon(const Path& path, const u8* icon_data, u32 icon_size);
+    void WriteIcon(const Path& path, const u8* icon_data, size_t icon_size);
 
 private:
     /**
@@ -51,6 +51,7 @@ private:
      * See GetExtSaveDataPath for the code that extracts this data from an archive path.
      */
     std::string mount_point;
+    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData archive
 };
 
 /**

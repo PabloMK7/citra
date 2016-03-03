@@ -77,15 +77,15 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_SaveData::GetFormatInfo(const Path& 
     std::string metadata_path = GetSaveDataMetadataPath(mount_point, Kernel::g_current_process->codeset->program_id);
     FileUtil::IOFile file(metadata_path, "rb");
 
-    if (file.IsOpen()) {
-        ArchiveFormatInfo info;
-        file.ReadBytes(&info, sizeof(info));
-        return MakeResult<ArchiveFormatInfo>(info);
+    if (!file.IsOpen()) {
+        LOG_ERROR(Service_FS, "Could not open metadata information for archive");
+        // TODO(Subv): Verify error code
+        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    LOG_ERROR(Service_FS, "Could not open metadata information for archive");
-    // TODO(Subv): Verify error code
-    return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
+    ArchiveFormatInfo info = {};
+    file.ReadBytes(&info, sizeof(info));
+    return MakeResult<ArchiveFormatInfo>(info);
 }
 
 } // namespace FileSys
