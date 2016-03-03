@@ -19,9 +19,9 @@ If you want to contribute please take a look at the [Contributor's Guide](CONTRI
 
 ### Building
 
-* __Windows__: [Windows Build](https://github.com/citra-emu/citra/wiki/Windows-Build)
-* __Linux__: [Linux Build](https://github.com/citra-emu/citra/wiki/Linux-Build)
-* __OSX__: [OS X Build](https://github.com/citra-emu/citra/wiki/OS-X-Build)
+* __Windows__: [Windows Build](https://github.com/citra-emu/citra/wiki/Building-For-Windows)
+* __Linux__: [Linux Build](https://github.com/citra-emu/citra/wiki/Building-For-Linux)
+* __OSX__: [OS X Build](https://github.com/citra-emu/citra/wiki/Building-For-OS-X)
 
 
 ### Support
