@@ -77,6 +77,22 @@ struct OutputVertex {
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
+/// Vertex shader memory
+struct ShaderSetup {
+    struct {
+        // The float uniforms are accessed by the shader JIT using SSE instructions, and are
+        // therefore required to be 16-byte aligned.
+        Math::Vec4<float24> MEMORY_ALIGNED16(f[96]);
+
+        std::array<bool, 16> b;
+        std::array<Math::Vec4<u8>, 4> i;
+    } uniforms;
+
+    Math::Vec4<float24> default_attributes[16];
+
+    std::array<u32, 1024> program_code;
+    std::array<u32, 1024> swizzle_data;
+};
 
 // Helper structure used to keep track of data useful for inspection of shader emulation
 template<bool full_debugging>
@@ -347,7 +363,7 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
  * @param setup Setup object for the shader pipeline
  * @return Debug information for this shader with regards to the given vertex
  */
-DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup);
+DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup);
 
 } // namespace Shader
 

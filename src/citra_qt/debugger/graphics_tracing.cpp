@@ -22,7 +22,7 @@
 #include "nihstro/float24.h"
 
 #include "video_core/pica.h"
-
+#include "video_core/pica_state.h"
 
 GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,
                                              QWidget* parent)

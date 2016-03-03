@@ -33,6 +33,7 @@ set(HEADERS
             command_processor.h
             gpu_debugger.h
             pica.h
+            pica_state.h
             pica_types.h
             primitive_assembly.h
             rasterizer.h

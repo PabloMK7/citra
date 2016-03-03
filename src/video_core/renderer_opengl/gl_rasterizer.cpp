@@ -19,6 +19,7 @@
 #include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/utils.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"

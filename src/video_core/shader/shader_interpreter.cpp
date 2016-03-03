@@ -7,6 +7,7 @@
 #include <nihstro/shader_bytecode.h>
 
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 

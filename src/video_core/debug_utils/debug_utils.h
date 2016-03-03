@@ -17,6 +17,7 @@
 #include "core/tracer/recorder.h"
 
 #include "video_core/pica.h"
+#include "video_core/shader/shader.h"
 
 namespace Pica {
 
@@ -182,7 +183,7 @@ private:
 };
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
-                const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
+                const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
 
 
 // Utility class to log Pica commands.
