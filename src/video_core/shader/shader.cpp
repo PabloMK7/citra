@@ -14,6 +14,7 @@
 
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/video_core.h"
 
 #include "shader.h"
@@ -145,7 +146,7 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
     return ret;
 }
 
-DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const State::ShaderSetup& setup) {
+DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup) {
     UnitState<true> state;
 
     state.program_counter = config.main_offset;

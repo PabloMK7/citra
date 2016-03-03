@@ -18,6 +18,7 @@
 #include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/utils.h"
 
 GraphicsFramebufferWidget::GraphicsFramebufferWidget(std::shared_ptr<Pica::DebugContext> debug_context,

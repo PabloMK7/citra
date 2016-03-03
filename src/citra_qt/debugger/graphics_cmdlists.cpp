@@ -21,6 +21,7 @@
 #include "common/vector_math.h"
 
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/debug_utils/debug_utils.h"
 
 QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {

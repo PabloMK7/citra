@@ -53,6 +53,18 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx, TriangleHandl
     }
 }
 
+template<typename VertexType>
+void PrimitiveAssembler<VertexType>::Reset() {
+    buffer_index = 0;
+    strip_ready = false;
+}
+
+template<typename VertexType>
+void PrimitiveAssembler<VertexType>::Reconfigure(Regs::TriangleTopology topology) {
+    Reset();
+    this->topology = topology;
+}
+
 // explicitly instantiate use cases
 template
 struct PrimitiveAssembler<Shader::OutputVertex>;

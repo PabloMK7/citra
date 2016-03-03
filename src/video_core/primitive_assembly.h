@@ -30,6 +30,16 @@ struct PrimitiveAssembler {
      */
     void SubmitVertex(VertexType& vtx, TriangleHandler triangle_handler);
 
+    /**
+     * Resets the internal state of the PrimitiveAssembler.
+     */
+    void Reset();
+
+    /**
+     * Reconfigures the PrimitiveAssembler to use a different triangle topology.
+     */
+    void Reconfigure(Regs::TriangleTopology topology);
+
 private:
     Regs::TriangleTopology topology;
 

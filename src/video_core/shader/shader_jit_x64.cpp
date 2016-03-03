@@ -11,6 +11,8 @@
 #include "shader.h"
 #include "shader_jit_x64.h"
 
+#include "video_core/pica_state.h"
+
 namespace Pica {
 
 namespace Shader {

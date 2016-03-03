@@ -15,6 +15,7 @@
 #include "video_core/clipper.h"
 #include "video_core/command_processor.h"
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -73,6 +74,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
             break;
 
+        case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.index, 0x232):
+            if (regs.vs_default_attributes_setup.index == 15) {
+                // Reset immediate primitive state
+                g_state.immediate.primitive_assembler.Reconfigure(regs.triangle_topology);
+                g_state.immediate.attribute_id = 0;
+            }
+            break;
+
         // Load default vertex input attributes
         case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[0], 0x233):
         case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[1], 0x234):
@@ -108,10 +117,47 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                           attribute.w.ToFloat32());
 
                 // TODO: Verify that this actually modifies the register!
-                setup.index = setup.index + 1;
+                if (setup.index < 15) {
+                    setup.index++;
+                } else {
+                    // Put each attribute into an immediate input buffer.
+                    // When all specified immediate attributes are present, the Vertex Shader is invoked and everything is
+                    // sent to the primitive assembler.
+
+                    auto& immediate_input = g_state.immediate.input;
+                    auto& immediate_attribute_id = g_state.immediate.attribute_id;
+                    const auto& attribute_config = regs.vertex_attributes;
+
+                    immediate_input.attr[immediate_attribute_id++] = attribute;
+
+                    if (immediate_attribute_id >= attribute_config.GetNumTotalAttributes()) {
+                        immediate_attribute_id = 0;
+
+                        Shader::UnitState<false> shader_unit;
+                        Shader::Setup(shader_unit);
+
+                        // Send to vertex shader
+                        Shader::OutputVertex output = Shader::Run(shader_unit, immediate_input, attribute_config.GetNumTotalAttributes());
+
+                        // Send to renderer
+                        using Pica::Shader::OutputVertex;
+                        auto AddTriangle = [](const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
+                            VideoCore::g_renderer->rasterizer->AddTriangle(v0, v1, v2);
+                        };
+
+                        g_state.immediate.primitive_assembler.SubmitVertex(output, AddTriangle);
+                    }
+                }
             }
             break;
         }
+
+        case PICA_REG_INDEX(gpu_mode):
+            if (regs.gpu_mode == Regs::GPUMode::Configuring && regs.vs_default_attributes_setup.index == 15) {
+                // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
+                VideoCore::g_renderer->rasterizer->DrawTriangles();
+            }
+            break;
 
         case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[0], 0x23c):
         case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[1], 0x23d):

@@ -28,6 +28,7 @@
 #include "core/settings.h"
 
 #include "video_core/pica.h"
+#include "video_core/pica_state.h"
 #include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
@@ -113,7 +114,7 @@ void GeometryDumper::Dump() {
 }
 
 
-void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const State::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
+void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
 {
     struct StuffToWrite {
         u8* pointer;

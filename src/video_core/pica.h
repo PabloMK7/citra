@@ -1089,7 +1089,16 @@ struct Regs {
         }
     } command_buffer;
 
-    INSERT_PADDING_WORDS(0x20);
+    INSERT_PADDING_WORDS(0x07);
+
+    enum class GPUMode : u32 {
+        Drawing = 0,
+        Configuring = 1
+    };
+
+    GPUMode gpu_mode;
+
+    INSERT_PADDING_WORDS(0x18);
 
     enum class TriangleTopology : u32 {
         List   = 0,
@@ -1278,6 +1287,7 @@ ASSERT_REG_POSITION(trigger_draw, 0x22e);
 ASSERT_REG_POSITION(trigger_draw_indexed, 0x22f);
 ASSERT_REG_POSITION(vs_default_attributes_setup, 0x232);
 ASSERT_REG_POSITION(command_buffer, 0x238);
+ASSERT_REG_POSITION(gpu_mode, 0x245);
 ASSERT_REG_POSITION(triangle_topology, 0x25e);
 ASSERT_REG_POSITION(restart_primitive, 0x25f);
 ASSERT_REG_POSITION(gs, 0x280);
@@ -1292,64 +1302,10 @@ static_assert(sizeof(Regs::ShaderConfig) == 0x30 * sizeof(u32), "ShaderConfig st
 static_assert(sizeof(Regs) <= 0x300 * sizeof(u32), "Register set structure larger than it should be");
 static_assert(sizeof(Regs) >= 0x300 * sizeof(u32), "Register set structure smaller than it should be");
 
-/// Struct used to describe current Pica state
-struct State {
-    /// Pica registers
-    Regs regs;
-
-    /// Vertex shader memory
-    struct ShaderSetup {
-        struct {
-            // The float uniforms are accessed by the shader JIT using SSE instructions, and are
-            // therefore required to be 16-byte aligned.
-            Math::Vec4<float24> MEMORY_ALIGNED16(f[96]);
-
-            std::array<bool, 16> b;
-            std::array<Math::Vec4<u8>, 4> i;
-        } uniforms;
-
-        Math::Vec4<float24> default_attributes[16];
-
-        std::array<u32, 1024> program_code;
-        std::array<u32, 1024> swizzle_data;
-    };
-
-    ShaderSetup vs;
-    ShaderSetup gs;
-
-    struct {
-        union LutEntry {
-            // Used for raw access
-            u32 raw;
-
-            // LUT value, encoded as 12-bit fixed point, with 12 fraction bits
-            BitField< 0, 12, u32> value;
-
-            // Used by HW for efficient interpolation, Citra does not use these
-            BitField<12, 12, u32> difference;
-
-            float ToFloat() {
-                return static_cast<float>(value) / 4095.f;
-            }
-        };
-
-        std::array<std::array<LutEntry, 256>, 24> luts;
-    } lighting;
-
-    /// Current Pica command list
-    struct {
-        const u32* head_ptr;
-        const u32* current_ptr;
-        u32 length;
-    } cmd_list;
-};
-
 /// Initialize Pica state
 void Init();
 
 /// Shutdown Pica state
 void Shutdown();
-
-extern State g_state; ///< Current Pica state
 
 } // namespace
