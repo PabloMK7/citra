@@ -4,19 +4,19 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 
-class INIReader;
+#include <inih/cpp/INIReader.h>
 
 class Config {
-    INIReader* glfw_config;
-    std::string glfw_config_loc;
+    std::unique_ptr<INIReader> sdl2_config;
+    std::string sdl2_config_loc;
 
-    bool LoadINI(INIReader* config, const char* location, const std::string& default_contents="", bool retry=true);
+    bool LoadINI(const std::string& default_contents="", bool retry=true);
     void ReadValues();
 public:
     Config();
-    ~Config();
 
     void Reload();
 };

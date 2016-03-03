@@ -27,7 +27,7 @@
 #include "core/loader/loader.h"
 
 #include "citra/config.h"
-#include "citra/emu_window/emu_window_glfw.h"
+#include "citra/emu_window/emu_window_sdl2.h"
 
 #include "video_core/video_core.h"
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     GDBStub::ToggleServer(Settings::values.use_gdbstub);
     GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
-    EmuWindow_GLFW* emu_window = new EmuWindow_GLFW;
+    EmuWindow_SDL2* emu_window = new EmuWindow_SDL2;
 
     VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
     VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;

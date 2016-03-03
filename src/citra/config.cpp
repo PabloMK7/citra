@@ -2,14 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include <inih/cpp/INIReader.h>
+
+#include <SDL.h>
 
 #include "citra/default_ini.h"
 
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/make_unique.h"
 
 #include "core/settings.h"
 
@@ -17,21 +18,22 @@
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
-    glfw_config_loc = FileUtil::GetUserPath(D_CONFIG_IDX) + "glfw-config.ini";
-    glfw_config = new INIReader(glfw_config_loc);
+    sdl2_config_loc = FileUtil::GetUserPath(D_CONFIG_IDX) + "sdl2-config.ini";
+    sdl2_config = Common::make_unique<INIReader>(sdl2_config_loc);
 
     Reload();
 }
 
-bool Config::LoadINI(INIReader* config, const char* location, const std::string& default_contents, bool retry) {
-    if (config->ParseError() < 0) {
+bool Config::LoadINI(const std::string& default_contents, bool retry) {
+    const char* location = this->sdl2_config_loc.c_str();
+    if (sdl2_config->ParseError() < 0) {
         if (retry) {
             LOG_WARNING(Config, "Failed to load %s. Creating file from defaults...", location);
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, default_contents, location);
-            *config = INIReader(location); // Reopen file
+            sdl2_config = Common::make_unique<INIReader>(location); // Reopen file
 
-            return LoadINI(config, location, default_contents, false);
+            return LoadINI(default_contents, false);
         }
         LOG_ERROR(Config, "Failed.");
         return false;
@@ -41,51 +43,47 @@ bool Config::LoadINI(INIReader* config, const char* location, const std::string&
 }
 
 static const std::array<int, Settings::NativeInput::NUM_INPUTS> defaults = {
-    GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_Z, GLFW_KEY_X,
-    GLFW_KEY_Q, GLFW_KEY_W, GLFW_KEY_1, GLFW_KEY_2,
-    GLFW_KEY_M, GLFW_KEY_N, GLFW_KEY_B,
-    GLFW_KEY_T, GLFW_KEY_G, GLFW_KEY_F, GLFW_KEY_H,
-    GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT,
-    GLFW_KEY_I, GLFW_KEY_K, GLFW_KEY_J, GLFW_KEY_L
+    SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_Z, SDL_SCANCODE_X,
+    SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_1, SDL_SCANCODE_2,
+    SDL_SCANCODE_M, SDL_SCANCODE_N, SDL_SCANCODE_B,
+    SDL_SCANCODE_T, SDL_SCANCODE_G, SDL_SCANCODE_F, SDL_SCANCODE_H,
+    SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
+    SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L
 };
 
 void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
         Settings::values.input_mappings[Settings::NativeInput::All[i]] =
-            glfw_config->GetInteger("Controls", Settings::NativeInput::Mapping[i], defaults[i]);
+            sdl2_config->GetInteger("Controls", Settings::NativeInput::Mapping[i], defaults[i]);
     }
 
     // Core
-    Settings::values.frame_skip = glfw_config->GetInteger("Core", "frame_skip", 0);
+    Settings::values.frame_skip = sdl2_config->GetInteger("Core", "frame_skip", 0);
 
     // Renderer
-    Settings::values.use_hw_renderer = glfw_config->GetBoolean("Renderer", "use_hw_renderer", false);
-    Settings::values.use_shader_jit = glfw_config->GetBoolean("Renderer", "use_shader_jit", true);
+    Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", false);
+    Settings::values.use_shader_jit = sdl2_config->GetBoolean("Renderer", "use_shader_jit", true);
 
-    Settings::values.bg_red   = (float)glfw_config->GetReal("Renderer", "bg_red",   1.0);
-    Settings::values.bg_green = (float)glfw_config->GetReal("Renderer", "bg_green", 1.0);
-    Settings::values.bg_blue  = (float)glfw_config->GetReal("Renderer", "bg_blue",  1.0);
+    Settings::values.bg_red   = (float)sdl2_config->GetReal("Renderer", "bg_red",   1.0);
+    Settings::values.bg_green = (float)sdl2_config->GetReal("Renderer", "bg_green", 1.0);
+    Settings::values.bg_blue  = (float)sdl2_config->GetReal("Renderer", "bg_blue",  1.0);
 
     // Data Storage
-    Settings::values.use_virtual_sd = glfw_config->GetBoolean("Data Storage", "use_virtual_sd", true);
+    Settings::values.use_virtual_sd = sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // System Region
-    Settings::values.region_value = glfw_config->GetInteger("System Region", "region_value", 1);
+    Settings::values.region_value = sdl2_config->GetInteger("System Region", "region_value", 1);
 
     // Miscellaneous
-    Settings::values.log_filter = glfw_config->Get("Miscellaneous", "log_filter", "*:Info");
+    Settings::values.log_filter = sdl2_config->Get("Miscellaneous", "log_filter", "*:Info");
 
     // Debugging
-    Settings::values.use_gdbstub = glfw_config->GetBoolean("Debugging", "use_gdbstub", false);
-    Settings::values.gdbstub_port = glfw_config->GetInteger("Debugging", "gdbstub_port", 24689);
+    Settings::values.use_gdbstub = sdl2_config->GetBoolean("Debugging", "use_gdbstub", false);
+    Settings::values.gdbstub_port = sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689);
 }
 
 void Config::Reload() {
-    LoadINI(glfw_config, glfw_config_loc.c_str(), DefaultINI::glfw_config_file);
+    LoadINI(DefaultINI::sdl2_config_file);
     ReadValues();
-}
-
-Config::~Config() {
-    delete glfw_config;
 }

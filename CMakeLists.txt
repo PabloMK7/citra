@@ -35,8 +35,8 @@ endfunction()
 
 project(citra)
 
-option(ENABLE_GLFW "Enable the GLFW frontend" ON)
-option(CITRA_USE_BUNDLED_GLFW "Download bundled GLFW binaries" OFF)
+option(ENABLE_SDL2 "Enable the SDL2 frontend" ON)
+option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
 
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
@@ -135,34 +135,29 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
-if (ENABLE_GLFW)
-    if (CITRA_USE_BUNDLED_GLFW)
+if (ENABLE_SDL2)
+    if (CITRA_USE_BUNDLED_SDL2)
         # Detect toolchain and platform
         if (MSVC14 AND ARCHITECTURE_x86_64)
-            set(GLFW_VER "glfw-3.1.1-msvc2015_64")
-        elseif (MSVC12 AND ARCHITECTURE_x86_64)
-            set(GLFW_VER "glfw-3.1.1-msvc2013_64")
+            set(SDL2_VER "SDL2-2.0.4")
         else()
-            message(FATAL_ERROR "No bundled GLFW binaries for your toolchain. Disable CITRA_USE_BUNDLED_GLFW and provide your own.")
+            message(FATAL_ERROR "No bundled SDL2 binaries for your toolchain. Disable CITRA_USE_BUNDLED_SDL2 and provide your own.")
         endif()
 
-        if (DEFINED GLFW_VER)
-            download_bundled_external("glfw/" ${GLFW_VER} GLFW_PREFIX)
+        if (DEFINED SDL2_VER)
+            download_bundled_external("sdl2/" ${SDL2_VER} SDL2_PREFIX)
         endif()
 
-        set(GLFW_INCLUDE_DIRS "${GLFW_PREFIX}/include" CACHE PATH "Path to GLFW3 headers")
-        set(GLFW_LIBRARY_DIRS "${GLFW_PREFIX}/lib" CACHE PATH "Path to GLFW3 libraries")
-        set(GLFW_LIBRARIES glfw3)
+        set(SDL2_INCLUDE_DIR "${SDL2_PREFIX}/include" CACHE PATH "Path to SDL2 headers")
+        set(SDL2_LIBRARY "${SDL2_PREFIX}/lib/x64/SDL2.lib" CACHE PATH "Path to SDL2 library")
+        set(SDL2_DLL_DIR "${SDL2_PREFIX}/lib/x64/" CACHE PATH "Path to SDL2.dll")
     else()
-        find_package(PkgConfig REQUIRED)
-        pkg_search_module(GLFW REQUIRED glfw3)
+        find_package(SDL2 REQUIRED)
     endif()
 endif()
 
 IF (APPLE)
     FIND_LIBRARY(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
-    FIND_LIBRARY(IOKIT_LIBRARY IOKit)           # GLFW dependency
-    FIND_LIBRARY(COREVIDEO_LIBRARY CoreVideo)   # GLFW dependency
     set(PLATFORM_LIBRARIES iconv ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
