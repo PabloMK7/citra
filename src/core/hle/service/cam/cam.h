@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/swap.h"
+
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace CAM {
@@ -140,6 +145,26 @@ enum class OutputFormat : u8 {
     RGB565 = 1
 };
 
+/// Stereo camera calibration data.
+struct StereoCameraCalibrationData {
+    u8 isValidRotationXY;      ///< Bool indicating whether the X and Y rotation data is valid.
+    INSERT_PADDING_BYTES(3);
+    float_le scale;            ///< Scale to match the left camera image with the right.
+    float_le rotationZ;        ///< Z axis rotation to match the left camera image with the right.
+    float_le translationX;     ///< X axis translation to match the left camera image with the right.
+    float_le translationY;     ///< Y axis translation to match the left camera image with the right.
+    float_le rotationX;        ///< X axis rotation to match the left camera image with the right.
+    float_le rotationY;        ///< Y axis rotation to match the left camera image with the right.
+    float_le angleOfViewRight; ///< Right camera angle of view.
+    float_le angleOfViewLeft;  ///< Left camera angle of view.
+    float_le distanceToChart;  ///< Distance between cameras and measurement chart.
+    float_le distanceCameras;  ///< Distance between left and right cameras.
+    s16_le imageWidth;         ///< Image width.
+    s16_le imageHeight;        ///< Image height.
+    INSERT_PADDING_BYTES(16);
+};
+static_assert(sizeof(StereoCameraCalibrationData) == 64, "StereoCameraCalibrationData structure size is wrong");
+
 struct PackageParameterCameraSelect {
     CameraSelect camera;
     s8 exposure;
@@ -164,6 +189,243 @@ struct PackageParameterCameraSelect {
 };
 
 static_assert(sizeof(PackageParameterCameraSelect) == 28, "PackageParameterCameraSelect structure size is wrong");
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00010040
+ *      1: u8 Camera port (`Port` enum)
+ *  Outputs:
+ *      0: 0x00010040
+ *      1: ResultCode
+ */
+void StartCapture(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00020040
+ *      1: u8 Camera port (`Port` enum)
+ *  Outputs:
+ *      0: 0x00020040
+ *      1: ResultCode
+ */
+void StopCapture(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00050040
+ *      1: u8 Camera port (`Port` enum)
+ *  Outputs:
+ *      0: 0x00050042
+ *      1: ResultCode
+ *      2: Descriptor: Handle
+ *      3: Event handle
+ */
+void GetVsyncInterruptEvent(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00060040
+ *      1: u8 Camera port (`Port` enum)
+ *  Outputs:
+ *      0: 0x00060042
+ *      1: ResultCode
+ *      2: Descriptor: Handle
+ *      3: Event handle
+ */
+void GetBufferErrorInterruptEvent(Service::Interface* self);
+
+/**
+ * Sets the target buffer to receive a frame of image data and starts the transfer. Each camera
+ * port has its own event to signal the end of the transfer.
+ *
+ *  Inputs:
+ *      0: 0x00070102
+ *      1: Destination address in calling process
+ *      2: u8 Camera port (`Port` enum)
+ *      3: Image size (in bytes?)
+ *      4: u16 Transfer unit size (in bytes?)
+ *      5: Descriptor: Handle
+ *      6: Handle to destination process
+ *  Outputs:
+ *      0: 0x00070042
+ *      1: ResultCode
+ *      2: Descriptor: Handle
+ *      3: Handle to event signalled when transfer finishes
+ */
+void SetReceiving(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00090100
+ *      1: u8 Camera port (`Port` enum)
+ *      2: u16 Number of lines to transfer
+ *      3: u16 Width
+ *      4: u16 Height
+ *  Outputs:
+ *      0: 0x00090040
+ *      1: ResultCode
+ */
+void SetTransferLines(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x000A0080
+ *      1: u16 Width
+ *      2: u16 Height
+ *  Outputs:
+ *      0: 0x000A0080
+ *      1: ResultCode
+ *      2: Maximum number of lines that fit in the buffer(?)
+ */
+void GetMaxLines(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x000C0040
+ *      1: u8 Camera port (`Port` enum)
+ *  Outputs:
+ *      0: 0x000C0080
+ *      1: ResultCode
+ *      2: Total number of bytes for each frame with current settings(?)
+ */
+void GetTransferBytes(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x000E0080
+ *      1: u8 Camera port (`Port` enum)
+ *      2: u8 bool Enable trimming if true
+ *  Outputs:
+ *      0: 0x000E0040
+ *      1: ResultCode
+ */
+void SetTrimming(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00120140
+ *      1: u8 Camera port (`Port` enum)
+ *      2: s16 Trim width(?)
+ *      3: s16 Trim height(?)
+ *      4: s16 Camera width(?)
+ *      5: s16 Camera height(?)
+ *  Outputs:
+ *      0: 0x00120040
+ *      1: ResultCode
+ */
+void SetTrimmingParamsCenter(Service::Interface* self);
+
+/**
+ * Selects up to two physical cameras to enable.
+ *  Inputs:
+ *      0: 0x00130040
+ *      1: u8 Cameras to activate (`CameraSelect` enum)
+ *  Outputs:
+ *      0: 0x00130040
+ *      1: ResultCode
+ */
+void Activate(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x001D00C0
+ *      1: u8 Camera select (`CameraSelect` enum)
+ *      2: u8 Type of flipping to perform (`Flip` enum)
+ *      3: u8 Context (`Context` enum)
+ *  Outputs:
+ *      0: 0x001D0040
+ *      1: ResultCode
+ */
+void FlipImage(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x001F00C0
+ *      1: u8 Camera select (`CameraSelect` enum)
+ *      2: u8 Camera frame resolution (`Size` enum)
+ *      3: u8 Context id (`Context` enum)
+ *  Outputs:
+ *      0: 0x001F0040
+ *      1: ResultCode
+ */
+void SetSize(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00200080
+ *      1: u8 Camera select (`CameraSelect` enum)
+ *      2: u8 Camera framerate (`FrameRate` enum)
+ *  Outputs:
+ *      0: 0x00200040
+ *      1: ResultCode
+ */
+void SetFrameRate(Service::Interface* self);
+
+/**
+ * Returns calibration data relating the outside cameras to eachother, for use in AR applications.
+ *
+ *  Inputs:
+ *      0: 0x002B0000
+ *  Outputs:
+ *      0: 0x002B0440
+ *      1: ResultCode
+ *      2-17: `StereoCameraCalibrationData` structure with calibration values
+ */
+void GetStereoCameraCalibrationData(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00360000
+ *  Outputs:
+ *      0: 0x00360080
+ *      1: ResultCode
+ *      2: ?
+ */
+void GetSuitableY2rStandardCoefficient(Service::Interface* self);
+
+/**
+ * Unknown
+ *  Inputs:
+ *      0: 0x00380040
+ *      1: u8 Sound ID
+ *  Outputs:
+ *      0: 0x00380040
+ *      1: ResultCode
+ */
+void PlayShutterSound(Service::Interface* self);
+
+/**
+ * Initializes the camera driver. Must be called before using other functions.
+ *  Inputs:
+ *      0: 0x00390000
+ *  Outputs:
+ *      0: 0x00390040
+ *      1: ResultCode
+ */
+void DriverInitialize(Service::Interface* self);
+
+/**
+ * Shuts down the camera driver.
+ *  Inputs:
+ *      0: 0x003A0000
+ *  Outputs:
+ *      0: 0x003A0040
+ *      1: ResultCode
+ */
+void DriverFinalize(Service::Interface* self);
 
 /// Initialize CAM service(s)
 void Init();
