@@ -22,8 +22,23 @@ static void GetWifiStatus(Service::Interface* self) {
     // TODO(purpasmart96): This function is only a stub,
     // it returns a valid result without implementing full functionality.
 
-    cmd_buff[1] = 0; // No error
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 0; // Connection type set to none
+
+    LOG_WARNING(Service_AC, "(STUBBED) called");
+}
+
+/**
+ * AC_U::IsConnected service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : bool, is connected
+ */
+static void IsConnected(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[2] = false; // Not connected to ac:u service
 
     LOG_WARNING(Service_AC, "(STUBBED) called");
 }
@@ -44,7 +59,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x002D0082, nullptr,               "SetRequestEulaVersion"},
     {0x00300004, nullptr,               "RegisterDisconnectEvent"},
     {0x003C0042, nullptr,               "GetAPSSIDList"},
-    {0x003E0042, nullptr,               "IsConnected"},
+    {0x003E0042, IsConnected,           "IsConnected"},
     {0x00400042, nullptr,               "SetClientVersion"},
 };
 
