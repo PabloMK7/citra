@@ -493,12 +493,25 @@ std::string Regs::GetCommandName(int index) {
 }
 
 void Init() {
+    g_state.Reset();
 }
 
 void Shutdown() {
     Shader::Shutdown();
+}
 
-    memset(&g_state, 0, sizeof(State));
+template <typename T>
+void Zero(T& o) {
+    memset(&o, 0, sizeof(o));
+}
+
+void State::Reset() {
+    Zero(regs);
+    Zero(vs);
+    Zero(gs);
+    Zero(cmd_list);
+    Zero(immediate);
+    primitive_assembler.Reconfigure(Regs::TriangleTopology::List);
 }
 
 }

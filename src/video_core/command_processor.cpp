@@ -75,12 +75,17 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
             break;
 
+        case PICA_REG_INDEX_WORKAROUND(triangle_topology, 0x25E):
+            g_state.primitive_assembler.Reconfigure(regs.triangle_topology);
+            break;
+
+        case PICA_REG_INDEX_WORKAROUND(restart_primitive, 0x25F):
+            g_state.primitive_assembler.Reset();
+            break;
+
         case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.index, 0x232):
-            if (regs.vs_default_attributes_setup.index == 15) {
-                // Reset immediate primitive state
-                g_state.immediate.primitive_assembler.Reconfigure(regs.triangle_topology);
-                g_state.immediate.attribute_id = 0;
-            }
+            g_state.immediate.current_attribute = 0;
+            default_attr_counter = 0;
             break;
 
         // Load default vertex input attributes
@@ -105,7 +110,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     break;
                 }
 
-                Math::Vec4<float24>& attribute = g_state.vs.default_attributes[setup.index];
+                Math::Vec4<float24> attribute;
 
                 // NOTE: The destination component order indeed is "backwards"
                 attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
@@ -119,26 +124,29 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 // TODO: Verify that this actually modifies the register!
                 if (setup.index < 15) {
+                    g_state.vs.default_attributes[setup.index] = attribute;
                     setup.index++;
                 } else {
                     // Put each attribute into an immediate input buffer.
                     // When all specified immediate attributes are present, the Vertex Shader is invoked and everything is
                     // sent to the primitive assembler.
 
-                    auto& immediate_input = g_state.immediate.input;
-                    auto& immediate_attribute_id = g_state.immediate.attribute_id;
-                    const auto& attribute_config = regs.vertex_attributes;
+                    auto& immediate_input = g_state.immediate.input_vertex;
+                    auto& immediate_attribute_id = g_state.immediate.current_attribute;
 
                     immediate_input.attr[immediate_attribute_id++] = attribute;
 
-                    if (immediate_attribute_id >= attribute_config.GetNumTotalAttributes()) {
+                    if (immediate_attribute_id >= regs.vs.num_input_attributes+1) {
                         immediate_attribute_id = 0;
 
                         Shader::UnitState<false> shader_unit;
                         Shader::Setup(shader_unit);
 
+                        if (g_debug_context)
+                            g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, static_cast<void*>(&immediate_input));
+
                         // Send to vertex shader
-                        Shader::OutputVertex output = Shader::Run(shader_unit, immediate_input, attribute_config.GetNumTotalAttributes());
+                        Shader::OutputVertex output = Shader::Run(shader_unit, immediate_input, regs.vs.num_input_attributes+1);
 
                         // Send to renderer
                         using Pica::Shader::OutputVertex;
@@ -146,7 +154,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                             VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                         };
 
-                        g_state.immediate.primitive_assembler.SubmitVertex(output, AddTriangle);
+                        g_state.primitive_assembler.SubmitVertex(output, AddTriangle);
                     }
                 }
             }
@@ -154,9 +162,13 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         }
 
         case PICA_REG_INDEX(gpu_mode):
-            if (regs.gpu_mode == Regs::GPUMode::Configuring && regs.vs_default_attributes_setup.index == 15) {
+            if (regs.gpu_mode == Regs::GPUMode::Configuring) {
                 // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
                 VideoCore::g_renderer->Rasterizer()->DrawTriangles();
+
+                if (g_debug_context) {
+                    g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+                }
             }
             break;
 
@@ -241,7 +253,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             DebugUtils::GeometryDumper geometry_dumper;
             PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
 #endif
-            PrimitiveAssembler<Shader::OutputVertex> primitive_assembler(regs.triangle_topology.Value());
+            PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
 
             if (g_debug_context) {
                 for (int i = 0; i < 3; ++i) {
@@ -412,15 +424,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                           range.second, range.first);
             }
 
-            VideoCore::g_renderer->Rasterizer()->DrawTriangles();
-
 #if PICA_DUMP_GEOMETRY
             geometry_dumper.Dump();
 #endif
-
-            if (g_debug_context) {
-                g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
-            }
 
             break;
         }

@@ -20,7 +20,7 @@ struct PrimitiveAssembler {
                                                VertexType& v1,
                                                VertexType& v2)>;
 
-    PrimitiveAssembler(Regs::TriangleTopology topology);
+    PrimitiveAssembler(Regs::TriangleTopology topology = Regs::TriangleTopology::List);
 
     /*
      * Queues a vertex, builds primitives from the vertex queue according to the given

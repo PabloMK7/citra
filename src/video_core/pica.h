@@ -1123,7 +1123,12 @@ struct Regs {
             BitField<24, 8, u32> w;
         } int_uniforms[4];
 
-        INSERT_PADDING_WORDS(0x5);
+        INSERT_PADDING_WORDS(0x4);
+
+        union {
+            // Number of input attributes to shader unit - 1
+            BitField<0, 4, u32> num_input_attributes;
+        };
 
         // Offset to shader program entry point (in words)
         BitField<0, 16, u32> main_offset;
