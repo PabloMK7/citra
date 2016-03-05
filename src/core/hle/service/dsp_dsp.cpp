@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
+
 #include "audio_core/hle/pipe.h"
 
+#include "common/hash.h"
 #include "common/logging/log.h"
 
 #include "core/hle/kernel/event.h"
@@ -65,8 +68,8 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
  * DSP_DSP::LoadComponent service function
  *  Inputs:
  *      1 : Size
- *      2 : Unknown (observed only half word used)
- *      3 : Unknown (observed only half word used)
+ *      2 : Program mask (observed only half word used)
+ *      3 : Data mask (observed only half word used)
  *      4 : (size << 4) | 0xA
  *      5 : Buffer address
  *  Outputs:
@@ -77,18 +80,28 @@ static void LoadComponent(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size       = cmd_buff[1];
-    u32 unk1       = cmd_buff[2];
-    u32 unk2       = cmd_buff[3];
-    u32 new_size   = cmd_buff[4];
+    u32 prog_mask  = cmd_buff[2];
+    u32 data_mask  = cmd_buff[3];
+    u32 desc       = cmd_buff[4];
     u32 buffer     = cmd_buff[5];
 
-    cmd_buff[1] = 0; // No error
+    cmd_buff[0] = IPC::MakeHeader(0x11, 2, 2);
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 1; // Pretend that we actually loaded the DSP firmware
+    cmd_buff[3] = desc;
+    cmd_buff[4] = buffer;
 
     // TODO(bunnei): Implement real DSP firmware loading
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x%X, unk1=0x%08X, unk2=0x%08X, new_size=0x%X, buffer=0x%08X",
-                size, unk1, unk2, new_size, buffer);
+    ASSERT(Memory::GetPointer(buffer) != nullptr);
+    ASSERT(size > 0x37C);
+
+    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64, Common::ComputeHash64(Memory::GetPointer(buffer), size));
+    // Some versions of the firmware have the location of DSP structures listed here.
+    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64, Common::ComputeHash64(Memory::GetPointer(buffer) + 0x340, 60));
+
+    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
+                size, prog_mask, data_mask, buffer);
 }
 
 /**
