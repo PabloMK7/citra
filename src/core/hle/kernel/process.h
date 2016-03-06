@@ -143,6 +143,7 @@ public:
     /// Bitmask of the used TLS slots
     std::bitset<300> used_tls_slots;
 
+    VAddr GetLinearHeapAreaAddress() const;
     VAddr GetLinearHeapBase() const;
     VAddr GetLinearHeapLimit() const;
 
