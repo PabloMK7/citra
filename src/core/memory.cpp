@@ -291,7 +291,7 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
     } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return addr - VRAM_PADDR + VRAM_VADDR;
     } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapBase();
+        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapAreaAddress();
     } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
         return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
     } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {

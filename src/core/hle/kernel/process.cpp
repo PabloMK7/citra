@@ -130,9 +130,11 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
 }
 
+VAddr Process::GetLinearHeapAreaAddress() const {
+    return kernel_version < 0x22C ? Memory::LINEAR_HEAP_VADDR : Memory::NEW_LINEAR_HEAP_VADDR;
+}
 VAddr Process::GetLinearHeapBase() const {
-    return (kernel_version < 0x22C ? Memory::LINEAR_HEAP_VADDR : Memory::NEW_LINEAR_HEAP_VADDR)
-            + memory_region->base;
+    return GetLinearHeapAreaAddress() + memory_region->base;
 }
 
 VAddr Process::GetLinearHeapLimit() const {
