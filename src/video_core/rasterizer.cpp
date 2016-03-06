@@ -858,12 +858,12 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
             }
 
-            // TODO: Does depth indeed only get written even if depth testing is enabled?
+            unsigned num_bits = Regs::DepthBitsPerPixel(regs.framebuffer.depth_format);
+            u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
+                           v1.screenpos[2].ToFloat32() * w1 +
+                           v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
+
             if (output_merger.depth_test_enable) {
-                unsigned num_bits = Regs::DepthBitsPerPixel(regs.framebuffer.depth_format);
-                u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
-                               v1.screenpos[2].ToFloat32() * w1 +
-                               v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
                 u32 ref_z = GetDepth(x >> 4, y >> 4);
 
                 bool pass = false;
@@ -907,10 +907,10 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         UpdateStencil(stencil_test.action_depth_fail);
                     continue;
                 }
-
-                if (output_merger.depth_write_enable)
-                    SetDepth(x >> 4, y >> 4, z);
             }
+
+            if (output_merger.depth_write_enable)
+                SetDepth(x >> 4, y >> 4, z);
 
             // The stencil depth_pass action is executed even if depth testing is disabled
             if (stencil_action_enable)
