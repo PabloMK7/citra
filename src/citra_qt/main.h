@@ -75,7 +75,7 @@ private:
      *
      * @param filename the filename to store
      */
-    void StoreRecentFile(const QString& filename);
+    void StoreRecentFile(const std::string& filename);
 
     /**
      * Updates the recent files menu.

@@ -310,6 +310,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
 
 void GMainWindow::BootGame(const std::string& filename) {
     LOG_INFO(Frontend, "Citra starting...");
+    StoreRecentFile(filename); // Put the filename on top of the list
 
     if (!InitializeSystem())
         return;
@@ -374,11 +375,11 @@ void GMainWindow::ShutdownGame() {
     emulation_running = false;
 }
 
-void GMainWindow::StoreRecentFile(const QString& filename)
+void GMainWindow::StoreRecentFile(const std::string& filename)
 {
     QSettings settings;
     QStringList recent_files = settings.value("recentFiles").toStringList();
-    recent_files.prepend(filename);
+    recent_files.prepend(QString::fromStdString(filename));
     recent_files.removeDuplicates();
     while (recent_files.size() > max_recent_files_item) {
         recent_files.removeLast();
@@ -426,7 +427,6 @@ void GMainWindow::OnMenuLoadFile() {
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), rom_path, tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
     if (!filename.isEmpty()) {
         settings.setValue("romsPath", QFileInfo(filename).path());
-        StoreRecentFile(filename);
 
         BootGame(filename.toLocal8Bit().data());
     }
@@ -462,7 +462,6 @@ void GMainWindow::OnMenuRecentFile() {
     QFileInfo file_info(filename);
     if (file_info.exists()) {
         BootGame(filename.toLocal8Bit().data());
-        StoreRecentFile(filename); // Put the filename on top of the list
     } else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, tr("File not found"), tr("File \"%1\" not found").arg(filename));
