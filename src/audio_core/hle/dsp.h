@@ -66,9 +66,9 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 #endif
 
 // There are 15 structures in each memory region. A table of them in the order they appear in memory
-// is presented below
+// is presented below:
 //
-//       Pipe 2 #    First Region DSP Address   Purpose                               Control
+//       #           First Region DSP Address   Purpose                               Control
 //       5           0x8400                     DSP Status                            DSP
 //       9           0x8410                     DSP Debug Info                        DSP
 //       6           0x8540                     Final Mix Samples                     DSP
@@ -84,6 +84,9 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //       13          0xAC52                     Surround Sound Related
 //       14          0xAC5C                     Surround Sound Related
 //       0           0xBFFF                     Frame Counter                         Application
+//
+// #: This refers to the order in which they appear in the DspPipe::Audio DSP pipe.
+//    See also: DSP::HLE::PipeRead.
 //
 // Note that the above addresses do vary slightly between audio firmwares observed; the addresses are
 // not fixed in stone. The addresses above are only an examplar; they're what this implementation
@@ -472,12 +475,46 @@ struct SharedMemory {
 
     AdpcmCoefficients adpcm_coefficients;
 
-    /// Unknown 10-14 (Surround sound related)
-    INSERT_PADDING_DSPWORDS(0x16ED);
+    struct {
+        INSERT_PADDING_DSPWORDS(0x100);
+    } unknown10;
+
+    struct {
+        INSERT_PADDING_DSPWORDS(0xC0);
+    } unknown11;
+
+    struct {
+        INSERT_PADDING_DSPWORDS(0x180);
+    } unknown12;
+
+    struct {
+        INSERT_PADDING_DSPWORDS(0xA);
+    } unknown13;
+
+    struct {
+        INSERT_PADDING_DSPWORDS(0x13A3);
+    } unknown14;
 
     u16_le frame_counter;
 };
 ASSERT_DSP_STRUCT(SharedMemory, 0x8000);
+
+// Structures must have an offset that is a multiple of two.
+static_assert(offsetof(SharedMemory, frame_counter) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, source_configurations) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, source_statuses) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, adpcm_coefficients) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, dsp_configuration) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, dsp_status) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, final_samples) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, intermediate_mix_samples) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, compressor) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, dsp_debug) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, unknown10) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, unknown11) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, unknown12) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, unknown13) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+static_assert(offsetof(SharedMemory, unknown14) % 2 == 0, "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
 
 #undef INSERT_PADDING_DSPWORDS
 #undef ASSERT_DSP_STRUCT

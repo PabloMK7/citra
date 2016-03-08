@@ -5,50 +5,154 @@
 #include <array>
 #include <vector>
 
+#include "audio_core/hle/dsp.h"
 #include "audio_core/hle/pipe.h"
 
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
 namespace DSP {
 namespace HLE {
 
-static size_t pipe2position = 0;
+static DspState dsp_state = DspState::Off;
+
+static std::array<std::vector<u8>, static_cast<size_t>(DspPipe::DspPipe_MAX)> pipe_data;
 
 void ResetPipes() {
-    pipe2position = 0;
+    for (auto& data : pipe_data) {
+        data.clear();
+    }
+    dsp_state = DspState::Off;
 }
 
-std::vector<u8> PipeRead(u32 pipe_number, u32 length) {
-    if (pipe_number != 2) {
-        LOG_WARNING(Audio_DSP, "pipe_number = %u (!= 2), unimplemented", pipe_number);
-        return {}; // We currently don't handle anything other than the audio pipe.
-    }
-
-    // Canned DSP responses that games expect. These were taken from HW by 3dmoo team.
-    // TODO: Our implementation will actually use a slightly different response than this one.
-    // TODO: Use offsetof on DSP structures instead for a proper response.
-    static const std::array<u8, 32> canned_response {{
-        0x0F, 0x00, 0xFF, 0xBF, 0x8E, 0x9E, 0x80, 0x86, 0x8E, 0xA7, 0x30, 0x94, 0x00, 0x84, 0x40, 0x85,
-        0x8E, 0x94, 0x10, 0x87, 0x10, 0x84, 0x0E, 0xA9, 0x0E, 0xAA, 0xCE, 0xAA, 0x4E, 0xAC, 0x58, 0xAC
-    }};
-
-    // TODO: Move this into dsp::DSP service since it happens on the service side.
-    // Hardware observation: No data is returned if requested length reads beyond the end of the data in-pipe.
-    if (pipe2position + length > canned_response.size()) {
+std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) {
+    if (pipe_number >= DspPipe::DspPipe_MAX) {
+        LOG_ERROR(Audio_DSP, "pipe_number = %u invalid", pipe_number);
         return {};
     }
 
-    std::vector<u8> ret;
-    for (size_t i = 0; i < length; i++, pipe2position++) {
-        ret.emplace_back(canned_response[pipe2position]);
+    std::vector<u8>& data = pipe_data[static_cast<size_t>(pipe_number)];
+
+    if (length > data.size()) {
+        LOG_WARNING(Audio_DSP, "pipe_number = %u is out of data, application requested read of %u but %zu remain",
+                    pipe_number, length, data.size());
+        length = data.size();
     }
 
+    if (length == 0)
+        return {};
+
+    std::vector<u8> ret(data.begin(), data.begin() + length);
+    data.erase(data.begin(), data.begin() + length);
     return ret;
 }
 
-void PipeWrite(u32 pipe_number, const std::vector<u8>& buffer) {
-    // TODO: proper pipe behaviour
+size_t GetPipeReadableSize(DspPipe pipe_number) {
+    if (pipe_number >= DspPipe::DspPipe_MAX) {
+        LOG_ERROR(Audio_DSP, "pipe_number = %u invalid", pipe_number);
+        return 0;
+    }
+
+    return pipe_data[static_cast<size_t>(pipe_number)].size();
+}
+
+static void WriteU16(DspPipe pipe_number, u16 value) {
+    std::vector<u8>& data = pipe_data[static_cast<size_t>(pipe_number)];
+    // Little endian
+    data.emplace_back(value & 0xFF);
+    data.emplace_back(value >> 8);
+}
+
+static void AudioPipeWriteStructAddresses() {
+    // These struct addresses are DSP dram addresses.
+    // See also: DSP_DSP::ConvertProcessAddressFromDspDram
+    static const std::array<u16, 15> struct_addresses = {
+        0x8000 + offsetof(SharedMemory, frame_counter) / 2,
+        0x8000 + offsetof(SharedMemory, source_configurations) / 2,
+        0x8000 + offsetof(SharedMemory, source_statuses) / 2,
+        0x8000 + offsetof(SharedMemory, adpcm_coefficients) / 2,
+        0x8000 + offsetof(SharedMemory, dsp_configuration) / 2,
+        0x8000 + offsetof(SharedMemory, dsp_status) / 2,
+        0x8000 + offsetof(SharedMemory, final_samples) / 2,
+        0x8000 + offsetof(SharedMemory, intermediate_mix_samples) / 2,
+        0x8000 + offsetof(SharedMemory, compressor) / 2,
+        0x8000 + offsetof(SharedMemory, dsp_debug) / 2,
+        0x8000 + offsetof(SharedMemory, unknown10) / 2,
+        0x8000 + offsetof(SharedMemory, unknown11) / 2,
+        0x8000 + offsetof(SharedMemory, unknown12) / 2,
+        0x8000 + offsetof(SharedMemory, unknown13) / 2,
+        0x8000 + offsetof(SharedMemory, unknown14) / 2
+    };
+
+    // Begin with a u16 denoting the number of structs.
+    WriteU16(DspPipe::Audio, struct_addresses.size());
+    // Then write the struct addresses.
+    for (u16 addr : struct_addresses) {
+        WriteU16(DspPipe::Audio, addr);
+    }
+}
+
+void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
+    switch (pipe_number) {
+    case DspPipe::Audio: {
+        if (buffer.size() != 4) {
+            LOG_ERROR(Audio_DSP, "DspPipe::Audio: Unexpected buffer length %zu was written", buffer.size());
+            return;
+        }
+
+        enum class StateChange {
+            Initalize = 0,
+            Shutdown = 1,
+            Wakeup = 2,
+            Sleep = 3
+        };
+
+        // The difference between Initialize and Wakeup is that Input state is maintained
+        // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)
+        // Waking up from sleep garbles some of the structs in the memory region. (TODO:
+        // Implement this.) Applications store away the state of these structs before
+        // sleeping and reset it back after wakeup on behalf of the DSP.
+
+        switch (static_cast<StateChange>(buffer[0])) {
+        case StateChange::Initalize:
+            LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
+            ResetPipes();
+            AudioPipeWriteStructAddresses();
+            dsp_state = DspState::On;
+            break;
+        case StateChange::Shutdown:
+            LOG_INFO(Audio_DSP, "Application has requested shutdown of DSP hardware");
+            dsp_state = DspState::Off;
+            break;
+        case StateChange::Wakeup:
+            LOG_INFO(Audio_DSP, "Application has requested wakeup of DSP hardware");
+            ResetPipes();
+            AudioPipeWriteStructAddresses();
+            dsp_state = DspState::On;
+            break;
+        case StateChange::Sleep:
+            LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
+            UNIMPLEMENTED();
+            dsp_state = DspState::Sleeping;
+            break;
+        default:
+            LOG_ERROR(Audio_DSP, "Application has requested unknown state transition of DSP hardware %hhu", buffer[0]);
+            dsp_state = DspState::Off;
+            break;
+        }
+
+        return;
+    }
+    default:
+        LOG_CRITICAL(Audio_DSP, "pipe_number = %u unimplemented", pipe_number);
+        UNIMPLEMENTED();
+        return;
+    }
+}
+
+DspState GetDspState() {
+    return dsp_state;
 }
 
 } // namespace HLE
