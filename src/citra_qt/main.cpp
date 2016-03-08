@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <clocale>
 #include <thread>
 
 #include <QDesktopWidget>
@@ -562,6 +563,9 @@ int main(int argc, char* argv[]) {
 
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
+
+    // Qt changes the locale and causes issues in float conversion using std::to_string() when generating shaders
+    setlocale(LC_ALL, "C");
 
     GMainWindow main_window;
     // After settings have been loaded by GMainWindow, apply the filter
