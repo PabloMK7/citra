@@ -22,9 +22,6 @@ public:
         kFramebuffer_Texture
     };
 
-    RendererBase() : m_current_fps(0), m_current_frame(0) {
-    }
-
     virtual ~RendererBase() {
     }
 
@@ -46,21 +43,24 @@ public:
     // Getter/setter functions:
     // ------------------------
 
-    f32 GetCurrentframe() const {
+    f32 GetCurrentFPS() const {
         return m_current_fps;
     }
 
-    int current_frame() const {
+    int GetCurrentFrame() const {
         return m_current_frame;
+    }
+
+    VideoCore::RasterizerInterface* Rasterizer() const {
+        return rasterizer.get();
     }
 
     void RefreshRasterizerSetting();
 
-    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
-
 protected:
-    f32 m_current_fps;              ///< Current framerate, should be set by the renderer
-    int m_current_frame;            ///< Current frame, should be set by the renderer
+    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
+    f32 m_current_fps   = 0.0f;     ///< Current framerate, should be set by the renderer
+    int m_current_frame = 0;        ///< Current frame, should be set by the renderer
 
 private:
     bool opengl_rasterizer_active = false;
