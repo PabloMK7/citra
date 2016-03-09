@@ -190,13 +190,6 @@ struct OpArg
         return IsSimpleReg() && GetSimpleReg() == reg;
     }
 
-    bool CanDoOpWith(const OpArg &other) const
-    {
-        if (IsSimpleReg()) return true;
-        if (!IsSimpleReg() && !other.IsSimpleReg() && !other.IsImm()) return false;
-        return true;
-    }
-
     int GetImmBits() const
     {
         switch (scale)
