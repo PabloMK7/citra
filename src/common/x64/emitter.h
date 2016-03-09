@@ -274,11 +274,15 @@ constexpr OpArg SImmAuto(s32 imm) {
     return OpArg(imm, (imm >= 128 || imm < -128) ? SCALE_IMM32 : SCALE_IMM8);
 }
 
+template <typename T>
+OpArg ImmPtr(const T* imm)
+{
 #ifdef _ARCH_64
-inline OpArg ImmPtr(const void* imm) {return Imm64((u64)imm);}
+    return Imm64(reinterpret_cast<u64>(imm));
 #else
-inline OpArg ImmPtr(const void* imm) {return Imm32((u32)imm);}
+    return Imm32(reinterpret_cast<u32>(imm));
 #endif
+}
 
 inline u32 PtrOffset(const void* ptr, const void* base)
 {
