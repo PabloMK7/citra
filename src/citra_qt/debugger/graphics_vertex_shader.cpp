@@ -179,9 +179,17 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     AlignToColumn(kOutputColumnWidth);
                     print_input(output, src1, swizzle.negate_src1, SelectorToString(swizzle.src1_selector));
                     AlignToColumn(kInputOperandColumnWidth);
-                    print_input(output, src2, swizzle.negate_src2, SelectorToString(swizzle.src2_selector));
+                    if (src_is_inverted) {
+                      print_input(output, src2, swizzle.negate_src2, SelectorToString(swizzle.src2_selector));
+                    } else {
+                      print_input(output, src2, swizzle.negate_src2, SelectorToString(swizzle.src2_selector), true, instr.mad.AddressRegisterName());
+                    }
                     AlignToColumn(kInputOperandColumnWidth);
-                    print_input(output, src3, swizzle.negate_src3, SelectorToString(swizzle.src3_selector));
+                    if (src_is_inverted) {
+                      print_input(output, src3, swizzle.negate_src3, SelectorToString(swizzle.src3_selector), true, instr.mad.AddressRegisterName());
+                    } else {
+                      print_input(output, src3, swizzle.negate_src3, SelectorToString(swizzle.src3_selector));
+                    }
                     AlignToColumn(kInputOperandColumnWidth);
                     break;
                 }
