@@ -46,11 +46,11 @@ public:
     // Getter/setter functions:
     // ------------------------
 
-    f32 GetCurrentframe() const {
+    f32 GetCurrentFPS() const {
         return m_current_fps;
     }
 
-    int current_frame() const {
+    int GetCurrentFrame() const {
         return m_current_frame;
     }
 
