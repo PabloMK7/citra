@@ -54,11 +54,14 @@ public:
         return m_current_frame;
     }
 
+    VideoCore::RasterizerInterface* Rasterizer() const {
+        return rasterizer.get();
+    }
+
     void RefreshRasterizerSetting();
 
-    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
-
 protected:
+    std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
     f32 m_current_fps;              ///< Current framerate, should be set by the renderer
     int m_current_frame;            ///< Current frame, should be set by the renderer
 

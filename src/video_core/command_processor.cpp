@@ -142,7 +142,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         // Send to renderer
                         using Pica::Shader::OutputVertex;
                         auto AddTriangle = [](const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
-                            VideoCore::g_renderer->rasterizer->AddTriangle(v0, v1, v2);
+                            VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                         };
 
                         g_state.immediate.primitive_assembler.SubmitVertex(output, AddTriangle);
@@ -155,7 +155,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(gpu_mode):
             if (regs.gpu_mode == Regs::GPUMode::Configuring && regs.vs_default_attributes_setup.index == 15) {
                 // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
-                VideoCore::g_renderer->rasterizer->DrawTriangles();
+                VideoCore::g_renderer->Rasterizer()->DrawTriangles();
             }
             break;
 
@@ -396,7 +396,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 using Pica::Shader::OutputVertex;
                 auto AddTriangle = [](
                         const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
-                    VideoCore::g_renderer->rasterizer->AddTriangle(v0, v1, v2);
+                    VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                 };
 
                 primitive_assembler.SubmitVertex(output, AddTriangle);
@@ -407,7 +407,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                           range.second, range.first);
             }
 
-            VideoCore::g_renderer->rasterizer->DrawTriangles();
+            VideoCore::g_renderer->Rasterizer()->DrawTriangles();
 
 #if PICA_DUMP_GEOMETRY
             geometry_dumper.Dump();
@@ -542,7 +542,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             break;
     }
 
-    VideoCore::g_renderer->rasterizer->NotifyPicaRegisterChanged(id);
+    VideoCore::g_renderer->Rasterizer()->NotifyPicaRegisterChanged(id);
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::PicaCommandProcessed, reinterpret_cast<void*>(&id));
