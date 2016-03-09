@@ -445,7 +445,7 @@ static void DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity,
 }
 
 /// Initialize the renderer
-void RendererOpenGL::Init() {
+bool RendererOpenGL::Init() {
     render_window->MakeCurrent();
 
     // TODO: Make frontends initialize this, so they can use gladLoadGLLoader with their own loaders
@@ -462,9 +462,15 @@ void RendererOpenGL::Init() {
     LOG_INFO(Render_OpenGL, "GL_VERSION: %s", glGetString(GL_VERSION));
     LOG_INFO(Render_OpenGL, "GL_VENDOR: %s", glGetString(GL_VENDOR));
     LOG_INFO(Render_OpenGL, "GL_RENDERER: %s", glGetString(GL_RENDERER));
+    if (!GLAD_GL_VERSION_3_3) {
+        return false;
+    }
+
     InitOpenGLObjects();
 
     RefreshRasterizerSetting();
+
+    return true;
 }
 
 /// Shutdown the renderer

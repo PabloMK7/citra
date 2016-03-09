@@ -41,7 +41,7 @@ extern std::atomic<bool> g_shader_jit_enabled;
 void Start();
 
 /// Initialize the video core
-void Init(EmuWindow* emu_window);
+bool Init(EmuWindow* emu_window);
 
 /// Shutdown the video core
 void Shutdown();

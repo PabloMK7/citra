@@ -73,12 +73,11 @@ void Stop() {
 }
 
 /// Initialize the core
-int Init() {
+void Init() {
     g_sys_core = Common::make_unique<ARM_DynCom>(USER32MODE);
     g_app_core = Common::make_unique<ARM_DynCom>(USER32MODE);
 
     LOG_DEBUG(Core, "Initialized OK");
-    return 0;
 }
 
 void Shutdown() {

@@ -38,7 +38,7 @@ public:
     virtual void SetWindow(EmuWindow* window) = 0;
 
     /// Initialize the renderer
-    virtual void Init() = 0;
+    virtual bool Init() = 0;
 
     /// Shutdown the renderer
     virtual void ShutDown() = 0;

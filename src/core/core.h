@@ -52,7 +52,7 @@ void Halt(const char *msg);
 void Stop();
 
 /// Initialize the core
-int Init();
+void Init();
 
 /// Shutdown the core
 void Shutdown();

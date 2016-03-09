@@ -249,22 +249,73 @@ void GMainWindow::OnDisplayTitleBars(bool show)
     }
 }
 
-void GMainWindow::BootGame(const std::string& filename) {
-    LOG_INFO(Frontend, "Citra starting...");
-
+bool GMainWindow::InitializeSystem() {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
         ShutdownGame();
 
     // Initialize the core emulation
-    System::Init(render_window);
+    System::Result system_result = System::Init(render_window);
+    if (System::Result::Success != system_result) {
+        switch (system_result) {
+        case System::Result::ErrorInitVideoCore:
+            QMessageBox::critical(this, tr("Error while starting Citra!"),
+                                  tr("Failed to initialize the video core!\n\n"
+                                     "Please ensure that your GPU supports OpenGL 3.3 and that you have the latest graphics driver."));
+            break;
 
-    // Load the game
-    if (Loader::ResultStatus::Success != Loader::LoadFile(filename)) {
+        default:
+            QMessageBox::critical(this, tr("Error while starting Citra!"),
+                                  tr("Unknown error (please check the log)!"));
+            break;
+        }
+        return false;
+    }
+    return true;
+}
+
+bool GMainWindow::LoadROM(const std::string& filename) {
+    Loader::ResultStatus result = Loader::LoadFile(filename);
+    if (Loader::ResultStatus::Success != result) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
         System::Shutdown();
-        return;
+
+        switch (result) {
+        case Loader::ResultStatus::ErrorEncrypted: {
+            // Build the MessageBox ourselves to have clickable link
+            QMessageBox popup_error;
+            popup_error.setTextFormat(Qt::RichText);
+            popup_error.setWindowTitle(tr("Error while loading ROM!"));
+            popup_error.setText(tr("The game that you are trying to load must be decrypted before being used with Citra.<br/><br/>"
+                                  "For more information on dumping and decrypting games, please see: <a href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
+            popup_error.setIcon(QMessageBox::Critical);
+            popup_error.exec();
+            break;
+        }
+        case Loader::ResultStatus::ErrorInvalidFormat:
+            QMessageBox::critical(this, tr("Error while loading ROM!"),
+                                  tr("The ROM format is not supported."));
+            break;
+        case Loader::ResultStatus::Error:
+
+        default:
+            QMessageBox::critical(this, tr("Error while loading ROM!"),
+                                  tr("Unknown error!"));
+            break;
+        }
+        return false;
     }
+    return true;
+}
+
+void GMainWindow::BootGame(const std::string& filename) {
+    LOG_INFO(Frontend, "Citra starting...");
+
+    if (!InitializeSystem())
+        return;
+
+    if (!LoadROM(filename))
+        return;
 
     // Create and start the emulation thread
     emu_thread = Common::make_unique<EmuThread>(render_window);

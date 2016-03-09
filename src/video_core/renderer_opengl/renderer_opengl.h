@@ -31,7 +31,7 @@ public:
     void SetWindow(EmuWindow* window) override;
 
     /// Initialize the renderer
-    void Init() override;
+    bool Init() override;
 
     /// Shutdown the renderer
     void ShutDown() override;
