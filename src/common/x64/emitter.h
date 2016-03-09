@@ -159,34 +159,35 @@ struct OpArg
 {
     friend class XEmitter;
 
-    OpArg() {}  // dummy op arg, used for storage
-    OpArg(u64 _offset, int _scale, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
+    constexpr OpArg() = default;  // dummy op arg, used for storage
+    constexpr OpArg(u64 offset_, int scale_, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
+        : scale(static_cast<u8>(scale_))
+        , offsetOrBaseReg(static_cast<u16>(rmReg))
+        , indexReg(static_cast<u16>(scaledReg))
+        , offset(offset_)
     {
-        operandReg = 0;
-        scale = (u8)_scale;
-        offsetOrBaseReg = (u16)rmReg;
-        indexReg = (u16)scaledReg;
-        //if scale == 0 never mind offsetting
-        offset = _offset;
     }
-    bool operator==(const OpArg &b) const
+
+    constexpr bool operator==(const OpArg &b) const
     {
-        return operandReg == b.operandReg && scale == b.scale && offsetOrBaseReg == b.offsetOrBaseReg &&
-               indexReg == b.indexReg && offset == b.offset;
+        return operandReg      == b.operandReg      &&
+               scale           == b.scale           &&
+               offsetOrBaseReg == b.offsetOrBaseReg &&
+               indexReg        == b.indexReg        &&
+               offset          == b.offset;
     }
+
     void WriteRex(XEmitter *emit, int opBits, int bits, int customOp = -1) const;
     void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm, int W = 0) const;
     void WriteRest(XEmitter *emit, int extraBytes=0, X64Reg operandReg=INVALID_REG, bool warn_64bit_offset = true) const;
     void WriteSingleByteOp(XEmitter *emit, u8 op, X64Reg operandReg, int bits);
-
     void WriteNormalOp(XEmitter *emit, bool toRM, NormalOp op, const OpArg &operand, int bits) const;
-    bool IsImm() const {return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64;}
-    bool IsSimpleReg() const {return scale == SCALE_NONE;}
-    bool IsSimpleReg(X64Reg reg) const
+
+    constexpr bool IsImm() const { return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64; }
+    constexpr bool IsSimpleReg() const { return scale == SCALE_NONE; }
+    constexpr bool IsSimpleReg(X64Reg reg) const
     {
-        if (!IsSimpleReg())
-            return false;
-        return GetSimpleReg() == reg;
+        return IsSimpleReg() && GetSimpleReg() == reg;
     }
 
     bool CanDoOpWith(const OpArg &other) const
@@ -218,16 +219,15 @@ struct OpArg
         }
     }
 
-    X64Reg GetSimpleReg() const
+    constexpr X64Reg GetSimpleReg() const
     {
-        if (scale == SCALE_NONE)
-            return (X64Reg)offsetOrBaseReg;
-        else
-            return INVALID_REG;
+        return scale == SCALE_NONE
+               ? static_cast<X64Reg>(offsetOrBaseReg)
+               : INVALID_REG;
     }
 
-    u32 GetImmValue() const {
-        return (u32)offset;
+    constexpr u32 GetImmValue() const {
+        return static_cast<u32>(offset);
     }
 
     // For loops.
@@ -236,11 +236,11 @@ struct OpArg
     }
 
 private:
-    u8 scale;
-    u16 offsetOrBaseReg;
-    u16 indexReg;
-    u64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
-    u16 operandReg;
+    u8 scale = 0;
+    u16 offsetOrBaseReg = 0;
+    u16 indexReg = 0;
+    u64 offset = 0;  // use RIP-relative as much as possible - 64-bit immediates are not available.
+    u16 operandReg = 0;
 };
 
 inline OpArg M(const void *ptr) {return OpArg((u64)ptr, (int)SCALE_RIP);}
