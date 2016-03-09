@@ -157,6 +157,8 @@ class XEmitter;
 // RIP addressing does not benefit from micro op fusion on Core arch
 struct OpArg
 {
+    friend class XEmitter;
+
     OpArg() {}  // dummy op arg, used for storage
     OpArg(u64 _offset, int _scale, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
     {
@@ -176,9 +178,6 @@ struct OpArg
     void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm, int W = 0) const;
     void WriteRest(XEmitter *emit, int extraBytes=0, X64Reg operandReg=INVALID_REG, bool warn_64bit_offset = true) const;
     void WriteSingleByteOp(XEmitter *emit, u8 op, X64Reg operandReg, int bits);
-    // This one is public - must be written to
-    u64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
-    u16 operandReg;
 
     void WriteNormalOp(XEmitter *emit, bool toRM, NormalOp op, const OpArg &operand, int bits) const;
     bool IsImm() const {return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64;}
@@ -240,6 +239,8 @@ private:
     u8 scale;
     u16 offsetOrBaseReg;
     u16 indexReg;
+    u64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
+    u16 operandReg;
 };
 
 inline OpArg M(const void *ptr) {return OpArg((u64)ptr, (int)SCALE_RIP);}
