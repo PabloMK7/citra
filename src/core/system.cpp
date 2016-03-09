@@ -29,6 +29,8 @@ Result Init(EmuWindow* emu_window) {
     }
     AudioCore::Init();
     GDBStub::Init();
+
+    return Result::Success;
 }
 
 void Shutdown() {
