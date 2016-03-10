@@ -157,45 +157,37 @@ class XEmitter;
 // RIP addressing does not benefit from micro op fusion on Core arch
 struct OpArg
 {
-    OpArg() {}  // dummy op arg, used for storage
-    OpArg(u64 _offset, int _scale, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
+    friend class XEmitter;
+
+    constexpr OpArg() = default;  // dummy op arg, used for storage
+    constexpr OpArg(u64 offset_, int scale_, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
+        : scale(static_cast<u8>(scale_))
+        , offsetOrBaseReg(static_cast<u16>(rmReg))
+        , indexReg(static_cast<u16>(scaledReg))
+        , offset(offset_)
     {
-        operandReg = 0;
-        scale = (u8)_scale;
-        offsetOrBaseReg = (u16)rmReg;
-        indexReg = (u16)scaledReg;
-        //if scale == 0 never mind offsetting
-        offset = _offset;
     }
-    bool operator==(const OpArg &b) const
+
+    constexpr bool operator==(const OpArg &b) const
     {
-        return operandReg == b.operandReg && scale == b.scale && offsetOrBaseReg == b.offsetOrBaseReg &&
-               indexReg == b.indexReg && offset == b.offset;
+        return operandReg      == b.operandReg      &&
+               scale           == b.scale           &&
+               offsetOrBaseReg == b.offsetOrBaseReg &&
+               indexReg        == b.indexReg        &&
+               offset          == b.offset;
     }
+
     void WriteRex(XEmitter *emit, int opBits, int bits, int customOp = -1) const;
     void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm, int W = 0) const;
     void WriteRest(XEmitter *emit, int extraBytes=0, X64Reg operandReg=INVALID_REG, bool warn_64bit_offset = true) const;
-    void WriteFloatModRM(XEmitter *emit, FloatOp op);
     void WriteSingleByteOp(XEmitter *emit, u8 op, X64Reg operandReg, int bits);
-    // This one is public - must be written to
-    u64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
-    u16 operandReg;
-
     void WriteNormalOp(XEmitter *emit, bool toRM, NormalOp op, const OpArg &operand, int bits) const;
-    bool IsImm() const {return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64;}
-    bool IsSimpleReg() const {return scale == SCALE_NONE;}
-    bool IsSimpleReg(X64Reg reg) const
-    {
-        if (!IsSimpleReg())
-            return false;
-        return GetSimpleReg() == reg;
-    }
 
-    bool CanDoOpWith(const OpArg &other) const
+    constexpr bool IsImm() const { return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64; }
+    constexpr bool IsSimpleReg() const { return scale == SCALE_NONE; }
+    constexpr bool IsSimpleReg(X64Reg reg) const
     {
-        if (IsSimpleReg()) return true;
-        if (!IsSimpleReg() && !other.IsSimpleReg() && !other.IsImm()) return false;
-        return true;
+        return IsSimpleReg() && GetSimpleReg() == reg;
     }
 
     int GetImmBits() const
@@ -220,16 +212,15 @@ struct OpArg
         }
     }
 
-    X64Reg GetSimpleReg() const
+    constexpr X64Reg GetSimpleReg() const
     {
-        if (scale == SCALE_NONE)
-            return (X64Reg)offsetOrBaseReg;
-        else
-            return INVALID_REG;
+        return scale == SCALE_NONE
+               ? static_cast<X64Reg>(offsetOrBaseReg)
+               : INVALID_REG;
     }
 
-    u32 GetImmValue() const {
-        return (u32)offset;
+    constexpr u32 GetImmValue() const {
+        return static_cast<u32>(offset);
     }
 
     // For loops.
@@ -238,56 +229,60 @@ struct OpArg
     }
 
 private:
-    u8 scale;
-    u16 offsetOrBaseReg;
-    u16 indexReg;
+    u8 scale = 0;
+    u16 offsetOrBaseReg = 0;
+    u16 indexReg = 0;
+    u64 offset = 0;  // use RIP-relative as much as possible - 64-bit immediates are not available.
+    u16 operandReg = 0;
 };
 
-inline OpArg M(const void *ptr) {return OpArg((u64)ptr, (int)SCALE_RIP);}
 template <typename T>
-inline OpArg M(const T *ptr)    {return OpArg((u64)(const void *)ptr, (int)SCALE_RIP);}
-inline OpArg R(X64Reg value)    {return OpArg(0, SCALE_NONE, value);}
-inline OpArg MatR(X64Reg value) {return OpArg(0, SCALE_ATREG, value);}
+inline OpArg M(const T *ptr)       { return OpArg(reinterpret_cast<u64>(ptr), static_cast<int>(SCALE_RIP)); }
+constexpr OpArg R(X64Reg value)    { return OpArg(0, SCALE_NONE, value); }
+constexpr OpArg MatR(X64Reg value) { return OpArg(0, SCALE_ATREG, value); }
 
-inline OpArg MDisp(X64Reg value, int offset)
+constexpr OpArg MDisp(X64Reg value, int offset)
 {
-    return OpArg((u32)offset, SCALE_ATREG, value);
+    return OpArg(static_cast<u32>(offset), SCALE_ATREG, value);
 }
 
-inline OpArg MComplex(X64Reg base, X64Reg scaled, int scale, int offset)
+constexpr OpArg MComplex(X64Reg base, X64Reg scaled, int scale, int offset)
 {
     return OpArg(offset, scale, base, scaled);
 }
 
-inline OpArg MScaled(X64Reg scaled, int scale, int offset)
+constexpr OpArg MScaled(X64Reg scaled, int scale, int offset)
 {
-    if (scale == SCALE_1)
-        return OpArg(offset, SCALE_ATREG, scaled);
-    else
-        return OpArg(offset, scale | 0x20, RAX, scaled);
+    return scale == SCALE_1
+           ? OpArg(offset, SCALE_ATREG, scaled)
+           : OpArg(offset, scale | 0x20, RAX, scaled);
 }
 
-inline OpArg MRegSum(X64Reg base, X64Reg offset)
+constexpr OpArg MRegSum(X64Reg base, X64Reg offset)
 {
     return MComplex(base, offset, 1, 0);
 }
 
-inline OpArg Imm8 (u8 imm)  {return OpArg(imm, SCALE_IMM8);}
-inline OpArg Imm16(u16 imm) {return OpArg(imm, SCALE_IMM16);} //rarely used
-inline OpArg Imm32(u32 imm) {return OpArg(imm, SCALE_IMM32);}
-inline OpArg Imm64(u64 imm) {return OpArg(imm, SCALE_IMM64);}
-inline OpArg UImmAuto(u32 imm) {
+constexpr OpArg Imm8 (u8 imm)  { return OpArg(imm, SCALE_IMM8);  }
+constexpr OpArg Imm16(u16 imm) { return OpArg(imm, SCALE_IMM16); } //rarely used
+constexpr OpArg Imm32(u32 imm) { return OpArg(imm, SCALE_IMM32); }
+constexpr OpArg Imm64(u64 imm) { return OpArg(imm, SCALE_IMM64); }
+constexpr OpArg UImmAuto(u32 imm) {
     return OpArg(imm, imm >= 128 ? SCALE_IMM32 : SCALE_IMM8);
 }
-inline OpArg SImmAuto(s32 imm) {
+constexpr OpArg SImmAuto(s32 imm) {
     return OpArg(imm, (imm >= 128 || imm < -128) ? SCALE_IMM32 : SCALE_IMM8);
 }
 
+template <typename T>
+OpArg ImmPtr(const T* imm)
+{
 #ifdef _ARCH_64
-inline OpArg ImmPtr(const void* imm) {return Imm64((u64)imm);}
+    return Imm64(reinterpret_cast<u64>(imm));
 #else
-inline OpArg ImmPtr(const void* imm) {return Imm32((u32)imm);}
+    return Imm32(reinterpret_cast<u32>(imm));
 #endif
+}
 
 inline u32 PtrOffset(const void* ptr, const void* base)
 {
