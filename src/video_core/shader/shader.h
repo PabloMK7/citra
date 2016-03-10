@@ -82,7 +82,7 @@ struct ShaderSetup {
     struct {
         // The float uniforms are accessed by the shader JIT using SSE instructions, and are
         // therefore required to be 16-byte aligned.
-        Math::Vec4<float24> MEMORY_ALIGNED16(f[96]);
+        alignas(16) Math::Vec4<float24> f[96];
 
         std::array<bool, 16> b;
         std::array<Math::Vec4<u8>, 4> i;
@@ -276,9 +276,9 @@ struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
-        Math::Vec4<float24> MEMORY_ALIGNED16(input[16]);
-        Math::Vec4<float24> MEMORY_ALIGNED16(output[16]);
-        Math::Vec4<float24> MEMORY_ALIGNED16(temporary[16]);
+        alignas(16) Math::Vec4<float24> input[16];
+        alignas(16) Math::Vec4<float24> output[16];
+        alignas(16) Math::Vec4<float24> temporary[16];
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
 
