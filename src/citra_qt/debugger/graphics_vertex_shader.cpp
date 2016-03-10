@@ -498,8 +498,8 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     // Reload widget state
     for (int attr = 0; attr < num_attributes; ++attr) {
         unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
-        input_data_mapping[source_attr]->setText(QString("-> v%1").arg(attr));
-        input_data_container[source_attr]->setVisible(true);
+        input_data_mapping[attr]->setText(QString("-> v%1").arg(source_attr));
+        input_data_container[attr]->setVisible(true);
     }
     // Only show input attributes which are used as input to the shader
     for (unsigned int attr = num_attributes; attr < 16; ++attr) {
