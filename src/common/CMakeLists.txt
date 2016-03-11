@@ -22,6 +22,7 @@ set(SRCS
             )
 
 set(HEADERS
+            alignment.h
             assert.h
             bit_field.h
             bit_set.h
