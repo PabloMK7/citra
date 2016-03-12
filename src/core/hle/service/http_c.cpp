@@ -49,6 +49,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00250080, nullptr,                 "AddDefaultCert"},
     {0x00260080, nullptr,                 "SelectRootCertChain"},
     {0x002700C4, nullptr,                 "SetClientCert"},
+    {0x002B0080, nullptr,                 "SetSSLOpt"},
+    {0x002C0080, nullptr,                 "SetSSLClearOpt"},
     {0x002D0000, nullptr,                 "CreateRootCertChain"},
     {0x002E0040, nullptr,                 "DestroyRootCertChain"},
     {0x002F0082, nullptr,                 "RootCertChainAddCert"},
