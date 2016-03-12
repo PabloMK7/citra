@@ -320,7 +320,7 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void SignalInterrupt(InterruptId interrupt_id) {
-    if (0 == g_interrupt_event) {
+    if (nullptr == g_interrupt_event) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
