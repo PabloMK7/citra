@@ -708,7 +708,7 @@ static void GetPriority(Service::Interface* self) {
 }
 
 /**
- * FS_User::InitializeWithSdkVersion service function.
+ * FS_User::GetArchiveResource service function.
  *  Inputs:
  *      0 : 0x08490040
  *      1 : Media type
