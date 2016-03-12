@@ -742,7 +742,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000C0082, Shutdown,                      "Shutdown"},
     {0x000D0082, nullptr,                       "GetHostByName"},
     {0x000E00C2, nullptr,                       "GetHostByAddr"},
-    {0x000F0106, nullptr,                       "unknown_resolve_ip"},
+    {0x000F0106, nullptr,                       "GetAddrInfo"},
+    {0x00100102, nullptr,                       "GetNameInfo"},
     {0x00110102, nullptr,                       "GetSockOpt"},
     {0x00120104, nullptr,                       "SetSockOpt"},
     {0x001300C2, Fcntl,                         "Fcntl"},
@@ -759,6 +760,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001E0040, nullptr,                       "ICMPClose"},
     {0x001F0040, nullptr,                       "GetResolverInfo"},
     {0x00210002, nullptr,                       "CloseSockets"},
+    {0x00230040, nullptr,                       "AddGlobalSocket"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
