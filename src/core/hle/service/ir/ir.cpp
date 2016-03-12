@@ -99,8 +99,8 @@ void Init() {
     transfer_shared_memory = nullptr;
 
     // Create event handle(s)
-    handle_event  = Event::Create(RESETTYPE_ONESHOT, "IR:HandleEvent");
-    conn_status_event = Event::Create(RESETTYPE_ONESHOT, "IR:ConnectionStatusEvent");
+    handle_event  = Event::Create(ResetType::OneShot, "IR:HandleEvent");
+    conn_status_event = Event::Create(ResetType::OneShot, "IR:ConnectionStatusEvent");
 }
 
 void Shutdown() {

@@ -43,7 +43,7 @@ bool Timer::ShouldWait() {
 void Timer::Acquire() {
     ASSERT_MSG( !ShouldWait(), "object unavailable!");
 
-    if (reset_type == RESETTYPE_ONESHOT)
+    if (reset_type == ResetType::OneShot)
         signaled = false;
 }
 

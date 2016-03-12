@@ -20,11 +20,10 @@ struct PageInfo {
     u32 flags;
 };
 
-enum ResetType {
-    RESETTYPE_ONESHOT,
-    RESETTYPE_STICKY,
-    RESETTYPE_PULSE,
-    RESETTYPE_MAX_BIT = (1u << 31),
+enum class ResetType {
+    OneShot,
+    Sticky,
+    Pulse,
 };
 
 enum ArbitrationType {

@@ -138,7 +138,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    handle_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "NWM_UDS::handle_event");
+    handle_event = Kernel::Event::Create(ResetType::OneShot, "NWM_UDS::handle_event");
 
     Register(FunctionTable);
 }

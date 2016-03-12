@@ -457,7 +457,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    semaphore_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "DSP_DSP::semaphore_event");
+    semaphore_event = Kernel::Event::Create(ResetType::OneShot, "DSP_DSP::semaphore_event");
     read_pipe_count = 0;
 
     Register(FunctionTable);

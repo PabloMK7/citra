@@ -293,10 +293,10 @@ void Init() {
     AddService(new CAM_S_Interface);
     AddService(new CAM_U_Interface);
 
-    completion_event_cam1 = Kernel::Event::Create(RESETTYPE_ONESHOT, "CAM_U::completion_event_cam1");
-    completion_event_cam2 = Kernel::Event::Create(RESETTYPE_ONESHOT, "CAM_U::completion_event_cam2");
-    interrupt_error_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "CAM_U::interrupt_error_event");
-    vsync_interrupt_error_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "CAM_U::vsync_interrupt_error_event");
+    completion_event_cam1 = Kernel::Event::Create(ResetType::OneShot, "CAM_U::completion_event_cam1");
+    completion_event_cam2 = Kernel::Event::Create(ResetType::OneShot, "CAM_U::completion_event_cam2");
+    interrupt_error_event = Kernel::Event::Create(ResetType::OneShot, "CAM_U::interrupt_error_event");
+    vsync_interrupt_error_event = Kernel::Event::Create(ResetType::OneShot, "CAM_U::vsync_interrupt_error_event");
 }
 
 void Shutdown() {

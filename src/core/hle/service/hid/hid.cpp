@@ -201,11 +201,11 @@ void Init() {
     next_touch_index = 0;
 
     // Create event handles
-    event_pad_or_touch_1 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch1");
-    event_pad_or_touch_2 = Event::Create(RESETTYPE_ONESHOT, "HID:EventPadOrTouch2");
-    event_accelerometer  = Event::Create(RESETTYPE_ONESHOT, "HID:EventAccelerometer");
-    event_gyroscope      = Event::Create(RESETTYPE_ONESHOT, "HID:EventGyroscope");
-    event_debug_pad      = Event::Create(RESETTYPE_ONESHOT, "HID:EventDebugPad");
+    event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
+    event_pad_or_touch_2 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch2");
+    event_accelerometer  = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
+    event_gyroscope      = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
+    event_debug_pad      = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
 }
 
 void Shutdown() {

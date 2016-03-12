@@ -424,7 +424,7 @@ const Interface::FunctionInfo FunctionTable[] = {
 // Interface class
 
 Interface::Interface() {
-    completion_event = Kernel::Event::Create(RESETTYPE_ONESHOT, "Y2R:Completed");
+    completion_event = Kernel::Event::Create(ResetType::OneShot, "Y2R:Completed");
     std::memset(&conversion, 0, sizeof(conversion));
 
     Register(FunctionTable);
