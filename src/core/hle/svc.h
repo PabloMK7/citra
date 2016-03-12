@@ -26,15 +26,6 @@ enum class ResetType {
     Pulse,
 };
 
-enum ArbitrationType {
-    ARBITRATIONTYPE_SIGNAL,
-    ARBITRATIONTYPE_WAIT_IF_LESS_THAN,
-    ARBITRATIONTYPE_DECREMENT_AND_WAIT_IF_LESS_THAN,
-    ARBITRATIONTYPE_WAIT_IF_LESS_THAN_WITH_TIMEOUT,
-    ARBITRATIONTYPE_DECREMENT_AND_WAIT_IF_LESS_THAN_WITH_TIMEOUT,
-    ARBITRATIONTYPE_MAX_BIT = (1u << 31)
-};
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SVC
 
