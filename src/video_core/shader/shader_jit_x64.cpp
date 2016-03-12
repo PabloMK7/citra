@@ -789,7 +789,7 @@ CompiledShader* JitCompiler::Compile() {
 }
 
 JitCompiler::JitCompiler() {
-    AllocCodeSpace(1024 * 1024 * 4);
+    AllocCodeSpace(jit_cache_size);
 }
 
 void JitCompiler::Clear() {

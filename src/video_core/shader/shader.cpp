@@ -32,6 +32,12 @@ namespace Shader {
 static std::unordered_map<u64, CompiledShader*> shader_map;
 static JitCompiler jit;
 static CompiledShader* jit_shader;
+
+static void ClearCache() {
+    shader_map.clear();
+    jit.Clear();
+    LOG_INFO(HW_GPU, "Shader JIT cache cleared");
+}
 #endif // ARCHITECTURE_x86_64
 
 void Setup(UnitState<false>& state) {
@@ -45,6 +51,12 @@ void Setup(UnitState<false>& state) {
         if (iter != shader_map.end()) {
             jit_shader = iter->second;
         } else {
+            // Check if remaining JIT code space is enough for at least one more (massive) shader
+            if (jit.GetSpaceLeft() < jit_shader_size) {
+                // If not, clear the cache of all previously compiled shaders
+                ClearCache();
+            }
+
             jit_shader = jit.Compile();
             shader_map.emplace(cache_key, jit_shader);
         }
@@ -54,7 +66,7 @@ void Setup(UnitState<false>& state) {
 
 void Shutdown() {
 #ifdef ARCHITECTURE_x86_64
-    shader_map.clear();
+    ClearCache();
 #endif // ARCHITECTURE_x86_64
 }
 

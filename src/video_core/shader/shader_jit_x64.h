@@ -19,6 +19,11 @@ namespace Pica {
 
 namespace Shader {
 
+/// Memory needed to be available to compile the next shader (otherwise, clear the cache)
+constexpr size_t jit_shader_size = 1024 * 512;
+/// Memory allocated for the JIT code space cache
+constexpr size_t jit_cache_size = 1024 * 1024 * 8;
+
 using CompiledShader = void(void* registers);
 
 /**
