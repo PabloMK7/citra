@@ -12,6 +12,7 @@
 
 #include "core/core_timing.h"
 #include "core/hle/applets/applet.h"
+#include "core/hle/applets/mii_selector.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
@@ -47,7 +48,12 @@ ResultCode Applet::Create(Service::APT::AppletId id) {
     case Service::APT::AppletId::SoftwareKeyboard2:
         applets[id] = std::make_shared<SoftwareKeyboard>(id);
         break;
+    case Service::APT::AppletId::Ed1:
+    case Service::APT::AppletId::Ed2:
+        applets[id] = std::make_shared<MiiSelector>(id);
+        break;
     default:
+        LOG_ERROR(Service_APT, "Could not create applet %u", id);
         // TODO(Subv): Find the right error code
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotSupported, ErrorLevel::Permanent);
     }
