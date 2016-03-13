@@ -7,9 +7,15 @@
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/svc.h"
 
 namespace Kernel {
+
+enum class ResetType {
+    OneShot,
+    Sticky,
+    Pulse,
+};
+
 
 class Event final : public WaitObject {
 public:

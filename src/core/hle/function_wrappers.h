@@ -10,6 +10,7 @@
 #include "core/memory.h"
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
+#include "core/hle/svc.h"
 
 namespace HLE {
 
