@@ -53,9 +53,9 @@ typedef u32 PAddr; ///< Represents a pointer in the ARM11 physical address space
 // An inheritable class to disallow the copy constructor and operator= functions
 class NonCopyable {
 protected:
-    NonCopyable() = default;
+    constexpr NonCopyable() = default;
     ~NonCopyable() = default;
 
-    NonCopyable(NonCopyable&) = delete;
-    NonCopyable& operator=(NonCopyable&) = delete;
+    NonCopyable(const NonCopyable&) = delete;
+    NonCopyable& operator=(const NonCopyable&) = delete;
 };
