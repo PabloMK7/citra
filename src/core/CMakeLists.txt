@@ -87,7 +87,8 @@ set(SRCS
             hle/service/ir/ir_user.cpp
             hle/service/ldr_ro.cpp
             hle/service/mic_u.cpp
-            hle/service/ndm_u.cpp
+            hle/service/ndm/ndm.cpp
+            hle/service/ndm/ndm_u.cpp
             hle/service/news/news.cpp
             hle/service/news/news_s.cpp
             hle/service/news/news_u.cpp
@@ -218,7 +219,8 @@ set(HEADERS
             hle/service/ir/ir_user.h
             hle/service/ldr_ro.h
             hle/service/mic_u.h
-            hle/service/ndm_u.h
+            hle/service/ndm/ndm.h
+            hle/service/ndm/ndm_u.h
             hle/service/news/news.h
             hle/service/news/news_s.h
             hle/service/news/news_u.h
