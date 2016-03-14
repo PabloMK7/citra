@@ -117,8 +117,8 @@ struct Regs {
     INSERT_PADDING_WORDS(0x11);
 
     union {
-        BitField< 0, 16, u32> x;
-        BitField<16, 16, u32> y;
+        BitField< 0, 10, s32> x;
+        BitField<16, 10, s32> y;
     } viewport_corner;
 
     INSERT_PADDING_WORDS(0x17);
