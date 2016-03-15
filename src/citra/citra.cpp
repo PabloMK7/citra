@@ -19,6 +19,8 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
+#include "common/make_unique.h"
+#include "common/scope_exit.h"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -64,6 +66,7 @@ int main(int argc, char **argv) {
     Log::SetFilter(&log_filter);
 
     MicroProfileOnThreadCreate("EmuThread");
+    SCOPE_EXIT({ MicroProfileShutdown(); });
 
     if (boot_filename.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
@@ -76,12 +79,13 @@ int main(int argc, char **argv) {
     GDBStub::ToggleServer(Settings::values.use_gdbstub);
     GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
-    EmuWindow_SDL2* emu_window = new EmuWindow_SDL2;
+    std::unique_ptr<EmuWindow_SDL2> emu_window = Common::make_unique<EmuWindow_SDL2>();
 
     VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
     VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;
 
-    System::Init(emu_window);
+    System::Init(emu_window.get());
+    SCOPE_EXIT({ System::Shutdown(); });
 
     Loader::ResultStatus load_result = Loader::LoadFile(boot_filename);
     if (Loader::ResultStatus::Success != load_result) {
@@ -92,12 +96,6 @@ int main(int argc, char **argv) {
     while (emu_window->IsOpen()) {
         Core::RunLoop();
     }
-
-    System::Shutdown();
-
-    delete emu_window;
-
-    MicroProfileShutdown();
 
     return 0;
 }
