@@ -160,40 +160,41 @@ void JitCompiler::Compile_SwizzleSrc(Instruction instr, unsigned src_num, Source
     ASSERT_MSG(src_offset == src_offset_disp, "Source register offset too large for int type");
 
     unsigned operand_desc_id;
+
+    const bool is_inverted = (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
+
+    unsigned address_register_index;
+    unsigned offset_src;
+
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
         instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI) {
-        // The MAD and MADI instructions do not use the address offset registers, so loading the
-        // source is a bit simpler here
-
         operand_desc_id = instr.mad.operand_desc_id;
-
-        // Load the source
-        MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
+        offset_src = is_inverted ? 3 : 2;
+        address_register_index = instr.mad.address_register_index;
     } else {
         operand_desc_id = instr.common.operand_desc_id;
+        offset_src = is_inverted ? 2 : 1;
+        address_register_index = instr.common.address_register_index;
+    }
 
-        const bool is_inverted = (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
-        unsigned offset_src = is_inverted ? 2 : 1;
-
-        if (src_num == offset_src && instr.common.address_register_index != 0) {
-            switch (instr.common.address_register_index) {
-            case 1: // address offset 1
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, SCALE_1, src_offset_disp));
-                break;
-            case 2: // address offset 2
-                MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, SCALE_1, src_offset_disp));
-                break;
-            case 3: // address offset 3
-                MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, SCALE_1, src_offset_disp));
-                break;
-            default:
-                UNREACHABLE();
-                break;
-            }
-        } else {
-            // Load the source
-            MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
+    if (src_num == offset_src && address_register_index != 0) {
+        switch (address_register_index) {
+        case 1: // address offset 1
+            MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, SCALE_1, src_offset_disp));
+            break;
+        case 2: // address offset 2
+            MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, SCALE_1, src_offset_disp));
+            break;
+        case 3: // address offset 3
+            MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, SCALE_1, src_offset_disp));
+            break;
+        default:
+            UNREACHABLE();
+            break;
         }
+    } else {
+        // Load the source
+        MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
     }
 
     SwizzlePattern swiz = { g_state.vs.swizzle_data[operand_desc_id] };
