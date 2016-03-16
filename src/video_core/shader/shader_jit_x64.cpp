@@ -645,7 +645,8 @@ void JitCompiler::Compile_MAD(Instruction instr) {
 }
 
 void JitCompiler::Compile_IF(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards if-statements not supported");
+    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards if-statements (%d -> %d) not supported",
+            *offset_ptr, instr.flow_control.dest_offset.Value());
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -676,7 +677,8 @@ void JitCompiler::Compile_IF(Instruction instr) {
 }
 
 void JitCompiler::Compile_LOOP(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards loops not supported");
+    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards loops (%d -> %d) not supported",
+            *offset_ptr, instr.flow_control.dest_offset.Value());
     ASSERT_MSG(!looping, "Nested loops not supported");
 
     looping = true;
@@ -704,7 +706,8 @@ void JitCompiler::Compile_LOOP(Instruction instr) {
 }
 
 void JitCompiler::Compile_JMP(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards jumps not supported");
+    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards jumps (%d -> %d) not supported",
+            *offset_ptr, instr.flow_control.dest_offset.Value());
 
     if (instr.opcode.Value() == OpCode::Id::JMPC)
         Compile_EvaluateCondition(instr);
@@ -748,7 +751,7 @@ void JitCompiler::Compile_NextInstr(unsigned* offset) {
     } else {
         // Unhandled instruction
         LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)",
-                     instr.opcode.Value().EffectiveOpCode(), instr.hex);
+                instr.opcode.Value().EffectiveOpCode(), instr.hex);
     }
 }
 
@@ -787,7 +790,7 @@ CompiledShader* JitCompiler::Compile() {
 }
 
 JitCompiler::JitCompiler() {
-    AllocCodeSpace(1024 * 1024 * 4);
+    AllocCodeSpace(jit_cache_size);
 }
 
 void JitCompiler::Clear() {

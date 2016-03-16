@@ -32,6 +32,12 @@ namespace Shader {
 static std::unordered_map<u64, CompiledShader*> shader_map;
 static JitCompiler jit;
 static CompiledShader* jit_shader;
+
+static void ClearCache() {
+    shader_map.clear();
+    jit.Clear();
+    LOG_INFO(HW_GPU, "Shader JIT cache cleared");
+}
 #endif // ARCHITECTURE_x86_64
 
 void Setup(UnitState<false>& state) {
@@ -45,6 +51,12 @@ void Setup(UnitState<false>& state) {
         if (iter != shader_map.end()) {
             jit_shader = iter->second;
         } else {
+            // Check if remaining JIT code space is enough for at least one more (massive) shader
+            if (jit.GetSpaceLeft() < jit_shader_size) {
+                // If not, clear the cache of all previously compiled shaders
+                ClearCache();
+            }
+
             jit_shader = jit.Compile();
             shader_map.emplace(cache_key, jit_shader);
         }
@@ -54,7 +66,7 @@ void Setup(UnitState<false>& state) {
 
 void Shutdown() {
 #ifdef ARCHITECTURE_x86_64
-    shader_map.clear();
+    ClearCache();
 #endif // ARCHITECTURE_x86_64
 }
 
@@ -135,7 +147,7 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
             std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
     }
 
-    LOG_TRACE(Render_Software, "Output vertex: pos(%.2f, %.2f, %.2f, %.2f), quat(%.2f, %.2f, %.2f, %.2f), "
+    LOG_TRACE(HW_GPU, "Output vertex: pos(%.2f, %.2f, %.2f, %.2f), quat(%.2f, %.2f, %.2f, %.2f), "
         "col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f), view(%.2f, %.2f, %.2f)",
         ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
         ret.quat.x.ToFloat32(), ret.quat.y.ToFloat32(), ret.quat.z.ToFloat32(), ret.quat.w.ToFloat32(),
