@@ -1225,13 +1225,13 @@ struct Regs {
         return sizeof(Regs) / sizeof(u32);
     }
 
-    u32& operator [] (int index) const {
-        u32* content = (u32*)this;
+    const u32& operator [] (int index) const {
+        const u32* content = reinterpret_cast<const u32*>(this);
         return content[index];
     }
 
     u32& operator [] (int index) {
-        u32* content = (u32*)this;
+        u32* content = reinterpret_cast<u32*>(this);
         return content[index];
     }
 
