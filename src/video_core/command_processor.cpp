@@ -234,7 +234,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             const auto& index_info = regs.index_array;
             const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
-            const u16* index_address_16 = (u16*)index_address_8;
+            const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
             bool index_u16 = index_info.format != 0;
 
 #if PICA_DUMP_GEOMETRY
@@ -345,10 +345,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                         : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
                                 }
 
-                                const float srcval = (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *(s8*)srcdata :
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *(u8*)srcdata :
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *(s16*)srcdata :
-                                    *(float*)srcdata;
+                                const float srcval =
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE)  ? *reinterpret_cast<const s8*>(srcdata) :
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *reinterpret_cast<const u8*>(srcdata) :
+                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *reinterpret_cast<const s16*>(srcdata) :
+                                    *reinterpret_cast<const float*>(srcdata);
 
                                 input.attr[i][comp] = float24::FromFloat32(srcval);
                                 LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",

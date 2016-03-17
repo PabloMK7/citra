@@ -117,13 +117,13 @@ void GeometryDumper::Dump() {
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
 {
     struct StuffToWrite {
-        u8* pointer;
+        const u8* pointer;
         u32 size;
     };
     std::vector<StuffToWrite> writing_queue;
     u32 write_offset = 0;
 
-    auto QueueForWriting = [&writing_queue,&write_offset](u8* pointer, u32 size) {
+    auto QueueForWriting = [&writing_queue,&write_offset](const u8* pointer, u32 size) {
         writing_queue.push_back({pointer, size});
         u32 old_write_offset = write_offset;
         write_offset += size;
@@ -228,27 +228,27 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     DVLPHeader dvlp{ DVLPHeader::MAGIC_WORD };
     DVLEHeader dvle{ DVLEHeader::MAGIC_WORD };
 
-    QueueForWriting((u8*)&dvlb, sizeof(dvlb));
-    u32 dvlp_offset = QueueForWriting((u8*)&dvlp, sizeof(dvlp));
-    dvlb.dvle_offset = QueueForWriting((u8*)&dvle, sizeof(dvle));
+    QueueForWriting(reinterpret_cast<const u8*>(&dvlb), sizeof(dvlb));
+    u32 dvlp_offset = QueueForWriting(reinterpret_cast<const u8*>(&dvlp), sizeof(dvlp));
+    dvlb.dvle_offset = QueueForWriting(reinterpret_cast<const u8*>(&dvle), sizeof(dvle));
 
     // TODO: Reduce the amount of binary code written to relevant portions
     dvlp.binary_offset = write_offset - dvlp_offset;
     dvlp.binary_size_words = setup.program_code.size();
-    QueueForWriting((u8*)setup.program_code.data(), setup.program_code.size() * sizeof(u32));
+    QueueForWriting(reinterpret_cast<const u8*>(setup.program_code.data()), setup.program_code.size() * sizeof(u32));
 
     dvlp.swizzle_info_offset = write_offset - dvlp_offset;
     dvlp.swizzle_info_num_entries = setup.swizzle_data.size();
     u32 dummy = 0;
     for (unsigned int i = 0; i < setup.swizzle_data.size(); ++i) {
-        QueueForWriting((u8*)&setup.swizzle_data[i], sizeof(setup.swizzle_data[i]));
-        QueueForWriting((u8*)&dummy, sizeof(dummy));
+        QueueForWriting(reinterpret_cast<const u8*>(&setup.swizzle_data[i]), sizeof(setup.swizzle_data[i]));
+        QueueForWriting(reinterpret_cast<const u8*>(&dummy), sizeof(dummy));
     }
 
     dvle.main_offset_words = config.main_offset;
     dvle.output_register_table_offset = write_offset - dvlb.dvle_offset;
     dvle.output_register_table_size = static_cast<u32>(output_info_table.size());
-    QueueForWriting((u8*)output_info_table.data(), static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
+    QueueForWriting(reinterpret_cast<const u8*>(output_info_table.data()), static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
 
     // TODO: Create a label table for "main"
 
@@ -292,14 +292,14 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     dvle.constant_table_offset = write_offset - dvlb.dvle_offset;
     dvle.constant_table_size = constant_table.size();
     for (const auto& constant : constant_table) {
-        QueueForWriting((uint8_t*)&constant, sizeof(constant));
+        QueueForWriting(reinterpret_cast<const u8*>(&constant), sizeof(constant));
     }
 
     // Write data to file
     std::ofstream file(filename, std::ios_base::out | std::ios_base::binary);
 
-    for (auto& chunk : writing_queue) {
-        file.write((char*)chunk.pointer, chunk.size);
+    for (const auto& chunk : writing_queue) {
+        file.write(reinterpret_cast<const char*>(chunk.pointer), chunk.size);
     }
 }
 
