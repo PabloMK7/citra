@@ -409,7 +409,7 @@ void RunInterpreter(UnitState<Debug>& state) {
         {
             if ((instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD) ||
                 (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI)) {
-                const SwizzlePattern& swizzle = *(SwizzlePattern*)&swizzle_data[instr.mad.operand_desc_id];
+                const SwizzlePattern& swizzle = *reinterpret_cast<const SwizzlePattern*>(&swizzle_data[instr.mad.operand_desc_id]);
 
                 bool is_inverted = (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MADI);
 
