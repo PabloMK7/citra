@@ -741,7 +741,9 @@ void JitCompiler::Compile_Block(unsigned end) {
 void JitCompiler::Compile_NextInstr(unsigned* offset) {
     offset_ptr = offset;
 
-    Instruction instr = *(Instruction*)&g_state.vs.program_code[(*offset_ptr)++];
+    Instruction instr;
+    std::memcpy(&instr, &g_state.vs.program_code[(*offset_ptr)++], sizeof(Instruction));
+
     OpCode::Id opcode = instr.opcode.Value();
     auto instr_func = instr_table[static_cast<unsigned>(opcode)];
 
