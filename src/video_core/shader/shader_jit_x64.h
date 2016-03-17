@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <set>
+#include <utility>
+
 #include <nihstro/shader_bytecode.h>
 
 #include "common/x64/emitter.h"
@@ -66,8 +69,9 @@ public:
     void Compile_MAD(Instruction instr);
 
 private:
+
     void Compile_Block(unsigned end);
-    void Compile_NextInstr(unsigned* offset);
+    void Compile_NextInstr();
 
     void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, Gen::X64Reg dest);
     void Compile_DestEnable(Instruction instr, Gen::X64Reg dest);
@@ -81,13 +85,31 @@ private:
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
 
+    /**
+     * Emits the code to conditionally return from a subroutine envoked by the `CALL` instruction.
+     */
+    void Compile_Return();
+
     BitSet32 PersistentCallerSavedRegs();
 
-    /// Pointer to the variable that stores the current Pica code offset. Used to handle nested code blocks.
-    unsigned* offset_ptr = nullptr;
+    /**
+     * Analyzes the entire shader program for `CALL` instructions before emitting any code,
+     * identifying the locations where a return needs to be inserted.
+     */
+    void FindReturnOffsets();
 
-    /// Set to true if currently in a loop, used to check for the existence of nested loops
-    bool looping = false;
+    /// Mapping of Pica VS instructions to pointers in the emitted code
+    std::array<const u8*, 1024> code_ptr;
+
+    /// Offsets in code where a return needs to be inserted
+    std::set<unsigned> return_offsets;
+
+    unsigned last_program_counter;  ///< Offset of the most recent instruction decoded
+    unsigned program_counter;       ///< Offset of the next instruction to decode
+    bool looping = false;           ///< True if compiling a loop, used to check for nested loops
+
+    /// Branches that need to be fixed up once the entire shader program is compiled
+    std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;
 };
 
 } // Shader

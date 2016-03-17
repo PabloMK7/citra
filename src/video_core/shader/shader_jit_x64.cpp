@@ -138,6 +138,15 @@ static const u8 NO_SRC_REG_SWIZZLE = 0x1b;
 static const u8 NO_DEST_REG_MASK = 0xf;
 
 /**
+ * Get the vertex shader instruction for a given offset in the current shader program
+ * @param offset Offset in the current shader program of the instruction
+ * @return Instruction at the specified offset
+ */
+static Instruction GetVertexShaderInstruction(size_t offset) {
+    return { g_state.vs.program_code[offset] };
+}
+
+/**
  * Loads and swizzles a source register into the specified XMM register.
  * @param instr VS instruction, used for determining how to load the source register
  * @param src_num Number indicating which source register to load (1 = src1, 2 = src2, 3 = src3)
@@ -564,10 +573,23 @@ void JitCompiler::Compile_END(Instruction instr) {
 }
 
 void JitCompiler::Compile_CALL(Instruction instr) {
-    unsigned offset = instr.flow_control.dest_offset;
-    while (offset < (instr.flow_control.dest_offset + instr.flow_control.num_instructions)) {
-        Compile_NextInstr(&offset);
-    }
+    // Need to advance the return address past the proceeding instructions, this is the number of bytes to skip
+    constexpr unsigned SKIP = 21;
+    const uintptr_t start = reinterpret_cast<uintptr_t>(GetCodePtr());
+
+    // Push return address - not using CALL because we also want to push the offset of the return before jumping
+    MOV(64, R(RAX), ImmPtr(GetCodePtr() + SKIP));
+    PUSH(RAX);
+
+    // Push offset of the return
+    PUSH(32, Imm32(instr.flow_control.dest_offset + instr.flow_control.num_instructions));
+
+    // Jump
+    FixupBranch b = J(true);
+    fixup_branches.push_back({ b, instr.flow_control.dest_offset });
+
+    // Make sure that if the above code changes, SKIP gets updated
+    ASSERT(reinterpret_cast<uintptr_t>(GetCodePtr()) - start == SKIP);
 }
 
 void JitCompiler::Compile_CALLC(Instruction instr) {
@@ -645,8 +667,8 @@ void JitCompiler::Compile_MAD(Instruction instr) {
 }
 
 void JitCompiler::Compile_IF(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards if-statements (%d -> %d) not supported",
-            *offset_ptr, instr.flow_control.dest_offset.Value());
+    ASSERT_MSG(instr.flow_control.dest_offset > last_program_counter, "Backwards if-statements (%d -> %d) not supported",
+        last_program_counter, instr.flow_control.dest_offset.Value());
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -677,8 +699,8 @@ void JitCompiler::Compile_IF(Instruction instr) {
 }
 
 void JitCompiler::Compile_LOOP(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards loops (%d -> %d) not supported",
-            *offset_ptr, instr.flow_control.dest_offset.Value());
+    ASSERT_MSG(instr.flow_control.dest_offset > last_program_counter, "Backwards loops (%d -> %d) not supported",
+        last_program_counter, instr.flow_control.dest_offset.Value());
     ASSERT_MSG(!looping, "Nested loops not supported");
 
     looping = true;
@@ -706,9 +728,6 @@ void JitCompiler::Compile_LOOP(Instruction instr) {
 }
 
 void JitCompiler::Compile_JMP(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > *offset_ptr, "Backwards jumps (%d -> %d) not supported",
-            *offset_ptr, instr.flow_control.dest_offset.Value());
-
     if (instr.opcode.Value() == OpCode::Id::JMPC)
         Compile_EvaluateCondition(instr);
     else if (instr.opcode.Value() == OpCode::Id::JMPU)
@@ -718,31 +737,42 @@ void JitCompiler::Compile_JMP(Instruction instr) {
 
     bool inverted_condition = (instr.opcode.Value() == OpCode::Id::JMPU) &&
         (instr.flow_control.num_instructions & 1);
+
     FixupBranch b = J_CC(inverted_condition ? CC_Z : CC_NZ, true);
-
-    Compile_Block(instr.flow_control.dest_offset);
-
-    SetJumpTarget(b);
+    fixup_branches.push_back({ b, instr.flow_control.dest_offset });
 }
 
 void JitCompiler::Compile_Block(unsigned end) {
-    // Save current offset pointer
-    unsigned* prev_offset_ptr = offset_ptr;
-    unsigned offset = *prev_offset_ptr;
-
-    while (offset < end)
-        Compile_NextInstr(&offset);
-
-    // Restore current offset pointer
-    offset_ptr = prev_offset_ptr;
-    *offset_ptr = offset;
+    while (program_counter < end) {
+        Compile_NextInstr();
+    }
 }
 
-void JitCompiler::Compile_NextInstr(unsigned* offset) {
-    offset_ptr = offset;
+void JitCompiler::Compile_Return() {
+    // Peek return offset on the stack and check if we're at that offset
+    MOV(64, R(RAX), MDisp(RSP, 0));
+    CMP(32, R(RAX), Imm32(program_counter));
 
-    Instruction instr;
-    std::memcpy(&instr, &g_state.vs.program_code[(*offset_ptr)++], sizeof(Instruction));
+    // If so, jump back to before CALL
+    FixupBranch b = J_CC(CC_NZ, true);
+    ADD(64, R(RSP), Imm32(8)); // Ignore return offset that's on the stack
+    POP(RAX); // Pop off return address
+    JMPptr(R(RAX));
+    SetJumpTarget(b);
+}
+
+void JitCompiler::Compile_NextInstr() {
+    last_program_counter = program_counter;
+
+    auto search = return_offsets.find(program_counter);
+    if (search != return_offsets.end()) {
+        Compile_Return();
+    }
+
+    ASSERT_MSG(code_ptr[program_counter] == nullptr, "Tried to compile already compiled shader location!");
+    code_ptr[program_counter] = GetCodePtr();
+
+    Instruction instr = GetVertexShaderInstruction(program_counter++);
 
     OpCode::Id opcode = instr.opcode.Value();
     auto instr_func = instr_table[static_cast<unsigned>(opcode)];
@@ -757,9 +787,24 @@ void JitCompiler::Compile_NextInstr(unsigned* offset) {
     }
 }
 
+void JitCompiler::FindReturnOffsets() {
+    return_offsets.clear();
+
+    for (size_t offset = 0; offset < g_state.vs.program_code.size(); ++offset) {
+        Instruction instr = GetVertexShaderInstruction(offset);
+
+        switch (instr.opcode.Value()) {
+        case OpCode::Id::CALL:
+        case OpCode::Id::CALLC:
+        case OpCode::Id::CALLU:
+            return_offsets.insert(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+            break;
+        }
+    }
+}
+
 CompiledShader* JitCompiler::Compile() {
     const u8* start = GetCodePtr();
-    unsigned offset = g_state.regs.vs.main_offset;
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure
     ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
@@ -782,10 +827,27 @@ CompiledShader* JitCompiler::Compile() {
     MOV(PTRBITS, R(RAX), ImmPtr(&neg));
     MOVAPS(NEGBIT, MatR(RAX));
 
-    looping = false;
+    // Find all `CALL` instructions and identify return locations
+    FindReturnOffsets();
 
-    while (offset < g_state.vs.program_code.size()) {
-        Compile_NextInstr(&offset);
+    // Reset flow control state
+    last_program_counter = 0;
+    program_counter = 0;
+    looping = false;
+    code_ptr.fill(nullptr);
+    fixup_branches.clear();
+
+    // Jump to start of the shader program
+    if (g_state.regs.vs.main_offset != 0) {
+        fixup_branches.push_back({ J(true),  g_state.regs.vs.main_offset });
+    }
+
+    // Compile entire program
+    Compile_Block(static_cast<unsigned>(g_state.vs.program_code.size()));
+
+    // Set the target for any incomplete branches now that the entire shader program has been emitted
+    for (const auto& branch : fixup_branches) {
+        SetJumpTarget(branch.first, code_ptr[branch.second]);
     }
 
     return (CompiledShader*)start;
