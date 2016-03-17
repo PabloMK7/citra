@@ -1221,7 +1221,7 @@ struct Regs {
     // Used for debugging purposes, so performance is not an issue here
     static std::string GetCommandName(int index);
 
-    static inline size_t NumIds() {
+    static constexpr size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 

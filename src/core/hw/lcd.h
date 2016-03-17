@@ -38,7 +38,7 @@ struct Regs {
     u32 backlight_bottom;
     INSERT_PADDING_WORDS(0x16F);
 
-    static inline size_t NumIds() {
+    static constexpr size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 

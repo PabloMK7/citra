@@ -263,7 +263,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x9c3);
 
-    static inline size_t NumIds() {
+    static constexpr size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 
