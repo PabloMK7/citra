@@ -707,6 +707,30 @@ static void GetPriority(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "called priority=0x%X", priority);
 }
 
+/**
+ * FS_User::GetArchiveResource service function.
+ *  Inputs:
+ *      0 : 0x08490040
+ *      1 : Media type
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Sector byte-size
+ *      3 : Cluster byte-size
+ *      4 : Partition capacity in clusters
+ *      5 : Available free space in clusters
+ */
+static void GetArchiveResource(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x%08X", cmd_buff[1]);
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = 512;
+    cmd_buff[3] = 16384;
+    cmd_buff[4] = 0x80000; // 8GiB capacity
+    cmd_buff[5] = 0x80000; // 8GiB free
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr,                  "Dummy1"},
     {0x040100C4, nullptr,                  "Control"},
@@ -782,7 +806,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08460102, nullptr,                  "GetLegacyRomHeader2"},
     {0x08470180, nullptr,                  "FormatCtrCardUserSaveData"},
     {0x08480042, nullptr,                  "GetSdmcCtrRootPath"},
-    {0x08490040, nullptr,                  "GetArchiveResource"},
+    {0x08490040, GetArchiveResource,       "GetArchiveResource"},
     {0x084A0002, nullptr,                  "ExportIntegrityVerificationSeed"},
     {0x084B0002, nullptr,                  "ImportIntegrityVerificationSeed"},
     {0x084C0242, FormatSaveData,           "FormatSaveData"},
