@@ -78,6 +78,24 @@ struct TouchDataEntry {
 };
 
 /**
+ * Structure of a single entry of accelerometer state history within HID shared memory
+ */
+struct AccelerometerDataEntry {
+    s16 x;
+    s16 y;
+    s16 z;
+};
+
+/**
+ * Structure of a single entry of gyroscope state history within HID shared memory
+ */
+struct GyroscopeDataEntry {
+    s16 x;
+    s16 y;
+    s16 z;
+};
+
+/**
  * Structure of data stored in HID shared memory
  */
 struct SharedMem {
@@ -112,6 +130,34 @@ struct SharedMem {
 
         std::array<TouchDataEntry, 8> entries; ///< Last 8 touch entries, in pixel coordinates
     } touch;
+
+    /// Accelerometer data
+    struct {
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated accelerometer entry
+
+        INSERT_PADDING_WORDS(0x1);
+
+        AccelerometerDataEntry raw_entry;
+        INSERT_PADDING_BYTES(2);
+
+        std::array<AccelerometerDataEntry, 8> entries;
+    } accelerometer;
+
+    /// Gyroscope data
+    struct {
+        s64 index_reset_ticks; ///< CPU tick count for when HID module updated entry index 0
+        s64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+        u32 index; ///< Index of the last updated accelerometer entry
+
+        INSERT_PADDING_WORDS(0x1);
+
+        GyroscopeDataEntry raw_entry;
+        INSERT_PADDING_BYTES(2);
+
+        std::array<GyroscopeDataEntry, 32> entries;
+    } gyroscope;
 };
 
 // TODO: MSVC does not support using offsetof() on non-static data members even though this
@@ -221,6 +267,26 @@ void DisableGyroscopeLow(Interface* self);
  *      2 : u8 output value
  */
 void GetSoundVolume(Interface* self);
+
+/**
+ * HID::GetGyroscopeLowRawToDpsCoefficient service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : float output value
+ */
+void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self);
+
+/**
+ * HID::GetGyroscopeLowCalibrateParam service function
+ *  Inputs:
+ *      None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2~6 : CalibrateParam?
+ */
+void GetGyroscopeLowCalibrateParam(Service::Interface* self);
 
 /// Checks for user input updates
 void Update();
