@@ -447,7 +447,10 @@ public:
 
     void SetZero()
     {
-        x=0; y=0; z=0;
+        x = 0;
+        y = 0;
+        z = 0;
+        w = 0;
     }
 
     // Common alias: RGBA (colors)
