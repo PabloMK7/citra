@@ -200,7 +200,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             for (int loader = 0; loader < 12; ++loader) {
                 const auto& loader_config = attribute_config.attribute_loaders[loader];
 
-                u32 load_address = base_address + loader_config.data_offset;
+                u32 offset = 0;
 
                 // TODO: What happens if a loader overwrites a previous one's data?
                 for (unsigned component = 0; component < loader_config.component_count; ++component) {
@@ -212,17 +212,17 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     u32 attribute_index = loader_config.GetComponent(component);
                     if (attribute_index < 12) {
                         int element_size = attribute_config.GetElementSizeInBytes(attribute_index);
-                        load_address = Common::AlignUp(load_address, element_size);
-                        vertex_attribute_sources[attribute_index] = load_address;
+                        offset = Common::AlignUp(offset, element_size);
+                        vertex_attribute_sources[attribute_index] = base_address + loader_config.data_offset + offset;
                         vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
                         vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
                         vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
                         vertex_attribute_element_size[attribute_index] = element_size;
-                        load_address += attribute_config.GetStride(attribute_index);
+                        offset += attribute_config.GetStride(attribute_index);
                     } else if (attribute_index < 16) {
                         // Attribute ids 12, 13, 14 and 15 signify 4, 8, 12 and 16-byte paddings, respectively
-                        load_address = Common::AlignUp(load_address, 4);
-                        load_address += (attribute_index - 11) * 4;
+                        offset = Common::AlignUp(offset, 4);
+                        offset += (attribute_index - 11) * 4;
                     } else {
                         UNREACHABLE(); // This is truly unreachable due to the number of bits for each component
                     }
