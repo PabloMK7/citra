@@ -531,6 +531,22 @@ void XEmitter::SetJumpTarget(const FixupBranch& branch)
     }
 }
 
+void XEmitter::SetJumpTarget(const FixupBranch& branch, const u8* target)
+{
+    if (branch.type == 0)
+    {
+        s64 distance = (s64)(target - branch.ptr);
+        ASSERT_MSG(distance >= -0x80 && distance < 0x80, "Jump target too far away, needs force5Bytes = true");
+        branch.ptr[-1] = (u8)(s8)distance;
+    }
+    else if (branch.type == 1)
+    {
+        s64 distance = (s64)(target - branch.ptr);
+        ASSERT_MSG(distance >= -0x80000000LL && distance < 0x80000000LL, "Jump target too far away, needs indirect register");
+        ((s32*)branch.ptr)[-1] = (s32)distance;
+    }
+}
+
 //Single byte opcodes
 //There is no PUSHAD/POPAD in 64-bit mode.
 void XEmitter::INT3() {Write8(0xCC);}
