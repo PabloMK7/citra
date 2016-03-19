@@ -473,12 +473,6 @@ static void DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity,
 bool RendererOpenGL::Init() {
     render_window->MakeCurrent();
 
-    // TODO: Make frontends initialize this, so they can use gladLoadGLLoader with their own loaders
-    if (!gladLoadGL()) {
-        LOG_CRITICAL(Render_OpenGL, "Failed to initialize GL functions! Exiting...");
-        exit(-1);
-    }
-
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(DebugHandler, nullptr);

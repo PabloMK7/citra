@@ -6,6 +6,9 @@
 #include <memory>
 #include <thread>
 
+#include <glad/glad.h>
+
+#define QT_NO_OPENGL
 #include <QDesktopWidget>
 #include <QtGui>
 #include <QFileDialog>
@@ -239,6 +242,14 @@ bool GMainWindow::InitializeSystem() {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
         ShutdownGame();
+
+    render_window->MakeCurrent();
+    if (!gladLoadGL()) {
+        QMessageBox::critical(this, tr("Error while starting Citra!"),
+                              tr("Failed to initialize the video core!\n\n"
+                                 "Please ensure that your GPU supports OpenGL 3.3 and that you have the latest graphics driver."));
+        return false;
+    }
 
     // Initialize the core emulation
     System::Result system_result = System::Init(render_window);
