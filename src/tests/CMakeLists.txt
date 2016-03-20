@@ -1,0 +1,14 @@
+set(SRCS
+            tests.cpp
+            )
+
+set(HEADERS
+            )
+
+create_directory_groups(${SRCS} ${HEADERS})
+
+include_directories(../../externals/catch/single_include/)
+
+add_executable(tests ${SRCS} ${HEADERS})
+target_link_libraries(tests core video_core audio_core common)
+target_link_libraries(tests ${PLATFORM_LIBRARIES})
