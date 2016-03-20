@@ -22,10 +22,8 @@ namespace Pica {
 
 namespace Shader {
 
-/// Memory needed to be available to compile the next shader (otherwise, clear the cache)
-constexpr size_t jit_shader_size = 1024 * 512;
-/// Memory allocated for the JIT code space cache
-constexpr size_t jit_cache_size = 1024 * 1024 * 8;
+/// Memory allocated for each compiled shader (64Kb)
+constexpr size_t MAX_SHADER_SIZE = 1024 * 64;
 
 using CompiledShader = void(void* registers);
 
@@ -37,9 +35,11 @@ class JitCompiler : public Gen::XCodeBlock {
 public:
     JitCompiler();
 
-    CompiledShader* Compile();
+    void Run(void* registers) const {
+        program(registers);
+    }
 
-    void Clear();
+    void Compile();
 
     void Compile_ADD(Instruction instr);
     void Compile_DP3(Instruction instr);
@@ -104,12 +104,14 @@ private:
     /// Offsets in code where a return needs to be inserted
     std::set<unsigned> return_offsets;
 
-    unsigned last_program_counter;  ///< Offset of the most recent instruction decoded
-    unsigned program_counter;       ///< Offset of the next instruction to decode
-    bool looping = false;           ///< True if compiling a loop, used to check for nested loops
+    unsigned last_program_counter = 0;  ///< Offset of the most recent instruction decoded
+    unsigned program_counter = 0;       ///< Offset of the next instruction to decode
+    bool looping = false;               ///< True if compiling a loop, used to check for nested loops
 
     /// Branches that need to be fixed up once the entire shader program is compiled
     std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;
+
+    CompiledShader* program = nullptr;
 };
 
 } // Shader

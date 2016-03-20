@@ -28,15 +28,8 @@ namespace Pica {
 namespace Shader {
 
 #ifdef ARCHITECTURE_x86_64
-static std::unordered_map<u64, CompiledShader*> shader_map;
-static JitCompiler jit;
-static CompiledShader* jit_shader;
-
-static void ClearCache() {
-    shader_map.clear();
-    jit.Clear();
-    LOG_INFO(HW_GPU, "Shader JIT cache cleared");
-}
+static std::unordered_map<u64, std::unique_ptr<JitCompiler>> shader_map;
+static const JitCompiler* jit_shader;
 #endif // ARCHITECTURE_x86_64
 
 void Setup(UnitState<false>& state) {
@@ -48,16 +41,12 @@ void Setup(UnitState<false>& state) {
 
         auto iter = shader_map.find(cache_key);
         if (iter != shader_map.end()) {
-            jit_shader = iter->second;
+            jit_shader = iter->second.get();
         } else {
-            // Check if remaining JIT code space is enough for at least one more (massive) shader
-            if (jit.GetSpaceLeft() < jit_shader_size) {
-                // If not, clear the cache of all previously compiled shaders
-                ClearCache();
-            }
-
-            jit_shader = jit.Compile();
-            shader_map.emplace(cache_key, jit_shader);
+            auto shader = std::make_unique<JitCompiler>();
+            shader->Compile();
+            jit_shader = shader.get();
+            shader_map[cache_key] = std::move(shader);
         }
     }
 #endif // ARCHITECTURE_x86_64
@@ -65,7 +54,7 @@ void Setup(UnitState<false>& state) {
 
 void Shutdown() {
 #ifdef ARCHITECTURE_x86_64
-    ClearCache();
+    shader_map.clear();
 #endif // ARCHITECTURE_x86_64
 }
 
@@ -109,7 +98,7 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled)
-        jit_shader(&state.registers);
+        jit_shader->Run(&state.registers);
     else
         RunInterpreter(state);
 #else

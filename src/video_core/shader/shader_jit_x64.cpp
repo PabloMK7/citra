@@ -589,7 +589,7 @@ void JitCompiler::Compile_CALL(Instruction instr) {
     fixup_branches.push_back({ b, instr.flow_control.dest_offset });
 
     // Make sure that if the above code changes, SKIP gets updated
-    ASSERT(reinterpret_cast<uintptr_t>(GetCodePtr()) - start == SKIP);
+    ASSERT(reinterpret_cast<ptrdiff_t>(GetCodePtr()) - start == SKIP);
 }
 
 void JitCompiler::Compile_CALLC(Instruction instr) {
@@ -803,8 +803,8 @@ void JitCompiler::FindReturnOffsets() {
     }
 }
 
-CompiledShader* JitCompiler::Compile() {
-    const u8* start = GetCodePtr();
+void JitCompiler::Compile() {
+    program = (CompiledShader*)GetCodePtr();
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure
     ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
@@ -850,15 +850,14 @@ CompiledShader* JitCompiler::Compile() {
         SetJumpTarget(branch.first, code_ptr[branch.second]);
     }
 
-    return (CompiledShader*)start;
+    uintptr_t size = reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
+    ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
+
+    LOG_DEBUG(HW_GPU, "Compiled shader size=%d", size);
 }
 
 JitCompiler::JitCompiler() {
-    AllocCodeSpace(jit_cache_size);
-}
-
-void JitCompiler::Clear() {
-    ClearCodeSpace();
+    AllocCodeSpace(MAX_SHADER_SIZE);
 }
 
 } // namespace Shader
