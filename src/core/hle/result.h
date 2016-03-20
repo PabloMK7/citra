@@ -19,8 +19,12 @@
 enum class ErrorDescription : u32 {
     Success = 0,
     WrongAddress = 53,
-    FS_NotFound = 100,
+    FS_NotFound = 120,
+    FS_AlreadyExists = 190,
+    FS_InvalidOpenFlags = 230,
+    FS_NotAFile = 250,
     FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
+    FS_InvalidPath = 702,
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,

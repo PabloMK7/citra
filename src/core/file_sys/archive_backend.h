@@ -11,6 +11,7 @@
 
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/swap.h"
 
 #include "core/hle/result.h"
 
@@ -62,6 +63,14 @@ private:
     std::u16string u16str;
 };
 
+struct ArchiveFormatInfo {
+    u32_le total_size; ///< The pre-defined size of the archive, as specified in the Create or Format call
+    u32_le number_directories; ///< The pre-defined number of directories in the archive, as specified in the Create or Format call
+    u32_le number_files; ///< The pre-defined number of files in the archive, as specified in the Create or Format call
+    u8 duplicate_data; ///< Whether the archive should duplicate the data, as specified in the Create or Format call
+};
+static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");
+
 class ArchiveBackend : NonCopyable {
 public:
     virtual ~ArchiveBackend() {
@@ -76,16 +85,16 @@ public:
      * Open a file specified by its path, using the specified mode
      * @param path Path relative to the archive
      * @param mode Mode to open the file with
-     * @return Opened file, or nullptr
+     * @return Opened file, or error code
      */
-    virtual std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const = 0;
+    virtual ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode mode) const = 0;
 
     /**
      * Delete a file specified by its path
      * @param path Path relative to the archive
-     * @return Whether the file could be deleted
+     * @return Result of the operation
      */
-    virtual bool DeleteFile(const Path& path) const = 0;
+    virtual ResultCode DeleteFile(const Path& path) const = 0;
 
     /**
      * Rename a File specified by its path
@@ -108,7 +117,7 @@ public:
      * @param size The size of the new file, filled with zeroes
      * @return File creation result code
      */
-    virtual ResultCode CreateFile(const Path& path, u32 size) const = 0;
+    virtual ResultCode CreateFile(const Path& path, u64 size) const = 0;
 
     /**
      * Create a directory specified by its path
@@ -159,9 +168,17 @@ public:
     /**
      * Deletes the archive contents and then re-creates the base folder
      * @param path Path to the archive
+     * @param format_info Format information for the new archive
      * @return ResultCode of the operation, 0 on success
      */
-    virtual ResultCode Format(const Path& path) = 0;
+    virtual ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) = 0;
+
+    /**
+     * Retrieves the format info about the archive with the specified path
+     * @param path Path to the archive
+     * @return Format information about the archive or error code
+     */
+    virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const = 0;
 };
 
 } // namespace FileSys

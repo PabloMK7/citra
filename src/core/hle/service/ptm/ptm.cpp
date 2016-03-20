@@ -103,7 +103,7 @@ void Init() {
     // If the archive didn't exist, create the files inside
     if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
         // Format the archive to create the directories
-        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, FileSys::ArchiveFormatInfo(), archive_path);
         // Open it again to get a valid archive now that the folder exists
         archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");

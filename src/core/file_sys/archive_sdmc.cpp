@@ -40,9 +40,14 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path&
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SDMC::Format(const Path& path) {
+ResultCode ArchiveFactory_SDMC::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     // This is kind of an undesirable operation, so let's just ignore it. :)
     return RESULT_SUCCESS;
 }
 
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path) const {
+    // TODO(Subv): Implement
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive %s", GetName().c_str());
+    return ResultCode(-1);
+}
 } // namespace FileSys

@@ -48,11 +48,17 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(co
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SaveDataCheck::Format(const Path& path) {
+ResultCode ArchiveFactory_SaveDataCheck::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     LOG_ERROR(Service_FS, "Attempted to format a SaveDataCheck archive.");
     // TODO: Verify error code
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS,
         ErrorSummary::NotSupported, ErrorLevel::Permanent);
+}
+
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SaveDataCheck::GetFormatInfo(const Path& path) const {
+    // TODO(Subv): Implement
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive %s", GetName().c_str());
+    return ResultCode(-1);
 }
 
 } // namespace FileSys

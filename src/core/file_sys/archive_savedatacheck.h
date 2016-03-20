@@ -23,7 +23,8 @@ public:
     std::string GetName() const override { return "SaveDataCheck"; }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
-    ResultCode Format(const Path& path) override;
+    ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
+    ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
 private:
     std::string mount_point;

@@ -310,7 +310,8 @@ ResultCode UpdateConfigNANDSavegame() {
 
 ResultCode FormatConfig() {
     ResultCode res = DeleteConfigNANDSaveFile();
-    if (!res.IsSuccess())
+    // The delete command fails if the file doesn't exist, so we have to check that too
+    if (!res.IsSuccess() && res.description != ErrorDescription::FS_NotFound)
         return res;
     // Delete the old data
     cfg_config_file_buffer.fill(0);
@@ -407,7 +408,7 @@ void Init() {
     // If the archive didn't exist, create the files inside
     if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
         // Format the archive to create the directories
-        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData, FileSys::ArchiveFormatInfo(), archive_path);
 
         // Open it again to get a valid archive now that the folder exists
         archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);

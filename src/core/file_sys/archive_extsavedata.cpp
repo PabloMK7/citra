@@ -58,7 +58,7 @@ Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
 }
 
 ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location, bool shared)
-        : mount_point(GetExtDataContainerPath(mount_location, shared)) {
+        : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
     LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
 }
 
@@ -74,21 +74,59 @@ bool ArchiveFactory_ExtSaveData::Initialize() {
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
     std::string fullpath = GetExtSaveDataPath(mount_point, path) + "user/";
     if (!FileUtil::Exists(fullpath)) {
-        // TODO(Subv): Check error code, this one is probably wrong
-        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-            ErrorSummary::InvalidState, ErrorLevel::Status);
+        // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
+        // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
+        if (!shared) {
+            return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
+                              ErrorSummary::InvalidState, ErrorLevel::Status);
+        } else {
+            return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
+                              ErrorSummary::InvalidState, ErrorLevel::Status);
+        }
     }
     auto archive = Common::make_unique<DiskArchive>(fullpath);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path) {
+ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     // These folders are always created with the ExtSaveData
     std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
     std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
     FileUtil::CreateFullPath(user_path);
     FileUtil::CreateFullPath(boss_path);
+
+    // Write the format metadata
+    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    FileUtil::IOFile file(metadata_path, "wb");
+
+    if (!file.IsOpen()) {
+        // TODO(Subv): Find the correct error code
+        return ResultCode(-1);
+    }
+
+    file.WriteBytes(&format_info, sizeof(format_info));
     return RESULT_SUCCESS;
+}
+
+ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path) const {
+    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    FileUtil::IOFile file(metadata_path, "rb");
+
+    if (!file.IsOpen()) {
+        LOG_ERROR(Service_FS, "Could not open metadata information for archive");
+        // TODO(Subv): Verify error code
+        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
+    }
+
+    ArchiveFormatInfo info = {};
+    file.ReadBytes(&info, sizeof(info));
+    return MakeResult<ArchiveFormatInfo>(info);
+}
+
+void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data, size_t icon_size) {
+    std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
+    FileUtil::IOFile icon_file(game_path + "icon", "wb");
+    icon_file.WriteBytes(icon_data, icon_size);
 }
 
 } // namespace FileSys

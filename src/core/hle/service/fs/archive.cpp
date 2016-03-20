@@ -103,7 +103,18 @@ ResultVal<bool> File::SyncRequest() {
             u32 address = cmd_buff[5];
             LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address);
-            cmd_buff[2] = static_cast<u32>(backend->Read(offset, length, Memory::GetPointer(address)));
+
+            if (offset + length > backend->GetSize()) {
+                LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%llX length=0x%08X file_size=0x%llX",
+                          offset, length, backend->GetSize());
+            }
+
+            ResultVal<size_t> read = backend->Read(offset, length, Memory::GetPointer(address));
+            if (read.Failed()) {
+                cmd_buff[1] = read.Code().raw;
+                return read.Code();
+            }
+            cmd_buff[2] = static_cast<u32>(*read);
             break;
         }
 
@@ -116,7 +127,13 @@ ResultVal<bool> File::SyncRequest() {
             u32 address = cmd_buff[6];
             LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
                       GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
-            cmd_buff[2] = static_cast<u32>(backend->Write(offset, length, flush != 0, Memory::GetPointer(address)));
+
+            ResultVal<size_t> written = backend->Write(offset, length, flush != 0, Memory::GetPointer(address));
+            if (written.Failed()) {
+                cmd_buff[1] = written.Code().raw;
+                return written.Code();
+            }
+            cmd_buff[2] = static_cast<u32>(*written);
             break;
         }
 
@@ -294,13 +311,11 @@ ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_han
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    std::unique_ptr<FileSys::FileBackend> backend = archive->OpenFile(path, mode);
-    if (backend == nullptr) {
-        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
-                          ErrorSummary::NotFound, ErrorLevel::Status);
-    }
+    auto backend = archive->OpenFile(path, mode);
+    if (backend.Failed())
+        return backend.Code();
 
-    auto file = Kernel::SharedPtr<File>(new File(std::move(backend), path));
+    auto file = Kernel::SharedPtr<File>(new File(backend.MoveFrom(), path));
     return MakeResult<Kernel::SharedPtr<File>>(std::move(file));
 }
 
@@ -309,10 +324,7 @@ ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Pa
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
 
-    if (archive->DeleteFile(path))
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return archive->DeleteFile(path);
 }
 
 ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
@@ -347,7 +359,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u32 file_size) {
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u64 file_size) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_HANDLE;
@@ -395,7 +407,7 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
 
     std::unique_ptr<FileSys::DirectoryBackend> backend = archive->OpenDirectory(path);
     if (backend == nullptr) {
-        return ResultCode(ErrorDescription::NotFound, ErrorModule::FS,
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
                           ErrorSummary::NotFound, ErrorLevel::Permanent);
     }
 
@@ -410,49 +422,45 @@ ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle) {
     return MakeResult<u64>(archive->GetFreeBytes());
 }
 
-ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::Path& path) {
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info, const FileSys::Path& path) {
     auto archive_itr = id_code_map.find(id_code);
     if (archive_itr == id_code_map.end()) {
         return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
 
-    return archive_itr->second->Format(path);
+    return archive_itr->second->Format(path, format_info);
 }
 
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size) {
+ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code, FileSys::Path& archive_path) {
+    auto archive = id_code_map.find(id_code);
+    if (archive == id_code_map.end()) {
+        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
+    }
+
+    return archive->second->GetFormatInfo(archive_path);
+}
+
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size, const FileSys::ArchiveFormatInfo& format_info) {
     // Construct the binary path to the archive first
     FileSys::Path path = FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
 
-    std::string media_type_directory;
-    if (media_type == MediaType::NAND) {
-        media_type_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    } else if (media_type == MediaType::SDMC) {
-        media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX);
-    } else {
-        LOG_ERROR(Service_FS, "Unsupported media type %u", media_type);
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+    auto archive = id_code_map.find(media_type == MediaType::NAND ? ArchiveIdCode::SharedExtSaveData : ArchiveIdCode::ExtSaveData);
+
+    if (archive == id_code_map.end()) {
+        return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
 
-    std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
-    std::string game_path = FileSys::GetExtSaveDataPath(base_path, path);
-    // These two folders are always created with the ExtSaveData
-    std::string user_path = game_path + "user/";
-    std::string boss_path = game_path + "boss/";
-    if (!FileUtil::CreateFullPath(user_path))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
-    if (!FileUtil::CreateFullPath(boss_path))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+    auto ext_savedata = static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get());
+
+    ResultCode result = ext_savedata->Format(path, format_info);
+    if (result.IsError())
+        return result;
 
     u8* smdh_icon = Memory::GetPointer(icon_buffer);
     if (!smdh_icon)
         return ResultCode(-1); // TODO(Subv): Find the right error code
 
-    // Create the icon
-    FileUtil::IOFile icon_file(game_path + "icon", "wb+");
-    if (!icon_file.IsGood())
-        return ResultCode(-1); // TODO(Subv): Find the right error code
-
-    icon_file.WriteBytes(smdh_icon, icon_size);
+    ext_savedata->WriteIcon(path, smdh_icon, icon_size);
     return RESULT_SUCCESS;
 }
 
@@ -473,7 +481,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     // Delete all directories (/user, /boss) and the icon file.
     std::string base_path = FileSys::GetExtDataContainerPath(media_type_directory, media_type == MediaType::NAND);
     std::string extsavedata_path = FileSys::GetExtSaveDataPath(base_path, path);
-    if (!FileUtil::DeleteDirRecursively(extsavedata_path))
+    if (FileUtil::Exists(extsavedata_path) && !FileUtil::DeleteDirRecursively(extsavedata_path))
         return ResultCode(-1); // TODO(Subv): Find the right error code
     return RESULT_SUCCESS;
 }

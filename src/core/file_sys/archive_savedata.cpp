@@ -26,9 +26,15 @@ static std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
 }
 
 static std::string GetSaveDataPath(const std::string& mount_location, u64 program_id) {
-    u32 high = program_id >> 32;
-    u32 low = program_id & 0xFFFFFFFF;
+    u32 high = (u32)(program_id >> 32);
+    u32 low = (u32)(program_id & 0xFFFFFFFF);
     return Common::StringFromFormat("%s%08x/%08x/data/00000001/", mount_location.c_str(), high, low);
+}
+
+static std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 program_id) {
+    u32 high = (u32)(program_id >> 32);
+    u32 low = (u32)(program_id & 0xFFFFFFFF);
+    return Common::StringFromFormat("%s%08x/%08x/data/00000001.metadata", mount_location.c_str(), high, low);
 }
 
 ArchiveFactory_SaveData::ArchiveFactory_SaveData(const std::string& sdmc_directory)
@@ -51,11 +57,35 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const P
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SaveData::Format(const Path& path) {
+ResultCode ArchiveFactory_SaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
     std::string concrete_mount_point = GetSaveDataPath(mount_point, Kernel::g_current_process->codeset->program_id);
     FileUtil::DeleteDirRecursively(concrete_mount_point);
     FileUtil::CreateFullPath(concrete_mount_point);
+
+    // Write the format metadata
+    std::string metadata_path = GetSaveDataMetadataPath(mount_point, Kernel::g_current_process->codeset->program_id);
+    FileUtil::IOFile file(metadata_path, "wb");
+
+    if (file.IsOpen()) {
+        file.WriteBytes(&format_info, sizeof(format_info));
+        return RESULT_SUCCESS;
+    }
     return RESULT_SUCCESS;
+}
+
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SaveData::GetFormatInfo(const Path& path) const {
+    std::string metadata_path = GetSaveDataMetadataPath(mount_point, Kernel::g_current_process->codeset->program_id);
+    FileUtil::IOFile file(metadata_path, "rb");
+
+    if (!file.IsOpen()) {
+        LOG_ERROR(Service_FS, "Could not open metadata information for archive");
+        // TODO(Subv): Verify error code
+        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
+    }
+
+    ArchiveFormatInfo info = {};
+    file.ReadBytes(&info, sizeof(info));
+    return MakeResult<ArchiveFormatInfo>(info);
 }
 
 } // namespace FileSys

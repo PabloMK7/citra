@@ -33,11 +33,11 @@ public:
 
     virtual std::string GetName() const override { return "DiskArchive: " + mount_point; }
 
-    std::unique_ptr<FileBackend> OpenFile(const Path& path, const Mode mode) const override;
-    bool DeleteFile(const Path& path) const override;
+    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode mode) const override;
+    ResultCode DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
     bool DeleteDirectory(const Path& path) const override;
-    ResultCode CreateFile(const Path& path, u32 size) const override;
+    ResultCode CreateFile(const Path& path, u64 size) const override;
     bool CreateDirectory(const Path& path) const override;
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
     std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
@@ -54,9 +54,9 @@ class DiskFile : public FileBackend {
 public:
     DiskFile(const DiskArchive& archive, const Path& path, const Mode mode);
 
-    bool Open() override;
-    size_t Read(u64 offset, size_t length, u8* buffer) const override;
-    size_t Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
+    ResultCode Open() override;
+    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override;
