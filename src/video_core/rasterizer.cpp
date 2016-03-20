@@ -862,10 +862,30 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
             }
 
+            // interpolated_z = z / w
+            float interpolated_z_over_w = (v0.screenpos[2].ToFloat32() * w0 +
+                                           v1.screenpos[2].ToFloat32() * w1 +
+                                           v2.screenpos[2].ToFloat32() * w2) / wsum;
+
+            // Not fully accurate. About 3 bits in precision are missing.
+            // Z-Buffer (z / w * scale + offset)
+            float depth_scale = float24::FromRaw(regs.viewport_depth_range).ToFloat32();
+            float depth_offset = float24::FromRaw(regs.viewport_depth_near_plane).ToFloat32();
+            float depth = interpolated_z_over_w * depth_scale + depth_offset;
+
+            // Potentially switch to W-Buffer
+            if (regs.depthmap_enable == Pica::Regs::DepthBuffering::WBuffering) {
+
+                // W-Buffer (z * scale + w * offset = (z / w * scale + offset) * w)
+                depth *= interpolated_w_inverse.ToFloat32() * wsum;
+            }
+
+            // Clamp the result
+            depth = MathUtil::Clamp(depth, 0.0f, 1.0f);
+
+            // Convert float to integer
             unsigned num_bits = Regs::DepthBitsPerPixel(regs.framebuffer.depth_format);
-            u32 z = (u32)((v0.screenpos[2].ToFloat32() * w0 +
-                           v1.screenpos[2].ToFloat32() * w1 +
-                           v2.screenpos[2].ToFloat32() * w2) * ((1 << num_bits) - 1) / wsum);
+            u32 z = (u32)(depth * ((1 << num_bits) - 1));
 
             if (output_merger.depth_test_enable) {
                 u32 ref_z = GetDepth(x >> 4, y >> 4);
