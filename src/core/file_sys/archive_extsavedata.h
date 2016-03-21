@@ -45,13 +45,14 @@ public:
     void WriteIcon(const Path& path, const u8* icon_data, size_t icon_size);
 
 private:
+    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData archive
+
     /**
      * This holds the full directory path for this archive, it is only set after a successful call
      * to Open, this is formed as <base extsavedatapath>/<type>/<high>/<low>.
      * See GetExtSaveDataPath for the code that extracts this data from an archive path.
      */
     std::string mount_point;
-    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData archive
 };
 
 /**
