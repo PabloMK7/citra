@@ -483,7 +483,8 @@ void Reschedule() {
 
     Thread* cur = GetCurrentThread();
     Thread* next = PopNextReadyThread();
-    HLE::g_reschedule = false;
+
+    HLE::DoneRescheduling();
 
     // Don't bother switching to the same thread
     if (next == cur)
