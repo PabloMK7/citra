@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstring>
 #include <unordered_map>
+#include <vector>
 
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -593,17 +594,13 @@ static void Poll(Service::Interface* self) {
 
     // The 3ds_pollfd and the pollfd structures may be different (Windows/Linux have different sizes)
     // so we have to copy the data
-    pollfd* platform_pollfd = new pollfd[nfds];
-    for (unsigned current_fds = 0; current_fds < nfds; ++current_fds)
-        platform_pollfd[current_fds] = CTRPollFD::ToPlatform(input_fds[current_fds]);
+    std::vector<pollfd> platform_pollfd(nfds);
+    std::transform(input_fds, input_fds + nfds, platform_pollfd.begin(), CTRPollFD::ToPlatform);
 
-    int ret = ::poll(platform_pollfd, nfds, timeout);
+    const int ret = ::poll(platform_pollfd.data(), nfds, timeout);
 
     // Now update the output pollfd structure
-    for (unsigned current_fds = 0; current_fds < nfds; ++current_fds)
-        output_fds[current_fds] = CTRPollFD::FromPlatform(platform_pollfd[current_fds]);
-
-    delete[] platform_pollfd;
+    std::transform(platform_pollfd.begin(), platform_pollfd.end(), output_fds, CTRPollFD::FromPlatform);
 
     int result = 0;
     if (ret == SOCKET_ERROR_VALUE)
