@@ -74,7 +74,7 @@ enum class ResultStatus {
     ErrorEncrypted,
 };
 
-static inline u32 MakeMagic(char a, char b, char c, char d) {
+constexpr u32 MakeMagic(char a, char b, char c, char d) {
     return a | b << 8 | c << 16 | d << 24;
 }
 

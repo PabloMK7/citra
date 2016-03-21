@@ -16,23 +16,23 @@
 
 namespace IPC {
 
-inline u32 MakeHeader(u16 command_id, unsigned int regular_params, unsigned int translate_params) {
+constexpr u32 MakeHeader(u16 command_id, unsigned int regular_params, unsigned int translate_params) {
     return ((u32)command_id << 16) | (((u32)regular_params & 0x3F) << 6) | (((u32)translate_params & 0x3F) << 0);
 }
 
-inline u32 MoveHandleDesc(unsigned int num_handles = 1) {
+constexpr u32 MoveHandleDesc(unsigned int num_handles = 1) {
     return 0x0 | ((num_handles - 1) << 26);
 }
 
-inline u32 CopyHandleDesc(unsigned int num_handles = 1) {
+constexpr u32 CopyHandleDesc(unsigned int num_handles = 1) {
     return 0x10 | ((num_handles - 1) << 26);
 }
 
-inline u32 CallingPidDesc() {
+constexpr u32 CallingPidDesc() {
     return 0x20;
 }
 
-inline u32 StaticBufferDesc(u32 size, unsigned int buffer_id) {
+constexpr u32 StaticBufferDesc(u32 size, unsigned int buffer_id) {
     return 0x2 | (size << 14) | ((buffer_id & 0xF) << 10);
 }
 
@@ -42,7 +42,7 @@ enum MappedBufferPermissions {
     RW = R | W,
 };
 
-inline u32 MappedBufferDesc(u32 size, MappedBufferPermissions perms) {
+constexpr u32 MappedBufferDesc(u32 size, MappedBufferPermissions perms) {
     return 0x8 | (size << 4) | (u32)perms;
 }
 
