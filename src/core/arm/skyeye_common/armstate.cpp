@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include "common/swap.h"
 #include "common/logging/log.h"
 #include "core/memory.h"
@@ -48,8 +49,7 @@ void ARMul_State::ChangePrivilegeMode(u32 new_mode)
             Spsr[UNDEFBANK] = Spsr_copy;
             break;
         case FIQ32MODE:
-            Reg_firq[0] = Reg[13];
-            Reg_firq[1] = Reg[14];
+            std::copy(Reg.begin() + 8, Reg.end() - 1, Reg_firq.begin());
             Spsr[FIQBANK] = Spsr_copy;
             break;
         }
@@ -85,8 +85,7 @@ void ARMul_State::ChangePrivilegeMode(u32 new_mode)
             Bank = UNDEFBANK;
             break;
         case FIQ32MODE:
-            Reg[13] = Reg_firq[0];
-            Reg[14] = Reg_firq[1];
+            std::copy(Reg_firq.begin(), Reg_firq.end(), Reg.begin() + 8);
             Spsr_copy = Spsr[FIQBANK];
             Bank = FIQBANK;
             break;
