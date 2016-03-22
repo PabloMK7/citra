@@ -121,15 +121,23 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
     // figure out what those circumstances are and enable the remaining outputs then.
-    for (int i = 0; i < 7; ++i) {
-        const auto& output_register_map = g_state.regs.vs_output_attributes[i]; // TODO: Don't hardcode VS here
+    unsigned index = 0;
+    for (unsigned i = 0; i < 7; ++i) {
+
+        if (index >= g_state.regs.vs_output_total)
+            break;
+
+        if ((g_state.regs.vs.output_mask & (1 << i)) == 0)
+            continue;
+
+        const auto& output_register_map = g_state.regs.vs_output_attributes[index]; // TODO: Don't hardcode VS here
 
         u32 semantics[4] = {
             output_register_map.map_x, output_register_map.map_y,
             output_register_map.map_z, output_register_map.map_w
         };
 
-        for (int comp = 0; comp < 4; ++comp) {
+        for (unsigned comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
             if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
                 *out = state.registers.output[i][comp];
@@ -139,10 +147,12 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
                 memset(out, 0, sizeof(*out));
             }
         }
+
+        index++;
     }
 
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing interpolation
-    for (int i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < 4; ++i) {
         ret.color[i] = float24::FromFloat32(
             std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
     }
