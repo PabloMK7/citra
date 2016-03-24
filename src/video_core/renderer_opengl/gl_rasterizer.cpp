@@ -190,6 +190,9 @@ void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
 }
 
 void RasterizerOpenGL::DrawTriangles() {
+    if (vertex_batch.empty())
+        return;
+
     SyncFramebuffer();
     SyncDrawState();
 

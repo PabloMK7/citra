@@ -12,6 +12,8 @@ namespace Pica {
 
 /// Struct used to describe current Pica state
 struct State {
+    void Reset();
+
     /// Pica registers
     Regs regs;
 
@@ -46,13 +48,14 @@ struct State {
 
     /// Struct used to describe immediate mode rendering state
     struct ImmediateModeState {
-        Shader::InputVertex input;
-        // This is constructed with a dummy triangle topology
-        PrimitiveAssembler<Shader::OutputVertex> primitive_assembler;
-        int attribute_id = 0;
-
-        ImmediateModeState() : primitive_assembler(Regs::TriangleTopology::List) {}
+        // Used to buffer partial vertices for immediate-mode rendering.
+        Shader::InputVertex input_vertex;
+        // Index of the next attribute to be loaded into `input_vertex`.
+        int current_attribute = 0;
     } immediate;
+
+    // This is constructed with a dummy triangle topology
+    PrimitiveAssembler<Shader::OutputVertex> primitive_assembler;
 };
 
 extern State g_state; ///< Current Pica state
