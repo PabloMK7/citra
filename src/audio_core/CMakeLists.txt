@@ -1,11 +1,13 @@
 set(SRCS
             audio_core.cpp
+            codec.cpp
             hle/dsp.cpp
             hle/pipe.cpp
             )
 
 set(HEADERS
             audio_core.h
+            codec.h
             hle/dsp.h
             hle/pipe.h
             sink.h
