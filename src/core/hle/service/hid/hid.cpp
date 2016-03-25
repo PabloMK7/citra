@@ -251,14 +251,13 @@ void GetGyroscopeLowCalibrateParam(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    // currently don't understand the meaning of return value,
-    // so stubbed these with value from a real console.
-    // TODO(wwylele): implement this correctly
-    cmd_buff[2] = 0x19DDFFDC;
-    cmd_buff[3] = 0x0002E5DA;
-    cmd_buff[4] = 0xE5CE1A2D;
-    cmd_buff[5] = 0x19C6FFF3;
-    cmd_buff[6] = 0x001CE61E;
+    const s16 param_unit = 6700; // an approximate value taken from hw
+    GyroscopeCalibrateParam param = {
+        { 0, param_unit, -param_unit },
+        { 0, param_unit, -param_unit },
+        { 0, param_unit, -param_unit },
+    };
+    memcpy(&cmd_buff[2], &param, sizeof(param));
 
     LOG_WARNING(Service_HID, "(STUBBED) called");
 }

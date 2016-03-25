@@ -160,6 +160,18 @@ struct SharedMem {
     } gyroscope;
 };
 
+/**
+ * Structure of calibrate params that GetGyroscopeLowCalibrateParam returns
+ */
+struct GyroscopeCalibrateParam {
+    struct {
+        // TODO (wwylele): figure out the exact meaning of these params
+        s16 zero_point;
+        s16 positive_unit_point;
+        s16 negative_unit_point;
+    } x, y, z;
+};
+
 // TODO: MSVC does not support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
@@ -284,7 +296,7 @@ void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self);
  *      None
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
- *      2~6 : CalibrateParam?
+ *      2~6 (18 bytes) : struct GyroscopeCalibrateParam
  */
 void GetGyroscopeLowCalibrateParam(Service::Interface* self);
 
