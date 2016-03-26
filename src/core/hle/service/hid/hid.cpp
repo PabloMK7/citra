@@ -83,17 +83,17 @@ void Update() {
     PadState changed = { { (state.hex ^ old_state.hex) } };
 
     // Get the current Pad entry
-    PadDataEntry* pad_entry = &mem->pad.entries[mem->pad.index];
+    PadDataEntry& pad_entry = mem->pad.entries[mem->pad.index];
 
     // Update entry properties
-    pad_entry->current_state.hex = state.hex;
-    pad_entry->delta_additions.hex = changed.hex & state.hex;
-    pad_entry->delta_removals.hex = changed.hex & old_state.hex;;
+    pad_entry.current_state.hex = state.hex;
+    pad_entry.delta_additions.hex = changed.hex & state.hex;
+    pad_entry.delta_removals.hex = changed.hex & old_state.hex;;
 
     // Set circle Pad
-    pad_entry->circle_pad_x = state.circle_left  ? -MAX_CIRCLEPAD_POS :
+    pad_entry.circle_pad_x = state.circle_left  ? -MAX_CIRCLEPAD_POS :
                               state.circle_right ?  MAX_CIRCLEPAD_POS : 0x0;
-    pad_entry->circle_pad_y = state.circle_down  ? -MAX_CIRCLEPAD_POS :
+    pad_entry.circle_pad_y = state.circle_down  ? -MAX_CIRCLEPAD_POS :
                               state.circle_up    ?  MAX_CIRCLEPAD_POS : 0x0;
 
     // If we just updated index 0, provide a new timestamp
@@ -106,11 +106,11 @@ void Update() {
     next_touch_index = (next_touch_index + 1) % mem->touch.entries.size();
 
     // Get the current touch entry
-    TouchDataEntry* touch_entry = &mem->touch.entries[mem->touch.index];
+    TouchDataEntry& touch_entry = mem->touch.entries[mem->touch.index];
     bool pressed = false;
 
-    std::tie(touch_entry->x, touch_entry->y, pressed) = VideoCore::g_emu_window->GetTouchState();
-    touch_entry->valid.Assign(pressed ? 1 : 0);
+    std::tie(touch_entry.x, touch_entry.y, pressed) = VideoCore::g_emu_window->GetTouchState();
+    touch_entry.valid.Assign(pressed ? 1 : 0);
 
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
