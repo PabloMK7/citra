@@ -838,9 +838,7 @@ void JitCompiler::Compile() {
     fixup_branches.clear();
 
     // Jump to start of the shader program
-    if (g_state.regs.vs.main_offset != 0) {
-        fixup_branches.push_back({ J(true),  g_state.regs.vs.main_offset });
-    }
+    JMPptr(R(ABI_PARAM2));
 
     // Compile entire program
     Compile_Block(static_cast<unsigned>(g_state.vs.program_code.size()));

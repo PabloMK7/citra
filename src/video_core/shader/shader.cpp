@@ -36,8 +36,7 @@ void Setup(UnitState<false>& state) {
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
         u64 cache_key = (Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
-            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data)) ^
-            g_state.regs.vs.main_offset);
+            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data)));
 
         auto iter = shader_map.find(cache_key);
         if (iter != shader_map.end()) {
@@ -98,7 +97,7 @@ OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attr
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled)
-        jit_shader->Run(&state.registers);
+        jit_shader->Run(&state.registers, g_state.regs.vs.main_offset);
     else
         RunInterpreter(state);
 #else

@@ -25,8 +25,6 @@ namespace Shader {
 /// Memory allocated for each compiled shader (64Kb)
 constexpr size_t MAX_SHADER_SIZE = 1024 * 64;
 
-using CompiledShader = void(void* registers);
-
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
  * code that can be executed on the host machine directly.
@@ -35,8 +33,8 @@ class JitCompiler : public Gen::XCodeBlock {
 public:
     JitCompiler();
 
-    void Run(void* registers) const {
-        program(registers);
+    void Run(void* registers, unsigned offset) const {
+        program(registers, code_ptr[offset]);
     }
 
     void Compile();
@@ -111,6 +109,7 @@ private:
     /// Branches that need to be fixed up once the entire shader program is compiled
     std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;
 
+    using CompiledShader = void(void* registers, const u8* start_addr);
     CompiledShader* program = nullptr;
 };
 
