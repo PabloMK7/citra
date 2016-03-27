@@ -346,5 +346,11 @@ u32 GraphicsFramebufferWidget::BytesPerPixel(GraphicsFramebufferWidget::Format f
         case Format::RGBA4:
         case Format::D16:
             return 2;
+        default:
+            UNREACHABLE_MSG("GraphicsFramebufferWidget::BytesPerPixel: this "
+                            "should not be reached as this function should "
+                            "be given a format which is in "
+                            "GraphicsFramebufferWidget::Format. Instead got %i",
+                            static_cast<int>(format));
     }
 }
