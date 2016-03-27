@@ -65,8 +65,8 @@ endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
 
 if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wno-attributes -pthread")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wno-attributes")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
     if (ARCHITECTURE_x86_64)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
@@ -134,6 +134,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
+
+find_package(Threads REQUIRED)
 
 if (ENABLE_SDL2)
     if (CITRA_USE_BUNDLED_SDL2)
