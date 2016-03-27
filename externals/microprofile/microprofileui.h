@@ -879,7 +879,7 @@ void MicroProfileDrawDetailedBars(uint32_t nWidth, uint32_t nHeight, int nBaseY,
     static int64_t nRefCpu = 0, nRefGpu = 0;
     if(MicroProfileGetGpuTickReference(&nTickReferenceCpu, &nTickReferenceGpu))
     {
-        if(0 == nRefCpu || abs(nRefCpu-nBaseTicksCpu) > abs(nTickReferenceCpu-nBaseTicksCpu))
+        if(0 == nRefCpu || std::abs(nRefCpu-nBaseTicksCpu) > std::abs(nTickReferenceCpu-nBaseTicksCpu))
         {
             nRefCpu = nTickReferenceCpu;
             nRefGpu = nTickReferenceGpu;
