@@ -66,7 +66,7 @@ void GameList::ValidateEntry(const QModelIndex& item)
 
     if (file_path.isEmpty())
         return;
-    std::string std_file_path = file_path.toLocal8Bit();
+    std::string std_file_path(file_path.toLocal8Bit());
     if (!FileUtil::Exists(std_file_path) || FileUtil::IsDirectory(std_file_path))
         return;
     emit GameChosen(file_path);
