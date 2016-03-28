@@ -89,7 +89,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x004E0000, nullptr,               "HardwareResetAsync"},
     {0x004F0080, nullptr,               "SetApplicationCpuTimeLimit"},
     {0x00500040, nullptr,               "GetApplicationCpuTimeLimit"},
-    {0x00510080, nullptr,               "GetStartupArgument"},
+    {0x00510080, GetStartupArgument,    "GetStartupArgument"},
     {0x00520104, nullptr,               "Wrap1"},
     {0x00530104, nullptr,               "Unwrap1"},
     {0x00580002, nullptr,               "GetProgramID"},

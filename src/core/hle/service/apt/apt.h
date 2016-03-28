@@ -67,6 +67,12 @@ enum class AppletId : u32 {
     Ed2                = 0x402,
 };
 
+enum class StartupArgumentType : u32 {
+    OtherApp   = 0,
+    Restart    = 1,
+    OtherMedia = 2,
+};
+
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
 void SendParameter(const MessageParameter& parameter);
 
@@ -343,6 +349,17 @@ void PreloadLibraryApplet(Service::Interface* self);
  *      1 : Result of function, 0 on success, otherwise error code
  */
 void StartLibraryApplet(Service::Interface* self);
+
+/**
+* APT::GetStartupArgument service function
+*  Inputs:
+*      1 : Parameter Size (capped to 0x300)
+*      2 : StartupArgumentType
+*  Outputs:
+*      0 : Return header
+*      1 : u8, Exists (0 = does not exist, 1 = exists)
+*/
+void GetStartupArgument(Service::Interface* self);
 
 /// Initialize the APT service
 void Init();
