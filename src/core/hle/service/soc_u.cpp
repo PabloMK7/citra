@@ -729,11 +729,7 @@ static void GetSockOpt(Service::Interface* self) {
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
     u32 optname = cmd_buffer[3];
-#ifdef _WIN32
-    int optlen = (int)cmd_buffer[4];
-#else
     socklen_t optlen = (socklen_t)cmd_buffer[4];
-#endif
 
     // 0x100 = static buffer offset (bytes)
     // + 0x4 = 2nd pointer (u32) position
