@@ -568,7 +568,7 @@ static void RecvFrom(Service::Interface* self) {
     socklen_t src_addr_len = sizeof(src_addr);
     int ret = ::recvfrom(socket_handle, (char*)output_buff, len, flags, &src_addr, &src_addr_len);
 
-    if (buffer_parameters.output_src_address_buffer != 0) {
+    if (buffer_parameters.output_src_address_buffer != 0 && src_addr_len > 0) {
         CTRSockAddr* ctr_src_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(buffer_parameters.output_src_address_buffer));
         *ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
     }
@@ -724,6 +724,49 @@ static void ShutdownSockets(Service::Interface* self) {
     cmd_buffer[1] = 0;
 }
 
+static void GetSockOpt(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 socket_handle = cmd_buffer[1];
+    u32 level = cmd_buffer[2];
+    u32 optname = cmd_buffer[3];
+    u32 optlen = cmd_buffer[4];
+
+    // 0x100 = static buffer offset (bytes)
+    // + 0x4 = 2nd pointer (u32) position
+    // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
+    u8* optval = Memory::GetPointer(cmd_buffer[0x104 >> 2]);
+
+    int ret = ::getsockopt(socket_handle, level, optname, &optval, &optlen);
+    int err = 0;
+    if(ret == SOCKET_ERROR_VALUE) {
+        err = TranslateError(GET_ERRNO);
+    }
+
+    cmd_buffer[0] = IPC::MakeHeader(0x11, 4, 2);
+    cmd_buffer[1] = ret;
+    cmd_buffer[2] = err;
+    cmd_buffer[3] = optlen;
+}
+
+static void SetSockOpt(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 socket_handle = cmd_buffer[1];
+    u32 level = cmd_buffer[2];
+    u32 optname = cmd_buffer[3];
+    socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
+    void *optval = Memory::GetPointer(cmd_buffer[8]);
+
+    int ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
+    int err = 0;
+    if(ret == SOCKET_ERROR_VALUE) {
+        err = TranslateError(GET_ERRNO);
+    }
+
+    cmd_buffer[0] = IPC::MakeHeader(0x12, 4, 4);
+    cmd_buffer[1] = ret;
+    cmd_buffer[2] = err;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010044, InitializeSockets,             "InitializeSockets"},
     {0x000200C2, Socket,                        "Socket"},
@@ -741,8 +784,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000E00C2, nullptr,                       "GetHostByAddr"},
     {0x000F0106, nullptr,                       "GetAddrInfo"},
     {0x00100102, nullptr,                       "GetNameInfo"},
-    {0x00110102, nullptr,                       "GetSockOpt"},
-    {0x00120104, nullptr,                       "SetSockOpt"},
+    {0x00110102, GetSockOpt,                    "GetSockOpt"},
+    {0x00120104, SetSockOpt,                    "SetSockOpt"},
     {0x001300C2, Fcntl,                         "Fcntl"},
     {0x00140084, Poll,                          "Poll"},
     {0x00150042, nullptr,                       "SockAtMark"},
