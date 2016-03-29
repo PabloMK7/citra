@@ -729,12 +729,12 @@ static void GetSockOpt(Service::Interface* self) {
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
     u32 optname = cmd_buffer[3];
-    u32 optlen = cmd_buffer[4];
+    int optlen = (int)cmd_buffer[4];
 
     // 0x100 = static buffer offset (bytes)
     // + 0x4 = 2nd pointer (u32) position
     // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
-    u8* optval = Memory::GetPointer(cmd_buffer[0x104 >> 2]);
+    char* optval = reinterpret_cast<char*>(Memory::GetPointer(cmd_buffer[0x104 >> 2]));
 
     int ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
     int err = 0;
@@ -754,7 +754,7 @@ static void SetSockOpt(Service::Interface* self) {
     u32 level = cmd_buffer[2];
     u32 optname = cmd_buffer[3];
     socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
-    u8 *optval = Memory::GetPointer(cmd_buffer[8]);
+    const char *optval = reinterpret_cast<const char*>(Memory::GetPointer(cmd_buffer[8]));
 
     int ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
     int err = 0;
