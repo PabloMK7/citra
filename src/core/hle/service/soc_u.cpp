@@ -738,7 +738,7 @@ static void GetSockOpt(Service::Interface* self) {
 
     int ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
     int err = 0;
-    if(ret == SOCKET_ERROR_VALUE) {
+    if (ret == SOCKET_ERROR_VALUE) {
         err = TranslateError(GET_ERRNO);
     }
 
