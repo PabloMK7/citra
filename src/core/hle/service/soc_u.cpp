@@ -568,7 +568,7 @@ static void RecvFrom(Service::Interface* self) {
     socklen_t src_addr_len = sizeof(src_addr);
     int ret = ::recvfrom(socket_handle, (char*)output_buff, len, flags, &src_addr, &src_addr_len);
 
-    if (buffer_parameters.output_src_address_buffer != 0 && src_addr_len > 0) {
+    if (ret >= 0 && buffer_parameters.output_src_address_buffer != 0 && src_addr_len > 0) {
         CTRSockAddr* ctr_src_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(buffer_parameters.output_src_address_buffer));
         *ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
     }
@@ -736,7 +736,7 @@ static void GetSockOpt(Service::Interface* self) {
     // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
     u8* optval = Memory::GetPointer(cmd_buffer[0x104 >> 2]);
 
-    int ret = ::getsockopt(socket_handle, level, optname, &optval, &optlen);
+    int ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
     int err = 0;
     if(ret == SOCKET_ERROR_VALUE) {
         err = TranslateError(GET_ERRNO);
@@ -754,11 +754,11 @@ static void SetSockOpt(Service::Interface* self) {
     u32 level = cmd_buffer[2];
     u32 optname = cmd_buffer[3];
     socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
-    void *optval = Memory::GetPointer(cmd_buffer[8]);
+    u8 *optval = Memory::GetPointer(cmd_buffer[8]);
 
     int ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
     int err = 0;
-    if(ret == SOCKET_ERROR_VALUE) {
+    if (ret == SOCKET_ERROR_VALUE) {
         err = TranslateError(GET_ERRNO);
     }
 
