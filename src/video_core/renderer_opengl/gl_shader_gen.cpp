@@ -540,6 +540,7 @@ layout (std140) uniform shader_data {
     vec4 const_color[NUM_TEV_STAGES];
     vec4 tev_combiner_buffer_color;
     int alphatest_ref;
+    float depth_scale;
     float depth_offset;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
@@ -581,7 +582,15 @@ vec4 secondary_fragment_color = vec4(0.0);
     }
 
     out += "color = last_tex_env_out;\n";
-    out += "gl_FragDepth = gl_FragCoord.z + depth_offset;\n}";
+
+    out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";
+    out += "float depth = z_over_w * depth_scale + depth_offset;\n";
+    if (state.depthmap_enable == Pica::Regs::DepthBuffering::WBuffering) {
+        out += "depth /= gl_FragCoord.w;\n";
+    }
+    out += "gl_FragDepth = depth;\n";
+
+    out += "}";
 
     return out;
 }
