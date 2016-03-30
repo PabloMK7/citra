@@ -295,6 +295,26 @@ union CTRSockAddr {
     }
 };
 
+/// Filters valid sockopt names and converts from platform-specific name if necessary
+static int GetSockOptName(u32 name) {
+    switch(name) {
+        case SO_RCVLOWAT:
+#ifdef _WIN32
+            // LOWAT not supported by WinSock
+            return -1;
+#endif
+        case SO_REUSEADDR:
+        case SO_SNDBUF:
+        case SO_RCVBUF:
+        case SO_TYPE:
+        case SO_ERROR:
+            return name;
+        default:
+            // all other options are either ineffectual or unsupported
+            return -1;
+    }
+}
+
 /// Holds info about the currently open sockets
 static std::unordered_map<u32, SocketHolder> open_sockets;
 
@@ -728,18 +748,29 @@ static void GetSockOpt(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
-    u32 optname = cmd_buffer[3];
+    int optname = GetSockOptName(cmd_buffer[3]);
     socklen_t optlen = (socklen_t)cmd_buffer[4];
 
-    // 0x100 = static buffer offset (bytes)
-    // + 0x4 = 2nd pointer (u32) position
-    // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
-    char* optval = reinterpret_cast<char*>(Memory::GetPointer(cmd_buffer[0x104 >> 2]));
-
-    int ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
+    int ret = -1;
     int err = 0;
-    if (ret == SOCKET_ERROR_VALUE) {
-        err = TranslateError(GET_ERRNO);
+
+    if(optname < 0) {
+#ifdef _WIN32
+        err = WSAEINVAL;
+#else
+        err = EINVAL;
+#endif
+    } else {
+        // 0x100 = static buffer offset (bytes)
+        // + 0x4 = 2nd pointer (u32) position
+        // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
+        char *optval = reinterpret_cast<char *>(Memory::GetPointer(cmd_buffer[0x104 >> 2]));
+
+        ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
+        err = 0;
+        if (ret == SOCKET_ERROR_VALUE) {
+            err = TranslateError(GET_ERRNO);
+        }
     }
 
     cmd_buffer[0] = IPC::MakeHeader(0x11, 4, 2);
@@ -752,14 +783,26 @@ static void SetSockOpt(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
-    u32 optname = cmd_buffer[3];
-    socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
-    const char *optval = reinterpret_cast<const char*>(Memory::GetPointer(cmd_buffer[8]));
+    int optname = GetSockOptName(cmd_buffer[3]);
 
-    int ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
+    int ret = -1;
     int err = 0;
-    if (ret == SOCKET_ERROR_VALUE) {
-        err = TranslateError(GET_ERRNO);
+
+    if(optname < 0) {
+#ifdef _WIN32
+        err = WSAEINVAL;
+#else
+        err = EINVAL;
+#endif
+    } else {
+        socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
+        const char *optval = reinterpret_cast<const char *>(Memory::GetPointer(cmd_buffer[8]));
+
+        ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
+        err = 0;
+        if (ret == SOCKET_ERROR_VALUE) {
+            err = TranslateError(GET_ERRNO);
+        }
     }
 
     cmd_buffer[0] = IPC::MakeHeader(0x12, 4, 4);
