@@ -500,7 +500,7 @@ void Init() {
 }
 
 void Shutdown() {
-    Shader::Shutdown();
+    Shader::ClearCache();
 }
 
 template <typename T>

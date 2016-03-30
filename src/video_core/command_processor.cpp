@@ -144,12 +144,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         immediate_attribute_id = 0;
 
                         Shader::UnitState<false> shader_unit;
-                        Shader::Setup();
+                        g_state.vs.Setup();
 
                         // Send to vertex shader
                         if (g_debug_context)
                             g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation, static_cast<void*>(&immediate_input));
-                        Shader::OutputVertex output = Shader::Run(shader_unit, immediate_input, regs.vs.num_input_attributes+1);
+                        Shader::OutputVertex output = g_state.vs.Run(shader_unit, immediate_input, regs.vs.num_input_attributes+1);
 
                         // Send to renderer
                         using Pica::Shader::OutputVertex;
@@ -237,7 +237,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             vertex_cache_ids.fill(-1);
 
             Shader::UnitState<false> shader_unit;
-            Shader::Setup();
+            g_state.vs.Setup();
 
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
@@ -274,7 +274,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     // Send to vertex shader
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation, (void*)&input);
-                    output = Shader::Run(shader_unit, input, loader.GetNumTotalAttributes());
+                    output = g_state.vs.Run(shader_unit, input, loader.GetNumTotalAttributes());
 
                     if (is_indexed) {
                         vertex_cache[vertex_cache_pos] = output;
