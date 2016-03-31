@@ -36,7 +36,8 @@ enum {
     CALL            = (1 << 4),
     RET             = (1 << 5),
     END_OF_PAGE     = (1 << 6),
-    THUMB           = (1 << 7)
+    THUMB           = (1 << 7),
+    SINGLE_STEP     = (1 << 8)
 };
 
 #define RM    BITS(sht_oper, 0, 3)
@@ -3466,7 +3467,35 @@ enum {
 
 MICROPROFILE_DEFINE(DynCom_Decode, "DynCom", "Decode", MP_RGB(255, 64, 64));
 
-static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
+static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, const u32 phys_addr, ARM_INST_PTR& inst_base) {
+    unsigned int inst_size = 4;
+    unsigned int inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
+
+    // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
+    if (cpu->TFlag) {
+        u32 arm_inst;
+        ThumbDecodeStatus state = DecodeThumbInstruction(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
+
+        // We have translated the Thumb branch instruction in the Thumb decoder
+        if (state == ThumbDecodeStatus::BRANCH) {
+            return inst_size;
+        }
+        inst = arm_inst;
+    }
+
+    int idx;
+    if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
+        std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
+        LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, disasm.c_str(), inst);
+        LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
+        CITRA_IGNORE_EXIT(-1);
+    }
+    inst_base = arm_instruction_trans[idx](inst, idx);
+
+    return inst_size;
+}
+
+static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) {
     Common::Profiling::ScopeTimer timer_decode(profile_decode);
     MICROPROFILE_SCOPE(DynCom_Decode);
 
@@ -3475,8 +3504,6 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     // Go on next, until terminal instruction
     // Save start addr of basicblock in CreamCache
     ARM_INST_PTR inst_base = nullptr;
-    unsigned int inst, inst_size = 4;
-    int idx;
     int ret = NON_BRANCH;
     int size = 0; // instruction size of basic block
     bb_start = top;
@@ -3485,30 +3512,10 @@ static int InterpreterTranslate(ARMul_State* cpu, int& bb_start, u32 addr) {
     u32 pc_start = cpu->Reg[15];
 
     while (ret == NON_BRANCH) {
-        inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
+        unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
         size++;
-        // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
-        if (cpu->TFlag) {
-            u32 arm_inst;
-            ThumbDecodeStatus state = DecodeThumbInstruction(inst, phys_addr, &arm_inst, &inst_size, &inst_base);
 
-            // We have translated the Thumb branch instruction in the Thumb decoder
-            if (state == ThumbDecodeStatus::BRANCH) {
-                goto translated;
-            }
-            inst = arm_inst;
-        }
-
-        if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
-            std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
-            LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, disasm.c_str(), inst);
-            LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
-            CITRA_IGNORE_EXIT(-1);
-        }
-        inst_base = arm_instruction_trans[idx](inst, idx);
-
-translated:
         phys_addr += inst_size;
 
         if ((phys_addr & 0xfff) == 0) {
@@ -3516,6 +3523,27 @@ translated:
         }
         ret = inst_base->br;
     };
+
+    cpu->instruction_cache[pc_start] = bb_start;
+
+    return KEEP_GOING;
+}
+
+static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr) {
+    Common::Profiling::ScopeTimer timer_decode(profile_decode);
+    MICROPROFILE_SCOPE(DynCom_Decode);
+
+    ARM_INST_PTR inst_base = nullptr;
+    bb_start = top;
+
+    u32 phys_addr = addr;
+    u32 pc_start = cpu->Reg[15];
+
+    InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
+
+    if (inst_base->br == NON_BRANCH) {
+        inst_base->br = SINGLE_STEP;
+    }
 
     cpu->instruction_cache[pc_start] = bb_start;
 
@@ -3871,8 +3899,11 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         auto itr = cpu->instruction_cache.find(cpu->Reg[15]);
         if (itr != cpu->instruction_cache.end()) {
             ptr = itr->second;
+        } else if (cpu->NumInstrsToExecute != 1) {
+            if (InterpreterTranslateBlock(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
+                goto END;
         } else {
-            if (InterpreterTranslate(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
+            if (InterpreterTranslateSingle(cpu, ptr, cpu->Reg[15]) == FETCH_EXCEPTION)
                 goto END;
         }
 
