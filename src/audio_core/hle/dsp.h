@@ -126,8 +126,11 @@ struct SourceConfiguration {
         union {
             u32_le dirty_raw;
 
+            BitField<0, 1, u32_le> format_dirty;
+            BitField<1, 1, u32_le> mono_or_stereo_dirty;
             BitField<2, 1, u32_le> adpcm_coefficients_dirty;
             BitField<3, 1, u32_le> partial_embedded_buffer_dirty; ///< Tends to be set when a looped buffer is queued.
+            BitField<4, 1, u32_le> partial_reset_flag;
 
             BitField<16, 1, u32_le> enable_dirty;
             BitField<17, 1, u32_le> interpolation_dirty;
@@ -143,8 +146,7 @@ struct SourceConfiguration {
             BitField<27, 1, u32_le> gain_2_dirty;
             BitField<28, 1, u32_le> sync_dirty;
             BitField<29, 1, u32_le> reset_flag;
-
-            BitField<31, 1, u32_le> embedded_buffer_dirty;
+            BitField<30, 1, u32_le> embedded_buffer_dirty;
         };
 
         // Gain control
@@ -175,7 +177,8 @@ struct SourceConfiguration {
         /**
          * This is the simplest normalized first-order digital recursive filter.
          * The transfer function of this filter is:
-         *     H(z) = b0 / (1 + a1 z^-1)
+         *     H(z) = b0 / (1 - a1 z^-1)
+         * Note the feedbackward coefficient is negated.
          * Values are signed fixed point with 15 fractional bits.
          */
         struct SimpleFilter {
@@ -192,11 +195,11 @@ struct SourceConfiguration {
          * Values are signed fixed point with 14 fractional bits.
          */
         struct BiquadFilter {
-            s16_le b0;
-            s16_le b1;
-            s16_le b2;
-            s16_le a1;
             s16_le a2;
+            s16_le a1;
+            s16_le b2;
+            s16_le b1;
+            s16_le b0;
         };
 
         union {
