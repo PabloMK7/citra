@@ -22,7 +22,7 @@ inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
     };
 
     // Range check table for input
-    if (mode >= ARRAY_SIZE(filter_mode_table)) {
+    if (static_cast<size_t>(mode) >= ARRAY_SIZE(filter_mode_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode %d", mode);
         UNREACHABLE();
 
@@ -51,7 +51,7 @@ inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     };
 
     // Range check table for input
-    if (mode >= ARRAY_SIZE(wrap_mode_table)) {
+    if (static_cast<size_t>(mode) >= ARRAY_SIZE(wrap_mode_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown texture wrap mode %d", mode);
         UNREACHABLE();
 
@@ -91,7 +91,7 @@ inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     };
 
     // Range check table for input
-    if ((unsigned)factor >= ARRAY_SIZE(blend_func_table)) {
+    if (static_cast<size_t>(factor) >= ARRAY_SIZE(blend_func_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown blend factor %d", factor);
         UNREACHABLE();
 
@@ -122,7 +122,7 @@ inline GLenum LogicOp(Pica::Regs::LogicOp op) {
     };
 
     // Range check table for input
-    if ((unsigned)op >= ARRAY_SIZE(logic_op_table)) {
+    if (static_cast<size_t>(op) >= ARRAY_SIZE(logic_op_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown logic op %d", op);
         UNREACHABLE();
 
@@ -145,7 +145,7 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     };
 
     // Range check table for input
-    if ((unsigned)func >= ARRAY_SIZE(compare_func_table)) {
+    if (static_cast<size_t>(func) >= ARRAY_SIZE(compare_func_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown compare function %d", func);
         UNREACHABLE();
 
@@ -168,7 +168,7 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
     };
 
     // Range check table for input
-    if ((unsigned)action >= ARRAY_SIZE(stencil_op_table)) {
+    if (static_cast<size_t>(action) >= ARRAY_SIZE(stencil_op_table)) {
         LOG_CRITICAL(Render_OpenGL, "Unknown stencil op %d", action);
         UNREACHABLE();
 
