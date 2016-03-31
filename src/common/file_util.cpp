@@ -192,7 +192,7 @@ bool CreateFullPath(const std::string &fullPath)
 {
     int panicCounter = 100;
     LOG_TRACE(Common_Filesystem, "path %s", fullPath.c_str());
-    LOG_WARNING(Common_Filesystem, "path %s", fullPath.c_str());
+
     if (FileUtil::Exists(fullPath))
     {
         LOG_WARNING(Common_Filesystem, "path exists %s", fullPath.c_str());
