@@ -192,7 +192,7 @@ bool CreateFullPath(const std::string &fullPath)
 {
     int panicCounter = 100;
     LOG_TRACE(Common_Filesystem, "path %s", fullPath.c_str());
-
+    LOG_WARNING(Common_Filesystem, "path %s", fullPath.c_str());
     if (FileUtil::Exists(fullPath))
     {
         LOG_WARNING(Common_Filesystem, "path exists %s", fullPath.c_str());
@@ -577,15 +577,23 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
 // Returns the current directory
 std::string GetCurrentDir()
 {
-    char *dir;
     // Get the current working directory (getcwd uses malloc)
+#ifdef _WIN32
+    wchar_t *dir;
+    if (!(dir = _wgetcwd(nullptr, 0))) {
+#else
+    char *dir;
     if (!(dir = getcwd(nullptr, 0))) {
-
+#endif
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: %s",
                 GetLastErrorMsg());
         return nullptr;
     }
+#ifdef _WIN32
+    std::string strDir = Common::UTF16ToUTF8(dir);
+#else
     std::string strDir = dir;
+#endif
     free(dir);
     return strDir;
 }
@@ -593,7 +601,11 @@ std::string GetCurrentDir()
 // Sets the current directory to the given directory
 bool SetCurrentDir(const std::string &directory)
 {
+#ifdef _WIN32
+    return _wchdir(Common::UTF8ToUTF16W(directory).c_str()) == 0;
+#else
     return chdir(directory.c_str()) == 0;
+#endif
 }
 
 #if defined(__APPLE__)
@@ -618,9 +630,9 @@ std::string& GetExeDirectory()
     static std::string exe_path;
     if (exe_path.empty())
     {
-        TCHAR tchar_exe_path[2048];
-        GetModuleFileName(nullptr, tchar_exe_path, 2048);
-        exe_path = Common::TStrToUTF8(tchar_exe_path);
+        wchar_t wchar_exe_path[2048];
+        GetModuleFileNameW(nullptr, wchar_exe_path, 2048);
+        exe_path = Common::UTF16ToUTF8(wchar_exe_path);
         exe_path = exe_path.substr(0, exe_path.find_last_of('\\'));
     }
     return exe_path;
