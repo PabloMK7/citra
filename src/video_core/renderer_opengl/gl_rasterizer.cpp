@@ -153,6 +153,9 @@ void RasterizerOpenGL::Reset() {
     SyncLogicOp();
     SyncStencilTest();
     SyncDepthTest();
+    SyncColorWriteMask();
+    SyncStencilWriteMask();
+    SyncDepthWriteMask();
 
     SetShader();
 
@@ -268,16 +271,23 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         state.draw.shader_dirty = true;
         break;
 
-    // Stencil test
+    // Sync GL stencil test + stencil write mask
+    // (Pica stencil test function register also contains a stencil write mask)
     case PICA_REG_INDEX(output_merger.stencil_test.raw_func):
+        SyncStencilTest();
+        SyncStencilWriteMask();
+        break;
     case PICA_REG_INDEX(output_merger.stencil_test.raw_op):
     case PICA_REG_INDEX(framebuffer.depth_format):
         SyncStencilTest();
         break;
 
-    // Depth test
+    // Sync GL depth test + depth and color write mask
+    // (Pica depth test function register also contains a depth and color write mask)
     case PICA_REG_INDEX(output_merger.depth_test_enable):
         SyncDepthTest();
+        SyncDepthWriteMask();
+        SyncColorWriteMask();
         break;
 
     // Logic op
@@ -881,13 +891,30 @@ void RasterizerOpenGL::SyncLogicOp() {
     state.logic_op = PicaToGL::LogicOp(Pica::g_state.regs.output_merger.logic_op);
 }
 
+void RasterizerOpenGL::SyncColorWriteMask() {
+    const auto& regs = Pica::g_state.regs;
+    state.color_mask.red_enabled = regs.output_merger.red_enable;
+    state.color_mask.green_enabled = regs.output_merger.green_enable;
+    state.color_mask.blue_enabled = regs.output_merger.blue_enable;
+    state.color_mask.alpha_enabled = regs.output_merger.alpha_enable;
+}
+
+void RasterizerOpenGL::SyncStencilWriteMask() {
+    const auto& regs = Pica::g_state.regs;
+    state.stencil.write_mask = regs.output_merger.stencil_test.write_mask;
+}
+
+void RasterizerOpenGL::SyncDepthWriteMask() {
+    const auto& regs = Pica::g_state.regs;
+    state.depth.write_mask = regs.output_merger.depth_write_enable ? GL_TRUE : GL_FALSE;
+}
+
 void RasterizerOpenGL::SyncStencilTest() {
     const auto& regs = Pica::g_state.regs;
     state.stencil.test_enabled = regs.output_merger.stencil_test.enable && regs.framebuffer.depth_format == Pica::Regs::DepthFormat::D24S8;
     state.stencil.test_func = PicaToGL::CompareFunc(regs.output_merger.stencil_test.func);
     state.stencil.test_ref = regs.output_merger.stencil_test.reference_value;
     state.stencil.test_mask = regs.output_merger.stencil_test.input_mask;
-    state.stencil.write_mask = regs.output_merger.stencil_test.write_mask;
     state.stencil.action_stencil_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_stencil_fail);
     state.stencil.action_depth_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_fail);
     state.stencil.action_depth_pass = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_pass);
@@ -899,11 +926,6 @@ void RasterizerOpenGL::SyncDepthTest() {
                                regs.output_merger.depth_write_enable == 1;
     state.depth.test_func = regs.output_merger.depth_test_enable == 1 ?
                             PicaToGL::CompareFunc(regs.output_merger.depth_test_func) : GL_ALWAYS;
-    state.color_mask.red_enabled = regs.output_merger.red_enable;
-    state.color_mask.green_enabled = regs.output_merger.green_enable;
-    state.color_mask.blue_enabled = regs.output_merger.blue_enable;
-    state.color_mask.alpha_enabled = regs.output_merger.alpha_enable;
-    state.depth.write_mask = regs.output_merger.depth_write_enable ? GL_TRUE : GL_FALSE;
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
