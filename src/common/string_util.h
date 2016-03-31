@@ -95,7 +95,7 @@ std::string CP1252ToUTF8(const std::string& str);
 std::string SHIFTJISToUTF8(const std::string& str);
 
 #ifdef _WIN32
-
+std::string UTF16ToUTF8(const std::wstring& input);
 std::wstring UTF8ToUTF16W(const std::string& str);
 
 #ifdef _UNICODE
