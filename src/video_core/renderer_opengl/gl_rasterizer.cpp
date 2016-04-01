@@ -290,6 +290,19 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncColorWriteMask();
         break;
 
+    // Sync GL depth and stencil write mask
+    // (This is a dedicated combined depth / stencil write-enable register)
+    case PICA_REG_INDEX(framebuffer.allow_depth_stencil_write):
+        SyncDepthWriteMask();
+        SyncStencilWriteMask();
+        break;
+
+    // Sync GL color write mask
+    // (This is a dedicated color write-enable register)
+    case PICA_REG_INDEX(framebuffer.allow_color_write):
+        SyncColorWriteMask();
+        break;
+
     // Logic op
     case PICA_REG_INDEX(output_merger.logic_op):
         SyncLogicOp();
@@ -893,20 +906,29 @@ void RasterizerOpenGL::SyncLogicOp() {
 
 void RasterizerOpenGL::SyncColorWriteMask() {
     const auto& regs = Pica::g_state.regs;
-    state.color_mask.red_enabled = regs.output_merger.red_enable;
-    state.color_mask.green_enabled = regs.output_merger.green_enable;
-    state.color_mask.blue_enabled = regs.output_merger.blue_enable;
-    state.color_mask.alpha_enabled = regs.output_merger.alpha_enable;
+
+    auto IsColorWriteEnabled = [&](u32 value) {
+        return (regs.framebuffer.allow_color_write != 0 && value != 0) ? GL_TRUE : GL_FALSE;
+    };
+
+    state.color_mask.red_enabled = IsColorWriteEnabled(regs.output_merger.red_enable);
+    state.color_mask.green_enabled = IsColorWriteEnabled(regs.output_merger.green_enable);
+    state.color_mask.blue_enabled = IsColorWriteEnabled(regs.output_merger.blue_enable);
+    state.color_mask.alpha_enabled = IsColorWriteEnabled(regs.output_merger.alpha_enable);
 }
 
 void RasterizerOpenGL::SyncStencilWriteMask() {
     const auto& regs = Pica::g_state.regs;
-    state.stencil.write_mask = regs.output_merger.stencil_test.write_mask;
+    state.stencil.write_mask = (regs.framebuffer.allow_depth_stencil_write != 0)
+                             ? static_cast<GLuint>(regs.output_merger.stencil_test.write_mask)
+                             : 0;
 }
 
 void RasterizerOpenGL::SyncDepthWriteMask() {
     const auto& regs = Pica::g_state.regs;
-    state.depth.write_mask = regs.output_merger.depth_write_enable ? GL_TRUE : GL_FALSE;
+    state.depth.write_mask = (regs.framebuffer.allow_depth_stencil_write != 0 && regs.output_merger.depth_write_enable)
+                           ? GL_TRUE
+                           : GL_FALSE;
 }
 
 void RasterizerOpenGL::SyncStencilTest() {
