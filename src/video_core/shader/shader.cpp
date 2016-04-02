@@ -32,7 +32,7 @@ static std::unordered_map<u64, std::unique_ptr<JitCompiler>> shader_map;
 static const JitCompiler* jit_shader;
 #endif // ARCHITECTURE_x86_64
 
-void Setup(UnitState<false>& state) {
+void Setup() {
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
         u64 cache_key = (Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^

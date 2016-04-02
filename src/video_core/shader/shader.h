@@ -339,9 +339,8 @@ struct UnitState {
 /**
  * Performs any shader unit setup that only needs to happen once per shader (as opposed to once per
  * vertex, which would happen within the `Run` function).
- * @param state Shader unit state, must be setup per shader and per shader unit
  */
-void Setup(UnitState<false>& state);
+void Setup();
 
 /// Performs any cleanup when the emulator is shutdown
 void Shutdown();
