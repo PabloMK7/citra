@@ -61,6 +61,7 @@ enum class Class : ClassType {
     Service_NIM,                ///< The NIM (Network interface manager) service
     Service_NWM,                ///< The NWM (Network wlan manager) service
     Service_CAM,                ///< The CAM (Camera) service
+    Service_CECD,               ///< The CECD service
     Service_CFG,                ///< The CFG (Configuration) service
     Service_DSP,                ///< The DSP (DSP control) service
     Service_HID,                ///< The HID (Human interface device) service
