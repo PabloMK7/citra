@@ -48,6 +48,7 @@ namespace Log {
         SUB(Service, CAM) \
         SUB(Service, CFG) \
         SUB(Service, DSP) \
+        SUB(Service, DLP) \
         SUB(Service, HID) \
         SUB(Service, SOC) \
         SUB(Service, IR) \

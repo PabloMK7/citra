@@ -9,6 +9,7 @@
 #include "core/hle/service/ac_u.h"
 #include "core/hle/service/act_u.h"
 #include "core/hle/service/csnd_snd.h"
+#include "core/hle/service/dlp_srvr.h"
 #include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -121,6 +122,7 @@ void Init() {
     AddService(new AC_U::Interface);
     AddService(new ACT_U::Interface);
     AddService(new CSND_SND::Interface);
+    AddService(new DLP_SRVR::Interface);
     AddService(new DSP_DSP::Interface);
     AddService(new GSP_GPU::Interface);
     AddService(new GSP_LCD::Interface);

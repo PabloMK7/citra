@@ -68,6 +68,7 @@ set(SRCS
             hle/service/cfg/cfg_s.cpp
             hle/service/cfg/cfg_u.cpp
             hle/service/csnd_snd.cpp
+            hle/service/dlp_srvr.cpp
             hle/service/dsp_dsp.cpp
             hle/service/err_f.cpp
             hle/service/frd/frd.cpp
@@ -200,6 +201,7 @@ set(HEADERS
             hle/service/cfg/cfg_s.h
             hle/service/cfg/cfg_u.h
             hle/service/csnd_snd.h
+            hle/service/dlp_srvr.h
             hle/service/dsp_dsp.h
             hle/service/err_f.h
             hle/service/frd/frd.h
