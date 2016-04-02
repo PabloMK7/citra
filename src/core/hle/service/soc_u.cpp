@@ -151,6 +151,34 @@ static int TranslateError(int error) {
     return error;
 }
 
+/// Holds the translation from system network socket options to 3DS network socket options
+/// Note: -1 = No effect/unavailable
+static const std::unordered_map<int, int> sockopt_map = { {
+    { 0x0004,   SO_REUSEADDR },
+    { 0x0080,   -1 },
+    { 0x0100,   -1 },
+    { 0x1001,   SO_SNDBUF },
+    { 0x1002,   SO_RCVBUF },
+    { 0x1003,   -1 },
+#ifdef _WIN32
+    /// Unsupported in WinSock2
+    { 0x1004,   -1 },
+#else
+    { 0x1004,   SO_RCVLOWAT },
+#endif
+    { 0x1008,   SO_TYPE },
+    { 0x1009,   SO_ERROR },
+}};
+
+/// Converts a socket option from 3ds-specific to platform-specific
+static int TranslateSockOpt(int console_opt_name) {
+    auto found = sockopt_map.find(console_opt_name);
+    if (found != sockopt_map.end()) {
+        return found->second;
+    }
+    return console_opt_name;
+}
+
 /// Holds information about a particular socket
 struct SocketHolder {
     u32 socket_fd; ///< The socket descriptor
@@ -294,26 +322,6 @@ union CTRSockAddr {
         return result;
     }
 };
-
-/// Filters valid sockopt names and converts from platform-specific name if necessary
-static int GetSockOptName(u32 name) {
-    switch(name) {
-        case SO_RCVLOWAT:
-#ifdef _WIN32
-            // LOWAT not supported by WinSock
-            return -1;
-#endif
-        case SO_REUSEADDR:
-        case SO_SNDBUF:
-        case SO_RCVBUF:
-        case SO_TYPE:
-        case SO_ERROR:
-            return name;
-        default:
-            // all other options are either ineffectual or unsupported
-            return -1;
-    }
-}
 
 /// Holds info about the currently open sockets
 static std::unordered_map<u32, SocketHolder> open_sockets;
@@ -748,7 +756,7 @@ static void GetSockOpt(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
-    int optname = GetSockOptName(cmd_buffer[3]);
+    int optname = TranslateSockOpt(cmd_buffer[3]);
     socklen_t optlen = (socklen_t)cmd_buffer[4];
 
     int ret = -1;
@@ -783,7 +791,7 @@ static void SetSockOpt(Service::Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
-    int optname = GetSockOptName(cmd_buffer[3]);
+    int optname = TranslateSockOpt(cmd_buffer[3]);
 
     int ret = -1;
     int err = 0;
