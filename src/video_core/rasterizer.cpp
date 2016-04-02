@@ -923,66 +923,34 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             if (output_merger.alphablend_enable) {
                 auto params = output_merger.alpha_blending;
 
-                auto LookupFactorRGB = [&](Regs::BlendFactor factor) -> Math::Vec3<u8> {
-                    switch (factor) {
-                    case Regs::BlendFactor::Zero :
-                        return Math::Vec3<u8>(0, 0, 0);
+                auto LookupFactor = [&](unsigned channel, Regs::BlendFactor factor) -> u8 {
+                    DEBUG_ASSERT(channel < 4);
 
-                    case Regs::BlendFactor::One :
-                        return Math::Vec3<u8>(255, 255, 255);
+                    const Math::Vec4<u8> blend_const = {
+                        static_cast<u8>(output_merger.blend_const.r),
+                        static_cast<u8>(output_merger.blend_const.g),
+                        static_cast<u8>(output_merger.blend_const.b),
+                        static_cast<u8>(output_merger.blend_const.a)
+                    };
 
-                    case Regs::BlendFactor::SourceColor:
-                        return combiner_output.rgb();
-
-                    case Regs::BlendFactor::OneMinusSourceColor:
-                        return Math::Vec3<u8>(255 - combiner_output.r(), 255 - combiner_output.g(), 255 - combiner_output.b());
-
-                    case Regs::BlendFactor::DestColor:
-                        return dest.rgb();
-
-                    case Regs::BlendFactor::OneMinusDestColor:
-                        return Math::Vec3<u8>(255 - dest.r(), 255 - dest.g(), 255 - dest.b());
-
-                    case Regs::BlendFactor::SourceAlpha:
-                        return Math::Vec3<u8>(combiner_output.a(), combiner_output.a(), combiner_output.a());
-
-                    case Regs::BlendFactor::OneMinusSourceAlpha:
-                        return Math::Vec3<u8>(255 - combiner_output.a(), 255 - combiner_output.a(), 255 - combiner_output.a());
-
-                    case Regs::BlendFactor::DestAlpha:
-                        return Math::Vec3<u8>(dest.a(), dest.a(), dest.a());
-
-                    case Regs::BlendFactor::OneMinusDestAlpha:
-                        return Math::Vec3<u8>(255 - dest.a(), 255 - dest.a(), 255 - dest.a());
-
-                    case Regs::BlendFactor::ConstantColor:
-                        return Math::Vec3<u8>(output_merger.blend_const.r, output_merger.blend_const.g, output_merger.blend_const.b);
-
-                    case Regs::BlendFactor::OneMinusConstantColor:
-                        return Math::Vec3<u8>(255 - output_merger.blend_const.r, 255 - output_merger.blend_const.g, 255 - output_merger.blend_const.b);
-
-                    case Regs::BlendFactor::ConstantAlpha:
-                        return Math::Vec3<u8>(output_merger.blend_const.a, output_merger.blend_const.a, output_merger.blend_const.a);
-
-                    case Regs::BlendFactor::OneMinusConstantAlpha:
-                        return Math::Vec3<u8>(255 - output_merger.blend_const.a, 255 - output_merger.blend_const.a, 255 - output_merger.blend_const.a);
-
-                    default:
-                        LOG_CRITICAL(HW_GPU, "Unknown color blend factor %x", factor);
-                        UNIMPLEMENTED();
-                        break;
-                    }
-
-                    return {};
-                };
-
-                auto LookupFactorA = [&](Regs::BlendFactor factor) -> u8 {
                     switch (factor) {
                     case Regs::BlendFactor::Zero:
                         return 0;
 
                     case Regs::BlendFactor::One:
                         return 255;
+
+                    case Regs::BlendFactor::SourceColor:
+                        return combiner_output[channel];
+
+                    case Regs::BlendFactor::OneMinusSourceColor:
+                        return 255 - combiner_output[channel];
+
+                    case Regs::BlendFactor::DestColor:
+                        return dest[channel];
+
+                    case Regs::BlendFactor::OneMinusDestColor:
+                        return 255 - dest[channel];
 
                     case Regs::BlendFactor::SourceAlpha:
                         return combiner_output.a();
@@ -996,19 +964,31 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     case Regs::BlendFactor::OneMinusDestAlpha:
                         return 255 - dest.a();
 
+                    case Regs::BlendFactor::ConstantColor:
+                        return blend_const[channel];
+
+                    case Regs::BlendFactor::OneMinusConstantColor:
+                        return 255 - blend_const[channel];
+
                     case Regs::BlendFactor::ConstantAlpha:
-                        return output_merger.blend_const.a;
+                        return blend_const.a();
 
                     case Regs::BlendFactor::OneMinusConstantAlpha:
-                        return 255 - output_merger.blend_const.a;
+                        return 255 - blend_const.a();
+
+                    case Regs::BlendFactor::SourceAlphaSaturate:
+                        // Returns 1.0 for the alpha channel
+                        if (channel == 3)
+                            return 255;
+                        return std::min(combiner_output.a(), static_cast<u8>(255 - dest.a()));
 
                     default:
-                        LOG_CRITICAL(HW_GPU, "Unknown alpha blend factor %x", factor);
+                        LOG_CRITICAL(HW_GPU, "Unknown blend factor %x", factor);
                         UNIMPLEMENTED();
                         break;
                     }
 
-                    return {};
+                    return combiner_output[channel];
                 };
 
                 static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
@@ -1060,10 +1040,15 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                                     MathUtil::Clamp(result.a(), 0, 255));
                 };
 
-                auto srcfactor = Math::MakeVec(LookupFactorRGB(params.factor_source_rgb),
-                                               LookupFactorA(params.factor_source_a));
-                auto dstfactor = Math::MakeVec(LookupFactorRGB(params.factor_dest_rgb),
-                                               LookupFactorA(params.factor_dest_a));
+                auto srcfactor = Math::MakeVec(LookupFactor(0, params.factor_source_rgb),
+                                               LookupFactor(1, params.factor_source_rgb),
+                                               LookupFactor(2, params.factor_source_rgb),
+                                               LookupFactor(3, params.factor_source_a));
+
+                auto dstfactor = Math::MakeVec(LookupFactor(0, params.factor_dest_rgb),
+                                               LookupFactor(1, params.factor_dest_rgb),
+                                               LookupFactor(2, params.factor_dest_rgb),
+                                               LookupFactor(3, params.factor_dest_a));
 
                 blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
                 blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
