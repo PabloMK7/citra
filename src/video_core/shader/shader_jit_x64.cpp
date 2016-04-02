@@ -146,6 +146,16 @@ static Instruction GetVertexShaderInstruction(size_t offset) {
     return { g_state.vs.program_code[offset] };
 }
 
+static void LogCritical(const char* msg) {
+    LOG_CRITICAL(HW_GPU, msg);
+}
+
+void JitCompiler::RuntimeAssert(bool condition, const char* msg) {
+    if (!condition) {
+        ABI_CallFunctionP(reinterpret_cast<const void*>(LogCritical), const_cast<char*>(msg));
+    }
+}
+
 /**
  * Loads and swizzles a source register into the specified XMM register.
  * @param instr VS instruction, used for determining how to load the source register
@@ -667,8 +677,7 @@ void JitCompiler::Compile_MAD(Instruction instr) {
 }
 
 void JitCompiler::Compile_IF(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > last_program_counter, "Backwards if-statements (%d -> %d) not supported",
-        last_program_counter, instr.flow_control.dest_offset.Value());
+    RuntimeAssert(instr.flow_control.dest_offset > last_program_counter, "Backwards if-statements not supported");
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -699,9 +708,8 @@ void JitCompiler::Compile_IF(Instruction instr) {
 }
 
 void JitCompiler::Compile_LOOP(Instruction instr) {
-    ASSERT_MSG(instr.flow_control.dest_offset > last_program_counter, "Backwards loops (%d -> %d) not supported",
-        last_program_counter, instr.flow_control.dest_offset.Value());
-    ASSERT_MSG(!looping, "Nested loops not supported");
+    RuntimeAssert(instr.flow_control.dest_offset > last_program_counter, "Backwards loops not supported");
+    RuntimeAssert(!looping, "Nested loops not supported");
 
     looping = true;
 

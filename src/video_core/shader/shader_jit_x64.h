@@ -91,6 +91,12 @@ private:
     BitSet32 PersistentCallerSavedRegs();
 
     /**
+     * Assertion evaluated at compile-time, but only triggered if executed at runtime.
+     * @param msg Message to be logged if the assertion fails.
+     */
+    void RuntimeAssert(bool condition, const char* msg);
+
+    /**
      * Analyzes the entire shader program for `CALL` instructions before emitting any code,
      * identifying the locations where a return needs to be inserted.
      */
