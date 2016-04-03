@@ -808,6 +808,9 @@ void RasterizerOpenGL::SyncFramebuffer() {
 
         ReloadDepthBuffer();
     }
+
+    ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+               "OpenGL rasterizer framebuffer setup failed, status %X", glCheckFramebufferStatus(GL_FRAMEBUFFER));
 }
 
 void RasterizerOpenGL::SyncCullMode() {
