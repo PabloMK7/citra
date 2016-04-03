@@ -64,6 +64,7 @@ enum class Class : ClassType {
     Service_CECD,               ///< The CECD service
     Service_CFG,                ///< The CFG (Configuration) service
     Service_DSP,                ///< The DSP (DSP control) service
+    Service_DLP,                ///< The DLP (Download Play) service
     Service_HID,                ///< The HID (Human interface device) service
     Service_SOC,                ///< The SOC (Socket) service
     Service_IR,                 ///< The IR service

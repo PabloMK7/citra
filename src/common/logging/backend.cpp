@@ -49,6 +49,7 @@ namespace Log {
         SUB(Service, CECD) \
         SUB(Service, CFG) \
         SUB(Service, DSP) \
+        SUB(Service, DLP) \
         SUB(Service, HID) \
         SUB(Service, SOC) \
         SUB(Service, IR) \
