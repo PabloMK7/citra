@@ -65,7 +65,7 @@ endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
 
 if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-attributes -pthread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wno-attributes -pthread")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 
     if (ARCHITECTURE_x86_64)
