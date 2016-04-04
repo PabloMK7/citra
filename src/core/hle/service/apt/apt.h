@@ -351,14 +351,14 @@ void PreloadLibraryApplet(Service::Interface* self);
 void StartLibraryApplet(Service::Interface* self);
 
 /**
-* APT::GetStartupArgument service function
-*  Inputs:
-*      1 : Parameter Size (capped to 0x300)
-*      2 : StartupArgumentType
-*  Outputs:
-*      0 : Return header
-*      1 : u8, Exists (0 = does not exist, 1 = exists)
-*/
+ * APT::GetStartupArgument service function
+ *  Inputs:
+ *      1 : Parameter Size (capped to 0x300)
+ *      2 : StartupArgumentType
+ *  Outputs:
+ *      0 : Return header
+ *      1 : u8, Exists (0 = does not exist, 1 = exists)
+ */
 void GetStartupArgument(Service::Interface* self);
 
 /// Initialize the APT service
