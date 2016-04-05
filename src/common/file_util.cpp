@@ -85,7 +85,7 @@ bool Exists(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
-    int result = _tstat64(Common::UTF8ToTStr(copy).c_str(), &file_info);
+    int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
 #endif
@@ -102,7 +102,7 @@ bool IsDirectory(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
-    int result = _tstat64(Common::UTF8ToTStr(copy).c_str(), &file_info);
+    int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
 #endif
@@ -138,7 +138,7 @@ bool Delete(const std::string &filename)
     }
 
 #ifdef _WIN32
-    if (!DeleteFile(Common::UTF8ToTStr(filename).c_str()))
+    if (!DeleteFileW(Common::UTF8ToUTF16W(filename).c_str()))
     {
         LOG_ERROR(Common_Filesystem, "DeleteFile failed on %s: %s",
                  filename.c_str(), GetLastErrorMsg());
@@ -160,7 +160,7 @@ bool CreateDir(const std::string &path)
 {
     LOG_TRACE(Common_Filesystem, "directory %s", path.c_str());
 #ifdef _WIN32
-    if (::CreateDirectory(Common::UTF8ToTStr(path).c_str(), nullptr))
+    if (::CreateDirectoryW(Common::UTF8ToUTF16W(path).c_str(), nullptr))
         return true;
     DWORD error = GetLastError();
     if (error == ERROR_ALREADY_EXISTS)
@@ -241,7 +241,7 @@ bool DeleteDir(const std::string &filename)
     }
 
 #ifdef _WIN32
-    if (::RemoveDirectory(Common::UTF8ToTStr(filename).c_str()))
+    if (::RemoveDirectoryW(Common::UTF8ToUTF16W(filename).c_str()))
         return true;
 #else
     if (rmdir(filename.c_str()) == 0)
@@ -257,8 +257,13 @@ bool Rename(const std::string &srcFilename, const std::string &destFilename)
 {
     LOG_TRACE(Common_Filesystem, "%s --> %s",
             srcFilename.c_str(), destFilename.c_str());
+#ifdef _WIN32
+    if (_wrename(Common::UTF8ToUTF16W(srcFilename).c_str(), Common::UTF8ToUTF16W(destFilename).c_str()) == 0)
+        return true;
+#else
     if (rename(srcFilename.c_str(), destFilename.c_str()) == 0)
         return true;
+#endif
     LOG_ERROR(Common_Filesystem, "failed %s --> %s: %s",
               srcFilename.c_str(), destFilename.c_str(), GetLastErrorMsg());
     return false;
@@ -270,7 +275,7 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename)
     LOG_TRACE(Common_Filesystem, "%s --> %s",
             srcFilename.c_str(), destFilename.c_str());
 #ifdef _WIN32
-    if (CopyFile(Common::UTF8ToTStr(srcFilename).c_str(), Common::UTF8ToTStr(destFilename).c_str(), FALSE))
+    if (CopyFileW(Common::UTF8ToUTF16W(srcFilename).c_str(), Common::UTF8ToUTF16W(destFilename).c_str(), FALSE))
         return true;
 
     LOG_ERROR(Common_Filesystem, "failed %s --> %s: %s",
@@ -358,7 +363,7 @@ u64 GetSize(const std::string &filename)
 
     struct stat64 buf;
 #ifdef _WIN32
-    if (_tstat64(Common::UTF8ToTStr(filename).c_str(), &buf) == 0)
+    if (_wstat64(Common::UTF8ToUTF16W(filename).c_str(), &buf) == 0)
 #else
     if (stat64(filename.c_str(), &buf) == 0)
 #endif
@@ -432,16 +437,16 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
 
 #ifdef _WIN32
     // Find the first file in the directory.
-    WIN32_FIND_DATA ffd;
+    WIN32_FIND_DATAW ffd;
 
-    HANDLE handle_find = FindFirstFile(Common::UTF8ToTStr(directory + "\\*").c_str(), &ffd);
+    HANDLE handle_find = FindFirstFileW(Common::UTF8ToUTF16W(directory + "\\*").c_str(), &ffd);
     if (handle_find == INVALID_HANDLE_VALUE) {
         FindClose(handle_find);
         return false;
     }
     // windows loop
     do {
-        const std::string virtual_name(Common::TStrToUTF8(ffd.cFileName));
+        const std::string virtual_name(Common::UTF16ToUTF8(ffd.cFileName));
 #else
     struct dirent dirent, *result = nullptr;
 
@@ -465,7 +470,7 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
         found_entries += ret_entries;
 
 #ifdef _WIN32
-    } while (FindNextFile(handle_find, &ffd) != 0);
+    } while (FindNextFileW(handle_find, &ffd) != 0);
     FindClose(handle_find);
 #else
     }
@@ -572,15 +577,23 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
 // Returns the current directory
 std::string GetCurrentDir()
 {
-    char *dir;
     // Get the current working directory (getcwd uses malloc)
+#ifdef _WIN32
+    wchar_t *dir;
+    if (!(dir = _wgetcwd(nullptr, 0))) {
+#else
+    char *dir;
     if (!(dir = getcwd(nullptr, 0))) {
-
+#endif
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: %s",
                 GetLastErrorMsg());
         return nullptr;
     }
+#ifdef _WIN32
+    std::string strDir = Common::UTF16ToUTF8(dir);
+#else
     std::string strDir = dir;
+#endif
     free(dir);
     return strDir;
 }
@@ -588,7 +601,11 @@ std::string GetCurrentDir()
 // Sets the current directory to the given directory
 bool SetCurrentDir(const std::string &directory)
 {
+#ifdef _WIN32
+    return _wchdir(Common::UTF8ToUTF16W(directory).c_str()) == 0;
+#else
     return chdir(directory.c_str()) == 0;
+#endif
 }
 
 #if defined(__APPLE__)
@@ -613,9 +630,9 @@ std::string& GetExeDirectory()
     static std::string exe_path;
     if (exe_path.empty())
     {
-        TCHAR tchar_exe_path[2048];
-        GetModuleFileName(nullptr, tchar_exe_path, 2048);
-        exe_path = Common::TStrToUTF8(tchar_exe_path);
+        wchar_t wchar_exe_path[2048];
+        GetModuleFileNameW(nullptr, wchar_exe_path, 2048);
+        exe_path = Common::UTF16ToUTF8(wchar_exe_path);
         exe_path = exe_path.substr(0, exe_path.find_last_of('\\'));
     }
     return exe_path;
@@ -900,7 +917,7 @@ bool IOFile::Open(const std::string& filename, const char openmode[])
 {
     Close();
 #ifdef _WIN32
-    _tfopen_s(&m_file, Common::UTF8ToTStr(filename).c_str(), Common::UTF8ToTStr(openmode).c_str());
+    _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(), Common::UTF8ToUTF16W(openmode).c_str());
 #else
     m_file = fopen(filename.c_str(), openmode);
 #endif

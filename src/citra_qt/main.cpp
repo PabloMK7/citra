@@ -417,7 +417,7 @@ void GMainWindow::UpdateRecentFiles() {
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
-    BootGame(game_path.toLocal8Bit().data());
+    BootGame(game_path.toStdString());
 }
 
 void GMainWindow::OnMenuLoadFile() {
@@ -428,7 +428,7 @@ void GMainWindow::OnMenuLoadFile() {
     if (!filename.isEmpty()) {
         settings.setValue("romsPath", QFileInfo(filename).path());
 
-        BootGame(filename.toLocal8Bit().data());
+        BootGame(filename.toStdString());
     }
 }
 
@@ -440,7 +440,7 @@ void GMainWindow::OnMenuLoadSymbolMap() {
     if (!filename.isEmpty()) {
         settings.setValue("symbolsPath", QFileInfo(filename).path());
 
-        LoadSymbolMap(filename.toLocal8Bit().data());
+        LoadSymbolMap(filename.toStdString());
     }
 }
 
@@ -461,7 +461,7 @@ void GMainWindow::OnMenuRecentFile() {
     QString filename = action->data().toString();
     QFileInfo file_info(filename);
     if (file_info.exists()) {
-        BootGame(filename.toLocal8Bit().data());
+        BootGame(filename.toStdString());
     } else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, tr("File not found"), tr("File \"%1\" not found").arg(filename));

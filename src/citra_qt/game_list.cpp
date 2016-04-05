@@ -66,7 +66,7 @@ void GameList::ValidateEntry(const QModelIndex& item)
 
     if (file_path.isEmpty())
         return;
-    std::string std_file_path(file_path.toLocal8Bit());
+    std::string std_file_path(file_path.toStdString());
     if (!FileUtil::Exists(std_file_path) || FileUtil::IsDirectory(std_file_path))
         return;
     emit GameChosen(file_path);
@@ -148,7 +148,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool d
 
             emit EntryReady({
                 new GameListItem(QString::fromStdString(Loader::GetFileTypeString(filetype))),
-                new GameListItemPath(QString::fromLocal8Bit(physical_name.c_str())),
+                new GameListItemPath(QString::fromStdString(physical_name)),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
         }

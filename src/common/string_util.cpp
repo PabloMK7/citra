@@ -320,19 +320,6 @@ std::u16string UTF8ToUTF16(const std::string& input)
 #endif
 }
 
-static std::string UTF16ToUTF8(const std::wstring& input)
-{
-    auto const size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
-
-    std::string output;
-    output.resize(size);
-
-    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size()), nullptr, nullptr))
-        output.clear();
-
-    return output;
-}
-
 static std::wstring CPToUTF16(u32 code_page, const std::string& input)
 {
     auto const size = MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
@@ -341,6 +328,19 @@ static std::wstring CPToUTF16(u32 code_page, const std::string& input)
     output.resize(size);
 
     if (size == 0 || size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size())))
+        output.clear();
+
+    return output;
+}
+
+std::string UTF16ToUTF8(const std::wstring& input)
+{
+    auto const size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), nullptr, 0, nullptr, nullptr);
+
+    std::string output;
+    output.resize(size);
+
+    if (size == 0 || size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()), &output[0], static_cast<int>(output.size()), nullptr, nullptr))
         output.clear();
 
     return output;
