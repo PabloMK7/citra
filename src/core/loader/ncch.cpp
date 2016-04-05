@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 #include "common/string_util.h"
 #include "common/swap.h"
 

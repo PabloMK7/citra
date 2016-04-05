@@ -8,7 +8,6 @@
 #include <boost/range/algorithm/fill.hpp>
 
 #include "common/hash.h"
-#include "common/make_unique.h"
 #include "common/microprofile.h"
 #include "common/profiler.h"
 

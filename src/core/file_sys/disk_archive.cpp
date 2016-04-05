@@ -4,11 +4,11 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <memory>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/file_sys/disk_archive.h"
 
@@ -19,7 +19,7 @@ namespace FileSys {
 
 ResultVal<std::unique_ptr<FileBackend>> DiskArchive::OpenFile(const Path& path, const Mode mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
-    auto file = Common::make_unique<DiskFile>(*this, path, mode);
+    auto file = std::make_unique<DiskFile>(*this, path, mode);
     ResultCode result = file->Open();
     if (result.IsError())
         return result;
@@ -83,7 +83,7 @@ bool DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) c
 
 std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
-    auto directory = Common::make_unique<DiskDirectory>(*this, path);
+    auto directory = std::make_unique<DiskDirectory>(*this, path);
     if (!directory->Open())
         return nullptr;
     return std::move(directory);
@@ -132,7 +132,7 @@ ResultCode DiskFile::Open() {
     // Open the file in binary mode, to avoid problems with CR/LF on Windows systems
     mode_string += "b";
 
-    file = Common::make_unique<FileUtil::IOFile>(path, mode_string.c_str());
+    file = std::make_unique<FileUtil::IOFile>(path, mode_string.c_str());
     if (file->IsOpen())
         return RESULT_SUCCESS;
     return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound, ErrorLevel::Status);

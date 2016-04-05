@@ -5,7 +5,6 @@
 #include <memory>
 
 #include "common/emu_window.h"
-#include "common/make_unique.h"
 #include "common/logging/log.h"
 
 #include "core/core.h"
@@ -32,7 +31,7 @@ bool Init(EmuWindow* emu_window) {
     Pica::Init();
 
     g_emu_window = emu_window;
-    g_renderer = Common::make_unique<RendererOpenGL>();
+    g_renderer = std::make_unique<RendererOpenGL>();
     g_renderer->SetWindow(g_emu_window);
     if (g_renderer->Init()) {
         LOG_DEBUG(Render, "initialized OK");

@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include <inih/cpp/INIReader.h>
 
 #include <SDL.h>
@@ -10,7 +12,6 @@
 
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/settings.h"
 
@@ -19,7 +20,7 @@
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     sdl2_config_loc = FileUtil::GetUserPath(D_CONFIG_IDX) + "sdl2-config.ini";
-    sdl2_config = Common::make_unique<INIReader>(sdl2_config_loc);
+    sdl2_config = std::make_unique<INIReader>(sdl2_config_loc);
 
     Reload();
 }
@@ -31,7 +32,7 @@ bool Config::LoadINI(const std::string& default_contents, bool retry) {
             LOG_WARNING(Config, "Failed to load %s. Creating file from defaults...", location);
             FileUtil::CreateFullPath(location);
             FileUtil::WriteStringToFile(true, default_contents, location);
-            sdl2_config = Common::make_unique<INIReader>(location); // Reopen file
+            sdl2_config = std::make_unique<INIReader>(location); // Reopen file
 
             return LoadINI(default_contents, false);
         }

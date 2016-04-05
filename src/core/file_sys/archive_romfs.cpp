@@ -7,7 +7,6 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/file_sys/archive_romfs.h"
 #include "core/file_sys/ivfc_archive.h"
@@ -25,7 +24,7 @@ ArchiveFactory_RomFS::ArchiveFactory_RomFS(Loader::AppLoader& app_loader) {
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_RomFS::Open(const Path& path) {
-    auto archive = Common::make_unique<IVFCArchive>(romfs_file, data_offset, data_size);
+    auto archive = std::make_unique<IVFCArchive>(romfs_file, data_offset, data_size);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

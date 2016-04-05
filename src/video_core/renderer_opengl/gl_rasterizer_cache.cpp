@@ -2,8 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "common/hash.h"
-#include "common/make_unique.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
@@ -29,7 +30,7 @@ void RasterizerCacheOpenGL::LoadAndBindTexture(OpenGLState &state, unsigned text
     } else {
         MICROPROFILE_SCOPE(OpenGL_TextureUpload);
 
-        std::unique_ptr<CachedTexture> new_texture = Common::make_unique<CachedTexture>();
+        std::unique_ptr<CachedTexture> new_texture = std::make_unique<CachedTexture>();
 
         new_texture->texture.Create();
         state.texture_units[texture_unit].texture_2d = new_texture->texture.handle;

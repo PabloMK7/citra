@@ -15,7 +15,6 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
@@ -521,23 +520,23 @@ void ArchiveInit() {
 
     std::string sdmc_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     std::string nand_directory = FileUtil::GetUserPath(D_NAND_IDX);
-    auto sdmc_factory = Common::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory);
+    auto sdmc_factory = std::make_unique<FileSys::ArchiveFactory_SDMC>(sdmc_directory);
     if (sdmc_factory->Initialize())
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path %s", sdmc_directory.c_str());
 
     // Create the SaveData archive
-    auto savedata_factory = Common::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
+    auto savedata_factory = std::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
 
-    auto extsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);
+    auto extsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);
     if (extsavedata_factory->Initialize())
         RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
     else
         LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path %s", extsavedata_factory->GetMountPoint().c_str());
 
-    auto sharedextsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
+    auto sharedextsavedata_factory = std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
     if (sharedextsavedata_factory->Initialize())
         RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     else
@@ -545,10 +544,10 @@ void ArchiveInit() {
             sharedextsavedata_factory->GetMountPoint().c_str());
 
     // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
-    auto savedatacheck_factory = Common::make_unique<FileSys::ArchiveFactory_SaveDataCheck>(nand_directory);
+    auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_SaveDataCheck>(nand_directory);
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::SaveDataCheck);
 
-    auto systemsavedata_factory = Common::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory);
+    auto systemsavedata_factory = std::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory);
     RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
 }
 

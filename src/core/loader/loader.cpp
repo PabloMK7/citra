@@ -6,7 +6,6 @@
 #include <string>
 
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 #include "common/string_util.h"
 
 #include "core/file_sys/archive_romfs.h"
@@ -120,7 +119,7 @@ ResultStatus LoadFile(const std::string& filename) {
         AppLoader_THREEDSX app_loader(std::move(file), filename_filename, filename);
         // Load application and RomFS
         if (ResultStatus::Success == app_loader.Load()) {
-            Service::FS::RegisterArchiveType(Common::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
+            Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;
@@ -139,7 +138,7 @@ ResultStatus LoadFile(const std::string& filename) {
         // Load application and RomFS
         ResultStatus result = app_loader.Load();
         if (ResultStatus::Success == result) {
-            Service::FS::RegisterArchiveType(Common::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
+            Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
         }
         return result;
     }

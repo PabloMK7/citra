@@ -3,8 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
-#include "common/make_unique.h"
+#include <memory>
 
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
@@ -18,7 +17,7 @@
 #include "core/core_timing.h"
 
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
-    state = Common::make_unique<ARMul_State>(initial_mode);
+    state = std::make_unique<ARMul_State>(initial_mode);
 }
 
 ARM_DynCom::~ARM_DynCom() {

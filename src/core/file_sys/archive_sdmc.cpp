@@ -3,10 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <memory>
 
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/disk_archive.h"
@@ -36,7 +36,7 @@ bool ArchiveFactory_SDMC::Initialize() {
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path) {
-    auto archive = Common::make_unique<DiskArchive>(sdmc_directory);
+    auto archive = std::make_unique<DiskArchive>(sdmc_directory);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
