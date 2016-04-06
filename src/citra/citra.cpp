@@ -36,25 +36,40 @@
 
 static void PrintHelp()
 {
-    std::cout << "Usage: citra <filename>" << std::endl;
+    std::cout << "Usage: citra [options] <filename>" << std::endl;
+    std::cout << "--help, -h            Display this information" << std::endl;
+    std::cout << "--gdbport, -g number  Enable gdb stub on port number" << std::endl;
 }
 
 /// Application entry point
 int main(int argc, char **argv) {
     int option_index = 0;
+    u32 gdb_port = 0;
+    char *endarg;
     std::string boot_filename;
+
     static struct option long_options[] = {
         { "help", no_argument, 0, 'h' },
+        { "gdbport", required_argument, 0, 'g' },
         { 0, 0, 0, 0 }
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, ":h", long_options, &option_index);
+        char arg = getopt_long(argc, argv, ":hg:", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
             case 'h':
                 PrintHelp();
                 return 0;
+            case 'g':
+                errno = 0;
+                gdb_port = strtoul(optarg, &endarg, 0);
+                if (endarg == optarg) errno = EINVAL;
+                if (errno != 0) {
+                    perror("--gdbport");
+                    exit(1);
+                }
+                break;
             }
         } else {
             boot_filename = argv[optind];
@@ -76,8 +91,10 @@ int main(int argc, char **argv) {
     Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
-    GDBStub::ToggleServer(Settings::values.use_gdbstub);
-    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
+    if (gdb_port != 0) {
+        GDBStub::ToggleServer(true);
+        GDBStub::SetServerPort(gdb_port);
+    }
 
     std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
 
