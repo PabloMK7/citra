@@ -7,7 +7,6 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 
 #include "core/file_sys/ivfc_archive.h"
 
@@ -21,7 +20,7 @@ std::string IVFCArchive::GetName() const {
 }
 
 ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path, const Mode mode) const {
-    return MakeResult<std::unique_ptr<FileBackend>>(Common::make_unique<IVFCFile>(romfs_file, data_offset, data_size));
+    return MakeResult<std::unique_ptr<FileBackend>>(std::make_unique<IVFCFile>(romfs_file, data_offset, data_size));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
@@ -58,7 +57,7 @@ bool IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) c
 }
 
 std::unique_ptr<DirectoryBackend> IVFCArchive::OpenDirectory(const Path& path) const {
-    return Common::make_unique<IVFCDirectory>();
+    return std::make_unique<IVFCDirectory>();
 }
 
 u64 IVFCArchive::GetFreeBytes() const {

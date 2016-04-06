@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <clocale>
+#include <memory>
 #include <thread>
 
 #include <QDesktopWidget>
@@ -30,7 +31,6 @@
 #include "citra_qt/debugger/ramview.h"
 #include "citra_qt/debugger/registers.h"
 
-#include "common/make_unique.h"
 #include "common/microprofile.h"
 #include "common/platform.h"
 #include "common/scm_rev.h"
@@ -319,7 +319,7 @@ void GMainWindow::BootGame(const std::string& filename) {
         return;
 
     // Create and start the emulation thread
-    emu_thread = Common::make_unique<EmuThread>(render_window);
+    emu_thread = std::make_unique<EmuThread>(render_window);
     emit EmulationStarting(emu_thread.get());
     render_window->moveContext();
     emu_thread->start();

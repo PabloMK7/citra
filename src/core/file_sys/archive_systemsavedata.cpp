@@ -3,11 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
-#include "common/make_unique.h"
 #include "common/string_util.h"
 
 #include "core/file_sys/archive_systemsavedata.h"
@@ -59,7 +59,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
         return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
             ErrorSummary::InvalidState, ErrorLevel::Status);
     }
-    auto archive = Common::make_unique<DiskArchive>(fullpath);
+    auto archive = std::make_unique<DiskArchive>(fullpath);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

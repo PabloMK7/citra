@@ -3,11 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <memory>
 
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 #include "common/string_util.h"
 
 #include "core/file_sys/archive_savedata.h"
@@ -53,7 +53,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const P
             ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    auto archive = Common::make_unique<DiskArchive>(std::move(concrete_mount_point));
+    auto archive = std::make_unique<DiskArchive>(std::move(concrete_mount_point));
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

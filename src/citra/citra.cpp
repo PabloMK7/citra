@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <iostream>
+#include <memory>
 
 // This needs to be included before getopt.h because the latter #defines symbols used by it
 #include "common/microprofile.h"
@@ -19,7 +20,6 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
-#include "common/make_unique.h"
 #include "common/scope_exit.h"
 
 #include "core/settings.h"
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     GDBStub::ToggleServer(Settings::values.use_gdbstub);
     GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
 
-    std::unique_ptr<EmuWindow_SDL2> emu_window = Common::make_unique<EmuWindow_SDL2>();
+    std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
 
     VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
     VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;

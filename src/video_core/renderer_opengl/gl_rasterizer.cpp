@@ -9,7 +9,6 @@
 
 #include "common/color.h"
 #include "common/file_util.h"
-#include "common/make_unique.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/profiler.h"
@@ -677,7 +676,7 @@ void RasterizerOpenGL::ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::
 
 void RasterizerOpenGL::SetShader() {
     PicaShaderConfig config = PicaShaderConfig::CurrentConfig();
-    std::unique_ptr<PicaShader> shader = Common::make_unique<PicaShader>();
+    std::unique_ptr<PicaShader> shader = std::make_unique<PicaShader>();
 
     // Find (or generate) the GLSL shader for the current TEV state
     auto cached_shader = shader_cache.find(config);

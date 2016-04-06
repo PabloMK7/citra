@@ -4,8 +4,6 @@
 
 #include <memory>
 
-#include "common/make_unique.h"
-
 #include "core/settings.h"
 
 #include "video_core/renderer_base.h"
@@ -19,9 +17,9 @@ void RendererBase::RefreshRasterizerSetting() {
         opengl_rasterizer_active = hw_renderer_enabled;
 
         if (hw_renderer_enabled) {
-            rasterizer = Common::make_unique<RasterizerOpenGL>();
+            rasterizer = std::make_unique<RasterizerOpenGL>();
         } else {
-            rasterizer = Common::make_unique<VideoCore::SWRasterizer>();
+            rasterizer = std::make_unique<VideoCore::SWRasterizer>();
         }
         rasterizer->InitObjects();
         rasterizer->Reset();

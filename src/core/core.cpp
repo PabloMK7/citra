@@ -4,7 +4,6 @@
 
 #include <memory>
 
-#include "common/make_unique.h"
 #include "common/logging/log.h"
 
 #include "core/core.h"
@@ -74,8 +73,8 @@ void Stop() {
 
 /// Initialize the core
 void Init() {
-    g_sys_core = Common::make_unique<ARM_DynCom>(USER32MODE);
-    g_app_core = Common::make_unique<ARM_DynCom>(USER32MODE);
+    g_sys_core = std::make_unique<ARM_DynCom>(USER32MODE);
+    g_app_core = std::make_unique<ARM_DynCom>(USER32MODE);
 
     LOG_DEBUG(Core, "Initialized OK");
 }

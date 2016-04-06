@@ -42,7 +42,6 @@ set(HEADERS
             logging/filter.h
             logging/log.h
             logging/backend.h
-            make_unique.h
             math_util.h
             memory_util.h
             microprofile.h
