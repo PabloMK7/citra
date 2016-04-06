@@ -71,9 +71,8 @@ ResultVal<bool> Interface::SyncRequest() {
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
         return MakeResult<bool>(false);
-    } else {
-        LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
     }
+    LOG_TRACE(Service, "%s", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
 
     itr->second.func(this);
 

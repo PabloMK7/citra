@@ -49,6 +49,7 @@ enum class Class : ClassType {
     Service,                    ///< HLE implementation of system services. Each major service
                                 ///  should have its own subclass.
     Service_SRV,                ///< The SRV (Service Directory) implementation
+    Service_FRD,                ///< The FRD (Friends) service
     Service_FS,                 ///< The FS (Filesystem) service implementation
     Service_ERR,                ///< The ERR (Error) port implementation
     Service_APT,                ///< The APT (Applets) service
