@@ -43,8 +43,10 @@ static void PrintHelp()
 
 /// Application entry point
 int main(int argc, char **argv) {
+    Config config;
     int option_index = 0;
-    u32 gdb_port = 0;
+    bool use_gdbstub = Settings::values.use_gdbstub;
+    u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port);
     char *endarg;
     std::string boot_filename;
 
@@ -64,6 +66,7 @@ int main(int argc, char **argv) {
             case 'g':
                 errno = 0;
                 gdb_port = strtoul(optarg, &endarg, 0);
+                use_gdbstub = true;
                 if (endarg == optarg) errno = EINVAL;
                 if (errno != 0) {
                     perror("--gdbport");
@@ -88,13 +91,10 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
-    if (gdb_port != 0) {
-        GDBStub::ToggleServer(true);
-        GDBStub::SetServerPort(gdb_port);
-    }
+    GDBStub::ToggleServer(use_gdbstub);
+    GDBStub::SetServerPort(gdb_port);
 
     std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
 
