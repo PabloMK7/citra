@@ -139,8 +139,9 @@ void RasterizerOpenGL::InitObjects() {
     }
     state.Apply();
 
-    ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
-               "OpenGL rasterizer framebuffer setup failed, status %X", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    ASSERT_MSG(status == GL_FRAMEBUFFER_COMPLETE,
+               "OpenGL rasterizer framebuffer setup failed, status %X", status);
 }
 
 void RasterizerOpenGL::Reset() {
@@ -808,8 +809,9 @@ void RasterizerOpenGL::SyncFramebuffer() {
         ReloadDepthBuffer();
     }
 
-    ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
-               "OpenGL rasterizer framebuffer setup failed, status %X", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    ASSERT_MSG(status == GL_FRAMEBUFFER_COMPLETE,
+               "OpenGL rasterizer framebuffer setup failed, status %X", status);
 }
 
 void RasterizerOpenGL::SyncCullMode() {
