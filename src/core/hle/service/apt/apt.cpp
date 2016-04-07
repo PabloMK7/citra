@@ -397,6 +397,23 @@ void GetAppletInfo(Service::Interface* self) {
     LOG_WARNING(Service_APT, "(stubbed) called appid=%u", app_id);
 }
 
+void GetStartupArgument(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 parameter_size = cmd_buff[1];
+    StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(cmd_buff[2]);
+
+    if (parameter_size >= 0x300) {
+        LOG_ERROR(Service_APT, "Parameter size is outside the valid range (capped to 0x300): parameter_size=0x%08x", parameter_size);
+        return;
+    }
+
+    LOG_WARNING(Service_APT,"(stubbed) called startup_argument_type=%u , parameter_size=0x%08x , parameter_value=0x%08x",
+                startup_argument_type, parameter_size, Memory::Read32(cmd_buff[41]));
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = (parameter_size > 0) ? 1 : 0;
+}
+
 void Init() {
     AddService(new APT_A_Interface);
     AddService(new APT_S_Interface);
