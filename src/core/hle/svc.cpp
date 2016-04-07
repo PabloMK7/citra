@@ -860,6 +860,10 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
         // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
         *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
+        if(*out % Memory::PAGE_SIZE != 0) {
+            LOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
+            return ERR_MISALIGNED_SIZE;
+        }
         break;
     case 1:
     case 3:
