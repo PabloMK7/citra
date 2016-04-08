@@ -93,7 +93,7 @@ void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 e
     context.cpu_registers[0] = arg;
     context.pc = entry_point;
     context.sp = stack_top;
-    context.cpsr = 0x1F; // Usermode
+    context.cpsr = 0x1F | ((entry_point & 1) << 5); // Usermode and THUMB mode
 }
 
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
