@@ -16,6 +16,15 @@ namespace CECD {
 static Kernel::SharedPtr<Kernel::Event> cecinfo_event;
 static Kernel::SharedPtr<Kernel::Event> change_state_event;
 
+void GetCecStateAbbreviated(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[2] = static_cast<u32>(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE);
+
+    LOG_WARNING(Service_CECD, "(STUBBED) called");
+}
+
 void GetCecInfoEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
