@@ -60,6 +60,59 @@ const u32 R15_REGISTER = 15;
 const u32 CPSR_REGISTER = 25;
 const u32 FPSCR_REGISTER = 58;
 
+// For sample XML files see the GDB source /gdb/features
+// GDB also wants the l character at the start
+// This XML defines what the registers are for this specific ARM device
+static const char* target_xml =
+R"(l<?xml version="1.0"?>
+<!DOCTYPE target SYSTEM "gdb-target.dtd">
+<target version="1.0">
+  <feature name="org.gnu.gdb.arm.core">
+    <reg name="r0" bitsize="32"/>
+    <reg name="r1" bitsize="32"/>
+    <reg name="r2" bitsize="32"/>
+    <reg name="r3" bitsize="32"/>
+    <reg name="r4" bitsize="32"/>
+    <reg name="r5" bitsize="32"/>
+    <reg name="r6" bitsize="32"/>
+    <reg name="r7" bitsize="32"/>
+    <reg name="r8" bitsize="32"/>
+    <reg name="r9" bitsize="32"/>
+    <reg name="r10" bitsize="32"/>
+    <reg name="r11" bitsize="32"/>
+    <reg name="r12" bitsize="32"/>
+    <reg name="sp" bitsize="32" type="data_ptr"/>
+    <reg name="lr" bitsize="32"/>
+    <reg name="pc" bitsize="32" type="code_ptr"/>
+
+    <!-- The CPSR is register 25, rather than register 16, because
+         the FPA registers historically were placed between the PC
+         and the CPSR in the "g" packet.  -->
+
+    <reg name="cpsr" bitsize="32" regnum="25"/>
+  </feature>
+  <feature name="org.gnu.gdb.arm.vfp">
+    <reg name="d0" bitsize="64" type="float"/>
+    <reg name="d1" bitsize="64" type="float"/>
+    <reg name="d2" bitsize="64" type="float"/>
+    <reg name="d3" bitsize="64" type="float"/>
+    <reg name="d4" bitsize="64" type="float"/>
+    <reg name="d5" bitsize="64" type="float"/>
+    <reg name="d6" bitsize="64" type="float"/>
+    <reg name="d7" bitsize="64" type="float"/>
+    <reg name="d8" bitsize="64" type="float"/>
+    <reg name="d9" bitsize="64" type="float"/>
+    <reg name="d10" bitsize="64" type="float"/>
+    <reg name="d11" bitsize="64" type="float"/>
+    <reg name="d12" bitsize="64" type="float"/>
+    <reg name="d13" bitsize="64" type="float"/>
+    <reg name="d14" bitsize="64" type="float"/>
+    <reg name="d15" bitsize="64" type="float"/>
+    <reg name="fpscr" bitsize="32" type="int" group="float"/>
+  </feature>
+</target>
+)";
+
 namespace GDBStub {
 
 static int gdbserver_socket = -1;
@@ -211,7 +264,7 @@ static u8 ReadByte() {
 }
 
 /// Calculate the checksum of the current command buffer.
-static u8 CalculateChecksum(u8 *buffer, u32 length) {
+static u8 CalculateChecksum(u8* buffer, u32 length) {
     return static_cast<u8>(std::accumulate(buffer, buffer + length, 0, std::plus<u8>()));
 }
 
@@ -353,8 +406,15 @@ static void SendReply(const char* reply) {
 static void HandleQuery() {
     LOG_DEBUG(Debug_GDBStub, "gdb: query '%s'\n", command_buffer + 1);
 
-    if (!strcmp(reinterpret_cast<const char*>(command_buffer + 1), "TStatus")) {
+    const char* query = reinterpret_cast<const char*>(command_buffer + 1);
+
+    if (strcmp(query, "TStatus") == 0 ) {
         SendReply("T0");
+    } else if (strncmp(query, "Supported:", strlen("Supported:")) == 0) {
+        // PacketSize needs to be large enough for target xml
+        SendReply("PacketSize=800;qXfer:features:read+");
+    } else if (strncmp(query, "Xfer:features:read:target.xml:", strlen("Xfer:features:read:target.xml:")) == 0) {
+        SendReply(target_xml);
     } else {
         SendReply("");
     }
@@ -491,28 +551,24 @@ static void ReadRegisters() {
     memset(buffer, 0, sizeof(buffer));
 
     u8* bufptr = buffer;
-    for (int i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
-        if (reg <= R15_REGISTER) {
-            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetReg(reg));
-        } else if (reg == CPSR_REGISTER) {
-            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetCPSR());
-        } else if (reg == CPSR_REGISTER - 1) {
-            // Dummy FPA register, ignore
-            IntToGdbHex(bufptr + i * CHAR_BIT, 0);
-        } else if (reg < CPSR_REGISTER) {
-            // Dummy FPA registers, ignore
-            IntToGdbHex(bufptr + i * CHAR_BIT, 0);
-            IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
-            IntToGdbHex(bufptr + (i + 2) * CHAR_BIT, 0);
-            i += 2;
-        } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
-            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPReg(reg - CPSR_REGISTER - 1));
-            IntToGdbHex(bufptr + (i + 1) * CHAR_BIT, 0);
-            i++;
-        } else if (reg == FPSCR_REGISTER) {
-            IntToGdbHex(bufptr + i * CHAR_BIT, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
-        }
+
+    for (int reg = 0; reg <= R15_REGISTER; reg++) {
+        IntToGdbHex(bufptr + reg * CHAR_BIT, Core::g_app_core->GetReg(reg));
     }
+
+    bufptr += (16 * CHAR_BIT);
+
+    IntToGdbHex(bufptr, Core::g_app_core->GetCPSR());
+
+    bufptr += CHAR_BIT;
+
+    for (int reg = 0; reg <= 31; reg++) {
+        IntToGdbHex(bufptr + reg * CHAR_BIT, Core::g_app_core->GetVFPReg(reg));
+    }
+
+    bufptr += (32 * CHAR_BIT);
+
+    IntToGdbHex(bufptr, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR));
 
     SendReply(reinterpret_cast<char*>(buffer));
 }
@@ -883,6 +939,12 @@ void Init(u16 port) {
     int tmpsock = socket(PF_INET, SOCK_STREAM, 0);
     if (tmpsock == -1) {
         LOG_ERROR(Debug_GDBStub, "Failed to create gdb socket");
+    }
+
+    // Set socket to SO_REUSEADDR so it can always bind on the same port
+    int reuse_enabled = 1;
+    if (setsockopt(tmpsock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse_enabled, sizeof(reuse_enabled)) < 0) {
+        LOG_ERROR(Debug_GDBStub, "Failed to set gdb socket option");
     }
 
     const sockaddr* server_addr = reinterpret_cast<const sockaddr*>(&saddr_server);
