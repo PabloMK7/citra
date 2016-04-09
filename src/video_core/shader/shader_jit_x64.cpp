@@ -810,7 +810,15 @@ void JitCompiler::FindReturnOffsets() {
 }
 
 void JitCompiler::Compile() {
+    // Reset flow control state
     program = (CompiledShader*)GetCodePtr();
+    program_counter = 0;
+    looping = false;
+    code_ptr.fill(nullptr);
+    fixup_branches.clear();
+
+    // Find all `CALL` instructions and identify return locations
+    FindReturnOffsets();
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure
     ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
@@ -832,15 +840,6 @@ void JitCompiler::Compile() {
     static const __m128 neg = { -0.f, -0.f, -0.f, -0.f };
     MOV(PTRBITS, R(RAX), ImmPtr(&neg));
     MOVAPS(NEGBIT, MatR(RAX));
-
-    // Find all `CALL` instructions and identify return locations
-    FindReturnOffsets();
-
-    // Reset flow control state
-    program_counter = 0;
-    looping = false;
-    code_ptr.fill(nullptr);
-    fixup_branches.clear();
 
     // Jump to start of the shader program
     JMPptr(R(ABI_PARAM2));
