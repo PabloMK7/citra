@@ -108,7 +108,6 @@ private:
     /// Offsets in code where a return needs to be inserted
     std::set<unsigned> return_offsets;
 
-    unsigned last_program_counter = 0;  ///< Offset of the most recent instruction decoded
     unsigned program_counter = 0;       ///< Offset of the next instruction to decode
     bool looping = false;               ///< True if compiling a loop, used to check for nested loops
 

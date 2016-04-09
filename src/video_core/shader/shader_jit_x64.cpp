@@ -677,7 +677,7 @@ void JitCompiler::Compile_MAD(Instruction instr) {
 }
 
 void JitCompiler::Compile_IF(Instruction instr) {
-    RuntimeAssert(instr.flow_control.dest_offset > last_program_counter, "Backwards if-statements not supported");
+    RuntimeAssert(instr.flow_control.dest_offset >= program_counter, "Backwards if-statements not supported");
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -708,7 +708,7 @@ void JitCompiler::Compile_IF(Instruction instr) {
 }
 
 void JitCompiler::Compile_LOOP(Instruction instr) {
-    RuntimeAssert(instr.flow_control.dest_offset > last_program_counter, "Backwards loops not supported");
+    RuntimeAssert(instr.flow_control.dest_offset >= program_counter, "Backwards loops not supported");
     RuntimeAssert(!looping, "Nested loops not supported");
 
     looping = true;
@@ -770,8 +770,6 @@ void JitCompiler::Compile_Return() {
 }
 
 void JitCompiler::Compile_NextInstr() {
-    last_program_counter = program_counter;
-
     auto search = return_offsets.find(program_counter);
     if (search != return_offsets.end()) {
         Compile_Return();
@@ -839,7 +837,6 @@ void JitCompiler::Compile() {
     FindReturnOffsets();
 
     // Reset flow control state
-    last_program_counter = 0;
     program_counter = 0;
     looping = false;
     code_ptr.fill(nullptr);
