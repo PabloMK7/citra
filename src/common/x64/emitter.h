@@ -425,6 +425,7 @@ public:
 #undef CALL
 #endif
     void CALL(const void* fnptr);
+    FixupBranch CALL();
     void CALLptr(OpArg arg);
 
     FixupBranch J_CC(CCFlags conditionCode, bool force5bytes = false);

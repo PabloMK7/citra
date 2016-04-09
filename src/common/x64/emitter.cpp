@@ -455,6 +455,18 @@ void XEmitter::CALL(const void* fnptr)
     Write32(u32(distance));
 }
 
+FixupBranch XEmitter::CALL()
+{
+    FixupBranch branch;
+    branch.type = 1;
+    branch.ptr = code + 5;
+
+    Write8(0xE8);
+    Write32(0);
+
+    return branch;
+}
+
 FixupBranch XEmitter::J(bool force5bytes)
 {
     FixupBranch branch;
