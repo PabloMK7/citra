@@ -583,23 +583,15 @@ void JitCompiler::Compile_END(Instruction instr) {
 }
 
 void JitCompiler::Compile_CALL(Instruction instr) {
-    // Need to advance the return address past the proceeding instructions, this is the number of bytes to skip
-    constexpr unsigned SKIP = 21;
-    const uintptr_t start = reinterpret_cast<uintptr_t>(GetCodePtr());
-
-    // Push return address - not using CALL because we also want to push the offset of the return before jumping
-    MOV(64, R(RAX), ImmPtr(GetCodePtr() + SKIP));
-    PUSH(RAX);
-
     // Push offset of the return
-    PUSH(32, Imm32(instr.flow_control.dest_offset + instr.flow_control.num_instructions));
+    PUSH(64, Imm32(instr.flow_control.dest_offset + instr.flow_control.num_instructions));
 
-    // Jump
-    FixupBranch b = J(true);
+    // Call the subroutine
+    FixupBranch b = CALL();
     fixup_branches.push_back({ b, instr.flow_control.dest_offset });
 
-    // Make sure that if the above code changes, SKIP gets updated
-    ASSERT(reinterpret_cast<ptrdiff_t>(GetCodePtr()) - start == SKIP);
+    // Skip over the return offset that's on the stack
+    ADD(64, R(RSP), Imm32(8));
 }
 
 void JitCompiler::Compile_CALLC(Instruction instr) {
@@ -758,14 +750,12 @@ void JitCompiler::Compile_Block(unsigned end) {
 
 void JitCompiler::Compile_Return() {
     // Peek return offset on the stack and check if we're at that offset
-    MOV(64, R(RAX), MDisp(RSP, 0));
+    MOV(64, R(RAX), MDisp(RSP, 8));
     CMP(32, R(RAX), Imm32(program_counter));
 
     // If so, jump back to before CALL
     FixupBranch b = J_CC(CC_NZ, true);
-    ADD(64, R(RSP), Imm32(8)); // Ignore return offset that's on the stack
-    POP(RAX); // Pop off return address
-    JMPptr(R(RAX));
+    RET();
     SetJumpTarget(b);
 }
 
