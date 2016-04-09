@@ -809,7 +809,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
 
             auto UpdateStencil = [stencil_test, x, y, &old_stencil](Pica::Regs::StencilAction action) {
                 u8 new_stencil = PerformStencilAction(action, old_stencil, stencil_test.reference_value);
-                SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+                if (g_state.regs.framebuffer.allow_depth_stencil_write != 0)
+                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
             };
 
             if (stencil_action_enable) {
@@ -909,7 +910,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 }
             }
 
-            if (output_merger.depth_write_enable)
+            if (regs.framebuffer.allow_depth_stencil_write != 0 && output_merger.depth_write_enable)
                 SetDepth(x >> 4, y >> 4, z);
 
             // The stencil depth_pass action is executed even if depth testing is disabled
@@ -1133,7 +1134,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 output_merger.alpha_enable ? blend_output.a() : dest.a()
             };
 
-            DrawPixel(x >> 4, y >> 4, result);
+            if (regs.framebuffer.allow_color_write != 0)
+                DrawPixel(x >> 4, y >> 4, result);
         }
     }
 }
