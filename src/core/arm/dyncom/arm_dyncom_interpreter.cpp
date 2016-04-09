@@ -4080,11 +4080,12 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if ((inst_base->cond == ConditionCode::AL) || CondPassed(cpu, inst_base->cond)) {
             unsigned int inst = inst_cream->inst;
             if (BITS(inst, 20, 27) == 0x12 && BITS(inst, 4, 7) == 0x3) {
+                const u32 jump_address = cpu->Reg[inst_cream->val.Rm];
                 cpu->Reg[14] = (cpu->Reg[15] + cpu->GetInstructionSize());
                 if(cpu->TFlag)
                     cpu->Reg[14] |= 0x1;
-                cpu->Reg[15] = cpu->Reg[inst_cream->val.Rm] & 0xfffffffe;
-                cpu->TFlag = cpu->Reg[inst_cream->val.Rm] & 0x1;
+                cpu->Reg[15] = jump_address & 0xfffffffe;
+                cpu->TFlag = jump_address & 0x1;
             } else {
                 cpu->Reg[14] = (cpu->Reg[15] + cpu->GetInstructionSize());
                 cpu->TFlag = 0x1;
