@@ -26,7 +26,7 @@
 #include "citra_qt/debugger/graphics.h"
 #include "citra_qt/debugger/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics_cmdlists.h"
-#include "citra_qt/debugger/graphics_framebuffer.h"
+#include "citra_qt/debugger/graphics_surface.h"
 #include "citra_qt/debugger/graphics_tracing.h"
 #include "citra_qt/debugger/graphics_vertex_shader.h"
 #include "citra_qt/debugger/profiler.h"
@@ -98,10 +98,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
     graphicsBreakpointsWidget->hide();
 
-    auto graphicsFramebufferWidget = new GraphicsFramebufferWidget(Pica::g_debug_context, this);
-    addDockWidget(Qt::RightDockWidgetArea, graphicsFramebufferWidget);
-    graphicsFramebufferWidget->hide();
-
     auto graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
@@ -110,7 +106,12 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
 
+    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica surface viewer"), this);
+    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this, SLOT(OnCreateGraphicsSurfaceViewer()));
+
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
+    debug_menu->addAction(graphicsSurfaceViewerAction);
+    debug_menu->addSeparator();
     debug_menu->addAction(profilerWidget->toggleViewAction());
 #if MICROPROFILE_ENABLED
     debug_menu->addAction(microProfileDialog->toggleViewAction());
@@ -121,7 +122,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     debug_menu->addAction(graphicsWidget->toggleViewAction());
     debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
     debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
-    debug_menu->addAction(graphicsFramebufferWidget->toggleViewAction());
     debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
     debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
 
@@ -496,6 +496,13 @@ void GMainWindow::OnConfigure() {
         configureDialog.applyConfiguration();
         config->Save();
     }
+}
+
+void GMainWindow::OnCreateGraphicsSurfaceViewer() {
+    auto graphicsSurfaceViewerWidget = new GraphicsSurfaceWidget(Pica::g_debug_context, this);
+    addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
+    // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
+    graphicsSurfaceViewerWidget->show();
 }
 
 bool GMainWindow::ConfirmClose() {

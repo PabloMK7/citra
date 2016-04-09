@@ -61,25 +61,3 @@ private:
     QWidget* command_info_widget;
     QPushButton* toggle_tracing;
 };
-
-class TextureInfoDockWidget : public QDockWidget {
-    Q_OBJECT
-
-public:
-    TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr);
-
-signals:
-    void UpdatePixmap(const QPixmap& pixmap);
-
-private slots:
-    void OnAddressChanged(qint64 value);
-    void OnFormatChanged(int value);
-    void OnWidthChanged(int value);
-    void OnHeightChanged(int value);
-    void OnStrideChanged(int value);
-
-private:
-    QPixmap ReloadPixmap() const;
-
-    Pica::DebugUtils::TextureInfo info;
-};
