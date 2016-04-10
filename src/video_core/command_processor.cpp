@@ -249,10 +249,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
             bool index_u16 = index_info.format != 0;
 
-#if PICA_DUMP_GEOMETRY
-            DebugUtils::GeometryDumper geometry_dumper;
-            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
-#endif
             PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
 
             if (g_debug_context) {
@@ -388,17 +384,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
-#if PICA_DUMP_GEOMETRY
-                    // NOTE: When dumping geometry, we simply assume that the first input attribute
-                    //       corresponds to the position for now.
-                    DebugUtils::GeometryDumper::Vertex dumped_vertex = {
-                        input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()
-                    };
-                    using namespace std::placeholders;
-                    dumping_primitive_assembler.SubmitVertex(dumped_vertex,
-                                                             std::bind(&DebugUtils::GeometryDumper::AddTriangle,
-                                                                       &geometry_dumper, _1, _2, _3));
-#endif
                     // Send to vertex shader
                     output = Shader::Run(shader_unit, input, attribute_config.GetNumTotalAttributes());
 
@@ -423,10 +408,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
                                                           range.second, range.first);
             }
-
-#if PICA_DUMP_GEOMETRY
-            geometry_dumper.Dump();
-#endif
 
             break;
         }

@@ -85,35 +85,6 @@ std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
-void GeometryDumper::AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2) {
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-
-    int num_vertices = (int)vertices.size();
-    faces.push_back({{ num_vertices-3, num_vertices-2, num_vertices-1 }});
-}
-
-void GeometryDumper::Dump() {
-    static int index = 0;
-    std::string filename = std::string("geometry_dump") + std::to_string(++index) + ".obj";
-
-    std::ofstream file(filename);
-
-    for (const auto& vertex : vertices) {
-        file << "v " << vertex.pos[0]
-             << " "  << vertex.pos[1]
-             << " "  << vertex.pos[2] << std::endl;
-    }
-
-    for (const Face& face : faces) {
-        file << "f " << 1+face.index[0]
-             << " "  << 1+face.index[1]
-             << " "  << 1+face.index[2] << std::endl;
-    }
-}
-
-
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
 {
     struct StuffToWrite {

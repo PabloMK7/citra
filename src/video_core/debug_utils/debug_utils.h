@@ -158,29 +158,8 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 
 namespace DebugUtils {
 
-#define PICA_DUMP_GEOMETRY 0
 #define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
-
-// Simple utility class for dumping geometry data to an OBJ file
-class GeometryDumper {
-public:
-    struct Vertex {
-        std::array<float,3> pos;
-    };
-
-    void AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2);
-
-    void Dump();
-
-private:
-    struct Face {
-        int index[3];
-    };
-
-    std::vector<Vertex> vertices;
-    std::vector<Face> faces;
-};
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
                 const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
