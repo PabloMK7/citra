@@ -39,6 +39,7 @@ static void assert_noinline_call(const Fn& fn) {
     }); } while (0)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
+#define UNREACHABLE_MSG(_a_, ...) ASSERT_MSG(false, _a_, __VA_ARGS__)
 
 #ifdef _DEBUG
 #define DEBUG_ASSERT(_a_) ASSERT(_a_)
@@ -49,3 +50,4 @@ static void assert_noinline_call(const Fn& fn) {
 #endif
 
 #define UNIMPLEMENTED() DEBUG_ASSERT_MSG(false, "Unimplemented code!")
+#define UNIMPLEMENTED_MSG(_a_, ...) ASSERT_MSG(false, _a_, __VA_ARGS__)
