@@ -7,12 +7,12 @@
 #include <QStringList>
 
 #include "citra_qt/config.h"
+#include "citra_qt/ui_settings.h"
 
 #include "common/file_util.h"
 #include "core/settings.h"
 
 Config::Config() {
-
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
     qt_config_loc = FileUtil::GetUserPath(D_CONFIG_IDX) + "qt-config.ini";
     FileUtil::CreateFullPath(qt_config_loc);
@@ -67,6 +67,51 @@ void Config::ReadValues() {
     Settings::values.use_gdbstub = qt_config->value("use_gdbstub", false).toBool();
     Settings::values.gdbstub_port = qt_config->value("gdbstub_port", 24689).toInt();
     qt_config->endGroup();
+
+    qt_config->beginGroup("UI");
+
+    qt_config->beginGroup("UILayout");
+    UISettings::values.geometry = qt_config->value("geometry").toByteArray();
+    UISettings::values.state = qt_config->value("state").toByteArray();
+    UISettings::values.renderwindow_geometry = qt_config->value("geometryRenderWindow").toByteArray();
+    UISettings::values.gamelist_header_state = qt_config->value("gameListHeaderState").toByteArray();
+    UISettings::values.microprofile_geometry = qt_config->value("microProfileDialogGeometry").toByteArray();
+    UISettings::values.microprofile_visible = qt_config->value("microProfileDialogVisible", false).toBool();
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Paths");
+    UISettings::values.roms_path = qt_config->value("romsPath").toString();
+    UISettings::values.symbols_path = qt_config->value("symbolsPath").toString();
+    UISettings::values.gamedir = qt_config->value("gameListRootDir", ".").toString();
+    UISettings::values.gamedir_deepscan = qt_config->value("gameListDeepScan", false).toBool();
+    UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Shortcuts");
+    QStringList groups = qt_config->childGroups();
+    for (auto group : groups) {
+        qt_config->beginGroup(group);
+
+        QStringList hotkeys = qt_config->childGroups();
+        for (auto hotkey : hotkeys) {
+            qt_config->beginGroup(hotkey);
+            UISettings::values.shortcuts.emplace_back(
+                        UISettings::Shortcut(group + "/" + hotkey,
+                                             UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
+                                                                           qt_config->value("Context").toInt())));
+            qt_config->endGroup();
+        }
+
+        qt_config->endGroup();
+    }
+    qt_config->endGroup();
+
+    UISettings::values.single_window_mode = qt_config->value("singleWindowMode", true).toBool();
+    UISettings::values.display_titlebar = qt_config->value("displayTitleBars", true).toBool();
+    UISettings::values.confirm_before_closing = qt_config->value("confirmClose",true).toBool();
+    UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
+
+    qt_config->endGroup();
 }
 
 void Config::SaveValues() {
@@ -106,6 +151,39 @@ void Config::SaveValues() {
     qt_config->beginGroup("Debugging");
     qt_config->setValue("use_gdbstub", Settings::values.use_gdbstub);
     qt_config->setValue("gdbstub_port", Settings::values.gdbstub_port);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("UI");
+
+    qt_config->beginGroup("UILayout");
+    qt_config->setValue("geometry", UISettings::values.geometry);
+    qt_config->setValue("state", UISettings::values.state);
+    qt_config->setValue("geometryRenderWindow", UISettings::values.renderwindow_geometry);
+    qt_config->setValue("gameListHeaderState", UISettings::values.gamelist_header_state);
+    qt_config->setValue("microProfileDialogGeometry", UISettings::values.microprofile_geometry);
+    qt_config->setValue("microProfileDialogVisible", UISettings::values.microprofile_visible);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Paths");
+    qt_config->setValue("romsPath", UISettings::values.roms_path);
+    qt_config->setValue("symbolsPath", UISettings::values.symbols_path);
+    qt_config->setValue("gameListRootDir", UISettings::values.gamedir);
+    qt_config->setValue("gameListDeepScan", UISettings::values.gamedir_deepscan);
+    qt_config->setValue("recentFiles", UISettings::values.recent_files);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Shortcuts");
+    for (auto shortcut : UISettings::values.shortcuts ) {
+        qt_config->setValue(shortcut.first + "/KeySeq", shortcut.second.first);
+        qt_config->setValue(shortcut.first + "/Context", shortcut.second.second);
+    }
+    qt_config->endGroup();
+
+    qt_config->setValue("singleWindowMode", UISettings::values.single_window_mode);
+    qt_config->setValue("displayTitleBars", UISettings::values.display_titlebar);
+    qt_config->setValue("confirmClose", UISettings::values.confirm_before_closing);
+    qt_config->setValue("firstStart", UISettings::values.first_start);
+
     qt_config->endGroup();
 }
 

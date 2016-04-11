@@ -4,11 +4,12 @@
 
 #include <map>
 
+#include <QtGlobal>
 #include <QKeySequence>
-#include <QSettings>
 #include <QShortcut>
 
 #include "citra_qt/hotkeys.h"
+#include "citra_qt/ui_settings.h"
 
 struct Hotkey
 {
@@ -24,54 +25,39 @@ typedef std::map<QString, HotkeyMap> HotkeyGroupMap;
 
 HotkeyGroupMap hotkey_groups;
 
-void SaveHotkeys(QSettings& settings)
+void SaveHotkeys()
 {
-    settings.beginGroup("Shortcuts");
-
+    UISettings::values.shortcuts.clear();
     for (auto group : hotkey_groups)
     {
-        settings.beginGroup(group.first);
         for (auto hotkey : group.second)
         {
-            settings.beginGroup(hotkey.first);
-            settings.setValue(QString("KeySeq"), hotkey.second.keyseq.toString());
-            settings.setValue(QString("Context"), hotkey.second.context);
-            settings.endGroup();
+            UISettings::values.shortcuts.emplace_back(
+                        UISettings::Shortcut(group.first + "/" + hotkey.first,
+                                             UISettings::ContextualShortcut(hotkey.second.keyseq.toString(),
+                                                                           hotkey.second.context)));
         }
-        settings.endGroup();
     }
-    settings.endGroup();
 }
 
-void LoadHotkeys(QSettings& settings)
+void LoadHotkeys()
 {
-    settings.beginGroup("Shortcuts");
-
     // Make sure NOT to use a reference here because it would become invalid once we call beginGroup()
-    QStringList groups = settings.childGroups();
-    for (auto group : groups)
+    for (auto shortcut : UISettings::values.shortcuts)
     {
-        settings.beginGroup(group);
+        QStringList cat = shortcut.first.split("/");
+        Q_ASSERT(cat.size() >= 2);
 
-        QStringList hotkeys = settings.childGroups();
-        for (auto hotkey : hotkeys)
+        // RegisterHotkey assigns default keybindings, so use old values as default parameters
+        Hotkey& hk = hotkey_groups[cat[0]][cat[1]];
+        if (!shortcut.second.first.isEmpty())
         {
-            settings.beginGroup(hotkey);
-
-            // RegisterHotkey assigns default keybindings, so use old values as default parameters
-            Hotkey& hk = hotkey_groups[group][hotkey];
-            hk.keyseq = QKeySequence::fromString(settings.value("KeySeq", hk.keyseq.toString()).toString());
-            hk.context = (Qt::ShortcutContext)settings.value("Context", hk.context).toInt();
-            if (hk.shortcut)
-                hk.shortcut->setKey(hk.keyseq);
-
-            settings.endGroup();
+            hk.keyseq = QKeySequence::fromString(shortcut.second.first);
+            hk.context = (Qt::ShortcutContext)shortcut.second.second;
         }
-
-        settings.endGroup();
+        if (hk.shortcut)
+            hk.shortcut->setKey(hk.keyseq);
     }
-
-    settings.endGroup();
 }
 
 void RegisterHotkey(const QString& group, const QString& action, const QKeySequence& default_keyseq, Qt::ShortcutContext default_context)
@@ -94,7 +80,7 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
 }
 
 
-GHotkeysDialog::GHotkeysDialog(QWidget* parent): QDialog(parent)
+GHotkeysDialog::GHotkeysDialog(QWidget* parent): QWidget(parent)
 {
     ui.setupUi(this);
 

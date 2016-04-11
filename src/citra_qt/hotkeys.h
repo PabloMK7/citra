@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma once
+
 #include "ui_hotkeys.h"
 
 class QDialog;
@@ -33,16 +35,16 @@ QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widge
  *
  * @note Each hotkey group will be stored a settings group; For each hotkey inside that group, a settings group will be created to store the key sequence and the hotkey context.
  */
-void SaveHotkeys(QSettings& settings);
+void SaveHotkeys();
 
 /**
  * Loads hotkeys from the settings file.
  *
  * @note Yet unregistered hotkeys which are present in the settings will automatically be registered.
  */
-void LoadHotkeys(QSettings& settings);
+void LoadHotkeys();
 
-class GHotkeysDialog : public QDialog
+class GHotkeysDialog : public QWidget
 {
     Q_OBJECT
 

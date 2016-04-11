@@ -10,6 +10,7 @@
 
 #include "ui_main.h"
 
+class Config;
 class GameList;
 class GImageInfo;
 class GRenderWindow;
@@ -104,12 +105,8 @@ private slots:
     /// Called whenever a user selects the "File->Select Game List Root" menu item
     void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
-    void OnOpenHotkeysDialog();
     void OnConfigure();
     void OnDisplayTitleBars(bool);
-    void SetHardwareRendererEnabled(bool);
-    void SetGdbstubEnabled(bool);
-    void SetShaderJITEnabled(bool);
     void ToggleWindowMode();
 
 private:
@@ -117,6 +114,8 @@ private:
 
     GRenderWindow* render_window;
     GameList* game_list;
+
+    std::unique_ptr<Config> config;
 
     // Whether emulation is currently running in Citra.
     bool emulation_running = false;
@@ -131,7 +130,6 @@ private:
     GPUCommandListWidget* graphicsCommandsWidget;
 
     QAction* actions_recent_files[max_recent_files_item];
-    bool confirm_before_closing;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_

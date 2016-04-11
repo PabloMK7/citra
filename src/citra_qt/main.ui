@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>22</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -73,9 +73,6 @@
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="separator"/>
-    <addaction name="action_Use_Hardware_Renderer"/>
-    <addaction name="action_Use_Shader_JIT"/>
-    <addaction name="action_Use_Gdbstub"/>
     <addaction name="action_Configure"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -84,7 +81,6 @@
     </property>
     <addaction name="action_Single_Window_Mode"/>
     <addaction name="actionDisplay_widget_title_bars"/>
-    <addaction name="action_Hotkeys"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -150,35 +146,6 @@
     <string>Single Window Mode</string>
    </property>
   </action>
-  <action name="action_Hotkeys">
-   <property name="text">
-    <string>Configure &amp;Hotkeys ...</string>
-   </property>
-  </action>
-  <action name="action_Use_Hardware_Renderer">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Use Hardware Renderer</string>
-   </property>
-  </action>
-  <action name="action_Use_Shader_JIT">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Use Shader JIT</string>
-   </property>
-  </action>
-  <action name="action_Use_Gdbstub">
-    <property name="checkable">
-      <bool>true</bool>
-    </property>
-    <property name="text">
-      <string>Use Gdbstub</string>
-    </property>
-  </action>
   <action name="action_Configure">
    <property name="text">
     <string>Configure ...</string>
@@ -216,22 +183,6 @@
     <hint type="destinationlabel">
      <x>367</x>
      <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>action_Configure</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnConfigure()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>540</x>
-     <y>364</y>
     </hint>
    </hints>
   </connection>
