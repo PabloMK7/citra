@@ -189,6 +189,7 @@ void Config::SaveValues() {
 
 void Config::Reload() {
     ReadValues();
+    Settings::Apply();
 }
 
 void Config::Save() {

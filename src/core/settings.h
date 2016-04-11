@@ -67,4 +67,6 @@ struct Values {
     u16 gdbstub_port;
 } extern values;
 
+void Apply();
+
 }

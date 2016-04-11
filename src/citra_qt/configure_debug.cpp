@@ -5,7 +5,6 @@
 #include "citra_qt/configure_debug.h"
 #include "ui_configure_debug.h"
 
-#include "core/gdbstub/gdbstub.h"
 #include "core/settings.h"
 
 ConfigureDebug::ConfigureDebug(QWidget *parent) :
@@ -26,7 +25,7 @@ void ConfigureDebug::setConfiguration() {
 }
 
 void ConfigureDebug::applyConfiguration() {
-    GDBStub::ToggleServer(ui->toogle_gdbstub->isChecked());
     Settings::values.use_gdbstub = ui->toogle_gdbstub->isChecked();
     Settings::values.gdbstub_port = ui->gdbport_spinbox->value();
+    Settings::Apply();
 }

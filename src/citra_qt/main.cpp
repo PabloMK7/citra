@@ -141,9 +141,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
 
     game_list->LoadInterfaceLayout();
 
-    GDBStub::ToggleServer(Settings::values.use_gdbstub);
-    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
-
     ui.action_Single_Window_Mode->setChecked(UISettings::values.single_window_mode);
     ToggleWindowMode();
 
