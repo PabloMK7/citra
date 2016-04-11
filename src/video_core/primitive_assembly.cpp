@@ -68,7 +68,5 @@ void PrimitiveAssembler<VertexType>::Reconfigure(Regs::TriangleTopology topology
 // explicitly instantiate use cases
 template
 struct PrimitiveAssembler<Shader::OutputVertex>;
-template
-struct PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex>;
 
 } // namespace
