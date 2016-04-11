@@ -93,13 +93,12 @@ int main(int argc, char **argv) {
 
     log_filter.ParseFilterString(Settings::values.log_filter);
 
-    GDBStub::ToggleServer(use_gdbstub);
-    GDBStub::SetServerPort(gdb_port);
+    // Apply the command line arguments
+    Settings::values.gdbstub_port = gdb_port;
+    Settings::values.use_gdbstub = use_gdbstub;
+    Settings::Apply();
 
     std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
-
-    VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
-    VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;
 
     System::Init(emu_window.get());
     SCOPE_EXIT({ System::Shutdown(); });
