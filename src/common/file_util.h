@@ -14,6 +14,10 @@
 
 #include "common/common_types.h"
 
+#ifdef _MSC_VER
+#include "common/string_util.h"
+#endif
+
 // User directory indices for GetUserPath
 enum {
     D_USER_IDX,
@@ -172,7 +176,7 @@ class IOFile : public NonCopyable
 {
 public:
     IOFile();
-    IOFile(std::FILE* file);
+    explicit IOFile(std::FILE* file);
     IOFile(const std::string& filename, const char openmode[]);
 
     ~IOFile();
@@ -235,10 +239,10 @@ public:
         return WriteArray(&object, 1);
     }
 
-    bool IsOpen() { return nullptr != m_file; }
+    bool IsOpen() const { return nullptr != m_file; }
 
     // m_good is set to false when a read, write or other function fails
-    bool IsGood() {    return m_good; }
+    bool IsGood() const { return m_good; }
     operator void*() { return m_good ? m_file : nullptr; }
 
     std::FILE* ReleaseHandle();
@@ -258,9 +262,6 @@ public:
 
     std::FILE* m_file;
     bool m_good;
-private:
-    IOFile(IOFile&);
-    IOFile& operator=(IOFile& other);
 };
 
 }  // namespace
