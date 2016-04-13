@@ -151,7 +151,7 @@ static void LogCritical(const char* msg) {
     LOG_CRITICAL(HW_GPU, msg);
 }
 
-void JitShader::RuntimeAssert(bool condition, const char* msg) {
+void JitShader::Compile_Assert(bool condition, const char* msg) {
     if (!condition) {
         ABI_CallFunctionP(reinterpret_cast<const void*>(LogCritical), const_cast<char*>(msg));
     }
@@ -670,7 +670,7 @@ void JitShader::Compile_MAD(Instruction instr) {
 }
 
 void JitShader::Compile_IF(Instruction instr) {
-    RuntimeAssert(instr.flow_control.dest_offset >= program_counter, "Backwards if-statements not supported");
+    Compile_Assert(instr.flow_control.dest_offset >= program_counter, "Backwards if-statements not supported");
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -701,8 +701,8 @@ void JitShader::Compile_IF(Instruction instr) {
 }
 
 void JitShader::Compile_LOOP(Instruction instr) {
-    RuntimeAssert(instr.flow_control.dest_offset >= program_counter, "Backwards loops not supported");
-    RuntimeAssert(!looping, "Nested loops not supported");
+    Compile_Assert(instr.flow_control.dest_offset >= program_counter, "Backwards loops not supported");
+    Compile_Assert(!looping, "Nested loops not supported");
 
     looping = true;
 

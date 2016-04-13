@@ -94,7 +94,7 @@ private:
      * Assertion evaluated at compile-time, but only triggered if executed at runtime.
      * @param msg Message to be logged if the assertion fails.
      */
-    void RuntimeAssert(bool condition, const char* msg);
+    void Compile_Assert(bool condition, const char* msg);
 
     /**
      * Analyzes the entire shader program for `CALL` instructions before emitting any code,
