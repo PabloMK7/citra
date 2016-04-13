@@ -845,6 +845,12 @@ void JitCompiler::Compile() {
         SetJumpTarget(branch.first, code_ptr[branch.second]);
     }
 
+    // Free memory that's no longer needed
+    return_offsets.clear();
+    return_offsets.shrink_to_fit();
+    fixup_branches.clear();
+    fixup_branches.shrink_to_fit();
+
     uintptr_t size = reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
     ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
 
