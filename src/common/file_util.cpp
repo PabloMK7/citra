@@ -876,11 +876,10 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 }
 
 IOFile::IOFile()
-    : m_file(nullptr), m_good(true)
-{}
+{
+}
 
 IOFile::IOFile(const std::string& filename, const char openmode[])
-    : m_file(nullptr), m_good(true)
 {
     Open(filename, openmode);
 }
@@ -891,7 +890,6 @@ IOFile::~IOFile()
 }
 
 IOFile::IOFile(IOFile&& other)
-    : m_file(nullptr), m_good(true)
 {
     Swap(other);
 }
