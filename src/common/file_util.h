@@ -176,7 +176,6 @@ class IOFile : public NonCopyable
 {
 public:
     IOFile();
-    explicit IOFile(std::FILE* file);
     IOFile(const std::string& filename, const char openmode[]);
 
     ~IOFile();
@@ -245,13 +244,7 @@ public:
 
     // m_good is set to false when a read, write or other function fails
     bool IsGood() const { return m_good; }
-    operator void*() { return m_good ? m_file : nullptr; }
-
-    std::FILE* ReleaseHandle();
-
-    std::FILE* GetHandle() { return m_file; }
-
-    void SetHandle(std::FILE* file);
+    explicit operator bool() const { return IsGood(); }
 
     bool Seek(s64 off, int origin);
     u64 Tell();

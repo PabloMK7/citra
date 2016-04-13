@@ -586,6 +586,21 @@ TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
     return info;
 }
 
+#ifdef HAVE_PNG
+// Adapter functions to libpng to write/flush to File::IOFile instances.
+static void WriteIOFile(png_structp png_ptr, png_bytep data, png_size_t length) {
+    auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
+    if (!fp->WriteBytes(data, length))
+         png_error(png_ptr, "Failed to write to output PNG file.");
+}
+
+static void FlushIOFile(png_structp png_ptr) {
+    auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
+    if (!fp->Flush())
+         png_error(png_ptr, "Failed to flush to output PNG file.");
+}
+#endif
+
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
 #ifndef HAVE_PNG
     return;
@@ -629,7 +644,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
         goto finalise;
     }
 
-    png_init_io(png_ptr, fp.GetHandle());
+    png_set_write_fn(png_ptr, static_cast<void*>(&fp), WriteIOFile, FlushIOFile);
 
     // Write header (8 bit color depth)
     png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height,
