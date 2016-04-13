@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <smmintrin.h>
 
 #include "common/x64/abi.h"
@@ -760,8 +761,7 @@ void JitCompiler::Compile_Return() {
 }
 
 void JitCompiler::Compile_NextInstr() {
-    auto search = return_offsets.find(program_counter);
-    if (search != return_offsets.end()) {
+    if (std::binary_search(return_offsets.begin(), return_offsets.end(), program_counter)) {
         Compile_Return();
     }
 
@@ -793,10 +793,13 @@ void JitCompiler::FindReturnOffsets() {
         case OpCode::Id::CALL:
         case OpCode::Id::CALLC:
         case OpCode::Id::CALLU:
-            return_offsets.insert(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+            return_offsets.push_back(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
             break;
         }
     }
+
+    // Sort for efficient binary search later
+    std::sort(return_offsets.begin(), return_offsets.end());
 }
 
 void JitCompiler::Compile() {

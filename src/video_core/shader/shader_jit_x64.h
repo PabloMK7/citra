@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <set>
 #include <utility>
+#include <vector>
 
 #include <nihstro/shader_bytecode.h>
 
@@ -106,7 +106,7 @@ private:
     std::array<const u8*, 1024> code_ptr;
 
     /// Offsets in code where a return needs to be inserted
-    std::set<unsigned> return_offsets;
+    std::vector<unsigned> return_offsets;
 
     unsigned program_counter = 0;       ///< Offset of the next instruction to decode
     bool looping = false;               ///< True if compiling a loop, used to check for nested loops
