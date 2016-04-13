@@ -930,12 +930,12 @@ bool IOFile::Close()
     return m_good;
 }
 
-u64 IOFile::GetSize()
+u64 IOFile::GetSize() const
 {
     if (IsOpen())
         return FileUtil::GetSize(m_file);
-    else
-        return 0;
+
+    return 0;
 }
 
 bool IOFile::Seek(s64 off, int origin)
@@ -946,12 +946,12 @@ bool IOFile::Seek(s64 off, int origin)
     return m_good;
 }
 
-u64 IOFile::Tell()
+u64 IOFile::Tell() const
 {
     if (IsOpen())
         return ftello(m_file);
-    else
-        return -1;
+
+    return -1;
 }
 
 bool IOFile::Flush()
