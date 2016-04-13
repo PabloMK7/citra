@@ -29,9 +29,9 @@ constexpr size_t MAX_SHADER_SIZE = 1024 * 64;
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
  * code that can be executed on the host machine directly.
  */
-class JitCompiler : public Gen::XCodeBlock {
+class JitShader : public Gen::XCodeBlock {
 public:
-    JitCompiler();
+    JitShader();
 
     void Run(void* registers, unsigned offset) const {
         program(registers, code_ptr[offset]);

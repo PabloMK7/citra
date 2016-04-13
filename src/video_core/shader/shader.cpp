@@ -28,8 +28,8 @@ namespace Pica {
 namespace Shader {
 
 #ifdef ARCHITECTURE_x86_64
-static std::unordered_map<u64, std::unique_ptr<JitCompiler>> shader_map;
-static const JitCompiler* jit_shader;
+static std::unordered_map<u64, std::unique_ptr<JitShader>> shader_map;
+static const JitShader* jit_shader;
 #endif // ARCHITECTURE_x86_64
 
 void Setup() {
@@ -42,7 +42,7 @@ void Setup() {
         if (iter != shader_map.end()) {
             jit_shader = iter->second.get();
         } else {
-            auto shader = std::make_unique<JitCompiler>();
+            auto shader = std::make_unique<JitShader>();
             shader->Compile();
             jit_shader = shader.get();
             shader_map[cache_key] = std::move(shader);
