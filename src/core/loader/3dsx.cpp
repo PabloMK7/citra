@@ -303,4 +303,31 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& ro
     return ResultStatus::ErrorNotUsed;
 }
 
+ResultStatus AppLoader_THREEDSX::ReadIcon(std::vector<u8>& buffer) {
+    if (!file.IsOpen())
+        return ResultStatus::Error;
+
+    // Reset read pointer in case this file has been read before.
+    file.Seek(0, SEEK_SET);
+
+    THREEDSX_Header hdr;
+    if (file.ReadBytes(&hdr, sizeof(THREEDSX_Header)) != sizeof(THREEDSX_Header))
+        return ResultStatus::Error;
+
+    if (hdr.header_size != sizeof(THREEDSX_Header))
+        return ResultStatus::Error;
+
+    // Check if the 3DSX has a SMDH...
+    if (hdr.smdh_offset != 0) {
+        file.Seek(hdr.smdh_offset, SEEK_SET);
+        buffer.resize(hdr.smdh_size);
+
+        if (file.ReadBytes(&buffer[0], hdr.smdh_size) != hdr.smdh_size)
+            return ResultStatus::Error;
+
+        return ResultStatus::Success;
+    }
+    return ResultStatus::ErrorNotUsed;
+}
+
 } // namespace Loader

@@ -90,6 +90,28 @@ const char* GetFileTypeString(FileType type) {
     return "unknown";
 }
 
+std::unique_ptr<AppLoader> GetLoader(FileUtil::IOFile&& file, FileType type,
+    const std::string& filename, const std::string& filepath) {
+    switch (type) {
+
+    // 3DSX file format.
+    case FileType::THREEDSX:
+        return std::make_unique<AppLoader_THREEDSX>(std::move(file), filename, filepath);
+
+    // Standard ELF file format.
+    case FileType::ELF:
+        return std::make_unique<AppLoader_ELF>(std::move(file), filename);
+
+    // NCCH/NCSD container formats.
+    case FileType::CXI:
+    case FileType::CCI:
+        return std::make_unique<AppLoader_NCCH>(std::move(file), filepath);
+
+    default:
+        return std::unique_ptr<AppLoader>();
+    }
+}
+
 ResultStatus LoadFile(const std::string& filename) {
     FileUtil::IOFile file(filename, "rb");
     if (!file.IsOpen()) {
@@ -111,15 +133,19 @@ ResultStatus LoadFile(const std::string& filename) {
 
     LOG_INFO(Loader, "Loading file %s as %s...", filename.c_str(), GetFileTypeString(type));
 
+    std::unique_ptr<AppLoader> app_loader = GetLoader(std::move(file), type, filename_filename, filename);
+
     switch (type) {
 
-    //3DSX file format...
+    // 3DSX file format...
+    // or NCCH/NCSD container formats...
     case FileType::THREEDSX:
+    case FileType::CXI:
+    case FileType::CCI:
     {
-        AppLoader_THREEDSX app_loader(std::move(file), filename_filename, filename);
         // Load application and RomFS
-        if (ResultStatus::Success == app_loader.Load()) {
-            Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
+        if (ResultStatus::Success == app_loader->Load()) {
+            Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
         break;
@@ -127,21 +153,7 @@ ResultStatus LoadFile(const std::string& filename) {
 
     // Standard ELF file format...
     case FileType::ELF:
-        return AppLoader_ELF(std::move(file), filename_filename).Load();
-
-    // NCCH/NCSD container formats...
-    case FileType::CXI:
-    case FileType::CCI:
-    {
-        AppLoader_NCCH app_loader(std::move(file), filename);
-
-        // Load application and RomFS
-        ResultStatus result = app_loader.Load();
-        if (ResultStatus::Success == result) {
-            Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(app_loader), Service::FS::ArchiveIdCode::RomFS);
-        }
-        return result;
-    }
+        return app_loader->Load();
 
     // CIA file format...
     case FileType::CIA:
