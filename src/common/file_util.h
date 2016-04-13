@@ -192,6 +192,9 @@ public:
     template <typename T>
     size_t ReadArray(T* data, size_t length)
     {
+        static_assert(std::is_standard_layout<T>(), "Given array does not consist of standard layout objects");
+        static_assert(std::is_trivially_copyable<T>(), "Given array does not consist of trivially copyable objects");
+
         if (!IsOpen()) {
             m_good = false;
             return -1;
@@ -207,9 +210,8 @@ public:
     template <typename T>
     size_t WriteArray(const T* data, size_t length)
     {
-        static_assert(std::is_standard_layout<T>::value, "Given array does not consist of standard layout objects");
-        // TODO: gcc 4.8 does not support is_trivially_copyable, but we really should check for it here.
-        //static_assert(std::is_trivially_copyable<T>::value, "Given array does not consist of trivially copyable objects");
+        static_assert(std::is_standard_layout<T>(), "Given array does not consist of standard layout objects");
+        static_assert(std::is_trivially_copyable<T>(), "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
             m_good = false;
