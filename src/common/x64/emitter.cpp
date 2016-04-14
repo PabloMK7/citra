@@ -455,6 +455,18 @@ void XEmitter::CALL(const void* fnptr)
     Write32(u32(distance));
 }
 
+FixupBranch XEmitter::CALL()
+{
+    FixupBranch branch;
+    branch.type = 1;
+    branch.ptr = code + 5;
+
+    Write8(0xE8);
+    Write32(0);
+
+    return branch;
+}
+
 FixupBranch XEmitter::J(bool force5bytes)
 {
     FixupBranch branch;
@@ -526,6 +538,22 @@ void XEmitter::SetJumpTarget(const FixupBranch& branch)
     else if (branch.type == 1)
     {
         s64 distance = (s64)(code - branch.ptr);
+        ASSERT_MSG(distance >= -0x80000000LL && distance < 0x80000000LL, "Jump target too far away, needs indirect register");
+        ((s32*)branch.ptr)[-1] = (s32)distance;
+    }
+}
+
+void XEmitter::SetJumpTarget(const FixupBranch& branch, const u8* target)
+{
+    if (branch.type == 0)
+    {
+        s64 distance = (s64)(target - branch.ptr);
+        ASSERT_MSG(distance >= -0x80 && distance < 0x80, "Jump target too far away, needs force5Bytes = true");
+        branch.ptr[-1] = (u8)(s8)distance;
+    }
+    else if (branch.type == 1)
+    {
+        s64 distance = (s64)(target - branch.ptr);
         ASSERT_MSG(distance >= -0x80000000LL && distance < 0x80000000LL, "Jump target too far away, needs indirect register");
         ((s32*)branch.ptr)[-1] = (s32)distance;
     }

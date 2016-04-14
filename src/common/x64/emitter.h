@@ -425,12 +425,14 @@ public:
 #undef CALL
 #endif
     void CALL(const void* fnptr);
+    FixupBranch CALL();
     void CALLptr(OpArg arg);
 
     FixupBranch J_CC(CCFlags conditionCode, bool force5bytes = false);
     void J_CC(CCFlags conditionCode, const u8* addr, bool force5Bytes = false);
 
     void SetJumpTarget(const FixupBranch& branch);
+    void SetJumpTarget(const FixupBranch& branch, const u8* target);
 
     void SETcc(CCFlags flag, OpArg dest);
     // Note: CMOV brings small if any benefit on current cpus.
