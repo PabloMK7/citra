@@ -824,13 +824,12 @@ size_t WriteStringToFile(bool text_file, const std::string &str, const char *fil
 
 size_t ReadFileToString(bool text_file, const char *filename, std::string &str)
 {
-    FileUtil::IOFile file(filename, text_file ? "r" : "rb");
-    auto const f = file.GetHandle();
+    IOFile file(filename, text_file ? "r" : "rb");
 
-    if (!f)
+    if (!file)
         return false;
 
-    str.resize(static_cast<u32>(GetSize(f)));
+    str.resize(static_cast<u32>(file.GetSize()));
     return file.ReadArray(&str[0], str.size());
 }
 
@@ -877,15 +876,10 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 }
 
 IOFile::IOFile()
-    : m_file(nullptr), m_good(true)
-{}
-
-IOFile::IOFile(std::FILE* file)
-    : m_file(file), m_good(true)
-{}
+{
+}
 
 IOFile::IOFile(const std::string& filename, const char openmode[])
-    : m_file(nullptr), m_good(true)
 {
     Open(filename, openmode);
 }
@@ -896,7 +890,6 @@ IOFile::~IOFile()
 }
 
 IOFile::IOFile(IOFile&& other)
-    : m_file(nullptr), m_good(true)
 {
     Swap(other);
 }
@@ -935,26 +928,12 @@ bool IOFile::Close()
     return m_good;
 }
 
-std::FILE* IOFile::ReleaseHandle()
-{
-    std::FILE* const ret = m_file;
-    m_file = nullptr;
-    return ret;
-}
-
-void IOFile::SetHandle(std::FILE* file)
-{
-    Close();
-    Clear();
-    m_file = file;
-}
-
-u64 IOFile::GetSize()
+u64 IOFile::GetSize() const
 {
     if (IsOpen())
         return FileUtil::GetSize(m_file);
-    else
-        return 0;
+
+    return 0;
 }
 
 bool IOFile::Seek(s64 off, int origin)
@@ -965,12 +944,12 @@ bool IOFile::Seek(s64 off, int origin)
     return m_good;
 }
 
-u64 IOFile::Tell()
+u64 IOFile::Tell() const
 {
     if (IsOpen())
         return ftello(m_file);
-    else
-        return -1;
+
+    return -1;
 }
 
 bool IOFile::Flush()

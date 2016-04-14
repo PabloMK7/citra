@@ -176,7 +176,6 @@ class IOFile : public NonCopyable
 {
 public:
     IOFile();
-    explicit IOFile(std::FILE* file);
     IOFile(const std::string& filename, const char openmode[]);
 
     ~IOFile();
@@ -192,6 +191,9 @@ public:
     template <typename T>
     size_t ReadArray(T* data, size_t length)
     {
+        static_assert(std::is_standard_layout<T>(), "Given array does not consist of standard layout objects");
+        static_assert(std::is_trivially_copyable<T>(), "Given array does not consist of trivially copyable objects");
+
         if (!IsOpen()) {
             m_good = false;
             return -1;
@@ -207,9 +209,8 @@ public:
     template <typename T>
     size_t WriteArray(const T* data, size_t length)
     {
-        static_assert(std::is_standard_layout<T>::value, "Given array does not consist of standard layout objects");
-        // TODO: gcc 4.8 does not support is_trivially_copyable, but we really should check for it here.
-        //static_assert(std::is_trivially_copyable<T>::value, "Given array does not consist of trivially copyable objects");
+        static_assert(std::is_standard_layout<T>(), "Given array does not consist of standard layout objects");
+        static_assert(std::is_trivially_copyable<T>(), "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
             m_good = false;
@@ -243,25 +244,20 @@ public:
 
     // m_good is set to false when a read, write or other function fails
     bool IsGood() const { return m_good; }
-    operator void*() { return m_good ? m_file : nullptr; }
-
-    std::FILE* ReleaseHandle();
-
-    std::FILE* GetHandle() { return m_file; }
-
-    void SetHandle(std::FILE* file);
+    explicit operator bool() const { return IsGood(); }
 
     bool Seek(s64 off, int origin);
-    u64 Tell();
-    u64 GetSize();
+    u64 Tell() const;
+    u64 GetSize() const;
     bool Resize(u64 size);
     bool Flush();
 
     // clear error state
     void Clear() { m_good = true; std::clearerr(m_file); }
 
-    std::FILE* m_file;
-    bool m_good;
+private:
+    std::FILE* m_file = nullptr;
+    bool m_good = true;
 };
 
 }  // namespace
