@@ -174,7 +174,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
         return ResultStatus::Error;
 
     LOG_DEBUG(Loader, "%d sections:", kMaxSections);
-    // Iterate through the ExeFs archive until we find the .code file...
+    // Iterate through the ExeFs archive until we find a section with the specified name...
     for (unsigned section_number = 0; section_number < kMaxSections; section_number++) {
         const auto& section = exefs_header.section[section_number];
 
@@ -186,7 +186,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
             s64 section_offset = (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
             file.Seek(section_offset, SEEK_SET);
 
-            if (is_compressed) {
+            if (strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
                 std::unique_ptr<u8[]> temp_buffer;
                 try {
