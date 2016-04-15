@@ -261,7 +261,7 @@ void PerformConversion(ConversionConfiguration& cvt) {
     ASSERT(cvt.block_alignment != BlockAlignment::Block8x8 || cvt.input_lines % 8 == 0);
     // Tiles per row
     size_t num_tiles = cvt.input_line_width / 8;
-    ASSERT(num_tiles < MAX_TILES);
+    ASSERT(num_tiles <= MAX_TILES);
 
     // Buffer used as a CDMA source/target.
     std::unique_ptr<u8[]> data_buffer(new u8[cvt.input_line_width * 8 * 4]);
