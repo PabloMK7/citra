@@ -286,7 +286,7 @@ void StartPicaTracing()
     }
 
     std::lock_guard<std::mutex> lock(pica_trace_mutex);
-    pica_trace = std::unique_ptr<PicaTrace>(new PicaTrace);
+    pica_trace = std::make_unique<PicaTrace>();
 
     is_pica_tracing = true;
 }
