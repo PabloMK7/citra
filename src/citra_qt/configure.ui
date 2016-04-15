@@ -10,24 +10,12 @@
     <height>501</height>
    </rect>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>370</width>
-    <height>219</height>
-   </size>
-  </property>
   <property name="windowTitle">
    <string>Citra Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
-     <property name="minimumSize">
-      <size>
-       <width>371</width>
-       <height>221</height>
-      </size>
-     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
