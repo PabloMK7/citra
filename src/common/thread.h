@@ -30,8 +30,7 @@
 #   endif
 #endif
 
-namespace Common
-{
+namespace Common {
 
 int CurrentThreadId();
 
@@ -43,55 +42,55 @@ public:
     Event() : is_set(false) {}
 
     void Set() {
-        std::lock_guard<std::mutex> lk(m_mutex);
+        std::lock_guard<std::mutex> lk(mutex);
         if (!is_set) {
             is_set = true;
-            m_condvar.notify_one();
+            condvar.notify_one();
         }
     }
 
     void Wait() {
-        std::unique_lock<std::mutex> lk(m_mutex);
-        m_condvar.wait(lk, [&]{ return is_set; });
+        std::unique_lock<std::mutex> lk(mutex);
+        condvar.wait(lk, [&]{ return is_set; });
         is_set = false;
     }
 
     void Reset() {
-        std::unique_lock<std::mutex> lk(m_mutex);
+        std::unique_lock<std::mutex> lk(mutex);
         // no other action required, since wait loops on the predicate and any lingering signal will get cleared on the first iteration
         is_set = false;
     }
 
 private:
     bool is_set;
-    std::condition_variable m_condvar;
-    std::mutex m_mutex;
+    std::condition_variable condvar;
+    std::mutex mutex;
 };
 
 class Barrier {
 public:
-    Barrier(size_t count) : m_count(count), m_waiting(0) {}
+    explicit Barrier(size_t count_) : count(count_), waiting(0), generation(0) {}
 
     /// Blocks until all "count" threads have called Sync()
     void Sync() {
-        std::unique_lock<std::mutex> lk(m_mutex);
+        std::unique_lock<std::mutex> lk(mutex);
+        const size_t current_generation = generation;
 
-        // TODO: broken when next round of Sync()s
-        // is entered before all waiting threads return from the notify_all
-
-        if (++m_waiting == m_count) {
-            m_waiting = 0;
-            m_condvar.notify_all();
+        if (++waiting == count) {
+            generation++;
+            waiting = 0;
+            condvar.notify_all();
         } else {
-            m_condvar.wait(lk, [&]{ return m_waiting == 0; });
+            condvar.wait(lk, [this, current_generation]{ return current_generation != generation; });
         }
     }
 
 private:
-    std::condition_variable m_condvar;
-    std::mutex m_mutex;
-    const size_t m_count;
-    size_t m_waiting;
+    std::condition_variable condvar;
+    std::mutex mutex;
+    const size_t count;
+    size_t waiting;
+    size_t generation; // Incremented once each time the barrier is used
 };
 
 void SleepCurrentThread(int ms);
@@ -100,8 +99,7 @@ void SwitchCurrentThread();    // On Linux, this is equal to sleep 1ms
 // Use this function during a spin-wait to make the current thread
 // relax while another thread is working. This may be more efficient
 // than using events because event functions use kernel calls.
-inline void YieldCPU()
-{
+inline void YieldCPU() {
     std::this_thread::yield();
 }
 
