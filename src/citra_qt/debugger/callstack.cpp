@@ -37,10 +37,13 @@ void CallstackWidget::OnDebugModeEntered()
     int counter = 0;
     for (u32 addr = 0x10000000; addr >= sp; addr -= 4)
     {
+        if (!Memory::IsValidVirtualAddress(addr))
+            break;
+
         const u32 ret_addr = Memory::Read32(addr);
         const u32 call_addr = ret_addr - 4; //get call address???
 
-        if (Memory::GetPointer(call_addr) == nullptr)
+        if (!Memory::IsValidVirtualAddress(call_addr))
             break;
 
         /* TODO (mattvail) clean me, move to debugger interface */
