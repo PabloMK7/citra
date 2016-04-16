@@ -457,6 +457,44 @@ void WriteBlock(const VAddr dest_addr, const u8* src_buffer, const size_t size) 
     }
 }
 
+void ZeroBlock(const VAddr dest_addr, const size_t size) {
+    size_t remaining_size = size;
+    size_t page_index = dest_addr >> PAGE_BITS;
+    size_t page_offset = dest_addr & PAGE_MASK;
+
+    while (remaining_size > 0) {
+        const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
+        const VAddr current_vaddr = (page_index << PAGE_BITS) + page_offset;
+
+        switch (current_page_table->attributes[page_index]) {
+        case PageType::Unmapped: {
+            LOG_ERROR(HW_Memory, "unmapped ZeroBlock @ 0x%08X (start address = 0x%08X, size = %zu)", current_vaddr, dest_addr, size);
+            break;
+        }
+        case PageType::Memory: {
+            DEBUG_ASSERT(current_page_table->pointers[page_index]);
+
+            u8* dest_ptr = current_page_table->pointers[page_index] + page_offset;
+            std::memset(dest_ptr, 0, copy_amount);
+            break;
+        }
+        case PageType::Special: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            static const std::array<u8, PAGE_SIZE> zeros = {};
+            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, zeros.data(), copy_amount);
+            break;
+        }
+        default:
+            UNREACHABLE();
+        }
+
+        page_index++;
+        page_offset = 0;
+        remaining_size -= copy_amount;
+    }
+}
+
 template<>
 u8 ReadMMIO<u8>(MMIORegionPointer mmio_handler, VAddr addr) {
     return mmio_handler->Read8(addr);

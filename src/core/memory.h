@@ -126,6 +126,7 @@ void Write32(VAddr addr, u32 data);
 void Write64(VAddr addr, u64 data);
 
 void WriteBlock(const VAddr dest_addr, const u8* src_buffer, size_t size);
+void ZeroBlock(const VAddr dest_addr, const size_t size);
 
 u8* GetPointer(VAddr virtual_address);
 
