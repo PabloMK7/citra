@@ -3,13 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
-#include "common/assert.h"
-#include "common/common_types.h"
-#include "common/common_funcs.h"
-
-#include "core/core.h"
-#include "core/memory.h"
 #include "core/hle/config_mem.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

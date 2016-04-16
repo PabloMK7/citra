@@ -10,12 +10,8 @@
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
-#include "core/hle/service/fs/archive.h"
-#include "core/loader/elf.h"
-#include "core/loader/ncch.h"
+#include "core/loader/3dsx.h"
 #include "core/memory.h"
-
-#include "3dsx.h"
 
 namespace Loader {
 
