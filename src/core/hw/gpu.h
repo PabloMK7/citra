@@ -78,7 +78,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x4);
 
-    struct {
+    struct MemoryFillConfig {
         u32 address_start;
         u32 address_end;
 
@@ -165,7 +165,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x169);
 
-    struct {
+    struct DisplayTransferConfig {
         u32 input_address;
         u32 output_address;
 

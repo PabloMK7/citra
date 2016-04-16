@@ -21,7 +21,5 @@ void RendererBase::RefreshRasterizerSetting() {
         } else {
             rasterizer = std::make_unique<VideoCore::SWRasterizer>();
         }
-        rasterizer->InitObjects();
-        rasterizer->Reset();
     }
 }

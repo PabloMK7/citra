@@ -5,6 +5,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <memory>
 
 class OpenGLState {
 public:
@@ -63,15 +64,15 @@ public:
 
     struct {
         GLuint texture_1d; // GL_TEXTURE_BINDING_1D
-    } lighting_lut[6];
+    } lighting_luts[6];
 
     struct {
-        GLuint framebuffer; // GL_DRAW_FRAMEBUFFER_BINDING
+        GLuint read_framebuffer; // GL_READ_FRAMEBUFFER_BINDING
+        GLuint draw_framebuffer; // GL_DRAW_FRAMEBUFFER_BINDING
         GLuint vertex_array; // GL_VERTEX_ARRAY_BINDING
         GLuint vertex_buffer; // GL_ARRAY_BUFFER_BINDING
         GLuint uniform_buffer; // GL_UNIFORM_BUFFER_BINDING
         GLuint shader_program; // GL_CURRENT_PROGRAM
-        bool shader_dirty;
     } draw;
 
     OpenGLState();
@@ -82,14 +83,18 @@ public:
     }
 
     /// Apply this state as the current OpenGL state
-    void Apply();
+    void Apply() const;
 
-    static void ResetTexture(GLuint id);
-    static void ResetSampler(GLuint id);
-    static void ResetProgram(GLuint id);
-    static void ResetBuffer(GLuint id);
-    static void ResetVertexArray(GLuint id);
-    static void ResetFramebuffer(GLuint id);
+    /// Check the status of the current OpenGL read or draw framebuffer configuration
+    static GLenum CheckFBStatus(GLenum target);
+
+    /// Resets and unbinds any references to the given resource in the current OpenGL state
+    static void ResetTexture(GLuint handle);
+    static void ResetSampler(GLuint handle);
+    static void ResetProgram(GLuint handle);
+    static void ResetBuffer(GLuint handle);
+    static void ResetVertexArray(GLuint handle);
+    static void ResetFramebuffer(GLuint handle);
 
 private:
     static OpenGLState cur_state;

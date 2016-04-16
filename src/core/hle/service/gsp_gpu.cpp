@@ -4,6 +4,7 @@
 
 #include "common/bit_field.h"
 #include "common/microprofile.h"
+#include "common/profiler.h"
 
 #include "core/memory.h"
 #include "core/hle/kernel/event.h"
@@ -15,8 +16,6 @@
 
 #include "video_core/gpu_debugger.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
 
 #include "gsp_gpu.h"
 
@@ -291,8 +290,6 @@ static void FlushDataCache(Service::Interface* self) {
     u32 size    = cmd_buff[2];
     u32 process = cmd_buff[4];
 
-    VideoCore::g_renderer->Rasterizer()->InvalidateRegion(Memory::VirtualToPhysicalAddress(address), size);
-
     // TODO(purpasmart96): Verify return header on HW
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -408,6 +405,8 @@ void SignalInterrupt(InterruptId interrupt_id) {
     g_interrupt_event->Signal();
 }
 
+MICROPROFILE_DEFINE(GPU_GSP_DMA, "GPU", "GSP DMA", MP_RGB(100, 0, 255));
+
 /// Executes the next GSP command
 static void ExecuteCommand(const Command& command, u32 thread_id) {
     // Utility function to convert register ID to address
@@ -419,18 +418,21 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
     // GX request DMA - typically used for copying memory from GSP heap to VRAM
     case CommandId::REQUEST_DMA:
-        VideoCore::g_renderer->Rasterizer()->FlushRegion(Memory::VirtualToPhysicalAddress(command.dma_request.source_address),
-                                                            command.dma_request.size);
+    {
+        MICROPROFILE_SCOPE(GPU_GSP_DMA);
+
+        // TODO: Consider attempting rasterizer-accelerated surface blit if that usage is ever possible/likely
+        Memory::RasterizerFlushRegion(Memory::VirtualToPhysicalAddress(command.dma_request.source_address),
+                            command.dma_request.size);
+        Memory::RasterizerFlushAndInvalidateRegion(Memory::VirtualToPhysicalAddress(command.dma_request.dest_address),
+                            command.dma_request.size);
 
         memcpy(Memory::GetPointer(command.dma_request.dest_address),
                Memory::GetPointer(command.dma_request.source_address),
                command.dma_request.size);
         SignalInterrupt(InterruptId::DMA);
-
-        VideoCore::g_renderer->Rasterizer()->InvalidateRegion(Memory::VirtualToPhysicalAddress(command.dma_request.dest_address),
-                                                          command.dma_request.size);
         break;
-
+    }
     // TODO: This will need some rework in the future. (why?)
     case CommandId::SUBMIT_GPU_CMDLIST:
     {
@@ -517,13 +519,8 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
     case CommandId::CACHE_FLUSH:
     {
-        for (auto& region : command.cache_flush.regions) {
-            if (region.size == 0)
-                break;
-
-            VideoCore::g_renderer->Rasterizer()->InvalidateRegion(
-                Memory::VirtualToPhysicalAddress(region.address), region.size);
-        }
+        // NOTE: Rasterizer flushing handled elsewhere in CPU read/write and other GPU handlers
+        // Use command.cache_flush.regions to implement this handler
         break;
     }
 
