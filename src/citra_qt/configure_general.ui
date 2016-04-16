@@ -128,6 +128,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="toogle_scaled_resolution">
+            <property name="text">
+             <string>Enable scaled resolution</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
