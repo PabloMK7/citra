@@ -246,6 +246,26 @@ void Write(const VAddr vaddr, const T data) {
     }
 }
 
+bool IsValidVirtualAddress(const VAddr vaddr) {
+    const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    if (page_pointer)
+        return true;
+
+    if (current_page_table->attributes[vaddr >> PAGE_BITS] != PageType::Special)
+        return false;
+
+    MMIORegionPointer mmio_region = GetMMIOHandler(vaddr);
+    if (mmio_region) {
+        return mmio_region->IsValidAddress(vaddr);
+    }
+
+    return false;
+}
+
+bool IsValidPhysicalAddress(const PAddr paddr) {
+    return IsValidVirtualAddress(PhysicalToVirtualAddress(paddr));
+}
+
 u8* GetPointer(const VAddr vaddr) {
     u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
@@ -261,6 +281,7 @@ u8* GetPointer(const VAddr vaddr) {
 }
 
 u8* GetPhysicalPointer(PAddr address) {
+    // TODO(Subv): This call should not go through the application's memory mapping.
     return GetPointer(PhysicalToVirtualAddress(address));
 }
 

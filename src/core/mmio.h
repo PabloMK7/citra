@@ -18,6 +18,8 @@ class MMIORegion {
 public:
     virtual ~MMIORegion() = default;
 
+    virtual bool IsValidAddress(VAddr addr) = 0;
+
     virtual u8 Read8(VAddr addr) = 0;
     virtual u16 Read16(VAddr addr) = 0;
     virtual u32 Read32(VAddr addr) = 0;
