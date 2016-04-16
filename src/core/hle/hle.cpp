@@ -8,8 +8,6 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/hle.h"
-#include "core/hle/config_mem.h"
-#include "core/hle/shared_page.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
