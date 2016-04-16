@@ -24,7 +24,7 @@ struct MiiConfig {
     u8  unk_004;
     INSERT_PADDING_BYTES(3);
     u16 unk_008;
-    INSERT_PADDING_BYTES(0x8C - 0xA);
+    INSERT_PADDING_BYTES(0x82);
     u8  unk_08C;
     INSERT_PADDING_BYTES(3);
     u16 unk_090;
@@ -75,6 +75,8 @@ public:
 
     /// Whether this applet is currently running instead of the host application or not.
     bool started;
+
+    MiiConfig config;
 };
 
 }

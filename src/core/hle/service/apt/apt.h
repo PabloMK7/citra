@@ -20,16 +20,14 @@ struct MessageParameter {
     u32 sender_id = 0;
     u32 destination_id = 0;
     u32 signal = 0;
-    u32 buffer_size = 0;
     Kernel::SharedPtr<Kernel::Object> object = nullptr;
-    u8* data = nullptr;
+    std::vector<u8> buffer;
 };
 
 /// Holds information about the parameters used in StartLibraryApplet
 struct AppletStartupParameter {
-    u32 buffer_size = 0;
     Kernel::SharedPtr<Kernel::Object> object = nullptr;
-    u8* data = nullptr;
+    std::vector<u8> buffer;
 };
 
 /// Used by the application to pass information about the current framebuffer to applets.

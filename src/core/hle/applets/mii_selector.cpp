@@ -32,9 +32,9 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
-    ASSERT(sizeof(capture_info) == parameter.buffer_size);
+    ASSERT(sizeof(capture_info) == parameter.buffer.size());
 
-    memcpy(&capture_info, parameter.data, sizeof(capture_info));
+    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     using Kernel::MemoryPermission;
     // Allocate a heap block of the required size for this applet.
@@ -47,8 +47,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = static_cast<u32>(Service::APT::SignalType::LibAppFinished);
-    result.data = nullptr;
-    result.buffer_size = 0;
+    result.buffer.clear();
     result.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     result.sender_id = static_cast<u32>(id);
     result.object = framebuffer_memory;
@@ -63,15 +62,17 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the application.
     // TODO(Subv): Reverse the parameter format for the Mii Selector
 
-    if(parameter.buffer_size >= sizeof(u32)) {
-        // TODO: defaults return no error, but garbage in other unknown fields
-        memset(parameter.data, 0, sizeof(u32));
-    }
+    memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+
+    // TODO(Subv): Find more about this structure, result code 0 is enough to let most games continue.
+    MiiResult result;
+    memset(&result, 0, sizeof(result));
+    result.result_code = 0;
 
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
-    message.buffer_size = parameter.buffer_size;
-    message.data = parameter.data;
+    message.buffer.resize(sizeof(MiiResult));
+    std::memcpy(message.buffer.data(), &result, message.buffer.size());
     message.signal = static_cast<u32>(Service::APT::SignalType::LibAppClosed);
     message.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     message.sender_id = static_cast<u32>(id);
