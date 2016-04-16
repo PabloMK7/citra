@@ -191,28 +191,32 @@ void GetConfigInfoBlk2(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 size = cmd_buff[1];
     u32 block_id = cmd_buff[2];
-    u8* data_pointer = Memory::GetPointer(cmd_buff[4]);
+    VAddr data_pointer = cmd_buff[4];
 
-    if (data_pointer == nullptr) {
+    if (!Memory::IsValidVirtualAddress(data_pointer)) {
         cmd_buff[1] = -1; // TODO(Subv): Find the right error code
         return;
     }
 
-    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x2, data_pointer).raw;
+    std::vector<u8> data(size);
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x2, data.data()).raw;
+    Memory::WriteBlock(data_pointer, data.data(), data.size());
 }
 
 void GetConfigInfoBlk8(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 size = cmd_buff[1];
     u32 block_id = cmd_buff[2];
-    u8* data_pointer = Memory::GetPointer(cmd_buff[4]);
+    VAddr data_pointer = cmd_buff[4];
 
-    if (data_pointer == nullptr) {
+    if (!Memory::IsValidVirtualAddress(data_pointer)) {
         cmd_buff[1] = -1; // TODO(Subv): Find the right error code
         return;
     }
 
-    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x8, data_pointer).raw;
+    std::vector<u8> data(size);
+    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x8, data.data()).raw;
+    Memory::WriteBlock(data_pointer, data.data(), data.size());
 }
 
 void UpdateConfigNANDSavegame(Service::Interface* self) {
