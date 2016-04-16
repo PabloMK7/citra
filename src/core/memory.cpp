@@ -364,6 +364,45 @@ u64 Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
+void ReadBlock(const VAddr src_addr, u8* dest_buffer, const size_t size) {
+    size_t remaining_size = size;
+    size_t page_index = src_addr >> PAGE_BITS;
+    size_t page_offset = src_addr & PAGE_MASK;
+
+    while (remaining_size > 0) {
+        const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
+        const VAddr current_vaddr = (page_index << PAGE_BITS) + page_offset;
+
+        switch (current_page_table->attributes[page_index]) {
+        case PageType::Unmapped: {
+            LOG_ERROR(HW_Memory, "unmapped ReadBlock @ 0x%08X (start address = 0x%08X, size = %zu)", current_vaddr, src_addr, size);
+            std::memset(dest_buffer, 0, copy_amount);
+            break;
+        }
+        case PageType::Memory: {
+            DEBUG_ASSERT(current_page_table->pointers[page_index]);
+
+            const u8* src_ptr = current_page_table->pointers[page_index] + page_offset;
+            std::memcpy(dest_buffer, src_ptr, copy_amount);
+            break;
+        }
+        case PageType::Special: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, dest_buffer, copy_amount);
+            break;
+        }
+        default:
+            UNREACHABLE();
+        }
+
+        page_index++;
+        page_offset = 0;
+        dest_buffer += copy_amount;
+        remaining_size -= copy_amount;
+    }
+}
+
 void Write8(const VAddr addr, const u8 data) {
     Write<u8>(addr, data);
 }
@@ -380,9 +419,41 @@ void Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
-void WriteBlock(const VAddr addr, const u8* data, const size_t size) {
-    for (u32 offset = 0; offset < size; offset++) {
-        Write8(addr + offset, data[offset]);
+void WriteBlock(const VAddr dest_addr, const u8* src_buffer, const size_t size) {
+    size_t remaining_size = size;
+    size_t page_index = dest_addr >> PAGE_BITS;
+    size_t page_offset = dest_addr & PAGE_MASK;
+
+    while (remaining_size > 0) {
+        const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
+        const VAddr current_vaddr = (page_index << PAGE_BITS) + page_offset;
+
+        switch (current_page_table->attributes[page_index]) {
+        case PageType::Unmapped: {
+            LOG_ERROR(HW_Memory, "unmapped WriteBlock @ 0x%08X (start address = 0x%08X, size = %zu)", current_vaddr, dest_addr, size);
+            break;
+        }
+        case PageType::Memory: {
+            DEBUG_ASSERT(current_page_table->pointers[page_index]);
+
+            u8* dest_ptr = current_page_table->pointers[page_index] + page_offset;
+            std::memcpy(dest_ptr, src_buffer, copy_amount);
+            break;
+        }
+        case PageType::Special: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, src_buffer, copy_amount);
+            break;
+        }
+        default:
+            UNREACHABLE();
+        }
+
+        page_index++;
+        page_offset = 0;
+        src_buffer += copy_amount;
+        remaining_size -= copy_amount;
     }
 }
 

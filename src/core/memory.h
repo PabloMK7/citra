@@ -118,12 +118,14 @@ u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
 u64 Read64(VAddr addr);
 
+void ReadBlock(const VAddr src_addr, u8* dest_buffer, size_t size);
+
 void Write8(VAddr addr, u8 data);
 void Write16(VAddr addr, u16 data);
 void Write32(VAddr addr, u32 data);
 void Write64(VAddr addr, u64 data);
 
-void WriteBlock(VAddr addr, const u8* data, size_t size);
+void WriteBlock(const VAddr dest_addr, const u8* src_buffer, size_t size);
 
 u8* GetPointer(VAddr virtual_address);
 
