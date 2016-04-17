@@ -497,6 +497,11 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
         break;
     }
 
+    if (processor_id == THREADPROCESSORID_1 || processor_id == THREADPROCESSORID_ALL ||
+        (processor_id == THREADPROCESSORID_DEFAULT && Kernel::g_current_process->ideal_processor == THREADPROCESSORID_1)) {
+        LOG_WARNING(Kernel_SVC, "Newly created thread is allowed to be run in the SysCore, unimplemented.");
+    }
+
     CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(
             name, entry_point, priority, arg, processor_id, stack_top));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
