@@ -99,6 +99,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE:
     {
+        // TODO(Subv): What happens if an application tries to FREE a block of memory that has a SharedMemory pointing to it?
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
             ResultCode result = process.HeapFree(addr0, size);
             if (result.IsError()) return result;
@@ -798,6 +799,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
         case MemoryPermission::Read:
         case MemoryPermission::Write:
         case MemoryPermission::ReadWrite:
+        case MemoryPermission::DontCare:
             return true;
         default:
             return false;

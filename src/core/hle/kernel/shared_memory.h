@@ -49,6 +49,12 @@ public:
     HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
     /**
+     * Converts the specified MemoryPermission into the equivalent VMAPermission.
+     * @param permission The MemoryPermission to convert.
+     */
+    static VMAPermission ConvertPermissions(MemoryPermission permission);
+
+    /**
      * Maps a shared memory block to an address in the target process' address space
      * @param target_process Process on which to map the memory block.
      * @param address Address in system memory to map shared memory block to

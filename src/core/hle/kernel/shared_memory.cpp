@@ -46,6 +46,7 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
             Kernel::g_current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
         }
     } else {
+        // TODO(Subv): What happens if an application tries to create multiple memory blocks pointing to the same address?
         auto& vm_manager = shared_memory->owner_process->vm_manager;
         // The memory is already available and mapped in the owner process.
         auto vma = vm_manager.FindVMA(address)->second;
@@ -56,6 +57,8 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
         vm_manager.UnmapRange(address, size);
         // Map our own block into the address space
         vm_manager.MapMemoryBlock(address, shared_memory->backing_block, 0, size, MemoryState::Shared);
+        // Reprotect the block with the new permissions
+        vm_manager.ReprotectRange(address, size, ConvertPermissions(permissions));
     }
 
     shared_memory->base_address = address;
@@ -65,8 +68,28 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
 ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermission permissions,
         MemoryPermission other_permissions) {
 
-    // TODO(Subv): Return E0E01BEE when permissions and other_permissions don't
-    // match what was specified when the memory block was created.
+    MemoryPermission own_other_permissions = target_process == owner_process ? this->permissions : this->other_permissions;
+
+    // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
+    if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {
+        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    // Error out if the requested permissions don't match what the creator process allows.
+    if (static_cast<u32>(permissions) & ~static_cast<u32>(own_other_permissions)) {
+        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    // Heap-backed memory blocks can not be mapped with other_permissions = DontCare
+    if (base_address != 0 && other_permissions == MemoryPermission::DontCare) {
+        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    // Error out if the provided permissions are not compatible with what the creator process needs.
+    if (other_permissions != MemoryPermission::DontCare &&
+        static_cast<u32>(this->permissions) & ~static_cast<u32>(other_permissions)) {
+        return ResultCode(ErrorDescription::WrongPermission, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+    }
 
     // TODO(Subv): Check for the Shared Device Mem flag in the creator process.
     /*if (was_created_with_shared_device_mem && address != 0) {
@@ -76,11 +99,13 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     // TODO(Subv): The same process that created a SharedMemory object
     // can not map it in its own address space unless it was created with addr=0, result 0xD900182C.
 
-    if (address < Memory::HEAP_VADDR || address + size >= Memory::SHARED_MEMORY_VADDR_END) {
-        LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, invalid address",
-                GetObjectId(), address, name.c_str());
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    if (address != 0) {
+        if (address < Memory::HEAP_VADDR || address + size >= Memory::SHARED_MEMORY_VADDR_END) {
+            LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, invalid address",
+                      GetObjectId(), address, name.c_str());
+            return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
+                              ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        }
     }
 
     VAddr target_address = address;
@@ -91,15 +116,22 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     }
 
     // Map the memory block into the target process
-    target_process->vm_manager.MapMemoryBlock(target_address, backing_block, backing_block_offset, size, MemoryState::Shared);
+    auto result = target_process->vm_manager.MapMemoryBlock(target_address, backing_block, backing_block_offset, size, MemoryState::Shared);
+    if (result.Failed())
+        return result.Code();
 
-    return RESULT_SUCCESS;
+    return target_process->vm_manager.ReprotectRange(target_address, size, ConvertPermissions(permissions));
 }
 
 ResultCode SharedMemory::Unmap(Process* target_process, VAddr address) {
     // TODO(Subv): Verify what happens if the application tries to unmap an address that is not mapped to a SharedMemory.
     return target_process->vm_manager.UnmapRange(address, size);
 }
+
+VMAPermission SharedMemory::ConvertPermissions(MemoryPermission permission) {
+    u32 masked_permissions = static_cast<u32>(permission) & static_cast<u32>(MemoryPermission::ReadWriteExecute);
+    return static_cast<VMAPermission>(masked_permissions);
+};
 
 u8* SharedMemory::GetPointer(u32 offset) {
     return backing_block->data() + backing_block_offset + offset;
