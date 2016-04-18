@@ -442,8 +442,33 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
 
                 DEBUG_ASSERT(0 != texture.config.address);
 
-                int s = (int)(uv[i].u() * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
-                int t = (int)(uv[i].v() * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
+                float24 u = uv[i].u();
+                float24 v = uv[i].v();
+
+                // Only unit 0 respects the texturing type (according to 3DBrew)
+                // TODO: Refactor so cubemaps and shadowmaps can be handled
+                if (i == 0) {
+                    switch(texture.config.type) {
+                    case Regs::TextureConfig::Texture2D:
+                        break;
+                    case Regs::TextureConfig::Projection2D: {
+                        auto tc0_w = GetInterpolatedAttribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
+                        u /= tc0_w;
+                        v /= tc0_w;
+                        break;
+                    }
+                    default:
+                        // TODO: Change to LOG_ERROR when more types are handled.
+                        LOG_DEBUG(HW_GPU, "Unhandled texture type %x", (int)texture.config.type);
+                        UNIMPLEMENTED();
+                        break;
+                    }
+                }
+
+                int s = (int)(u * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
+                int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
+
+
                 static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
                     switch (mode) {
                         case Regs::TextureConfig::ClampToEdge:
