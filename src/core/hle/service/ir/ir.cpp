@@ -94,8 +94,9 @@ void Init() {
     AddService(new IR_User_Interface);
 
     using Kernel::MemoryPermission;
-    shared_memory = SharedMemory::Create(0x1000, Kernel::MemoryPermission::ReadWrite,
-                                         Kernel::MemoryPermission::ReadWrite, "IR:SharedMemory");
+    shared_memory = SharedMemory::Create(nullptr, 0x1000,
+                                         Kernel::MemoryPermission::ReadWrite, Kernel::MemoryPermission::ReadWrite,
+                                         0, Kernel::MemoryRegion::BASE, "IR:SharedMemory");
     transfer_shared_memory = nullptr;
 
     // Create event handle(s)

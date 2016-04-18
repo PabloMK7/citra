@@ -335,8 +335,9 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     g_interrupt_event->name = "GSP_GPU::interrupt_event";
 
     using Kernel::MemoryPermission;
-    g_shared_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite,
-        MemoryPermission::ReadWrite, "GSPSharedMem");
+    g_shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000,
+                                                   MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+                                                   0, Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
 
     Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
 

@@ -36,8 +36,8 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
 
     memcpy(&capture_info, parameter.data, sizeof(capture_info));
     using Kernel::MemoryPermission;
-    framebuffer_memory = Kernel::SharedMemory::Create(capture_info.size, MemoryPermission::ReadWrite,
-                                                      MemoryPermission::ReadWrite, "MiiSelector Memory");
+    framebuffer_memory = Kernel::SharedMemory::Create(nullptr, capture_info.size, MemoryPermission::ReadWrite,
+                                                      MemoryPermission::ReadWrite, 0, Kernel::MemoryRegion::BASE, "MiiSelector Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;

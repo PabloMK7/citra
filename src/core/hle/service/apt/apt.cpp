@@ -37,8 +37,6 @@ static Kernel::SharedPtr<Kernel::Mutex> lock;
 static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
 static Kernel::SharedPtr<Kernel::Event> parameter_event; ///< APT parameter event
 
-static std::shared_ptr<std::vector<u8>> shared_font;
-
 static u32 cpu_percent; ///< CPU time available to the running application
 
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
@@ -74,23 +72,14 @@ void Initialize(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    if (shared_font != nullptr) {
-        // TODO(yuriks): This is a hack to keep this working right now even with our completely
-        // broken shared memory system.
-        shared_font_mem->fixed_address = SHARED_FONT_VADDR;
-        Kernel::g_current_process->vm_manager.MapMemoryBlock(shared_font_mem->fixed_address,
-                shared_font, 0, shared_font_mem->size, Kernel::MemoryState::Shared);
-
-        cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
-        cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-        cmd_buff[2] = SHARED_FONT_VADDR;
-        cmd_buff[3] = IPC::MoveHandleDesc();
-        cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
-    } else {
-        cmd_buff[0] = IPC::MakeHeader(0x44, 1, 0);
-        cmd_buff[1] = -1; // Generic error (not really possible to verify this on hardware)
-        LOG_ERROR(Kernel_SVC, "called, but %s has not been loaded!", SHARED_FONT);
-    }
+    cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    // Since the SharedMemory interface doesn't provide the address at which the memory was allocated,
+    // the APT service calculates this address by scanning the entire address space (using svcQueryMemory)
+    // and searches for an allocation of the same size as the Shared Font.
+    cmd_buff[2] = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
+    cmd_buff[3] = IPC::MoveHandleDesc();
+    cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
 }
 
 void NotifyToWait(Service::Interface* self) {
@@ -433,14 +422,12 @@ void Init() {
     FileUtil::IOFile file(filepath, "rb");
 
     if (file.IsOpen()) {
-        // Read shared font data
-        shared_font = std::make_shared<std::vector<u8>>((size_t)file.GetSize());
-        file.ReadBytes(shared_font->data(), shared_font->size());
-
         // Create shared font memory object
         using Kernel::MemoryPermission;
-        shared_font_mem = Kernel::SharedMemory::Create(3 * 1024 * 1024, // 3MB
-                MemoryPermission::ReadWrite, MemoryPermission::Read, "APT_U:shared_font_mem");
+        shared_font_mem = Kernel::SharedMemory::Create(nullptr, 0x332000, // 3272 KB
+                MemoryPermission::ReadWrite, MemoryPermission::Read, 0, Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
+        // Read shared font data
+        file.ReadBytes(shared_font_mem->GetPointer(), file.GetSize());
     } else {
         LOG_WARNING(Service_APT, "Unable to load shared font: %s", filepath.c_str());
         shared_font_mem = nullptr;
@@ -459,7 +446,6 @@ void Init() {
 }
 
 void Shutdown() {
-    shared_font = nullptr;
     shared_font_mem = nullptr;
     lock = nullptr;
     notification_event = nullptr;
