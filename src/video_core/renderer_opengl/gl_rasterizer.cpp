@@ -76,6 +76,9 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD1);
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD2);
 
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0_W, 1, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0_w));
+    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0_W);
+
     glVertexAttribPointer(GLShader::ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, normquat));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_NORMQUAT);
 
@@ -317,6 +320,11 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     // Logic op
     case PICA_REG_INDEX(output_merger.logic_op):
         SyncLogicOp();
+        break;
+
+    // Texture 0 type
+    case PICA_REG_INDEX(texture0.type):
+        shader_dirty = true;
         break;
 
     // TEV stages
