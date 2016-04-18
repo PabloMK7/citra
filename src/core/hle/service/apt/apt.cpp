@@ -22,16 +22,73 @@
 namespace Service {
 namespace APT {
 
-// Address used for shared font (as observed on HW)
-// TODO(bunnei): This is the hard-coded address where we currently dump the shared font from via
-// https://github.com/citra-emu/3dsutils. This is technically a hack, and will not work at any
-// address other than 0x18000000 due to internal pointers in the shared font dump that would need to
-// be relocated. This might be fixed by dumping the shared font @ address 0x00000000 and then
-// correctly mapping it in Citra, however we still do not understand how the mapping is determined.
-static const VAddr SHARED_FONT_VADDR = 0x18000000;
+/// BCFNT Shared Font file structures
+namespace BCFNT {
+struct CFNT {
+    u8 magic[4];
+    u16_le endianness;
+    u16_le header_size;
+    u32_le version;
+    u32_le file_size;
+    u32_le num_blocks;
+};
+
+struct FINF {
+    u8 magic[4];
+    u32_le section_size;
+    u8 font_type;
+    u8 line_feed;
+    u16_le alter_char_index;
+    u8 default_width[3];
+    u8 encoding;
+    u32_le tglp_offset;
+    u32_le cwdh_offset;
+    u32_le cmap_offset;
+    u8 height;
+    u8 width;
+    u8 ascent;
+    u8 reserved;
+};
+
+struct TGLP {
+    u8 magic[4];
+    u32_le section_size;
+    u8 cell_width;
+    u8 cell_height;
+    u8 baseline_position;
+    u8 max_character_width;
+    u32_le sheet_size;
+    u16_le num_sheets;
+    u16_le sheet_image_format;
+    u16_le num_columns;
+    u16_le num_rows;
+    u16_le sheet_width;
+    u16_le sheet_height;
+    u32_le sheet_data_offset;
+};
+
+struct CMAP {
+    u8 magic[4];
+    u32_le section_size;
+    u16_le code_begin;
+    u16_le code_end;
+    u16_le mapping_method;
+    u16_le reserved;
+    u32_le next_cmap_offset;
+};
+
+struct CWDH {
+    u8 magic[4];
+    u32_le section_size;
+    u16_le start_index;
+    u16_le end_index;
+    u32_le next_cwdh_offset;
+};
+}
 
 /// Handle to shared memory region designated to for shared system font
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
+static bool shared_font_relocated = false;
 
 static Kernel::SharedPtr<Kernel::Mutex> lock;
 static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
@@ -72,12 +129,19 @@ void Initialize(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    // The shared font has to be relocated to the new address before being passed to the application.
+    VAddr target_address = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
+    // The shared font dumped by 3dsutils (https://github.com/citra-emu/3dsutils) uses this address as base,
+    // so we relocate it from there to our real address.
+    static const VAddr SHARED_FONT_VADDR = 0x18000000;
+    if (!shared_font_relocated)
+        RelocateSharedFont(SHARED_FONT_VADDR, target_address);
     cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was allocated,
-    // the APT service calculates this address by scanning the entire address space (using svcQueryMemory)
+    // the real APT service calculates this address by scanning the entire address space (using svcQueryMemory)
     // and searches for an allocation of the same size as the Shared Font.
-    cmd_buff[2] = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
+    cmd_buff[2] = target_address;
     cmd_buff[3] = IPC::MoveHandleDesc();
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
 }
@@ -447,6 +511,7 @@ void Init() {
 
 void Shutdown() {
     shared_font_mem = nullptr;
+    shared_font_relocated = false;
     lock = nullptr;
     notification_event = nullptr;
     parameter_event = nullptr;
