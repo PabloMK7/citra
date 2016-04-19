@@ -41,6 +41,11 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
 
         shared_memory->linear_heap_phys_address = Memory::FCRAM_PADDR + memory_region->base + shared_memory->backing_block_offset;
 
+        // Increase the amount of used linear heap memory for the owner process.
+        if (shared_memory->owner_process != nullptr) {
+            shared_memory->owner_process->linear_heap_used += size;
+        }
+
         // Refresh the address mappings for the current process.
         if (Kernel::g_current_process != nullptr) {
             Kernel::g_current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
