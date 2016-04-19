@@ -20,6 +20,7 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
+#include "common/scm_rev.h"
 #include "common/scope_exit.h"
 
 #include "core/settings.h"
@@ -34,11 +35,17 @@
 #include "video_core/video_core.h"
 
 
-static void PrintHelp()
+static void PrintHelp(const char *argv0)
 {
-    std::cout << "Usage: citra [options] <filename>" << std::endl;
-    std::cout << "--help, -h            Display this information" << std::endl;
-    std::cout << "--gdbport, -g number  Enable gdb stub on port number" << std::endl;
+    std::cout << "Usage: " << argv0 << " [options] <filename>\n"
+                 "-g, --gdbport=NUMBER  Enable gdb stub on port NUMBER\n"
+                 "-h, --help            Display this help and exit\n"
+                 "-v, --version         Output version information and exit\n";
+}
+
+static void PrintVersion()
+{
+    std::cout << "Citra " << Common::g_scm_branch << " " << Common::g_scm_desc << std::endl;
 }
 
 /// Application entry point
@@ -51,18 +58,16 @@ int main(int argc, char **argv) {
     std::string boot_filename;
 
     static struct option long_options[] = {
-        { "help", no_argument, 0, 'h' },
         { "gdbport", required_argument, 0, 'g' },
+        { "help", no_argument, 0, 'h' },
+        { "version", no_argument, 0, 'v' },
         { 0, 0, 0, 0 }
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, ":hg:", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "g:hv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
-            case 'h':
-                PrintHelp();
-                return 0;
             case 'g':
                 errno = 0;
                 gdb_port = strtoul(optarg, &endarg, 0);
@@ -73,6 +78,12 @@ int main(int argc, char **argv) {
                     exit(1);
                 }
                 break;
+            case 'h':
+                PrintHelp(argv[0]);
+                return 0;
+            case 'v':
+                PrintVersion();
+                return 0;
             }
         } else {
             boot_filename = argv[optind];
