@@ -12,6 +12,7 @@
 #include "core/hle/service/apt/apt_a.h"
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
+#include "core/hle/service/apt/bcfnt/bcfnt.h"
 #include "core/hle/service/fs/archive.h"
 
 #include "core/hle/kernel/event.h"
@@ -21,70 +22,6 @@
 
 namespace Service {
 namespace APT {
-
-/// BCFNT Shared Font file structures
-namespace BCFNT {
-struct CFNT {
-    u8 magic[4];
-    u16_le endianness;
-    u16_le header_size;
-    u32_le version;
-    u32_le file_size;
-    u32_le num_blocks;
-};
-
-struct FINF {
-    u8 magic[4];
-    u32_le section_size;
-    u8 font_type;
-    u8 line_feed;
-    u16_le alter_char_index;
-    u8 default_width[3];
-    u8 encoding;
-    u32_le tglp_offset;
-    u32_le cwdh_offset;
-    u32_le cmap_offset;
-    u8 height;
-    u8 width;
-    u8 ascent;
-    u8 reserved;
-};
-
-struct TGLP {
-    u8 magic[4];
-    u32_le section_size;
-    u8 cell_width;
-    u8 cell_height;
-    u8 baseline_position;
-    u8 max_character_width;
-    u32_le sheet_size;
-    u16_le num_sheets;
-    u16_le sheet_image_format;
-    u16_le num_columns;
-    u16_le num_rows;
-    u16_le sheet_width;
-    u16_le sheet_height;
-    u32_le sheet_data_offset;
-};
-
-struct CMAP {
-    u8 magic[4];
-    u32_le section_size;
-    u16_le code_begin;
-    u16_le code_end;
-    u16_le mapping_method;
-    u16_le reserved;
-    u32_le next_cmap_offset;
-};
-
-struct CWDH {
-    u8 magic[4];
-    u32_le section_size;
-    u16_le start_index;
-    u16_le end_index;
-    u32_le next_cwdh_offset;
-};
-}
 
 /// Handle to shared memory region designated to for shared system font
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
@@ -133,9 +70,13 @@ void GetSharedFont(Service::Interface* self) {
     VAddr target_address = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
     // The shared font dumped by 3dsutils (https://github.com/citra-emu/3dsutils) uses this address as base,
     // so we relocate it from there to our real address.
+    // TODO(Subv): This address is wrong if the shared font is dumped from a n3DS,
+    // we need a way to automatically calculate the original address of the font from the file.
     static const VAddr SHARED_FONT_VADDR = 0x18000000;
-    if (!shared_font_relocated)
-        RelocateSharedFont(SHARED_FONT_VADDR, target_address);
+    if (!shared_font_relocated) {
+        BCFNT::RelocateSharedFont(shared_font_mem, SHARED_FONT_VADDR, target_address);
+        shared_font_relocated = true;
+    }
     cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was allocated,
