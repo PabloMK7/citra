@@ -151,6 +151,34 @@ static int TranslateError(int error) {
     return error;
 }
 
+/// Holds the translation from system network socket options to 3DS network socket options
+/// Note: -1 = No effect/unavailable
+static const std::unordered_map<int, int> sockopt_map = { {
+    { 0x0004,   SO_REUSEADDR },
+    { 0x0080,   -1 },
+    { 0x0100,   -1 },
+    { 0x1001,   SO_SNDBUF },
+    { 0x1002,   SO_RCVBUF },
+    { 0x1003,   -1 },
+#ifdef _WIN32
+    /// Unsupported in WinSock2
+    { 0x1004,   -1 },
+#else
+    { 0x1004,   SO_RCVLOWAT },
+#endif
+    { 0x1008,   SO_TYPE },
+    { 0x1009,   SO_ERROR },
+}};
+
+/// Converts a socket option from 3ds-specific to platform-specific
+static int TranslateSockOpt(int console_opt_name) {
+    auto found = sockopt_map.find(console_opt_name);
+    if (found != sockopt_map.end()) {
+        return found->second;
+    }
+    return console_opt_name;
+}
+
 /// Holds information about a particular socket
 struct SocketHolder {
     u32 socket_fd; ///< The socket descriptor
@@ -568,7 +596,7 @@ static void RecvFrom(Service::Interface* self) {
     socklen_t src_addr_len = sizeof(src_addr);
     int ret = ::recvfrom(socket_handle, (char*)output_buff, len, flags, &src_addr, &src_addr_len);
 
-    if (buffer_parameters.output_src_address_buffer != 0) {
+    if (ret >= 0 && buffer_parameters.output_src_address_buffer != 0 && src_addr_len > 0) {
         CTRSockAddr* ctr_src_addr = reinterpret_cast<CTRSockAddr*>(Memory::GetPointer(buffer_parameters.output_src_address_buffer));
         *ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
     }
@@ -724,6 +752,72 @@ static void ShutdownSockets(Service::Interface* self) {
     cmd_buffer[1] = 0;
 }
 
+static void GetSockOpt(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 socket_handle = cmd_buffer[1];
+    u32 level = cmd_buffer[2];
+    int optname = TranslateSockOpt(cmd_buffer[3]);
+    socklen_t optlen = (socklen_t)cmd_buffer[4];
+
+    int ret = -1;
+    int err = 0;
+
+    if(optname < 0) {
+#ifdef _WIN32
+        err = WSAEINVAL;
+#else
+        err = EINVAL;
+#endif
+    } else {
+        // 0x100 = static buffer offset (bytes)
+        // + 0x4 = 2nd pointer (u32) position
+        // >> 2  = convert to u32 offset instead of byte offset (cmd_buffer = u32*)
+        char* optval = reinterpret_cast<char *>(Memory::GetPointer(cmd_buffer[0x104 >> 2]));
+
+        ret = ::getsockopt(socket_handle, level, optname, optval, &optlen);
+        err = 0;
+        if (ret == SOCKET_ERROR_VALUE) {
+            err = TranslateError(GET_ERRNO);
+        }
+    }
+
+    cmd_buffer[0] = IPC::MakeHeader(0x11, 4, 2);
+    cmd_buffer[1] = ret;
+    cmd_buffer[2] = err;
+    cmd_buffer[3] = optlen;
+}
+
+static void SetSockOpt(Service::Interface* self) {
+    u32* cmd_buffer = Kernel::GetCommandBuffer();
+    u32 socket_handle = cmd_buffer[1];
+    u32 level = cmd_buffer[2];
+    int optname = TranslateSockOpt(cmd_buffer[3]);
+
+    int ret = -1;
+    int err = 0;
+
+    if(optname < 0) {
+#ifdef _WIN32
+        err = WSAEINVAL;
+#else
+        err = EINVAL;
+#endif
+    } else {
+        socklen_t optlen = static_cast<socklen_t>(cmd_buffer[4]);
+        const char* optval = reinterpret_cast<const char *>(Memory::GetPointer(cmd_buffer[8]));
+
+        ret = static_cast<u32>(::setsockopt(socket_handle, level, optname, optval, optlen));
+        err = 0;
+        if (ret == SOCKET_ERROR_VALUE) {
+            err = TranslateError(GET_ERRNO);
+        }
+    }
+
+    cmd_buffer[0] = IPC::MakeHeader(0x12, 4, 4);
+    cmd_buffer[1] = ret;
+    cmd_buffer[2] = err;
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010044, InitializeSockets,             "InitializeSockets"},
     {0x000200C2, Socket,                        "Socket"},
@@ -741,8 +835,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000E00C2, nullptr,                       "GetHostByAddr"},
     {0x000F0106, nullptr,                       "GetAddrInfo"},
     {0x00100102, nullptr,                       "GetNameInfo"},
-    {0x00110102, nullptr,                       "GetSockOpt"},
-    {0x00120104, nullptr,                       "SetSockOpt"},
+    {0x00110102, GetSockOpt,                    "GetSockOpt"},
+    {0x00120104, SetSockOpt,                    "SetSockOpt"},
     {0x001300C2, Fcntl,                         "Fcntl"},
     {0x00140084, Poll,                          "Poll"},
     {0x00150042, nullptr,                       "SockAtMark"},
