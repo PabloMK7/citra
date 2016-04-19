@@ -69,9 +69,10 @@ static void StripTailDirSlashes(std::string &fname)
 {
     if (fname.length() > 1)
     {
-        size_t i = fname.length() - 1;
-        while (fname[i] == DIR_SEP_CHR)
-            fname[i--] = '\0';
+        size_t i = fname.length();
+        while (i > 0 && fname[i - 1] == DIR_SEP_CHR)
+            --i;
+        fname.resize(i);
     }
     return;
 }
@@ -85,6 +86,10 @@ bool Exists(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
+    // Windows needs a slash to identify a driver root
+    if (copy.size() != 0 && copy.back() == ':')
+        copy += DIR_SEP_CHR;
+
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
@@ -102,6 +107,10 @@ bool IsDirectory(const std::string &filename)
     StripTailDirSlashes(copy);
 
 #ifdef _WIN32
+    // Windows needs a slash to identify a driver root
+    if (copy.size() != 0 && copy.back() == ':')
+        copy += DIR_SEP_CHR;
+
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
     int result = stat64(copy.c_str(), &file_info);
