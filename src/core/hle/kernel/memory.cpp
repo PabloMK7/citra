@@ -109,7 +109,6 @@ struct MemoryArea {
 static MemoryArea memory_areas[] = {
     {SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE,     "Shared Memory"}, // Shared memory
     {VRAM_VADDR,          VRAM_SIZE,              "VRAM"},          // Video memory (VRAM)
-    {TLS_AREA_VADDR,      TLS_AREA_SIZE,          "TLS Area"},      // TLS memory
 };
 
 }
