@@ -77,17 +77,23 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 
     // Error out if the requested permissions don't match what the creator process allows.
     if (static_cast<u32>(permissions) & ~static_cast<u32>(own_other_permissions)) {
+        LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
+                  GetObjectId(), address, name.c_str());
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
     }
 
     // Heap-backed memory blocks can not be mapped with other_permissions = DontCare
     if (base_address != 0 && other_permissions == MemoryPermission::DontCare) {
+        LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
+                  GetObjectId(), address, name.c_str());
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
     }
 
     // Error out if the provided permissions are not compatible with what the creator process needs.
     if (other_permissions != MemoryPermission::DontCare &&
         static_cast<u32>(this->permissions) & ~static_cast<u32>(other_permissions)) {
+        LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
+                  GetObjectId(), address, name.c_str());
         return ResultCode(ErrorDescription::WrongPermission, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
@@ -117,8 +123,11 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 
     // Map the memory block into the target process
     auto result = target_process->vm_manager.MapMemoryBlock(target_address, backing_block, backing_block_offset, size, MemoryState::Shared);
-    if (result.Failed())
+    if (result.Failed()) {
+        LOG_ERROR(Kernel, "cannot map id=%u, target_address=0x%08X name=%s, error mapping to virtual memory",
+                  GetObjectId(), target_address, name.c_str());
         return result.Code();
+    }
 
     return target_process->vm_manager.ReprotectRange(target_address, size, ConvertPermissions(permissions));
 }
