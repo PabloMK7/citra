@@ -568,7 +568,7 @@ static void SendTo(Service::Interface* self) {
     Memory::ReadBlock(input_buff_address, input_buff.data(), input_buff.size());
 
     CTRSockAddr ctr_dest_addr;
-    Memory::ReadBlock(dest_addr_addr, reinterpret_cast<u8*>(&ctr_dest_addr), sizeof(ctr_dest_addr));
+    Memory::ReadBlock(dest_addr_addr, &ctr_dest_addr, sizeof(ctr_dest_addr));
 
     int ret = -1;
     if (addr_len > 0) {
@@ -623,7 +623,7 @@ static void RecvFrom(Service::Interface* self) {
 
     if (ret >= 0 && buffer_parameters.output_src_address_buffer != 0 && src_addr_len > 0) {
         CTRSockAddr ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
-        Memory::WriteBlock(buffer_parameters.output_src_address_buffer, reinterpret_cast<u8*>(&ctr_src_addr), sizeof(ctr_src_addr));
+        Memory::WriteBlock(buffer_parameters.output_src_address_buffer, &ctr_src_addr, sizeof(ctr_src_addr));
     }
 
     int result = 0;
@@ -654,7 +654,7 @@ static void Poll(Service::Interface* self) {
     }
 
     std::vector<CTRPollFD> ctr_fds(nfds);
-    Memory::ReadBlock(input_fds_addr, reinterpret_cast<u8*>(ctr_fds.data()), nfds * sizeof(CTRPollFD));
+    Memory::ReadBlock(input_fds_addr, ctr_fds.data(), nfds * sizeof(CTRPollFD));
 
     // The 3ds_pollfd and the pollfd structures may be different (Windows/Linux have different sizes)
     // so we have to copy the data
@@ -666,7 +666,7 @@ static void Poll(Service::Interface* self) {
     // Now update the output pollfd structure
     std::transform(platform_pollfd.begin(), platform_pollfd.end(), ctr_fds.begin(), CTRPollFD::FromPlatform);
 
-    Memory::WriteBlock(output_fds_addr, reinterpret_cast<u8*>(ctr_fds.data()), nfds * sizeof(CTRPollFD));
+    Memory::WriteBlock(output_fds_addr, ctr_fds.data(), nfds * sizeof(CTRPollFD));
 
     int result = 0;
     if (ret == SOCKET_ERROR_VALUE)
@@ -690,7 +690,7 @@ static void GetSockName(Service::Interface* self) {
 
     if (ctr_dest_addr_addr != 0 && Memory::IsValidVirtualAddress(ctr_dest_addr_addr)) {
         CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
-        Memory::WriteBlock(ctr_dest_addr_addr, reinterpret_cast<u8*>(&ctr_dest_addr), sizeof(ctr_dest_addr));
+        Memory::WriteBlock(ctr_dest_addr_addr, &ctr_dest_addr, sizeof(ctr_dest_addr));
     } else {
         cmd_buffer[1] = -1; // TODO(Subv): Verify error
         return;
@@ -731,7 +731,7 @@ static void GetPeerName(Service::Interface* self) {
 
     if (ctr_dest_addr_addr != 0 && Memory::IsValidVirtualAddress(ctr_dest_addr_addr)) {
         CTRSockAddr ctr_dest_addr = CTRSockAddr::FromPlatform(dest_addr);
-        Memory::WriteBlock(ctr_dest_addr_addr, reinterpret_cast<u8*>(&ctr_dest_addr), sizeof(ctr_dest_addr));
+        Memory::WriteBlock(ctr_dest_addr_addr, &ctr_dest_addr, sizeof(ctr_dest_addr));
     } else {
         cmd_buffer[1] = -1;
         return;
@@ -761,7 +761,7 @@ static void Connect(Service::Interface* self) {
     }
 
     CTRSockAddr ctr_input_addr;
-    Memory::ReadBlock(ctr_input_addr_addr, reinterpret_cast<u8*>(&ctr_input_addr), sizeof(ctr_input_addr));
+    Memory::ReadBlock(ctr_input_addr_addr, &ctr_input_addr, sizeof(ctr_input_addr));
 
     sockaddr input_addr = CTRSockAddr::ToPlatform(ctr_input_addr);
     int ret = ::connect(socket_handle, &input_addr, sizeof(input_addr));

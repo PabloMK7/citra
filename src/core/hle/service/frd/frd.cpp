@@ -23,7 +23,7 @@ void GetMyPresence(Service::Interface* self) {
 
     ASSERT(shifted_out_size == ((sizeof(MyPresence) << 14) | 2));
 
-    Memory::WriteBlock(my_presence_addr, reinterpret_cast<const u8*>(&my_presence), sizeof(MyPresence));
+    Memory::WriteBlock(my_presence_addr, &my_presence, sizeof(MyPresence));
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
@@ -39,8 +39,7 @@ void GetFriendKeyList(Service::Interface* self) {
 
     FriendKey zero_key = {};
     for (u32 i = 0; i < frd_count; ++i) {
-        Memory::WriteBlock(frd_key_addr + i * sizeof(FriendKey),
-                           reinterpret_cast<const u8*>(&zero_key), sizeof(FriendKey));
+        Memory::WriteBlock(frd_key_addr + i * sizeof(FriendKey), &zero_key, sizeof(FriendKey));
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -58,8 +57,7 @@ void GetFriendProfile(Service::Interface* self) {
 
     Profile zero_profile = {};
     for (u32 i = 0; i < count; ++i) {
-        Memory::WriteBlock(profiles_addr + i * sizeof(Profile),
-            reinterpret_cast<const u8*>(&zero_profile), sizeof(Profile));
+        Memory::WriteBlock(profiles_addr + i * sizeof(Profile), &zero_profile, sizeof(Profile));
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -88,7 +86,7 @@ void GetMyFriendKey(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    Memory::WriteBlock(cmd_buff[2], reinterpret_cast<const u8*>(&my_friend_key), sizeof(FriendKey));
+    Memory::WriteBlock(cmd_buff[2], &my_friend_key, sizeof(FriendKey));
     LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 

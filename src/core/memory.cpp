@@ -364,7 +364,7 @@ u64 Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
-void ReadBlock(const VAddr src_addr, u8* dest_buffer, const size_t size) {
+void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
     size_t remaining_size = size;
     size_t page_index = src_addr >> PAGE_BITS;
     size_t page_offset = src_addr & PAGE_MASK;
@@ -398,7 +398,7 @@ void ReadBlock(const VAddr src_addr, u8* dest_buffer, const size_t size) {
 
         page_index++;
         page_offset = 0;
-        dest_buffer += copy_amount;
+        dest_buffer = static_cast<u8*>(dest_buffer) + copy_amount;
         remaining_size -= copy_amount;
     }
 }
@@ -419,7 +419,7 @@ void Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
-void WriteBlock(const VAddr dest_addr, const u8* src_buffer, const size_t size) {
+void WriteBlock(const VAddr dest_addr, const void* src_buffer, const size_t size) {
     size_t remaining_size = size;
     size_t page_index = dest_addr >> PAGE_BITS;
     size_t page_offset = dest_addr & PAGE_MASK;
@@ -452,7 +452,7 @@ void WriteBlock(const VAddr dest_addr, const u8* src_buffer, const size_t size) 
 
         page_index++;
         page_offset = 0;
-        src_buffer += copy_amount;
+        src_buffer = static_cast<const u8*>(src_buffer) + copy_amount;
         remaining_size -= copy_amount;
     }
 }

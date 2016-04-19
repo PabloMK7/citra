@@ -123,8 +123,8 @@ void Write16(VAddr addr, u16 data);
 void Write32(VAddr addr, u32 data);
 void Write64(VAddr addr, u64 data);
 
-void ReadBlock(const VAddr src_addr, u8* dest_buffer, size_t size);
-void WriteBlock(const VAddr dest_addr, const u8* src_buffer, size_t size);
+void ReadBlock(const VAddr src_addr, void* dest_buffer, size_t size);
+void WriteBlock(const VAddr dest_addr, const void* src_buffer, size_t size);
 void ZeroBlock(const VAddr dest_addr, const size_t size);
 void CopyBlock(VAddr dest_addr, VAddr src_addr, size_t size);
 
