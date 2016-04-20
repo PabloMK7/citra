@@ -13,6 +13,7 @@
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/ptm/ptm.h"
 
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
@@ -40,6 +41,9 @@ static Kernel::SharedPtr<Kernel::Event> parameter_event; ///< APT parameter even
 static std::shared_ptr<std::vector<u8>> shared_font;
 
 static u32 cpu_percent; ///< CPU time available to the running application
+
+// APT::CheckNew3DSApp will check this unknown_ns_state_field to determine processing mode
+static u8 unknown_ns_state_field;
 
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
 static MessageParameter next_parameter;
@@ -264,6 +268,10 @@ void PrepareToStartApplication(Service::Interface* self) {
     u32 title_info4  = cmd_buff[4];
     u32 flags        = cmd_buff[5];
 
+    if (flags & 0x00000100) {
+        unknown_ns_state_field = 1;
+    }
+
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_WARNING(Service_APT, "(STUBBED) called title_info1=0x%08X, title_info2=0x%08X, title_info3=0x%08X,"
@@ -379,6 +387,25 @@ void StartLibraryApplet(Service::Interface* self) {
     cmd_buff[1] = applet->Start(parameter).raw;
 }
 
+void SetNSStateField(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    unknown_ns_state_field = cmd_buff[1];
+
+    cmd_buff[0] = IPC::MakeHeader(0x55, 1, 0);
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    LOG_WARNING(Service_APT, "(STUBBED) unknown_ns_state_field=%u", unknown_ns_state_field);
+}
+
+void GetNSStateField(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    cmd_buff[0] = IPC::MakeHeader(0x56, 2, 0);
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[8] = unknown_ns_state_field;
+    LOG_WARNING(Service_APT, "(STUBBED) unknown_ns_state_field=%u", unknown_ns_state_field);
+}
+
 void GetAppletInfo(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     auto app_id = static_cast<AppletId>(cmd_buff[1]);
@@ -412,6 +439,29 @@ void GetStartupArgument(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = (parameter_size > 0) ? 1 : 0;
+}
+
+void CheckNew3DSApp(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    if (unknown_ns_state_field) {
+        cmd_buff[1] = RESULT_SUCCESS.raw;
+        cmd_buff[2] = 0;
+    } else {
+        PTM::CheckNew3DS(self);
+    }
+
+    cmd_buff[0] = IPC::MakeHeader(0x101, 2, 0);
+    LOG_WARNING(Service_APT, "(STUBBED) called");
+}
+
+void CheckNew3DS(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    PTM::CheckNew3DS(self);
+
+    cmd_buff[0] = IPC::MakeHeader(0x102, 2, 0);
+    LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 void Init() {
@@ -449,6 +499,7 @@ void Init() {
     lock = Kernel::Mutex::Create(false, "APT_U:Lock");
 
     cpu_percent = 0;
+    unknown_ns_state_field = 0;
 
     // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
     notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");

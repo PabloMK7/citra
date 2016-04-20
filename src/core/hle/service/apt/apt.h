@@ -361,6 +361,50 @@ void StartLibraryApplet(Service::Interface* self);
  */
 void GetStartupArgument(Service::Interface* self);
 
+/**
+ * APT::SetNSStateField service function
+ *  Inputs:
+ *      1 : u8 NS state field
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *  Note:
+ *      This writes the input u8 to a NS state field.
+ */
+void SetNSStateField(Service::Interface* self);
+
+/**
+ * APT::GetNSStateField service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      8 : u8 NS state field
+ *  Note:
+ *      This returns a u8 NS state field(which can be set by cmd 0x00550040), at cmdreply+8.
+ */
+void GetNSStateField(Service::Interface* self);
+
+/**
+ * APT::CheckNew3DSApp service function
+ *  Outputs:
+ *      1: Result code, 0 on success, otherwise error code
+ *      2: u8 output: 0 = Old3DS, 1 = New3DS.
+ *  Note:
+ *  This uses PTMSYSM:CheckNew3DS.
+ *  When a certain NS state field is non-zero, the output value is zero,
+ *  Otherwise the output is from PTMSYSM:CheckNew3DS.
+ *  Normally this NS state field is zero, however this state field is set to 1
+ *  when APT:PrepareToStartApplication is used with flags bit8 is set.
+ */
+void CheckNew3DSApp(Service::Interface* self);
+
+/**
+ * Wrapper for PTMSYSM:CheckNew3DS
+ * APT::CheckNew3DS service function
+ *  Outputs:
+ *      1: Result code, 0 on success, otherwise error code
+ *      2: u8 output: 0 = Old3DS, 1 = New3DS.
+ */
+void CheckNew3DS(Service::Interface* self);
+
 /// Initialize the APT service
 void Init();
 

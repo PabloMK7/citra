@@ -88,6 +88,14 @@ void GetTotalStepCount(Interface* self);
  */
 void IsLegacyPowerOff(Interface* self);
 
+/**
+ * PTM::CheckNew3DS service function
+ *  Outputs:
+ *      1: Result code, 0 on success, otherwise error code
+ *      2: u8 output: 0 = Old3DS, 1 = New3DS.
+ */
+void CheckNew3DS(Interface* self);
+
 /// Initialize the PTM service
 void Init();
 
