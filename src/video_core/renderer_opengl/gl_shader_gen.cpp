@@ -198,6 +198,9 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
     case Operation::AddThenMultiply:
         out += "min(" + variable_name + "[0] + " + variable_name + "[1], vec3(1.0)) * " + variable_name + "[2]";
         break;
+    case Operation::Dot3_RGB:
+        out += "vec3(dot(" + variable_name + "[0] - vec3(0.5), " + variable_name + "[1] - vec3(0.5)) * 4.0)";
+        break;
     default:
         out += "vec3(0.0)";
         LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: %u", operation);
