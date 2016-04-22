@@ -874,6 +874,8 @@ void RasterizerOpenGL::SetShader() {
 
         SyncGlobalAmbient();
         for (int light_index = 0; light_index < 8; light_index++) {
+            SyncLightSpecular0(light_index);
+            SyncLightSpecular1(light_index);
             SyncLightDiffuse(light_index);
             SyncLightAmbient(light_index);
             SyncLightPosition(light_index);

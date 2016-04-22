@@ -332,17 +332,23 @@ private:
     /// Syncs the depth test states to match the PICA register
     void SyncDepthTest();
 
-    /// Syncs the TEV constant color to match the PICA register
-    void SyncTevConstColor(int tev_index, const Pica::Regs::TevStageConfig& tev_stage);
-
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
+
+    /// Syncs the TEV constant color to match the PICA register
+    void SyncTevConstColor(int tev_index, const Pica::Regs::TevStageConfig& tev_stage);
 
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();
 
     /// Syncs the lighting lookup tables
     void SyncLightingLUT(unsigned index);
+
+    /// Syncs the specified light's specular 0 color to match the PICA register
+    void SyncLightSpecular0(int light_index);
+
+    /// Syncs the specified light's specular 1 color to match the PICA register
+    void SyncLightSpecular1(int light_index);
 
     /// Syncs the specified light's diffuse color to match the PICA register
     void SyncLightDiffuse(int light_index);
@@ -352,12 +358,6 @@ private:
 
     /// Syncs the specified light's position to match the PICA register
     void SyncLightPosition(int light_index);
-
-    /// Syncs the specified light's specular 0 color to match the PICA register
-    void SyncLightSpecular0(int light_index);
-
-    /// Syncs the specified light's specular 1 color to match the PICA register
-    void SyncLightSpecular1(int light_index);
 
     OpenGLState state;
 
