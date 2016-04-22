@@ -46,6 +46,10 @@ use_hw_renderer =
 # 0 : Interpreter (slow), 1 (default): JIT (fast)
 use_shader_jit =
 
+# Whether to use native 3DS screen resolution or to scale rendering resolution to the displayed screen size.
+# 0 (default): Native, 1: Scaled
+use_scaled_resolution =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 1.0 for all.
 bg_red =

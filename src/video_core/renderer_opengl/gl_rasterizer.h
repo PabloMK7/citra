@@ -19,6 +19,7 @@
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
+#include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/shader/shader_interpreter.h"
 
 /**
@@ -191,16 +192,17 @@ public:
     RasterizerOpenGL();
     ~RasterizerOpenGL() override;
 
-    void InitObjects() override;
-    void Reset() override;
     void AddTriangle(const Pica::Shader::OutputVertex& v0,
                      const Pica::Shader::OutputVertex& v1,
                      const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override;
-    void FlushFramebuffer() override;
     void NotifyPicaRegisterChanged(u32 id) override;
+    void FlushAll() override;
     void FlushRegion(PAddr addr, u32 size) override;
-    void InvalidateRegion(PAddr addr, u32 size) override;
+    void FlushAndInvalidateRegion(PAddr addr, u32 size) override;
+    bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) override;
+    bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
+    bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr, u32 pixel_stride, ScreenInfo& screen_info) override;
 
     /// OpenGL shader generated for a given Pica register state
     struct PicaShader {
@@ -209,26 +211,6 @@ public:
     };
 
 private:
-
-    /// Structure used for storing information about color textures
-    struct TextureInfo {
-        OGLTexture texture;
-        GLsizei width;
-        GLsizei height;
-        Pica::Regs::ColorFormat format;
-        GLenum gl_format;
-        GLenum gl_type;
-    };
-
-    /// Structure used for storing information about depth textures
-    struct DepthTextureInfo {
-        OGLTexture texture;
-        GLsizei width;
-        GLsizei height;
-        Pica::Regs::DepthFormat format;
-        GLenum gl_format;
-        GLenum gl_type;
-    };
 
     struct SamplerInfo {
         using TextureConfig = Pica::Regs::TextureConfig;
@@ -311,17 +293,8 @@ private:
     static_assert(sizeof(UniformData) == 0x310, "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
-    /// Reconfigure the OpenGL color texture to use the given format and dimensions
-    void ReconfigureColorTexture(TextureInfo& texture, Pica::Regs::ColorFormat format, u32 width, u32 height);
-
-    /// Reconfigure the OpenGL depth texture to use the given format and dimensions
-    void ReconfigureDepthTexture(DepthTextureInfo& texture, Pica::Regs::DepthFormat format, u32 width, u32 height);
-
     /// Sets the OpenGL shader in accordance with the current PICA register state
     void SetShader();
-
-    /// Syncs the state and contents of the OpenGL framebuffer to match the current PICA framebuffer
-    void SyncFramebuffer();
 
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
@@ -386,45 +359,15 @@ private:
     /// Syncs the specified light's specular 1 color to match the PICA register
     void SyncLightSpecular1(int light_index);
 
-    /// Syncs the remaining OpenGL drawing state to match the current PICA state
-    void SyncDrawState();
-
-    /// Copies the 3DS color framebuffer into the OpenGL color framebuffer texture
-    void ReloadColorBuffer();
-
-    /// Copies the 3DS depth framebuffer into the OpenGL depth framebuffer texture
-    void ReloadDepthBuffer();
-
-    /**
-     * Save the current OpenGL color framebuffer to the current PICA framebuffer in 3DS memory
-     * Loads the OpenGL framebuffer textures into temporary buffers
-     * Then copies into the 3DS framebuffer using proper Morton order
-     */
-    void CommitColorBuffer();
-
-    /**
-     * Save the current OpenGL depth framebuffer to the current PICA framebuffer in 3DS memory
-     * Loads the OpenGL framebuffer textures into temporary buffers
-     * Then copies into the 3DS framebuffer using proper Morton order
-     */
-    void CommitDepthBuffer();
+    OpenGLState state;
 
     RasterizerCacheOpenGL res_cache;
 
     std::vector<HardwareVertex> vertex_batch;
 
-    OpenGLState state;
-
-    PAddr cached_fb_color_addr;
-    PAddr cached_fb_depth_addr;
-
-    // Hardware rasterizer
-    std::array<SamplerInfo, 3> texture_samplers;
-    TextureInfo fb_color_texture;
-    DepthTextureInfo fb_depth_texture;
-
     std::unordered_map<PicaShaderConfig, std::unique_ptr<PicaShader>> shader_cache;
     const PicaShader* current_shader = nullptr;
+    bool shader_dirty;
 
     struct {
         UniformData data;
@@ -432,11 +375,12 @@ private:
         bool dirty;
     } uniform_block_data;
 
+    std::array<SamplerInfo, 3> texture_samplers;
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
     OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
 
-    std::array<OGLTexture, 6> lighting_lut;
+    std::array<OGLTexture, 6> lighting_luts;
     std::array<std::array<GLvec4, 256>, 6> lighting_lut_data;
 };

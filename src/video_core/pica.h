@@ -577,7 +577,7 @@ struct Regs {
         }
     }
 
-    struct {
+    struct FramebufferConfig {
         INSERT_PADDING_WORDS(0x3);
 
         union {

@@ -25,6 +25,7 @@ void ConfigureGeneral::setConfiguration() {
     ui->region_combobox->setCurrentIndex(Settings::values.region_value);
     ui->toogle_hw_renderer->setChecked(Settings::values.use_hw_renderer);
     ui->toogle_shader_jit->setChecked(Settings::values.use_shader_jit);
+    ui->toogle_scaled_resolution->setChecked(Settings::values.use_scaled_resolution);
 }
 
 void ConfigureGeneral::applyConfiguration() {
@@ -33,5 +34,6 @@ void ConfigureGeneral::applyConfiguration() {
     Settings::values.region_value = ui->region_combobox->currentIndex();
     Settings::values.use_hw_renderer = ui->toogle_hw_renderer->isChecked();
     Settings::values.use_shader_jit = ui->toogle_shader_jit->isChecked();
+    Settings::values.use_scaled_resolution = ui->toogle_scaled_resolution->isChecked();
     Settings::Apply();
 }
