@@ -376,7 +376,14 @@ void SignalInterrupt(InterruptId interrupt_id) {
     if (!gpu_right_acquired) {
         return;
     }
-
+    if (nullptr == g_interrupt_event) {
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
+        return;
+    }
+    if (nullptr == g_shared_memory) {
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
+        return;
+    }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
         InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
         u8 next = interrupt_relay_queue->index;
