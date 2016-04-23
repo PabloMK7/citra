@@ -41,9 +41,12 @@ struct ScreenInfo;
  * two separate shaders sharing the same key.
  */
 struct PicaShaderConfig {
+
     /// Construct a PicaShaderConfig with the current Pica register configuration.
     static PicaShaderConfig CurrentConfig() {
         PicaShaderConfig res;
+        std::memset(&res, 0, sizeof(PicaShaderConfig));
+
         const auto& regs = Pica::g_state.regs;
 
         res.alpha_test_func = regs.output_merger.alpha_test.enable ?
@@ -134,38 +137,42 @@ struct PicaShaderConfig {
         return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
     };
 
-    Pica::Regs::CompareFunc alpha_test_func = Pica::Regs::CompareFunc::Never;
-    std::array<Pica::Regs::TevStageConfig, 6> tev_stages = {};
-    u8 combiner_buffer_input = 0;
+    Pica::Regs::CompareFunc alpha_test_func;
+    std::array<Pica::Regs::TevStageConfig, 6> tev_stages;
+    u8 combiner_buffer_input;
 
     struct {
         struct {
-            unsigned num = 0;
-            bool directional = false;
-            bool two_sided_diffuse = false;
-            bool dist_atten_enable = false;
-            GLfloat dist_atten_scale = 0.0f;
-            GLfloat dist_atten_bias = 0.0f;
+            unsigned num;
+            bool directional;
+            bool two_sided_diffuse;
+            bool dist_atten_enable;
+            GLfloat dist_atten_scale;
+            GLfloat dist_atten_bias;
         } light[8];
 
-        bool enable = false;
-        unsigned src_num = 0;
-        Pica::Regs::LightingBumpMode bump_mode = Pica::Regs::LightingBumpMode::None;
-        unsigned bump_selector = 0;
-        bool bump_renorm = false;
-        bool clamp_highlights = false;
+        bool enable;
+        unsigned src_num;
+        Pica::Regs::LightingBumpMode bump_mode;
+        unsigned bump_selector;
+        bool bump_renorm;
+        bool clamp_highlights;
 
-        Pica::Regs::LightingConfig config = Pica::Regs::LightingConfig::Config0;
-        Pica::Regs::LightingFresnelSelector fresnel_selector = Pica::Regs::LightingFresnelSelector::None;
+        Pica::Regs::LightingConfig config;
+        Pica::Regs::LightingFresnelSelector fresnel_selector;
 
         struct {
-            bool enable = false;
-            bool abs_input = false;
-            Pica::Regs::LightingLutInput type = Pica::Regs::LightingLutInput::NH;
-            float scale = 1.0f;
+            bool enable;
+            bool abs_input;
+            Pica::Regs::LightingLutInput type;
+            float scale;
         } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
     } lighting;
+
 };
+#if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
+static_assert(std::is_trivially_copyable<PicaShaderConfig>::value, "PicaShaderConfig must be trivially copyable");
+#endif
 
 namespace std {
 
