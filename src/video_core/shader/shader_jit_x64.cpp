@@ -856,7 +856,7 @@ void JitShader::Compile() {
     uintptr_t size = reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
     ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
 
-    LOG_DEBUG(HW_GPU, "Compiled shader size=%d", size);
+    LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", size);
 }
 
 JitShader::JitShader() {
