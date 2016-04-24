@@ -529,7 +529,7 @@ static void ReadRegister() {
         id |= HexCharToValue(command_buffer[2]);
     }
 
-    if (id >= R0_REGISTER && id <= R15_REGISTER) {
+    if (id <= R15_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetReg(id));
     } else if (id == CPSR_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetCPSR());
@@ -584,7 +584,7 @@ static void WriteRegister() {
         id |= HexCharToValue(command_buffer[2]);
     }
 
-    if (id >= R0_REGISTER && id <= R15_REGISTER) {
+    if (id <= R15_REGISTER) {
         Core::g_app_core->SetReg(id, GdbHexToInt(buffer_ptr));
     } else if (id == CPSR_REGISTER) {
         Core::g_app_core->SetCPSR(GdbHexToInt(buffer_ptr));

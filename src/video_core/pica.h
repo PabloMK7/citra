@@ -747,8 +747,13 @@ struct Regs {
         case LightingSampler::ReflectGreen:
         case LightingSampler::ReflectBlue:
             return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) || (config == LightingConfig::Config7);
+        default:
+            UNREACHABLE_MSG("Regs::IsLightingSamplerSupported: Reached "
+                            "unreachable section, sampler should be one "
+                            "of Distribution0, Distribution1, Fresnel, "
+                            "ReflectRed, ReflectGreen or ReflectBlue, instead "
+                            "got %i", static_cast<int>(config));
         }
-        return false;
     }
 
     struct {

@@ -879,7 +879,7 @@ void MicroProfileDrawDetailedBars(uint32_t nWidth, uint32_t nHeight, int nBaseY,
     static int64_t nRefCpu = 0, nRefGpu = 0;
     if(MicroProfileGetGpuTickReference(&nTickReferenceCpu, &nTickReferenceGpu))
     {
-        if(0 == nRefCpu || abs(nRefCpu-nBaseTicksCpu) > abs(nTickReferenceCpu-nBaseTicksCpu))
+        if(0 == nRefCpu || std::abs(nRefCpu-nBaseTicksCpu) > std::abs(nTickReferenceCpu-nBaseTicksCpu))
         {
             nRefCpu = nTickReferenceCpu;
             nRefGpu = nTickReferenceGpu;
@@ -1230,7 +1230,12 @@ void MicroProfileDrawDetailedBars(uint32_t nWidth, uint32_t nHeight, int nBaseY,
                 char ThreadName[MicroProfileThreadLog::THREAD_MAX_LEN + 16];
                 const char* cLocal = MicroProfileIsLocalThread(nThreadId) ? "*": " ";
 
+#if defined(WIN32)
+                // nThreadId is 32-bit on Windows
                 int nStrLen = snprintf(ThreadName, sizeof(ThreadName)-1, "%04x: %s%s", nThreadId, cLocal, i < nNumThreadsBase ? &S.Pool[i]->ThreadName[0] : MICROPROFILE_THREAD_NAME_FROM_ID(nThreadId) );
+#else
+                int nStrLen = snprintf(ThreadName, sizeof(ThreadName)-1, "%04llx: %s%s", nThreadId, cLocal, i < nNumThreadsBase ? &S.Pool[i]->ThreadName[0] : MICROPROFILE_THREAD_NAME_FROM_ID(nThreadId) );
+#endif
                 uint32_t nThreadColor = -1;
                 if(nThreadId == nContextSwitchHoverThreadAfter || nThreadId == nContextSwitchHoverThreadBefore)
                     nThreadColor = UI.nHoverColorShared|0x906060;

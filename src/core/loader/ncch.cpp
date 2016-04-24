@@ -255,7 +255,7 @@ ResultStatus AppLoader_NCCH::Load() {
     resource_limit_category = exheader_header.arm11_system_local_caps.resource_limit_category;
 
     LOG_INFO(Loader,  "Name:                        %s"    , exheader_header.codeset_info.name);
-    LOG_INFO(Loader,  "Program ID:                  %016X" , ncch_header.program_id);
+    LOG_INFO(Loader,  "Program ID:                  %016llX" , ncch_header.program_id);
     LOG_DEBUG(Loader, "Code compressed:             %s"    , is_compressed ? "yes" : "no");
     LOG_DEBUG(Loader, "Entry point:                 0x%08X", entry_point);
     LOG_DEBUG(Loader, "Code size:                   0x%08X", code_size);
