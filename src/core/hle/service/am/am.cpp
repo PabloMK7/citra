@@ -43,7 +43,7 @@ void FindContentInfos(Service::Interface* self) {
     am_content_count[media_type] = cmd_buff[4];
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u, title_id=0x%016lx, content_cound=%u, content_ids_pointer=0x%08x, content_info_pointer=0x%08x",
+    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u, title_id=0x%016llx, content_cound=%u, content_ids_pointer=0x%08x, content_info_pointer=0x%08x",
                 media_type, title_id, am_content_count[media_type], content_ids_pointer, content_info_pointer);
 }
 
