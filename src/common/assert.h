@@ -39,7 +39,7 @@ static void assert_noinline_call(const Fn& fn) {
     }); } while (0)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
-#define UNREACHABLE_MSG(_a_, ...) ASSERT_MSG(false, _a_, __VA_ARGS__)
+#define UNREACHABLE_MSG(...) ASSERT_MSG(false, __VA_ARGS__)
 
 #ifdef _DEBUG
 #define DEBUG_ASSERT(_a_) ASSERT(_a_)
