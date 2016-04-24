@@ -10,8 +10,6 @@ class VMManager;
 
 namespace AudioCore {
 
-constexpr int num_sources = 24;
-constexpr int samples_per_frame = 160;     ///< Samples per audio frame at native sample rate
 constexpr int native_sample_rate = 32728;  ///< 32kHz
 
 /// Initialise Audio Core

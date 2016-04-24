@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <type_traits>
 
-#include "audio_core/audio_core.h"
+#include "audio_core/hle/common.h"
 
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
@@ -305,7 +305,7 @@ struct SourceConfiguration {
         u16_le buffer_id;
     };
 
-    Configuration config[AudioCore::num_sources];
+    Configuration config[num_sources];
 };
 ASSERT_DSP_STRUCT(SourceConfiguration::Configuration, 192);
 ASSERT_DSP_STRUCT(SourceConfiguration::Configuration::Buffer, 20);
@@ -320,7 +320,7 @@ struct SourceStatus {
         INSERT_PADDING_DSPWORDS(1);
     };
 
-    Status status[AudioCore::num_sources];
+    Status status[num_sources];
 };
 ASSERT_DSP_STRUCT(SourceStatus::Status, 12);
 
@@ -413,7 +413,7 @@ ASSERT_DSP_STRUCT(DspConfiguration::ReverbEffect, 52);
 struct AdpcmCoefficients {
     /// Coefficients are signed fixed point with 11 fractional bits.
     /// Each source has 16 coefficients associated with it.
-    s16_le coeff[AudioCore::num_sources][16];
+    s16_le coeff[num_sources][16];
 };
 ASSERT_DSP_STRUCT(AdpcmCoefficients, 768);
 
@@ -427,7 +427,7 @@ ASSERT_DSP_STRUCT(DspStatus, 32);
 /// Final mixed output in PCM16 stereo format, what you hear out of the speakers.
 /// When the application writes to this region it has no effect.
 struct FinalMixSamples {
-    s16_le pcm16[2 * AudioCore::samples_per_frame];
+    s16_le pcm16[2 * samples_per_frame];
 };
 ASSERT_DSP_STRUCT(FinalMixSamples, 640);
 
@@ -437,7 +437,7 @@ ASSERT_DSP_STRUCT(FinalMixSamples, 640);
 /// Values that exceed s16 range will be clipped by the DSP after further processing.
 struct IntermediateMixSamples {
     struct Samples {
-        s32_le pcm32[4][AudioCore::samples_per_frame]; ///< Little-endian as opposed to DSP middle-endian.
+        s32_le pcm32[4][samples_per_frame]; ///< Little-endian as opposed to DSP middle-endian.
     };
 
     Samples mix1;
