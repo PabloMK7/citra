@@ -17,7 +17,6 @@
 
 namespace DSP_DSP {
 
-static u32 read_pipe_count;
 static Kernel::SharedPtr<Kernel::Event> semaphore_event;
 
 struct PairHash {
@@ -458,7 +457,6 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     semaphore_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
-    read_pipe_count = 0;
 
     Register(FunctionTable);
 }
