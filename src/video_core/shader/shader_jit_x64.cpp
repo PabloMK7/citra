@@ -148,7 +148,7 @@ static Instruction GetVertexShaderInstruction(size_t offset) {
 }
 
 static void LogCritical(const char* msg) {
-    LOG_CRITICAL(HW_GPU, msg);
+    LOG_CRITICAL(HW_GPU, "%s", msg);
 }
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
