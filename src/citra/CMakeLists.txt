@@ -21,7 +21,7 @@ target_link_libraries(citra ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} inih glad)
 if (MSVC)
     target_link_libraries(citra getopt)
 endif()
-target_link_libraries(citra ${PLATFORM_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(citra ${PLATFORM_LIBRARIES} Threads::Threads)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
     install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

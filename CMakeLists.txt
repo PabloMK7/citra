@@ -1,6 +1,6 @@
-# CMake 2.8.11 required for Qt5 settings to be applied automatically on
-# dependent libraries.
-cmake_minimum_required(VERSION 2.8.11)
+# CMake 3.1 required for Qt5 settings to be applied automatically on
+# dependent libraries and IMPORTED targets.
+cmake_minimum_required(VERSION 3.1)
 
 function(download_bundled_external remote_path lib_name prefix_var)
     set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
@@ -135,6 +135,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
+# Prefer the -pthread flag on Linux.
+set (THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 if (ENABLE_SDL2)
