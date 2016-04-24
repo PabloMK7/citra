@@ -795,6 +795,8 @@ void JitShader::FindReturnOffsets() {
         case OpCode::Id::CALLU:
             return_offsets.push_back(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
             break;
+        default:
+            break;
         }
     }
 
