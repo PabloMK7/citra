@@ -114,7 +114,15 @@ public:
      * @param event Event which has happened
      * @param data Optional data pointer (pass nullptr if unused). Needs to remain valid until Resume() is called.
      */
-    void OnEvent(Event event, void* data);
+    void OnEvent(Event event, void* data) {
+        // This check is left in the header to allow the compiler to inline it.
+        if (!breakpoints[(int)event].enabled)
+            return;
+        // For the rest of event handling, call a separate function.
+        DoOnEvent(event, data);
+    }
+
+    void DoOnEvent(Event event, void *data);
 
     /**
      * Resume from the current breakpoint.
@@ -126,12 +134,14 @@ public:
      * Delete all set breakpoints and resume emulation.
      */
     void ClearBreakpoints() {
-        breakpoints.clear();
+        for (auto &bp : breakpoints) {
+            bp.enabled = false;
+        }
         Resume();
     }
 
     // TODO: Evaluate if access to these members should be hidden behind a public interface.
-    std::map<Event, BreakPoint> breakpoints;
+    std::array<BreakPoint, (int)Event::NumEvents> breakpoints;
     Event active_breakpoint;
     bool at_breakpoint = false;
 

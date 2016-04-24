@@ -40,10 +40,7 @@ using nihstro::DVLPHeader;
 
 namespace Pica {
 
-void DebugContext::OnEvent(Event event, void* data) {
-    if (!breakpoints[event].enabled)
-        return;
-
+void DebugContext::DoOnEvent(Event event, void* data) {
     {
         std::unique_lock<std::mutex> lock(breakpoint_mutex);
 

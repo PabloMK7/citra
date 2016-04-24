@@ -75,7 +75,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
     case Role_IsEnabled:
     {
         auto context = context_weak.lock();
-        return context && context->breakpoints[event].enabled;
+        return context && context->breakpoints[(int)event].enabled;
     }
 
     default:
@@ -110,7 +110,7 @@ bool BreakPointModel::setData(const QModelIndex& index, const QVariant& value, i
         if (!context)
             return false;
 
-        context->breakpoints[event].enabled = value == Qt::Checked;
+        context->breakpoints[(int)event].enabled = value == Qt::Checked;
         QModelIndex changed_index = createIndex(index.row(), 0);
         emit dataChanged(changed_index, changed_index);
         return true;
