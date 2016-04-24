@@ -102,7 +102,10 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
 
     u32 addr = cmd_buff[1];
 
+    cmd_buff[0] = IPC::MakeHeader(0xC, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    // TODO(merry): There is a per-region offset missing in this calculation (that seems to be always zero).
     cmd_buff[2] = (addr << 1) + (Memory::DSP_RAM_VADDR + 0x40000);
 
     LOG_DEBUG(Service_DSP, "addr=0x%08X", addr);
@@ -157,7 +160,9 @@ static void LoadComponent(Service::Interface* self) {
 static void GetSemaphoreEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    cmd_buff[0] = IPC::MakeHeader(0x16, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    // cmd_buff[2] not set
     cmd_buff[3] = Kernel::g_handle_table.Create(semaphore_event).MoveFrom(); // Event handle
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
@@ -182,8 +187,7 @@ static void FlushDataCache(Service::Interface* self) {
     u32 size    = cmd_buff[2];
     u32 process = cmd_buff[4];
 
-    // TODO(purpasmart96): Verify return header on HW
-
+    cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_TRACE(Service_DSP, "called address=0x%08X, size=0x%X, process=0x%08X", address, size, process);
@@ -248,6 +252,7 @@ static void RegisterInterruptEvents(Service::Interface* self) {
 static void SetSemaphore(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    cmd_buff[0] = IPC::MakeHeader(0x7, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
@@ -271,17 +276,23 @@ static void WriteProcessPipe(Service::Interface* self) {
     u32 size = cmd_buff[2];
     u32 buffer = cmd_buff[4];
 
-    ASSERT_MSG(IPC::StaticBufferDesc(size, 1) == cmd_buff[3], "IPC static buffer descriptor failed validation (0x%X). pipe=%u, size=0x%X, buffer=0x%08X", cmd_buff[3], pipe, size, buffer);
+    if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
+        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, size=0x%X, buffer=0x%08X", cmd_buff[3], pipe, size, buffer);
+        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
+        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+        return;
+    }
+
     ASSERT_MSG(Memory::GetPointer(buffer) != nullptr, "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
 
     std::vector<u8> message(size);
-
     for (size_t i = 0; i < size; i++) {
         message[i] = Memory::Read8(buffer + i);
     }
 
     DSP::HLE::PipeWrite(pipe, message);
 
+    cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_DEBUG(Service_DSP, "pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
@@ -311,6 +322,7 @@ static void ReadPipeIfPossible(Service::Interface* self) {
 
     ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
 
+    cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     if (DSP::HLE::GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = DSP::HLE::PipeRead(pipe, size);
@@ -321,6 +333,8 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     } else {
         cmd_buff[2] = 0; // Return no data
     }
+    cmd_buff[3] = IPC::StaticBufferDesc(size, 0);
+    cmd_buff[4] = addr;
 
     LOG_DEBUG(Service_DSP, "pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe, unknown, size, addr, cmd_buff[2]);
 }
@@ -351,8 +365,11 @@ static void ReadPipe(Service::Interface* self) {
 
         Memory::WriteBlock(addr, response.data(), response.size());
 
+        cmd_buff[0] = IPC::MakeHeader(0xE, 2, 2);
         cmd_buff[1] = RESULT_SUCCESS.raw; // No error
         cmd_buff[2] = static_cast<u32>(response.size());
+        cmd_buff[3] = IPC::StaticBufferDesc(size, 0);
+        cmd_buff[4] = addr;
     } else {
         // No more data is in pipe. Hardware hangs in this case; this should never happen.
         UNREACHABLE();
@@ -376,6 +393,7 @@ static void GetPipeReadableSize(Service::Interface* self) {
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(cmd_buff[1]);
     u32 unknown = cmd_buff[2];
 
+    cmd_buff[0] = IPC::MakeHeader(0xF, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = DSP::HLE::GetPipeReadableSize(pipe);
 
@@ -394,6 +412,7 @@ static void SetSemaphoreMask(Service::Interface* self) {
 
     u32 mask = cmd_buff[1];
 
+    cmd_buff[0] = IPC::MakeHeader(0x17, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x%08X", mask);
@@ -411,6 +430,7 @@ static void SetSemaphoreMask(Service::Interface* self) {
 static void GetHeadphoneStatus(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    cmd_buff[0] = IPC::MakeHeader(0x1F, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 0; // Not using headphones?
 
@@ -437,6 +457,7 @@ static void RecvData(Service::Interface* self) {
 
     // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown or slept.
 
+    cmd_buff[0] = IPC::MakeHeader(0x1, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     switch (DSP::HLE::GetDspState()) {
     case DSP::HLE::DspState::On:
@@ -472,6 +493,7 @@ static void RecvDataIsReady(Service::Interface* self) {
 
     ASSERT_MSG(register_number == 0, "Unknown register_number %u", register_number);
 
+    cmd_buff[0] = IPC::MakeHeader(0x2, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1; // Ready to read
 

@@ -18,6 +18,7 @@
 /// Detailed description of the error. This listing is likely incomplete.
 enum class ErrorDescription : u32 {
     Success = 0,
+    OS_InvalidBufferDescriptor = 48,
     WrongAddress = 53,
     FS_NotFound = 120,
     FS_AlreadyExists = 190,
