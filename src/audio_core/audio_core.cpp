@@ -4,6 +4,7 @@
 
 #include "audio_core/audio_core.h"
 #include "audio_core/hle/dsp.h"
+#include "audio_core/hle/pipe.h"
 
 #include "core/core_timing.h"
 #include "core/hle/kernel/vm_manager.h"
@@ -17,10 +18,8 @@ static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 
 static void AudioTickCallback(u64 /*userdata*/, int cycles_late) {
     if (DSP::HLE::Tick()) {
-        // HACK: We're not signaling the interrups when they should be, but just firing them all off together.
-        // It should be only (interrupt_id = 2, channel_id = 2) that's signalled here.
-        // TODO(merry): Understand when the other interrupts are fired.
-        DSP_DSP::SignalAllInterrupts();
+        // TODO(merry): Signal all the other interrupts as appropriate.
+        DSP_DSP::SignalPipeInterrupt(DSP::HLE::DspPipe::Audio);
     }
 
     // Reschedule recurrent event

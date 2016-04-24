@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "audio_core/hle/pipe.h"
@@ -12,6 +13,8 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/dsp_dsp.h"
 
+using DspPipe = DSP::HLE::DspPipe;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace DSP_DSP
 
@@ -19,29 +22,71 @@ namespace DSP_DSP {
 
 static Kernel::SharedPtr<Kernel::Event> semaphore_event;
 
-struct PairHash {
-    template <typename T, typename U>
-    std::size_t operator()(const std::pair<T, U> &x) const {
-        // TODO(yuriks): Replace with better hash combining function.
-        return std::hash<T>()(x.first) ^ std::hash<U>()(x.second);
+/// There are three types of interrupts
+enum class InterruptType {
+    Zero, One, Pipe
+};
+constexpr size_t NUM_INTERRUPT_TYPE = 3;
+
+class InterruptEvents final {
+public:
+    void Signal(InterruptType type, DspPipe pipe) {
+        Kernel::SharedPtr<Kernel::Event>& event = Get(type, pipe);
+        if (event) {
+            event->Signal();
+        }
     }
+
+    Kernel::SharedPtr<Kernel::Event>& Get(InterruptType type, DspPipe dsp_pipe) {
+        switch (type) {
+        case InterruptType::Zero:
+            return zero;
+        case InterruptType::One:
+            return one;
+        case InterruptType::Pipe: {
+            const size_t pipe_index = static_cast<size_t>(dsp_pipe);
+            ASSERT(pipe_index < DSP::HLE::NUM_DSP_PIPE);
+            return pipe[pipe_index];
+        }
+        }
+
+        UNREACHABLE_MSG("Invalid interrupt type = %zu", static_cast<size_t>(type));
+    }
+
+    bool HasTooManyEventsRegistered() const {
+        // Actual service implementation only has 6 'slots' for interrupts.
+        constexpr size_t max_number_of_interrupt_events = 6;
+
+        size_t number = std::count_if(pipe.begin(), pipe.end(), [](const auto& evt) {
+            return evt != nullptr;
+        });
+
+        if (zero != nullptr)
+            number++;
+        if (one != nullptr)
+            number++;
+
+        return number >= max_number_of_interrupt_events;
+    }
+
+private:
+    /// Currently unknown purpose
+    Kernel::SharedPtr<Kernel::Event> zero = nullptr;
+    /// Currently unknown purpose
+    Kernel::SharedPtr<Kernel::Event> one = nullptr;
+    /// Each DSP pipe has an associated interrupt
+    std::array<Kernel::SharedPtr<Kernel::Event>, DSP::HLE::NUM_DSP_PIPE> pipe = {{}};
 };
 
-/// Map of (audio interrupt number, channel number) to Kernel::Events. See: RegisterInterruptEvents
-static std::unordered_map<std::pair<u32, u32>, Kernel::SharedPtr<Kernel::Event>, PairHash> interrupt_events;
+static InterruptEvents interrupt_events;
 
 // DSP Interrupts:
-// Interrupt #2 occurs every frame tick. Userland programs normally have a thread that's waiting
-// for an interrupt event. Immediately after this interrupt event, userland normally updates the
-// state in the next region and increments the relevant frame counter by two.
-void SignalAllInterrupts() {
-    // HACK: The other interrupts have currently unknown purpose, we trigger them each tick in any case.
-    for (auto& interrupt_event : interrupt_events)
-        interrupt_event.second->Signal();
-}
-
-void SignalInterrupt(u32 interrupt, u32 channel) {
-    interrupt_events[std::make_pair(interrupt, channel)]->Signal();
+// The audio-pipe interrupt occurs every frame tick. Userland programs normally have a thread
+// that's waiting for an interrupt event. Immediately after this interrupt event, userland
+// normally updates the state in the next region and increments the relevant frame counter by
+// two.
+void SignalPipeInterrupt(DspPipe pipe) {
+    interrupt_events.Signal(InterruptType::Pipe, pipe);
 }
 
 /**
@@ -147,8 +192,8 @@ static void FlushDataCache(Service::Interface* self) {
 /**
  * DSP_DSP::RegisterInterruptEvents service function
  *  Inputs:
- *      1 : Interrupt Number
- *      2 : Channel Number
+ *      1 : Interrupt Type
+ *      2 : Pipe Number
  *      4 : Interrupt event handle
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
@@ -156,23 +201,40 @@ static void FlushDataCache(Service::Interface* self) {
 static void RegisterInterruptEvents(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 interrupt = cmd_buff[1];
-    u32 channel = cmd_buff[2];
+    u32 type_index = cmd_buff[1];
+    u32 pipe_index = cmd_buff[2];
     u32 event_handle = cmd_buff[4];
+
+    ASSERT_MSG(type_index < NUM_INTERRUPT_TYPE && pipe_index < DSP::HLE::NUM_DSP_PIPE,
+               "Invalid type or pipe: type = %u, pipe = %u", type_index, pipe_index);
+
+    InterruptType type = static_cast<InterruptType>(cmd_buff[1]);
+    DspPipe pipe = static_cast<DspPipe>(cmd_buff[2]);
+
+    cmd_buff[0] = IPC::MakeHeader(0x15, 1, 0);
 
     if (event_handle) {
         auto evt = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
-        if (evt) {
-            interrupt_events[std::make_pair(interrupt, channel)] = evt;
-            cmd_buff[1] = RESULT_SUCCESS.raw;
-            LOG_INFO(Service_DSP, "Registered interrupt=%u, channel=%u, event_handle=0x%08X", interrupt, channel, event_handle);
-        } else {
-            LOG_CRITICAL(Service_DSP, "Invalid event handle! interrupt=%u, channel=%u, event_handle=0x%08X", interrupt, channel, event_handle);
-            ASSERT(false); // This should really be handled at a IPC translation layer.
+
+        if (!evt) {
+            LOG_INFO(Service_DSP, "Invalid event handle! type=%u, pipe=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+            ASSERT(false); // TODO: This should really be handled at an IPC translation layer.
         }
+
+        if (interrupt_events.HasTooManyEventsRegistered()) {
+            LOG_INFO(Service_DSP, "Ran out of space to register interrupts (Attempted to register type=%u, pipe=%u, event_handle=0x%08X)",
+                     type_index, pipe_index, event_handle);
+            cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP, ErrorSummary::OutOfResource, ErrorLevel::Status).raw;
+            return;
+        }
+
+        interrupt_events.Get(type, pipe) = evt;
+        LOG_INFO(Service_DSP, "Registered type=%u, pipe=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+        cmd_buff[1] = RESULT_SUCCESS.raw;
     } else {
-        interrupt_events.erase(std::make_pair(interrupt, channel));
-        LOG_INFO(Service_DSP, "Unregistered interrupt=%u, channel=%u, event_handle=0x%08X", interrupt, channel, event_handle);
+        interrupt_events.Get(type, pipe) = nullptr;
+        LOG_INFO(Service_DSP, "Unregistered interrupt=%u, channel=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+        cmd_buff[1] = RESULT_SUCCESS.raw;
     }
 }
 
@@ -194,7 +256,7 @@ static void SetSemaphore(Service::Interface* self) {
 /**
  * DSP_DSP::WriteProcessPipe service function
  *  Inputs:
- *      1 : Channel
+ *      1 : Pipe Number
  *      2 : Size
  *      3 : (size << 14) | 0x402
  *      4 : Buffer
@@ -457,13 +519,14 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 Interface::Interface() {
     semaphore_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
+    interrupt_events = {};
 
     Register(FunctionTable);
 }
 
 Interface::~Interface() {
     semaphore_event = nullptr;
-    interrupt_events.clear();
+    interrupt_events = {};
 }
 
 } // namespace

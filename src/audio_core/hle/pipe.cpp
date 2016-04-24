@@ -12,6 +12,8 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
+#include "core/hle/service/dsp_dsp.h"
+
 namespace DSP {
 namespace HLE {
 
@@ -97,6 +99,8 @@ static void AudioPipeWriteStructAddresses() {
     for (u16 addr : struct_addresses) {
         WriteU16(DspPipe::Audio, addr);
     }
+    // Signal that we have data on this pipe.
+    DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
 }
 
 void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
