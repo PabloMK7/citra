@@ -16,6 +16,9 @@ set(HEADERS
             sink.h
             )
 
+include_directories(../../externals/soundtouch/include)
+
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(audio_core STATIC ${SRCS} ${HEADERS})
+target_link_libraries(audio_core SoundTouch)

@@ -249,6 +249,9 @@ if(ENABLE_QT)
     include_directories(externals/qhexedit)
     add_subdirectory(externals/qhexedit)
 endif()
+
+add_subdirectory(externals/soundtouch)
+
 add_subdirectory(src)
 
 # Install freedesktop.org metadata files, following those specifications:
