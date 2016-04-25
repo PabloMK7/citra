@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
@@ -30,10 +31,9 @@ namespace HLE {
 struct SharedMemory;
 
 constexpr VAddr region0_base = 0x1FF50000;
-extern SharedMemory g_region0;
-
 constexpr VAddr region1_base = 0x1FF70000;
-extern SharedMemory g_region1;
+
+extern std::array<SharedMemory, 2> g_regions;
 
 /**
  * The DSP is native 16-bit. The DSP also appears to be big-endian. When reading 32-bit numbers from
@@ -534,9 +534,6 @@ void Shutdown();
  * @return Whether an audio interrupt should be triggered this frame.
  */
 bool Tick();
-
-/// Returns a mutable reference to the current region. Current region is selected based on the frame counter.
-SharedMemory& CurrentRegion();
 
 } // namespace HLE
 } // namespace DSP

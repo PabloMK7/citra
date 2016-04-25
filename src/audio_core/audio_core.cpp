@@ -38,10 +38,10 @@ void Init() {
 
 /// Add DSP address spaces to Process's address space.
 void AddAddressSpace(Kernel::VMManager& address_space) {
-    auto r0_vma = address_space.MapBackingMemory(DSP::HLE::region0_base, reinterpret_cast<u8*>(&DSP::HLE::g_region0), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
+    auto r0_vma = address_space.MapBackingMemory(DSP::HLE::region0_base, reinterpret_cast<u8*>(&DSP::HLE::g_regions[0]), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
     address_space.Reprotect(r0_vma, Kernel::VMAPermission::ReadWrite);
 
-    auto r1_vma = address_space.MapBackingMemory(DSP::HLE::region1_base, reinterpret_cast<u8*>(&DSP::HLE::g_region1), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
+    auto r1_vma = address_space.MapBackingMemory(DSP::HLE::region1_base, reinterpret_cast<u8*>(&DSP::HLE::g_regions[1]), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
     address_space.Reprotect(r1_vma, Kernel::VMAPermission::ReadWrite);
 }
 
