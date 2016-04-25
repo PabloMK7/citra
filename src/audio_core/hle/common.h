@@ -27,7 +27,7 @@ using QuadFrame32   = std::array<std::array<s32, 4>, samples_per_frame>;
  */
 template<typename FrameT, typename FilterT>
 void FilterFrame(FrameT& frame, FilterT& filter) {
-    std::transform(frame.begin(), frame.end(), frame.begin(), [&filter](const typename FrameT::value_type& sample) {
+    std::transform(frame.begin(), frame.end(), frame.begin(), [&filter](const auto& sample) {
         return filter.ProcessSample(sample);
     });
 }

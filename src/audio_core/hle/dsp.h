@@ -169,9 +169,9 @@ struct SourceConfiguration {
         float_le rate_multiplier;
 
         enum class InterpolationMode : u8 {
-            None = 0,
+            Polyphase = 0,
             Linear = 1,
-            Polyphase = 2
+            None = 2
         };
 
         InterpolationMode interpolation_mode;
@@ -318,10 +318,10 @@ ASSERT_DSP_STRUCT(SourceConfiguration::Configuration::Buffer, 20);
 struct SourceStatus {
     struct Status {
         u8 is_enabled;               ///< Is this channel enabled? (Doesn't have to be playing anything.)
-        u8 previous_buffer_id_dirty; ///< Non-zero when previous_buffer_id changes
+        u8 current_buffer_id_dirty;  ///< Non-zero when current_buffer_id changes
         u16_le sync;                 ///< Is set by the DSP to the value of SourceConfiguration::sync
         u32_dsp buffer_position;     ///< Number of samples into the current buffer
-        u16_le previous_buffer_id;   ///< Updated when a buffer finishes playing
+        u16_le current_buffer_id;    ///< Updated when a buffer finishes playing
         INSERT_PADDING_DSPWORDS(1);
     };
 
