@@ -148,7 +148,7 @@ static Instruction GetVertexShaderInstruction(size_t offset) {
 }
 
 static void LogCritical(const char* msg) {
-    LOG_CRITICAL(HW_GPU, msg);
+    LOG_CRITICAL(HW_GPU, "%s", msg);
 }
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
@@ -795,6 +795,8 @@ void JitShader::FindReturnOffsets() {
         case OpCode::Id::CALLU:
             return_offsets.push_back(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
             break;
+        default:
+            break;
         }
     }
 
@@ -854,7 +856,7 @@ void JitShader::Compile() {
     uintptr_t size = reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
     ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
 
-    LOG_DEBUG(HW_GPU, "Compiled shader size=%d", size);
+    LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", size);
 }
 
 JitShader::JitShader() {
