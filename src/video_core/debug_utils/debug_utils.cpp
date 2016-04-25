@@ -208,11 +208,12 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
 
     // TODO: Reduce the amount of binary code written to relevant portions
     dvlp.binary_offset = write_offset - dvlp_offset;
-    dvlp.binary_size_words = setup.program_code.size();
-    QueueForWriting(reinterpret_cast<const u8*>(setup.program_code.data()), setup.program_code.size() * sizeof(u32));
+    dvlp.binary_size_words = static_cast<uint32_t>(setup.program_code.size());
+    QueueForWriting(reinterpret_cast<const u8*>(setup.program_code.data()),
+                    static_cast<u32>(setup.program_code.size()) * sizeof(u32));
 
     dvlp.swizzle_info_offset = write_offset - dvlp_offset;
-    dvlp.swizzle_info_num_entries = setup.swizzle_data.size();
+    dvlp.swizzle_info_num_entries = static_cast<uint32_t>(setup.swizzle_data.size());
     u32 dummy = 0;
     for (unsigned int i = 0; i < setup.swizzle_data.size(); ++i) {
         QueueForWriting(reinterpret_cast<const u8*>(&setup.swizzle_data[i]), sizeof(setup.swizzle_data[i]));
@@ -264,7 +265,7 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
             constant_table.emplace_back(constant);
     }
     dvle.constant_table_offset = write_offset - dvlb.dvle_offset;
-    dvle.constant_table_size = constant_table.size();
+    dvle.constant_table_size = static_cast<uint32_t>(constant_table.size());
     for (const auto& constant : constant_table) {
         QueueForWriting(reinterpret_cast<const u8*>(&constant), sizeof(constant));
     }

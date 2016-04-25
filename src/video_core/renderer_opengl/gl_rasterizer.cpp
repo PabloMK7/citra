@@ -93,7 +93,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     state.Apply();
 
     for (size_t i = 0; i < lighting_luts.size(); ++i) {
-        glActiveTexture(GL_TEXTURE3 + i);
+        glActiveTexture(static_cast<GLenum>(GL_TEXTURE3 + i));
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

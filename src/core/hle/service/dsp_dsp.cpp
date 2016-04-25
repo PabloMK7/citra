@@ -288,7 +288,7 @@ static void WriteProcessPipe(Service::Interface* self) {
     ASSERT_MSG(Memory::GetPointer(buffer) != nullptr, "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
 
     std::vector<u8> message(size);
-    for (size_t i = 0; i < size; i++) {
+    for (u32 i = 0; i < size; i++) {
         message[i] = Memory::Read8(buffer + i);
     }
 
@@ -403,7 +403,7 @@ static void GetPipeReadableSize(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0xF, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = DSP::HLE::GetPipeReadableSize(pipe);
+    cmd_buff[2] = static_cast<u32>(DSP::HLE::GetPipeReadableSize(pipe));
 
     LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, cmd_buff[2]);
 }

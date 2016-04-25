@@ -178,11 +178,11 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr, Shared
                 for (unsigned current_inprogress = 0; current_inprogress < remaining && pos < end_pos; current_inprogress++) {
                     const auto& table = reloc_table[current_inprogress];
                     LOG_TRACE(Loader, "(t=%d,skip=%u,patch=%u)", current_segment_reloc_table,
-                              (u32)table.skip, (u32)table.patch);
+                              static_cast<u32>(table.skip), static_cast<u32>(table.patch));
                     pos += table.skip;
                     s32 num_patches = table.patch;
                     while (0 < num_patches && pos < end_pos) {
-                        u32 in_addr = (u8*)pos - program_image.data();
+                        u32 in_addr = static_cast<u32>(reinterpret_cast<u8*>(pos) - program_image.data());
                         u32 addr = TranslateAddr(*pos, &loadinfo, offsets);
                         LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)",
                                   base_addr + in_addr, addr, current_segment_reloc_table, *pos);
@@ -284,7 +284,7 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& ro
     // Check if the 3DSX has a RomFS...
     if (hdr.fs_offset != 0) {
         u32 romfs_offset = hdr.fs_offset;
-        u32 romfs_size = file.GetSize() - hdr.fs_offset;
+        u32 romfs_size = static_cast<u32>(file.GetSize()) - hdr.fs_offset;
 
         LOG_DEBUG(Loader, "RomFS offset:           0x%08X", romfs_offset);
         LOG_DEBUG(Loader, "RomFS size:             0x%08X", romfs_size);

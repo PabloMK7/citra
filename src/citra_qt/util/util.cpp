@@ -19,7 +19,7 @@ QString ReadableByteSize(qulonglong size) {
     static const std::array<const char*, 6> units = { "B", "KiB", "MiB", "GiB", "TiB", "PiB" };
     if (size == 0)
         return "0";
-    int digit_groups = std::min<int>((int)(std::log10(size) / std::log10(1024)), units.size());
+    int digit_groups = std::min<int>(static_cast<int>(std::log10(size) / std::log10(1024)), static_cast<int>(units.size()));
     return QString("%L1 %2").arg(size / std::pow(1024, digit_groups), 0, 'f', 1)
                             .arg(units[digit_groups]);
 }

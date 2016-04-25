@@ -374,7 +374,7 @@ static void SendReply(const char* reply) {
 
     memset(command_buffer, 0, sizeof(command_buffer));
 
-    command_length = strlen(reply);
+    command_length = static_cast<u32>(strlen(reply));
     if (command_length + 4 > sizeof(command_buffer)) {
         LOG_ERROR(Debug_GDBStub, "command_buffer overflow in SendReply");
         return;
@@ -515,7 +515,7 @@ static bool IsDataAvailable() {
         return false;
     }
 
-    return FD_ISSET(gdbserver_socket, &fd_socket);
+    return FD_ISSET(gdbserver_socket, &fd_socket) != 0;
 }
 
 /// Send requested register to gdb client.
@@ -633,10 +633,10 @@ static void ReadMemory() {
 
     auto start_offset = command_buffer+1;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
+    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
+    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     LOG_DEBUG(Debug_GDBStub, "gdb: addr: %08x len: %08x\n", addr, len);
 
@@ -658,11 +658,11 @@ static void ReadMemory() {
 static void WriteMemory() {
     auto start_offset = command_buffer+1;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
+    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     start_offset = addr_pos+1;
     auto len_pos = std::find(start_offset, command_buffer+command_length, ':');
-    u32 len = HexToInt(start_offset, len_pos - start_offset);
+    u32 len = HexToInt(start_offset, static_cast<u32>(len_pos - start_offset));
 
     u8* dst = Memory::GetPointer(addr);
     if (!dst) {
@@ -752,10 +752,10 @@ static void AddBreakpoint() {
 
     auto start_offset = command_buffer+3;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
+    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
+    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -800,10 +800,10 @@ static void RemoveBreakpoint() {
 
     auto start_offset = command_buffer+3;
     auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
-    PAddr addr = HexToInt(start_offset, addr_pos - start_offset);
+    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, (command_buffer + command_length) - start_offset);
+    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints

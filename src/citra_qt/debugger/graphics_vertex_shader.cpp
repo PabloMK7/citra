@@ -515,7 +515,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     }
 
     // Initialize debug info text for current cycle count
-    cycle_index->setMaximum(debug_data.records.size() - 1);
+    cycle_index->setMaximum(static_cast<int>(debug_data.records.size() - 1));
     OnCycleIndexChanged(cycle_index->value());
 
     model->endResetModel();

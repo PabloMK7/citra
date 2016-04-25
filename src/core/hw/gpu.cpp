@@ -188,10 +188,10 @@ inline void Write(u32 addr, const T data) {
                     u32 output_gap = config.texture_copy.output_gap * 16;
 
                     size_t contiguous_input_size = config.texture_copy.size / input_width * (input_width + input_gap);
-                    Memory::RasterizerFlushRegion(config.GetPhysicalInputAddress(), contiguous_input_size);
+                    Memory::RasterizerFlushRegion(config.GetPhysicalInputAddress(), static_cast<u32>(contiguous_input_size));
 
                     size_t contiguous_output_size = config.texture_copy.size / output_width * (output_width + output_gap);
-                    Memory::RasterizerFlushAndInvalidateRegion(config.GetPhysicalOutputAddress(), contiguous_output_size);
+                    Memory::RasterizerFlushAndInvalidateRegion(config.GetPhysicalOutputAddress(), static_cast<u32>(contiguous_output_size));
 
                     u32 remaining_size = config.texture_copy.size;
                     u32 remaining_input = input_width;
