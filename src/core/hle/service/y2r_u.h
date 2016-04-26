@@ -97,6 +97,7 @@ struct ConversionConfiguration {
     u16 input_line_width;
     u16 input_lines;
     CoefficientSet coefficients;
+    u8 padding;
     u16 alpha;
 
     /// Input parameters for the Y (luma) plane
@@ -107,6 +108,25 @@ struct ConversionConfiguration {
     ResultCode SetInputLineWidth(u16 width);
     ResultCode SetInputLines(u16 lines);
     ResultCode SetStandardCoefficient(StandardCoefficient standard_coefficient);
+};
+
+struct DitheringWeightParams {
+    u16 w0_xEven_yEven;
+    u16 w0_xOdd_yEven;
+    u16 w0_xEven_yOdd;
+    u16 w0_xOdd_yOdd;
+    u16 w1_xEven_yEven;
+    u16 w1_xOdd_yEven;
+    u16 w1_xEven_yOdd;
+    u16 w1_xOdd_yOdd;
+    u16 w2_xEven_yEven;
+    u16 w2_xOdd_yEven;
+    u16 w2_xEven_yOdd;
+    u16 w2_xOdd_yOdd;
+    u16 w3_xEven_yEven;
+    u16 w3_xOdd_yEven;
+    u16 w3_xEven_yOdd;
+    u16 w3_xOdd_yOdd;
 };
 
 class Interface : public Service::Interface {
