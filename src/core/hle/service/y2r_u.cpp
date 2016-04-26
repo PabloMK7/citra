@@ -88,10 +88,11 @@ static void SetInputFormat(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     conversion.input_format = static_cast<InputFormat>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called input_format=%hhu", conversion.input_format);
 
     cmd_buff[0] = IPC::MakeHeader(0x1, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called input_format=%hhu", conversion.input_format);
 }
 
 static void GetInputFormat(Service::Interface* self) {
@@ -100,6 +101,7 @@ static void GetInputFormat(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x2, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = static_cast<u32>(conversion.input_format);
+
     LOG_DEBUG(Service_Y2R, "called input_format=%hhu", conversion.input_format);
 }
 
@@ -107,10 +109,11 @@ static void SetOutputFormat(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     conversion.output_format = static_cast<OutputFormat>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called output_format=%hhu", conversion.output_format);
 
     cmd_buff[0] = IPC::MakeHeader(0x3, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called output_format=%hhu", conversion.output_format);
 }
 
 static void GetOutputFormat(Service::Interface* self) {
@@ -119,6 +122,7 @@ static void GetOutputFormat(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x4, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = static_cast<u32>(conversion.output_format);
+
     LOG_DEBUG(Service_Y2R, "called output_format=%hhu", conversion.output_format);
 }
 
@@ -126,10 +130,11 @@ static void SetRotation(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     conversion.rotation = static_cast<Rotation>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called rotation=%hhu", conversion.rotation);
 
     cmd_buff[0] = IPC::MakeHeader(0x5, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called rotation=%hhu", conversion.rotation);
 }
 
 static void GetRotation(Service::Interface* self) {
@@ -138,6 +143,7 @@ static void GetRotation(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x6, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = static_cast<u32>(conversion.rotation);
+
     LOG_DEBUG(Service_Y2R, "called rotation=%hhu", conversion.rotation);
 }
 
@@ -145,10 +151,11 @@ static void SetBlockAlignment(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     conversion.block_alignment = static_cast<BlockAlignment>(cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R, "called block_alignment=%hhu", conversion.block_alignment);
 
     cmd_buff[0] = IPC::MakeHeader(0x7, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called block_alignment=%hhu", conversion.block_alignment);
 }
 
 static void GetBlockAlignment(Service::Interface* self) {
@@ -157,6 +164,7 @@ static void GetBlockAlignment(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x8, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = static_cast<u32>(conversion.block_alignment);
+
     LOG_DEBUG(Service_Y2R, "called block_alignment=%hhu", conversion.block_alignment);
 }
 
@@ -173,6 +181,7 @@ static void SetSpacialDithering(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x9, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -188,6 +197,7 @@ static void GetSpacialDithering(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xA, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = spacial_dithering_enabled;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -204,6 +214,7 @@ static void SetTemporalDithering(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0xB, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -219,6 +230,7 @@ static void GetTemporalDithering(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xC, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = temporal_dithering_enabled;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -235,6 +247,7 @@ static void SetTransferEndInterrupt(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -250,6 +263,7 @@ static void GetTransferEndInterrupt(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xE, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = transfer_end_interrupt_enabled;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -265,6 +279,7 @@ static void GetTransferEndEvent(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xF, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).MoveFrom();
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -275,13 +290,12 @@ static void SetSendingY(Service::Interface* self) {
     conversion.src_Y.image_size = cmd_buff[2];
     conversion.src_Y.transfer_unit = cmd_buff[3];
     conversion.src_Y.gap = cmd_buff[4];
-    u32 src_process_handle = cmd_buff[6];
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "src_process_handle=0x%08X", conversion.src_Y.image_size,
-        conversion.src_Y.transfer_unit, conversion.src_Y.gap, src_process_handle);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
+            conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap, cmd_buff[6]);
 }
 
 static void SetSendingU(Service::Interface* self) {
@@ -291,13 +305,12 @@ static void SetSendingU(Service::Interface* self) {
     conversion.src_U.image_size = cmd_buff[2];
     conversion.src_U.transfer_unit = cmd_buff[3];
     conversion.src_U.gap = cmd_buff[4];
-    u32 src_process_handle = cmd_buff[6];
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "src_process_handle=0x%08X", conversion.src_U.image_size,
-        conversion.src_U.transfer_unit, conversion.src_U.gap, src_process_handle);
 
     cmd_buff[0] = IPC::MakeHeader(0x11, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
+            conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap, cmd_buff[6]);
 }
 
 static void SetSendingV(Service::Interface* self) {
@@ -307,13 +320,12 @@ static void SetSendingV(Service::Interface* self) {
     conversion.src_V.image_size = cmd_buff[2];
     conversion.src_V.transfer_unit = cmd_buff[3];
     conversion.src_V.gap = cmd_buff[4];
-    u32 src_process_handle = cmd_buff[6];
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "src_process_handle=0x%08X", conversion.src_V.image_size,
-        conversion.src_V.transfer_unit, conversion.src_V.gap, src_process_handle);
 
     cmd_buff[0] = IPC::MakeHeader(0x12, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
+            conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap, cmd_buff[6]);
 }
 
 static void SetSendingYUYV(Service::Interface* self) {
@@ -323,13 +335,12 @@ static void SetSendingYUYV(Service::Interface* self) {
     conversion.src_YUYV.image_size = cmd_buff[2];
     conversion.src_YUYV.transfer_unit = cmd_buff[3];
     conversion.src_YUYV.gap = cmd_buff[4];
-    u32 src_process_handle = cmd_buff[6];
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "src_process_handle=0x%08X", conversion.src_YUYV.image_size,
-        conversion.src_YUYV.transfer_unit, conversion.src_YUYV.gap, src_process_handle);
 
     cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
+            conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit, conversion.src_YUYV.gap, cmd_buff[6]);
 }
 
 /**
@@ -344,6 +355,7 @@ static void IsFinishedSendingYuv(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x14, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -359,6 +371,7 @@ static void IsFinishedSendingY(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x15, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -374,6 +387,7 @@ static void IsFinishedSendingU(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x16, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -389,6 +403,7 @@ static void IsFinishedSendingV(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x17, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -399,14 +414,12 @@ static void SetReceiving(Service::Interface* self) {
     conversion.dst.image_size = cmd_buff[2];
     conversion.dst.transfer_unit = cmd_buff[3];
     conversion.dst.gap = cmd_buff[4];
-    u32 dst_process_handle = cmd_buff[6];
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-        "dst_process_handle=0x%08X", conversion.dst.image_size,
-        conversion.dst.transfer_unit, conversion.dst.gap,
-        dst_process_handle);
 
     cmd_buff[0] = IPC::MakeHeader(0x18, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, dst_process_handle=0x%08X",
+            conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap, cmd_buff[6]);
 }
 
 /**
@@ -421,15 +434,17 @@ static void IsFinishedReceiving(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x19, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 static void SetInputLineWidth(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    LOG_DEBUG(Service_Y2R, "called input_line_width=%u", cmd_buff[1]);
     cmd_buff[0] = IPC::MakeHeader(0x1A, 1, 0);
     cmd_buff[1] = conversion.SetInputLineWidth(cmd_buff[1]).raw;
+
+    LOG_DEBUG(Service_Y2R, "called input_line_width=%u", cmd_buff[1]);
 }
 
 static void GetInputLineWidth(Service::Interface* self) {
@@ -438,15 +453,17 @@ static void GetInputLineWidth(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x1B, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = conversion.input_line_width;
+
     LOG_DEBUG(Service_Y2R, "called input_line_width=%u", conversion.input_line_width);
 }
 
 static void SetInputLines(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    LOG_DEBUG(Service_Y2R, "called input_lines=%u", cmd_buff[1]);
     cmd_buff[0] = IPC::MakeHeader(0x1C, 1, 0);
     cmd_buff[1] = conversion.SetInputLines(cmd_buff[1]).raw;
+
+    LOG_DEBUG(Service_Y2R, "called input_lines=%u", cmd_buff[1]);
 }
 
 static void GetInputLines(Service::Interface* self) {
@@ -455,6 +472,7 @@ static void GetInputLines(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x1D, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = static_cast<u32>(conversion.input_lines);
+
     LOG_DEBUG(Service_Y2R, "called input_lines=%u", conversion.input_lines);
 }
 
@@ -463,12 +481,13 @@ static void SetCoefficient(Service::Interface* self) {
 
     const u16* coefficients = reinterpret_cast<const u16*>(&cmd_buff[1]);
     std::memcpy(conversion.coefficients.data(), coefficients, sizeof(CoefficientSet));
-    LOG_DEBUG(Service_Y2R, "called coefficients=[%hX, %hX, %hX, %hX, %hX, %hX, %hX, %hX]",
-            coefficients[0], coefficients[1], coefficients[2], coefficients[3],
-            coefficients[4], coefficients[5], coefficients[6], coefficients[7]);
 
     cmd_buff[0] = IPC::MakeHeader(0x1E, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called coefficients=[%hX, %hX, %hX, %hX, %hX, %hX, %hX, %hX]",
+            coefficients[0], coefficients[1], coefficients[2], coefficients[3],
+            coefficients[4], coefficients[5], coefficients[6], coefficients[7]);
 }
 
 static void GetCoefficient(Service::Interface* self) {
@@ -477,6 +496,8 @@ static void GetCoefficient(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x1F, 5, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     std::memcpy(&cmd_buff[2], conversion.coefficients.data(), sizeof(CoefficientSet));
+
+    LOG_DEBUG(Service_Y2R, "called");
 }
 
 static void SetStandardCoefficient(Service::Interface* self) {
@@ -486,6 +507,7 @@ static void SetStandardCoefficient(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x20, 1, 0);
     cmd_buff[1] = conversion.SetStandardCoefficient((StandardCoefficient)index).raw;
+
     LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u", index);
 }
 
@@ -495,15 +517,15 @@ static void GetStandardCoefficient(Service::Interface* self) {
     u32 index = cmd_buff[1];
 
     if (index < ARRAY_SIZE(standard_coefficients)) {
-        std::memcpy(&cmd_buff[2], &standard_coefficients[index], sizeof(CoefficientSet));
-
         cmd_buff[0] = IPC::MakeHeader(0x21, 5, 0);
         cmd_buff[1] = RESULT_SUCCESS.raw;
+        std::memcpy(&cmd_buff[2], &standard_coefficients[index], sizeof(CoefficientSet));
+
         LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u ", index);
-    }
-    else {
+    } else {
         cmd_buff[0] = IPC::MakeHeader(0x21, 1, 0);
-        cmd_buff[1] = -1;
+        cmd_buff[1] = -1; // TODO(bunnei): Identify the correct error code for this
+
         LOG_ERROR(Service_Y2R, "called standard_coefficient=%u  The argument is invalid!", index);
     }
 }
@@ -512,10 +534,11 @@ static void SetAlpha(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     conversion.alpha = cmd_buff[1];
-    LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
 
     cmd_buff[0] = IPC::MakeHeader(0x22, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
 }
 
 static void GetAlpha(Service::Interface* self) {
@@ -524,6 +547,7 @@ static void GetAlpha(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x23, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = conversion.alpha;
+
     LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
 }
 
@@ -533,6 +557,7 @@ static void SetDitheringWeightParams(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x24, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -542,6 +567,7 @@ static void GetDitheringWeightParams(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x25, 9, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     std::memcpy(&cmd_buff[2], &dithering_weight_params, sizeof(DitheringWeightParams));
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -549,17 +575,17 @@ static void StartConversion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // dst_image_size would seem to be perfect for this, but it doesn't include the gap :(
-    u32 total_output_size = conversion.input_lines *
-        (conversion.dst.transfer_unit + conversion.dst.gap);
+    u32 total_output_size = conversion.input_lines * (conversion.dst.transfer_unit + conversion.dst.gap);
     Memory::RasterizerFlushAndInvalidateRegion(Memory::VirtualToPhysicalAddress(conversion.dst.address), total_output_size);
 
     HW::Y2R::PerformConversion(conversion);
 
-    LOG_DEBUG(Service_Y2R, "called");
     completion_event->Signal();
 
     cmd_buff[0] = IPC::MakeHeader(0x26, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_DEBUG(Service_Y2R, "called");
 }
 
 static void StopConversion(Service::Interface* self) {
@@ -567,6 +593,7 @@ static void StopConversion(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x27, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -582,6 +609,7 @@ static void IsBusyConversion(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x28, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0; // StartConversion always finishes immediately
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -592,32 +620,38 @@ static void SetPackageParameter(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     auto params = reinterpret_cast<const ConversionParameters*>(&cmd_buff[1]);
-    LOG_DEBUG(Service_Y2R,
-        "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
-        "input_line_width=%hu input_lines=%hu standard_coefficient=%hhu "
-        "reserved=%hhu alpha=%hX",
-        params->input_format, params->output_format, params->rotation, params->block_alignment,
-        params->input_line_width, params->input_lines, params->standard_coefficient,
-        params->padding, params->alpha);
-
-    ResultCode result = RESULT_SUCCESS;
 
     conversion.input_format = params->input_format;
     conversion.output_format = params->output_format;
     conversion.rotation = params->rotation;
     conversion.block_alignment = params->block_alignment;
-    result = conversion.SetInputLineWidth(params->input_line_width);
-    if (result.IsError()) goto cleanup;
+
+    ResultCode result = conversion.SetInputLineWidth(params->input_line_width);
+
+    if (result.IsError())
+        goto cleanup;
+
     result = conversion.SetInputLines(params->input_lines);
-    if (result.IsError()) goto cleanup;
+
+    if (result.IsError())
+        goto cleanup;
+
     result = conversion.SetStandardCoefficient(params->standard_coefficient);
-    if (result.IsError()) goto cleanup;
+
+    if (result.IsError())
+        goto cleanup;
+
     conversion.padding = params->padding;
     conversion.alpha = params->alpha;
 
 cleanup:
     cmd_buff[0] = IPC::MakeHeader(0x29, 1, 0);
     cmd_buff[1] = result.raw;
+
+    LOG_DEBUG(Service_Y2R, "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
+            "input_line_width=%hu input_lines=%hu standard_coefficient=%hhu reserved=%hhu alpha=%hX",
+            params->input_format, params->output_format, params->rotation, params->block_alignment,
+            params->input_line_width, params->input_lines, params->standard_coefficient, params->padding, params->alpha);
 }
 
 static void PingProcess(Service::Interface* self) {
@@ -626,6 +660,7 @@ static void PingProcess(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x2A, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
+
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
@@ -651,6 +686,7 @@ static void DriverInitialize(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x2B, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
@@ -659,6 +695,7 @@ static void DriverFinalize(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x2C, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
+
     LOG_DEBUG(Service_Y2R, "called");
 }
 
