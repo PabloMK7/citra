@@ -272,18 +272,20 @@ static void SetSemaphore(Service::Interface* self) {
 static void WriteProcessPipe(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(cmd_buff[1]);
+    u32 pipe_index = cmd_buff[1];
     u32 size = cmd_buff[2];
     u32 buffer = cmd_buff[4];
 
+    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
+
     if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
-        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, size=0x%X, buffer=0x%08X", cmd_buff[3], pipe, size, buffer);
+        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, size=0x%X, buffer=0x%08X", cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
         cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
         return;
     }
 
-    ASSERT_MSG(Memory::GetPointer(buffer) != nullptr, "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
+    ASSERT_MSG(Memory::GetPointer(buffer) != nullptr, "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
 
     std::vector<u8> message(size);
     for (size_t i = 0; i < size; i++) {
@@ -295,7 +297,7 @@ static void WriteProcessPipe(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
+    LOG_DEBUG(Service_DSP, "pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
 }
 
 /**
@@ -315,12 +317,14 @@ static void WriteProcessPipe(Service::Interface* self) {
 static void ReadPipeIfPossible(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(cmd_buff[1]);
+    u32 pipe_index = cmd_buff[1];
     u32 unknown = cmd_buff[2];
     u32 size = cmd_buff[3] & 0xFFFF; // Lower 16 bits are size
     VAddr addr = cmd_buff[0x41];
 
-    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
+    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
+
+    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index, unknown, size, addr);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -336,7 +340,7 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     cmd_buff[3] = IPC::StaticBufferDesc(size, 0);
     cmd_buff[4] = addr;
 
-    LOG_DEBUG(Service_DSP, "pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe, unknown, size, addr, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -353,12 +357,14 @@ static void ReadPipeIfPossible(Service::Interface* self) {
 static void ReadPipe(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(cmd_buff[1]);
+    u32 pipe_index = cmd_buff[1];
     u32 unknown = cmd_buff[2];
     u32 size = cmd_buff[3] & 0xFFFF; // Lower 16 bits are size
     VAddr addr = cmd_buff[0x41];
 
-    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
+    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
+
+    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index, unknown, size, addr);
 
     if (DSP::HLE::GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = DSP::HLE::PipeRead(pipe, size);
@@ -375,7 +381,7 @@ static void ReadPipe(Service::Interface* self) {
         UNREACHABLE();
     }
 
-    LOG_DEBUG(Service_DSP, "pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe, unknown, size, addr, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -390,14 +396,16 @@ static void ReadPipe(Service::Interface* self) {
 static void GetPipeReadableSize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(cmd_buff[1]);
+    u32 pipe_index = cmd_buff[1];
     u32 unknown = cmd_buff[2];
+
+    DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
     cmd_buff[0] = IPC::MakeHeader(0xF, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = DSP::HLE::GetPipeReadableSize(pipe);
 
-    LOG_DEBUG(Service_DSP, "pipe=0x%08X, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe, unknown, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, cmd_buff[2]);
 }
 
 /**
