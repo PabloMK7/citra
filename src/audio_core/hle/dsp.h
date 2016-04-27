@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <type_traits>
 
 #include "audio_core/hle/common.h"
@@ -14,6 +15,10 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
+
+namespace AudioCore {
+class Sink;
+}
 
 namespace DSP {
 namespace HLE {
@@ -534,6 +539,12 @@ void Shutdown();
  * @return Whether an audio interrupt should be triggered this frame.
  */
 bool Tick();
+
+/**
+ * Set the output sink. This must be called before calling Tick().
+ * @param sink The sink to which audio will be output to.
+ */
+void SetSink(std::unique_ptr<AudioCore::Sink> sink);
 
 } // namespace HLE
 } // namespace DSP

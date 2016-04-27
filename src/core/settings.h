@@ -63,6 +63,9 @@ struct Values {
 
     std::string log_filter;
 
+    // Audio
+    std::string sink_id;
+
     // Debugging
     bool use_gdbstub;
     u16 gdbstub_port;

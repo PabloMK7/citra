@@ -56,6 +56,11 @@ bg_red =
 bg_blue =
 bg_green =
 
+[Audio]
+# Which audio output engine to use.
+# auto (default): Auto-select, null: No audio output
+output_engine =
+
 [Data Storage]
 # Whether to create a virtual SD card.
 # 1 (default): Yes, 0: No

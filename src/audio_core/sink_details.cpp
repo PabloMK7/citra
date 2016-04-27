@@ -10,6 +10,7 @@
 
 namespace AudioCore {
 
+// g_sink_details is ordered in terms of desirability, with the best choice at the top.
 const std::vector<SinkDetails> g_sink_details = {
     { "null", []() { return std::make_unique<NullSink>(); } },
 };
