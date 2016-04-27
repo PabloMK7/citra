@@ -15,6 +15,7 @@ set(HEADERS
             hle/filter.h
             hle/pipe.h
             interpolate.h
+            null_sink.h
             sink.h
             )
 
