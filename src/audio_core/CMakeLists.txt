@@ -3,6 +3,7 @@ set(SRCS
             codec.cpp
             hle/dsp.cpp
             hle/filter.cpp
+            hle/mixers.cpp
             hle/pipe.cpp
             hle/source.cpp
             interpolate.cpp
@@ -16,6 +17,7 @@ set(HEADERS
             hle/common.h
             hle/dsp.h
             hle/filter.h
+            hle/mixers.h
             hle/pipe.h
             hle/source.h
             interpolate.h

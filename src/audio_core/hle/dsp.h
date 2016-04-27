@@ -428,7 +428,7 @@ ASSERT_DSP_STRUCT(DspStatus, 32);
 /// Final mixed output in PCM16 stereo format, what you hear out of the speakers.
 /// When the application writes to this region it has no effect.
 struct FinalMixSamples {
-    s16_le pcm16[2 * samples_per_frame];
+    s16_le pcm16[samples_per_frame][2];
 };
 ASSERT_DSP_STRUCT(FinalMixSamples, 640);
 
