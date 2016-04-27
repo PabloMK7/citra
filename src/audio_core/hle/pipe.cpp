@@ -12,12 +12,14 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
+#include "core/hle/service/dsp_dsp.h"
+
 namespace DSP {
 namespace HLE {
 
 static DspState dsp_state = DspState::Off;
 
-static std::array<std::vector<u8>, static_cast<size_t>(DspPipe::DspPipe_MAX)> pipe_data;
+static std::array<std::vector<u8>, NUM_DSP_PIPE> pipe_data;
 
 void ResetPipes() {
     for (auto& data : pipe_data) {
@@ -27,16 +29,18 @@ void ResetPipes() {
 }
 
 std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) {
-    if (pipe_number >= DspPipe::DspPipe_MAX) {
-        LOG_ERROR(Audio_DSP, "pipe_number = %u invalid", pipe_number);
+    const size_t pipe_index = static_cast<size_t>(pipe_number);
+
+    if (pipe_index >= NUM_DSP_PIPE) {
+        LOG_ERROR(Audio_DSP, "pipe_number = %zu invalid", pipe_index);
         return {};
     }
 
-    std::vector<u8>& data = pipe_data[static_cast<size_t>(pipe_number)];
+    std::vector<u8>& data = pipe_data[pipe_index];
 
     if (length > data.size()) {
-        LOG_WARNING(Audio_DSP, "pipe_number = %u is out of data, application requested read of %u but %zu remain",
-                    pipe_number, length, data.size());
+        LOG_WARNING(Audio_DSP, "pipe_number = %zu is out of data, application requested read of %u but %zu remain",
+                    pipe_index, length, data.size());
         length = data.size();
     }
 
@@ -49,16 +53,20 @@ std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) {
 }
 
 size_t GetPipeReadableSize(DspPipe pipe_number) {
-    if (pipe_number >= DspPipe::DspPipe_MAX) {
-        LOG_ERROR(Audio_DSP, "pipe_number = %u invalid", pipe_number);
+    const size_t pipe_index = static_cast<size_t>(pipe_number);
+
+    if (pipe_index >= NUM_DSP_PIPE) {
+        LOG_ERROR(Audio_DSP, "pipe_number = %zu invalid", pipe_index);
         return 0;
     }
 
-    return pipe_data[static_cast<size_t>(pipe_number)].size();
+    return pipe_data[pipe_index].size();
 }
 
 static void WriteU16(DspPipe pipe_number, u16 value) {
-    std::vector<u8>& data = pipe_data[static_cast<size_t>(pipe_number)];
+    const size_t pipe_index = static_cast<size_t>(pipe_number);
+
+    std::vector<u8>& data = pipe_data.at(pipe_index);
     // Little endian
     data.emplace_back(value & 0xFF);
     data.emplace_back(value >> 8);
@@ -91,6 +99,8 @@ static void AudioPipeWriteStructAddresses() {
     for (u16 addr : struct_addresses) {
         WriteU16(DspPipe::Audio, addr);
     }
+    // Signal that we have data on this pipe.
+    DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
 }
 
 void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
@@ -145,7 +155,7 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
         return;
     }
     default:
-        LOG_CRITICAL(Audio_DSP, "pipe_number = %u unimplemented", pipe_number);
+        LOG_CRITICAL(Audio_DSP, "pipe_number = %zu unimplemented", static_cast<size_t>(pipe_number));
         UNIMPLEMENTED();
         return;
     }

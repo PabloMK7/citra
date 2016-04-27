@@ -19,9 +19,9 @@ enum class DspPipe {
     Debug = 0,
     Dma = 1,
     Audio = 2,
-    Binary = 3,
-    DspPipe_MAX
+    Binary = 3
 };
+constexpr size_t NUM_DSP_PIPE = 8;
 
 /**
  * Read a DSP pipe.
