@@ -65,6 +65,7 @@ namespace Log {
         SUB(Render, OpenGL) \
         CLS(Audio) \
         SUB(Audio, DSP) \
+        SUB(Audio, Sink) \
         CLS(Loader)
 
 // GetClassName is a macro defined by Windows.h, grrr...

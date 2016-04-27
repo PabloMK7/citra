@@ -58,7 +58,7 @@ bg_green =
 
 [Audio]
 # Which audio output engine to use.
-# auto (default): Auto-select, null: No audio output
+# auto (default): Auto-select, null: No audio output, sdl2: SDL2 (if available)
 output_engine =
 
 [Data Storage]

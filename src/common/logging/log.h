@@ -78,8 +78,9 @@ enum class Class : ClassType {
     Render,                     ///< Emulator video output and hardware acceleration
     Render_Software,            ///< Software renderer backend
     Render_OpenGL,              ///< OpenGL backend
-    Audio,                      ///< Emulator audio output
+    Audio,                      ///< Audio emulation
     Audio_DSP,                  ///< The HLE implementation of the DSP
+    Audio_Sink,                 ///< Emulator audio output backend
     Loader,                     ///< ROM loader
 
     Count ///< Total number of logging classes

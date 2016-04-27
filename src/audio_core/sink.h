@@ -19,7 +19,7 @@ public:
     virtual ~Sink() = default;
 
     /// The native rate of this sink. The sink expects to be fed samples that respect this. (Units: samples/sec)
-    virtual unsigned GetNativeSampleRate() const = 0;
+    virtual unsigned int GetNativeSampleRate() const = 0;
 
     /**
      * Feed stereo samples to sink.
