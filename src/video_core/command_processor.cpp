@@ -22,6 +22,7 @@
 #include "video_core/video_core.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/shader/shader_interpreter.h"
+#include "video_core/vertex_loader.h"
 
 namespace Pica {
 
@@ -192,62 +193,19 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 #if PICA_LOG_TEV
             DebugUtils::DumpTevStageConfig(regs.GetTevStages());
 #endif
-
             if (g_debug_context)
                 g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
 
-            const auto& attribute_config = regs.vertex_attributes;
-            const u32 base_address = attribute_config.GetPhysicalBaseAddress();
-            int num_total_attributes = attribute_config.GetNumTotalAttributes();
-
-            // Information about internal vertex attributes
-            u32 vertex_attribute_sources[16];
-            boost::fill(vertex_attribute_sources, 0xdeadbeef);
-            u32 vertex_attribute_strides[16] = {};
-            Regs::VertexAttributeFormat vertex_attribute_formats[16] = {};
-
-            u32 vertex_attribute_elements[16] = {};
-            u32 vertex_attribute_element_size[16] = {};
-            bool vertex_attribute_default[16] = {};
-            // Setup attribute data from loaders
-            for (int loader = 0; loader < 12; ++loader) {
-                const auto& loader_config = attribute_config.attribute_loaders[loader];
-
-                u32 offset = 0;
-
-                // TODO: What happens if a loader overwrites a previous one's data?
-                for (unsigned component = 0; component < loader_config.component_count; ++component) {
-                    if (component >= 12) {
-                        LOG_ERROR(HW_GPU, "Overflow in the vertex attribute loader %u trying to load component %u", loader, component);
-                        continue;
-                    }
-
-                    u32 attribute_index = loader_config.GetComponent(component);
-                    if (attribute_index < 12) {
-                        int element_size = attribute_config.GetElementSizeInBytes(attribute_index);
-                        offset = Common::AlignUp(offset, element_size);
-                        vertex_attribute_sources[attribute_index] = base_address + loader_config.data_offset + offset;
-                        vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
-                        vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
-                        vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
-                        vertex_attribute_element_size[attribute_index] = element_size;
-                        vertex_attribute_default[attribute_index] = attribute_config.IsDefaultAttribute(attribute_index);
-                        offset += attribute_config.GetStride(attribute_index);
-                    } else if (attribute_index < 16) {
-                        // Attribute ids 12, 13, 14 and 15 signify 4, 8, 12 and 16-byte paddings, respectively
-                        offset = Common::AlignUp(offset, 4);
-                        offset += (attribute_index - 11) * 4;
-                    } else {
-                        UNREACHABLE(); // This is truly unreachable due to the number of bits for each component
-                    }
-                }
-            }
+            // Processes information about internal vertex attributes to figure out how a vertex is loaded.
+            // Later, these can be compiled and cached.
+            VertexLoader loader;
+            loader.Setup(regs);
 
             // Load vertices
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
             const auto& index_info = regs.index_array;
-            const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
+            const u8* index_address_8 = Memory::GetPhysicalPointer(loader.GetPhysicalBaseAddress() + index_info.offset);
             const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
             bool index_u16 = index_info.format != 0;
 
@@ -265,32 +223,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
-            class {
-                /// Combine overlapping and close ranges
-                void SimplifyRanges() {
-                    for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-                        // NOTE: We add 32 to the range end address to make sure "close" ranges are combined, too
-                        auto it2 = std::next(it);
-                        while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
-                            it->second = std::max(it->second, it2->first + it2->second - it->first);
-                            it2 = ranges.erase(it2);
-                        }
-                    }
-                }
-
-            public:
-                /// Record a particular memory access in the list
-                void AddAccess(u32 paddr, u32 size) {
-                    // Create new range or extend existing one
-                    ranges[paddr] = std::max(ranges[paddr], size);
-
-                    // Simplify ranges...
-                    SimplifyRanges();
-                }
-
-                /// Map of accessed ranges (mapping start address to range size)
-                std::map<u32, u32> ranges;
-            } memory_accesses;
+            MemoryAccesses memory_accesses;
 
             // Simple circular-replacement vertex cache
             // The size has been tuned for optimal balance between hit-rate and the cost of lookup
@@ -319,7 +252,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (is_indexed) {
                     if (g_debug_context && Pica::g_debug_context->recorder) {
                         int size = index_u16 ? 2 : 1;
-                        memory_accesses.AddAccess(base_address + index_info.offset + size * index, size);
+                        memory_accesses.AddAccess(loader.GetPhysicalBaseAddress() + index_info.offset + size * index, size);
                     }
 
                     for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
@@ -334,60 +267,13 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (!vertex_cache_hit) {
                     // Initialize data for the current vertex
                     Shader::InputVertex input;
-
-                    for (int i = 0; i < num_total_attributes; ++i) {
-                        if (vertex_attribute_elements[i] != 0) {
-                            // Default attribute values set if array elements have < 4 components. This
-                            // is *not* carried over from the default attribute settings even if they're
-                            // enabled for this attribute.
-                            static const float24 zero = float24::FromFloat32(0.0f);
-                            static const float24 one = float24::FromFloat32(1.0f);
-                            input.attr[i] = Math::Vec4<float24>(zero, zero, zero, one);
-
-                            // Load per-vertex data from the loader arrays
-                            for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                                u32 source_addr = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
-                                const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
-
-                                if (g_debug_context && Pica::g_debug_context->recorder) {
-                                    memory_accesses.AddAccess(source_addr,
-                                        (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
-                                        : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
-                                }
-
-                                const float srcval =
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE)  ? *reinterpret_cast<const s8*>(srcdata) :
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *reinterpret_cast<const u8*>(srcdata) :
-                                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *reinterpret_cast<const s16*>(srcdata) :
-                                    *reinterpret_cast<const float*>(srcdata);
-
-                                input.attr[i][comp] = float24::FromFloat32(srcval);
-                                LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",
-                                    comp, i, vertex, index,
-                                    base_address,
-                                    vertex_attribute_sources[i] - base_address,
-                                    vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
-                                    input.attr[i][comp].ToFloat32());
-                            }
-                        } else if (vertex_attribute_default[i]) {
-                            // Load the default attribute if we're configured to do so
-                            input.attr[i] = g_state.vs.default_attributes[i];
-                            LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
-                                      i, vertex, index,
-                                      input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
-                                      input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
-                        } else {
-                            // TODO(yuriks): In this case, no data gets loaded and the vertex
-                            // remains with the last value it had. This isn't currently maintained
-                            // as global state, however, and so won't work in Citra yet.
-                        }
-                    }
+                    loader.LoadVertex(index, vertex, input, memory_accesses);
 
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
                     // Send to vertex shader
-                    output = Shader::Run(shader_unit, input, num_total_attributes);
+                    output = Shader::Run(shader_unit, input, loader.GetNumTotalAttributes());
 
                     if (is_indexed) {
                         vertex_cache[vertex_cache_pos] = output;
