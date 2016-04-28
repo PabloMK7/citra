@@ -46,13 +46,11 @@ void VertexLoader::Setup(const Pica::Regs& regs) {
 
             u32 attribute_index = loader_config.GetComponent(component);
             if (attribute_index < 12) {
-                int element_size = attribute_config.GetElementSizeInBytes(attribute_index);
-                offset = Common::AlignUp(offset, element_size);
+                offset = Common::AlignUp(offset, attribute_config.GetElementSizeInBytes(attribute_index));
                 vertex_attribute_sources[attribute_index] = loader_config.data_offset + offset;
                 vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
                 vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
                 vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
-                vertex_attribute_element_size[attribute_index] = element_size;
                 offset += attribute_config.GetStride(attribute_index);
             } else if (attribute_index < 16) {
                 // Attribute ids 12, 13, 14 and 15 signify 4, 8, 12 and 16-byte paddings, respectively
@@ -68,38 +66,63 @@ void VertexLoader::Setup(const Pica::Regs& regs) {
 void VertexLoader::LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses) {
     for (int i = 0; i < num_total_attributes; ++i) {
         if (vertex_attribute_elements[i] != 0) {
+            // Load per-vertex data from the loader arrays
+            u32 source_addr = base_address + vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex;
+
+            if (g_debug_context && Pica::g_debug_context->recorder) {
+                memory_accesses.AddAccess(source_addr,
+                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
+                    : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
+            }
+
+            switch (vertex_attribute_formats[i]) {
+            case Regs::VertexAttributeFormat::BYTE:
+            {
+                const s8* srcdata = reinterpret_cast<const s8*>(Memory::GetPhysicalPointer(source_addr));
+                for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                }
+                break;
+            }
+            case Regs::VertexAttributeFormat::UBYTE:
+            {
+                const u8* srcdata = reinterpret_cast<const u8*>(Memory::GetPhysicalPointer(source_addr));
+                for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                }
+                break;
+            }
+            case Regs::VertexAttributeFormat::SHORT:
+            {
+                const s16* srcdata = reinterpret_cast<const s16*>(Memory::GetPhysicalPointer(source_addr));
+                for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                }
+                break;
+            }
+            case Regs::VertexAttributeFormat::FLOAT:
+            {
+                const float* srcdata = reinterpret_cast<const float*>(Memory::GetPhysicalPointer(source_addr));
+                for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
+                    input.attr[i][comp] = float24::FromFloat32(srcdata[comp]);
+                }
+                break;
+            }
+            }
+
             // Default attribute values set if array elements have < 4 components. This
             // is *not* carried over from the default attribute settings even if they're
             // enabled for this attribute.
-            static const float24 zero = float24::FromFloat32(0.0f);
-            static const float24 one = float24::FromFloat32(1.0f);
-            input.attr[i] = Math::Vec4<float24>(zero, zero, zero, one);
-
-            // Load per-vertex data from the loader arrays
-            for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                u32 source_addr = base_address + vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
-                const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
-
-                if (g_debug_context && Pica::g_debug_context->recorder) {
-                    memory_accesses.AddAccess(source_addr,
-                        (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT) ? 4
-                        : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? 2 : 1);
-                }
-
-                const float srcval =
-                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::BYTE) ? *reinterpret_cast<const s8*>(srcdata) :
-                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::UBYTE) ? *reinterpret_cast<const u8*>(srcdata) :
-                    (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT) ? *reinterpret_cast<const s16*>(srcdata) :
-                    *reinterpret_cast<const float*>(srcdata);
-
-                input.attr[i][comp] = float24::FromFloat32(srcval);
-                LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",
-                    comp, i, vertex, index,
-                    base_address,
-                    vertex_attribute_sources[i],
-                    vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
-                    input.attr[i][comp].ToFloat32());
+            for (unsigned int comp = vertex_attribute_elements[i]; comp < 4; ++comp) {
+                input.attr[i][comp] = comp == 3 ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
             }
+
+            LOG_TRACE(HW_GPU, "Loaded %d components of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f %f %f %f",
+                vertex_attribute_elements[i], i, vertex, index,
+                base_address,
+                vertex_attribute_sources[i],
+                vertex_attribute_strides[i] * vertex,
+                input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(), input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
         } else if (vertex_attribute_is_default[i]) {
             // Load the default attribute if we're configured to do so
             input.attr[i] = g_state.vs.default_attributes[i];

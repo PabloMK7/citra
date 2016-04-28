@@ -47,7 +47,6 @@ private:
     u32 vertex_attribute_strides[16] = {};
     Regs::VertexAttributeFormat vertex_attribute_formats[16] = {};
     u32 vertex_attribute_elements[16] = {};
-    u32 vertex_attribute_element_size[16] = {};
     bool vertex_attribute_is_default[16];
     int num_total_attributes;
 };
