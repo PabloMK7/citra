@@ -198,6 +198,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             const auto& attribute_config = regs.vertex_attributes;
             const u32 base_address = attribute_config.GetPhysicalBaseAddress();
+            int num_total_attributes = attribute_config.GetNumTotalAttributes();
 
             // Information about internal vertex attributes
             u32 vertex_attribute_sources[16];
@@ -207,7 +208,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             u32 vertex_attribute_elements[16] = {};
             u32 vertex_attribute_element_size[16] = {};
-
+            bool vertex_attribute_default[16] = {};
             // Setup attribute data from loaders
             for (int loader = 0; loader < 12; ++loader) {
                 const auto& loader_config = attribute_config.attribute_loaders[loader];
@@ -230,6 +231,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
                         vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
                         vertex_attribute_element_size[attribute_index] = element_size;
+                        vertex_attribute_default[attribute_index] = attribute_config.IsDefaultAttribute(attribute_index);
                         offset += attribute_config.GetStride(attribute_index);
                     } else if (attribute_index < 16) {
                         // Attribute ids 12, 13, 14 and 15 signify 4, 8, 12 and 16-byte paddings, respectively
@@ -333,7 +335,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     // Initialize data for the current vertex
                     Shader::InputVertex input;
 
-                    for (int i = 0; i < attribute_config.GetNumTotalAttributes(); ++i) {
+                    for (int i = 0; i < num_total_attributes; ++i) {
                         if (vertex_attribute_elements[i] != 0) {
                             // Default attribute values set if array elements have < 4 components. This
                             // is *not* carried over from the default attribute settings even if they're
@@ -362,12 +364,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                 input.attr[i][comp] = float24::FromFloat32(srcval);
                                 LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",
                                     comp, i, vertex, index,
-                                    attribute_config.GetPhysicalBaseAddress(),
+                                    base_address,
                                     vertex_attribute_sources[i] - base_address,
                                     vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
                                     input.attr[i][comp].ToFloat32());
                             }
-                        } else if (attribute_config.IsDefaultAttribute(i)) {
+                        } else if (vertex_attribute_default[i]) {
                             // Load the default attribute if we're configured to do so
                             input.attr[i] = g_state.vs.default_attributes[i];
                             LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
@@ -385,7 +387,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
                     // Send to vertex shader
-                    output = Shader::Run(shader_unit, input, attribute_config.GetNumTotalAttributes());
+                    output = Shader::Run(shader_unit, input, num_total_attributes);
 
                     if (is_indexed) {
                         vertex_cache[vertex_cache_pos] = output;
