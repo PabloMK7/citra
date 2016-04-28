@@ -7,3 +7,6 @@
 [submodule "nihstro"]
 	path = externals/nihstro
 	url = https://github.com/neobrain/nihstro.git
+[submodule "soundtouch"]
+	path = externals/soundtouch
+	url = https://github.com/citra-emu/soundtouch.git
