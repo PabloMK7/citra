@@ -1,5 +1,8 @@
 #pragma once
 
+#include <iterator>
+#include <algorithm>
+
 #include "video_core/pica.h"
 #include "video_core/shader/shader.h"
 
@@ -34,8 +37,8 @@ public:
 
 class VertexLoader {
 public:
-    void Setup(const Pica::Regs &regs);
-    void LoadVertex(int index, int vertex, Shader::InputVertex &input, MemoryAccesses &memory_accesses);
+    void Setup(const Pica::Regs& regs);
+    void LoadVertex(int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses);
 
     u32 GetPhysicalBaseAddress() const { return base_address; }
     int GetNumTotalAttributes() const { return num_total_attributes; }

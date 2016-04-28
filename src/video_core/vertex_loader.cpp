@@ -14,14 +14,14 @@
 
 #include "debug_utils/debug_utils.h"
 
-#include "pica.h"
-#include "pica_state.h"
-#include "pica_types.h"
-#include "vertex_loader.h"
+#include "video_core/pica.h"
+#include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
+#include "video_core/vertex_loader.h"
 
 namespace Pica {
 
-void VertexLoader::Setup(const Pica::Regs &regs) {
+void VertexLoader::Setup(const Pica::Regs& regs) {
     const auto& attribute_config = regs.vertex_attributes;
     base_address = attribute_config.GetPhysicalBaseAddress();
     num_total_attributes = attribute_config.GetNumTotalAttributes();
@@ -66,7 +66,7 @@ void VertexLoader::Setup(const Pica::Regs &regs) {
     }
 }
 
-void VertexLoader::LoadVertex(int index, int vertex, Shader::InputVertex &input, MemoryAccesses &memory_accesses) {
+void VertexLoader::LoadVertex(int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses) {
     for (int i = 0; i < num_total_attributes; ++i) {
         if (vertex_attribute_elements[i] != 0) {
             // Default attribute values set if array elements have < 4 components. This
