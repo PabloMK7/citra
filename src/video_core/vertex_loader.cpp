@@ -23,7 +23,6 @@ namespace Pica {
 
 void VertexLoader::Setup(const Pica::Regs& regs) {
     const auto& attribute_config = regs.vertex_attributes;
-    base_address = attribute_config.GetPhysicalBaseAddress();
     num_total_attributes = attribute_config.GetNumTotalAttributes();
 
     boost::fill(vertex_attribute_sources, 0xdeadbeef);
@@ -49,7 +48,7 @@ void VertexLoader::Setup(const Pica::Regs& regs) {
             if (attribute_index < 12) {
                 int element_size = attribute_config.GetElementSizeInBytes(attribute_index);
                 offset = Common::AlignUp(offset, element_size);
-                vertex_attribute_sources[attribute_index] = base_address + loader_config.data_offset + offset;
+                vertex_attribute_sources[attribute_index] = loader_config.data_offset + offset;
                 vertex_attribute_strides[attribute_index] = static_cast<u32>(loader_config.byte_count);
                 vertex_attribute_formats[attribute_index] = attribute_config.GetFormat(attribute_index);
                 vertex_attribute_elements[attribute_index] = attribute_config.GetNumElements(attribute_index);
@@ -66,7 +65,7 @@ void VertexLoader::Setup(const Pica::Regs& regs) {
     }
 }
 
-void VertexLoader::LoadVertex(int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses) {
+void VertexLoader::LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses) {
     for (int i = 0; i < num_total_attributes; ++i) {
         if (vertex_attribute_elements[i] != 0) {
             // Default attribute values set if array elements have < 4 components. This
@@ -78,7 +77,7 @@ void VertexLoader::LoadVertex(int index, int vertex, Shader::InputVertex& input,
 
             // Load per-vertex data from the loader arrays
             for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
-                u32 source_addr = vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
+                u32 source_addr = base_address + vertex_attribute_sources[i] + vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i];
                 const u8* srcdata = Memory::GetPhysicalPointer(source_addr);
 
                 if (g_debug_context && Pica::g_debug_context->recorder) {
@@ -97,7 +96,7 @@ void VertexLoader::LoadVertex(int index, int vertex, Shader::InputVertex& input,
                 LOG_TRACE(HW_GPU, "Loaded component %x of attribute %x for vertex %x (index %x) from 0x%08x + 0x%08x + 0x%04x: %f",
                     comp, i, vertex, index,
                     base_address,
-                    vertex_attribute_sources[i] - base_address,
+                    vertex_attribute_sources[i],
                     vertex_attribute_strides[i] * vertex + comp * vertex_attribute_element_size[i],
                     input.attr[i][comp].ToFloat32());
             }

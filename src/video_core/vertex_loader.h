@@ -38,10 +38,10 @@ public:
 class VertexLoader {
 public:
     void Setup(const Pica::Regs& regs);
-    void LoadVertex(int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses);
+    void LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses);
 
-    u32 GetPhysicalBaseAddress() const { return base_address; }
     int GetNumTotalAttributes() const { return num_total_attributes; }
+
 private:
     u32 vertex_attribute_sources[16];
     u32 vertex_attribute_strides[16] = {};
@@ -49,7 +49,6 @@ private:
     u32 vertex_attribute_elements[16] = {};
     u32 vertex_attribute_element_size[16] = {};
     bool vertex_attribute_is_default[16];
-    u32 base_address;
     int num_total_attributes;
 };
 

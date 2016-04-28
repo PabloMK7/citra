@@ -199,13 +199,14 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             // Processes information about internal vertex attributes to figure out how a vertex is loaded.
             // Later, these can be compiled and cached.
             VertexLoader loader;
+            const u32 base_address = regs.vertex_attributes.GetPhysicalBaseAddress();
             loader.Setup(regs);
 
             // Load vertices
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
 
             const auto& index_info = regs.index_array;
-            const u8* index_address_8 = Memory::GetPhysicalPointer(loader.GetPhysicalBaseAddress() + index_info.offset);
+            const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
             const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
             bool index_u16 = index_info.format != 0;
 
@@ -252,7 +253,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (is_indexed) {
                     if (g_debug_context && Pica::g_debug_context->recorder) {
                         int size = index_u16 ? 2 : 1;
-                        memory_accesses.AddAccess(loader.GetPhysicalBaseAddress() + index_info.offset + size * index, size);
+                        memory_accesses.AddAccess(base_address + index_info.offset + size * index, size);
                     }
 
                     for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
@@ -267,7 +268,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (!vertex_cache_hit) {
                     // Initialize data for the current vertex
                     Shader::InputVertex input;
-                    loader.LoadVertex(index, vertex, input, memory_accesses);
+                    loader.LoadVertex(base_address, index, vertex, input, memory_accesses);
 
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
