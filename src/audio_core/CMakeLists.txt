@@ -5,6 +5,7 @@ set(SRCS
             hle/filter.cpp
             hle/pipe.cpp
             interpolate.cpp
+            sink_details.cpp
             )
 
 set(HEADERS
@@ -17,6 +18,7 @@ set(HEADERS
             interpolate.h
             null_sink.h
             sink.h
+            sink_details.h
             )
 
 include_directories(../../externals/soundtouch/include)
