@@ -25,7 +25,7 @@ namespace Pica {
 namespace Shader {
 
 struct InputVertex {
-    Math::Vec4<float24> attr[16];
+    alignas(16) Math::Vec4<float24> attr[16];
 };
 
 struct OutputVertex {
