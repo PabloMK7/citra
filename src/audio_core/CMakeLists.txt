@@ -4,6 +4,7 @@ set(SRCS
             hle/dsp.cpp
             hle/filter.cpp
             hle/pipe.cpp
+            interpolate.cpp
             )
 
 set(HEADERS
@@ -13,6 +14,7 @@ set(HEADERS
             hle/dsp.h
             hle/filter.h
             hle/pipe.h
+            interpolate.h
             sink.h
             )
 
