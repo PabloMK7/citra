@@ -8,8 +8,32 @@
 namespace DSP {
 namespace HLE {
 
-SharedMemory g_region0;
-SharedMemory g_region1;
+std::array<SharedMemory, 2> g_regions;
+
+static size_t CurrentRegionIndex() {
+    // The region with the higher frame counter is chosen unless there is wraparound.
+    // This function only returns a 0 or 1.
+
+    if (g_regions[0].frame_counter == 0xFFFFu && g_regions[1].frame_counter != 0xFFFEu) {
+        // Wraparound has occured.
+        return 1;
+    }
+
+    if (g_regions[1].frame_counter == 0xFFFFu && g_regions[0].frame_counter != 0xFFFEu) {
+        // Wraparound has occured.
+        return 0;
+    }
+
+    return (g_regions[0].frame_counter > g_regions[1].frame_counter) ? 0 : 1;
+}
+
+static SharedMemory& ReadRegion() {
+    return g_regions[CurrentRegionIndex()];
+}
+
+static SharedMemory& WriteRegion() {
+    return g_regions[1 - CurrentRegionIndex()];
+}
 
 void Init() {
     DSP::HLE::ResetPipes();
@@ -20,22 +44,6 @@ void Shutdown() {
 
 bool Tick() {
     return true;
-}
-
-SharedMemory& CurrentRegion() {
-    // The region with the higher frame counter is chosen unless there is wraparound.
-
-    if (g_region0.frame_counter == 0xFFFFu && g_region1.frame_counter != 0xFFFEu) {
-        // Wraparound has occured.
-        return g_region1;
-    }
-
-    if (g_region1.frame_counter == 0xFFFFu && g_region0.frame_counter != 0xFFFEu) {
-        // Wraparound has occured.
-        return g_region0;
-    }
-
-    return (g_region0.frame_counter > g_region1.frame_counter) ? g_region0 : g_region1;
 }
 
 } // namespace HLE
