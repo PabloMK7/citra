@@ -109,7 +109,11 @@ void GameList::SaveInterfaceLayout()
 void GameList::LoadInterfaceLayout()
 {
     auto header = tree_view->header();
-    header->restoreState(UISettings::values.gamelist_header_state);
+    if (!header->restoreState(UISettings::values.gamelist_header_state)) {
+        // We are using the name column to display icons and titles
+        // so make it as large as possible as default.
+        header->resizeSection(COLUMN_NAME, header->width());
+    }
 
     item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
 }
