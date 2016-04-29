@@ -71,7 +71,9 @@ void EmuThread::run() {
     // Shutdown the core emulation
     System::Shutdown();
 
+#if MICROPROFILE_ENABLED
     MicroProfileOnThreadExit();
+#endif
 
     render_window->moveContext();
 }

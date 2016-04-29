@@ -14,8 +14,10 @@
 
 // Include the implementation of the UI in this file. This isn't in microprofile.cpp because the
 // non-Qt frontends don't need it (and don't implement the UI drawing hooks either).
+#if MICROPROFILE_ENABLED
 #define MICROPROFILEUI_IMPL 1
 #include "common/microprofileui.h"
+#endif
 
 using namespace Common::Profiling;
 
@@ -148,6 +150,8 @@ void ProfilerWidget::setProfilingInfoUpdateEnabled(bool enable)
     }
 }
 
+#if MICROPROFILE_ENABLED
+
 class MicroProfileWidget : public QWidget {
 public:
     MicroProfileWidget(QWidget* parent = nullptr);
@@ -171,6 +175,8 @@ private:
     QTimer update_timer;
 };
 
+#endif
+
 MicroProfileDialog::MicroProfileDialog(QWidget* parent)
     : QWidget(parent, Qt::Dialog)
 {
@@ -179,6 +185,8 @@ MicroProfileDialog::MicroProfileDialog(QWidget* parent)
     resize(1000, 600);
     // Remove the "?" button from the titlebar and enable the maximize button
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint | Qt::WindowMaximizeButtonHint);
+
+#if MICROPROFILE_ENABLED
 
     MicroProfileWidget* widget = new MicroProfileWidget(this);
 
@@ -191,6 +199,7 @@ MicroProfileDialog::MicroProfileDialog(QWidget* parent)
     setFocusProxy(widget);
     widget->setFocusPolicy(Qt::StrongFocus);
     widget->setFocus();
+#endif
 }
 
 QAction* MicroProfileDialog::toggleViewAction() {
@@ -217,6 +226,9 @@ void MicroProfileDialog::hideEvent(QHideEvent* ev) {
     }
     QWidget::hideEvent(ev);
 }
+
+
+#if MICROPROFILE_ENABLED
 
 /// There's no way to pass a user pointer to MicroProfile, so this variable is used to make the
 /// QPainter available inside the drawing callbacks.
@@ -337,3 +349,4 @@ void MicroProfileDrawLine2D(u32 vertices_length, float* vertices, u32 hex_color)
     mp_painter->drawPolyline(point_buf.data(), vertices_length);
     point_buf.clear();
 }
+#endif

@@ -7,8 +7,10 @@
 #include <QAbstractItemModel>
 #include <QDockWidget>
 #include <QTimer>
+
 #include "ui_profiler.h"
 
+#include "common/microprofile.h"
 #include "common/profiler_reporting.h"
 
 class ProfilerModel : public QAbstractItemModel
@@ -48,6 +50,7 @@ private:
 
     QTimer update_timer;
 };
+
 
 class MicroProfileDialog : public QWidget {
     Q_OBJECT
