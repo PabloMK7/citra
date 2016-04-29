@@ -47,7 +47,6 @@ set(HEADERS
             microprofile.h
             microprofileui.h
             platform.h
-            profiler.h
             profiler_reporting.h
             scm_rev.h
             scope_exit.h

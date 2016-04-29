@@ -10,7 +10,6 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "core/memory.h"
 #include "core/hle/svc.h"
@@ -24,9 +23,6 @@
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
 #include "core/gdbstub/gdbstub.h"
-
-Common::Profiling::TimingCategory profile_execute("DynCom::Execute");
-Common::Profiling::TimingCategory profile_decode("DynCom::Decode");
 
 enum {
     COND            = (1 << 0),
@@ -3496,7 +3492,6 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
 }
 
 static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) {
-    Common::Profiling::ScopeTimer timer_decode(profile_decode);
     MICROPROFILE_SCOPE(DynCom_Decode);
 
     // Decode instruction, get index
@@ -3530,7 +3525,6 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
 }
 
 static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr) {
-    Common::Profiling::ScopeTimer timer_decode(profile_decode);
     MICROPROFILE_SCOPE(DynCom_Decode);
 
     ARM_INST_PTR inst_base = nullptr;
@@ -3565,7 +3559,6 @@ static int clz(unsigned int x) {
 MICROPROFILE_DEFINE(DynCom_Execute, "DynCom", "Execute", MP_RGB(255, 0, 0));
 
 unsigned InterpreterMainLoop(ARMul_State* cpu) {
-    Common::Profiling::ScopeTimer timer_execute(profile_execute);
     MICROPROFILE_SCOPE(DynCom_Execute);
 
     GDBStub::BreakpointAddress breakpoint_data;

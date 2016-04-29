@@ -9,6 +9,7 @@
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/util/util.h"
 
+#include "common/common_types.h"
 #include "common/microprofile.h"
 #include "common/profiler_reporting.h"
 
@@ -36,21 +37,9 @@ static QVariant GetDataForColumn(int col, const AggregatedDuration& duration)
     }
 }
 
-static const TimingCategoryInfo* GetCategoryInfo(int id)
-{
-    const auto& categories = GetProfilingManager().GetTimingCategoriesInfo();
-    if ((size_t)id >= categories.size()) {
-        return nullptr;
-    } else {
-        return &categories[id];
-    }
-}
-
 ProfilerModel::ProfilerModel(QObject* parent) : QAbstractItemModel(parent)
 {
     updateProfilingInfo();
-    const auto& categories = GetProfilingManager().GetTimingCategoriesInfo();
-    results.time_per_category.resize(categories.size());
 }
 
 QVariant ProfilerModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -87,7 +76,7 @@ int ProfilerModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     } else {
-        return static_cast<int>(results.time_per_category.size() + 2);
+        return 2;
     }
 }
 
@@ -105,17 +94,6 @@ QVariant ProfilerModel::data(const QModelIndex& index, int role) const
                 return tr("Frame (with swapping)");
             } else {
                 return GetDataForColumn(index.column(), results.interframe_time);
-            }
-        } else {
-            if (index.column() == 0) {
-                const TimingCategoryInfo* info = GetCategoryInfo(index.row() - 2);
-                return info != nullptr ? QString(info->name) : QVariant();
-            } else {
-                if (index.row() - 2 < (int)results.time_per_category.size()) {
-                    return GetDataForColumn(index.column(), results.time_per_category[index.row() - 2]);
-                } else {
-                    return QVariant();
-                }
             }
         }
     }

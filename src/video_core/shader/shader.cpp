@@ -9,7 +9,6 @@
 
 #include "common/hash.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
@@ -57,13 +56,11 @@ void Shutdown() {
 #endif // ARCHITECTURE_x86_64
 }
 
-static Common::Profiling::TimingCategory shader_category("Vertex Shader");
 MICROPROFILE_DEFINE(GPU_VertexShader, "GPU", "Vertex Shader", MP_RGB(50, 50, 240));
 
 OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attributes) {
     auto& config = g_state.regs.vs;
 
-    Common::Profiling::ScopeTimer timer(shader_category);
     MICROPROFILE_SCOPE(GPU_VertexShader);
 
     state.program_counter = config.main_offset;

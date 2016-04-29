@@ -4,7 +4,6 @@
 
 #include "common/bit_field.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "core/memory.h"
 #include "core/hle/kernel/event.h"

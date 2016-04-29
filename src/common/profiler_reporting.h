@@ -4,22 +4,17 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <vector>
 
-#include "common/profiler.h"
 #include "common/synchronized_wrapper.h"
 
 namespace Common {
 namespace Profiling {
 
-struct TimingCategoryInfo {
-    static const unsigned int NO_PARENT = -1;
-
-    TimingCategory* category;
-    const char* name;
-    unsigned int parent;
-};
+using Clock = std::chrono::high_resolution_clock;
+using Duration = Clock::duration;
 
 struct ProfilingFrameResult {
     /// Time since the last delivered frame
@@ -27,21 +22,11 @@ struct ProfilingFrameResult {
 
     /// Time spent processing a frame, excluding VSync
     Duration frame_time;
-
-    /// Total amount of time spent inside each category in this frame. Indexed by the category id
-    std::vector<Duration> time_per_category;
 };
 
 class ProfilingManager final {
 public:
     ProfilingManager();
-
-    unsigned int RegisterTimingCategory(TimingCategory* category, const char* name);
-    void SetTimingCategoryParent(unsigned int category, unsigned int parent);
-
-    const std::vector<TimingCategoryInfo>& GetTimingCategoriesInfo() const {
-        return timing_categories;
-    }
 
     /// This should be called after swapping screen buffers.
     void BeginFrame();
@@ -54,7 +39,6 @@ public:
     }
 
 private:
-    std::vector<TimingCategoryInfo> timing_categories;
     Clock::time_point last_frame_end;
     Clock::time_point this_frame_start;
 
@@ -73,9 +57,6 @@ struct AggregatedFrameResult {
     AggregatedDuration frame_time;
 
     float fps;
-
-    /// Total amount of time spent inside each category in this frame. Indexed by the category id
-    std::vector<AggregatedDuration> time_per_category;
 };
 
 class TimingResultsAggregator final {
@@ -83,7 +64,6 @@ public:
     TimingResultsAggregator(size_t window_size);
 
     void Clear();
-    void SetNumberOfCategories(size_t n);
 
     void AddFrame(const ProfilingFrameResult& frame_result);
 
@@ -95,7 +75,6 @@ public:
 
     std::vector<Duration> interframe_times;
     std::vector<Duration> frame_times;
-    std::vector<std::vector<Duration>> times_per_category;
 };
 
 ProfilingManager& GetProfilingManager();

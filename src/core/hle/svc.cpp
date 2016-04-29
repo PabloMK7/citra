@@ -6,7 +6,6 @@
 
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
 
@@ -1031,8 +1030,6 @@ static const FunctionDef SVC_Table[] = {
     {0x7D, HLE::Wrap<QueryProcessMemory>,   "QueryProcessMemory"},
 };
 
-Common::Profiling::TimingCategory profiler_svc("SVC Calls");
-
 static const FunctionDef* GetSVCInfo(u32 func_num) {
     if (func_num >= ARRAY_SIZE(SVC_Table)) {
         LOG_ERROR(Kernel_SVC, "unknown svc=0x%02X", func_num);
@@ -1044,7 +1041,6 @@ static const FunctionDef* GetSVCInfo(u32 func_num) {
 MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
 
 void CallSVC(u32 immediate) {
-    Common::Profiling::ScopeTimer timer_svc(profiler_svc);
     MICROPROFILE_SCOPE(Kernel_SVC);
 
     const FunctionDef* info = GetSVCInfo(immediate);

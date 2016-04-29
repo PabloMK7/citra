@@ -11,7 +11,6 @@
 #include "common/file_util.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "core/memory.h"
 #include "core/settings.h"

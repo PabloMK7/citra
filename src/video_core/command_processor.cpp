@@ -7,7 +7,6 @@
 
 #include "common/alignment.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "core/settings.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -34,8 +33,6 @@ static u32 uniform_write_buffer[4];
 static int default_attr_counter = 0;
 
 static u32 default_attr_write_buffer[3];
-
-Common::Profiling::TimingCategory category_drawing("Drawing");
 
 // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
 static const u32 expand_bits_to_bytes[] = {
@@ -186,7 +183,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
-            Common::Profiling::ScopeTimer scope_timer(category_drawing);
             MICROPROFILE_SCOPE(GPU_Drawing);
 
 #if PICA_LOG_TEV

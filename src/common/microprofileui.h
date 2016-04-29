@@ -13,4 +13,7 @@
 #define MICROPROFILE_HELP_ALT "Right-Click"
 #define MICROPROFILE_HELP_MOD "Ctrl"
 
+// This isn't included by microprofileui.h :(
+#include <cstdlib> // For std::abs
+
 #include <microprofileui.h>
