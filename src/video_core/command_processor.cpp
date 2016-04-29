@@ -224,7 +224,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
-            MemoryAccesses memory_accesses;
+            DebugUtils::MemoryAccessTracker memory_accesses;
 
             // Simple circular-replacement vertex cache
             // The size has been tuned for optimal balance between hit-rate and the cost of lookup

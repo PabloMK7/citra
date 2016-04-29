@@ -12,8 +12,7 @@
 
 #include "core/memory.h"
 
-#include "debug_utils/debug_utils.h"
-
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
@@ -63,7 +62,7 @@ void VertexLoader::Setup(const Pica::Regs& regs) {
     }
 }
 
-void VertexLoader::LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input, MemoryAccesses& memory_accesses) {
+void VertexLoader::LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input, DebugUtils::MemoryAccessTracker& memory_accesses) {
     for (int i = 0; i < num_total_attributes; ++i) {
         if (vertex_attribute_elements[i] != 0) {
             // Load per-vertex data from the loader arrays
