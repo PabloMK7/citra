@@ -389,6 +389,10 @@ ResultCode FormatConfig() {
     res = CreateConfigInfoBlk(0x000F0004, sizeof(CONSOLE_MODEL), 0xC, &CONSOLE_MODEL);
     if (!res.IsSuccess()) return res;
 
+    // 0x00170000 - Unknown
+    res = CreateConfigInfoBlk(0x00170000, 0x4, 0xE, zero_buffer);
+    if (!res.IsSuccess()) return res;
+
     // Save the buffer to the file
     res = UpdateConfigNANDSavegame();
     if (!res.IsSuccess())
