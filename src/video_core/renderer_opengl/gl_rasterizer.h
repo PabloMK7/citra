@@ -138,7 +138,28 @@ struct PicaShaderConfig {
     };
 
     Pica::Regs::CompareFunc alpha_test_func;
-    std::array<Pica::Regs::TevStageConfig, 6> tev_stages;
+
+    // NOTE: MSVC15 (Update 2) doesn't think `delete`'d constructors and operators are TC.
+    //       This makes BitField not TC when used in a union or struct so we have to resort
+    //       to this ugly hack.
+    //       Once that bug is fixed we can use Pica::Regs::TevStageConfig here.
+    //       Doesn't include const_color because we don't sync it, see comment in CurrentConfig()
+    struct TevStageConfigRaw {
+        u32 sources_raw;
+        u32 modifiers_raw;
+        u32 ops_raw;
+        u32 scales_raw;
+        explicit operator Pica::Regs::TevStageConfig() const noexcept {
+            Pica::Regs::TevStageConfig stage;
+            stage.sources_raw = sources_raw;
+            stage.modifiers_raw = modifiers_raw;
+            stage.ops_raw = ops_raw;
+            stage.const_color = 0;
+            stage.scales_raw = scales_raw;
+            return stage;
+        }
+    };
+    std::array<TevStageConfigRaw, 6> tev_stages;
     u8 combiner_buffer_input;
 
     struct {

@@ -287,7 +287,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
 
 /// Writes the code to emulate the specified TEV stage
 static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
-    auto& stage = config.tev_stages[index];
+    const auto stage = static_cast<const Pica::Regs::TevStageConfig>(config.tev_stages[index]);
     if (!IsPassThroughTevStage(stage)) {
         std::string index_name = std::to_string(index);
 
