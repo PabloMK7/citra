@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace Kernel {
 class VMManager;
 }
@@ -17,6 +19,9 @@ void Init();
 
 /// Add DSP address spaces to a Process.
 void AddAddressSpace(Kernel::VMManager& vm_manager);
+
+/// Select the sink to use based on sink id.
+void SelectSink(std::string sink_id);
 
 /// Shutdown Audio Core
 void Shutdown();

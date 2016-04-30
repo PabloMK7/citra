@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
+
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/pipe.h"
+#include "audio_core/sink.h"
 
 namespace DSP {
 namespace HLE {
@@ -35,6 +38,8 @@ static SharedMemory& WriteRegion() {
     return g_regions[1 - CurrentRegionIndex()];
 }
 
+static std::unique_ptr<AudioCore::Sink> sink;
+
 void Init() {
     DSP::HLE::ResetPipes();
 }
@@ -44,6 +49,10 @@ void Shutdown() {
 
 bool Tick() {
     return true;
+}
+
+void SetSink(std::unique_ptr<AudioCore::Sink> sink_) {
+    sink = std::move(sink_);
 }
 
 } // namespace HLE
