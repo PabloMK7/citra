@@ -5,7 +5,6 @@
 #pragma once
 
 #include <new>
-#include <type_traits>
 #include <utility>
 
 #include "common/assert.h"

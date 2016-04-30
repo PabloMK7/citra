@@ -4,6 +4,10 @@
 
 #pragma once
 
+#if !defined(ARCHITECTURE_x86_64) && !defined(_M_ARM)
+#include <cstdlib> // for exit
+#endif
+
 #include "common_types.h"
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))

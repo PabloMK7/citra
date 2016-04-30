@@ -2,25 +2,29 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <memory>
+#include <atomic>
+#include <cmath>
+#include <cstring>
 #include <unordered_map>
+#include <utility>
 
 #include <boost/range/algorithm/fill.hpp>
 
+#include "common/bit_field.h"
 #include "common/hash.h"
+#include "common/logging/log.h"
 #include "common/microprofile.h"
 
-#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
-#include "video_core/video_core.h"
-
-#include "shader.h"
-#include "shader_interpreter.h"
+#include "video_core/shader/shader.h"
+#include "video_core/shader/shader_interpreter.h"
 
 #ifdef ARCHITECTURE_x86_64
-#include "shader_jit_x64.h"
+#include "video_core/shader/shader_jit_x64.h"
 #endif // ARCHITECTURE_x86_64
+
+#include "video_core/video_core.h"
 
 namespace Pica {
 

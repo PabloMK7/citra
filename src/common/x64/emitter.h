@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "common/assert.h"
 #include "common/bit_set.h"
 #include "common/common_types.h"

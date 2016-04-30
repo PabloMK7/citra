@@ -4,8 +4,10 @@
 
 #pragma once
 
-#include "common_types.h"
-#include "memory_util.h"
+#include <cstddef>
+
+#include "common/common_types.h"
+#include "common/memory_util.h"
 
 // Everything that needs to generate code should inherit from this.
 // You get memory management for free, plus, you can use all emitter functions without

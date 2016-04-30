@@ -4,11 +4,7 @@
 
 #include <memory>
 
-#include "common/emu_window.h"
 #include "common/logging/log.h"
-
-#include "core/core.h"
-#include "core/settings.h"
 
 #include "video_core/pica.h"
 #include "video_core/renderer_base.h"

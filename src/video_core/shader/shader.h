@@ -4,17 +4,23 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <type_traits>
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
 
-#include <nihstro/shader_binary.h>
+#include <nihstro/shader_bytecode.h>
 
+#include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
 
 #include "video_core/pica.h"
+#include "video_core/pica_types.h"
 
 using nihstro::RegisterType;
 using nihstro::SourceRegister;

@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "video_core/shader/shader.h"
-
 namespace Pica {
 
 namespace Shader {
+
+template <bool Debug> struct UnitState;
 
 template<bool Debug>
 void RunInterpreter(UnitState<Debug>& state);

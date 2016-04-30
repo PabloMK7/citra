@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <string>
-
 #include "common/common_types.h"
 
 namespace VideoCore {

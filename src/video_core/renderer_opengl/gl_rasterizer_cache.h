@@ -4,20 +4,26 @@
 
 #pragma once
 
-#include <map>
+#include <array>
 #include <memory>
 #include <set>
+#include <tuple>
 
 #include <boost/icl/interval_map.hpp>
+#include <glad/glad.h>
 
-#include "common/math_util.h"
+#include "common/assert.h"
+#include "common/common_funcs.h"
+#include "common/common_types.h"
 
 #include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
-#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
-#include "video_core/renderer_opengl/gl_state.h"
+
+namespace MathUtil {
+template <class T> struct Rectangle;
+}
 
 struct CachedSurface;
 

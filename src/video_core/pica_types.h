@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <cstring>
 
 #include "common/common_types.h"

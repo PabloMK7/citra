@@ -6,7 +6,8 @@
 
 #include <string>
 #include <array>
-#include <common/file_util.h>
+
+#include "common/common_types.h"
 
 namespace Settings {
 

@@ -4,14 +4,17 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <utility>
 #include <vector>
 
 #include <nihstro/shader_bytecode.h>
 
+#include "common/bit_set.h"
+#include "common/common_types.h"
 #include "common/x64/emitter.h"
 
-#include "video_core/pica.h"
 #include "video_core/shader/shader.h"
 
 using nihstro::Instruction;

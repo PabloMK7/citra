@@ -4,22 +4,32 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <condition_variable>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
+#include "common/common_types.h"
 #include "common/vector_math.h"
 
-#include "core/tracer/recorder.h"
-
 #include "video_core/pica.h"
-#include "video_core/shader/shader.h"
+
+namespace CiTrace {
+class Recorder;
+}
 
 namespace Pica {
+
+namespace Shader {
+struct ShaderSetup;
+}
 
 class DebugContext {
 public:

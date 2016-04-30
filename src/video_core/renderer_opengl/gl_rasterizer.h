@@ -4,23 +4,33 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstring>
 #include <memory>
 #include <vector>
 #include <unordered_map>
 
+#include <glad/glad.h>
+
+#include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/hash.h"
+#include "common/vector_math.h"
+
+#include "core/hw/gpu.h"
 
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
+#include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
-#include "video_core/renderer_opengl/renderer_opengl.h"
-#include "video_core/shader/shader_interpreter.h"
+#include "video_core/shader/shader.h"
+
+struct ScreenInfo;
 
 /**
  * This struct contains all state used to generate the GLSL shader program that emulates the current

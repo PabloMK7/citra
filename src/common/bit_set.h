@@ -7,6 +7,7 @@
 #include <intrin.h>
 #endif
 #include <initializer_list>
+#include <new>
 #include <type_traits>
 #include "common/common_types.h"
 

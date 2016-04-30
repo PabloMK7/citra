@@ -2,10 +2,19 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <atomic>
+#include <cstring>
+#include <iterator>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
+#include <glad/glad.h>
+
+#include "common/bit_field.h"
 #include "common/emu_window.h"
-#include "common/hash.h"
+#include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
@@ -15,7 +24,7 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
-#include "video_core/renderer_opengl/pica_to_gl.h"
+#include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 

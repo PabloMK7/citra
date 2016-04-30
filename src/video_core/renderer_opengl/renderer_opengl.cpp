@@ -5,23 +5,28 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
+#include <memory>
+
+#include <glad/glad.h>
 
 #include "common/assert.h"
+#include "common/bit_field.h"
 #include "common/emu_window.h"
 #include "common/logging/log.h"
 #include "common/profiler_reporting.h"
+#include "common/synchronized_wrapper.h"
 
-#include "core/memory.h"
-#include "core/settings.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
+#include "core/memory.h"
+#include "core/settings.h"
+#include "core/tracer/recorder.h"
 
-#include "video_core/video_core.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/renderer_opengl/gl_rasterizer.h"
-#include "video_core/renderer_opengl/gl_shader_util.h"
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/video_core.h"
 
 static const char vertex_shader[] = R"(
 #version 150 core

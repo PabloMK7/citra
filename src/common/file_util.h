@@ -7,9 +7,9 @@
 #include <array>
 #include <fstream>
 #include <functional>
-#include <cstddef>
 #include <cstdio>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "common/common_types.h"

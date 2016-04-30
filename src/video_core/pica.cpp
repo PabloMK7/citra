@@ -3,10 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <iterator>
 #include <unordered_map>
+#include <utility>
 
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/primitive_assembly.h"
 #include "video_core/shader/shader.h"
 
 namespace Pica {
@@ -480,7 +483,7 @@ std::string Regs::GetCommandName(int index) {
     static std::unordered_map<u32, const char*> map;
 
     if (map.empty()) {
-        map.insert(begin(register_names), end(register_names));
+        map.insert(std::begin(register_names), std::end(register_names));
     }
 
     // Return empty string if no match is found

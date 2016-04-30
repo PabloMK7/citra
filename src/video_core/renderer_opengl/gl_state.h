@@ -5,7 +5,6 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <memory>
 
 class OpenGLState {
 public:
