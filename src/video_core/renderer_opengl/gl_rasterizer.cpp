@@ -812,6 +812,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(const Pica::Regs::TextureConf
 
     if (wrap_s == TextureConfig::ClampToBorder || wrap_t == TextureConfig::ClampToBorder) {
         if (border_color != config.border_color.raw) {
+            border_color = config.border_color.raw;
             auto gl_color = PicaToGL::ColorRGBA8(border_color);
             glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.data());
         }
