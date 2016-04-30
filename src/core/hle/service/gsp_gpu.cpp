@@ -43,6 +43,8 @@ Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
 /// Thread index into interrupt relay queue
 u32 g_thread_id = 0;
 
+static bool gpu_right_acquired = false;
+
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
     return g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
@@ -370,6 +372,9 @@ static void UnregisterInterruptRelayQueue(Service::Interface* self) {
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void SignalInterrupt(InterruptId interrupt_id) {
+    if (!gpu_right_acquired) {
+        return;
+    }
     if (nullptr == g_interrupt_event) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
@@ -624,6 +629,35 @@ static void ImportDisplayCaptureInfo(Service::Interface* self) {
     LOG_WARNING(Service_GSP, "called");
 }
 
+/**
+ * GSP_GPU::AcquireRight service function
+ *  Outputs:
+ *      1: Result code
+ */
+static void AcquireRight(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    gpu_right_acquired = true;
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_GSP, "called");
+}
+
+/**
+ * GSP_GPU::ReleaseRight service function
+ *  Outputs:
+ *      1: Result code
+ */
+static void ReleaseRight(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    gpu_right_acquired = false;
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+
+    LOG_WARNING(Service_GSP, "called");
+}
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010082, WriteHWRegs,                   "WriteHWRegs"},
@@ -647,8 +681,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00130042, RegisterInterruptRelayQueue,   "RegisterInterruptRelayQueue"},
     {0x00140000, UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
     {0x00150002, nullptr,                       "TryAcquireRight"},
-    {0x00160042, nullptr,                       "AcquireRight"},
-    {0x00170000, nullptr,                       "ReleaseRight"},
+    {0x00160042, AcquireRight,                  "AcquireRight"},
+    {0x00170000, ReleaseRight,                  "ReleaseRight"},
     {0x00180000, ImportDisplayCaptureInfo,      "ImportDisplayCaptureInfo"},
     {0x00190000, nullptr,                       "SaveVramSysArea"},
     {0x001A0000, nullptr,                       "RestoreVramSysArea"},
@@ -669,11 +703,13 @@ Interface::Interface() {
     g_shared_memory = nullptr;
 
     g_thread_id = 0;
+    gpu_right_acquired = false;
 }
 
 Interface::~Interface() {
     g_interrupt_event = nullptr;
     g_shared_memory = nullptr;
+    gpu_right_acquired = false;
 }
 
 } // namespace
