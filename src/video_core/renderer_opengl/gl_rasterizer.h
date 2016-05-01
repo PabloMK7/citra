@@ -39,17 +39,24 @@ struct ScreenInfo;
  * directly accessing Pica registers. This should reduce the risk of bugs in shader generation where
  * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
  * two separate shaders sharing the same key.
+ *
+ * We use a union because "implicitly-defined copy/move constructor for a union X copies the object representation of X."
+ * and "implicitly-defined copy assignment operator for a union X copies the object representation (3.9) of X."
+ * = Bytewise copy instead of memberwise copy.
+ * This is important because the padding bytes are included in the hash and comparison between objects.
  */
-struct PicaShaderConfig {
+union PicaShaderConfig {
 
     /// Construct a PicaShaderConfig with the current Pica register configuration.
     static PicaShaderConfig CurrentConfig() {
         PicaShaderConfig res;
-        std::memset(&res, 0, sizeof(PicaShaderConfig));
+
+        auto& state = res.state;
+        std::memset(&state, 0, sizeof(PicaShaderConfig::State));
 
         const auto& regs = Pica::g_state.regs;
 
-        res.alpha_test_func = regs.output_merger.alpha_test.enable ?
+        state.alpha_test_func = regs.output_merger.alpha_test.enable ?
             regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
 
         // Copy relevant tev stages fields.
@@ -59,85 +66,83 @@ struct PicaShaderConfig {
         DEBUG_ASSERT(res.tev_stages.size() == tev_stages.size());
         for (size_t i = 0; i < tev_stages.size(); i++) {
             const auto& tev_stage = tev_stages[i];
-            res.tev_stages[i].sources_raw = tev_stage.sources_raw;
-            res.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
-            res.tev_stages[i].ops_raw = tev_stage.ops_raw;
-            res.tev_stages[i].scales_raw = tev_stage.scales_raw;
+            state.tev_stages[i].sources_raw = tev_stage.sources_raw;
+            state.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
+            state.tev_stages[i].ops_raw = tev_stage.ops_raw;
+            state.tev_stages[i].scales_raw = tev_stage.scales_raw;
         }
 
-        res.combiner_buffer_input =
+        state.combiner_buffer_input =
             regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
             regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
 
         // Fragment lighting
 
-        res.lighting.enable = !regs.lighting.disable;
-        res.lighting.src_num = regs.lighting.num_lights + 1;
+        state.lighting.enable = !regs.lighting.disable;
+        state.lighting.src_num = regs.lighting.num_lights + 1;
 
-        for (unsigned light_index = 0; light_index < res.lighting.src_num; ++light_index) {
+        for (unsigned light_index = 0; light_index < state.lighting.src_num; ++light_index) {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
-            res.lighting.light[light_index].num = num;
-            res.lighting.light[light_index].directional = light.directional != 0;
-            res.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
-            res.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
-            res.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
-            res.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
+            state.lighting.light[light_index].num = num;
+            state.lighting.light[light_index].directional = light.directional != 0;
+            state.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
+            state.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
+            state.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
         }
 
-        res.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
-        res.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
-        res.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
-        res.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
+        state.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
+        state.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
+        state.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
+        state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
 
-        res.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
-        res.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
-        res.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
-        res.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+        state.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
+        state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
+        state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
+        state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
-        res.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
-        res.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
-        res.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
-        res.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
+        state.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
+        state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
+        state.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
+        state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
-        res.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
-        res.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
-        res.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
-        res.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
+        state.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
+        state.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
+        state.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
+        state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
 
-        res.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
-        res.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
-        res.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
-        res.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
+        state.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
+        state.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
+        state.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
+        state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
 
-        res.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
-        res.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
-        res.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
-        res.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
+        state.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
+        state.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
+        state.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
+        state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
-        res.lighting.config = regs.lighting.config;
-        res.lighting.fresnel_selector = regs.lighting.fresnel_selector;
-        res.lighting.bump_mode = regs.lighting.bump_mode;
-        res.lighting.bump_selector = regs.lighting.bump_selector;
-        res.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
-        res.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
+        state.lighting.config = regs.lighting.config;
+        state.lighting.fresnel_selector = regs.lighting.fresnel_selector;
+        state.lighting.bump_mode = regs.lighting.bump_mode;
+        state.lighting.bump_selector = regs.lighting.bump_selector;
+        state.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
+        state.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
 
         return res;
     }
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
-        return (stage_index < 4) && (combiner_buffer_input & (1 << stage_index));
+        return (stage_index < 4) && (state.combiner_buffer_input & (1 << stage_index));
     }
 
     bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
-        return (stage_index < 4) && ((combiner_buffer_input >> 4) & (1 << stage_index));
+        return (stage_index < 4) && ((state.combiner_buffer_input >> 4) & (1 << stage_index));
     }
 
     bool operator ==(const PicaShaderConfig& o) const {
-        return std::memcmp(this, &o, sizeof(PicaShaderConfig)) == 0;
+        return std::memcmp(&state, &o.state, sizeof(PicaShaderConfig::State)) == 0;
     };
-
-    Pica::Regs::CompareFunc alpha_test_func;
 
     // NOTE: MSVC15 (Update 2) doesn't think `delete`'d constructors and operators are TC.
     //       This makes BitField not TC when used in a union or struct so we have to resort
@@ -159,40 +164,45 @@ struct PicaShaderConfig {
             return stage;
         }
     };
-    std::array<TevStageConfigRaw, 6> tev_stages;
-    u8 combiner_buffer_input;
 
-    struct {
-        struct {
-            unsigned num;
-            bool directional;
-            bool two_sided_diffuse;
-            bool dist_atten_enable;
-            GLfloat dist_atten_scale;
-            GLfloat dist_atten_bias;
-        } light[8];
+    struct State {
 
-        bool enable;
-        unsigned src_num;
-        Pica::Regs::LightingBumpMode bump_mode;
-        unsigned bump_selector;
-        bool bump_renorm;
-        bool clamp_highlights;
-
-        Pica::Regs::LightingConfig config;
-        Pica::Regs::LightingFresnelSelector fresnel_selector;
+        Pica::Regs::CompareFunc alpha_test_func;
+        std::array<TevStageConfigRaw, 6> tev_stages;
+        u8 combiner_buffer_input;
 
         struct {
+            struct {
+                unsigned num;
+                bool directional;
+                bool two_sided_diffuse;
+                bool dist_atten_enable;
+                GLfloat dist_atten_scale;
+                GLfloat dist_atten_bias;
+            } light[8];
+
             bool enable;
-            bool abs_input;
-            Pica::Regs::LightingLutInput type;
-            float scale;
-        } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
-    } lighting;
+            unsigned src_num;
+            Pica::Regs::LightingBumpMode bump_mode;
+            unsigned bump_selector;
+            bool bump_renorm;
+            bool clamp_highlights;
 
+            Pica::Regs::LightingConfig config;
+            Pica::Regs::LightingFresnelSelector fresnel_selector;
+
+            struct {
+                bool enable;
+                bool abs_input;
+                Pica::Regs::LightingLutInput type;
+                float scale;
+            } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
+        } lighting;
+
+    } state;
 };
 #if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
-static_assert(std::is_trivially_copyable<PicaShaderConfig>::value, "PicaShaderConfig must be trivially copyable");
+static_assert(std::is_trivially_copyable<PicaShaderConfig::State>::value, "PicaShaderConfig::State must be trivially copyable");
 #endif
 
 namespace std {
@@ -200,7 +210,7 @@ namespace std {
 template <>
 struct hash<PicaShaderConfig> {
     size_t operator()(const PicaShaderConfig& k) const {
-        return Common::ComputeHash64(&k, sizeof(PicaShaderConfig));
+        return Common::ComputeHash64(&k.state, sizeof(PicaShaderConfig::State));
     }
 };
 
