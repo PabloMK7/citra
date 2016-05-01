@@ -1,14 +1,13 @@
-#include <cmath>
-#include <string>
+#include <memory>
 
-#include "boost/range/algorithm/fill.hpp"
+#include <boost/range/algorithm/fill.hpp>
 
 #include "common/assert.h"
 #include "common/alignment.h"
 #include "common/bit_field.h"
-#include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/vector_math.h"
 
 #include "core/memory.h"
 
@@ -16,6 +15,7 @@
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/shader/shader.h"
 #include "video_core/vertex_loader.h"
 
 namespace Pica {

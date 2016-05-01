@@ -2,9 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <atomic>
 #include <memory>
-
-#include "core/settings.h"
 
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"

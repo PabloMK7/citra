@@ -4,9 +4,16 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
+
 #include <glad/glad.h>
 
+#include "common/assert.h"
+#include "common/bit_field.h"
+#include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/logging/log.h"
 
 #include "video_core/pica.h"
 

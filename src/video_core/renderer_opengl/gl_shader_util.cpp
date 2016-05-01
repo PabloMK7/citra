@@ -2,8 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
 #include <vector>
+
+#include <glad/glad.h>
 
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"

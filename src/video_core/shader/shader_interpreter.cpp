@@ -2,12 +2,20 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <numeric>
+
 #include <nihstro/shader_bytecode.h>
 
-#include "common/file_util.h"
-#include "video_core/pica.h"
+#include "common/assert.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
+#include "common/vector_math.h"
+
 #include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 

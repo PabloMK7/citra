@@ -3,22 +3,28 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
+#include "common/assert.h"
+#include "common/bit_field.h"
 #include "common/color.h"
 #include "common/common_types.h"
+#include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
+#include "common/vector_math.h"
 
 #include "core/memory.h"
 #include "core/hw/gpu.h"
 
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
 #include "video_core/utils.h"
-#include "video_core/debug_utils/debug_utils.h"
-#include "video_core/shader/shader_interpreter.h"
+#include "video_core/shader/shader.h"
 
 namespace Pica {
 

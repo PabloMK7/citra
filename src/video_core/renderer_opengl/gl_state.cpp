@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/pica.h"
-#include "video_core/renderer_opengl/gl_resource_manager.h"
+#include <glad/glad.h>
+
+#include "common/common_funcs.h"
+#include "common/logging/log.h"
+
 #include "video_core/renderer_opengl/gl_state.h"
 
 OpenGLState OpenGLState::cur_state;

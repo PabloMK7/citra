@@ -4,35 +4,41 @@
 
 #include <algorithm>
 #include <condition_variable>
+#include <cstdint>
 #include <cstring>
 #include <fstream>
-#include <list>
 #include <map>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 
 #ifdef HAVE_PNG
 #include <png.h>
+#include <setjmp.h>
 #endif
 
+#include <nihstro/bit_field.h>
 #include <nihstro/float24.h>
 #include <nihstro/shader_binary.h>
 
 #include "common/assert.h"
+#include "common/bit_field.h"
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
 
-#include "core/settings.h"
-
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
+#include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_base.h"
+#include "video_core/shader/shader.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
-#include "video_core/debug_utils/debug_utils.h"
 
 using nihstro::DVLBHeader;
 using nihstro::DVLEHeader;

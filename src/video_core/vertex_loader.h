@@ -1,13 +1,18 @@
 #pragma once
 
-#include <iterator>
-#include <algorithm>
+#include "common/common_types.h"
 
 #include "video_core/pica.h"
-#include "video_core/shader/shader.h"
-#include "video_core/debug_utils/debug_utils.h"
 
 namespace Pica {
+
+namespace DebugUtils {
+class MemoryAccessTracker;
+}
+
+namespace Shader {
+class InputVertex;
+}
 
 class VertexLoader {
 public:

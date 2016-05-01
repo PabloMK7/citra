@@ -5,9 +5,12 @@
 #pragma once
 
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <string>
+
+#ifndef _MSC_VER
+#include <type_traits> // for std::enable_if
+#endif
 
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -15,8 +18,6 @@
 #include "common/common_types.h"
 #include "common/vector_math.h"
 #include "common/logging/log.h"
-
-#include "pica_types.h"
 
 namespace Pica {
 

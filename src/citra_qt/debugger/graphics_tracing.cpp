@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <array>
+#include <iterator>
 #include <memory>
 
 #include <boost/range/algorithm/copy.hpp>
@@ -18,6 +21,7 @@
 
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
+#include "core/tracer/recorder.h"
 
 #include "nihstro/float24.h"
 

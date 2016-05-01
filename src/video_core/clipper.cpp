@@ -2,13 +2,24 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
+
 #include <boost/container/static_vector.hpp>
+#include <boost/container/vector.hpp>
+
+#include "common/bit_field.h"
+#include "common/common_types.h"
+#include "common/logging/log.h"
+#include "common/vector_math.h"
 
 #include "video_core/clipper.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
-#include "video_core/shader/shader_interpreter.h"
+#include "video_core/shader/shader.h"
 
 namespace Pica {
 

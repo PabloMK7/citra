@@ -10,6 +10,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
+#include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

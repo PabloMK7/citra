@@ -8,6 +8,12 @@
 
 #include "video_core/rasterizer_interface.h"
 
+namespace Pica {
+namespace Shader {
+struct OutputVertex;
+}
+}
+
 namespace VideoCore {
 
 class SWRasterizer : public RasterizerInterface {

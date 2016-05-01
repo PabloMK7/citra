@@ -52,8 +52,6 @@ struct Regs {
         return content[index];
     }
 
-#undef ASSERT_MEMBER_SIZE
-
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 
