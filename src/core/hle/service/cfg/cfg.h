@@ -98,19 +98,6 @@ void GetCountryCodeString(Service::Interface* self);
 void GetCountryCodeID(Service::Interface* self);
 
 /**
- * CFG::GetConfigInfoBlk2 service function
- *  Inputs:
- *      0 : 0x00010082
- *      1 : Size
- *      2 : Block ID
- *      3 : Descriptor for the output buffer
- *      4 : Output buffer pointer
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void GetConfigInfoBlk2(Service::Interface* self);
-
-/**
  * CFG::SecureInfoGetRegion service function
  *  Inputs:
  *      1 : None
