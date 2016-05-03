@@ -23,4 +23,5 @@ void ConfigureDialog::applyConfiguration() {
     ui->graphicsTab->applyConfiguration();
     ui->audioTab->applyConfiguration();
     ui->debugTab->applyConfiguration();
+    Settings::Apply();
 }

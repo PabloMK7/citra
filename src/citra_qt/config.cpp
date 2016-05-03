@@ -54,6 +54,11 @@ void Config::ReadValues() {
     Settings::values.bg_blue = qt_config->value("bg_blue", 1.0).toFloat();
     qt_config->endGroup();
 
+    qt_config->beginGroup("Layout");
+    Settings::values.layout_option = static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
+    Settings::values.swap_screen = qt_config->value("swap_screen", false).toBool();
+    qt_config->endGroup();
+
     qt_config->beginGroup("Audio");
     Settings::values.sink_id = qt_config->value("output_engine", "auto").toString().toStdString();
     Settings::values.enable_audio_stretching =
@@ -153,6 +158,11 @@ void Config::SaveValues() {
     qt_config->setValue("bg_red", (double)Settings::values.bg_red);
     qt_config->setValue("bg_green", (double)Settings::values.bg_green);
     qt_config->setValue("bg_blue", (double)Settings::values.bg_blue);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("Layout");
+    qt_config->setValue("layout_option", static_cast<int>(Settings::values.layout_option));
+    qt_config->setValue("swap_screen", Settings::values.swap_screen);
     qt_config->endGroup();
 
     qt_config->beginGroup("Audio");

@@ -46,11 +46,8 @@ bool EmuWindow_SDL2::IsOpen() const {
 
 void EmuWindow_SDL2::OnResize() {
     int width, height;
-
     SDL_GetWindowSize(render_window, &width, &height);
-
-    NotifyFramebufferLayoutChanged(
-        EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
+    UpdateCurrentFramebufferLayout(width, height);
 }
 
 EmuWindow_SDL2::EmuWindow_SDL2() {

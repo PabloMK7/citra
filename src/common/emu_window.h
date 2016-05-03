@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 #include "common/common_types.h"
+#include "common/framebuffer_layout.h"
 #include "common/math_util.h"
 #include "core/hle/service/hid/hid.h"
 
@@ -36,23 +37,6 @@ public:
         int res_width;
         int res_height;
         std::pair<unsigned, unsigned> min_client_area_size;
-    };
-
-    /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
-    struct FramebufferLayout {
-
-        /**
-         * Factory method for constructing a default FramebufferLayout
-         * @param width Window framebuffer width in pixels
-         * @param height Window framebuffer height in pixels
-         * @return Newly created FramebufferLayout object with default screen regions initialized
-         */
-        static FramebufferLayout DefaultScreenLayout(unsigned width, unsigned height);
-
-        unsigned width;
-        unsigned height;
-        MathUtil::Rectangle<unsigned> top_screen;
-        MathUtil::Rectangle<unsigned> bottom_screen;
     };
 
     /// Swap buffers to display the next frame
@@ -211,9 +195,15 @@ public:
       * Gets the framebuffer layout (width, height, and screen regions)
       * @note This method is thread-safe
       */
-    const FramebufferLayout& GetFramebufferLayout() const {
+    const Layout::FramebufferLayout& GetFramebufferLayout() const {
         return framebuffer_layout;
     }
+
+    /**
+     * Convenience method to update the VideoCore EmuWindow
+     * Read from the current settings to determine which layout to use.
+     */
+    void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);
 
 protected:
     EmuWindow() {
@@ -250,7 +240,7 @@ protected:
      * Update framebuffer layout with the given parameter.
      * @note EmuWindow implementations will usually use this in window resize event handlers.
      */
-    void NotifyFramebufferLayoutChanged(const FramebufferLayout& layout) {
+    void NotifyFramebufferLayoutChanged(const Layout::FramebufferLayout& layout) {
         framebuffer_layout = layout;
     }
 
@@ -274,7 +264,7 @@ private:
         // By default, ignore this request and do nothing.
     }
 
-    FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
+    Layout::FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 
     unsigned client_area_width;  ///< Current client width, should be set by window impl.
     unsigned client_area_height; ///< Current client height, should be set by window impl.
