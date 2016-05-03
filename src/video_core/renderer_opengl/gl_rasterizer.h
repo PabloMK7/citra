@@ -49,7 +49,9 @@ struct PicaShaderConfig {
         res.alpha_test_func = regs.output_merger.alpha_test.enable ?
             regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
 
-        // Copy tev stages
+        // Copy relevant tev stages fields.
+        // We don't sync const_color here because of the high variance, it is a
+        // shader uniform instead.
         const auto& tev_stages = regs.GetTevStages();
         DEBUG_ASSERT(res.tev_stages.size() == tev_stages.size());
         for (size_t i = 0; i < tev_stages.size(); i++) {
@@ -57,7 +59,6 @@ struct PicaShaderConfig {
             res.tev_stages[i].sources_raw = tev_stage.sources_raw;
             res.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
             res.tev_stages[i].ops_raw = tev_stage.ops_raw;
-            res.tev_stages[i].const_color = tev_stage.const_color;
             res.tev_stages[i].scales_raw = tev_stage.scales_raw;
         }
 
