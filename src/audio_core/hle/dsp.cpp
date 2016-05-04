@@ -2,10 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <memory>
 
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/pipe.h"
+#include "audio_core/hle/source.h"
 #include "audio_core/sink.h"
 
 namespace DSP {
@@ -38,16 +40,38 @@ static SharedMemory& WriteRegion() {
     return g_regions[1 - CurrentRegionIndex()];
 }
 
+static std::array<Source, num_sources> sources = {
+    Source(0), Source(1), Source(2), Source(3), Source(4), Source(5),
+    Source(6), Source(7), Source(8), Source(9), Source(10), Source(11),
+    Source(12), Source(13), Source(14), Source(15), Source(16), Source(17),
+    Source(18), Source(19), Source(20), Source(21), Source(22), Source(23)
+};
+
 static std::unique_ptr<AudioCore::Sink> sink;
 
 void Init() {
     DSP::HLE::ResetPipes();
+    for (auto& source : sources) {
+        source.Reset();
+    }
 }
 
 void Shutdown() {
 }
 
 bool Tick() {
+    SharedMemory& read = ReadRegion();
+    SharedMemory& write = WriteRegion();
+
+    std::array<QuadFrame32, 3> intermediate_mixes = {};
+
+    for (size_t i = 0; i < num_sources; i++) {
+        write.source_statuses.status[i] = sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
+        for (size_t mix = 0; mix < 3; mix++) {
+            sources[i].MixInto(intermediate_mixes[mix], mix);
+        }
+    }
+
     return true;
 }
 

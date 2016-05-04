@@ -16,6 +16,7 @@ namespace HLE {
 
 /// Preprocessing filters. There is an independent set of filters for each Source.
 class SourceFilters final {
+public:
     SourceFilters() { Reset(); }
 
     /// Reset internal state.
