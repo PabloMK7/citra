@@ -21,13 +21,6 @@
 namespace HLE {
 namespace Applets {
 
-MiiSelector::MiiSelector(Service::APT::AppletId id) : Applet(id), started(false) {
-    // Create the SharedMemory that will hold the framebuffer data
-    // TODO(Subv): What size should we use here?
-    using Kernel::MemoryPermission;
-    framebuffer_memory = Kernel::SharedMemory::Create(0x1000, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, "MiiSelector Memory");
-}
-
 ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != static_cast<u32>(Service::APT::SignalType::LibAppJustStarted)) {
         LOG_ERROR(Service_APT, "unsupported signal %u", parameter.signal);
@@ -36,8 +29,18 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
         return ResultCode(-1);
     }
 
+    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
+    // Create the SharedMemory that will hold the framebuffer data
+    Service::APT::CaptureBufferInfo capture_info;
+    ASSERT(sizeof(capture_info) == parameter.buffer_size);
+
+    memcpy(&capture_info, parameter.data, sizeof(capture_info));
+    using Kernel::MemoryPermission;
+    framebuffer_memory = Kernel::SharedMemory::Create(capture_info.size, MemoryPermission::ReadWrite,
+                                                      MemoryPermission::ReadWrite, "MiiSelector Memory");
+
+    // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
-    // The buffer passed in parameter contains the data returned by GSPGPU::ImportDisplayCaptureInfo
     result.signal = static_cast<u32>(Service::APT::SignalType::LibAppFinished);
     result.data = nullptr;
     result.buffer_size = 0;

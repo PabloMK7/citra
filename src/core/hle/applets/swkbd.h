@@ -53,8 +53,7 @@ static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config
 
 class SoftwareKeyboard final : public Applet {
 public:
-    SoftwareKeyboard(Service::APT::AppletId id);
-    ~SoftwareKeyboard() {}
+    SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) { }
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
@@ -72,8 +71,8 @@ public:
      */
     void Finalize();
 
-    /// TODO(Subv): Find out what this is actually used for.
-    /// It is believed that the application stores the current screen image here.
+    /// This SharedMemory will be created when we receive the LibAppJustStarted message.
+    /// It holds the framebuffer info retrieved by the application with GSPGPU::ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 
     /// SharedMemory where the output text will be stored
