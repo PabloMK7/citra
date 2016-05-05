@@ -232,6 +232,13 @@ private:
      */
     ResultStatus LoadExec();
 
+    /**
+     * Ensure ExeFS is loaded and ready for reading sections
+     * @return ResultStatus result of function
+     */
+    ResultStatus LoadExeFS();
+
+    bool            is_exefs_loaded = false;
     bool            is_compressed = false;
 
     u32             entry_point = 0;

@@ -20,8 +20,8 @@ class GameList : public QWidget {
 
 public:
     enum {
-        COLUMN_FILE_TYPE,
         COLUMN_NAME,
+        COLUMN_FILE_TYPE,
         COLUMN_SIZE,
         COLUMN_COUNT, // Number of columns
     };

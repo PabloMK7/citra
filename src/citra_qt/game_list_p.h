@@ -6,13 +6,85 @@
 
 #include <atomic>
 
+#include <QImage>
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
 
 #include "citra_qt/util/util.h"
 #include "common/string_util.h"
+#include "common/color.h"
 
+#include "core/loader/loader.h"
+
+#include "video_core/utils.h"
+
+/**
+ * Tests if data is a valid SMDH by its length and magic number.
+ * @param smdh_data data buffer to test
+ * @return bool test result
+ */
+static bool IsValidSMDH(const std::vector<u8>& smdh_data) {
+    if (smdh_data.size() < sizeof(Loader::SMDH))
+        return false;
+
+    u32 magic;
+    memcpy(&magic, smdh_data.data(), 4);
+
+    return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
+}
+
+/**
+ * Gets game icon from SMDH
+ * @param sdmh SMDH data
+ * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
+ * @return QPixmap game icon
+ */
+static QPixmap GetIconFromSMDH(const Loader::SMDH& smdh, bool large) {
+    u32 size;
+    const u8* icon_data;
+
+    if (large) {
+        size = 48;
+        icon_data = smdh.large_icon.data();
+    } else {
+        size = 24;
+        icon_data = smdh.small_icon.data();
+    }
+
+    QImage icon(size, size, QImage::Format::Format_RGB888);
+    for (u32 x = 0; x < size; ++x) {
+        for (u32 y = 0; y < size; ++y) {
+            u32 coarse_y = y & ~7;
+            auto v = Color::DecodeRGB565(
+                icon_data + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * size * 2);
+            icon.setPixel(x, y, qRgb(v.r(), v.g(), v.b()));
+        }
+    }
+    return QPixmap::fromImage(icon);
+}
+
+/**
+ * Gets the default icon (for games without valid SMDH)
+ * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
+ * @return QPixmap default icon
+ */
+static QPixmap GetDefaultIcon(bool large) {
+    int size = large ? 48 : 24;
+    QPixmap icon(size, size);
+    icon.fill(Qt::transparent);
+    return icon;
+}
+
+/**
+ * Gets the short game title fromn SMDH
+ * @param sdmh SMDH data
+ * @param language title language
+ * @return QString short title
+ */
+static QString GetShortTitleFromSMDH(const Loader::SMDH& smdh, Loader::SMDH::TitleLanguage language) {
+    return QString::fromUtf16(smdh.titles[static_cast<int>(language)].short_title.data());
+}
 
 class GameListItem : public QStandardItem {
 
@@ -27,29 +99,43 @@ public:
  * A specialization of GameListItem for path values.
  * This class ensures that for every full path value it holds, a correct string representation
  * of just the filename (with no extension) will be displayed to the user.
+ * If this class recieves valid SMDH data, it will also display game icons and titles.
  */
 class GameListItemPath : public GameListItem {
 
 public:
     static const int FullPathRole = Qt::UserRole + 1;
+    static const int TitleRole = Qt::UserRole + 2;
 
     GameListItemPath(): GameListItem() {}
-    GameListItemPath(const QString& game_path): GameListItem()
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data): GameListItem()
     {
         setData(game_path, FullPathRole);
+
+        if (!IsValidSMDH(smdh_data)) {
+            // SMDH is not valid, set a default icon
+            setData(GetDefaultIcon(true), Qt::DecorationRole);
+            return;
+        }
+
+        Loader::SMDH smdh;
+        memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+
+        // Get icon from SMDH
+        setData(GetIconFromSMDH(smdh, true), Qt::DecorationRole);
+
+        // Get title form SMDH
+        setData(GetShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English), TitleRole);
     }
 
-    void setData(const QVariant& value, int role) override
-    {
-        // By specializing setData for FullPathRole, we can ensure that the two string
-        // representations of the data are always accurate and in the correct format.
-        if (role == FullPathRole) {
+    QVariant data(int role) const override {
+        if (role == Qt::DisplayRole) {
             std::string filename;
-            Common::SplitPath(value.toString().toStdString(), nullptr, &filename, nullptr);
-            GameListItem::setData(QString::fromStdString(filename), Qt::DisplayRole);
-            GameListItem::setData(value, FullPathRole);
+            Common::SplitPath(data(FullPathRole).toString().toStdString(), nullptr, &filename, nullptr);
+            QString title = data(TitleRole).toString();
+            return QString::fromStdString(filename) + (title.isEmpty() ? "" : "\n    " + title);
         } else {
-            GameListItem::setData(value, role);
+            return GameListItem::data(role);
         }
     }
 };

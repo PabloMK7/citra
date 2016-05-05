@@ -34,8 +34,8 @@ GameList::GameList(QWidget* parent)
     tree_view->setUniformRowHeights(true);
 
     item_model->insertColumns(0, COLUMN_COUNT);
-    item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
+    item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
 
     connect(tree_view, SIGNAL(activated(const QModelIndex&)), this, SLOT(ValidateEntry(const QModelIndex&)));
@@ -109,7 +109,11 @@ void GameList::SaveInterfaceLayout()
 void GameList::LoadInterfaceLayout()
 {
     auto header = tree_view->header();
-    header->restoreState(UISettings::values.gamelist_header_state);
+    if (!header->restoreState(UISettings::values.gamelist_header_state)) {
+        // We are using the name column to display icons and titles
+        // so make it as large as possible as default.
+        header->resizeSection(COLUMN_NAME, header->width());
+    }
 
     item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
 }
@@ -143,9 +147,15 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool d
                 LOG_WARNING(Frontend, "Filetype and extension of file %s do not match.", physical_name.c_str());
             }
 
+            std::vector<u8> smdh;
+            std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(FileUtil::IOFile(physical_name, "rb"), filetype, filename_filename, physical_name);
+
+            if (loader)
+                loader->ReadIcon(smdh);
+
             emit EntryReady({
+                new GameListItemPath(QString::fromStdString(physical_name), smdh),
                 new GameListItem(QString::fromStdString(Loader::GetFileTypeString(filetype))),
-                new GameListItemPath(QString::fromStdString(physical_name)),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
         }

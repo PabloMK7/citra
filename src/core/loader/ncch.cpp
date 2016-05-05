@@ -173,6 +173,10 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
     if (!file.IsOpen())
         return ResultStatus::Error;
 
+    ResultStatus result = LoadExeFS();
+    if (result != ResultStatus::Success)
+        return result;
+
     LOG_DEBUG(Loader, "%d sections:", kMaxSections);
     // Iterate through the ExeFs archive until we find a section with the specified name...
     for (unsigned section_number = 0; section_number < kMaxSections; section_number++) {
@@ -215,9 +219,9 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
     return ResultStatus::ErrorNotUsed;
 }
 
-ResultStatus AppLoader_NCCH::Load() {
-    if (is_loaded)
-        return ResultStatus::ErrorAlreadyLoaded;
+ResultStatus AppLoader_NCCH::LoadExeFS() {
+    if (is_exefs_loaded)
+        return ResultStatus::Success;
 
     if (!file.IsOpen())
         return ResultStatus::Error;
@@ -281,6 +285,18 @@ ResultStatus AppLoader_NCCH::Load() {
     file.Seek(exefs_offset + ncch_offset, SEEK_SET);
     if (file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
         return ResultStatus::Error;
+
+    is_exefs_loaded = true;
+    return ResultStatus::Success;
+}
+
+ResultStatus AppLoader_NCCH::Load() {
+    if (is_loaded)
+        return ResultStatus::ErrorAlreadyLoaded;
+
+    ResultStatus result = LoadExeFS();
+    if (result != ResultStatus::Success)
+        return result;
 
     is_loaded = true; // Set state to loaded
 
