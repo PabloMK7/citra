@@ -55,6 +55,11 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the application.
     // TODO(Subv): Reverse the parameter format for the Mii Selector
 
+    if(parameter.buffer_size >= sizeof(u32)) {
+        // TODO: defaults return no error, but garbage in other unknown fields
+        memset(parameter.data, 0, sizeof(u32));
+    }
+
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
     message.buffer_size = parameter.buffer_size;
