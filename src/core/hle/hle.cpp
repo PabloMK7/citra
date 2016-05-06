@@ -36,7 +36,7 @@ void Reschedule(const char *reason) {
     reschedule = true;
 }
 
-bool RescheduleIsPending() {
+bool IsReschedulePending() {
     return reschedule;
 }
 

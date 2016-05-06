@@ -52,7 +52,7 @@ void RunLoop(int tight_loop) {
     }
 
     HW::Update();
-    if (HLE::RescheduleIsPending()) {
+    if (HLE::IsReschedulePending()) {
         Kernel::Reschedule();
     }
 }

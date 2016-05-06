@@ -14,7 +14,7 @@ const Handle INVALID_HANDLE = 0;
 namespace HLE {
 
 void Reschedule(const char *reason);
-bool RescheduleIsPending();
+bool IsReschedulePending();
 void DoneRescheduling();
 
 void Init();
