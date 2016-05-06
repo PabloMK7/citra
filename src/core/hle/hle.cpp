@@ -12,9 +12,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace HLE {
+namespace {
 
-bool g_reschedule; ///< If true, immediately reschedules the CPU to a new thread
+bool reschedule; ///< If true, immediately reschedules the CPU to a new thread
+
+}
+
+namespace HLE {
 
 void Reschedule(const char *reason) {
     DEBUG_ASSERT_MSG(reason != nullptr && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
@@ -27,13 +31,21 @@ void Reschedule(const char *reason) {
 
     Core::g_app_core->PrepareReschedule();
 
-    g_reschedule = true;
+    reschedule = true;
+}
+
+bool IsReschedulePending() {
+    return reschedule;
+}
+
+void DoneRescheduling() {
+    reschedule = false;
 }
 
 void Init() {
     Service::Init();
 
-    g_reschedule = false;
+    reschedule = false;
 
     LOG_DEBUG(Kernel, "initialized OK");
 }

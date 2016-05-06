@@ -13,9 +13,9 @@ const Handle INVALID_HANDLE = 0;
 
 namespace HLE {
 
-extern bool g_reschedule;   ///< If true, immediately reschedules the CPU to a new thread
-
 void Reschedule(const char *reason);
+bool IsReschedulePending();
+void DoneRescheduling();
 
 void Init();
 void Shutdown();
