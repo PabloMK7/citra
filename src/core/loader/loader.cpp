@@ -144,11 +144,12 @@ ResultStatus LoadFile(const std::string& filename) {
     case FileType::CCI:
     {
         // Load application and RomFS
-        if (ResultStatus::Success == app_loader->Load()) {
+        ResultStatus result = app_loader->Load();
+        if (ResultStatus::Success == result) {
             Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*app_loader), Service::FS::ArchiveIdCode::RomFS);
             return ResultStatus::Success;
         }
-        break;
+        return result;
     }
 
     // Standard ELF file format...
