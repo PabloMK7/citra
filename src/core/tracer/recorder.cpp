@@ -26,17 +26,17 @@ void Recorder::Finish(const std::string& filename) {
     // Calculate file offsets
     auto& initial = header.initial_state_offsets;
 
-    initial.gpu_registers_size      = initial_state.gpu_registers.size();
-    initial.lcd_registers_size      = initial_state.lcd_registers.size();
-    initial.pica_registers_size     = initial_state.pica_registers.size();
-    initial.default_attributes_size = initial_state.default_attributes.size();
-    initial.vs_program_binary_size  = initial_state.vs_program_binary.size();
-    initial.vs_swizzle_data_size    = initial_state.vs_swizzle_data.size();
-    initial.vs_float_uniforms_size  = initial_state.vs_float_uniforms.size();
-    initial.gs_program_binary_size  = initial_state.gs_program_binary.size();
-    initial.gs_swizzle_data_size    = initial_state.gs_swizzle_data.size();
-    initial.gs_float_uniforms_size  = initial_state.gs_float_uniforms.size();
-    header.stream_size              = stream.size();
+    initial.gpu_registers_size      = static_cast<u32>(initial_state.gpu_registers.size());
+    initial.lcd_registers_size      = static_cast<u32>(initial_state.lcd_registers.size());
+    initial.pica_registers_size     = static_cast<u32>(initial_state.pica_registers.size());
+    initial.default_attributes_size = static_cast<u32>(initial_state.default_attributes.size());
+    initial.vs_program_binary_size  = static_cast<u32>(initial_state.vs_program_binary.size());
+    initial.vs_swizzle_data_size    = static_cast<u32>(initial_state.vs_swizzle_data.size());
+    initial.vs_float_uniforms_size  = static_cast<u32>(initial_state.vs_float_uniforms.size());
+    initial.gs_program_binary_size  = static_cast<u32>(initial_state.gs_program_binary.size());
+    initial.gs_swizzle_data_size    = static_cast<u32>(initial_state.gs_swizzle_data.size());
+    initial.gs_float_uniforms_size  = static_cast<u32>(initial_state.gs_float_uniforms.size());
+    header.stream_size              = static_cast<u32>(stream.size());
 
     initial.gpu_registers      = sizeof(header);
     initial.lcd_registers      = initial.gpu_registers      + initial.gpu_registers_size * sizeof(u32);
@@ -68,7 +68,7 @@ void Recorder::Finish(const std::string& filename) {
             DEBUG_ASSERT(stream_element.extra_data.size() == 0);
             break;
         }
-        header.stream_offset += stream_element.extra_data.size();
+        header.stream_offset += static_cast<u32>(stream_element.extra_data.size());
     }
 
     try {

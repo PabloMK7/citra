@@ -36,12 +36,17 @@ std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) {
         return {};
     }
 
+    if (length > UINT16_MAX) { // Can only read at most UINT16_MAX from the pipe
+        LOG_ERROR(Audio_DSP, "length of %u greater than max of %u", length, UINT16_MAX);
+        return {};
+    }
+
     std::vector<u8>& data = pipe_data[pipe_index];
 
     if (length > data.size()) {
         LOG_WARNING(Audio_DSP, "pipe_number = %zu is out of data, application requested read of %u but %zu remain",
                     pipe_index, length, data.size());
-        length = data.size();
+        length = static_cast<u32>(data.size());
     }
 
     if (length == 0)
@@ -94,7 +99,7 @@ static void AudioPipeWriteStructAddresses() {
     };
 
     // Begin with a u16 denoting the number of structs.
-    WriteU16(DspPipe::Audio, struct_addresses.size());
+    WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
     // Then write the struct addresses.
     for (u16 addr : struct_addresses) {
         WriteU16(DspPipe::Audio, addr);

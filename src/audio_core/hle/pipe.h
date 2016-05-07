@@ -24,10 +24,14 @@ enum class DspPipe {
 constexpr size_t NUM_DSP_PIPE = 8;
 
 /**
- * Read a DSP pipe.
- * @param pipe_number The Pipe ID
- * @param length How much data to request.
- * @return The data read from the pipe. The size of this vector can be less than the length requested.
+ * Reads `length` bytes from the DSP pipe identified with `pipe_number`.
+ * @note Can read up to the maximum value of a u16 in bytes (65,535).
+ * @note IF an error is encoutered with either an invalid `pipe_number` or `length` value, an empty vector will be returned.
+ * @note IF `length` is set to 0, an empty vector will be returned.
+ * @note IF `length` is greater than the amount of data available, this function will only read the available amount.
+ * @param pipe_number a `DspPipe`
+ * @param length the number of bytes to read. The max is 65,535 (max of u16).
+ * @returns a vector of bytes from the specified pipe. On error, will be empty.
  */
 std::vector<u8> PipeRead(DspPipe pipe_number, u32 length);
 
