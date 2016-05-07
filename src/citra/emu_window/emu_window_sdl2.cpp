@@ -9,6 +9,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+#include <glad/glad.h>
+
 #include "common/key_map.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
@@ -95,6 +97,11 @@ EmuWindow_SDL2::EmuWindow_SDL2() {
 
     if (gl_context == nullptr) {
         LOG_CRITICAL(Frontend, "Failed to create SDL2 GL context! Exiting...");
+        exit(1);
+    }
+
+    if (!gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress))) {
+        LOG_CRITICAL(Frontend, "Failed to initialize GL functions! Exiting...");
         exit(1);
     }
 
