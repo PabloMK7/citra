@@ -62,15 +62,15 @@ ASSERT_REG_POSITION(unk_6C, 0x6C);
 
 class MiiSelector final : public Applet {
 public:
-    MiiSelector(Service::APT::AppletId id);
+    MiiSelector(Service::APT::AppletId id) : Applet(id), started(false) { }
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
     bool IsRunning() const override { return started; }
 
-    /// TODO(Subv): Find out what this is actually used for.
-    /// It is believed that the application stores the current screen image here.
+    /// This SharedMemory will be created when we receive the LibAppJustStarted message.
+    /// It holds the framebuffer info retrieved by the application with GSPGPU::ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 
     /// Whether this applet is currently running instead of the host application or not.

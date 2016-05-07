@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "common/swap.h"
 
 #include "core/hle/kernel/kernel.h"
 
@@ -30,6 +31,20 @@ struct AppletStartupParameter {
     Kernel::SharedPtr<Kernel::Object> object = nullptr;
     u8* data = nullptr;
 };
+
+/// Used by the application to pass information about the current framebuffer to applets.
+struct CaptureBufferInfo {
+    u32_le size;
+    u8 is_3d;
+    INSERT_PADDING_BYTES(0x3); // Padding for alignment
+    u32_le top_screen_left_offset;
+    u32_le top_screen_right_offset;
+    u32_le top_screen_format;
+    u32_le bottom_screen_left_offset;
+    u32_le bottom_screen_right_offset;
+    u32_le bottom_screen_format;
+};
+static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has incorrect size");
 
 /// Signals used by APT functions
 enum class SignalType : u32 {
