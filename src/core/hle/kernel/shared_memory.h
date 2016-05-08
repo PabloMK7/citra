@@ -30,7 +30,7 @@ enum class MemoryPermission : u32 {
 class SharedMemory final : public Object {
 public:
     /**
-     * Creates a shared memory object
+     * Creates a shared memory object.
      * @param owner_process Process that created this shared memory object.
      * @param size Size of the memory block. Must be page-aligned.
      * @param permissions Permission restrictions applied to the process which created the block.
@@ -41,6 +41,18 @@ public:
      */
     static SharedPtr<SharedMemory> Create(SharedPtr<Process> owner_process, u32 size, MemoryPermission permissions,
             MemoryPermission other_permissions, VAddr address = 0, MemoryRegion region = MemoryRegion::BASE, std::string name = "Unknown");
+
+    /**
+     * Creates a shared memory object from a block of memory managed by an HLE applet.
+     * @param heap_block Heap block of the HLE applet.
+     * @param offset The offset into the heap block that the SharedMemory will map.
+     * @param size Size of the memory block. Must be page-aligned.
+     * @param permissions Permission restrictions applied to the process which created the block.
+     * @param other_permissions Permission restrictions applied to other processes mapping the block.
+     * @param name Optional object name, used for debugging purposes.
+     */
+    static SharedPtr<SharedMemory> CreateForApplet(std::shared_ptr<std::vector<u8>> heap_block, u32 offset, u32 size,
+                                                   MemoryPermission permissions, MemoryPermission other_permissions, std::string name = "Unknown Applet");
 
     std::string GetTypeName() const override { return "SharedMemory"; }
     std::string GetName() const override { return name; }

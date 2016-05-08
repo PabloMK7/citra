@@ -58,6 +58,7 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
         // Copy it over to our own storage
         shared_memory->backing_block = std::make_shared<std::vector<u8>>(vma.backing_block->data() + vma.offset,
                                                                          vma.backing_block->data() + vma.offset + size);
+        shared_memory->backing_block_offset = 0;
         // Unmap the existing pages
         vm_manager.UnmapRange(address, size);
         // Map our own block into the address space
@@ -67,6 +68,22 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
     }
 
     shared_memory->base_address = address;
+    return shared_memory;
+}
+
+SharedPtr<SharedMemory> SharedMemory::CreateForApplet(std::shared_ptr<std::vector<u8>> heap_block, u32 offset, u32 size,
+                                                      MemoryPermission permissions, MemoryPermission other_permissions, std::string name) {
+    SharedPtr<SharedMemory> shared_memory(new SharedMemory);
+
+    shared_memory->owner_process = nullptr;
+    shared_memory->name = std::move(name);
+    shared_memory->size = size;
+    shared_memory->permissions = permissions;
+    shared_memory->other_permissions = other_permissions;
+    shared_memory->backing_block = heap_block;
+    shared_memory->backing_block_offset = offset;
+    shared_memory->base_address = Memory::HEAP_VADDR + offset;
+
     return shared_memory;
 }
 
