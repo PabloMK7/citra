@@ -107,6 +107,8 @@ public:
     ProcessFlags flags;
     /// Kernel compatibility version for this process
     u16 kernel_version = 0;
+    /// The default CPU for this process, threads are scheduled on this cpu by default.
+    u8 ideal_processor = 0;
 
     /// The id of this process
     u32 process_id = next_process_id++;
