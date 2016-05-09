@@ -25,6 +25,8 @@
     #include <sys/endian.h>
 #endif
 
+#include <cstring>
+
 #include "common/common_types.h"
 
 // GCC 4.6+
@@ -89,27 +91,29 @@ inline u64 swap64(u64 data) {return ((u64)swap32(data) << 32) | swap32(data >> 3
 #endif
 
 inline float swapf(float f) {
-    union {
-        float f;
-        unsigned int u32;
-    } dat1, dat2;
+    static_assert(sizeof(u32) == sizeof(float),
+                  "float must be the same size as uint32_t.");
 
-    dat1.f = f;
-    dat2.u32 = swap32(dat1.u32);
+    u32 value;
+    std::memcpy(&value, &f, sizeof(u32));
 
-    return dat2.f;
+    value = swap32(value);
+    std::memcpy(&f, &value, sizeof(u32));
+
+    return f;
 }
 
 inline double swapd(double f) {
-    union  {
-        double f;
-        unsigned long long u64;
-    } dat1, dat2;
+    static_assert(sizeof(u64) == sizeof(double),
+                  "double must be the same size as uint64_t.");
 
-    dat1.f = f;
-    dat2.u64 = swap64(dat1.u64);
+    u64 value;
+    std::memcpy(&value, &f, sizeof(u64));
 
-    return dat2.f;
+    value = swap64(value);
+    std::memcpy(&f, &value, sizeof(u64));
+
+    return f;
 }
 
 }  // Namespace Common
