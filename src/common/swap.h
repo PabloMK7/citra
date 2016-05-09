@@ -25,6 +25,8 @@
     #include <sys/endian.h>
 #endif
 
+#include <cstring>
+
 #include "common/common_types.h"
 
 // GCC 4.6+
@@ -58,9 +60,6 @@
 
 namespace Common {
 
-inline u8 swap8(u8 _data) {return _data;}
-inline u32 swap24(const u8* _data) {return (_data[0] << 16) | (_data[1] << 8) | _data[2];}
-
 #ifdef _MSC_VER
 inline u16 swap16(u16 _data) {return _byteswap_ushort(_data);}
 inline u32 swap32(u32 _data) {return _byteswap_ulong (_data);}
@@ -92,52 +91,29 @@ inline u64 swap64(u64 data) {return ((u64)swap32(data) << 32) | swap32(data >> 3
 #endif
 
 inline float swapf(float f) {
-    union {
-        float f;
-        unsigned int u32;
-    } dat1, dat2;
+    static_assert(sizeof(u32) == sizeof(float),
+                  "float must be the same size as uint32_t.");
 
-    dat1.f = f;
-    dat2.u32 = swap32(dat1.u32);
+    u32 value;
+    std::memcpy(&value, &f, sizeof(u32));
 
-    return dat2.f;
+    value = swap32(value);
+    std::memcpy(&f, &value, sizeof(u32));
+
+    return f;
 }
 
 inline double swapd(double f) {
-    union  {
-        double f;
-        unsigned long long u64;
-    } dat1, dat2;
+    static_assert(sizeof(u64) == sizeof(double),
+                  "double must be the same size as uint64_t.");
 
-    dat1.f = f;
-    dat2.u64 = swap64(dat1.u64);
+    u64 value;
+    std::memcpy(&value, &f, sizeof(u64));
 
-    return dat2.f;
-}
+    value = swap64(value);
+    std::memcpy(&f, &value, sizeof(u64));
 
-inline u16 swap16(const u8* _pData) {return swap16(*(const u16*)_pData);}
-inline u32 swap32(const u8* _pData) {return swap32(*(const u32*)_pData);}
-inline u64 swap64(const u8* _pData) {return swap64(*(const u64*)_pData);}
-
-template <int count>
-void swap(u8*);
-
-template <>
-inline void swap<1>(u8* data) { }
-
-template <>
-inline void swap<2>(u8* data) {
-    *reinterpret_cast<u16*>(data) = swap16(data);
-}
-
-template <>
-inline void swap<4>(u8* data) {
-    *reinterpret_cast<u32*>(data) = swap32(data);
-}
-
-template <>
-inline void swap<8>(u8* data) {
-    *reinterpret_cast<u64*>(data) = swap64(data);
+    return f;
 }
 
 }  // Namespace Common
@@ -534,35 +510,35 @@ bool operator==(const S &p, const swap_struct_t<T, F> v) {
 template <typename T>
 struct swap_64_t {
     static T swap(T x) {
-        return (T)Common::swap64(*(u64 *)&x);
+        return static_cast<T>(Common::swap64(x));
     }
 };
 
 template <typename T>
 struct swap_32_t {
     static T swap(T x) {
-        return (T)Common::swap32(*(u32 *)&x);
+        return static_cast<T>(Common::swap32(x));
     }
 };
 
 template <typename T>
 struct swap_16_t {
     static T swap(T x) {
-        return (T)Common::swap16(*(u16 *)&x);
+        return static_cast<T>(Common::swap16(x));
     }
 };
 
 template <typename T>
 struct swap_float_t {
     static T swap(T x) {
-        return (T)Common::swapf(*(float *)&x);
+        return static_cast<T>(Common::swapf(x));
     }
 };
 
 template <typename T>
 struct swap_double_t {
     static T swap(T x) {
-        return (T)Common::swapd(*(double *)&x);
+        return static_cast<T>(Common::swapd(x));
     }
 };
 
