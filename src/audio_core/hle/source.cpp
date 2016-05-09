@@ -126,13 +126,13 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
     if (config.simple_filter_dirty) {
         config.simple_filter_dirty.Assign(0);
         state.filters.Configure(config.simple_filter);
-        LOG_TRACE(Audio_DSP, "source_id=%zu simple filter update");
+        LOG_TRACE(Audio_DSP, "source_id=%zu simple filter update", source_id);
     }
 
     if (config.biquad_filter_dirty) {
         config.biquad_filter_dirty.Assign(0);
         state.filters.Configure(config.biquad_filter);
-        LOG_TRACE(Audio_DSP, "source_id=%zu biquad filter update");
+        LOG_TRACE(Audio_DSP, "source_id=%zu biquad filter update", source_id);
     }
 
     if (config.interpolation_dirty) {
