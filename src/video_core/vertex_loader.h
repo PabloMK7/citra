@@ -12,7 +12,7 @@ class MemoryAccessTracker;
 }
 
 namespace Shader {
-class InputVertex;
+struct InputVertex;
 }
 
 class VertexLoader {
