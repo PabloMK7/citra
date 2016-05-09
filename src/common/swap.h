@@ -510,35 +510,35 @@ bool operator==(const S &p, const swap_struct_t<T, F> v) {
 template <typename T>
 struct swap_64_t {
     static T swap(T x) {
-        return (T)Common::swap64(*(u64 *)&x);
+        return static_cast<T>(Common::swap64(x));
     }
 };
 
 template <typename T>
 struct swap_32_t {
     static T swap(T x) {
-        return (T)Common::swap32(*(u32 *)&x);
+        return static_cast<T>(Common::swap32(x));
     }
 };
 
 template <typename T>
 struct swap_16_t {
     static T swap(T x) {
-        return (T)Common::swap16(*(u16 *)&x);
+        return static_cast<T>(Common::swap16(x));
     }
 };
 
 template <typename T>
 struct swap_float_t {
     static T swap(T x) {
-        return (T)Common::swapf(*(float *)&x);
+        return static_cast<T>(Common::swapf(x));
     }
 };
 
 template <typename T>
 struct swap_double_t {
     static T swap(T x) {
-        return (T)Common::swapd(*(double *)&x);
+        return static_cast<T>(Common::swapd(x));
     }
 };
 
