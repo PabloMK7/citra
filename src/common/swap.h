@@ -58,9 +58,6 @@
 
 namespace Common {
 
-inline u8 swap8(u8 _data) {return _data;}
-inline u32 swap24(const u8* _data) {return (_data[0] << 16) | (_data[1] << 8) | _data[2];}
-
 #ifdef _MSC_VER
 inline u16 swap16(u16 _data) {return _byteswap_ushort(_data);}
 inline u32 swap32(u32 _data) {return _byteswap_ulong (_data);}
@@ -113,31 +110,6 @@ inline double swapd(double f) {
     dat2.u64 = swap64(dat1.u64);
 
     return dat2.f;
-}
-
-inline u16 swap16(const u8* _pData) {return swap16(*(const u16*)_pData);}
-inline u32 swap32(const u8* _pData) {return swap32(*(const u32*)_pData);}
-inline u64 swap64(const u8* _pData) {return swap64(*(const u64*)_pData);}
-
-template <int count>
-void swap(u8*);
-
-template <>
-inline void swap<1>(u8* data) { }
-
-template <>
-inline void swap<2>(u8* data) {
-    *reinterpret_cast<u16*>(data) = swap16(data);
-}
-
-template <>
-inline void swap<4>(u8* data) {
-    *reinterpret_cast<u32*>(data) = swap32(data);
-}
-
-template <>
-inline void swap<8>(u8* data) {
-    *reinterpret_cast<u64*>(data) = swap64(data);
 }
 
 }  // Namespace Common
