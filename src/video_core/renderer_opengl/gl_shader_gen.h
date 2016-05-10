@@ -6,7 +6,7 @@
 
 #include <string>
 
-struct PicaShaderConfig;
+union PicaShaderConfig;
 
 namespace GLShader {
 
