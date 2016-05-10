@@ -63,7 +63,7 @@ union PicaShaderConfig {
         // We don't sync const_color here because of the high variance, it is a
         // shader uniform instead.
         const auto& tev_stages = regs.GetTevStages();
-        DEBUG_ASSERT(res.tev_stages.size() == tev_stages.size());
+        DEBUG_ASSERT(state.tev_stages.size() == tev_stages.size());
         for (size_t i = 0; i < tev_stages.size(); i++) {
             const auto& tev_stage = tev_stages[i];
             state.tev_stages[i].sources_raw = tev_stage.sources_raw;
