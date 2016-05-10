@@ -437,7 +437,7 @@ static void HandleSetThread() {
  *
  * @param signal Signal to be sent to client.
  */
-void SendSignal(u32 signal) {
+static void SendSignal(u32 signal) {
     if (gdbserver_socket == -1) {
         return;
     }
@@ -713,7 +713,7 @@ static void Continue() {
  * @param addr Address of breakpoint.
  * @param len Length of breakpoint.
  */
-bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
+static bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
     std::map<u32, Breakpoint>& p = GetBreakpointList(type);
 
     Breakpoint breakpoint;
@@ -907,7 +907,7 @@ void ToggleServer(bool status) {
     }
 }
 
-void Init(u16 port) {
+static void Init(u16 port) {
     if (!g_server_enabled) {
         // Set the halt loop to false in case the user enabled the gdbstub mid-execution.
         // This way the CPU can still execute normally.
