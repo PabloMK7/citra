@@ -75,8 +75,6 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     viewport.halfsize_y = float24::FromRaw(regs.viewport_size_y);
     viewport.offset_x   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.x));
     viewport.offset_y   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.y));
-    viewport.zscale     = float24::FromRaw(regs.viewport_depth_range);
-    viewport.offset_z   = float24::FromRaw(regs.viewport_depth_far_plane);
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
     vtx.color *= inv_w;
@@ -89,7 +87,7 @@ static void InitScreenCoordinates(OutputVertex& vtx)
 
     vtx.screenpos[0] = (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
     vtx.screenpos[1] = (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
-    vtx.screenpos[2] = viewport.offset_z + vtx.pos.z * inv_w * viewport.zscale;
+    vtx.screenpos[2] = vtx.pos.z * inv_w;
 }
 
 void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const OutputVertex &v2) {

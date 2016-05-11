@@ -256,8 +256,13 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // Depth modifiers
     case PICA_REG_INDEX(viewport_depth_range):
-    case PICA_REG_INDEX(viewport_depth_far_plane):
+    case PICA_REG_INDEX(viewport_depth_near_plane):
         SyncDepthModifiers();
+        break;
+
+    // Depth buffering
+    case PICA_REG_INDEX(depthmap_enable):
+        shader_dirty = true;
         break;
 
     // Blending
@@ -910,10 +915,10 @@ void RasterizerOpenGL::SyncCullMode() {
 }
 
 void RasterizerOpenGL::SyncDepthModifiers() {
-    float depth_scale = -Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
-    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_far_plane).ToFloat32() / 2.0f;
+    float depth_scale = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
+    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
 
-    // TODO: Implement scale modifier
+    uniform_block_data.data.depth_scale = depth_scale;
     uniform_block_data.data.depth_offset = depth_offset;
     uniform_block_data.dirty = true;
 }

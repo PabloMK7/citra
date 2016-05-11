@@ -56,6 +56,8 @@ union PicaShaderConfig {
 
         const auto& regs = Pica::g_state.regs;
 
+        state.depthmap_enable = regs.depthmap_enable;
+
         state.alpha_test_func = regs.output_merger.alpha_test.enable ?
             regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
 
@@ -170,6 +172,8 @@ union PicaShaderConfig {
         Pica::Regs::CompareFunc alpha_test_func;
         std::array<TevStageConfigRaw, 6> tev_stages;
         u8 combiner_buffer_input;
+
+        Pica::Regs::DepthBuffering depthmap_enable;
 
         struct {
             struct {
@@ -315,6 +319,7 @@ private:
         GLvec4 const_color[6];
         GLvec4 tev_combiner_buffer_color;
         GLint alphatest_ref;
+        GLfloat depth_scale;
         GLfloat depth_offset;
         alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
