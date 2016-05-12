@@ -937,6 +937,8 @@ void RasterizerOpenGL::SyncBlendEnabled() {
 
 void RasterizerOpenGL::SyncBlendFuncs() {
     const auto& regs = Pica::g_state.regs;
+    state.blend.rgb_equation = PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_rgb);
+    state.blend.a_equation = PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_a);
     state.blend.src_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_rgb);
     state.blend.dst_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_rgb);
     state.blend.src_a_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_a);

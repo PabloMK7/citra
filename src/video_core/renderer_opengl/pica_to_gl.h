@@ -78,6 +78,26 @@ inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     return gl_mode;
 }
 
+inline GLenum BlendEquation(Pica::Regs::BlendEquation equation) {
+    static const GLenum blend_equation_table[] = {
+        GL_FUNC_ADD,              // BlendEquation::Add
+        GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
+        GL_FUNC_REVERSE_SUBTRACT, // BlendEquation::ReverseSubtract
+        GL_MIN,                   // BlendEquation::Min
+        GL_MAX,                   // BlendEquation::Max
+    };
+
+    // Range check table for input
+    if (static_cast<size_t>(equation) >= ARRAY_SIZE(blend_equation_table)) {
+        LOG_CRITICAL(Render_OpenGL, "Unknown blend equation %d", equation);
+        UNREACHABLE();
+
+        return GL_FUNC_ADD;
+    }
+
+    return blend_equation_table[(unsigned)equation];
+}
+
 inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     static const GLenum blend_func_table[] = {
         GL_ZERO,                     // BlendFactor::Zero

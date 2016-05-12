@@ -36,6 +36,8 @@ OpenGLState::OpenGLState() {
     stencil.action_stencil_fail = GL_KEEP;
 
     blend.enabled = false;
+    blend.rgb_equation = GL_FUNC_ADD;
+    blend.a_equation = GL_FUNC_ADD;
     blend.src_rgb_func = GL_ONE;
     blend.dst_rgb_func = GL_ZERO;
     blend.src_a_func = GL_ONE;
@@ -163,6 +165,11 @@ void OpenGLState::Apply() const {
             blend.dst_a_func != cur_state.blend.dst_a_func) {
         glBlendFuncSeparate(blend.src_rgb_func, blend.dst_rgb_func,
                             blend.src_a_func, blend.dst_a_func);
+    }
+
+    if (blend.rgb_equation != cur_state.blend.rgb_equation ||
+            blend.a_equation != cur_state.blend.a_equation) {
+        glBlendEquationSeparate(blend.rgb_equation, blend.a_equation);
     }
 
     if (logic_op != cur_state.logic_op) {
