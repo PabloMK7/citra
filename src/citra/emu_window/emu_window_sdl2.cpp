@@ -40,9 +40,9 @@ void EmuWindow_SDL2::OnMouseButton(u32 button, u8 state, s32 x, s32 y) {
 
 void EmuWindow_SDL2::OnKeyEvent(int key, u8 state) {
     if (state == SDL_PRESSED) {
-        KeyPressed({ key, keyboard_id });
+        KeyMap::PressKey(*this, { key, keyboard_id });
     } else if (state == SDL_RELEASED) {
-        KeyReleased({ key, keyboard_id });
+        KeyMap::ReleaseKey(*this, { key, keyboard_id });
     }
 }
 
@@ -168,8 +168,9 @@ void EmuWindow_SDL2::DoneCurrent() {
 }
 
 void EmuWindow_SDL2::ReloadSetKeymaps() {
+    KeyMap::ClearKeyMapping(keyboard_id);
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        KeyMap::SetKeyMapping({ Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id }, Service::HID::pad_mapping[i]);
+        KeyMap::SetKeyMapping({ Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id }, KeyMap::mapping_targets[i]);
     }
 }
 

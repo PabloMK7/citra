@@ -22,12 +22,15 @@ Config::Config() {
 }
 
 static const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> defaults = {
+    // directly mapped keys
     Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X,
     Qt::Key_Q, Qt::Key_W, Qt::Key_1, Qt::Key_2,
     Qt::Key_M, Qt::Key_N, Qt::Key_B,
     Qt::Key_T, Qt::Key_G, Qt::Key_F, Qt::Key_H,
+    Qt::Key_I, Qt::Key_K, Qt::Key_J, Qt::Key_L,
+
+    // indirectly mapped keys
     Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
-    Qt::Key_I, Qt::Key_K, Qt::Key_J, Qt::Key_L
 };
 
 void Config::ReadValues() {

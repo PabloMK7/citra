@@ -235,12 +235,12 @@ void GRenderWindow::closeEvent(QCloseEvent* event) {
 
 void GRenderWindow::keyPressEvent(QKeyEvent* event)
 {
-    this->KeyPressed({event->key(), keyboard_id});
+    KeyMap::PressKey(*this, { event->key(), keyboard_id });
 }
 
 void GRenderWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    this->KeyReleased({event->key(), keyboard_id});
+    KeyMap::ReleaseKey(*this, { event->key(), keyboard_id });
 }
 
 void GRenderWindow::mousePressEvent(QMouseEvent *event)
@@ -270,8 +270,9 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void GRenderWindow::ReloadSetKeymaps()
 {
+    KeyMap::ClearKeyMapping(keyboard_id);
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        KeyMap::SetKeyMapping({Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id}, Service::HID::pad_mapping[i]);
+        KeyMap::SetKeyMapping({ Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id }, KeyMap::mapping_targets[i]);
     }
 }
 
