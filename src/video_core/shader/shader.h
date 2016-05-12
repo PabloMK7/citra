@@ -43,7 +43,8 @@ struct OutputVertex {
     Math::Vec4<float24> color;
     Math::Vec2<float24> tc0;
     Math::Vec2<float24> tc1;
-    INSERT_PADDING_WORDS(2);
+    float24 tc0_w;
+    INSERT_PADDING_WORDS(1);
     Math::Vec3<float24> view;
     INSERT_PADDING_WORDS(1);
     Math::Vec2<float24> tc2;

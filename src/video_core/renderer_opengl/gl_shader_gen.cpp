@@ -32,8 +32,9 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
 }
 
 /// Writes the specified TEV stage source component(s)
-static void AppendSource(std::string& out, TevStageConfig::Source source,
+static void AppendSource(std::string& out, const PicaShaderConfig& config, TevStageConfig::Source source,
         const std::string& index_name) {
+    const auto& state = config.state;
     using Source = TevStageConfig::Source;
     switch (source) {
     case Source::PrimaryColor:
@@ -46,7 +47,20 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
         out += "secondary_fragment_color";
         break;
     case Source::Texture0:
-        out += "texture(tex[0], texcoord[0])";
+        // Only unit 0 respects the texturing type (according to 3DBrew)
+        switch(state.texture0_type) {
+        case Pica::Regs::TextureConfig::Texture2D:
+            out += "texture(tex[0], texcoord[0])";
+            break;
+        case Pica::Regs::TextureConfig::Projection2D:
+            out += "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
+            break;
+        default:
+            out += "texture(tex[0], texcoord[0])";
+            LOG_CRITICAL(HW_GPU, "Unhandled texture type %x", static_cast<int>(state.texture0_type));
+            UNIMPLEMENTED();
+            break;
+        }
         break;
     case Source::Texture1:
         out += "texture(tex[1], texcoord[1])";
@@ -71,53 +85,53 @@ static void AppendSource(std::string& out, TevStageConfig::Source source,
 }
 
 /// Writes the color components to use for the specified TEV stage color modifier
-static void AppendColorModifier(std::string& out, TevStageConfig::ColorModifier modifier,
+static void AppendColorModifier(std::string& out, const PicaShaderConfig& config, TevStageConfig::ColorModifier modifier,
         TevStageConfig::Source source, const std::string& index_name) {
     using ColorModifier = TevStageConfig::ColorModifier;
     switch (modifier) {
     case ColorModifier::SourceColor:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".rgb";
         break;
     case ColorModifier::OneMinusSourceColor:
         out += "vec3(1.0) - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".rgb";
         break;
     case ColorModifier::SourceAlpha:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".aaa";
         break;
     case ColorModifier::OneMinusSourceAlpha:
         out += "vec3(1.0) - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".aaa";
         break;
     case ColorModifier::SourceRed:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".rrr";
         break;
     case ColorModifier::OneMinusSourceRed:
         out += "vec3(1.0) - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".rrr";
         break;
     case ColorModifier::SourceGreen:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".ggg";
         break;
     case ColorModifier::OneMinusSourceGreen:
         out += "vec3(1.0) - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".ggg";
         break;
     case ColorModifier::SourceBlue:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".bbb";
         break;
     case ColorModifier::OneMinusSourceBlue:
         out += "vec3(1.0) - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".bbb";
         break;
     default:
@@ -128,44 +142,44 @@ static void AppendColorModifier(std::string& out, TevStageConfig::ColorModifier 
 }
 
 /// Writes the alpha component to use for the specified TEV stage alpha modifier
-static void AppendAlphaModifier(std::string& out, TevStageConfig::AlphaModifier modifier,
+static void AppendAlphaModifier(std::string& out, const PicaShaderConfig& config, TevStageConfig::AlphaModifier modifier,
         TevStageConfig::Source source, const std::string& index_name) {
     using AlphaModifier = TevStageConfig::AlphaModifier;
     switch (modifier) {
     case AlphaModifier::SourceAlpha:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".a";
         break;
     case AlphaModifier::OneMinusSourceAlpha:
         out += "1.0 - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".a";
         break;
     case AlphaModifier::SourceRed:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".r";
         break;
     case AlphaModifier::OneMinusSourceRed:
         out += "1.0 - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".r";
         break;
     case AlphaModifier::SourceGreen:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".g";
         break;
     case AlphaModifier::OneMinusSourceGreen:
         out += "1.0 - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".g";
         break;
     case AlphaModifier::SourceBlue:
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".b";
         break;
     case AlphaModifier::OneMinusSourceBlue:
         out += "1.0 - ";
-        AppendSource(out, source, index_name);
+        AppendSource(out, config, source, index_name);
         out += ".b";
         break;
     default:
@@ -292,11 +306,11 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
         std::string index_name = std::to_string(index);
 
         out += "vec3 color_results_" + index_name + "[3] = vec3[3](";
-        AppendColorModifier(out, stage.color_modifier1, stage.color_source1, index_name);
+        AppendColorModifier(out, config, stage.color_modifier1, stage.color_source1, index_name);
         out += ", ";
-        AppendColorModifier(out, stage.color_modifier2, stage.color_source2, index_name);
+        AppendColorModifier(out, config, stage.color_modifier2, stage.color_source2, index_name);
         out += ", ";
-        AppendColorModifier(out, stage.color_modifier3, stage.color_source3, index_name);
+        AppendColorModifier(out, config, stage.color_modifier3, stage.color_source3, index_name);
         out += ");\n";
 
         out += "vec3 color_output_" + index_name + " = ";
@@ -304,11 +318,11 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
         out += ";\n";
 
         out += "float alpha_results_" + index_name + "[3] = float[3](";
-        AppendAlphaModifier(out, stage.alpha_modifier1, stage.alpha_source1, index_name);
+        AppendAlphaModifier(out, config, stage.alpha_modifier1, stage.alpha_source1, index_name);
         out += ", ";
-        AppendAlphaModifier(out, stage.alpha_modifier2, stage.alpha_source2, index_name);
+        AppendAlphaModifier(out, config, stage.alpha_modifier2, stage.alpha_source2, index_name);
         out += ", ";
-        AppendAlphaModifier(out, stage.alpha_modifier3, stage.alpha_source3, index_name);
+        AppendAlphaModifier(out, config, stage.alpha_modifier3, stage.alpha_source3, index_name);
         out += ");\n";
 
         out += "float alpha_output_" + index_name + " = ";
@@ -523,6 +537,7 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 
 in vec4 primary_color;
 in vec2 texcoord[3];
+in float texcoord0_w;
 in vec4 normquat;
 in vec3 view;
 
@@ -598,17 +613,19 @@ vec4 secondary_fragment_color = vec4(0.0);
 std::string GenerateVertexShader() {
     std::string out = "#version 330 core\n";
 
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION)  + ") in vec4 vert_position;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_COLOR)     + ") in vec4 vert_color;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0) + ") in vec2 vert_texcoord0;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD1) + ") in vec2 vert_texcoord1;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD2) + ") in vec2 vert_texcoord2;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_NORMQUAT)  + ") in vec4 vert_normquat;\n";
-    out += "layout(location = " + std::to_string((int)ATTRIBUTE_VIEW)      + ") in vec3 vert_view;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION)    + ") in vec4 vert_position;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_COLOR)       + ") in vec4 vert_color;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0)   + ") in vec2 vert_texcoord0;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD1)   + ") in vec2 vert_texcoord1;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD2)   + ") in vec2 vert_texcoord2;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_TEXCOORD0_W) + ") in float vert_texcoord0_w;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_NORMQUAT)    + ") in vec4 vert_normquat;\n";
+    out += "layout(location = " + std::to_string((int)ATTRIBUTE_VIEW)        + ") in vec3 vert_view;\n";
 
     out += R"(
 out vec4 primary_color;
 out vec2 texcoord[3];
+out float texcoord0_w;
 out vec4 normquat;
 out vec3 view;
 
@@ -617,6 +634,7 @@ void main() {
     texcoord[0] = vert_texcoord0;
     texcoord[1] = vert_texcoord1;
     texcoord[2] = vert_texcoord2;
+    texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
     gl_Position = vec4(vert_position.x, vert_position.y, -vert_position.z, vert_position.w);
