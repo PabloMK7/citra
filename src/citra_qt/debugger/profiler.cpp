@@ -151,6 +151,8 @@ private:
     /// This timer is used to redraw the widget's contents continuously. To save resources, it only
     /// runs while the widget is visible.
     QTimer update_timer;
+    /// Scale the coordinate system appropriately when physical DPI != logical DPI.
+    qreal x_scale, y_scale;
 };
 
 #endif
@@ -220,10 +222,16 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
     MicroProfileInitUI();
 
     connect(&update_timer, SIGNAL(timeout()), SLOT(update()));
+
+    QPainter painter(this);
+    x_scale = qreal(painter.device()->physicalDpiX()) / qreal(painter.device()->logicalDpiX());
+    y_scale = qreal(painter.device()->physicalDpiY()) / qreal(painter.device()->logicalDpiY());
 }
 
 void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
     QPainter painter(this);
+
+    painter.scale(x_scale, y_scale);
 
     painter.setBackground(Qt::black);
     painter.eraseRect(rect());
@@ -248,24 +256,24 @@ void MicroProfileWidget::hideEvent(QHideEvent* ev) {
 }
 
 void MicroProfileWidget::mouseMoveEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x(), ev->y(), 0);
+    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
     ev->accept();
 }
 
 void MicroProfileWidget::mousePressEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x(), ev->y(), 0);
+    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
     MicroProfileMouseButton(ev->buttons() & Qt::LeftButton, ev->buttons() & Qt::RightButton);
     ev->accept();
 }
 
 void MicroProfileWidget::mouseReleaseEvent(QMouseEvent* ev) {
-    MicroProfileMousePosition(ev->x(), ev->y(), 0);
+    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, 0);
     MicroProfileMouseButton(ev->buttons() & Qt::LeftButton, ev->buttons() & Qt::RightButton);
     ev->accept();
 }
 
 void MicroProfileWidget::wheelEvent(QWheelEvent* ev) {
-    MicroProfileMousePosition(ev->x(), ev->y(), ev->delta() / 120);
+    MicroProfileMousePosition(ev->x() / x_scale, ev->y() / y_scale, ev->delta() / 120);
     ev->accept();
 }
 
