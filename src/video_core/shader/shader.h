@@ -83,23 +83,6 @@ struct OutputVertex {
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
-/// Vertex shader memory
-struct ShaderSetup {
-    struct {
-        // The float uniforms are accessed by the shader JIT using SSE instructions, and are
-        // therefore required to be 16-byte aligned.
-        alignas(16) Math::Vec4<float24> f[96];
-
-        std::array<bool, 16> b;
-        std::array<Math::Vec4<u8>, 4> i;
-    } uniforms;
-
-    Math::Vec4<float24> default_attributes[16];
-
-    std::array<u32, 1024> program_code;
-    std::array<u32, 1024> swizzle_data;
-};
-
 // Helper structure used to keep track of data useful for inspection of shader emulation
 template<bool full_debugging>
 struct DebugData;
@@ -342,33 +325,51 @@ struct UnitState {
     }
 };
 
-/**
- * Performs any shader unit setup that only needs to happen once per shader (as opposed to once per
- * vertex, which would happen within the `Run` function).
- */
-void Setup();
+/// Clears the shader cache
+void ClearCache();
 
-/// Performs any cleanup when the emulator is shutdown
-void Shutdown();
+struct ShaderSetup {
 
-/**
- * Runs the currently setup shader
- * @param state Shader unit state, must be setup per shader and per shader unit
- * @param input Input vertex into the shader
- * @param num_attributes The number of vertex shader attributes
- * @return The output vertex, after having been processed by the vertex shader
- */
-OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attributes);
+    struct {
+        // The float uniforms are accessed by the shader JIT using SSE instructions, and are
+        // therefore required to be 16-byte aligned.
+        alignas(16) Math::Vec4<float24> f[96];
 
-/**
- * Produce debug information based on the given shader and input vertex
- * @param input Input vertex into the shader
- * @param num_attributes The number of vertex shader attributes
- * @param config Configuration object for the shader pipeline
- * @param setup Setup object for the shader pipeline
- * @return Debug information for this shader with regards to the given vertex
- */
-DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup);
+        std::array<bool, 16> b;
+        std::array<Math::Vec4<u8>, 4> i;
+    } uniforms;
+
+    Math::Vec4<float24> default_attributes[16];
+
+    std::array<u32, 1024> program_code;
+    std::array<u32, 1024> swizzle_data;
+
+    /**
+     * Performs any shader unit setup that only needs to happen once per shader (as opposed to once per
+     * vertex, which would happen within the `Run` function).
+     */
+    void Setup();
+
+    /**
+     * Runs the currently setup shader
+     * @param state Shader unit state, must be setup per shader and per shader unit
+     * @param input Input vertex into the shader
+     * @param num_attributes The number of vertex shader attributes
+     * @return The output vertex, after having been processed by the vertex shader
+     */
+    OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attributes);
+
+    /**
+     * Produce debug information based on the given shader and input vertex
+     * @param input Input vertex into the shader
+     * @param num_attributes The number of vertex shader attributes
+     * @param config Configuration object for the shader pipeline
+     * @param setup Setup object for the shader pipeline
+     * @return Debug information for this shader with regards to the given vertex
+     */
+    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup);
+
+};
 
 } // namespace Shader
 
