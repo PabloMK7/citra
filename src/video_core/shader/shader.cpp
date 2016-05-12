@@ -67,7 +67,6 @@ OutputVertex ShaderSetup::Run(UnitState<false>& state, const InputVertex& input,
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
-    state.program_counter = config.main_offset;
     state.debug.max_offset = 0;
     state.debug.max_opdesc_id = 0;
 
@@ -143,7 +142,6 @@ OutputVertex ShaderSetup::Run(UnitState<false>& state, const InputVertex& input,
 DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup) {
     UnitState<true> state;
 
-    state.program_counter = config.main_offset;
     state.debug.max_offset = 0;
     state.debug.max_opdesc_id = 0;
 

@@ -272,28 +272,11 @@ struct UnitState {
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
 
-    u32 program_counter;
     bool conditional_code[2];
 
     // Two Address registers and one loop counter
     // TODO: How many bits do these actually have?
     s32 address_registers[3];
-
-    enum {
-        INVALID_ADDRESS = 0xFFFFFFFF
-    };
-
-    struct CallStackElement {
-        u32 final_address;  // Address upon which we jump to return_address
-        u32 return_address; // Where to jump when leaving scope
-        u8 repeat_counter;  // How often to repeat until this call stack element is removed
-        u8 loop_increment;  // Which value to add to the loop counter after an iteration
-                            // TODO: Should this be a signed value? Does it even matter?
-        u32 loop_address;   // The address where we'll return to after each loop iteration
-    };
-
-    // TODO: Is there a maximal size for this?
-    boost::container::static_vector<CallStackElement, 16> call_stack;
 
     DebugData<Debug> debug;
 
