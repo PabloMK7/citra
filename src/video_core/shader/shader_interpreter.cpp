@@ -29,8 +29,24 @@ namespace Pica {
 
 namespace Shader {
 
+constexpr u32 INVALID_ADDRESS = 0xFFFFFFFF;
+
+struct CallStackElement {
+    u32 final_address;  // Address upon which we jump to return_address
+    u32 return_address; // Where to jump when leaving scope
+    u8 repeat_counter;  // How often to repeat until this call stack element is removed
+    u8 loop_increment;  // Which value to add to the loop counter after an iteration
+                        // TODO: Should this be a signed value? Does it even matter?
+    u32 loop_address;   // The address where we'll return to after each loop iteration
+};
+
 template<bool Debug>
 void RunInterpreter(UnitState<Debug>& state) {
+    // TODO: Is there a maximal size for this?
+    boost::container::static_vector<CallStackElement, 16> call_stack;
+
+    u32 program_counter = g_state.regs.vs.main_offset;
+
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
     const auto& program_code = g_state.vs.program_code;
@@ -41,16 +57,16 @@ void RunInterpreter(UnitState<Debug>& state) {
     unsigned iteration = 0;
     bool exit_loop = false;
     while (!exit_loop) {
-        if (!state.call_stack.empty()) {
-            auto& top = state.call_stack.back();
-            if (state.program_counter == top.final_address) {
+        if (!call_stack.empty()) {
+            auto& top = call_stack.back();
+            if (program_counter == top.final_address) {
                 state.address_registers[2] += top.loop_increment;
 
                 if (top.repeat_counter-- == 0) {
-                    state.program_counter = top.return_address;
-                    state.call_stack.pop_back();
+                    program_counter = top.return_address;
+                    call_stack.pop_back();
                 } else {
-                    state.program_counter = top.loop_address;
+                    program_counter = top.loop_address;
                 }
 
                 // TODO: Is "trying again" accurate to hardware?
@@ -58,20 +74,20 @@ void RunInterpreter(UnitState<Debug>& state) {
             }
         }
 
-        const Instruction instr = { program_code[state.program_counter] };
+        const Instruction instr = { program_code[program_counter] };
         const SwizzlePattern swizzle = { swizzle_data[instr.common.operand_desc_id] };
 
-        static auto call = [](UnitState<Debug>& state, u32 offset, u32 num_instructions,
+        static auto call = [&program_counter, &call_stack](UnitState<Debug>& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
-            state.program_counter = offset - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
-            ASSERT(state.call_stack.size() < state.call_stack.capacity());
-            state.call_stack.push_back({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
+            program_counter = offset - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
+            ASSERT(call_stack.size() < call_stack.capacity());
+            call_stack.push_back({ offset + num_instructions, return_offset, repeat_count, loop_increment, offset });
         };
-        Record<DebugDataRecord::CUR_INSTR>(state.debug, iteration, state.program_counter);
+        Record<DebugDataRecord::CUR_INSTR>(state.debug, iteration, program_counter);
         if (iteration > 0)
-            Record<DebugDataRecord::NEXT_INSTR>(state.debug, iteration - 1, state.program_counter);
+            Record<DebugDataRecord::NEXT_INSTR>(state.debug, iteration - 1, program_counter);
 
-        state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + state.program_counter);
+        state.debug.max_offset = std::max<u32>(state.debug.max_offset, 1 + program_counter);
 
         auto LookupSourceRegister = [&](const SourceRegister& source_reg) -> const float24* {
             switch (source_reg.GetRegisterType()) {
@@ -519,7 +535,7 @@ void RunInterpreter(UnitState<Debug>& state) {
             case OpCode::Id::JMPC:
                 Record<DebugDataRecord::COND_CMP_IN>(state.debug, iteration, state.conditional_code);
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
-                    state.program_counter = instr.flow_control.dest_offset - 1;
+                    program_counter = instr.flow_control.dest_offset - 1;
                 }
                 break;
 
@@ -527,7 +543,7 @@ void RunInterpreter(UnitState<Debug>& state) {
                 Record<DebugDataRecord::COND_BOOL_IN>(state.debug, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
 
                 if (uniforms.b[instr.flow_control.bool_uniform_id] == !(instr.flow_control.num_instructions & 1)) {
-                    state.program_counter = instr.flow_control.dest_offset - 1;
+                    program_counter = instr.flow_control.dest_offset - 1;
                 }
                 break;
 
@@ -535,7 +551,7 @@ void RunInterpreter(UnitState<Debug>& state) {
                 call(state,
                      instr.flow_control.dest_offset,
                      instr.flow_control.num_instructions,
-                     state.program_counter + 1, 0, 0);
+                     program_counter + 1, 0, 0);
                 break;
 
             case OpCode::Id::CALLU:
@@ -544,7 +560,7 @@ void RunInterpreter(UnitState<Debug>& state) {
                     call(state,
                         instr.flow_control.dest_offset,
                         instr.flow_control.num_instructions,
-                        state.program_counter + 1, 0, 0);
+                        program_counter + 1, 0, 0);
                 }
                 break;
 
@@ -554,7 +570,7 @@ void RunInterpreter(UnitState<Debug>& state) {
                     call(state,
                         instr.flow_control.dest_offset,
                         instr.flow_control.num_instructions,
-                        state.program_counter + 1, 0, 0);
+                        program_counter + 1, 0, 0);
                 }
                 break;
 
@@ -565,8 +581,8 @@ void RunInterpreter(UnitState<Debug>& state) {
                 Record<DebugDataRecord::COND_BOOL_IN>(state.debug, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
                 if (uniforms.b[instr.flow_control.bool_uniform_id]) {
                     call(state,
-                         state.program_counter + 1,
-                         instr.flow_control.dest_offset - state.program_counter - 1,
+                         program_counter + 1,
+                         instr.flow_control.dest_offset - program_counter - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 } else {
                     call(state,
@@ -584,8 +600,8 @@ void RunInterpreter(UnitState<Debug>& state) {
                 Record<DebugDataRecord::COND_CMP_IN>(state.debug, iteration, state.conditional_code);
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy, instr.flow_control)) {
                     call(state,
-                         state.program_counter + 1,
-                         instr.flow_control.dest_offset - state.program_counter - 1,
+                         program_counter + 1,
+                         instr.flow_control.dest_offset - program_counter - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0, 0);
                 } else {
                     call(state,
@@ -607,8 +623,8 @@ void RunInterpreter(UnitState<Debug>& state) {
 
                 Record<DebugDataRecord::LOOP_INT_IN>(state.debug, iteration, loop_param);
                 call(state,
-                     state.program_counter + 1,
-                     instr.flow_control.dest_offset - state.program_counter + 1,
+                     program_counter + 1,
+                     instr.flow_control.dest_offset - program_counter + 1,
                      instr.flow_control.dest_offset + 1,
                      loop_param.x,
                      loop_param.z);
@@ -625,7 +641,7 @@ void RunInterpreter(UnitState<Debug>& state) {
         }
         }
 
-        ++state.program_counter;
+        ++program_counter;
         ++iteration;
     }
 }

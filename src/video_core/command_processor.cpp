@@ -128,7 +128,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 // TODO: Verify that this actually modifies the register!
                 if (setup.index < 15) {
-                    g_state.vs.default_attributes[setup.index] = attribute;
+                    g_state.vs_default_attributes[setup.index] = attribute;
                     setup.index++;
                 } else {
                     // Put each attribute into an immediate input buffer.
