@@ -340,8 +340,6 @@ struct ShaderSetup {
         std::array<Math::Vec4<u8>, 4> i;
     } uniforms;
 
-    Math::Vec4<float24> default_attributes[16];
-
     std::array<u32, 1024> program_code;
     std::array<u32, 1024> swizzle_data;
 

@@ -124,7 +124,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex, Shader::I
                 input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(), input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
         } else if (vertex_attribute_is_default[i]) {
             // Load the default attribute if we're configured to do so
-            input.attr[i] = g_state.vs.default_attributes[i];
+            input.attr[i] = g_state.vs_default_attributes[i];
             LOG_TRACE(HW_GPU, "Loaded default attribute %x for vertex %x (index %x): (%f, %f, %f, %f)",
                 i, vertex, index,
                 input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
