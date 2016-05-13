@@ -149,7 +149,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         // Send to vertex shader
                         if (g_debug_context)
                             g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation, static_cast<void*>(&immediate_input));
-                        Shader::OutputVertex output = g_state.vs.Run(shader_unit, immediate_input, regs.vs.num_input_attributes+1);
+                        g_state.vs.Run(shader_unit, immediate_input, regs.vs.num_input_attributes+1);
+                        Shader::OutputVertex output_vertex = shader_unit.output_registers.ToVertex(regs.vs);
 
                         // Send to renderer
                         using Pica::Shader::OutputVertex;
@@ -157,7 +158,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                             VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                         };
 
-                        g_state.primitive_assembler.SubmitVertex(output, AddTriangle);
+                        g_state.primitive_assembler.SubmitVertex(output_vertex, AddTriangle);
                     }
                 }
             }
@@ -231,7 +232,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             // The size has been tuned for optimal balance between hit-rate and the cost of lookup
             const size_t VERTEX_CACHE_SIZE = 32;
             std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
-            std::array<Shader::OutputVertex, VERTEX_CACHE_SIZE> vertex_cache;
+            std::array<Shader::OutputRegisters, VERTEX_CACHE_SIZE> vertex_cache;
 
             unsigned int vertex_cache_pos = 0;
             vertex_cache_ids.fill(-1);
@@ -249,7 +250,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 ASSERT(vertex != -1);
 
                 bool vertex_cache_hit = false;
-                Shader::OutputVertex output;
+                Shader::OutputRegisters output_registers;
 
                 if (is_indexed) {
                     if (g_debug_context && Pica::g_debug_context->recorder) {
@@ -259,7 +260,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                     for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
                         if (vertex == vertex_cache_ids[i]) {
-                            output = vertex_cache[i];
+                            output_registers = vertex_cache[i];
                             vertex_cache_hit = true;
                             break;
                         }
@@ -274,14 +275,18 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     // Send to vertex shader
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation, (void*)&input);
-                    output = g_state.vs.Run(shader_unit, input, loader.GetNumTotalAttributes());
+                    g_state.vs.Run(shader_unit, input, loader.GetNumTotalAttributes());
+                    output_registers = shader_unit.output_registers;
 
                     if (is_indexed) {
-                        vertex_cache[vertex_cache_pos] = output;
+                        vertex_cache[vertex_cache_pos] = output_registers;
                         vertex_cache_ids[vertex_cache_pos] = vertex;
                         vertex_cache_pos = (vertex_cache_pos + 1) % VERTEX_CACHE_SIZE;
                     }
                 }
+
+                // Retreive vertex from register data
+                Shader::OutputVertex output_vertex = output_registers.ToVertex(regs.vs);
 
                 // Send to renderer
                 using Pica::Shader::OutputVertex;
@@ -290,7 +295,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                 };
 
-                primitive_assembler.SubmitVertex(output, AddTriangle);
+                primitive_assembler.SubmitVertex(output_vertex, AddTriangle);
             }
 
             for (auto& range : memory_accesses.ranges) {
