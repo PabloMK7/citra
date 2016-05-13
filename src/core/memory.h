@@ -100,15 +100,9 @@ enum : VAddr {
     SHARED_PAGE_SIZE      = 0x00001000,
     SHARED_PAGE_VADDR_END = SHARED_PAGE_VADDR + SHARED_PAGE_SIZE,
 
-    // TODO(yuriks): The size of this area is dynamic, the kernel grows
-    // it as more and more threads are created. For now we'll just use a
-    // hardcoded value.
     /// Area where TLS (Thread-Local Storage) buffers are allocated.
     TLS_AREA_VADDR     = 0x1FF82000,
     TLS_ENTRY_SIZE     = 0x200,
-    TLS_AREA_SIZE      = 300 * TLS_ENTRY_SIZE + 0x800, // Space for up to 300 threads + round to page size
-    TLS_AREA_VADDR_END = TLS_AREA_VADDR + TLS_AREA_SIZE,
-
 
     /// Equivalent to LINEAR_HEAP_VADDR, but expanded to cover the extra memory in the New 3DS.
     NEW_LINEAR_HEAP_VADDR     = 0x30000000,
