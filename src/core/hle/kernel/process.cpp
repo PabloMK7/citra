@@ -209,7 +209,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         return ERR_INVALID_ADDRESS;
     }
 
-    // Expansion of the linear heap is only allowed if you do an allocation immediatelly at its
+    // Expansion of the linear heap is only allowed if you do an allocation immediately at its
     // end. It's possible to free gaps in the middle of the heap and then reallocate them later,
     // but expansions are only allowed at the end.
     if (target == heap_end) {

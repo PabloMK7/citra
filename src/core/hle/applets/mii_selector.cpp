@@ -35,9 +35,14 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     ASSERT(sizeof(capture_info) == parameter.buffer_size);
 
     memcpy(&capture_info, parameter.data, sizeof(capture_info));
+
     using Kernel::MemoryPermission;
-    framebuffer_memory = Kernel::SharedMemory::Create(capture_info.size, MemoryPermission::ReadWrite,
-                                                      MemoryPermission::ReadWrite, "MiiSelector Memory");
+    // Allocate a heap block of the required size for this applet.
+    heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
+    // Create a SharedMemory that directly points to this heap block.
+    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(heap_memory, 0, heap_memory->size(),
+                                                               MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+                                                               "MiiSelector Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;

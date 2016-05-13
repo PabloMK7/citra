@@ -99,6 +99,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE:
     {
+        // TODO(Subv): What happens if an application tries to FREE a block of memory that has a SharedMemory pointing to it?
         if (addr0 >= Memory::HEAP_VADDR && addr0 < Memory::HEAP_VADDR_END) {
             ResultCode result = process.HeapFree(addr0, size);
             if (result.IsError()) return result;
@@ -160,8 +161,6 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d",
         handle, addr, permissions, other_permissions);
 
-    // TODO(Subv): The same process that created a SharedMemory object can not map it in its own address space
-
     SharedPtr<SharedMemory> shared_memory = Kernel::g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr)
         return ERR_INVALID_HANDLE;
@@ -176,7 +175,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     case MemoryPermission::WriteExecute:
     case MemoryPermission::ReadWriteExecute:
     case MemoryPermission::DontCare:
-        return shared_memory->Map(addr, permissions_type,
+        return shared_memory->Map(Kernel::g_current_process.get(), addr, permissions_type,
                 static_cast<MemoryPermission>(other_permissions));
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x%08X", permissions);
@@ -196,7 +195,7 @@ static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     if (shared_memory == nullptr)
         return ERR_INVALID_HANDLE;
 
-    return shared_memory->Unmap(addr);
+    return shared_memory->Unmap(Kernel::g_current_process.get(), addr);
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
@@ -790,18 +789,44 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     if (size % Memory::PAGE_SIZE != 0)
         return ResultCode(ErrorDescription::MisalignedSize, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 
-    // TODO(Subv): Return E0A01BF5 if the address is not in the application's heap
-
-    // TODO(Subv): Implement this function properly
+    SharedPtr<SharedMemory> shared_memory = nullptr;
 
     using Kernel::MemoryPermission;
-    SharedPtr<SharedMemory> shared_memory = SharedMemory::Create(size,
-            (MemoryPermission)my_permission, (MemoryPermission)other_permission);
-    // Map the SharedMemory to the specified address
-    shared_memory->base_address = addr;
+    auto VerifyPermissions = [](MemoryPermission permission) {
+        // SharedMemory blocks can not be created with Execute permissions
+        switch (permission) {
+        case MemoryPermission::None:
+        case MemoryPermission::Read:
+        case MemoryPermission::Write:
+        case MemoryPermission::ReadWrite:
+        case MemoryPermission::DontCare:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (!VerifyPermissions(static_cast<MemoryPermission>(my_permission)) ||
+        !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
+        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+
+    if (addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) {
+        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    // When trying to create a memory block with address = 0,
+    // if the process has the Shared Device Memory flag in the exheader,
+    // then we have to allocate from the same region as the caller process instead of the BASE region.
+    Kernel::MemoryRegion region = Kernel::MemoryRegion::BASE;
+    if (addr == 0 && Kernel::g_current_process->flags.shared_device_mem)
+        region = Kernel::g_current_process->flags.memory_region;
+
+    shared_memory = SharedMemory::Create(Kernel::g_current_process, size,
+                                static_cast<MemoryPermission>(my_permission), static_cast<MemoryPermission>(other_permission), addr, region);
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(shared_memory)));
 
-    LOG_WARNING(Kernel_SVC, "(STUBBED) called addr=0x%08X", addr);
+    LOG_WARNING(Kernel_SVC, "called addr=0x%08X", addr);
     return RESULT_SUCCESS;
 }
 

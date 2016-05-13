@@ -107,7 +107,6 @@ struct MemoryArea {
 
 // We don't declare the IO regions in here since its handled by other means.
 static MemoryArea memory_areas[] = {
-    {SHARED_MEMORY_VADDR, SHARED_MEMORY_SIZE,     "Shared Memory"}, // Shared memory
     {VRAM_VADDR,          VRAM_SIZE,              "VRAM"},          // Video memory (VRAM)
 };
 

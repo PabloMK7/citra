@@ -65,6 +65,7 @@ protected:
     virtual ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) = 0;
 
     Service::APT::AppletId id; ///< Id of this Applet
+    std::shared_ptr<std::vector<u8>> heap_memory; ///< Heap memory for this Applet
 };
 
 /// Returns whether a library applet is currently running
