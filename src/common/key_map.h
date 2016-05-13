@@ -13,7 +13,11 @@ class EmuWindow;
 namespace KeyMap {
 
 enum class IndirectTarget {
-    CIRCLE_PAD_UP, CIRCLE_PAD_DOWN, CIRCLE_PAD_LEFT, CIRCLE_PAD_RIGHT,
+    CIRCLE_PAD_UP,
+    CIRCLE_PAD_DOWN,
+    CIRCLE_PAD_LEFT,
+    CIRCLE_PAD_RIGHT,
+    CIRCLE_PAD_MODIFIER,
 };
 
 /**

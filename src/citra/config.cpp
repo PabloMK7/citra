@@ -53,6 +53,7 @@ static const std::array<int, Settings::NativeInput::NUM_INPUTS> defaults = {
 
     // indirectly mapped keys
     SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
+    SDL_SCANCODE_D,
 };
 
 void Config::ReadValues() {
@@ -61,6 +62,7 @@ void Config::ReadValues() {
         Settings::values.input_mappings[Settings::NativeInput::All[i]] =
             sdl2_config->GetInteger("Controls", Settings::NativeInput::Mapping[i], defaults[i]);
     }
+    Settings::values.pad_circle_modifier_scale = (float)sdl2_config->GetReal("Controls", "pad_circle_modifier_scale", 0.5);
 
     // Core
     Settings::values.frame_skip = sdl2_config->GetInteger("Core", "frame_skip", 0);

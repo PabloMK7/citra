@@ -22,6 +22,7 @@ enum Values {
 
     // indirectly mapped keys
     CIRCLE_UP, CIRCLE_DOWN, CIRCLE_LEFT, CIRCLE_RIGHT,
+    CIRCLE_MODIFIER,
 
     NUM_INPUTS
 };
@@ -35,7 +36,8 @@ static const std::array<const char*, NUM_INPUTS> Mapping = {{
     "pad_cup", "pad_cdown", "pad_cleft", "pad_cright",
 
     // indirectly mapped keys
-    "pad_circle_up", "pad_circle_down", "pad_circle_left", "pad_circle_right"
+    "pad_circle_up", "pad_circle_down", "pad_circle_left", "pad_circle_right",
+    "pad_circle_modifier",
 }};
 static const std::array<Values, NUM_INPUTS> All = {{
     A, B, X, Y,
@@ -44,6 +46,7 @@ static const std::array<Values, NUM_INPUTS> All = {{
     DUP, DDOWN, DLEFT, DRIGHT,
     CUP, CDOWN, CLEFT, CRIGHT,
     CIRCLE_UP, CIRCLE_DOWN, CIRCLE_LEFT, CIRCLE_RIGHT,
+    CIRCLE_MODIFIER,
 }};
 }
 
@@ -51,6 +54,7 @@ static const std::array<Values, NUM_INPUTS> All = {{
 struct Values {
     // Controls
     std::array<int, NativeInput::NUM_INPUTS> input_mappings;
+    float pad_circle_modifier_scale;
 
     // Core
     int frame_skip;

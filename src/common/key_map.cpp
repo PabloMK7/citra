@@ -23,12 +23,17 @@ const std::array<KeyTarget, Settings::NativeInput::NUM_INPUTS> mapping_targets =
     IndirectTarget::CIRCLE_PAD_DOWN,
     IndirectTarget::CIRCLE_PAD_LEFT,
     IndirectTarget::CIRCLE_PAD_RIGHT,
+    IndirectTarget::CIRCLE_PAD_MODIFIER,
 }};
 
 static std::map<HostDeviceKey, KeyTarget> key_map;
 static int next_device_id = 0;
 
-static bool circle_pad_up = false, circle_pad_down = false, circle_pad_left = false, circle_pad_right = false;
+static bool circle_pad_up = false;
+static bool circle_pad_down = false;
+static bool circle_pad_left = false;
+static bool circle_pad_right = false;
+static bool circle_pad_modifier = false;
 
 static void UpdateCirclePad(EmuWindow& emu_window) {
     constexpr float SQRT_HALF = 0.707106781;
@@ -42,8 +47,9 @@ static void UpdateCirclePad(EmuWindow& emu_window) {
         ++y;
     if (circle_pad_down)
         --y;
-    // TODO: apply modifier here
-    emu_window.CirclePadUpdated(x * (y == 0 ? 1.0 : SQRT_HALF), y * (x == 0 ? 1.0 : SQRT_HALF));
+
+    float modifier = circle_pad_modifier ? Settings::values.pad_circle_modifier_scale : 1.0;
+    emu_window.CirclePadUpdated(x * modifier * (y == 0 ? 1.0 : SQRT_HALF), y * modifier * (x == 0 ? 1.0 : SQRT_HALF));
 }
 
 int NewDeviceId() {
@@ -89,6 +95,10 @@ void PressKey(EmuWindow& emu_window, HostDeviceKey key) {
             circle_pad_right = true;
             UpdateCirclePad(emu_window);
             break;
+        case IndirectTarget::CIRCLE_PAD_MODIFIER:
+            circle_pad_modifier = true;
+            UpdateCirclePad(emu_window);
+            break;
         }
     }
 }
@@ -116,6 +126,10 @@ void ReleaseKey(EmuWindow& emu_window,HostDeviceKey key) {
             break;
         case IndirectTarget::CIRCLE_PAD_RIGHT:
             circle_pad_right = false;
+            UpdateCirclePad(emu_window);
+            break;
+        case IndirectTarget::CIRCLE_PAD_MODIFIER:
+            circle_pad_modifier = false;
             UpdateCirclePad(emu_window);
             break;
         }
