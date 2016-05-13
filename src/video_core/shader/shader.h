@@ -283,10 +283,10 @@ struct UnitState {
     static size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
-            return offsetof(UnitState::Registers, input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -297,10 +297,10 @@ struct UnitState {
     static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return offsetof(UnitState::Registers, output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return offsetof(UnitState::Registers, temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -322,6 +322,23 @@ struct ShaderSetup {
         std::array<bool, 16> b;
         std::array<Math::Vec4<u8>, 4> i;
     } uniforms;
+
+    static size_t UniformOffset(RegisterType type, unsigned index) {
+        switch (type) {
+        case RegisterType::FloatUniform:
+            return offsetof(ShaderSetup, uniforms.f) + index*sizeof(Math::Vec4<float24>);
+
+        case RegisterType::BoolUniform:
+            return offsetof(ShaderSetup, uniforms.b) + index*sizeof(bool);
+
+        case RegisterType::IntUniform:
+            return offsetof(ShaderSetup, uniforms.i) + index*sizeof(Math::Vec4<u8>);
+
+        default:
+            UNREACHABLE();
+            return 0;
+        }
+    }
 
     std::array<u32, 1024> program_code;
     std::array<u32, 1024> swizzle_data;

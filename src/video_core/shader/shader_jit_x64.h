@@ -36,8 +36,8 @@ class JitShader : public Gen::XCodeBlock {
 public:
     JitShader();
 
-    void Run(void* registers, unsigned offset) const {
-        program(registers, code_ptr[offset]);
+    void Run(const ShaderSetup& setup, UnitState<false>& state, unsigned offset) const {
+        program(&setup, &state, code_ptr[offset]);
     }
 
     void Compile();
@@ -117,7 +117,7 @@ private:
     /// Branches that need to be fixed up once the entire shader program is compiled
     std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;
 
-    using CompiledShader = void(void* registers, const u8* start_addr);
+    using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program = nullptr;
 };
 
