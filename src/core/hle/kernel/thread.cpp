@@ -526,6 +526,8 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
 
     SharedPtr<Thread> thread = thread_res.MoveFrom();
 
+    thread->context.fpscr = FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
+
     // Run new "main" thread
     SwitchContext(thread.get());
 
