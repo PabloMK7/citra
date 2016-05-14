@@ -104,7 +104,6 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 
     // Sync fixed function OpenGL state
     SyncCullMode();
-    SyncDepthModifiers();
     SyncBlendEnabled();
     SyncBlendFuncs();
     SyncBlendColor();
@@ -259,8 +258,10 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // Depth modifiers
     case PICA_REG_INDEX(viewport_depth_range):
+        SyncDepthScale();
+        break;
     case PICA_REG_INDEX(viewport_depth_near_plane):
-        SyncDepthModifiers();
+        SyncDepthOffset();
         break;
 
     // Depth buffering
@@ -880,6 +881,8 @@ void RasterizerOpenGL::SetShader() {
         glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
 
         // Update uniforms
+        SyncDepthScale();
+        SyncDepthOffset();
         SyncAlphaTest();
         SyncCombinerColor();
         auto& tev_stages = Pica::g_state.regs.GetTevStages();
@@ -922,13 +925,20 @@ void RasterizerOpenGL::SyncCullMode() {
     }
 }
 
-void RasterizerOpenGL::SyncDepthModifiers() {
+void RasterizerOpenGL::SyncDepthScale() {
     float depth_scale = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
-    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
+    if (depth_scale != uniform_block_data.data.depth_scale) {
+        uniform_block_data.data.depth_scale = depth_scale;
+        uniform_block_data.dirty = true;
+    }
+}
 
-    uniform_block_data.data.depth_scale = depth_scale;
-    uniform_block_data.data.depth_offset = depth_offset;
-    uniform_block_data.dirty = true;
+void RasterizerOpenGL::SyncDepthOffset() {
+    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
+    if (depth_offset != uniform_block_data.data.depth_offset) {
+        uniform_block_data.data.depth_offset = depth_offset;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncBlendEnabled() {
