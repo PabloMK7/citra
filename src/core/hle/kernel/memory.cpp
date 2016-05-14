@@ -55,6 +55,9 @@ void MemoryInit(u32 mem_type) {
         memory_regions[i].size = memory_region_sizes[mem_type][i];
         memory_regions[i].used = 0;
         memory_regions[i].linear_heap_memory = std::make_shared<std::vector<u8>>();
+        // Reserve enough space for this region of FCRAM.
+        // We do not want this block of memory to be relocated when allocating from it.
+        memory_regions[i].linear_heap_memory->reserve(memory_regions[i].size);
 
         base += memory_regions[i].size;
     }
