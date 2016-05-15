@@ -75,14 +75,14 @@ public:
     /**
      * Signals a button press action to the HID module.
      * @param pad_state indicates which button to press
-     * @note only handle real buttons (A/B/X/Y/...), excluding analog input like circle pad.
+     * @note only handles real buttons (A/B/X/Y/...), excluding analog inputs like the circle pad.
      */
     void ButtonPressed(Service::HID::PadState pad_state);
 
     /**
      * Signals a button release action to the HID module.
      * @param pad_state indicates which button to press
-     * @note only handle real buttons (A/B/X/Y/...), excluding analog input like circle pad.
+     * @note only handles real buttons (A/B/X/Y/...), excluding analog inputs like the circle pad.
      */
     void ButtonReleased(Service::HID::PadState pad_state);
 
@@ -123,7 +123,7 @@ public:
     }
 
     /**
-     * Gets the current cirle pad state.
+     * Gets the current circle pad state.
      * @note This should be called by the core emu thread to get a state set by the window thread.
      * @todo Fix this function to be thread-safe.
      * @return std::tuple of (x, y), where `x` and `y` are the circle pad coordinates

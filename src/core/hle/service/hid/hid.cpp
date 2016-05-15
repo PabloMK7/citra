@@ -74,7 +74,7 @@ void Update() {
 
     PadState state = VideoCore::g_emu_window->GetPadState();
 
-    // Get current circle pad positon and update circle pad direction
+    // Get current circle pad position and update circle pad direction
     s16 circle_pad_x, circle_pad_y;
     std::tie(circle_pad_x, circle_pad_y) = VideoCore::g_emu_window->GetCirclePadState();
     state.hex |= GetCirclePadDirectionState(circle_pad_x, circle_pad_y).hex;

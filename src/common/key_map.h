@@ -13,7 +13,7 @@ class EmuWindow;
 namespace KeyMap {
 
 /**
- * Represents a key mapping target that are not 3DS real buttons.
+ * Represents key mapping targets that are not real 3DS buttons.
  * They will be handled by KeyMap and translated to 3DS input.
  */
 enum class IndirectTarget {
@@ -25,7 +25,7 @@ enum class IndirectTarget {
 };
 
 /**
- * Represents a key mapping target. It can be a PadState that represents 3DS real buttons,
+ * Represents a key mapping target. It can be a PadState that represents real 3DS buttons,
  * or an IndirectTarget.
  */
 struct KeyTarget {
@@ -84,12 +84,12 @@ void SetKeyMapping(HostDeviceKey key, KeyTarget target);
 void ClearKeyMapping(int device_id);
 
 /**
- * Maps a key press actions and call the corresponding function in EmuWindow
+ * Maps a key press action and call the corresponding function in EmuWindow
  */
 void PressKey(EmuWindow& emu_window, HostDeviceKey key);
 
 /**
- * Maps a key release actions and call the corresponding function in EmuWindow
+ * Maps a key release action and call the corresponding function in EmuWindow
  */
 void ReleaseKey(EmuWindow& emu_window, HostDeviceKey key);
 
