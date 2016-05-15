@@ -392,6 +392,20 @@ void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
             GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, dest_buffer, copy_amount);
             break;
         }
+        case PageType::RasterizerCachedMemory: {
+            RasterizerFlushRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            std::memcpy(dest_buffer, GetPointerFromVMA(current_vaddr), copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedSpecial: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            RasterizerFlushRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, dest_buffer, copy_amount);
+            break;
+        }
         default:
             UNREACHABLE();
         }
@@ -446,6 +460,20 @@ void WriteBlock(const VAddr dest_addr, const void* src_buffer, const size_t size
             GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, src_buffer, copy_amount);
             break;
         }
+        case PageType::RasterizerCachedMemory: {
+            RasterizerFlushAndInvalidateRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            std::memcpy(GetPointerFromVMA(current_vaddr), src_buffer, copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedSpecial: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            RasterizerFlushAndInvalidateRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, src_buffer, copy_amount);
+            break;
+        }
         default:
             UNREACHABLE();
         }
@@ -461,6 +489,8 @@ void ZeroBlock(const VAddr dest_addr, const size_t size) {
     size_t remaining_size = size;
     size_t page_index = dest_addr >> PAGE_BITS;
     size_t page_offset = dest_addr & PAGE_MASK;
+
+    static const std::array<u8, PAGE_SIZE> zeros = {};
 
     while (remaining_size > 0) {
         const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
@@ -481,7 +511,20 @@ void ZeroBlock(const VAddr dest_addr, const size_t size) {
         case PageType::Special: {
             DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
 
-            static const std::array<u8, PAGE_SIZE> zeros = {};
+            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, zeros.data(), copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedMemory: {
+            RasterizerFlushAndInvalidateRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            std::memset(GetPointerFromVMA(current_vaddr), 0, copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedSpecial: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            RasterizerFlushAndInvalidateRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
             GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, zeros.data(), copy_amount);
             break;
         }
@@ -518,6 +561,22 @@ void CopyBlock(VAddr dest_addr, VAddr src_addr, const size_t size) {
         }
         case PageType::Special: {
             DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            std::vector<u8> buffer(copy_amount);
+            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, buffer.data(), buffer.size());
+            WriteBlock(dest_addr, buffer.data(), buffer.size());
+            break;
+        }
+        case PageType::RasterizerCachedMemory: {
+            RasterizerFlushRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
+
+            WriteBlock(dest_addr, GetPointerFromVMA(current_vaddr), copy_amount);
+            break;
+        }
+        case PageType::RasterizerCachedSpecial: {
+            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+
+            RasterizerFlushRegion(VirtualToPhysicalAddress(current_vaddr), copy_amount);
 
             std::vector<u8> buffer(copy_amount);
             GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, buffer.data(), buffer.size());

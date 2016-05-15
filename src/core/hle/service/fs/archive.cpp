@@ -116,7 +116,6 @@ ResultVal<bool> File::SyncRequest() {
             }
             Memory::WriteBlock(address, data.data(), *read);
             cmd_buff[2] = static_cast<u32>(*read);
-            Memory::RasterizerFlushAndInvalidateRegion(Memory::VirtualToPhysicalAddress(address), length);
             break;
         }
 
