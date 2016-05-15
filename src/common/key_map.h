@@ -12,12 +12,16 @@ class EmuWindow;
 
 namespace KeyMap {
 
+/**
+ * Represents a key mapping target that are not 3DS real buttons.
+ * They will be handled by KeyMap and translated to 3DS input.
+ */
 enum class IndirectTarget {
-    CIRCLE_PAD_UP,
-    CIRCLE_PAD_DOWN,
-    CIRCLE_PAD_LEFT,
-    CIRCLE_PAD_RIGHT,
-    CIRCLE_PAD_MODIFIER,
+    CirclePadUp,
+    CirclePadDown,
+    CirclePadLeft,
+    CirclePadRight,
+    CirclePadModifier,
 };
 
 /**

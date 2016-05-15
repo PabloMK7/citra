@@ -19,11 +19,11 @@ const std::array<KeyTarget, Settings::NativeInput::NUM_INPUTS> mapping_targets =
     Service::HID::PAD_UP, Service::HID::PAD_DOWN, Service::HID::PAD_LEFT, Service::HID::PAD_RIGHT,
     Service::HID::PAD_C_UP, Service::HID::PAD_C_DOWN, Service::HID::PAD_C_LEFT, Service::HID::PAD_C_RIGHT,
 
-    IndirectTarget::CIRCLE_PAD_UP,
-    IndirectTarget::CIRCLE_PAD_DOWN,
-    IndirectTarget::CIRCLE_PAD_LEFT,
-    IndirectTarget::CIRCLE_PAD_RIGHT,
-    IndirectTarget::CIRCLE_PAD_MODIFIER,
+    IndirectTarget::CirclePadUp,
+    IndirectTarget::CirclePadDown,
+    IndirectTarget::CirclePadLeft,
+    IndirectTarget::CirclePadRight,
+    IndirectTarget::CirclePadModifier,
 }};
 
 static std::map<HostDeviceKey, KeyTarget> key_map;
@@ -79,23 +79,23 @@ void PressKey(EmuWindow& emu_window, HostDeviceKey key) {
         emu_window.ButtonPressed({{target->second.target.direct_target_hex}});
     } else {
         switch (target->second.target.indirect_target) {
-        case IndirectTarget::CIRCLE_PAD_UP:
+        case IndirectTarget::CirclePadUp:
             circle_pad_up = true;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_DOWN:
+        case IndirectTarget::CirclePadDown:
             circle_pad_down = true;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_LEFT:
+        case IndirectTarget::CirclePadLeft:
             circle_pad_left = true;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_RIGHT:
+        case IndirectTarget::CirclePadRight:
             circle_pad_right = true;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_MODIFIER:
+        case IndirectTarget::CirclePadModifier:
             circle_pad_modifier = true;
             UpdateCirclePad(emu_window);
             break;
@@ -112,23 +112,23 @@ void ReleaseKey(EmuWindow& emu_window,HostDeviceKey key) {
         emu_window.ButtonReleased({{target->second.target.direct_target_hex}});
     } else {
         switch (target->second.target.indirect_target) {
-        case IndirectTarget::CIRCLE_PAD_UP:
+        case IndirectTarget::CirclePadUp:
             circle_pad_up = false;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_DOWN:
+        case IndirectTarget::CirclePadDown:
             circle_pad_down = false;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_LEFT:
+        case IndirectTarget::CirclePadLeft:
             circle_pad_left = false;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_RIGHT:
+        case IndirectTarget::CirclePadRight:
             circle_pad_right = false;
             UpdateCirclePad(emu_window);
             break;
-        case IndirectTarget::CIRCLE_PAD_MODIFIER:
+        case IndirectTarget::CirclePadModifier:
             circle_pad_modifier = false;
             UpdateCirclePad(emu_window);
             break;
