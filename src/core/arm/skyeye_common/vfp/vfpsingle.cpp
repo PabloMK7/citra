@@ -592,7 +592,11 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
          * 2^0 <= m < 2^32-2^8
          */
         d = (vsm.significand << 1) >> shift;
-        rem = vsm.significand << (33 - shift);
+        if (shift > 0) {
+            rem = (vsm.significand << 1) << (32 - shift);
+        } else {
+            rem = 0;
+        }
 
         if (rmode == FPSCR_ROUND_NEAREST) {
             incr = 0x80000000;
@@ -619,12 +623,20 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
     } else {
         d = 0;
         if (vsm.exponent | vsm.significand) {
-            exceptions |= FPSCR_IXC;
-            if (rmode == FPSCR_ROUND_PLUSINF && vsm.sign == 0)
+            if (rmode == FPSCR_ROUND_NEAREST) {
+                if (vsm.exponent >= 126) {
+                    d = vsm.sign ? 0 : 1;
+                    exceptions |= vsm.sign ? FPSCR_IOC : FPSCR_IXC;
+                } else {
+                    exceptions |= FPSCR_IXC;
+                }
+            } else if (rmode == FPSCR_ROUND_PLUSINF && vsm.sign == 0) {
                 d = 1;
-            else if (rmode == FPSCR_ROUND_MINUSINF && vsm.sign) {
-                d = 0;
-                exceptions |= FPSCR_IOC;
+                exceptions |= FPSCR_IXC;
+            } else if (rmode == FPSCR_ROUND_MINUSINF) {
+                exceptions |= vsm.sign ? FPSCR_IOC : FPSCR_IXC;
+            } else {
+                exceptions |= FPSCR_IXC;
             }
         }
     }
@@ -661,7 +673,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
     if (tm & VFP_NAN) {
         d = 0;
         exceptions |= FPSCR_IOC;
-    } else if (vsm.exponent >= 127 + 32) {
+    } else if (vsm.exponent >= 127 + 31) {
         /*
          * m >= 2^31-2^7: invalid
          */
@@ -675,7 +687,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
 
         /* 2^0 <= m <= 2^31-2^7 */
         d = (vsm.significand << 1) >> shift;
-        rem = vsm.significand << (33 - shift);
+        rem = (vsm.significand << 1) << (32 - shift);
 
         if (rmode == FPSCR_ROUND_NEAREST) {
             incr = 0x80000000;
@@ -701,10 +713,14 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
         d = 0;
         if (vsm.exponent | vsm.significand) {
             exceptions |= FPSCR_IXC;
-            if (rmode == FPSCR_ROUND_PLUSINF && vsm.sign == 0)
+            if (rmode == FPSCR_ROUND_NEAREST) {
+                if (vsm.exponent >= 126)
+                    d = vsm.sign ? 0xffffffff : 1;
+            } else if (rmode == FPSCR_ROUND_PLUSINF && vsm.sign == 0) {
                 d = 1;
-            else if (rmode == FPSCR_ROUND_MINUSINF && vsm.sign)
-                d = -1;
+            } else if (rmode == FPSCR_ROUND_MINUSINF && vsm.sign) {
+                d = 0xffffffff;
+            }
         }
     }
 
