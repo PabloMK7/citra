@@ -9,6 +9,7 @@
 #include "audio_core/hle/pipe.h"
 #include "audio_core/hle/source.h"
 #include "audio_core/sink.h"
+#include "audio_core/time_stretch.h"
 
 namespace DSP {
 namespace HLE {
@@ -48,15 +49,29 @@ static std::array<Source, num_sources> sources = {
 };
 
 static std::unique_ptr<AudioCore::Sink> sink;
+static AudioCore::TimeStretcher time_stretcher;
 
 void Init() {
     DSP::HLE::ResetPipes();
+
     for (auto& source : sources) {
         source.Reset();
+    }
+
+    time_stretcher.Reset();
+    if (sink) {
+        time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
     }
 }
 
 void Shutdown() {
+    time_stretcher.Flush();
+    while (true) {
+        std::vector<s16> residual_audio = time_stretcher.Process(sink->SamplesInQueue());
+        if (residual_audio.empty())
+            break;
+        sink->EnqueueSamples(residual_audio);
+    }
 }
 
 bool Tick() {
@@ -77,6 +92,7 @@ bool Tick() {
 
 void SetSink(std::unique_ptr<AudioCore::Sink> sink_) {
     sink = std::move(sink_);
+    time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
 } // namespace HLE
