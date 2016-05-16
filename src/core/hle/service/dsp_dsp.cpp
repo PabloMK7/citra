@@ -440,9 +440,9 @@ static void GetHeadphoneStatus(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x1F, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0; // Not using headphones?
+    cmd_buff[2] = 0; // Not using headphones
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    LOG_DEBUG(Service_DSP, "called");
 }
 
 /**
