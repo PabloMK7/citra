@@ -64,6 +64,7 @@ MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
 OutputVertex ShaderSetup::Run(UnitState<false>& state, const InputVertex& input, int num_attributes) {
     auto& config = g_state.regs.vs;
+    auto& setup = g_state.vs;
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
@@ -81,11 +82,11 @@ OutputVertex ShaderSetup::Run(UnitState<false>& state, const InputVertex& input,
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled)
-        jit_shader->Run(&state.registers, g_state.regs.vs.main_offset);
+        jit_shader->Run(setup, state, config.main_offset);
     else
-        RunInterpreter(state);
+        RunInterpreter(setup, state, config.main_offset);
 #else
-    RunInterpreter(state);
+    RunInterpreter(setup, state, config.main_offset);
 #endif // ARCHITECTURE_x86_64
 
     // Setup output data
@@ -156,7 +157,7 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
 
-    RunInterpreter(state);
+    RunInterpreter(setup, state, config.main_offset);
     return state.debug;
 }
 

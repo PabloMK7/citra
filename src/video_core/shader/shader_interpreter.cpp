@@ -41,11 +41,11 @@ struct CallStackElement {
 };
 
 template<bool Debug>
-void RunInterpreter(UnitState<Debug>& state) {
+void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned offset) {
     // TODO: Is there a maximal size for this?
     boost::container::static_vector<CallStackElement, 16> call_stack;
 
-    u32 program_counter = g_state.regs.vs.main_offset;
+    u32 program_counter = offset;
 
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
@@ -647,8 +647,8 @@ void RunInterpreter(UnitState<Debug>& state) {
 }
 
 // Explicit instantiation
-template void RunInterpreter(UnitState<false>& state);
-template void RunInterpreter(UnitState<true>& state);
+template void RunInterpreter(const ShaderSetup& setup, UnitState<false>& state, unsigned offset);
+template void RunInterpreter(const ShaderSetup& setup, UnitState<true>& state, unsigned offset);
 
 } // namespace
 
