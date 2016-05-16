@@ -339,8 +339,11 @@ private:
     /// Syncs the cull mode to match the PICA register
     void SyncCullMode();
 
-    /// Syncs the depth scale and offset to match the PICA registers
-    void SyncDepthModifiers();
+    /// Syncs the depth scale to match the PICA register
+    void SyncDepthScale();
+
+    /// Syncs the depth offset to match the PICA register
+    void SyncDepthOffset();
 
     /// Syncs the blend enabled status to match the PICA register
     void SyncBlendEnabled();
@@ -413,7 +416,7 @@ private:
         UniformData data;
         bool lut_dirty[6];
         bool dirty;
-    } uniform_block_data;
+    } uniform_block_data = {};
 
     std::array<SamplerInfo, 3> texture_samplers;
     OGLVertexArray vertex_array;
@@ -422,5 +425,5 @@ private:
     OGLFramebuffer framebuffer;
 
     std::array<OGLTexture, 6> lighting_luts;
-    std::array<std::array<GLvec4, 256>, 6> lighting_lut_data;
+    std::array<std::array<GLvec4, 256>, 6> lighting_lut_data{};
 };
