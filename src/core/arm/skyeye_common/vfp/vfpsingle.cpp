@@ -638,7 +638,7 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
 
 static u32 vfp_single_ftouiz(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-    return vfp_single_ftoui(state, sd, unused, m, FPSCR_ROUND_TOZERO);
+    return vfp_single_ftoui(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
@@ -717,7 +717,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
 
 static u32 vfp_single_ftosiz(ARMul_State* state, int sd, int unused, s32 m, u32 fpscr)
 {
-    return vfp_single_ftosi(state, sd, unused, m, FPSCR_ROUND_TOZERO);
+    return vfp_single_ftosi(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static struct op fops_ext[] = {

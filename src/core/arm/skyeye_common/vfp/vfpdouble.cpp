@@ -615,7 +615,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
 static u32 vfp_double_ftouiz(ARMul_State* state, int sd, int unused, int dm, u32 fpscr)
 {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_double_ftoui(state, sd, unused, dm, FPSCR_ROUND_TOZERO);
+    return vfp_double_ftoui(state, sd, unused, dm, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 fpscr)
@@ -692,7 +692,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
 static u32 vfp_double_ftosiz(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_double_ftosi(state, dd, unused, dm, FPSCR_ROUND_TOZERO);
+    return vfp_double_ftosi(state, dd, unused, dm, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static struct op fops_ext[] = {
