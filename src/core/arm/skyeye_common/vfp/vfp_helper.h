@@ -357,8 +357,9 @@ inline int vfp_double_type(const vfp_double* s)
 // Unpack a double-precision float.  Note that this returns the magnitude
 // of the double-precision float mantissa with the 1. if necessary,
 // aligned to bit 62.
-inline void vfp_double_unpack(vfp_double* s, s64 val, u32* fpscr)
+inline u32 vfp_double_unpack(vfp_double* s, s64 val, u32 fpscr)
 {
+    u32 exceptions = 0;
     s->sign = vfp_double_packed_sign(val) >> 48;
     s->exponent = vfp_double_packed_exponent(val);
 
@@ -369,12 +370,13 @@ inline void vfp_double_unpack(vfp_double* s, s64 val, u32* fpscr)
 
     // If flush-to-zero mode is enabled, turn the denormal into zero.
     // On a VFPv2 architecture, the sign of the zero is always positive.
-    if ((*fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_double_type(s) & VFP_DENORMAL) != 0) {
+    if ((fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_double_type(s) & VFP_DENORMAL) != 0) {
         s->sign = 0;
         s->exponent = 0;
         s->significand = 0;
-        *fpscr |= FPSCR_IDC;
+        exceptions |= FPSCR_IDC;
     }
+    return exceptions;
 }
 
 // Re-pack a double-precision float. This assumes that the float is
