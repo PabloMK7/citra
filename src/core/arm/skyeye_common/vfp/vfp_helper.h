@@ -271,8 +271,9 @@ inline int vfp_single_type(const vfp_single* s)
 // Unpack a single-precision float.  Note that this returns the magnitude
 // of the single-precision float mantissa with the 1. if necessary,
 // aligned to bit 30.
-inline void vfp_single_unpack(vfp_single* s, s32 val, u32* fpscr)
+inline u32 vfp_single_unpack(vfp_single* s, s32 val, u32 fpscr)
 {
+    u32 exceptions = 0;
     s->sign = vfp_single_packed_sign(val) >> 16,
     s->exponent = vfp_single_packed_exponent(val);
 
@@ -283,12 +284,13 @@ inline void vfp_single_unpack(vfp_single* s, s32 val, u32* fpscr)
 
     // If flush-to-zero mode is enabled, turn the denormal into zero.
     // On a VFPv2 architecture, the sign of the zero is always positive.
-    if ((*fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_single_type(s) & VFP_DENORMAL) != 0) {
+    if ((fpscr & FPSCR_FLUSH_TO_ZERO) != 0 && (vfp_single_type(s) & VFP_DENORMAL) != 0) {
         s->sign = 0;
         s->exponent = 0;
         s->significand = 0;
-        *fpscr |= FPSCR_IDC;
+        exceptions |= FPSCR_IDC;
     }
+    return exceptions;
 }
 
 // Re-pack a single-precision float. This assumes that the float is
