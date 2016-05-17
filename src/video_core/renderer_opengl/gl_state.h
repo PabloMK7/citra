@@ -40,6 +40,8 @@ public:
 
     struct {
         bool enabled; // GL_BLEND
+        GLenum rgb_equation; // GL_BLEND_EQUATION_RGB
+        GLenum a_equation; // GL_BLEND_EQUATION_ALPHA
         GLenum src_rgb_func; // GL_BLEND_SRC_RGB
         GLenum dst_rgb_func; // GL_BLEND_DST_RGB
         GLenum src_a_func; // GL_BLEND_SRC_ALPHA
