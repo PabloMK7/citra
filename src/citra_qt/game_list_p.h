@@ -15,24 +15,9 @@
 #include "common/string_util.h"
 #include "common/color.h"
 
-#include "core/loader/loader.h"
+#include "core/loader/smdh.h"
 
 #include "video_core/utils.h"
-
-/**
- * Tests if data is a valid SMDH by its length and magic number.
- * @param smdh_data data buffer to test
- * @return bool test result
- */
-static bool IsValidSMDH(const std::vector<u8>& smdh_data) {
-    if (smdh_data.size() < sizeof(Loader::SMDH))
-        return false;
-
-    u32 magic;
-    memcpy(&magic, smdh_data.data(), 4);
-
-    return Loader::MakeMagic('S', 'M', 'D', 'H') == magic;
-}
 
 /**
  * Gets game icon from SMDH
@@ -40,27 +25,11 @@ static bool IsValidSMDH(const std::vector<u8>& smdh_data) {
  * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
  * @return QPixmap game icon
  */
-static QPixmap GetIconFromSMDH(const Loader::SMDH& smdh, bool large) {
-    u32 size;
-    const u8* icon_data;
-
-    if (large) {
-        size = 48;
-        icon_data = smdh.large_icon.data();
-    } else {
-        size = 24;
-        icon_data = smdh.small_icon.data();
-    }
-
-    QImage icon(size, size, QImage::Format::Format_RGB888);
-    for (u32 x = 0; x < size; ++x) {
-        for (u32 y = 0; y < size; ++y) {
-            u32 coarse_y = y & ~7;
-            auto v = Color::DecodeRGB565(
-                icon_data + VideoCore::GetMortonOffset(x, y, 2) + coarse_y * size * 2);
-            icon.setPixel(x, y, qRgb(v.r(), v.g(), v.b()));
-        }
-    }
+static QPixmap GetQPixmapFromSMDH(const Loader::SMDH& smdh, bool large) {
+    std::vector<u16> icon_data = smdh.GetIcon(large);
+    const uchar* data = reinterpret_cast<const uchar*>(icon_data.data());
+    int size = large ? 48 : 24;
+    QImage icon(data, size, size, QImage::Format::Format_RGB16);
     return QPixmap::fromImage(icon);
 }
 
@@ -82,8 +51,8 @@ static QPixmap GetDefaultIcon(bool large) {
  * @param language title language
  * @return QString short title
  */
-static QString GetShortTitleFromSMDH(const Loader::SMDH& smdh, Loader::SMDH::TitleLanguage language) {
-    return QString::fromUtf16(smdh.titles[static_cast<int>(language)].short_title.data());
+static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh, Loader::SMDH::TitleLanguage language) {
+    return QString::fromUtf16(smdh.GetShortTitle(language).data());
 }
 
 class GameListItem : public QStandardItem {
@@ -112,7 +81,7 @@ public:
     {
         setData(game_path, FullPathRole);
 
-        if (!IsValidSMDH(smdh_data)) {
+        if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
             setData(GetDefaultIcon(true), Qt::DecorationRole);
             return;
@@ -122,10 +91,10 @@ public:
         memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
         // Get icon from SMDH
-        setData(GetIconFromSMDH(smdh, true), Qt::DecorationRole);
+        setData(GetQPixmapFromSMDH(smdh, true), Qt::DecorationRole);
 
         // Get title form SMDH
-        setData(GetShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English), TitleRole);
+        setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English), TitleRole);
     }
 
     QVariant data(int role) const override {
