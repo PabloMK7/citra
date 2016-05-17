@@ -10,8 +10,10 @@
 #include "common/string_util.h"
 #include "common/swap.h"
 
+#include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/loader/ncch.h"
 #include "core/memory.h"
 
@@ -303,7 +305,12 @@ ResultStatus AppLoader_NCCH::Load() {
 
     is_loaded = true; // Set state to loaded
 
-    return LoadExec(); // Load the executable into memory for booting
+    result = LoadExec(); // Load the executable into memory for booting
+    if (ResultStatus::Success != result)
+        return result;
+
+    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this), Service::FS::ArchiveIdCode::RomFS);
+    return ResultStatus::Success;
 }
 
 ResultStatus AppLoader_NCCH::ReadCode(std::vector<u8>& buffer) {

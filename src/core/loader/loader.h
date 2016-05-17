@@ -207,10 +207,10 @@ extern const std::initializer_list<Kernel::AddressMapping> default_address_mappi
 std::unique_ptr<AppLoader> GetLoader(FileUtil::IOFile&& file, FileType type, const std::string& filename, const std::string& filepath);
 
 /**
- * Identifies and loads a bootable file
+ * Identifies a bootable file and return a suitable loader
  * @param filename String filename of bootable file
- * @return ResultStatus result of function
+ * @return best loader for this file
  */
-ResultStatus LoadFile(const std::string& filename);
+std::unique_ptr<AppLoader> GetFileLoader(const std::string& filename);
 
 } // namespace

@@ -10,6 +10,7 @@
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/loader/3dsx.h"
 #include "core/memory.h"
 
@@ -262,6 +263,8 @@ ResultStatus AppLoader_THREEDSX::Load() {
     Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
     Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
+
+    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this), Service::FS::ArchiveIdCode::RomFS);
 
     is_loaded = true;
     return ResultStatus::Success;
