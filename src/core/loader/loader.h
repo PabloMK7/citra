@@ -132,6 +132,12 @@ public:
     virtual ~AppLoader() { }
 
     /**
+     * Returns the type of this file
+     * @return FileType corresponding to the loaded file
+     */
+    virtual FileType GetFileType() = 0;
+
+    /**
      * Load the application
      * @return ResultStatus result of function
      */
