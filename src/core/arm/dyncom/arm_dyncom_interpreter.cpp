@@ -5527,28 +5527,32 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 
             // SMUAD and SMLAD
             if (BIT(op2, 1) == 0) {
-                RD = (product1 + product2);
+                u32 rd_val = (product1 + product2);
 
                 if (inst_cream->Ra != 15) {
-                    RD += cpu->Reg[inst_cream->Ra];
+                    rd_val += cpu->Reg[inst_cream->Ra];
 
                     if (ARMul_AddOverflowQ(product1 + product2, cpu->Reg[inst_cream->Ra]))
                         cpu->Cpsr |= (1 << 27);
                 }
+
+                RD = rd_val;
 
                 if (ARMul_AddOverflowQ(product1, product2))
                     cpu->Cpsr |= (1 << 27);
             }
             // SMUSD and SMLSD
             else {
-                RD = (product1 - product2);
+                u32 rd_val = (product1 - product2);
 
                 if (inst_cream->Ra != 15) {
-                    RD += cpu->Reg[inst_cream->Ra];
+                    rd_val += cpu->Reg[inst_cream->Ra];
 
                     if (ARMul_AddOverflowQ(product1 - product2, cpu->Reg[inst_cream->Ra]))
                         cpu->Cpsr |= (1 << 27);
                 }
+
+                RD = rd_val;
             }
         }
 
