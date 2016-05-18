@@ -7,6 +7,7 @@
 
 #include "core/hle/service/service.h"
 #include "core/hle/service/ac_u.h"
+#include "core/hle/service/act_a.h"
 #include "core/hle/service/act_u.h"
 #include "core/hle/service/csnd_snd.h"
 #include "core/hle/service/dlp_srvr.h"
@@ -119,6 +120,7 @@ void Init() {
     Service::PTM::Init();
 
     AddService(new AC_U::Interface);
+    AddService(new ACT_A::Interface);
     AddService(new ACT_U::Interface);
     AddService(new CSND_SND::Interface);
     AddService(new DLP_SRVR::Interface);
