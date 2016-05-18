@@ -29,6 +29,11 @@
        <string>Input</string>
       </attribute>
      </widget>
+      <widget class="ConfigureAudio" name="audioTab">
+        <attribute name="title">
+          <string>Audio</string>
+        </attribute>
+      </widget>
      <widget class="ConfigureDebug" name="debugTab">
       <attribute name="title">
        <string>Debug</string>
@@ -50,6 +55,12 @@
    <class>ConfigureGeneral</class>
    <extends>QWidget</extends>
    <header>configure_general.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureAudio</class>
+   <extends>QWidget</extends>
+   <header>configure_audio.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
