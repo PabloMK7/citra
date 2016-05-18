@@ -91,7 +91,15 @@ const char* GetFileTypeString(FileType type) {
     return "unknown";
 }
 
-std::unique_ptr<AppLoader> GetLoader(FileUtil::IOFile&& file, FileType type,
+/**
+ * Get a loader for a file with a specific type
+ * @param file The file to load
+ * @param type The type of the file
+ * @param filename the file name (without path)
+ * @param filepath the file full path (with name)
+ * @return std::unique_ptr<AppLoader> a pointer to a loader object;  nullptr for unsupported type
+ */
+static std::unique_ptr<AppLoader> GetFileLoader(FileUtil::IOFile&& file, FileType type,
     const std::string& filename, const std::string& filepath) {
     switch (type) {
 
@@ -113,7 +121,7 @@ std::unique_ptr<AppLoader> GetLoader(FileUtil::IOFile&& file, FileType type,
     }
 }
 
-std::unique_ptr<AppLoader> GetFileLoader(const std::string& filename) {
+std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
     FileUtil::IOFile file(filename, "rb");
     if (!file.IsOpen()) {
         LOG_ERROR(Loader, "Failed to load file %s", filename.c_str());
@@ -134,7 +142,7 @@ std::unique_ptr<AppLoader> GetFileLoader(const std::string& filename) {
 
     LOG_INFO(Loader, "Loading file %s as %s...", filename.c_str(), GetFileTypeString(type));
 
-    return GetLoader(std::move(file), type, filename_filename, filename);
+    return GetFileLoader(std::move(file), type, filename_filename, filename);
 }
 
 } // namespace Loader

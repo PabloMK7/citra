@@ -272,7 +272,7 @@ bool GMainWindow::InitializeSystem() {
 }
 
 bool GMainWindow::LoadROM(const std::string& filename) {
-    std::unique_ptr<Loader::AppLoader> app_loader = Loader::GetFileLoader(filename);
+    std::unique_ptr<Loader::AppLoader> app_loader = Loader::GetLoader(filename);
     if (!app_loader) {
         LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filename.c_str());
         QMessageBox::critical(this, tr("Error while loading ROM!"),

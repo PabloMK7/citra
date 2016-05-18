@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     System::Init(emu_window.get());
     SCOPE_EXIT({ System::Shutdown(); });
 
-    std::unique_ptr<Loader::AppLoader> loader = Loader::GetFileLoader(boot_filename);
+    std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(boot_filename);
     if (!loader) {
         LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", boot_filename.c_str());
         return -1;
