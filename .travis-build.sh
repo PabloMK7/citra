@@ -18,9 +18,16 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
     mkdir build && cd build
     cmake -DCITRA_FORCE_QT4=ON ..
     make -j4
+
+    ctest -VV -C Release
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    set -o pipefail
+
     export Qt5_DIR=$(brew --prefix)/opt/qt5
+
     mkdir build && cd build
     cmake .. -GXcode
-    xcodebuild -configuration Release | xcpretty -c && exit ${PIPESTATUS[0]}
+    xcodebuild -configuration Release | xcpretty -c
+
+    ctest -VV -C Release
 fi
