@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "audio_core/hle/dsp.h"
+#include "audio_core/hle/mixers.h"
 #include "audio_core/hle/pipe.h"
 #include "audio_core/hle/source.h"
 #include "audio_core/sink.h"
@@ -13,6 +14,8 @@
 
 namespace DSP {
 namespace HLE {
+
+// Region management
 
 std::array<SharedMemory, 2> g_regions;
 
@@ -41,15 +44,56 @@ static SharedMemory& WriteRegion() {
     return g_regions[1 - CurrentRegionIndex()];
 }
 
+// Audio processing and mixing
+
 static std::array<Source, num_sources> sources = {
     Source(0), Source(1), Source(2), Source(3), Source(4), Source(5),
     Source(6), Source(7), Source(8), Source(9), Source(10), Source(11),
     Source(12), Source(13), Source(14), Source(15), Source(16), Source(17),
     Source(18), Source(19), Source(20), Source(21), Source(22), Source(23)
 };
+static Mixers mixers;
+
+static StereoFrame16 GenerateCurrentFrame() {
+    SharedMemory& read = ReadRegion();
+    SharedMemory& write = WriteRegion();
+
+    std::array<QuadFrame32, 3> intermediate_mixes = {};
+
+    // Generate intermediate mixes
+    for (size_t i = 0; i < num_sources; i++) {
+        write.source_statuses.status[i] = sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
+        for (size_t mix = 0; mix < 3; mix++) {
+            sources[i].MixInto(intermediate_mixes[mix], mix);
+        }
+    }
+
+    // Generate final mix
+    write.dsp_status = mixers.Tick(read.dsp_configuration, read.intermediate_mix_samples, write.intermediate_mix_samples, intermediate_mixes);
+
+    StereoFrame16 output_frame = mixers.GetOutput();
+
+    // Write current output frame to the shared memory region
+    for (size_t samplei = 0; samplei < output_frame.size(); samplei++) {
+        for (size_t channeli = 0; channeli < output_frame[0].size(); channeli++) {
+            write.final_samples.pcm16[samplei][channeli] = s16_le(output_frame[samplei][channeli]);
+        }
+    }
+
+    return output_frame;
+}
+
+// Audio output
 
 static std::unique_ptr<AudioCore::Sink> sink;
 static AudioCore::TimeStretcher time_stretcher;
+
+static void OutputCurrentFrame(const StereoFrame16& frame) {
+    time_stretcher.AddSamples(&frame[0][0], frame.size());
+    sink->EnqueueSamples(time_stretcher.Process(sink->SamplesInQueue()));
+}
+
+// Public Interface
 
 void Init() {
     DSP::HLE::ResetPipes();
@@ -57,6 +101,8 @@ void Init() {
     for (auto& source : sources) {
         source.Reset();
     }
+
+    mixers.Reset();
 
     time_stretcher.Reset();
     if (sink) {
@@ -75,17 +121,12 @@ void Shutdown() {
 }
 
 bool Tick() {
-    SharedMemory& read = ReadRegion();
-    SharedMemory& write = WriteRegion();
+    StereoFrame16 current_frame = {};
 
-    std::array<QuadFrame32, 3> intermediate_mixes = {};
+    // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to shared memory region)
+    current_frame = GenerateCurrentFrame();
 
-    for (size_t i = 0; i < num_sources; i++) {
-        write.source_statuses.status[i] = sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
-        for (size_t mix = 0; mix < 3; mix++) {
-            sources[i].MixInto(intermediate_mixes[mix], mix);
-        }
-    }
+    OutputCurrentFrame(current_frame);
 
     return true;
 }
