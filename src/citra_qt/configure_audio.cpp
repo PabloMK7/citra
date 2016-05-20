@@ -28,14 +28,14 @@ ConfigureAudio::~ConfigureAudio() {
 }
 
 void ConfigureAudio::setConfiguration() {
+    int new_sink_index = 0;
     for (int index = 0; index < ui->output_sink_combo_box->count(); index++) {
         if (ui->output_sink_combo_box->itemText(index).toStdString() == Settings::values.sink_id) {
-            ui->output_sink_combo_box->setCurrentIndex(index);
+            new_sink_index = index;
             break;
         }
     }
-
-    ui->output_sink_combo_box->setCurrentIndex(0);
+    ui->output_sink_combo_box->setCurrentIndex(new_sink_index);
 }
 
 void ConfigureAudio::applyConfiguration() {
