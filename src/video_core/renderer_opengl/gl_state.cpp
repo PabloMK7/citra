@@ -58,6 +58,8 @@ OpenGLState::OpenGLState() {
         lut.texture_1d = 0;
     }
 
+    fog_lut.texture_1d = 0;
+
     draw.read_framebuffer = 0;
     draw.draw_framebuffer = 0;
     draw.vertex_array = 0;
@@ -193,6 +195,12 @@ void OpenGLState::Apply() const {
             glActiveTexture(GL_TEXTURE3 + i);
             glBindTexture(GL_TEXTURE_1D, lighting_luts[i].texture_1d);
         }
+    }
+
+    // Fog LUT
+    if (fog_lut.texture_1d != cur_state.fog_lut.texture_1d) {
+        glActiveTexture(GL_TEXTURE9);
+        glBindTexture(GL_TEXTURE_1D, fog_lut.texture_1d);
     }
 
     // Framebuffer

@@ -68,6 +68,10 @@ public:
     } lighting_luts[6];
 
     struct {
+        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+    } fog_lut;
+
+    struct {
         GLuint read_framebuffer; // GL_READ_FRAMEBUFFER_BINDING
         GLuint draw_framebuffer; // GL_DRAW_FRAMEBUFFER_BINDING
         GLuint vertex_array; // GL_VERTEX_ARRAY_BINDING
