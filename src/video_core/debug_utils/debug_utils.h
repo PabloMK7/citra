@@ -224,7 +224,11 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int s, int t, const Texture
 
 void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data);
 
-void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig,6>& stages);
+std::string GetTevStageConfigColorCombinerString(const Pica::Regs::TevStageConfig& tev_stage);
+std::string GetTevStageConfigAlphaCombinerString(const Pica::Regs::TevStageConfig& tev_stage);
+
+/// Dumps the Tev stage config to log at trace level
+void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig, 6>& stages);
 
 /**
  * Used in the vertex loader to merge access records. TODO: Investigate if actually useful.
