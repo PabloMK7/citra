@@ -27,7 +27,7 @@ build:
   parallel: true
 
 test_script:
-  - cd build && ctest -VV -C Release
+  - cd build && ctest -VV -C Release && cd ..
 
 on_success:
     # copying the needed QT Dlls is now done post build. See the CMakeLists.txt file in the citra-qt folder
