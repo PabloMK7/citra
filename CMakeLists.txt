@@ -255,6 +255,8 @@ endif()
 
 add_subdirectory(externals/soundtouch)
 
+enable_testing()
+
 add_subdirectory(src)
 
 # Install freedesktop.org metadata files, following those specifications:

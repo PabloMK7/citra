@@ -22,7 +22,14 @@ before_build:
   - cmake -G "Visual Studio 14 2015 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 ..
   - cd ..
 
-after_build:
+build:
+  project: build/citra.sln
+  parallel: true
+
+test_script:
+  - cd build && ctest -VV -C Release
+
+on_success:
     # copying the needed QT Dlls is now done post build. See the CMakeLists.txt file in the citra-qt folder
   - ps: >
         if (!"$env:APPVEYOR_PULL_REQUEST_TITLE" -and ("$env:APPVEYOR_REPO_BRANCH" -eq "master"))
