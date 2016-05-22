@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <tuple>
 
 #include "common/common_types.h"
 
@@ -12,10 +13,12 @@
 
 namespace Kernel {
 
+class ClientPort;
+
 class ServerPort final : public WaitObject {
 public:
     /**
-     * Creates a pair of a ServerPort and an associated ClientPort.
+     * Creates a pair of ServerPort and an associated ClientPort.
      * @param max_sessions Maximum number of sessions to the port
      * @param name Optional name of the ports
      * @return The created port tuple

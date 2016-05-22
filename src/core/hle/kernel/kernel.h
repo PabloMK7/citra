@@ -35,7 +35,7 @@ enum KernelHandle : Handle {
 
 enum class HandleType : u32 {
     Unknown         = 0,
-    ServerPort      = 1,
+
     Session         = 2,
     Event           = 3,
     Mutex           = 4,
@@ -49,6 +49,7 @@ enum class HandleType : u32 {
     ResourceLimit   = 12,
     CodeSet         = 13,
     ClientPort      = 14,
+    ServerPort      = 15,
 };
 
 enum {

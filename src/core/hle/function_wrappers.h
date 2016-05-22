@@ -194,6 +194,16 @@ template<ResultCode func(Handle, u32)> void Wrap() {
     FuncReturn(func(PARAM(0), PARAM(1)).raw);
 }
 
+template<ResultCode func(Handle*, Handle*, const char*, u32)> void Wrap() {
+    Handle param_1 = 0;
+    Handle param_2 = 0;
+    u32 retval = func(&param_1, &param_2, reinterpret_cast<const char*>(Memory::GetPointer(PARAM(2))), PARAM(3)).raw;
+    // The first out parameter is moved into R2 and the second is moved into R1.
+    Core::g_app_core->SetReg(1, param_2);
+    Core::g_app_core->SetReg(2, param_1);
+    FuncReturn(retval);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 

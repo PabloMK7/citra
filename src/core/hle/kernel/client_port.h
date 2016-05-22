@@ -12,6 +12,8 @@
 
 namespace Kernel {
 
+class ServerPort;
+
 class ClientPort : public Object {
 public:
     friend class ServerPort;
