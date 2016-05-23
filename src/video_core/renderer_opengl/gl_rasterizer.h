@@ -94,42 +94,42 @@ union PicaShaderConfig {
             state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
         }
 
-        state.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
+        state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
         state.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
         state.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
         state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
 
-        state.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
+        state.lighting.lut_d1.enable = regs.lighting.config1.disable_lut_d1 == 0;
         state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
         state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
         state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
-        state.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
+        state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
         state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
         state.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
         state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
-        state.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
+        state.lighting.lut_rr.enable = regs.lighting.config1.disable_lut_rr == 0;
         state.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
         state.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
         state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
 
-        state.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
+        state.lighting.lut_rg.enable = regs.lighting.config1.disable_lut_rg == 0;
         state.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
         state.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
         state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
 
-        state.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
+        state.lighting.lut_rb.enable = regs.lighting.config1.disable_lut_rb == 0;
         state.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
         state.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
         state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
-        state.lighting.config = regs.lighting.config;
-        state.lighting.fresnel_selector = regs.lighting.fresnel_selector;
-        state.lighting.bump_mode = regs.lighting.bump_mode;
-        state.lighting.bump_selector = regs.lighting.bump_selector;
-        state.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
-        state.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
+        state.lighting.config = regs.lighting.config0.config;
+        state.lighting.fresnel_selector = regs.lighting.config0.fresnel_selector;
+        state.lighting.bump_mode = regs.lighting.config0.bump_mode;
+        state.lighting.bump_selector = regs.lighting.config0.bump_selector;
+        state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
+        state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
 
         return res;
     }

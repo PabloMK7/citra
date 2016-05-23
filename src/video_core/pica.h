@@ -824,7 +824,7 @@ struct Regs {
             BitField<27, 1, u32> clamp_highlights;
             BitField<28, 2, LightingBumpMode> bump_mode;
             BitField<30, 1, u32> disable_bump_renorm;
-        };
+        } config0;
 
         union {
             BitField<16, 1, u32> disable_lut_d0;
@@ -845,13 +845,13 @@ struct Regs {
             BitField<29, 1, u32> disable_dist_atten_light_5;
             BitField<30, 1, u32> disable_dist_atten_light_6;
             BitField<31, 1, u32> disable_dist_atten_light_7;
-        };
+        } config1;
 
         bool IsDistAttenDisabled(unsigned index) const {
-            const unsigned disable[] = { disable_dist_atten_light_0, disable_dist_atten_light_1,
-                                         disable_dist_atten_light_2, disable_dist_atten_light_3,
-                                         disable_dist_atten_light_4, disable_dist_atten_light_5,
-                                         disable_dist_atten_light_6, disable_dist_atten_light_7 };
+            const unsigned disable[] = { config1.disable_dist_atten_light_0, config1.disable_dist_atten_light_1,
+                                         config1.disable_dist_atten_light_2, config1.disable_dist_atten_light_3,
+                                         config1.disable_dist_atten_light_4, config1.disable_dist_atten_light_5,
+                                         config1.disable_dist_atten_light_6, config1.disable_dist_atten_light_7 };
             return disable[index] != 0;
         }
 
