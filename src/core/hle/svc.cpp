@@ -6,6 +6,7 @@
 
 #include "common/logging/log.h"
 #include "common/microprofile.h"
+#include "common/scope_exit.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
 
@@ -326,9 +327,9 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         }
     }
 
-    HLE::Reschedule(__func__);
+    SCOPE_EXIT({HLE::Reschedule("WaitSynchronizationN");}); // Reschedule after putting the threads to sleep.
 
-    // If thread should wait, then set its state to waiting and then reschedule...
+    // If thread should wait, then set its state to waiting
     if (wait_thread) {
 
         // Actually wait the current thread on each object if we decided to wait...
