@@ -787,23 +787,21 @@ struct Regs {
             LightColor diffuse;     // material.diffuse * light.diffuse
             LightColor ambient;     // material.ambient * light.ambient
 
-            struct {
-                // Encoded as 16-bit floating point
-                union {
-                    BitField< 0, 16, u32> x;
-                    BitField<16, 16, u32> y;
-                };
-                union {
-                    BitField< 0, 16, u32> z;
-                };
-
-                INSERT_PADDING_WORDS(0x3);
-
-                union {
-                    BitField<0, 1, u32> directional;
-                    BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
-                };
+            // Encoded as 16-bit floating point
+            union {
+                BitField< 0, 16, u32> x;
+                BitField<16, 16, u32> y;
             };
+            union {
+                BitField< 0, 16, u32> z;
+            };
+
+            INSERT_PADDING_WORDS(0x3);
+
+            union {
+                BitField<0, 1, u32> directional;
+                BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
+            } config;
 
             BitField<0, 20, u32> dist_atten_bias;
             BitField<0, 20, u32> dist_atten_scale;

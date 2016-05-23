@@ -89,8 +89,8 @@ union PicaShaderConfig {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
             state.lighting.light[light_index].num = num;
-            state.lighting.light[light_index].directional = light.directional != 0;
-            state.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            state.lighting.light[light_index].directional = light.config.directional != 0;
+            state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
             state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
         }
 
