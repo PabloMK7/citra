@@ -439,9 +439,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         // If enabled, compute distance attenuation value
         std::string dist_atten = "1.0";
         if (light_config.dist_atten_enable) {
-            std::string scale = std::to_string(light_config.dist_atten_scale);
-            std::string bias = std::to_string(light_config.dist_atten_bias);
-            std::string index = "(" + scale + " * length(-view - " + light_src + ".position) + " + bias + ")";
+            std::string index = "(" + light_src + ".dist_atten_scale * length(-view - " + light_src + ".position) + " + light_src + ".dist_atten_bias)";
             index = "((clamp(" + index + ", 0.0, FLOAT_255)))";
             const unsigned lut_num = ((unsigned)Regs::LightingSampler::DistanceAttenuation + light_config.num);
             dist_atten = GetLutValue((Regs::LightingSampler)lut_num, index);
@@ -549,6 +547,8 @@ struct LightSrc {
     vec3 diffuse;
     vec3 ambient;
     vec3 position;
+    float dist_atten_bias;
+    float dist_atten_scale;
 };
 
 layout (std140) uniform shader_data {

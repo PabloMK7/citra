@@ -92,8 +92,6 @@ union PicaShaderConfig {
             state.lighting.light[light_index].directional = light.directional != 0;
             state.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
             state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
-            state.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
-            state.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
         }
 
         state.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
@@ -184,8 +182,6 @@ union PicaShaderConfig {
                 bool directional;
                 bool two_sided_diffuse;
                 bool dist_atten_enable;
-                GLfloat dist_atten_scale;
-                GLfloat dist_atten_bias;
             } light[8];
 
             bool enable;
@@ -316,6 +312,8 @@ private:
         alignas(16) GLvec3 diffuse;
         alignas(16) GLvec3 ambient;
         alignas(16) GLvec3 position;
+        GLfloat dist_atten_bias;
+        GLfloat dist_atten_scale;
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
@@ -330,7 +328,7 @@ private:
         LightSrc light_src[8];
     };
 
-    static_assert(sizeof(UniformData) == 0x310, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) == 0x390, "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
@@ -401,6 +399,12 @@ private:
 
     /// Syncs the specified light's position to match the PICA register
     void SyncLightPosition(int light_index);
+
+    /// Syncs the specified light's distance attenuation bias to match the PICA register
+    void SyncLightDistanceAttenuationBias(int light_index);
+
+    /// Syncs the specified light's distance attenuation scale to match the PICA register
+    void SyncLightDistanceAttenuationScale(int light_index);
 
     OpenGLState state;
 
