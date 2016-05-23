@@ -380,6 +380,17 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncCombinerColor();
         break;
 
+    // Fragment lighting switches
+    case PICA_REG_INDEX(lighting.disable):
+    case PICA_REG_INDEX(lighting.num_lights):
+    case PICA_REG_INDEX(lighting.config0):
+    case PICA_REG_INDEX(lighting.config1):
+    case PICA_REG_INDEX(lighting.abs_lut_input):
+    case PICA_REG_INDEX(lighting.lut_input):
+    case PICA_REG_INDEX(lighting.lut_scale):
+    case PICA_REG_INDEX(lighting.light_enable):
+        break;
+
     // Fragment lighting specular 0 color
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_0, 0x140 + 0 * 0x10):
         SyncLightSpecular0(0);
@@ -516,6 +527,18 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.light[7].x, 0x144 + 7 * 0x10):
     case PICA_REG_INDEX_WORKAROUND(lighting.light[7].z, 0x145 + 7 * 0x10):
         SyncLightPosition(7);
+        break;
+
+    // Fragment lighting light source config
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].config, 0x149 + 0 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].config, 0x149 + 1 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].config, 0x149 + 2 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].config, 0x149 + 3 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].config, 0x149 + 4 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].config, 0x149 + 5 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].config, 0x149 + 6 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].config, 0x149 + 7 * 0x10):
+        shader_dirty = true;
         break;
 
     // Fragment lighting distance attenuation bias
