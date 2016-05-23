@@ -316,16 +316,18 @@ private:
         GLfloat dist_atten_scale;
     };
 
-    /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
+    /// Uniform structure for the Uniform Buffer Object, all vectors must be 16-byte aligned
+    // NOTE: Always keep a vec4 at the end. The GL spec is not clear wether the alignment at
+    //       the end of a uniform block is included in UNIFORM_BLOCK_DATA_SIZE or not.
+    //       Not following that rule will cause problems on some AMD drivers.
     struct UniformData {
-        // A vec4 color for each of the six tev stages
-        GLvec4 const_color[6];
-        GLvec4 tev_combiner_buffer_color;
         GLint alphatest_ref;
         GLfloat depth_scale;
         GLfloat depth_offset;
         alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
+        alignas(16) GLvec4 const_color[6]; // A vec4 color for each of the six tev stages
+        alignas(16) GLvec4 tev_combiner_buffer_color;
     };
 
     static_assert(sizeof(UniformData) == 0x390, "The size of the UniformData structure has changed, update the structure in the shader");

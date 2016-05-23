@@ -552,13 +552,13 @@ struct LightSrc {
 };
 
 layout (std140) uniform shader_data {
-    vec4 const_color[NUM_TEV_STAGES];
-    vec4 tev_combiner_buffer_color;
     int alphatest_ref;
     float depth_scale;
     float depth_offset;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
+    vec4 const_color[NUM_TEV_STAGES];
+    vec4 tev_combiner_buffer_color;
 };
 
 uniform sampler2D tex[3];
