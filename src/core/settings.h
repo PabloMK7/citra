@@ -42,7 +42,7 @@ static const std::array<Values, NUM_INPUTS> All = {{
 
 struct Values {
     // CheckNew3DS
-    bool is_new3ds;
+    bool is_new_3ds;
 
     // Controls
     std::array<int, NativeInput::NUM_INPUTS> input_mappings;

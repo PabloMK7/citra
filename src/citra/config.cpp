@@ -78,7 +78,7 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd = sdl2_config->GetBoolean("Data Storage", "use_virtual_sd", true);
 
     // System
-    Settings::values.is_new3ds = sdl2_config->GetBoolean("System", "is_new3ds", false);
+    Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", false);
     Settings::values.region_value = sdl2_config->GetInteger("System", "region_value", 1);
 
     // Miscellaneous

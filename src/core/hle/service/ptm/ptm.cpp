@@ -91,10 +91,10 @@ void IsLegacyPowerOff(Service::Interface* self) {
 
 void CheckNew3DS(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    const bool is_new_3ds = Settings::values.is_new3ds;
+    const bool is_new_3ds = Settings::values.is_new_3ds;
 
     if (is_new_3ds) {
-        LOG_CRITICAL(Service_PTM, "The option 'is_new3ds' is enabled as part of the 'System' settings. Citra does not fully support New3DS emulation yet!");
+        LOG_CRITICAL(Service_PTM, "The option 'is_new_3ds' is enabled as part of the 'System' settings. Citra does not fully support New 3DS emulation yet!");
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
