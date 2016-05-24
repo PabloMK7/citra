@@ -60,7 +60,8 @@ void Config::ReadValues() {
     Settings::values.use_virtual_sd = qt_config->value("use_virtual_sd", true).toBool();
     qt_config->endGroup();
 
-    qt_config->beginGroup("System Region");
+    qt_config->beginGroup("System");
+    Settings::values.is_new3ds = qt_config->value("is_new3ds", false).toBool();
     Settings::values.region_value = qt_config->value("region_value", 1).toInt();
     qt_config->endGroup();
 
@@ -150,7 +151,8 @@ void Config::SaveValues() {
     qt_config->setValue("use_virtual_sd", Settings::values.use_virtual_sd);
     qt_config->endGroup();
 
-    qt_config->beginGroup("System Region");
+    qt_config->beginGroup("System");
+    qt_config->setValue("is_new3ds", Settings::values.is_new3ds);
     qt_config->setValue("region_value", Settings::values.region_value);
     qt_config->endGroup();
 

@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
-
+#include "core/settings.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -87,6 +87,20 @@ void IsLegacyPowerOff(Service::Interface* self) {
     cmd_buff[2] = 0;
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
+}
+
+void CheckNew3DS(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    const bool is_new_3ds = Settings::values.is_new3ds;
+
+    if (is_new_3ds) {
+        LOG_CRITICAL(Service_PTM, "The option 'is_new3ds' is enabled as part of the 'System' settings. Citra does not fully support New3DS emulation yet!");
+    }
+
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    cmd_buff[2] = is_new_3ds ? 1 : 0;
+
+    LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x%08x", static_cast<u32>(is_new_3ds));
 }
 
 void Init() {

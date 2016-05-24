@@ -21,6 +21,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0080, ReceiveParameter,             "ReceiveParameter"},
     {0x000E0080, GlanceParameter,              "GlanceParameter"},
     {0x000F0100, CancelParameter,              "CancelParameter"},
+    {0x00150140, PrepareToStartApplication,    "PrepareToStartApplication"},
     {0x00160040, PreloadLibraryApplet,         "PreloadLibraryApplet"},
     {0x00180040, PrepareToStartLibraryApplet,  "PrepareToStartLibraryApplet"},
     {0x001E0084, StartLibraryApplet,           "StartLibraryApplet"},
@@ -32,7 +33,10 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x004F0080, SetAppCpuTimeLimit,           "SetAppCpuTimeLimit"},
     {0x00500040, GetAppCpuTimeLimit,           "GetAppCpuTimeLimit"},
     {0x00510080, GetStartupArgument,           "GetStartupArgument"},
-    {0x00550040, nullptr,                      "WriteInputToNsState?"},
+    {0x00550040, SetNSStateField,              "SetNSStateField?"},
+    {0x00560000, GetNSStateField,              "GetNSStateField?"},
+    {0x01010000, CheckNew3DSApp,               "CheckNew3DSApp"},
+    {0x01020000, CheckNew3DS,                  "CheckNew3DS"}
 };
 
 APT_A_Interface::APT_A_Interface() {
