@@ -199,9 +199,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             // Processes information about internal vertex attributes to figure out how a vertex is loaded.
             // Later, these can be compiled and cached.
-            VertexLoader loader;
             const u32 base_address = regs.vertex_attributes.GetPhysicalBaseAddress();
-            loader.Setup(regs);
+            VertexLoader loader(regs);
 
             // Load vertices
             bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
