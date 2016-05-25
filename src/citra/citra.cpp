@@ -114,7 +114,13 @@ int main(int argc, char **argv) {
     System::Init(emu_window.get());
     SCOPE_EXIT({ System::Shutdown(); });
 
-    Loader::ResultStatus load_result = Loader::LoadFile(boot_filename);
+    std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(boot_filename);
+    if (!loader) {
+        LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", boot_filename.c_str());
+        return -1;
+    }
+
+    Loader::ResultStatus load_result = loader->Load();
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
         return -1;

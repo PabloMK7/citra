@@ -10,10 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
-#include "common/swap.h"
 
 namespace Kernel {
 struct AddressMapping;
@@ -80,56 +78,17 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
     return a | b << 8 | c << 16 | d << 24;
 }
 
-/// SMDH data structure that contains titles, icons etc. See https://www.3dbrew.org/wiki/SMDH
-struct SMDH {
-    u32_le magic;
-    u16_le version;
-    INSERT_PADDING_BYTES(2);
-
-    struct Title {
-        std::array<u16, 0x40> short_title;
-        std::array<u16, 0x80> long_title;
-        std::array<u16, 0x40> publisher;
-    };
-    std::array<Title, 16> titles;
-
-    std::array<u8, 16> ratings;
-    u32_le region_lockout;
-    u32_le match_maker_id;
-    u64_le match_maker_bit_id;
-    u32_le flags;
-    u16_le eula_version;
-    INSERT_PADDING_BYTES(2);
-    float_le banner_animation_frame;
-    u32_le cec_id;
-    INSERT_PADDING_BYTES(8);
-
-    std::array<u8, 0x480> small_icon;
-    std::array<u8, 0x1200> large_icon;
-
-    /// indicates the language used for each title entry
-    enum class TitleLanguage {
-        Japanese = 0,
-        English = 1,
-        French = 2,
-        German = 3,
-        Italian = 4,
-        Spanish = 5,
-        SimplifiedChinese = 6,
-        Korean= 7,
-        Dutch = 8,
-        Portuguese = 9,
-        Russian = 10,
-        TraditionalChinese = 11
-    };
-};
-static_assert(sizeof(SMDH) == 0x36C0, "SMDH structure size is wrong");
-
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
     AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) { }
     virtual ~AppLoader() { }
+
+    /**
+     * Returns the type of this file
+     * @return FileType corresponding to the loaded file
+     */
+    virtual FileType GetFileType() = 0;
 
     /**
      * Load the application
@@ -197,20 +156,10 @@ protected:
 extern const std::initializer_list<Kernel::AddressMapping> default_address_mappings;
 
 /**
- * Get a loader for a file with a specific type
- * @param file The file to load
- * @param type The type of the file
- * @param filename the file name (without path)
- * @param filepath the file full path (with name)
- * @return std::unique_ptr<AppLoader> a pointer to a loader object;  nullptr for unsupported type
- */
-std::unique_ptr<AppLoader> GetLoader(FileUtil::IOFile&& file, FileType type, const std::string& filename, const std::string& filepath);
-
-/**
- * Identifies and loads a bootable file
+ * Identifies a bootable file and return a suitable loader
  * @param filename String filename of bootable file
- * @return ResultStatus result of function
+ * @return best loader for this file
  */
-ResultStatus LoadFile(const std::string& filename);
+std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
 
 } // namespace

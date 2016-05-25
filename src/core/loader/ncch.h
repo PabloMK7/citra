@@ -174,6 +174,14 @@ public:
     static FileType IdentifyType(FileUtil::IOFile& file);
 
     /**
+     * Returns the type of this file
+     * @return FileType corresponding to the loaded file
+     */
+    FileType GetFileType() override {
+        return IdentifyType(file);
+    }
+
+    /**
      * Load the application
      * @return ResultStatus result of function
      */

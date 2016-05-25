@@ -132,30 +132,16 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, bool d
         if (deep_scan && FileUtil::IsDirectory(physical_name)) {
             AddFstEntriesToGameList(physical_name, true);
         } else {
-            std::string filename_filename, filename_extension;
-            Common::SplitPath(physical_name, nullptr, &filename_filename, &filename_extension);
-
-            Loader::FileType guessed_filetype = Loader::GuessFromExtension(filename_extension);
-            if (guessed_filetype == Loader::FileType::Unknown)
+            std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
+            if (!loader)
                 return true;
-            Loader::FileType filetype = Loader::IdentifyFile(physical_name);
-            if (filetype == Loader::FileType::Unknown) {
-                LOG_WARNING(Frontend, "File %s is of indeterminate type and is possibly corrupted.", physical_name.c_str());
-                return true;
-            }
-            if (guessed_filetype != filetype) {
-                LOG_WARNING(Frontend, "Filetype and extension of file %s do not match.", physical_name.c_str());
-            }
 
             std::vector<u8> smdh;
-            std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(FileUtil::IOFile(physical_name, "rb"), filetype, filename_filename, physical_name);
-
-            if (loader)
-                loader->ReadIcon(smdh);
+            loader->ReadIcon(smdh);
 
             emit EntryReady({
                 new GameListItemPath(QString::fromStdString(physical_name), smdh),
-                new GameListItem(QString::fromStdString(Loader::GetFileTypeString(filetype))),
+                new GameListItem(QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
         }
