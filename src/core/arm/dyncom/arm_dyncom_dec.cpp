@@ -422,6 +422,10 @@ ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
         n = arm_instruction[i].attribute_value;
         base = 0;
 
+        // 3DS has no VFP3 support
+        if (arm_instruction[i].version == ARMVFP3)
+            continue;
+
         while (n) {
             if (arm_instruction[i].content[base + 1] == 31 && arm_instruction[i].content[base] == 0) {
                 // clrex

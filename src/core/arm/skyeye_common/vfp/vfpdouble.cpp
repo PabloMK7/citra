@@ -568,7 +568,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
     if (vdm.exponent >= 1023 + 32) {
         d = vdm.sign ? 0 : 0xffffffff;
         exceptions = FPSCR_IOC;
-    } else if (vdm.exponent >= 1023 - 1) {
+    } else if (vdm.exponent >= 1023) {
         int shift = 1023 + 63 - vdm.exponent;
         u64 rem, incr = 0;
 
@@ -603,12 +603,20 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
     } else {
         d = 0;
         if (vdm.exponent | vdm.significand) {
-            exceptions |= FPSCR_IXC;
-            if (rmode == FPSCR_ROUND_PLUSINF && vdm.sign == 0)
+            if (rmode == FPSCR_ROUND_NEAREST) {
+                if (vdm.exponent >= 1022) {
+                    d = vdm.sign ? 0 : 1;
+                    exceptions |= vdm.sign ? FPSCR_IOC : FPSCR_IXC;
+                } else {
+                    exceptions |= FPSCR_IXC;
+                }
+            } else if (rmode == FPSCR_ROUND_PLUSINF && vdm.sign == 0) {
                 d = 1;
-            else if (rmode == FPSCR_ROUND_MINUSINF && vdm.sign) {
-                d = 0;
-                exceptions |= FPSCR_IOC;
+                exceptions |= FPSCR_IXC;
+            } else if (rmode == FPSCR_ROUND_MINUSINF) {
+                exceptions |= vdm.sign ? FPSCR_IOC : FPSCR_IXC;
+            } else {
+                exceptions |= FPSCR_IXC;
             }
         }
     }
@@ -623,7 +631,7 @@ static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 
 static u32 vfp_double_ftouiz(ARMul_State* state, int sd, int unused, int dm, u32 fpscr)
 {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_double_ftoui(state, sd, unused, dm, FPSCR_ROUND_TOZERO);
+    return vfp_double_ftoui(state, sd, unused, dm, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 fpscr)
@@ -647,12 +655,12 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
     if (tm & VFP_NAN) {
         d = 0;
         exceptions |= FPSCR_IOC;
-    } else if (vdm.exponent >= 1023 + 32) {
+    } else if (vdm.exponent >= 1023 + 31) {
         d = 0x7fffffff;
         if (vdm.sign)
             d = ~d;
         exceptions |= FPSCR_IOC;
-    } else if (vdm.exponent >= 1023 - 1) {
+    } else if (vdm.exponent >= 1023) {
         int shift = 1023 + 63 - vdm.exponent;	/* 58 */
         u64 rem, incr = 0;
 
@@ -683,10 +691,17 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
         d = 0;
         if (vdm.exponent | vdm.significand) {
             exceptions |= FPSCR_IXC;
-            if (rmode == FPSCR_ROUND_PLUSINF && vdm.sign == 0)
+            if (rmode == FPSCR_ROUND_NEAREST) {
+                if (vdm.exponent >= 1022) {
+                    d = vdm.sign ? 0xffffffff : 1;
+                } else {
+                    d = 0;
+                }
+            } else if (rmode == FPSCR_ROUND_PLUSINF && vdm.sign == 0) {
                 d = 1;
-            else if (rmode == FPSCR_ROUND_MINUSINF && vdm.sign)
-                d = -1;
+            } else if (rmode == FPSCR_ROUND_MINUSINF && vdm.sign) {
+                d = 0xffffffff;
+            }
         }
     }
 
@@ -700,7 +715,7 @@ static u32 vfp_double_ftosi(ARMul_State* state, int sd, int unused, int dm, u32 
 static u32 vfp_double_ftosiz(ARMul_State* state, int dd, int unused, int dm, u32 fpscr)
 {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_double_ftosi(state, dd, unused, dm, FPSCR_ROUND_TOZERO);
+    return vfp_double_ftosi(state, dd, unused, dm, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
 static struct op fops_ext[] = {
