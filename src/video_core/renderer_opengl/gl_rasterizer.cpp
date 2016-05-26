@@ -380,6 +380,17 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncCombinerColor();
         break;
 
+    // Fragment lighting switches
+    case PICA_REG_INDEX(lighting.disable):
+    case PICA_REG_INDEX(lighting.num_lights):
+    case PICA_REG_INDEX(lighting.config0):
+    case PICA_REG_INDEX(lighting.config1):
+    case PICA_REG_INDEX(lighting.abs_lut_input):
+    case PICA_REG_INDEX(lighting.lut_input):
+    case PICA_REG_INDEX(lighting.lut_scale):
+    case PICA_REG_INDEX(lighting.light_enable):
+        break;
+
     // Fragment lighting specular 0 color
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].specular_0, 0x140 + 0 * 0x10):
         SyncLightSpecular0(0);
@@ -516,6 +527,70 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.light[7].x, 0x144 + 7 * 0x10):
     case PICA_REG_INDEX_WORKAROUND(lighting.light[7].z, 0x145 + 7 * 0x10):
         SyncLightPosition(7);
+        break;
+
+    // Fragment lighting light source config
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].config, 0x149 + 0 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].config, 0x149 + 1 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].config, 0x149 + 2 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].config, 0x149 + 3 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].config, 0x149 + 4 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].config, 0x149 + 5 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].config, 0x149 + 6 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].config, 0x149 + 7 * 0x10):
+        shader_dirty = true;
+        break;
+
+    // Fragment lighting distance attenuation bias
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].dist_atten_bias, 0x014A + 0 * 0x10):
+        SyncLightDistanceAttenuationBias(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].dist_atten_bias, 0x014A + 1 * 0x10):
+        SyncLightDistanceAttenuationBias(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].dist_atten_bias, 0x014A + 2 * 0x10):
+        SyncLightDistanceAttenuationBias(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].dist_atten_bias, 0x014A + 3 * 0x10):
+        SyncLightDistanceAttenuationBias(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].dist_atten_bias, 0x014A + 4 * 0x10):
+        SyncLightDistanceAttenuationBias(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].dist_atten_bias, 0x014A + 5 * 0x10):
+        SyncLightDistanceAttenuationBias(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].dist_atten_bias, 0x014A + 6 * 0x10):
+        SyncLightDistanceAttenuationBias(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].dist_atten_bias, 0x014A + 7 * 0x10):
+        SyncLightDistanceAttenuationBias(7);
+        break;
+
+    // Fragment lighting distance attenuation scale
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].dist_atten_scale, 0x014B + 0 * 0x10):
+        SyncLightDistanceAttenuationScale(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].dist_atten_scale, 0x014B + 1 * 0x10):
+        SyncLightDistanceAttenuationScale(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].dist_atten_scale, 0x014B + 2 * 0x10):
+        SyncLightDistanceAttenuationScale(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].dist_atten_scale, 0x014B + 3 * 0x10):
+        SyncLightDistanceAttenuationScale(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].dist_atten_scale, 0x014B + 4 * 0x10):
+        SyncLightDistanceAttenuationScale(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].dist_atten_scale, 0x014B + 5 * 0x10):
+        SyncLightDistanceAttenuationScale(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].dist_atten_scale, 0x014B + 6 * 0x10):
+        SyncLightDistanceAttenuationScale(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].dist_atten_scale, 0x014B + 7 * 0x10):
+        SyncLightDistanceAttenuationScale(7);
         break;
 
     // Fragment lighting global ambient color (emission + ambient * ambient)
@@ -896,6 +971,8 @@ void RasterizerOpenGL::SetShader() {
             SyncLightDiffuse(light_index);
             SyncLightAmbient(light_index);
             SyncLightPosition(light_index);
+            SyncLightDistanceAttenuationBias(light_index);
+            SyncLightDistanceAttenuationScale(light_index);
         }
     }
 }
@@ -1102,6 +1179,24 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
 
     if (position != uniform_block_data.data.light_src[light_index].position) {
         uniform_block_data.data.light_src[light_index].position = position;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightDistanceAttenuationBias(int light_index) {
+    GLfloat dist_atten_bias = Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_bias).ToFloat32();
+
+    if (dist_atten_bias != uniform_block_data.data.light_src[light_index].dist_atten_bias) {
+        uniform_block_data.data.light_src[light_index].dist_atten_bias = dist_atten_bias;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightDistanceAttenuationScale(int light_index) {
+    GLfloat dist_atten_scale = Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_scale).ToFloat32();
+
+    if (dist_atten_scale != uniform_block_data.data.light_src[light_index].dist_atten_scale) {
+        uniform_block_data.data.light_src[light_index].dist_atten_scale = dist_atten_scale;
         uniform_block_data.dirty = true;
     }
 }

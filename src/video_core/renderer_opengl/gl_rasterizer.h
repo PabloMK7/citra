@@ -89,49 +89,47 @@ union PicaShaderConfig {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
             const auto& light = regs.lighting.light[num];
             state.lighting.light[light_index].num = num;
-            state.lighting.light[light_index].directional = light.directional != 0;
-            state.lighting.light[light_index].two_sided_diffuse = light.two_sided_diffuse != 0;
+            state.lighting.light[light_index].directional = light.config.directional != 0;
+            state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
             state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
-            state.lighting.light[light_index].dist_atten_bias = Pica::float20::FromRaw(light.dist_atten_bias).ToFloat32();
-            state.lighting.light[light_index].dist_atten_scale = Pica::float20::FromRaw(light.dist_atten_scale).ToFloat32();
         }
 
-        state.lighting.lut_d0.enable = regs.lighting.disable_lut_d0 == 0;
+        state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
         state.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
         state.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
         state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
 
-        state.lighting.lut_d1.enable = regs.lighting.disable_lut_d1 == 0;
+        state.lighting.lut_d1.enable = regs.lighting.config1.disable_lut_d1 == 0;
         state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
         state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
         state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
 
-        state.lighting.lut_fr.enable = regs.lighting.disable_lut_fr == 0;
+        state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
         state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
         state.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
         state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
 
-        state.lighting.lut_rr.enable = regs.lighting.disable_lut_rr == 0;
+        state.lighting.lut_rr.enable = regs.lighting.config1.disable_lut_rr == 0;
         state.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
         state.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
         state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
 
-        state.lighting.lut_rg.enable = regs.lighting.disable_lut_rg == 0;
+        state.lighting.lut_rg.enable = regs.lighting.config1.disable_lut_rg == 0;
         state.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
         state.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
         state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
 
-        state.lighting.lut_rb.enable = regs.lighting.disable_lut_rb == 0;
+        state.lighting.lut_rb.enable = regs.lighting.config1.disable_lut_rb == 0;
         state.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
         state.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
         state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
-        state.lighting.config = regs.lighting.config;
-        state.lighting.fresnel_selector = regs.lighting.fresnel_selector;
-        state.lighting.bump_mode = regs.lighting.bump_mode;
-        state.lighting.bump_selector = regs.lighting.bump_selector;
-        state.lighting.bump_renorm = regs.lighting.disable_bump_renorm == 0;
-        state.lighting.clamp_highlights = regs.lighting.clamp_highlights != 0;
+        state.lighting.config = regs.lighting.config0.config;
+        state.lighting.fresnel_selector = regs.lighting.config0.fresnel_selector;
+        state.lighting.bump_mode = regs.lighting.config0.bump_mode;
+        state.lighting.bump_selector = regs.lighting.config0.bump_selector;
+        state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
+        state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
 
         return res;
     }
@@ -184,8 +182,6 @@ union PicaShaderConfig {
                 bool directional;
                 bool two_sided_diffuse;
                 bool dist_atten_enable;
-                GLfloat dist_atten_scale;
-                GLfloat dist_atten_bias;
             } light[8];
 
             bool enable;
@@ -316,6 +312,8 @@ private:
         alignas(16) GLvec3 diffuse;
         alignas(16) GLvec3 ambient;
         alignas(16) GLvec3 position;
+        GLfloat dist_atten_bias;
+        GLfloat dist_atten_scale;
     };
 
     /// Uniform structure for the Uniform Buffer Object, all members must be 16-byte aligned
@@ -330,7 +328,7 @@ private:
         LightSrc light_src[8];
     };
 
-    static_assert(sizeof(UniformData) == 0x310, "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) == 0x390, "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
@@ -401,6 +399,12 @@ private:
 
     /// Syncs the specified light's position to match the PICA register
     void SyncLightPosition(int light_index);
+
+    /// Syncs the specified light's distance attenuation bias to match the PICA register
+    void SyncLightDistanceAttenuationBias(int light_index);
+
+    /// Syncs the specified light's distance attenuation scale to match the PICA register
+    void SyncLightDistanceAttenuationScale(int light_index);
 
     OpenGLState state;
 

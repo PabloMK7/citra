@@ -787,23 +787,21 @@ struct Regs {
             LightColor diffuse;     // material.diffuse * light.diffuse
             LightColor ambient;     // material.ambient * light.ambient
 
-            struct {
-                // Encoded as 16-bit floating point
-                union {
-                    BitField< 0, 16, u32> x;
-                    BitField<16, 16, u32> y;
-                };
-                union {
-                    BitField< 0, 16, u32> z;
-                };
-
-                INSERT_PADDING_WORDS(0x3);
-
-                union {
-                    BitField<0, 1, u32> directional;
-                    BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
-                };
+            // Encoded as 16-bit floating point
+            union {
+                BitField< 0, 16, u32> x;
+                BitField<16, 16, u32> y;
             };
+            union {
+                BitField< 0, 16, u32> z;
+            };
+
+            INSERT_PADDING_WORDS(0x3);
+
+            union {
+                BitField<0, 1, u32> directional;
+                BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
+            } config;
 
             BitField<0, 20, u32> dist_atten_bias;
             BitField<0, 20, u32> dist_atten_scale;
@@ -824,7 +822,7 @@ struct Regs {
             BitField<27, 1, u32> clamp_highlights;
             BitField<28, 2, LightingBumpMode> bump_mode;
             BitField<30, 1, u32> disable_bump_renorm;
-        };
+        } config0;
 
         union {
             BitField<16, 1, u32> disable_lut_d0;
@@ -845,13 +843,13 @@ struct Regs {
             BitField<29, 1, u32> disable_dist_atten_light_5;
             BitField<30, 1, u32> disable_dist_atten_light_6;
             BitField<31, 1, u32> disable_dist_atten_light_7;
-        };
+        } config1;
 
         bool IsDistAttenDisabled(unsigned index) const {
-            const unsigned disable[] = { disable_dist_atten_light_0, disable_dist_atten_light_1,
-                                         disable_dist_atten_light_2, disable_dist_atten_light_3,
-                                         disable_dist_atten_light_4, disable_dist_atten_light_5,
-                                         disable_dist_atten_light_6, disable_dist_atten_light_7 };
+            const unsigned disable[] = { config1.disable_dist_atten_light_0, config1.disable_dist_atten_light_1,
+                                         config1.disable_dist_atten_light_2, config1.disable_dist_atten_light_3,
+                                         config1.disable_dist_atten_light_4, config1.disable_dist_atten_light_5,
+                                         config1.disable_dist_atten_light_6, config1.disable_dist_atten_light_7 };
             return disable[index] != 0;
         }
 
