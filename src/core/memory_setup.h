@@ -6,7 +6,7 @@
 
 #include "common/common_types.h"
 
-#include "core/memory.h"
+#include "core/mmio.h"
 
 namespace Memory {
 
