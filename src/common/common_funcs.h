@@ -72,18 +72,24 @@ inline u64 _rotr64(u64 x, unsigned int shift){
 }
 
 #else // _MSC_VER
-    #if (_MSC_VER < 1900)
-        // Function Cross-Compatibility
-        #define snprintf _snprintf
-    #endif
 
-    // Locale Cross-Compatibility
-    #define locale_t _locale_t
+#if (_MSC_VER < 1900)
+    // Function Cross-Compatibility
+    #define snprintf _snprintf
+#endif
 
-    extern "C" {
-        __declspec(dllimport) void __stdcall DebugBreak(void);
-    }
-    #define Crash() {DebugBreak();}
+// Locale Cross-Compatibility
+#define locale_t _locale_t
+
+extern "C" {
+    __declspec(dllimport) void __stdcall DebugBreak(void);
+}
+#define Crash() {DebugBreak();}
+
+// cstdlib provides these on MSVC
+#define rotr _rotr
+#define rotl _rotl
+
 #endif // _MSC_VER ndef
 
 // Generic function to get last error message.
