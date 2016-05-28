@@ -15,38 +15,6 @@ namespace SRV {
 
 static Kernel::SharedPtr<Kernel::Event> event_handle;
 
-static const char* NotifDesc(u32 notif_id) {
-    switch (notif_id) {
-    case 0x100: return "This indicates that all processes must terminate : power - off, reboot, or FIRM - launch.";
-    case 0x104: return "This indicates that the system is entering sleep mode. (PTM : NotifySleepPreparationComplete needed for this and the following ? )";
-    case 0x105: return "This indicates that the system has exited sleep mode.";
-    case 0x107: return "Unknown.Subscribed to by CECD module.";
-    case 0x108: return "error at boot ?";
-    case 0x109: return "?(Subscribed to by GSP)";
-    case 0x10C: return "Unknown.";
-    //case 0x110 - 0x11F Unknown.See PM launch flags.
-    case 0x179: return "Unknown";
-    case 0x202: return "POWER button pressed";
-    case 0x203: return "POWER button held long";
-    case 0x204: return "HOME button pressed";
-    case 0x205: return "HOME button released";
-    case 0x206: return "This is signaled by NWMEXT : ControlWirelessEnabled and when the physical Wi - Fi slider is enabled";
-    case 0x207: return "SD card inserted";
-    case 0x208: return "Game cartridge inserted";
-    case 0x209: return "SD card removed";
-    case 0x20A: return "Game cartridge removed";
-    case 0x20B: return "Game cartridge inserted or removed";
-    case 0x20D: return "? (Subscribed to by GSP)";
-    case 0x20E: return "? (Subscribed to by GSP)";
-    case 0x213: return "? (Subscribed to by GSP)";
-    case 0x214: return "? (Subscribed to by GSP)";
-    case 0x302: return "Unknown.Signaled by nwm module.";
-    case 0x303: return "Unknown.Subscribed to by CECD module.";
-    case 0x304: return "Unknown.Subscribed to by CECD module";
-    }
-    return "Unknown notification";
-}
-
 /**
  * SRV::RegisterClient service function
  *  Inputs:
@@ -126,7 +94,7 @@ static void Subscribe(Service::Interface* self) {
     u32 notif_id = cmd_buff[1];
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X, desc: %s", notif_id, NotifDesc(notif_id));
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X", notif_id);
 }
 
 /**
@@ -143,7 +111,7 @@ static void Unsubscribe(Service::Interface* self) {
     u32 notif_id = cmd_buff[1];
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X, desc: %s", notif_id, NotifDesc(notif_id));
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X", notif_id);
 }
 
 /**
@@ -162,7 +130,7 @@ static void PublishToSubscriber(Service::Interface* self) {
     u8 flags = cmd_buff[2] & 0xFF;
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X, flags=%u, desc: %s", notif_id, flags, NotifDesc(notif_id));
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X, flags=%u", notif_id, flags);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
