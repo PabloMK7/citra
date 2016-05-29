@@ -21,11 +21,19 @@ static Kernel::SharedPtr<Kernel::Event> event_handle;
  *      0: 0x00010002
  *      1: ProcessId Header (must be 0x20)
  *  Outputs:
+ *      0: 0x00010040
  *      1: ResultCode
  */
 static void RegisterClient(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    if (cmd_buff[1] != 0x20) {
+        cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); //0x40
+        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
+                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+        return;
+    }
+    cmd_buff[0] = IPC::MakeHeader(0x1, 0x1, 0); //0x10040
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
@@ -35,6 +43,7 @@ static void RegisterClient(Service::Interface* self) {
  *  Inputs:
  *      0: 0x00020000
  *  Outputs:
+ *      0: 0x00020042
  *      1: ResultCode
  *      2: Translation descriptor: 0x20
  *      3: Handle to semaphore signaled on process notification
@@ -46,14 +55,15 @@ static void EnableNotification(Service::Interface* self) {
     event_handle = Kernel::Event::Create(Kernel::ResetType::OneShot, "SRV:Event");
     event_handle->Clear();
 
+    cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0x20;
+    cmd_buff[2] = IPC::CallingPidDesc();
     cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
 /**
- * SRV::EnableNotification service function
+ * SRV::GetServiceHandle service function
  *  Inputs:
  *      0: 0x00050100
  *      1-2: 8-byte UTF-8 service name
@@ -86,15 +96,17 @@ static void GetServiceHandle(Service::Interface* self) {
  *      0: 0x00090040
  *      1: Notification ID
  *  Outputs:
+ *      0: 0x00090040
  *      1: ResultCode
  */
 static void Subscribe(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 notif_id = cmd_buff[1];
+    u32 notification_id = cmd_buff[1];
 
+    cmd_buff[0] = IPC::MakeHeader(0x9, 0x1, 0); // 0x90040
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X", notif_id);
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
 /**
@@ -103,15 +115,17 @@ static void Subscribe(Service::Interface* self) {
  *      0: 0x000A0040
  *      1: Notification ID
  *  Outputs:
+ *      0: 0x000A0040
  *      1: ResultCode
  */
 static void Unsubscribe(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 notif_id = cmd_buff[1];
+    u32 notification_id = cmd_buff[1];
 
+    cmd_buff[0] = IPC::MakeHeader(0xA, 0x1, 0); // 0xA0040
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X", notif_id);
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
 /**
@@ -121,16 +135,18 @@ static void Unsubscribe(Service::Interface* self) {
  *      1: Notification ID
  *      2: Flags (bit0: only fire if not fired, bit1: report errors)
  *  Outputs:
+ *      0: 0x000C0040
  *      1: ResultCode
  */
 static void PublishToSubscriber(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 notif_id = cmd_buff[1];
+    u32 notification_id = cmd_buff[1];
     u8 flags = cmd_buff[2] & 0xFF;
 
+    cmd_buff[0] = IPC::MakeHeader(0xC, 0x1, 0); // 0xC0040
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notif_id=0x%X, flags=%u", notif_id, flags);
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X, flags=%u", notification_id, flags);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
