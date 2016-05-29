@@ -47,6 +47,12 @@ struct UsernameBlock {
 };
 static_assert(sizeof(UsernameBlock) == 0x1C, "UsernameBlock must be exactly 0x1C bytes");
 
+struct BirthdayBlock {
+    u8 month; ///< The month of the birthday
+    u8 day;   ///< The day of the birthday
+};
+static_assert(sizeof(BirthdayBlock) == 2, "BirthdayBlock must be exactly 2 bytes");
+
 struct ConsoleModelInfo {
     u8 model;       ///< The console model (3DS, 2DS, etc)
     u8 unknown[3];  ///< Unknown data
@@ -65,9 +71,8 @@ static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
-static const char CONSOLE_USERNAME[0x14] = "CITRA";
-/// This will be initialized in Init, and will be used when creating the block
-static UsernameBlock CONSOLE_USERNAME_BLOCK;
+static const UsernameBlock CONSOLE_USERNAME_BLOCK = { u"CITRA", 0, 0 };
+static const BirthdayBlock PROFILE_BIRTHDAY = { 3, 25 }; // March 25th, 2014
 /// TODO(Subv): Find out what this actually is
 static const u8 SOUND_OUTPUT_MODE = 2;
 static const u8 UNITED_STATES_COUNTRY_ID = 49;
@@ -329,32 +334,22 @@ ResultCode FormatConfig() {
 
     res = CreateConfigInfoBlk(0x00050005, sizeof(STEREO_CAMERA_SETTINGS), 0xE, STEREO_CAMERA_SETTINGS.data());
     if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x00070001, sizeof(SOUND_OUTPUT_MODE), 0xE, &SOUND_OUTPUT_MODE);
     if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x00090001, sizeof(CONSOLE_UNIQUE_ID), 0xE, &CONSOLE_UNIQUE_ID);
     if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x000A0000, sizeof(CONSOLE_USERNAME_BLOCK), 0xE, &CONSOLE_USERNAME_BLOCK);
     if (!res.IsSuccess()) return res;
 
-    // 0x000A0000 - Profile username
-    struct {
-        u16_le username[10];
-        u8 unused[4];
-        u32_le wordfilter_version; // Unused by Citra
-    } profile_username = {};
-
-    std::u16string username_string = Common::UTF8ToUTF16("Citra");
-    std::copy(username_string.cbegin(), username_string.cend(), profile_username.username);
-    res = CreateConfigInfoBlk(0x000A0000, sizeof(profile_username), 0xE, &profile_username);
-    if (!res.IsSuccess()) return res;
-
-    // 0x000A0001 - Profile birthday
-    const u8 profile_birthday[2] = {3, 25}; // March 25th, 2014
-    res = CreateConfigInfoBlk(0x000A0001, sizeof(profile_birthday), 0xE, profile_birthday);
+    res = CreateConfigInfoBlk(0x000A0001, sizeof(PROFILE_BIRTHDAY), 0xE, &PROFILE_BIRTHDAY);
     if (!res.IsSuccess()) return res;
 
     res = CreateConfigInfoBlk(0x000A0002, sizeof(CONSOLE_LANGUAGE), 0xE, &CONSOLE_LANGUAGE);
     if (!res.IsSuccess()) return res;
+
     res = CreateConfigInfoBlk(0x000B0000, sizeof(COUNTRY_INFO), 0xE, &COUNTRY_INFO);
     if (!res.IsSuccess()) return res;
 
@@ -434,17 +429,6 @@ void Init() {
         config->backend->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return;
     }
-
-    // Initialize the Username block
-    // TODO(Subv): Initialize this directly in the variable when MSVC supports char16_t string literals
-    memset(&CONSOLE_USERNAME_BLOCK, 0, sizeof(CONSOLE_USERNAME_BLOCK));
-    CONSOLE_USERNAME_BLOCK.ng_word = 0;
-    CONSOLE_USERNAME_BLOCK.zero = 0;
-
-    // Copy string to buffer and pad with zeros at the end
-    auto size = Common::UTF8ToUTF16(CONSOLE_USERNAME).copy(CONSOLE_USERNAME_BLOCK.username, 0x14);
-    std::fill(std::begin(CONSOLE_USERNAME_BLOCK.username) + size,
-              std::end(CONSOLE_USERNAME_BLOCK.username), 0);
 
     FormatConfig();
 }
