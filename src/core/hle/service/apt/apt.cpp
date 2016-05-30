@@ -180,12 +180,12 @@ void SendParameter(Service::Interface* self) {
     }
 
     MessageParameter param;
-    param.buffer_size = buffer_size;
     param.destination_id = dst_app_id;
     param.sender_id = src_app_id;
     param.object = Kernel::g_handle_table.GetGeneric(handle);
     param.signal = signal_type;
-    param.data = Memory::GetPointer(buffer);
+    param.buffer.resize(buffer_size);
+    Memory::ReadBlock(buffer, param.buffer.data(), param.buffer.size());
 
     cmd_buff[1] = dest_applet->ReceiveParameter(param).raw;
 
@@ -203,16 +203,15 @@ void ReceiveParameter(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = next_parameter.sender_id;
     cmd_buff[3] = next_parameter.signal; // Signal type
-    cmd_buff[4] = next_parameter.buffer_size; // Parameter buffer size
+    cmd_buff[4] = next_parameter.buffer.size(); // Parameter buffer size
     cmd_buff[5] = 0x10;
     cmd_buff[6] = 0;
     if (next_parameter.object != nullptr)
         cmd_buff[6] = Kernel::g_handle_table.Create(next_parameter.object).MoveFrom();
-    cmd_buff[7] = (next_parameter.buffer_size << 14) | 2;
+    cmd_buff[7] = (next_parameter.buffer.size() << 14) | 2;
     cmd_buff[8] = buffer;
 
-    if (next_parameter.data)
-        memcpy(Memory::GetPointer(buffer), next_parameter.data, std::min(buffer_size, next_parameter.buffer_size));
+    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
     LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
@@ -226,16 +225,15 @@ void GlanceParameter(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = next_parameter.sender_id;
     cmd_buff[3] = next_parameter.signal; // Signal type
-    cmd_buff[4] = next_parameter.buffer_size; // Parameter buffer size
+    cmd_buff[4] = next_parameter.buffer.size(); // Parameter buffer size
     cmd_buff[5] = 0x10;
     cmd_buff[6] = 0;
     if (next_parameter.object != nullptr)
         cmd_buff[6] = Kernel::g_handle_table.Create(next_parameter.object).MoveFrom();
-    cmd_buff[7] = (next_parameter.buffer_size << 14) | 2;
+    cmd_buff[7] = (next_parameter.buffer.size() << 14) | 2;
     cmd_buff[8] = buffer;
 
-    if (next_parameter.data)
-        memcpy(Memory::GetPointer(buffer), next_parameter.data, std::min(buffer_size, next_parameter.buffer_size));
+    Memory::WriteBlock(buffer, next_parameter.buffer.data(), std::min(static_cast<size_t>(buffer_size), next_parameter.buffer.size()));
 
     LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 }
@@ -373,10 +371,13 @@ void StartLibraryApplet(Service::Interface* self) {
         return;
     }
 
+    size_t buffer_size = cmd_buff[2];
+    VAddr buffer_addr = cmd_buff[6];
+
     AppletStartupParameter parameter;
-    parameter.buffer_size = cmd_buff[2];
     parameter.object = Kernel::g_handle_table.GetGeneric(cmd_buff[4]);
-    parameter.data = Memory::GetPointer(cmd_buff[6]);
+    parameter.buffer.resize(buffer_size);
+    Memory::ReadBlock(buffer_addr, parameter.buffer.data(), parameter.buffer.size());
 
     cmd_buff[1] = applet->Start(parameter).raw;
 }

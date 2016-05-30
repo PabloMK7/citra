@@ -66,14 +66,26 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
 }
 
 /**
+ * Writes a single GSP GPU hardware registers with a single u32 value
+ * (For internal use.)
+ *
+ * @param base_address The address of the register in question
+ * @param data Data to be written
+ */
+static void WriteSingleHWReg(u32 base_address, u32 data) {
+    DEBUG_ASSERT_MSG((base_address & 3) == 0 && base_address < 0x420000, "Write address out of range or misaligned");
+    HW::Write<u32>(base_address + REGS_BEGIN, data);
+}
+
+/**
  * Writes sequential GSP GPU hardware registers using an array of source data
  *
  * @param base_address The address of the first register in the sequence
  * @param size_in_bytes The number of registers to update (size of data)
- * @param data A pointer to the source data
+ * @param data_vaddr A pointer to the source data
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* data) {
+static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_vaddr) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 
@@ -87,10 +99,10 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* da
             return ERR_GSP_REGS_MISALIGNED;
         } else {
             while (size_in_bytes > 0) {
-                HW::Write<u32>(base_address + REGS_BEGIN, *data);
+                WriteSingleHWReg(base_address, Memory::Read32(data_vaddr));
 
                 size_in_bytes -= 4;
-                ++data;
+                data_vaddr += 4;
                 base_address += 4;
             }
             return RESULT_SUCCESS;
@@ -112,7 +124,7 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const u32* da
  * @param masks A pointer to the masks
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const u32* data, const u32* masks) {
+static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr data_vaddr, VAddr masks_vaddr) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 
@@ -131,14 +143,17 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, const
                 u32 reg_value;
                 HW::Read<u32>(reg_value, reg_address);
 
-                // Update the current value of the register only for set mask bits
-                reg_value = (reg_value & ~*masks) | (*data | *masks);
+                u32 data = Memory::Read32(data_vaddr);
+                u32 mask = Memory::Read32(masks_vaddr);
 
-                HW::Write<u32>(reg_address, reg_value);
+                // Update the current value of the register only for set mask bits
+                reg_value = (reg_value & ~mask) | (data | mask);
+
+                WriteSingleHWReg(base_address, reg_value);
 
                 size_in_bytes -= 4;
-                ++data;
-                ++masks;
+                data_vaddr += 4;
+                masks_vaddr += 4;
                 base_address += 4;
             }
             return RESULT_SUCCESS;
@@ -164,8 +179,7 @@ static void WriteHWRegs(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
-
-    u32* src = (u32*)Memory::GetPointer(cmd_buff[4]);
+    VAddr src = cmd_buff[4];
 
     cmd_buff[1] = WriteHWRegs(reg_addr, size, src).raw;
 }
@@ -186,8 +200,8 @@ static void WriteHWRegsWithMask(Service::Interface* self) {
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
 
-    u32* src_data = (u32*)Memory::GetPointer(cmd_buff[4]);
-    u32* mask_data = (u32*)Memory::GetPointer(cmd_buff[6]);
+    VAddr src_data = cmd_buff[4];
+    VAddr mask_data = cmd_buff[6];
 
     cmd_buff[1] = WriteHWRegsWithMask(reg_addr, size, src_data, mask_data).raw;
 }
@@ -210,13 +224,16 @@ static void ReadHWRegs(Service::Interface* self) {
         return;
     }
 
-    u32* dst = (u32*)Memory::GetPointer(cmd_buff[0x41]);
+    VAddr dst_vaddr = cmd_buff[0x41];
 
     while (size > 0) {
-        HW::Read<u32>(*dst, reg_addr + REGS_BEGIN);
+        u32 value;
+        HW::Read<u32>(value, reg_addr + REGS_BEGIN);
+
+        Memory::Write32(dst_vaddr, value);
 
         size -= 4;
-        ++dst;
+        dst_vaddr += 4;
         reg_addr += 4;
     }
 }
@@ -226,22 +243,22 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
     PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);
     if (info.active_fb == 0) {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)),
-                    4, &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)),
-                    4, &phys_address_right);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)),
+                         phys_address_left);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)),
+                         phys_address_right);
     } else {
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)),
-                    4, &phys_address_left);
-        WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)),
-                    4, &phys_address_right);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)),
+                         phys_address_left);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)),
+                         phys_address_right);
     }
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)),
-                4, &info.stride);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)),
-                4, &info.format);
-    WriteHWRegs(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
-                4, &info.shown_fb);
+    WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)),
+                     info.stride);
+    WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)),
+                     info.format);
+    WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
+                     info.shown_fb);
 
     if (Pica::g_debug_context)
         Pica::g_debug_context->OnEvent(Pica::DebugContext::Event::BufferSwapped, nullptr);
@@ -432,9 +449,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         Memory::RasterizerFlushAndInvalidateRegion(Memory::VirtualToPhysicalAddress(command.dma_request.dest_address),
                             command.dma_request.size);
 
-        memcpy(Memory::GetPointer(command.dma_request.dest_address),
-               Memory::GetPointer(command.dma_request.source_address),
-               command.dma_request.size);
+        // TODO(Subv): These memory accesses should not go through the application's memory mapping.
+        // They should go through the GSP module's memory mapping.
+        Memory::CopyBlock(command.dma_request.dest_address, command.dma_request.source_address, command.dma_request.size);
         SignalInterrupt(InterruptId::DMA);
         break;
     }

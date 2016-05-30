@@ -110,6 +110,9 @@ enum : VAddr {
     NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
+bool IsValidVirtualAddress(const VAddr addr);
+bool IsValidPhysicalAddress(const PAddr addr);
+
 u8 Read8(VAddr addr);
 u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
@@ -120,7 +123,10 @@ void Write16(VAddr addr, u16 data);
 void Write32(VAddr addr, u32 data);
 void Write64(VAddr addr, u64 data);
 
-void WriteBlock(VAddr addr, const u8* data, size_t size);
+void ReadBlock(const VAddr src_addr, void* dest_buffer, size_t size);
+void WriteBlock(const VAddr dest_addr, const void* src_buffer, size_t size);
+void ZeroBlock(const VAddr dest_addr, const size_t size);
+void CopyBlock(VAddr dest_addr, VAddr src_addr, size_t size);
 
 u8* GetPointer(VAddr virtual_address);
 

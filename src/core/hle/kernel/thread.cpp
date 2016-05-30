@@ -403,7 +403,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         priority = new_priority;
     }
 
-    if (!Memory::GetPointer(entry_point)) {
+    if (!Memory::IsValidVirtualAddress(entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,

@@ -140,12 +140,15 @@ static void LoadComponent(Service::Interface* self) {
 
     // TODO(bunnei): Implement real DSP firmware loading
 
-    ASSERT(Memory::GetPointer(buffer) != nullptr);
-    ASSERT(size > 0x37C);
+    ASSERT(Memory::IsValidVirtualAddress(buffer));
 
-    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64, Common::ComputeHash64(Memory::GetPointer(buffer), size));
+    std::vector<u8> component_data(size);
+    Memory::ReadBlock(buffer, component_data.data(), component_data.size());
+
+    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64, Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
-    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64, Common::ComputeHash64(Memory::GetPointer(buffer) + 0x340, 60));
+    ASSERT(size > 0x37C);
+    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64, Common::ComputeHash64(component_data.data() + 0x340, 60));
 
     LOG_WARNING(Service_DSP, "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
                 size, prog_mask, data_mask, buffer);
@@ -285,7 +288,7 @@ static void WriteProcessPipe(Service::Interface* self) {
         return;
     }
 
-    ASSERT_MSG(Memory::GetPointer(buffer) != nullptr, "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(buffer), "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
 
     std::vector<u8> message(size);
     for (u32 i = 0; i < size; i++) {
@@ -324,7 +327,7 @@ static void ReadPipeIfPossible(Service::Interface* self) {
 
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
-    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index, unknown, size, addr);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(addr), "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -364,7 +367,7 @@ static void ReadPipe(Service::Interface* self) {
 
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
-    ASSERT_MSG(Memory::GetPointer(addr) != nullptr, "Invalid addr: pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index, unknown, size, addr);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(addr), "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
 
     if (DSP::HLE::GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = DSP::HLE::PipeRead(pipe, size);

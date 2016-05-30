@@ -31,7 +31,6 @@ static void GenerateRandomData(Service::Interface* self) {
 
     u32 size = cmd_buff[1];
     VAddr address = cmd_buff[3];
-    u8* output_buff = Memory::GetPointer(address);
 
     // Fill the output buffer with random data.
     u32 data = 0;
@@ -44,13 +43,13 @@ static void GenerateRandomData(Service::Interface* self) {
 
         if (size > 4) {
             // Use up the entire 4 bytes of the random data for as long as possible
-            *(u32*)(output_buff + i) = data;
+            Memory::Write32(address + i, data);
             i += 4;
         } else if (size == 2) {
-            *(u16*)(output_buff + i) = (u16)(data & 0xffff);
+            Memory::Write16(address + i, static_cast<u16>(data & 0xffff));
             i += 2;
         } else {
-            *(u8*)(output_buff + i) = (u8)(data & 0xff);
+            Memory::Write8(address + i, static_cast<u8>(data & 0xff));
             i++;
         }
     }
