@@ -84,6 +84,15 @@ struct OutputVertex {
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
 
+struct OutputRegisters {
+    OutputRegisters() = default;
+
+    alignas(16) Math::Vec4<float24> value[16];
+
+    OutputVertex ToVertex(const Regs::ShaderConfig& config);
+};
+static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
+
 // Helper structure used to keep track of data useful for inspection of shader emulation
 template<bool full_debugging>
 struct DebugData;
@@ -267,10 +276,11 @@ struct UnitState {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
         alignas(16) Math::Vec4<float24> input[16];
-        alignas(16) Math::Vec4<float24> output[16];
         alignas(16) Math::Vec4<float24> temporary[16];
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
+
+    OutputRegisters output_registers;
 
     bool conditional_code[2];
 
@@ -297,7 +307,7 @@ struct UnitState {
     static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return offsetof(UnitState, registers.output) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, output_registers.value) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
             return offsetof(UnitState, registers.temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
@@ -354,9 +364,8 @@ struct ShaderSetup {
      * @param state Shader unit state, must be setup per shader and per shader unit
      * @param input Input vertex into the shader
      * @param num_attributes The number of vertex shader attributes
-     * @return The output vertex, after having been processed by the vertex shader
      */
-    OutputVertex Run(UnitState<false>& state, const InputVertex& input, int num_attributes);
+    void Run(UnitState<false>& state, const InputVertex& input, int num_attributes);
 
     /**
      * Produce debug information based on the given shader and input vertex
