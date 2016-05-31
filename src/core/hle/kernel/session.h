@@ -32,6 +32,10 @@ constexpr u32 CallingPidDesc() {
     return 0x20;
 }
 
+constexpr u32 TransferHandleDesc() {
+    return 0x20;
+}
+
 constexpr u32 StaticBufferDesc(u32 size, unsigned int buffer_id) {
     return 0x2 | (size << 14) | ((buffer_id & 0xF) << 10);
 }

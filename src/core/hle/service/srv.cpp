@@ -27,7 +27,7 @@ static Kernel::SharedPtr<Kernel::Event> event_handle;
 static void RegisterClient(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    if (cmd_buff[1] != 0x20) {
+    if (cmd_buff[1] != IPC::CallingPidDesc()) {
         cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); //0x40
         cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
                                  ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
@@ -57,7 +57,7 @@ static void EnableNotification(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = IPC::CallingPidDesc();
+    cmd_buff[2] = IPC::TransferHandleDesc();
     cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
