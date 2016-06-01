@@ -16,7 +16,7 @@ class ConfigureDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget *parent = nullptr);
+    explicit ConfigureDialog(QWidget *parent, bool emulation_running);
     ~ConfigureDialog();
 
     void applyConfiguration();
@@ -26,4 +26,5 @@ private:
 
 private:
     std::unique_ptr<Ui::ConfigureDialog> ui;
+    bool emulation_running;
 };

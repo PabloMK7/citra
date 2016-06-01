@@ -24,6 +24,11 @@
        <string>General</string>
       </attribute>
      </widget>
+     <widget class="ConfigureSystem" name="systemTab">
+      <attribute name="title">
+       <string>System</string>
+      </attribute>
+     </widget>
      <widget class="QWidget" name="inputTab">
       <attribute name="title">
        <string>Input</string>
@@ -55,6 +60,12 @@
    <class>ConfigureGeneral</class>
    <extends>QWidget</extends>
    <header>configure_general.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureSystem</class>
+   <extends>QWidget</extends>
+   <header>configure_system.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
