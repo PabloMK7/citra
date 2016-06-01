@@ -223,6 +223,22 @@ void GetConfigInfoBlk8(Service::Interface* self) {
     Memory::WriteBlock(data_pointer, data.data(), data.size());
 }
 
+void SetConfigInfoBlk4(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 block_id = cmd_buff[1];
+    u32 size = cmd_buff[2];
+    VAddr data_pointer = cmd_buff[4];
+
+    if (!Memory::IsValidVirtualAddress(data_pointer)) {
+        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
+        return;
+    }
+
+    std::vector<u8> data(size);
+    Memory::ReadBlock(data_pointer, data.data(), data.size());
+    cmd_buff[1] = Service::CFG::SetConfigInfoBlock(block_id, size, 0x4, data.data()).raw;
+}
+
 void UpdateConfigNANDSavegame(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = Service::CFG::UpdateConfigNANDSavegame().raw;
@@ -233,13 +249,13 @@ void FormatConfig(Service::Interface* self) {
     cmd_buff[1] = Service::CFG::FormatConfig().raw;
 }
 
-ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
+static ResultVal<void*> GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 flag) {
     // Read the header
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
 
     auto itr = std::find_if(std::begin(config->block_entries), std::end(config->block_entries),
         [&](const SaveConfigBlockEntry& entry) {
-            return entry.block_id == block_id && (entry.flags & flag);
+            return entry.block_id == block_id;
         });
 
     if (itr == std::end(config->block_entries)) {
@@ -247,17 +263,38 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output) {
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
+    if ((itr->flags & flag) == 0) {
+        LOG_ERROR(Service_CFG, "Invalid flag %u for config block 0x%X with size %u", flag, block_id, size);
+        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+    }
+
     if (itr->size != size) {
         LOG_ERROR(Service_CFG, "Invalid size %u for config block 0x%X with flags %u", size, block_id, flag);
         return ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config, ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
+    void* pointer;
+
     // The data is located in the block header itself if the size is less than 4 bytes
     if (itr->size <= 4)
-        memcpy(output, &itr->offset_or_data, itr->size);
+        pointer = &itr->offset_or_data;
     else
-        memcpy(output, &cfg_config_file_buffer[itr->offset_or_data], itr->size);
+        pointer = &cfg_config_file_buffer[itr->offset_or_data];
 
+    return MakeResult<void*>(pointer);
+}
+
+ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
+    void* pointer;
+    CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
+    memcpy(output, pointer, size);
+    return RESULT_SUCCESS;
+}
+
+ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
+    void* pointer;
+    CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
+    memcpy(pointer, input, size);
     return RESULT_SUCCESS;
 }
 

@@ -185,6 +185,22 @@ void GetConfigInfoBlk2(Service::Interface* self);
 void GetConfigInfoBlk8(Service::Interface* self);
 
 /**
+ * CFG::SetConfigInfoBlk4 service function
+ *  Inputs:
+ *      0 : 0x04020082 / 0x08020082
+ *      1 : Block ID
+ *      2 : Size
+ *      3 : Descriptor for the output buffer
+ *      4 : Output buffer pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *  Note:
+ *      The parameters order is different from GetConfigInfoBlk2/8's,
+ *      where Block ID and Size are switched.
+ */
+void SetConfigInfoBlk4(Service::Interface* self);
+
+/**
  * CFG::UpdateConfigNANDSavegame service function
  *  Inputs:
  *      0 : 0x04030000 / 0x08030000
@@ -212,7 +228,19 @@ void FormatConfig(Service::Interface* self);
  * @param output A pointer where we will write the read data
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
-ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output);
+ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output);
+
+/**
+ * Reads data from input and writes to a block with the specified id and flag
+ * in the Config savegame buffer.
+ * The input size must match exactly the size of the target block
+ * @param block_id The id of the block we want to write
+ * @param size The size of the block we want to write
+ * @param flag The target block must have this flag set
+ * @param input A pointer where we will read data and write to Config savegame buffer
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input);
 
 /**
  * Creates a block with the specified id and writes the input data to the cfg savegame buffer in memory.

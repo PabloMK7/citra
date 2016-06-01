@@ -22,7 +22,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0040, GetCountryCodeID,                     "GetCountryCodeID"},
     // cfg:s
     {0x04010082, GetConfigInfoBlk8,                    "GetConfigInfoBlk8"},
-    {0x04020082, nullptr,                              "SetConfigInfoBlk4"},
+    {0x04020082, SetConfigInfoBlk4,                    "SetConfigInfoBlk4"},
     {0x04030000, UpdateConfigNANDSavegame,             "UpdateConfigNANDSavegame"},
     {0x04040042, nullptr,                              "GetLocalFriendCodeSeedData"},
     {0x04050000, nullptr,                              "GetLocalFriendCodeSeed"},
