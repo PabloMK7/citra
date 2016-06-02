@@ -2,8 +2,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(SRCS
-            config/controller_config.cpp
-            config/controller_config_util.cpp
             config.cpp
             debugger/callstack.cpp
             debugger/disassembler.cpp
@@ -33,8 +31,6 @@ set(SRCS
             )
 
 set(HEADERS
-            config/controller_config.h
-            config/controller_config_util.h
             config.h
             debugger/callstack.h
             debugger/disassembler.h
@@ -65,7 +61,6 @@ set(HEADERS
             )
 
 set(UIS
-            config/controller_config.ui
             debugger/callstack.ui
             debugger/disassembler.ui
             debugger/profiler.ui
