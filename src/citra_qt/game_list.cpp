@@ -130,9 +130,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
         if (stop_processing)
             return false; // Breaks the callback loop.
 
-        if (recursion > 0 && FileUtil::IsDirectory(physical_name)) {
-            AddFstEntriesToGameList(physical_name, recursion - 1);
-        } else {
+        if (!FileUtil::IsDirectory(physical_name)) {
             std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
             if (!loader)
                 return true;
@@ -145,6 +143,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 new GameListItem(QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
+        } else if (recursion > 0) {
+            AddFstEntriesToGameList(physical_name, recursion - 1);
         }
 
         return true;
