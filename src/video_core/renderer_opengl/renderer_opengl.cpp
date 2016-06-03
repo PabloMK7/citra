@@ -450,7 +450,7 @@ static const char* GetType(GLenum type) {
 #undef RET
 }
 
-static void DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                          const GLchar* message, const void* user_param) {
     Log::Level level;
     switch (severity) {

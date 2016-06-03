@@ -44,7 +44,7 @@ Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
 u32 g_thread_id = 0;
 
 static bool gpu_right_acquired = false;
-
+static bool first_initialization = true;
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(u32 thread_id) {
     return g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
@@ -347,24 +347,25 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
     u32 flags = cmd_buff[1];
 
     g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
+    // TODO(mailwl): return right error code instead assert
     ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
 
     g_interrupt_event->name = "GSP_GPU::interrupt_event";
 
-    using Kernel::MemoryPermission;
-    g_shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000,
-                                                   MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-                                                   0, Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
-
-    Handle shmem_handle = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom();
-
-    // This specific code is required for a successful initialization, rather than 0
-    cmd_buff[1] = ResultCode((ErrorDescription)519, ErrorModule::GX,
-                             ErrorSummary::Success, ErrorLevel::Success).raw;
+    if (first_initialization) {
+        // This specific code is required for a successful initialization, rather than 0
+        first_initialization = false;
+        cmd_buff[1] = ResultCode(ErrorDescription::GPU_FirstInitialization, ErrorModule::GX,
+                                 ErrorSummary::Success, ErrorLevel::Success).raw;
+    } else {
+        cmd_buff[1] = RESULT_SUCCESS.raw;
+    }
     cmd_buff[2] = g_thread_id++; // Thread ID
-    cmd_buff[4] = shmem_handle; // GSP shared memory
+    cmd_buff[4] = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom(); // GSP shared memory
 
     g_interrupt_event->Signal(); // TODO(bunnei): Is this correct?
+
+    LOG_WARNING(Service_GSP, "called, flags=0x%08X", flags);
 }
 
 /**
@@ -375,12 +376,12 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
 static void UnregisterInterruptRelayQueue(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    g_shared_memory = nullptr;
+    g_thread_id = 0;
     g_interrupt_event = nullptr;
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_WARNING(Service_GSP, "called");
+    LOG_WARNING(Service_GSP, "(STUBBED) called");
 }
 
 /**
@@ -718,10 +719,15 @@ Interface::Interface() {
     Register(FunctionTable);
 
     g_interrupt_event = nullptr;
-    g_shared_memory = nullptr;
+
+    using Kernel::MemoryPermission;
+    g_shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000,
+                                                   MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+                                                   0, Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
 
     g_thread_id = 0;
     gpu_right_acquired = false;
+    first_initialization = true;
 }
 
 Interface::~Interface() {
