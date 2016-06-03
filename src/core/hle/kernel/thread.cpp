@@ -182,6 +182,48 @@ static void PriorityBoostStarvedThreads() {
 }
 
 /**
+ * Gets the registers for timeout parameter of the next WaitSynchronization call.
+ * @param thread a pointer to the thread that is ready to call WaitSynchronization
+ * @returns a tuple of two register pointers to low and high part of the timeout parameter
+ */
+static std::tuple<u32*, u32*> GetWaitSynchTimeoutParameterRegister(Thread* thread) {
+    bool thumb_mode = (thread->context.cpsr & TBIT) != 0;
+    u16 thumb_inst = Memory::Read16(thread->context.pc & 0xFFFFFFFE);
+    u32 inst = Memory::Read32(thread->context.pc & 0xFFFFFFFC) & 0x0FFFFFFF;
+
+    if ((thumb_mode && thumb_inst == 0xDF24) || (!thumb_mode && inst == 0x0F000024)) {
+        // svc #0x24 (WaitSynchronization1)
+        return std::make_tuple(&thread->context.cpu_registers[2], &thread->context.cpu_registers[3]);
+    } else if ((thumb_mode && thumb_inst == 0xDF25) || (!thumb_mode && inst == 0x0F000025)) {
+        // svc #0x25 (WaitSynchronizationN)
+        return std::make_tuple(&thread->context.cpu_registers[0], &thread->context.cpu_registers[4]);
+    }
+
+    UNREACHABLE();
+}
+
+/**
+ * Updates the WaitSynchronization timeout paramter according to the difference
+ * between ticks of the last WaitSynchronization call and the incoming one.
+ * @param timeout_low a pointer to the register for the low part of the timeout parameter
+ * @param timeout_high a pointer to the register for the high part of the timeout parameter
+ * @param last_tick tick of the last WaitSynchronization call
+ */
+static void UpdateTimeoutParameter(u32* timeout_low, u32* timeout_high, u64 last_tick) {
+    s64 timeout = ((s64)*timeout_high << 32) | *timeout_low;
+
+    if (timeout != -1) {
+        timeout -= cyclesToUs(CoreTiming::GetTicks() - last_tick) * 1000; // in nanoseconds
+
+        if (timeout < 0)
+            timeout = 0;
+
+        *timeout_low = timeout & 0xFFFFFFFF;
+        *timeout_high = timeout >> 32;
+    }
+}
+
+/**
  * Switches the CPU's active thread context to that of the specified thread
  * @param new_thread The thread to switch to
  */
@@ -219,6 +261,13 @@ static void SwitchContext(Thread* new_thread) {
 
             // SVC instruction is 2 bytes for THUMB, 4 bytes for ARM
             new_thread->context.pc -= thumb_mode ? 2 : 4;
+
+            // Get the register for timeout parameter
+            u32* timeout_low, *timeout_high;
+            std::tie(timeout_low, timeout_high) = GetWaitSynchTimeoutParameterRegister(new_thread);
+
+            // Update the timeout parameter
+            UpdateTimeoutParameter(timeout_low, timeout_high, new_thread->last_running_ticks);
         }
 
         // Clean up the thread's wait_objects, they'll be restored if needed during
