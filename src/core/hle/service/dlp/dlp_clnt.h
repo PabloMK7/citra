@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace DLP_SRVR
+namespace Service {
+namespace DLP {
 
-namespace DLP_SRVR {
-
-class Interface : public Service::Interface {
+class DLP_CLNT_Interface final : public Interface {
 public:
-    Interface();
+    DLP_CLNT_Interface();
 
     std::string GetPortName() const override {
-        return "dlp:SRVR";
+        return "dlp:CLNT";
     }
 };
 
-} // namespace
+} // namespace DLP
+} // namespace Service
