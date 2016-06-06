@@ -10,7 +10,6 @@
 #include "core/hle/service/act_a.h"
 #include "core/hle/service/act_u.h"
 #include "core/hle/service/csnd_snd.h"
-#include "core/hle/service/dlp_srvr.h"
 #include "core/hle/service/dsp_dsp.h"
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -31,6 +30,7 @@
 #include "core/hle/service/boss/boss.h"
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cecd/cecd.h"
+#include "core/hle/service/dlp/dlp.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -111,6 +111,7 @@ void Init() {
     Service::CAM::Init();
     Service::CECD::Init();
     Service::CFG::Init();
+    Service::DLP::Init();
     Service::FRD::Init();
     Service::HID::Init();
     Service::IR::Init();
@@ -123,7 +124,6 @@ void Init() {
     AddService(new ACT_A::Interface);
     AddService(new ACT_U::Interface);
     AddService(new CSND_SND::Interface);
-    AddService(new DLP_SRVR::Interface);
     AddService(new DSP_DSP::Interface);
     AddService(new GSP_GPU::Interface);
     AddService(new GSP_LCD::Interface);
@@ -150,6 +150,7 @@ void Shutdown() {
     Service::IR::Shutdown();
     Service::HID::Shutdown();
     Service::FRD::Shutdown();
+    Service::DLP::Shutdown();
     Service::CFG::Shutdown();
     Service::CECD::Shutdown();
     Service::CAM::Shutdown();

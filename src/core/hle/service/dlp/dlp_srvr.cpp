@@ -2,16 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/common_types.h"
 #include "common/logging/log.h"
-#include "core/hle/hle.h"
-#include "core/hle/service/dlp_srvr.h"
+#include "core/hle/result.h"
+#include "core/hle/service/dlp/dlp_srvr.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace DLP_SRVR
+namespace Service {
+namespace DLP {
 
-namespace DLP_SRVR {
-
-static void unk_0x000E0040(Service::Interface* self) {
+static void unk_0x000E0040(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
@@ -23,14 +22,13 @@ static void unk_0x000E0040(Service::Interface* self) {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010183, nullptr,           "Initialize"},
     {0x00020000, nullptr,           "Finalize"},
+    {0x000800C0, nullptr,           "SendWirelessRebootPassphrase"},
     {0x000E0040, unk_0x000E0040,    "unk_0x000E0040"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+DLP_SRVR_Interface::DLP_SRVR_Interface() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace DLP
+} // namespace Service
