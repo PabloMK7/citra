@@ -73,8 +73,7 @@ static const ConsoleModelInfo CONSOLE_MODEL = { NINTENDO_3DS_XL, { 0, 0, 0 } };
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const UsernameBlock CONSOLE_USERNAME_BLOCK = { u"CITRA", 0, 0 };
 static const BirthdayBlock PROFILE_BIRTHDAY = { 3, 25 }; // March 25th, 2014
-/// TODO(Subv): Find out what this actually is
-static const u8 SOUND_OUTPUT_MODE = 2;
+static const u8 SOUND_OUTPUT_MODE = SOUND_SURROUND;
 static const u8 UNITED_STATES_COUNTRY_ID = 49;
 /// TODO(Subv): Find what the other bytes are
 static const ConsoleCountryInfo COUNTRY_INFO = { { 0, 0, 0 }, UNITED_STATES_COUNTRY_ID };

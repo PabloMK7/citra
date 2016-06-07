@@ -38,6 +38,12 @@ enum SystemLanguage {
     LANGUAGE_RU = 10
 };
 
+enum SoundOutputMode {
+    SOUND_MONO = 0,
+    SOUND_STEREO = 1,
+    SOUND_SURROUND = 2
+};
+
 /// Block header in the config savedata file
 struct SaveConfigBlockEntry {
     u32 block_id;       ///< The id of the current block
