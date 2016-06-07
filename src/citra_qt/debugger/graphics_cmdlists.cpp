@@ -50,123 +50,6 @@ public:
     }
 };
 
-TextureInfoDockWidget::TextureInfoDockWidget(const Pica::DebugUtils::TextureInfo& info, QWidget* parent)
-    : QDockWidget(tr("Texture 0x%1").arg(info.physical_address, 8, 16, QLatin1Char('0'))),
-      info(info) {
-
-    QWidget* main_widget = new QWidget;
-
-    QLabel* image_widget = new QLabel;
-
-    connect(this, SIGNAL(UpdatePixmap(const QPixmap&)), image_widget, SLOT(setPixmap(const QPixmap&)));
-
-    CSpinBox* phys_address_spinbox = new CSpinBox;
-    phys_address_spinbox->SetBase(16);
-    phys_address_spinbox->SetRange(0, 0xFFFFFFFF);
-    phys_address_spinbox->SetPrefix("0x");
-    phys_address_spinbox->SetValue(info.physical_address);
-    connect(phys_address_spinbox, SIGNAL(ValueChanged(qint64)), this, SLOT(OnAddressChanged(qint64)));
-
-    QComboBox* format_choice = new QComboBox;
-    format_choice->addItem(tr("RGBA8"));
-    format_choice->addItem(tr("RGB8"));
-    format_choice->addItem(tr("RGB5A1"));
-    format_choice->addItem(tr("RGB565"));
-    format_choice->addItem(tr("RGBA4"));
-    format_choice->addItem(tr("IA8"));
-    format_choice->addItem(tr("RG8"));
-    format_choice->addItem(tr("I8"));
-    format_choice->addItem(tr("A8"));
-    format_choice->addItem(tr("IA4"));
-    format_choice->addItem(tr("I4"));
-    format_choice->addItem(tr("A4"));
-    format_choice->addItem(tr("ETC1"));
-    format_choice->addItem(tr("ETC1A4"));
-    format_choice->setCurrentIndex(static_cast<int>(info.format));
-    connect(format_choice, SIGNAL(currentIndexChanged(int)), this, SLOT(OnFormatChanged(int)));
-
-    QSpinBox* width_spinbox = new QSpinBox;
-    width_spinbox->setMaximum(65535);
-    width_spinbox->setValue(info.width);
-    connect(width_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnWidthChanged(int)));
-
-    QSpinBox* height_spinbox = new QSpinBox;
-    height_spinbox->setMaximum(65535);
-    height_spinbox->setValue(info.height);
-    connect(height_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnHeightChanged(int)));
-
-    QSpinBox* stride_spinbox = new QSpinBox;
-    stride_spinbox->setMaximum(65535 * 4);
-    stride_spinbox->setValue(info.stride);
-    connect(stride_spinbox, SIGNAL(valueChanged(int)), this, SLOT(OnStrideChanged(int)));
-
-    QVBoxLayout* main_layout = new QVBoxLayout;
-    main_layout->addWidget(image_widget);
-
-    {
-        QHBoxLayout* sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Source Address:")));
-        sub_layout->addWidget(phys_address_spinbox);
-        main_layout->addLayout(sub_layout);
-    }
-
-    {
-        QHBoxLayout* sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Format")));
-        sub_layout->addWidget(format_choice);
-        main_layout->addLayout(sub_layout);
-    }
-
-    {
-        QHBoxLayout* sub_layout = new QHBoxLayout;
-        sub_layout->addWidget(new QLabel(tr("Width:")));
-        sub_layout->addWidget(width_spinbox);
-        sub_layout->addStretch();
-        sub_layout->addWidget(new QLabel(tr("Height:")));
-        sub_layout->addWidget(height_spinbox);
-        sub_layout->addStretch();
-        sub_layout->addWidget(new QLabel(tr("Stride:")));
-        sub_layout->addWidget(stride_spinbox);
-        main_layout->addLayout(sub_layout);
-    }
-
-    main_widget->setLayout(main_layout);
-
-    emit UpdatePixmap(ReloadPixmap());
-
-    setWidget(main_widget);
-}
-
-void TextureInfoDockWidget::OnAddressChanged(qint64 value) {
-    info.physical_address = value;
-    emit UpdatePixmap(ReloadPixmap());
-}
-
-void TextureInfoDockWidget::OnFormatChanged(int value) {
-    info.format = static_cast<Pica::Regs::TextureFormat>(value);
-    emit UpdatePixmap(ReloadPixmap());
-}
-
-void TextureInfoDockWidget::OnWidthChanged(int value) {
-    info.width = value;
-    emit UpdatePixmap(ReloadPixmap());
-}
-
-void TextureInfoDockWidget::OnHeightChanged(int value) {
-    info.height = value;
-    emit UpdatePixmap(ReloadPixmap());
-}
-
-void TextureInfoDockWidget::OnStrideChanged(int value) {
-    info.stride = value;
-    emit UpdatePixmap(ReloadPixmap());
-}
-
-QPixmap TextureInfoDockWidget::ReloadPixmap() const {
-    u8* src = Memory::GetPhysicalPointer(info.physical_address);
-    return QPixmap::fromImage(LoadTexture(src, info));
-}
-
 GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {
 
 }
@@ -249,16 +132,16 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
             index = 0;
         } else if (COMMAND_IN_RANGE(command_id, texture1)) {
             index = 1;
-        } else {
+        } else if (COMMAND_IN_RANGE(command_id, texture2)) {
             index = 2;
+        } else {
+            UNREACHABLE_MSG("Unknown texture command");
         }
         auto config = Pica::g_state.regs.GetTextures()[index].config;
         auto format = Pica::g_state.regs.GetTextures()[index].format;
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
 
-        // TODO: Instead, emit a signal here to be caught by the main window widget.
-        auto main_window = static_cast<QMainWindow*>(parent());
-        main_window->tabifyDockWidget(this, new TextureInfoDockWidget(info, main_window));
+        // TODO: Open a surface debugger
     }
 }
 

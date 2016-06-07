@@ -9,7 +9,7 @@ set(SRCS
             debugger/graphics_breakpoint_observer.cpp
             debugger/graphics_breakpoints.cpp
             debugger/graphics_cmdlists.cpp
-            debugger/graphics_framebuffer.cpp
+            debugger/graphics_surface.cpp
             debugger/graphics_tracing.cpp
             debugger/graphics_vertex_shader.cpp
             debugger/profiler.cpp
@@ -39,7 +39,7 @@ set(HEADERS
             debugger/graphics_breakpoints.h
             debugger/graphics_breakpoints_p.h
             debugger/graphics_cmdlists.h
-            debugger/graphics_framebuffer.h
+            debugger/graphics_surface.h
             debugger/graphics_tracing.h
             debugger/graphics_vertex_shader.h
             debugger/profiler.h
