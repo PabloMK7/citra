@@ -646,7 +646,7 @@ static void ReadMemory() {
 
     u8* data = Memory::GetPointer(addr);
     if (!data) {
-        return SendReply("E0");
+        return SendReply("E00");
     }
 
     MemToGdbHex(reply, data, len);
