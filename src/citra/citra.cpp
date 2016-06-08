@@ -17,11 +17,16 @@
 #include <getopt.h>
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
+#include "common/string_util.h"
 
 #include "core/settings.h"
 #include "core/system.h"
@@ -55,6 +60,15 @@ int main(int argc, char **argv) {
     bool use_gdbstub = Settings::values.use_gdbstub;
     u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port);
     char *endarg;
+#ifdef _WIN32
+    int argc_w;
+    auto argv_w = CommandLineToArgvW(GetCommandLineW(), &argc_w);
+
+    if (argv_w == nullptr) {
+        LOG_CRITICAL(Frontend, "Failed to get command line arguments");
+        return -1;
+    }
+#endif
     std::string boot_filename;
 
     static struct option long_options[] = {
@@ -86,10 +100,18 @@ int main(int argc, char **argv) {
                 return 0;
             }
         } else {
+#ifdef _WIN32
+            boot_filename = Common::UTF16ToUTF8(argv_w[optind]);
+#else
             boot_filename = argv[optind];
+#endif
             optind++;
         }
     }
+
+#ifdef _WIN32
+    LocalFree(argv_w);
+#endif
 
     Log::Filter log_filter(Log::Level::Debug);
     Log::SetFilter(&log_filter);
