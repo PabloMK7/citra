@@ -35,7 +35,8 @@ enum SystemLanguage {
     LANGUAGE_KO = 7,
     LANGUAGE_NL = 8,
     LANGUAGE_PT = 9,
-    LANGUAGE_RU = 10
+    LANGUAGE_RU = 10,
+    LANGUAGE_TW = 11
 };
 
 enum SoundOutputMode {
