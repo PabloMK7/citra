@@ -26,7 +26,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmla)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -75,7 +75,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmls)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -124,7 +124,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmla)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -174,7 +174,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmls)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -223,7 +223,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vnmul)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -272,7 +272,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmul)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -321,7 +321,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vadd)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -370,7 +370,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vsub)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -419,7 +419,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vdiv)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -470,7 +470,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovi)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->d      = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
@@ -518,7 +518,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovr)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->d      = (inst_cream->single ? BITS(inst,12,15)<<1 | BIT(inst,22) : BITS(inst,12,15) | BIT(inst,22)<<4);
@@ -560,7 +560,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vabs)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -610,7 +610,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vneg)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -659,7 +659,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vsqrt)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -708,7 +708,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -757,7 +757,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcmp2)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -806,7 +806,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbds)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -857,7 +857,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbff)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -906,7 +906,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vcvtbfi)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->dp_operation = BIT(inst, 8);
     inst_cream->instr = inst;
@@ -962,7 +962,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrs)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->to_arm = BIT(inst, 20) == 1;
     inst_cream->t      = BITS(inst, 12, 15);
@@ -1006,7 +1006,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmsr)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->reg = BITS(inst, 16, 19);
     inst_cream->Rt  = BITS(inst, 12, 15);
@@ -1069,7 +1069,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrc)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
     inst_cream->t     = BITS(inst, 12, 15);
@@ -1115,7 +1115,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmrs)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->reg = BITS(inst, 16, 19);
     inst_cream->Rt  = BITS(inst, 12, 15);
@@ -1200,7 +1200,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbcr)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->d     = BITS(inst, 16, 19)|BIT(inst, 7)<<4;
     inst_cream->t     = BITS(inst, 12, 15);
@@ -1253,7 +1253,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrss)(unsigned int inst, int inde
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->to_arm = BIT(inst, 20) == 1;
     inst_cream->t      = BITS(inst, 12, 15);
@@ -1301,7 +1301,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vmovbrrd)(unsigned int inst, int index
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->to_arm = BIT(inst, 20) == 1;
     inst_cream->t      = BITS(inst, 12, 15);
@@ -1354,7 +1354,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vstr)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->add    = BIT(inst, 23);
@@ -1420,7 +1420,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vpush)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single  = BIT(inst, 8) == 0;
     inst_cream->d       = (inst_cream->single ? BITS(inst, 12, 15)<<1|BIT(inst, 22) : BITS(inst, 12, 15)|BIT(inst, 22)<<4);
@@ -1495,7 +1495,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vstm)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->add    = BIT(inst, 23);
@@ -1580,7 +1580,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vpop)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single  = BIT(inst, 8) == 0;
     inst_cream->d       = (inst_cream->single ? (BITS(inst, 12, 15)<<1)|BIT(inst, 22) : BITS(inst, 12, 15)|(BIT(inst, 22)<<4));
@@ -1653,7 +1653,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vldr)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->add    = BIT(inst, 23);
@@ -1722,7 +1722,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(vldm)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   = NON_BRANCH;
+    inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->single = BIT(inst, 8) == 0;
     inst_cream->add    = BIT(inst, 23);
