@@ -649,7 +649,7 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
     virt_addr = addr;
 }
 
-shtop_fp_t get_shifter_op(unsigned int inst) {
+shtop_fp_t GetShifterOp(unsigned int inst) {
     if (BIT(inst, 25)) {
         return DPO(Immediate);
     } else if (BITS(inst, 4, 11) == 0) {
@@ -674,7 +674,7 @@ shtop_fp_t get_shifter_op(unsigned int inst) {
     return nullptr;
 }
 
-get_addr_fp_t get_calc_addr_op(unsigned int inst) {
+get_addr_fp_t GetAddressingOp(unsigned int inst) {
     if (BITS(inst, 24, 27) == 5 && BIT(inst, 21) == 0) {
         return LnSWoUB(ImmediateOffset);
     } else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 0 && BITS(inst, 4, 11) == 0) {
@@ -718,7 +718,7 @@ get_addr_fp_t get_calc_addr_op(unsigned int inst) {
 }
 
 // Specialized for LDRT, LDRBT, STRT, and STRBT, which have specific addressing mode requirements
-get_addr_fp_t get_calc_addr_op_loadstoret(unsigned int inst) {
+get_addr_fp_t GetAddressingOpLoadStoreT(unsigned int inst) {
     if (BITS(inst, 25, 27) == 2) {
         return LnSWoUB(ImmediatePostIndexed);
     } else if (BITS(inst, 25, 27) == 3) {
