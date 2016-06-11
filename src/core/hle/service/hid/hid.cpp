@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cmath>
+
 #include "common/logging/log.h"
 #include "common/emu_window.h"
 
