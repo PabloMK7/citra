@@ -215,9 +215,6 @@ const PadState PAD_CIRCLE_LEFT  = {{1u << 29}};
 const PadState PAD_CIRCLE_UP    = {{1u << 30}};
 const PadState PAD_CIRCLE_DOWN  = {{1u << 31}};
 
-
-extern const std::array<Service::HID::PadState, Settings::NativeInput::NUM_INPUTS> pad_mapping;
-
 /**
  * HID::GetIPCHandles service function
  *  Inputs:

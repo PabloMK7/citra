@@ -44,12 +44,16 @@ bool Config::LoadINI(const std::string& default_contents, bool retry) {
 }
 
 static const std::array<int, Settings::NativeInput::NUM_INPUTS> defaults = {
+    // directly mapped keys
     SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_Z, SDL_SCANCODE_X,
     SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_1, SDL_SCANCODE_2,
     SDL_SCANCODE_M, SDL_SCANCODE_N, SDL_SCANCODE_B,
     SDL_SCANCODE_T, SDL_SCANCODE_G, SDL_SCANCODE_F, SDL_SCANCODE_H,
+    SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L,
+
+    // indirectly mapped keys
     SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT,
-    SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L
+    SDL_SCANCODE_D,
 };
 
 void Config::ReadValues() {
@@ -58,6 +62,7 @@ void Config::ReadValues() {
         Settings::values.input_mappings[Settings::NativeInput::All[i]] =
             sdl2_config->GetInteger("Controls", Settings::NativeInput::Mapping[i], defaults[i]);
     }
+    Settings::values.pad_circle_modifier_scale = (float)sdl2_config->GetReal("Controls", "pad_circle_modifier_scale", 0.5);
 
     // Core
     Settings::values.frame_skip = sdl2_config->GetInteger("Core", "frame_skip", 0);

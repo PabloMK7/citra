@@ -11,12 +11,28 @@
 #include "emu_window.h"
 #include "video_core/video_core.h"
 
-void EmuWindow::KeyPressed(KeyMap::HostDeviceKey key) {
-    pad_state.hex |= KeyMap::GetPadKey(key).hex;
+void EmuWindow::ButtonPressed(Service::HID::PadState pad) {
+    pad_state.hex |= pad.hex;
 }
 
-void EmuWindow::KeyReleased(KeyMap::HostDeviceKey key) {
-    pad_state.hex &= ~KeyMap::GetPadKey(key).hex;
+void EmuWindow::ButtonReleased(Service::HID::PadState pad) {
+    pad_state.hex &= ~pad.hex;
+}
+
+void EmuWindow::CirclePadUpdated(float x, float y) {
+    constexpr int MAX_CIRCLEPAD_POS = 0x9C; // Max value for a circle pad position
+
+    // Make sure the coordinates are in the unit circle,
+    // otherwise normalize it.
+    float r = x * x + y * y;
+    if (r > 1) {
+        r = std::sqrt(r);
+        x /= r;
+        y /= r;
+    }
+
+    circle_pad_x = static_cast<s16>(x * MAX_CIRCLEPAD_POS);
+    circle_pad_y = static_cast<s16>(y * MAX_CIRCLEPAD_POS);
 }
 
 /**

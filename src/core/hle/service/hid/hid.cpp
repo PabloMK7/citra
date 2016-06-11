@@ -19,8 +19,6 @@
 namespace Service {
 namespace HID {
 
-static const int MAX_CIRCLEPAD_POS = 0x9C; ///< Max value for a circle pad position
-
 // Handle to shared memory region designated to HID_User service
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
 
@@ -39,37 +37,47 @@ static u32 next_gyroscope_index;
 static int enable_accelerometer_count = 0; // positive means enabled
 static int enable_gyroscope_count = 0; // positive means enabled
 
-const std::array<Service::HID::PadState, Settings::NativeInput::NUM_INPUTS> pad_mapping = {{
-    Service::HID::PAD_A, Service::HID::PAD_B, Service::HID::PAD_X, Service::HID::PAD_Y,
-    Service::HID::PAD_L, Service::HID::PAD_R, Service::HID::PAD_ZL, Service::HID::PAD_ZR,
-    Service::HID::PAD_START, Service::HID::PAD_SELECT, Service::HID::PAD_NONE,
-    Service::HID::PAD_UP, Service::HID::PAD_DOWN, Service::HID::PAD_LEFT, Service::HID::PAD_RIGHT,
-    Service::HID::PAD_CIRCLE_UP, Service::HID::PAD_CIRCLE_DOWN, Service::HID::PAD_CIRCLE_LEFT, Service::HID::PAD_CIRCLE_RIGHT,
-    Service::HID::PAD_C_UP, Service::HID::PAD_C_DOWN, Service::HID::PAD_C_LEFT, Service::HID::PAD_C_RIGHT
-}};
+static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
+    constexpr float TAN30 = 0.577350269, TAN60 = 1 / TAN30; // 30 degree and 60 degree are angular thresholds for directions
+    constexpr int CIRCLE_PAD_THRESHOLD_SQUARE = 40 * 40; // a circle pad radius greater than 40 will trigger circle pad direction
+    PadState state;
+    state.hex = 0;
 
+    if (circle_pad_x * circle_pad_x + circle_pad_y * circle_pad_y > CIRCLE_PAD_THRESHOLD_SQUARE) {
+        float t = std::abs(static_cast<float>(circle_pad_y) / circle_pad_x);
 
-// TODO(peachum):
-// Add a method for setting analog input from joystick device for the circle Pad.
-//
-// This method should:
-//     * Be called after both PadButton<Press, Release>().
-//     * Be called before PadUpdateComplete()
-//     * Set current PadEntry.circle_pad_<axis> using analog data
-//     * Set PadData.raw_circle_pad_data
-//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_x >= 41
-//     * Set PadData.current_state.circle_up = 1 if current PadEntry.circle_pad_y >= 41
-//     * Set PadData.current_state.circle_left = 1 if current PadEntry.circle_pad_x <= -41
-//     * Set PadData.current_state.circle_right = 1 if current PadEntry.circle_pad_y <= -41
+        if (circle_pad_x != 0 && t < TAN60) {
+            if (circle_pad_x > 0)
+                state.circle_right.Assign(1);
+            else
+                state.circle_left.Assign(1);
+        }
+
+        if (circle_pad_x == 0 || t > TAN30) {
+            if (circle_pad_y > 0)
+                state.circle_up.Assign(1);
+            else
+                state.circle_down.Assign(1);
+        }
+    }
+
+    return state;
+}
 
 void Update() {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
-    const PadState state = VideoCore::g_emu_window->GetPadState();
 
     if (mem == nullptr) {
         LOG_DEBUG(Service_HID, "Cannot update HID prior to mapping shared memory!");
         return;
     }
+
+    PadState state = VideoCore::g_emu_window->GetPadState();
+
+    // Get current circle pad position and update circle pad direction
+    s16 circle_pad_x, circle_pad_y;
+    std::tie(circle_pad_x, circle_pad_y) = VideoCore::g_emu_window->GetCirclePadState();
+    state.hex |= GetCirclePadDirectionState(circle_pad_x, circle_pad_y).hex;
 
     mem->pad.current_state.hex = state.hex;
     mem->pad.index = next_pad_index;
@@ -88,13 +96,9 @@ void Update() {
     // Update entry properties
     pad_entry.current_state.hex = state.hex;
     pad_entry.delta_additions.hex = changed.hex & state.hex;
-    pad_entry.delta_removals.hex = changed.hex & old_state.hex;;
-
-    // Set circle Pad
-    pad_entry.circle_pad_x = state.circle_left  ? -MAX_CIRCLEPAD_POS :
-                              state.circle_right ?  MAX_CIRCLEPAD_POS : 0x0;
-    pad_entry.circle_pad_y = state.circle_down  ? -MAX_CIRCLEPAD_POS :
-                              state.circle_up    ?  MAX_CIRCLEPAD_POS : 0x0;
+    pad_entry.delta_removals.hex = changed.hex & old_state.hex;
+    pad_entry.circle_pad_x = circle_pad_x;
+    pad_entry.circle_pad_y = circle_pad_y;
 
     // If we just updated index 0, provide a new timestamp
     if (mem->pad.index == 0) {

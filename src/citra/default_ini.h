@@ -23,14 +23,19 @@ pad_l =
 pad_r =
 pad_zl =
 pad_zr =
-pad_sup =
-pad_sdown =
-pad_sleft =
-pad_sright =
 pad_cup =
 pad_cdown =
 pad_cleft =
 pad_cright =
+pad_circle_up =
+pad_circle_down =
+pad_circle_left =
+pad_circle_right =
+pad_circle_modifier =
+
+# The applied modifier scale to circle pad.
+# Must be in range of 0.0-1.0. Defaults to 0.5
+pad_circle_modifier_scale =
 
 [Core]
 # The applied frameskip amount. Must be a power of two.
