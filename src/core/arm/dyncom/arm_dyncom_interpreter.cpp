@@ -685,7 +685,7 @@ static inline void *AllocBuffer(unsigned int size) {
     return (void *)&inst_buf[start];
 }
 
-static shtop_fp_t get_shtop(unsigned int inst) {
+static shtop_fp_t GetShifterOp(unsigned int inst) {
     if (BIT(inst, 25)) {
         return DPO(Immediate);
     } else if (BITS(inst, 4, 11) == 0) {
@@ -710,7 +710,7 @@ static shtop_fp_t get_shtop(unsigned int inst) {
     return nullptr;
 }
 
-static get_addr_fp_t get_calc_addr_op(unsigned int inst) {
+static get_addr_fp_t GetAddressingOp(unsigned int inst) {
     if (BITS(inst, 24, 27) == 5 && BIT(inst, 21) == 0) {
         return LnSWoUB(ImmediateOffset);
     } else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 0 && BITS(inst, 4, 11) == 0) {

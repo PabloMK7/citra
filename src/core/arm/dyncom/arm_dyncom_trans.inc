@@ -14,7 +14,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(adc)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -35,7 +35,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(add)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -56,7 +56,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(and)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -97,7 +97,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bic)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -208,7 +208,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cmn)(unsigned int inst, int index)
     inst_cream->I  = BIT(inst, 25);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     return inst_base;
 }
@@ -224,7 +224,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cmp)(unsigned int inst, int index)
     inst_cream->I  = BIT(inst, 25);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     return inst_base;
 }
@@ -260,7 +260,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cpy)(unsigned int inst, int index)
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15) {
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -281,7 +281,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(eor)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -307,7 +307,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldm)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     if (BIT(inst, 15)) {
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -339,7 +339,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldr)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     if (BITS(inst, 12, 15) == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -357,7 +357,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrcond)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     if (BITS(inst, 12, 15) == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -406,7 +406,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrb)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -440,7 +440,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrd)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -480,7 +480,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrh)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -494,7 +494,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsb)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -508,7 +508,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrsh)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -606,7 +606,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mov)(unsigned int inst, int index)
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15) {
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -694,7 +694,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(mvn)(unsigned int inst, int index)
     inst_cream->S  = BIT(inst, 20);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15) {
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -716,7 +716,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(orr)(unsigned int inst, int index)
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -871,7 +871,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rfe)(unsigned int inst, int index)
     inst_base->br   = TransExtData::INDIRECT_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -890,7 +890,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsb)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -911,7 +911,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(rsc)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -970,7 +970,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sbc)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -1280,7 +1280,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(srs)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst     = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -1337,7 +1337,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(stm)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(sxtb)(unsigned int inst, int index)
@@ -1365,7 +1365,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(str)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -1410,7 +1410,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strb)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -1444,7 +1444,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strd)(unsigned int inst, int index){
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -1485,7 +1485,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strh)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    inst_cream->get_addr = get_calc_addr_op(inst);
+    inst_cream->get_addr = GetAddressingOp(inst);
 
     return inst_base;
 }
@@ -1528,7 +1528,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(sub)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     if (inst_cream->Rd == 15)
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -1641,7 +1641,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(teq)(unsigned int inst, int index)
     inst_cream->I               = BIT(inst, 25);
     inst_cream->Rn              = BITS(inst, 16, 19);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func      = get_shtop(inst);
+    inst_cream->shtop_func      = GetShifterOp(inst);
 
     return inst_base;
 }
@@ -1659,7 +1659,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(tst)(unsigned int inst, int index)
     inst_cream->Rn = BITS(inst, 16, 19);
     inst_cream->Rd = BITS(inst, 12, 15);
     inst_cream->shifter_operand = BITS(inst, 0, 11);
-    inst_cream->shtop_func = get_shtop(inst);
+    inst_cream->shtop_func = GetShifterOp(inst);
 
     return inst_base;
 }
