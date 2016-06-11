@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
@@ -672,18 +673,17 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
 
 typedef arm_inst * ARM_INST_PTR;
 
-#define CACHE_BUFFER_SIZE    (64 * 1024 * 2000)
-static char inst_buf[CACHE_BUFFER_SIZE];
-static int top = 0;
-static inline void *AllocBuffer(unsigned int size) {
-    int start = top;
-    top += size;
-    if (top > CACHE_BUFFER_SIZE) {
-        LOG_ERROR(Core_ARM11, "inst_buf is full");
-        CITRA_IGNORE_EXIT(-1);
-    }
-    return (void *)&inst_buf[start];
+#define TRANS_CACHE_SIZE (64 * 1024 * 2000)
+static char trans_cache_buf[TRANS_CACHE_SIZE];
+static size_t trans_cache_buf_top = 0;
+
+static void* AllocBuffer(size_t size) {
+    size_t start = trans_cache_buf_top;
+    trans_cache_buf_top += size;
+    ASSERT_MSG(trans_cache_buf_top <= TRANS_CACHE_SIZE, "Translation cache is full!");
+    return static_cast<void*>(&trans_cache_buf[start]);
 }
+
 
 static shtop_fp_t GetShifterOp(unsigned int inst) {
     if (BIT(inst, 25)) {
@@ -870,7 +870,7 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
     ARM_INST_PTR inst_base = nullptr;
     TransExtData ret = TransExtData::NON_BRANCH;
     int size = 0; // instruction size of basic block
-    bb_start = top;
+    bb_start = trans_cache_buf_top;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
@@ -897,7 +897,7 @@ static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr)
     MICROPROFILE_SCOPE(DynCom_Decode);
 
     ARM_INST_PTR inst_base = nullptr;
-    bb_start = top;
+    bb_start = trans_cache_buf_top;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
@@ -951,7 +951,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     #define SHIFTER_OPERAND inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
     #define FETCH_INST if (inst_base->br != TransExtData::NON_BRANCH) goto DISPATCH; \
-                       inst_base = (arm_inst *)&inst_buf[ptr]
+                       inst_base = (arm_inst *)&trans_cache_buf[ptr]
 
     #define INC_PC(l)   ptr += sizeof(arm_inst) + l
     #define INC_PC_STUB ptr += sizeof(arm_inst)
@@ -1274,7 +1274,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
             breakpoint_data = GDBStub::GetNextBreakpointFromAddress(cpu->Reg[15], GDBStub::BreakpointType::Execute);
         }
 
-        inst_base = (arm_inst *)&inst_buf[ptr];
+        inst_base = (arm_inst *)&trans_cache_buf[ptr];
         GOTO_NEXT_INST;
     }
     ADC_INST:
