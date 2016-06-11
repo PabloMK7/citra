@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
@@ -18,24 +17,13 @@
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
+#include "core/arm/dyncom/arm_dyncom_trans.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 
 #include "core/gdbstub/gdbstub.h"
-
-enum class TransExtData {
-    COND            = (1 << 0),
-    NON_BRANCH      = (1 << 1),
-    DIRECT_BRANCH   = (1 << 2),
-    INDIRECT_BRANCH = (1 << 3),
-    CALL            = (1 << 4),
-    RET             = (1 << 5),
-    END_OF_PAGE     = (1 << 6),
-    THUMB           = (1 << 7),
-    SINGLE_STEP     = (1 << 8)
-};
 
 #define RM    BITS(sht_oper, 0, 3)
 #define RS    BITS(sht_oper, 8, 11)
@@ -46,8 +34,6 @@ enum class TransExtData {
 #define ROTATE_LEFT(n, i, l)  ((n >> (l - i)) | (n << i))
 #define ROTATE_RIGHT_32(n, i) ROTATE_RIGHT(n, i, 32)
 #define ROTATE_LEFT_32(n, i)  ROTATE_LEFT(n, i, 32)
-
-typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
 static bool CondPassed(const ARMul_State* cpu, unsigned int cond) {
     const bool n_flag = cpu->NFlag != 0;
@@ -246,12 +232,6 @@ static unsigned int DPO(RotateRightByRegister)(ARMul_State* cpu, unsigned int sh
     return shifter_operand;
 }
 
-typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr);
-
-struct ldst_inst {
-    unsigned int inst;
-    get_addr_fp_t get_addr;
-};
 #define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
 #define LnSWoUB(s)   glue(LnSWoUB, s)
@@ -669,23 +649,7 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
     virt_addr = addr;
 }
 
-#include "arm_dyncom_trans_struct.inc"
-
-typedef arm_inst * ARM_INST_PTR;
-
-#define TRANS_CACHE_SIZE (64 * 1024 * 2000)
-static char trans_cache_buf[TRANS_CACHE_SIZE];
-static size_t trans_cache_buf_top = 0;
-
-static void* AllocBuffer(size_t size) {
-    size_t start = trans_cache_buf_top;
-    trans_cache_buf_top += size;
-    ASSERT_MSG(trans_cache_buf_top <= TRANS_CACHE_SIZE, "Translation cache is full!");
-    return static_cast<void*>(&trans_cache_buf[start]);
-}
-
-
-static shtop_fp_t GetShifterOp(unsigned int inst) {
+shtop_fp_t GetShifterOp(unsigned int inst) {
     if (BIT(inst, 25)) {
         return DPO(Immediate);
     } else if (BITS(inst, 4, 11) == 0) {
@@ -710,7 +674,7 @@ static shtop_fp_t GetShifterOp(unsigned int inst) {
     return nullptr;
 }
 
-static get_addr_fp_t GetAddressingOp(unsigned int inst) {
+get_addr_fp_t GetAddressingOp(unsigned int inst) {
     if (BITS(inst, 24, 27) == 5 && BIT(inst, 21) == 0) {
         return LnSWoUB(ImmediateOffset);
     } else if (BITS(inst, 24, 27) == 7 && BIT(inst, 21) == 0 && BITS(inst, 4, 11) == 0) {
@@ -768,10 +732,6 @@ get_addr_fp_t GetAddressingOpLoadStoreT(unsigned int inst) {
     return nullptr;
 }
 
-typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
-
-#include "arm_dyncom_trans.inc"
-
 enum {
     FETCH_SUCCESS,
     FETCH_FAILURE
@@ -782,7 +742,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
     ThumbDecodeStatus ret = TranslateThumbInstruction (addr, inst, arm_inst, inst_size);
     if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
-        int table_length = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
+        int table_length = arm_instruction_trans_len;
         u32 tinstr = GetThumbInstruction(inst, addr);
 
         switch ((tinstr & 0xF800) >> 11) {

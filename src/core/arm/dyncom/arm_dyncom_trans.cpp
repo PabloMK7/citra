@@ -1,4 +1,30 @@
+#include <cstdlib>
+
+#include "common/assert.h"
+#include "common/common_types.h"
+
+#include "core/arm/dyncom/arm_dyncom_interpreter.h"
+#include "core/arm/dyncom/arm_dyncom_trans.h"
+#include "core/arm/skyeye_common/armstate.h"
+#include "core/arm/skyeye_common/armsupp.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
+
+char trans_cache_buf[TRANS_CACHE_SIZE];
+size_t trans_cache_buf_top = 0;
+
+static void* AllocBuffer(size_t size) {
+    size_t start = trans_cache_buf_top;
+    trans_cache_buf_top += size;
+    ASSERT_MSG(trans_cache_buf_top <= TRANS_CACHE_SIZE, "Translation cache is full!");
+    return static_cast<void*>(&trans_cache_buf[start]);
+}
+
+#define glue(x, y) x ## y
 #define INTERPRETER_TRANSLATE(s) glue(InterpreterTranslate_, s)
+
+shtop_fp_t GetShifterOp(unsigned int inst);
+get_addr_fp_t GetAddressingOp(unsigned int inst);
+get_addr_fp_t GetAddressingOpLoadStoreT(unsigned int inst);
 
 static ARM_INST_PTR INTERPRETER_TRANSLATE(adc)(unsigned int inst, int index)
 {
@@ -73,7 +99,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bbl)(unsigned int inst, int index)
 
     inst_base->cond = BITS(inst, 28, 31);
     inst_base->idx  = index;
-    inst_base->br   =  TransExtData::DIRECT_BRANCH;
+    inst_base->br   = TransExtData::DIRECT_BRANCH;
 
     if (BIT(inst, 24))
         inst_base->br = TransExtData::CALL;
@@ -1763,7 +1789,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(b_2_thumb)(unsigned int tinst, int ind
     inst_cream->imm = ((tinst & 0x3FF) << 1) | ((tinst & (1 << 10)) ? 0xFFFFF800 : 0);
 
     inst_base->idx = index;
-    inst_base->br  =  TransExtData::DIRECT_BRANCH;
+    inst_base->br  = TransExtData::DIRECT_BRANCH;
 
     return inst_base;
 }
@@ -1776,7 +1802,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(b_cond_thumb)(unsigned int tinst, int 
     inst_cream->imm  = (((tinst & 0x7F) << 1) | ((tinst & (1 << 7)) ?    0xFFFFFF00 : 0));
     inst_cream->cond = ((tinst >> 8) & 0xf);
     inst_base->idx   = index;
-    inst_base->br    =  TransExtData::DIRECT_BRANCH;
+    inst_base->br    = TransExtData::DIRECT_BRANCH;
 
     return inst_base;
 }
@@ -1800,7 +1826,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(bl_2_thumb)(unsigned int tinst, int in
     inst_cream->imm = (tinst & 0x07FF) << 1;
 
     inst_base->idx = index;
-    inst_base->br  =  TransExtData::DIRECT_BRANCH;
+    inst_base->br  = TransExtData::DIRECT_BRANCH;
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(unsigned int tinst, int index)
@@ -1812,7 +1838,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(blx_1_thumb)(unsigned int tinst, int i
     inst_cream->instr = tinst;
 
     inst_base->idx    = index;
-    inst_base->br     =  TransExtData::DIRECT_BRANCH;
+    inst_base->br     = TransExtData::DIRECT_BRANCH;
     return inst_base;
 }
 
@@ -1937,7 +1963,6 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(yield)(unsigned int inst, int index)
 }
 
 // Floating point VFPv3 instructions
-
 #define VFP_INTERPRETER_TRANS
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_TRANS
@@ -2149,3 +2174,5 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(bl_2_thumb),
     INTERPRETER_TRANSLATE(blx_1_thumb)
 };
+
+const size_t arm_instruction_trans_len = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);

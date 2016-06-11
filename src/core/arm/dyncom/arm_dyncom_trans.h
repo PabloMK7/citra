@@ -1,3 +1,18 @@
+struct ARMul_State;
+typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
+
+enum class TransExtData {
+    COND            = (1 << 0),
+    NON_BRANCH      = (1 << 1),
+    DIRECT_BRANCH   = (1 << 2),
+    INDIRECT_BRANCH = (1 << 3),
+    CALL            = (1 << 4),
+    RET             = (1 << 5),
+    END_OF_PAGE     = (1 << 6),
+    THUMB           = (1 << 7),
+    SINGLE_STEP     = (1 << 8)
+};
+
 struct arm_inst {
     unsigned int idx;
     unsigned int cond;
@@ -456,7 +471,23 @@ struct pkh_inst {
 };
 
 // Floating point VFPv3 structures
-
 #define VFP_INTERPRETER_STRUCT
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_STRUCT
+
+typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr);
+
+struct ldst_inst {
+    unsigned int inst;
+    get_addr_fp_t get_addr;
+};
+
+typedef arm_inst* ARM_INST_PTR;
+typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
+
+extern const transop_fp_t arm_instruction_trans[];
+extern const size_t arm_instruction_trans_len;
+
+#define TRANS_CACHE_SIZE (64 * 1024 * 2000)
+extern char trans_cache_buf[TRANS_CACHE_SIZE];
+extern size_t trans_cache_buf_top;
