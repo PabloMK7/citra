@@ -753,6 +753,21 @@ static get_addr_fp_t GetAddressingOp(unsigned int inst) {
     return nullptr;
 }
 
+// Specialized for LDRT, LDRBT, STRT, and STRBT, which have specific addressing mode requirements
+get_addr_fp_t GetAddressingOpLoadStoreT(unsigned int inst) {
+    if (BITS(inst, 25, 27) == 2) {
+        return LnSWoUB(ImmediatePostIndexed);
+    } else if (BITS(inst, 25, 27) == 3) {
+        return LnSWoUB(ScaledRegisterPostIndexed);
+    }
+    // Reaching this would indicate the thumb version
+    // of this instruction, however the 3DS CPU doesn't
+    // support this variant (the 3DS CPU is only ARMv6K,
+    // while this variant is added in ARMv6T2).
+    // So it's sufficient for citra to not implement this.
+    return nullptr;
+}
+
 typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
 
 #include "arm_dyncom_trans.inc"

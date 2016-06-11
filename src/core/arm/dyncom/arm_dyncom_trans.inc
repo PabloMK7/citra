@@ -420,13 +420,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrbt)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (BITS(inst, 25, 27) == 2) {
-        inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
-    } else if (BITS(inst, 25, 27) == 3) {
-        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
-    } else {
-        DEBUG_MSG;
-    }
+    inst_cream->get_addr = GetAddressingOpLoadStoreT(inst);
 
     return inst_base;
 }
@@ -522,18 +516,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(ldrt)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (BITS(inst, 25, 27) == 2) {
-        inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
-    } else if (BITS(inst, 25, 27) == 3) {
-        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
-    } else {
-        // Reaching this would indicate the thumb version
-        // of this instruction, however the 3DS CPU doesn't
-        // support this variant (the 3DS CPU is only ARMv6K,
-        // while this variant is added in ARMv6T2).
-        // So it's sufficient for citra to not implement this.
-        DEBUG_MSG;
-    }
+    inst_cream->get_addr = GetAddressingOpLoadStoreT(inst);
 
     if (BITS(inst, 12, 15) == 15) {
         inst_base->br = TransExtData::INDIRECT_BRANCH;
@@ -1424,14 +1407,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strbt)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-
-    if (BITS(inst, 25, 27) == 2) {
-        inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
-    } else if (BITS(inst, 25, 27) == 3) {
-        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
-    } else {
-        DEBUG_MSG;
-    }
+    inst_cream->get_addr = GetAddressingOpLoadStoreT(inst);
 
     return inst_base;
 }
@@ -1499,18 +1475,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(strt)(unsigned int inst, int index)
     inst_base->br   = TransExtData::NON_BRANCH;
 
     inst_cream->inst = inst;
-    if (BITS(inst, 25, 27) == 2) {
-        inst_cream->get_addr = LnSWoUB(ImmediatePostIndexed);
-    } else if (BITS(inst, 25, 27) == 3) {
-        inst_cream->get_addr = LnSWoUB(ScaledRegisterPostIndexed);
-    } else {
-        // Reaching this would indicate the thumb version
-        // of this instruction, however the 3DS CPU doesn't
-        // support this variant (the 3DS CPU is only ARMv6K,
-        // while this variant is added in ARMv6T2).
-        // So it's sufficient for citra to not implement this.
-        DEBUG_MSG;
-    }
+    inst_cream->get_addr = GetAddressingOpLoadStoreT(inst);
 
     return inst_base;
 }
