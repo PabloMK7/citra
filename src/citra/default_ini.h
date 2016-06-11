@@ -71,7 +71,11 @@ output_engine =
 # 1 (default): Yes, 0: No
 use_virtual_sd =
 
-[System Region]
+[System]
+# The system model that Citra will try to emulate
+# 0: Old 3DS (default), 1: New 3DS
+is_new_3ds =
+
 # The system region that Citra will use during emulation
 # 0: Japan, 1: USA (default), 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
 region_value =
