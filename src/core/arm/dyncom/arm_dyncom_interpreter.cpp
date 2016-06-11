@@ -24,7 +24,7 @@
 
 #include "core/gdbstub/gdbstub.h"
 
-enum {
+enum class TransExtData {
     COND            = (1 << 0),
     NON_BRANCH      = (1 << 1),
     DIRECT_BRANCH   = (1 << 2),
@@ -853,14 +853,14 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
     // Go on next, until terminal instruction
     // Save start addr of basicblock in CreamCache
     ARM_INST_PTR inst_base = nullptr;
-    int ret = NON_BRANCH;
+    TransExtData ret = TransExtData::NON_BRANCH;
     int size = 0; // instruction size of basic block
     bb_start = top;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
 
-    while (ret == NON_BRANCH) {
+    while (ret == TransExtData::NON_BRANCH) {
         unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
         size++;
@@ -868,7 +868,7 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
         phys_addr += inst_size;
 
         if ((phys_addr & 0xfff) == 0) {
-            inst_base->br = END_OF_PAGE;
+            inst_base->br = TransExtData::END_OF_PAGE;
         }
         ret = inst_base->br;
     };
@@ -889,8 +889,8 @@ static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr)
 
     InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
 
-    if (inst_base->br == NON_BRANCH) {
-        inst_base->br = SINGLE_STEP;
+    if (inst_base->br == TransExtData::NON_BRANCH) {
+        inst_base->br = TransExtData::SINGLE_STEP;
     }
 
     cpu->instruction_cache[pc_start] = bb_start;
@@ -935,7 +935,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     #define SET_PC          (cpu->Reg[15] = cpu->Reg[15] + 8 + inst_cream->signed_immed_24)
     #define SHIFTER_OPERAND inst_cream->shtop_func(cpu, inst_cream->shifter_operand)
 
-    #define FETCH_INST if (inst_base->br != NON_BRANCH) goto DISPATCH; \
+    #define FETCH_INST if (inst_base->br != TransExtData::NON_BRANCH) goto DISPATCH; \
                        inst_base = (arm_inst *)&inst_buf[ptr]
 
     #define INC_PC(l)   ptr += sizeof(arm_inst) + l

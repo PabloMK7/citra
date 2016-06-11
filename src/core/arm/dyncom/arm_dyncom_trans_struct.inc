@@ -1,7 +1,7 @@
 struct arm_inst {
     unsigned int idx;
     unsigned int cond;
-    int br;
+    TransExtData br;
     char component[0];
 };
 
