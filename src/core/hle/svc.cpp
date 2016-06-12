@@ -14,12 +14,14 @@
 #include "core/arm/arm_interface.h"
 
 #include "core/hle/kernel/address_arbiter.h"
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/semaphore.h"
+#include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
@@ -834,6 +836,23 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     return RESULT_SUCCESS;
 }
 
+static ResultCode CreatePort(Handle* server_port, Handle* client_port, const char* name, u32 max_sessions) {
+    // TODO(Subv): Implement named ports.
+    ASSERT_MSG(name == nullptr, "Named ports are currently unimplemented");
+
+    using Kernel::ServerPort;
+    using Kernel::ClientPort;
+    using Kernel::SharedPtr;
+
+    auto ports = ServerPort::CreatePortPair(max_sessions);
+    CASCADE_RESULT(*client_port, Kernel::g_handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports))));
+    // Note: The 3DS kernel also leaks the client port handle if the server port handle fails to be created.
+    CASCADE_RESULT(*server_port, Kernel::g_handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports))));
+
+    LOG_TRACE(Kernel_SVC, "called max_sessions=%u", max_sessions);
+    return RESULT_SUCCESS;
+}
+
 static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     using Kernel::MemoryRegion;
 
@@ -1011,7 +1030,7 @@ static const FunctionDef SVC_Table[] = {
     {0x44, nullptr,                         "Unknown"},
     {0x45, nullptr,                         "Unknown"},
     {0x46, nullptr,                         "Unknown"},
-    {0x47, nullptr,                         "CreatePort"},
+    {0x47, HLE::Wrap<CreatePort>,           "CreatePort"},
     {0x48, nullptr,                         "CreateSessionToPort"},
     {0x49, nullptr,                         "CreateSession"},
     {0x4A, nullptr,                         "AcceptSession"},
