@@ -36,6 +36,7 @@ set(SRCS
             hle/applets/swkbd.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/client_port.cpp
+            hle/kernel/client_session.cpp
             hle/kernel/event.cpp
             hle/kernel/kernel.cpp
             hle/kernel/memory.cpp
@@ -44,7 +45,7 @@ set(SRCS
             hle/kernel/resource_limit.cpp
             hle/kernel/semaphore.cpp
             hle/kernel/server_port.cpp
-            hle/kernel/session.cpp
+            hle/kernel/server_session.cpp
             hle/kernel/shared_memory.cpp
             hle/kernel/thread.cpp
             hle/kernel/timer.cpp
@@ -184,6 +185,7 @@ set(HEADERS
             hle/applets/swkbd.h
             hle/kernel/address_arbiter.h
             hle/kernel/client_port.h
+            hle/kernel/client_session.h
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/memory.h
@@ -192,7 +194,7 @@ set(HEADERS
             hle/kernel/resource_limit.h
             hle/kernel/semaphore.h
             hle/kernel/server_port.h
-            hle/kernel/session.h
+            hle/kernel/server_session.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/kernel/timer.h

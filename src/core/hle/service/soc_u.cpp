@@ -11,7 +11,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
-#include "core/hle/kernel/session.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/soc_u.h"
 #include "core/memory.h"

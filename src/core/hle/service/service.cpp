@@ -41,8 +41,8 @@
 
 namespace Service {
 
-std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
-std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -61,7 +61,7 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-ResultVal<bool> Interface::SyncRequest() {
+ResultCode Interface::HandleSyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     auto itr = m_functions.find(cmd_buff[0]);
 
@@ -75,14 +75,14 @@ ResultVal<bool> Interface::SyncRequest() {
 
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
-        return MakeResult<bool>(false);
+        return RESULT_SUCCESS;
     }
     LOG_TRACE(Service, "%s",
               MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
 
     itr->second.func(this);
 
-    return MakeResult<bool>(false); // TODO: Implement return from actual function
+    return RESULT_SUCCESS; // TODO: Implement return from actual function, it should fail if the parameter translation fails
 }
 
 void Interface::Register(const FunctionInfo* functions, size_t n) {
@@ -97,10 +97,16 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
+    interface_->name = interface_->GetPortName();
+    interface_->active_sessions = 0;
+    interface_->max_sessions = interface_->GetMaxSessions();
     g_kernel_named_ports.emplace(interface_->GetPortName(), interface_);
 }
 
 void AddService(Interface* interface_) {
+    interface_->name = interface_->GetPortName();
+    interface_->active_sessions = 0;
+    interface_->max_sessions = interface_->GetMaxSessions();
     g_srv_services.emplace(interface_->GetPortName(), interface_);
 }
 

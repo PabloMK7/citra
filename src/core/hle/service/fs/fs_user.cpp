@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
@@ -17,7 +18,7 @@
 // Namespace FS_User
 
 using Kernel::SharedPtr;
-using Kernel::Session;
+using Kernel::ServerSession;
 
 namespace Service {
 namespace FS {
@@ -70,7 +71,7 @@ static void OpenFile(Service::Interface* self) {
     ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
+        cmd_buff[3] = Kernel::g_handle_table.Create((*file_res)->CreateClientSession()).MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -130,7 +131,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(*archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
+        cmd_buff[3] = Kernel::g_handle_table.Create((*file_res)->CreateClientSession()).MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%u",
@@ -391,7 +392,7 @@ static void OpenDirectory(Service::Interface* self) {
     ResultVal<SharedPtr<Directory>> dir_res = OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = dir_res.Code().raw;
     if (dir_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*dir_res).MoveFrom();
+        cmd_buff[3] = Kernel::g_handle_table.Create((*dir_res)->CreateClientSession()).MoveFrom();
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",
                   dirname_type, dirname_size, dir_path.DebugStr().c_str());

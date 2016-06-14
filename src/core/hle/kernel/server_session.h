@@ -162,57 +162,64 @@ inline u32* GetCommandBuffer(const int offset = 0) {
                                     offset);
 }
 
+class ClientSession;
+class ClientPort;
+
 /**
- * Kernel object representing the client endpoint of an IPC session. Sessions are the basic CTR-OS
+ * Kernel object representing the server endpoint of an IPC session. Sessions are the basic CTR-OS
  * primitive for communication between different processes, and are used to implement service calls
  * to the various system services.
  *
  * To make a service call, the client must write the command header and parameters to the buffer
  * located at offset 0x80 of the TLS (Thread-Local Storage) area, then execute a SendSyncRequest
- * SVC call with its Session handle. The kernel will read the command header, using it to marshall
+ * SVC call with its ClientSession handle. The kernel will read the command header, using it to marshall
  * the parameters to the process at the server endpoint of the session. After the server replies to
  * the request, the response is marshalled back to the caller's TLS buffer and control is
  * transferred back to it.
- *
- * In Citra, only the client endpoint is currently implemented and only HLE calls, where the IPC
- * request is answered by C++ code in the emulator, are supported. When SendSyncRequest is called
- * with the session handle, this class's SyncRequest method is called, which should read the TLS
- * buffer and emulate the call accordingly. Since the code can directly read the emulated memory,
- * no parameter marshalling is done.
- *
- * In the long term, this should be turned into the full-fledged IPC mechanism implemented by
- * CTR-OS so that IPC calls can be optionally handled by the real implementations of processes, as
- * opposed to HLE simulations.
  */
-class Session : public WaitObject {
+class ServerSession : public WaitObject {
 public:
-    Session();
-    ~Session() override;
-
-    std::string GetTypeName() const override {
-        return "Session";
-    }
-
-    static const HandleType HANDLE_TYPE = HandleType::Session;
-    HandleType GetHandleType() const override {
-        return HANDLE_TYPE;
-    }
+    ServerSession();
+    ~ServerSession() override;
 
     /**
-     * Handles a synchronous call to this session using HLE emulation. Emulated <-> emulated calls
-     * aren't supported yet.
+     * Creates a server session.
+     * @param name Optional name of the server session
+     * @return The created server session
      */
-    virtual ResultVal<bool> SyncRequest() = 0;
+    static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown");
 
-    // TODO(bunnei): These functions exist to satisfy a hardware test with a Session object
-    // passed into WaitSynchronization. Figure out the meaning of them.
+    std::string GetTypeName() const override { return "ServerSession"; }
 
-    bool ShouldWait() override {
-        return true;
-    }
+    static const HandleType HANDLE_TYPE = HandleType::ServerSession;
+    HandleType GetHandleType() const override { return HANDLE_TYPE; }
 
-    void Acquire() override {
-        ASSERT_MSG(!ShouldWait(), "object unavailable!");
-    }
+    /**
+     * Creates a pair of ServerSession and an associated ClientSession.
+     * @param client_port ClientPort to which the sessions are connected
+     * @param name Optional name of the ports
+     * @return The created session tuple
+     */
+    static std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(SharedPtr<ClientPort> client_port, std::string name = "Unknown");
+
+    /**
+     * Creates a portless ClientSession and associates it with this ServerSession.
+     * @returns ClientSession The newly created ClientSession.
+     */
+    SharedPtr<ClientSession> CreateClientSession();
+
+    /**
+     * Handle a sync request from the emulated application.
+     * Only HLE services should override this function.
+     * @returns ResultCode from the operation.
+     */
+    virtual ResultCode HandleSyncRequest();
+
+    bool ShouldWait() override;
+
+    void Acquire() override;
+
+    std::string name; ///< The name of this session (optional)
+    bool signaled;    ///< Whether there's new data available to this ServerSession
 };
 }

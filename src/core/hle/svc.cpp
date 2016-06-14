@@ -13,6 +13,7 @@
 #include "core/hle/function_wrappers.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
@@ -222,20 +223,31 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
         return ERR_NOT_FOUND;
     }
 
-    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(it->second));
+    auto client_port = it->second;
+
+    // Create a new session pair
+    auto sessions = Kernel::ServerSession::CreateSessionPair(client_port, port_name);
+    auto client_session = std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
+    auto server_session = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
+
+    // Add the server session to the port's queue
+    client_port->AddWaitingSession(server_session);
+
+    // Return the client session
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(client_session));
     return RESULT_SUCCESS;
 }
 
 /// Synchronize to an OS service
 static ResultCode SendSyncRequest(Handle handle) {
-    SharedPtr<Kernel::Session> session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
+    SharedPtr<Kernel::ClientSession> session = Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
     if (session == nullptr) {
         return ERR_INVALID_HANDLE;
     }
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    return session->SyncRequest().Code();
+    return session->HandleSyncRequest();
 }
 
 /// Close a handle

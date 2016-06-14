@@ -92,7 +92,7 @@ File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path&
 
 File::~File() {}
 
-ResultVal<bool> File::SyncRequest() {
+ResultCode File::HandleSyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
     switch (cmd) {
@@ -193,10 +193,10 @@ ResultVal<bool> File::SyncRequest() {
         LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return error;
+        return ServerSession::HandleSyncRequest();
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    return MakeResult<bool>(false);
+    return ServerSession::HandleSyncRequest();
 }
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
@@ -205,7 +205,7 @@ Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
 
 Directory::~Directory() {}
 
-ResultVal<bool> Directory::SyncRequest() {
+ResultCode Directory::HandleSyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
     switch (cmd) {
@@ -236,10 +236,10 @@ ResultVal<bool> Directory::SyncRequest() {
         LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return MakeResult<bool>(false);
+        return ServerSession::HandleSyncRequest();
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    return MakeResult<bool>(false);
+    return ServerSession::HandleSyncRequest();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

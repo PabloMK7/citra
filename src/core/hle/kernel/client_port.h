@@ -11,16 +11,27 @@
 namespace Kernel {
 
 class ServerPort;
+class ServerSession;
 
 class ClientPort : public Object {
 public:
     friend class ServerPort;
-    std::string GetTypeName() const override {
-        return "ClientPort";
-    }
-    std::string GetName() const override {
-        return name;
-    }
+
+    /**
+     * Adds the specified server session to the queue of pending sessions of the associated ServerPort
+     * @param server_session Server session to add to the queue
+     */
+    virtual void AddWaitingSession(SharedPtr<ServerSession> server_session);
+
+    /**
+     * Handle a sync request from the emulated application.
+     * Only HLE services should override this function.
+     * @returns ResultCode from the operation.
+     */
+    virtual ResultCode HandleSyncRequest() { return RESULT_SUCCESS; }
+
+    std::string GetTypeName() const override { return "ClientPort"; }
+    std::string GetName() const override { return name; }
 
     static const HandleType HANDLE_TYPE = HandleType::ClientPort;
     HandleType GetHandleType() const override {
