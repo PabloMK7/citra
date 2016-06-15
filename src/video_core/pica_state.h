@@ -33,10 +33,10 @@ struct State {
             u32 raw;
 
             // LUT value, encoded as 12-bit fixed point, with 12 fraction bits
-            BitField< 0, 12, u32> value;
+            BitField< 0, 12, u32> value; // 0.0.12 fixed point
 
             // Used by HW for efficient interpolation, Citra does not use these
-            BitField<12, 12, u32> difference;
+            BitField<12, 12, s32> difference; // 1.0.11 fixed point
 
             float ToFloat() {
                 return static_cast<float>(value) / 4095.f;
@@ -45,6 +45,18 @@ struct State {
 
         std::array<std::array<LutEntry, 256>, 24> luts;
     } lighting;
+
+    struct {
+        union LutEntry {
+            // Used for raw access
+            u32 raw;
+
+            BitField< 0, 13, s32> difference; // 1.1.11 fixed point
+            BitField<13, 11, u32> value; // 0.0.11 fixed point
+        };
+
+        std::array<LutEntry, 128> lut;
+    } fog;
 
     /// Current Pica command list
     struct {

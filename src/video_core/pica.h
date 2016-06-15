@@ -401,22 +401,47 @@ struct Regs {
     TevStageConfig tev_stage3;
     INSERT_PADDING_WORDS(0x3);
 
+    enum class FogMode : u32 {
+        None = 0,
+        Fog  = 5,
+        Gas  = 7,
+    };
+
     union {
-        // Tev stages 0-3 write their output to the combiner buffer if the corresponding bit in
-        // these masks are set
-        BitField< 8, 4, u32> update_mask_rgb;
-        BitField<12, 4, u32> update_mask_a;
+        BitField<0, 3, FogMode> fog_mode;
+        BitField<16, 1, u32> fog_flip;
 
-        bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
-            return (stage_index < 4) && (update_mask_rgb & (1 << stage_index));
-        }
+        union {
+            // Tev stages 0-3 write their output to the combiner buffer if the corresponding bit in
+            // these masks are set
+            BitField< 8, 4, u32> update_mask_rgb;
+            BitField<12, 4, u32> update_mask_a;
 
-        bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
-            return (stage_index < 4) && (update_mask_a & (1 << stage_index));
-        }
-    } tev_combiner_buffer_input;
+            bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
+                return (stage_index < 4) && (update_mask_rgb & (1 << stage_index));
+            }
 
-    INSERT_PADDING_WORDS(0xf);
+            bool TevStageUpdatesCombinerBufferAlpha(unsigned stage_index) const {
+                return (stage_index < 4) && (update_mask_a & (1 << stage_index));
+            }
+        } tev_combiner_buffer_input;
+    };
+
+    union {
+        u32 raw;
+        BitField< 0, 8, u32> r;
+        BitField< 8, 8, u32> g;
+        BitField<16, 8, u32> b;
+    } fog_color;
+
+    INSERT_PADDING_WORDS(0x4);
+
+    BitField<0, 16, u32> fog_lut_offset;
+
+    INSERT_PADDING_WORDS(0x1);
+
+    u32 fog_lut_data[8];
+
     TevStageConfig tev_stage4;
     INSERT_PADDING_WORDS(0x3);
     TevStageConfig tev_stage5;
@@ -1318,6 +1343,10 @@ ASSERT_REG_POSITION(tev_stage1, 0xc8);
 ASSERT_REG_POSITION(tev_stage2, 0xd0);
 ASSERT_REG_POSITION(tev_stage3, 0xd8);
 ASSERT_REG_POSITION(tev_combiner_buffer_input, 0xe0);
+ASSERT_REG_POSITION(fog_mode, 0xe0);
+ASSERT_REG_POSITION(fog_color, 0xe1);
+ASSERT_REG_POSITION(fog_lut_offset, 0xe6);
+ASSERT_REG_POSITION(fog_lut_data, 0xe8);
 ASSERT_REG_POSITION(tev_stage4, 0xf0);
 ASSERT_REG_POSITION(tev_stage5, 0xf8);
 ASSERT_REG_POSITION(tev_combiner_buffer_color, 0xfd);
