@@ -44,12 +44,10 @@ on_success:
             # Do a second archive with only the binaries
             7z a $BUILD_NAME_NOQT .\build\bin\release\*.exe
 
-            # Download winscp
-            Invoke-WebRequest "http://iweb.dl.sourceforge.net/project/winscp/WinSCP/5.7.3/winscp573.zip" -OutFile "winscp573.zip"
-            7z e -y winscp573.zip
 
-            # Upload to server
-            .\WinSCP.com /command `
+            # Download WinSCP and upload to server
+            choco install winscp.portable
+            WinSCP.exe /command `
                 "option batch abort" `
                 "option confirm off" `
                 "open sftp://citra-builds:${env:BUILD_PASSWORD}@builds.citra-emu.org -hostkey=*" `
