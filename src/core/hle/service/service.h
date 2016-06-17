@@ -40,7 +40,7 @@ public:
      * It should be overwritten by each service implementation for more fine-grained control.
      * @returns The maximum number of connections allowed.
      */
-    virtual u32 GetMaxSessions() { return DefaultMaxSessions; }
+    virtual u32 GetMaxSessions() const { return DefaultMaxSessions; }
 
     void AddWaitingSession(Kernel::SharedPtr<Kernel::ServerSession> server_session) override { }
 

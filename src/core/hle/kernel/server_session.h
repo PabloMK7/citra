@@ -200,7 +200,7 @@ public:
      * @param name Optional name of the ports
      * @return The created session tuple
      */
-    static std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(SharedPtr<ClientPort> client_port, std::string name = "Unknown");
+    static std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(SharedPtr<ClientPort> client_port, const std::string& name = "Unknown");
 
     /**
      * Creates a portless ClientSession and associates it with this ServerSession.

@@ -48,7 +48,7 @@ SharedPtr<ClientSession> ServerSession::CreateClientSession() {
     return ClientSession::Create(SharedPtr<ServerSession>(this), nullptr, name + "Client").MoveFrom();
 }
 
-std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(SharedPtr<ClientPort> client_port, std::string name) {
+std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(SharedPtr<ClientPort> client_port, const std::string& name) {
     auto server_session = ServerSession::Create(name + "Server").MoveFrom();
     auto client_session = ClientSession::Create(server_session, client_port, name + "Client").MoveFrom();
 

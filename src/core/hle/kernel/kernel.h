@@ -84,13 +84,13 @@ public:
      */
     bool IsWaitable() const {
         switch (GetHandleType()) {
-        case HandleType::ServerSession:
-        case HandleType::ServerPort:
         case HandleType::Event:
         case HandleType::Mutex:
         case HandleType::Thread:
         case HandleType::Semaphore:
         case HandleType::Timer:
+        case HandleType::ServerPort:
+        case HandleType::ServerSession:
             return true;
 
         case HandleType::Unknown:
@@ -101,6 +101,7 @@ public:
         case HandleType::ResourceLimit:
         case HandleType::CodeSet:
         case HandleType::ClientPort:
+        case HandleType::ClientSession:
             return false;
         }
     }
