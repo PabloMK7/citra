@@ -40,7 +40,6 @@ option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
 
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
-option(CITRA_FORCE_QT4 "Use Qt4 even if Qt5 is available." OFF)
 
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
@@ -201,16 +200,8 @@ if (ENABLE_QT)
         set(QT_PREFIX_HINT)
     endif()
 
-    if (NOT CITRA_FORCE_QT4)
-        find_package(Qt5 COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
-        set(CITRA_QT_LIBS Qt5::Widgets Qt5::OpenGL)
-    endif()
-
-    if (CITRA_FORCE_QT4 OR NOT Qt5_FOUND)
-        # Try to fallback to Qt4
-        find_package(Qt4 REQUIRED COMPONENTS QtGui QtOpenGL ${QT_PREFIX_HINT})
-        set(CITRA_QT_LIBS Qt4::QtGui Qt4::QtOpenGL)
-    endif()
+    find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
+    set(CITRA_QT_LIBS Qt5::Widgets Qt5::OpenGL)
 endif()
 
 # This function should be passed a list of all files in a target. It will automatically generate
