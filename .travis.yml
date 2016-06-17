@@ -1,22 +1,26 @@
-os:
-  - linux
-  - osx
-
 language: cpp
+
+matrix:
+  include:
+    - os: linux
+      sudo: true
+      dist: trusty
+    - os: osx
+      sudo: false
 
 env:
   global:
     - secure: "AXHFIafTmbGDsHD3mUVj5a4I397DQjti/WoqAJGUp2PglxTcc04BwxZ9Z+xLuf5N2Hs5r9ojAJLT8OGxJCLBDXzneQTNSqXbFuYSLbqrEAiIRlA9eRIotWCg+wYcO+5e8MKX+cHVKwiIWasUB21AtCdq6msh6Y3pUshZp212VPg="
-
-sudo: false
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-5
-      - g++-5
+      - gcc-6
+      - g++-6
+      - qt5-default
+      - libqt5opengl5-dev
       - xorg-dev
       - lib32stdc++6 # For CMake
       - lftp # To upload builds

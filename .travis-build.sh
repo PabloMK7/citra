@@ -11,12 +11,12 @@ fi
 
 #if OS is linux or is not set
 if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
-    export CC=gcc-5
-    export CXX=g++-5
+    export CC=gcc-6
+    export CXX=g++-6
     export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
 
     mkdir build && cd build
-    cmake -DCITRA_FORCE_QT4=ON ..
+    cmake ..
     make -j4
 
     ctest -VV -C Release
