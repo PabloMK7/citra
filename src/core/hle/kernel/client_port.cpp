@@ -7,16 +7,39 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
+#include "core/hle/service/service.h"
 
 namespace Kernel {
 
 ClientPort::ClientPort() {}
 ClientPort::~ClientPort() {}
 
+Kernel::SharedPtr<ClientPort> ClientPort::CreateForHLE(u32 max_sessions, std::unique_ptr<Service::Interface> hle_interface) {
+    SharedPtr<ClientPort> client_port(new ClientPort);
+    client_port->max_sessions = max_sessions;
+    client_port->active_sessions = 0;
+    client_port->name = hle_interface->GetPortName();
+    client_port->hle_interface = std::move(hle_interface);
+
+    return client_port;
+}
+
 void ClientPort::AddWaitingSession(SharedPtr<ServerSession> server_session) {
+    // A port that has an associated HLE interface doesn't have a server port.
+    if (hle_interface != nullptr)
+        return;
+
     server_port->pending_sessions.push_back(server_session);
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
+}
+
+ResultCode ClientPort::HandleSyncRequest() {
+    // Forward the request to the associated HLE interface if it exists
+    if (hle_interface != nullptr)
+        return hle_interface->HandleSyncRequest();
+
+    return RESULT_SUCCESS;
 }
 
 } // namespace

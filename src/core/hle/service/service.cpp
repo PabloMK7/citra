@@ -97,17 +97,13 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    interface_->name = interface_->GetPortName();
-    interface_->active_sessions = 0;
-    interface_->max_sessions = interface_->GetMaxSessions();
-    g_kernel_named_ports.emplace(interface_->GetPortName(), interface_);
+    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::unique_ptr<Interface>(interface_));
+    g_kernel_named_ports.emplace(interface_->GetPortName(), client_port);
 }
 
 void AddService(Interface* interface_) {
-    interface_->name = interface_->GetPortName();
-    interface_->active_sessions = 0;
-    interface_->max_sessions = interface_->GetMaxSessions();
-    g_srv_services.emplace(interface_->GetPortName(), interface_);
+    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::unique_ptr<Interface>(interface_));
+    g_srv_services.emplace(interface_->GetPortName(), client_port);
 }
 
 /// Initialize ServiceManager

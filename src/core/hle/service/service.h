@@ -22,18 +22,16 @@ static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 character
 static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maximum connections to an HLE port
 
 /// Interface to a CTROS service
-class Interface : public Kernel::ClientPort {
-    // TODO(yuriks): An "Interface" being a Kernel::Object is mostly non-sense. Interface should be
-    // just something that encapsulates a session and acts as a helper to implement service
-    // processes.
+class Interface {
 public:
-    std::string GetName() const override {
+    std::string GetName() const {
         return GetPortName();
     }
 
     virtual void SetVersion(u32 raw_version) {
         version.raw = raw_version;
     }
+    virtual ~Interface() {}
 
     /**
      * Gets the maximum allowed number of sessions that can be connected to this port at the same time.
@@ -41,8 +39,6 @@ public:
      * @returns The maximum number of connections allowed.
      */
     virtual u32 GetMaxSessions() const { return DefaultMaxSessions; }
-
-    void AddWaitingSession(Kernel::SharedPtr<Kernel::ServerSession> server_session) override { }
 
     typedef void (*Function)(Interface*);
 
@@ -60,7 +56,7 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    ResultCode HandleSyncRequest() override;
+    ResultCode HandleSyncRequest();
 
 protected:
     /**

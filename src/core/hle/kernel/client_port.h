@@ -5,17 +5,30 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+
+namespace Service {
+class Interface;
+}
 
 namespace Kernel {
 
 class ServerPort;
 class ServerSession;
 
-class ClientPort : public Object {
+class ClientPort final : public Object {
 public:
     friend class ServerPort;
+
+    /**
+     * Creates a serverless ClientPort that represents a bridge between the HLE implementation of a service/port and the emulated application.
+     * @param max_sessions Maximum number of sessions that this port is able to handle concurrently.
+     * @param hle_interface Interface object that implements the commands of the service.
+     * @returns ClientPort for the given HLE interface.
+     */
+    static Kernel::SharedPtr<ClientPort> CreateForHLE(u32 max_sessions, std::unique_ptr<Service::Interface> hle_interface);
 
     /**
      * Adds the specified server session to the queue of pending sessions of the associated ServerPort
@@ -25,10 +38,9 @@ public:
 
     /**
      * Handle a sync request from the emulated application.
-     * Only HLE services should override this function.
      * @returns ResultCode from the operation.
      */
-    virtual ResultCode HandleSyncRequest() { return RESULT_SUCCESS; }
+    ResultCode HandleSyncRequest();
 
     std::string GetTypeName() const override { return "ClientPort"; }
     std::string GetName() const override { return name; }
@@ -38,12 +50,13 @@ public:
         return HANDLE_TYPE;
     }
 
-    SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
-    u32 max_sessions;    ///< Maximum number of simultaneous sessions the port can have
-    u32 active_sessions; ///< Number of currently open sessions to this port
-    std::string name;    ///< Name of client port (optional)
+    SharedPtr<ServerPort> server_port = nullptr;                 ///< ServerPort associated with this client port.
+    u32 max_sessions;                                            ///< Maximum number of simultaneous sessions the port can have
+    u32 active_sessions;                                         ///< Number of currently open sessions to this port
+    std::string name;                                            ///< Name of client port (optional)
+    std::unique_ptr<Service::Interface> hle_interface = nullptr; ///< HLE implementation of this port's request handler
 
-protected:
+private:
     ClientPort();
     ~ClientPort() override;
 };
