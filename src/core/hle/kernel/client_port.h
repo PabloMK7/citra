@@ -28,19 +28,13 @@ public:
      * @param hle_interface Interface object that implements the commands of the service.
      * @returns ClientPort for the given HLE interface.
      */
-    static Kernel::SharedPtr<ClientPort> CreateForHLE(u32 max_sessions, std::unique_ptr<Service::Interface> hle_interface);
+    static Kernel::SharedPtr<ClientPort> CreateForHLE(u32 max_sessions, std::shared_ptr<Service::Interface> hle_interface);
 
     /**
      * Adds the specified server session to the queue of pending sessions of the associated ServerPort
      * @param server_session Server session to add to the queue
      */
-    virtual void AddWaitingSession(SharedPtr<ServerSession> server_session);
-
-    /**
-     * Handle a sync request from the emulated application.
-     * @returns ResultCode from the operation.
-     */
-    ResultCode HandleSyncRequest();
+    void AddWaitingSession(SharedPtr<ServerSession> server_session);
 
     std::string GetTypeName() const override { return "ClientPort"; }
     std::string GetName() const override { return name; }
@@ -54,7 +48,7 @@ public:
     u32 max_sessions;                                            ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions;                                         ///< Number of currently open sessions to this port
     std::string name;                                            ///< Name of client port (optional)
-    std::unique_ptr<Service::Interface> hle_interface = nullptr; ///< HLE implementation of this port's request handler
+    std::shared_ptr<Service::Interface> hle_interface = nullptr; ///< HLE implementation of this port's request handler
 
 private:
     ClientPort();

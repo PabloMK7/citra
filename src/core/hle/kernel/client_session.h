@@ -5,10 +5,15 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "common/common_types.h"
 
 #include "core/hle/kernel/kernel.h"
+
+namespace Service {
+class Interface;
+}
 
 namespace Kernel {
 
@@ -41,6 +46,7 @@ public:
     std::string name;                           ///< Name of client port (optional)
     SharedPtr<ServerSession> server_session;    ///< The server session associated with this client session.
     SharedPtr<ClientPort> client_port;          ///< The client port which this session is connected to.
+    std::shared_ptr<Service::Interface> hle_helper = nullptr; ///< HLE implementation of this port's request handler
 
 private:
     ClientSession();

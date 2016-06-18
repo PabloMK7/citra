@@ -14,7 +14,7 @@ namespace Kernel {
 ClientPort::ClientPort() {}
 ClientPort::~ClientPort() {}
 
-Kernel::SharedPtr<ClientPort> ClientPort::CreateForHLE(u32 max_sessions, std::unique_ptr<Service::Interface> hle_interface) {
+Kernel::SharedPtr<ClientPort> ClientPort::CreateForHLE(u32 max_sessions, std::shared_ptr<Service::Interface> hle_interface) {
     SharedPtr<ClientPort> client_port(new ClientPort);
     client_port->max_sessions = max_sessions;
     client_port->active_sessions = 0;
@@ -32,14 +32,6 @@ void ClientPort::AddWaitingSession(SharedPtr<ServerSession> server_session) {
     server_port->pending_sessions.push_back(server_session);
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
-}
-
-ResultCode ClientPort::HandleSyncRequest() {
-    // Forward the request to the associated HLE interface if it exists
-    if (hle_interface != nullptr)
-        return hle_interface->HandleSyncRequest();
-
-    return RESULT_SUCCESS;
 }
 
 } // namespace

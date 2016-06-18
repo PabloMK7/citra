@@ -8,6 +8,7 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 
 namespace Kernel {
 
@@ -20,6 +21,7 @@ ResultVal<SharedPtr<ClientSession>> ClientSession::Create(SharedPtr<ServerSessio
     client_session->name = std::move(name);
     client_session->server_session = server_session;
     client_session->client_port = client_port;
+    client_session->hle_helper = client_port->hle_interface;
 
     return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
 }
@@ -31,10 +33,9 @@ ResultCode ClientSession::HandleSyncRequest() {
     if (result.IsError())
         return result;
 
-    // Tell the client port to handle the request in case it's an HLE service.
-    // The client port can be nullptr for port-less sessions (Like for example File and Directory sessions).
-    if (client_port != nullptr)
-        result = client_port->HandleSyncRequest();
+    // If this ClientSession has an associated HLE helper, forward the request to it.
+    if (hle_helper != nullptr)
+        result = hle_helper->HandleSyncRequest(server_session);
 
     return result;
 }

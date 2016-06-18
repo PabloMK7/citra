@@ -61,7 +61,9 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-ResultCode Interface::HandleSyncRequest() {
+ResultCode Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
+
     u32* cmd_buff = Kernel::GetCommandBuffer();
     auto itr = m_functions.find(cmd_buff[0]);
 
@@ -97,12 +99,12 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::unique_ptr<Interface>(interface_));
+    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::shared_ptr<Interface>(interface_));
     g_kernel_named_ports.emplace(interface_->GetPortName(), client_port);
 }
 
 void AddService(Interface* interface_) {
-    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::unique_ptr<Interface>(interface_));
+    auto client_port = Kernel::ClientPort::CreateForHLE(interface_->GetMaxSessions(), std::shared_ptr<Interface>(interface_));
     g_srv_services.emplace(interface_->GetPortName(), client_port);
 }
 

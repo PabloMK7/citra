@@ -56,7 +56,7 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    ResultCode HandleSyncRequest();
+    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
 
 protected:
     /**
