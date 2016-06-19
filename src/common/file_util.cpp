@@ -434,7 +434,7 @@ bool CreateEmptyFile(const std::string &filename)
 }
 
 
-bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directory, DirectoryEntryCallable callback, unsigned int recursion)
+bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directory, DirectoryEntryCallable callback)
 {
     LOG_TRACE(Common_Filesystem, "directory %s", directory.c_str());
 
@@ -472,7 +472,7 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
             continue;
 
         unsigned ret_entries = 0;
-        if (!callback(&ret_entries, directory, virtual_name, recursion)) {
+        if (!callback(&ret_entries, directory, virtual_name)) {
             callback_error = true;
             break;
         }
@@ -497,10 +497,9 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string &directo
 
 unsigned ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry, unsigned int recursion)
 {
-    const auto callback = [&parent_entry](unsigned* num_entries_out,
-                                          const std::string& directory,
-                                          const std::string& virtual_name,
-                                          unsigned int recursion) -> bool {
+    const auto callback = [recursion, &parent_entry](unsigned* num_entries_out,
+                                                     const std::string& directory,
+                                                     const std::string& virtual_name) -> bool {
         FSTEntry entry;
         entry.virtualName = virtual_name;
         entry.physicalName = directory + DIR_SEP + virtual_name;
@@ -526,16 +525,15 @@ unsigned ScanDirectoryTree(const std::string &directory, FSTEntry& parent_entry,
     };
 
     unsigned num_entries;
-    return ForeachDirectoryEntry(&num_entries, directory, callback, recursion) ? num_entries : 0;
+    return ForeachDirectoryEntry(&num_entries, directory, callback) ? num_entries : 0;
 }
 
 
 bool DeleteDirRecursively(const std::string &directory, unsigned int recursion)
 {
-    const static auto callback = [](unsigned* num_entries_out,
-                                    const std::string& directory,
-                                    const std::string& virtual_name,
-                                    unsigned int recursion) -> bool {
+    const auto callback = [recursion](unsigned* num_entries_out,
+                                      const std::string& directory,
+                                      const std::string& virtual_name) -> bool {
         std::string new_path = directory + DIR_SEP_CHR + virtual_name;
 
         if (IsDirectory(new_path)) {
@@ -546,7 +544,7 @@ bool DeleteDirRecursively(const std::string &directory, unsigned int recursion)
         return Delete(new_path);
     };
 
-    if (!ForeachDirectoryEntry(nullptr, directory, callback, recursion))
+    if (!ForeachDirectoryEntry(nullptr, directory, callback))
         return false;
 
     // Delete the outermost directory
