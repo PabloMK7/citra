@@ -151,8 +151,8 @@ private:
     /// This timer is used to redraw the widget's contents continuously. To save resources, it only
     /// runs while the widget is visible.
     QTimer update_timer;
-    /// Scale the coordinate system appropriately when physical DPI != logical DPI.
-    qreal x_scale, y_scale;
+    /// Scale the coordinate system appropriately when dpi != 96.
+    qreal x_scale = 1.0, y_scale = 1.0;
 };
 
 #endif
@@ -222,15 +222,14 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
     MicroProfileInitUI();
 
     connect(&update_timer, SIGNAL(timeout()), SLOT(update()));
-
-    QPainter painter(this);
-    x_scale = qreal(painter.device()->physicalDpiX()) / qreal(painter.device()->logicalDpiX());
-    y_scale = qreal(painter.device()->physicalDpiY()) / qreal(painter.device()->logicalDpiY());
 }
 
 void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
     QPainter painter(this);
 
+    // The units used by Microprofile for drawing are based in pixels on a 96 dpi display.
+    x_scale = qreal(painter.device()->logicalDpiX()) / 96.0;
+    y_scale = qreal(painter.device()->logicalDpiY()) / 96.0;
     painter.scale(x_scale, y_scale);
 
     painter.setBackground(Qt::black);
@@ -241,7 +240,7 @@ void MicroProfileWidget::paintEvent(QPaintEvent* ev) {
     painter.setFont(font);
 
     mp_painter = &painter;
-    MicroProfileDraw(rect().width(), rect().height());
+    MicroProfileDraw(rect().width() / x_scale, rect().height() / y_scale);
     mp_painter = nullptr;
 }
 
