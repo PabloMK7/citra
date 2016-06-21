@@ -25,6 +25,10 @@ if [ "$TRAVIS_BRANCH" = "master" ]; then
         dylibbundler -b -x "${REV_NAME}/citra" -cd -d "${REV_NAME}/libs" -p "@executable_path/libs/"
     fi
 
+    # Copy documentation
+    cp license.txt "$REV_NAME"
+    cp README.md "$REV_NAME"
+
     ARCHIVE_NAME="${REV_NAME}.tar.xz"
     tar -cJvf "$ARCHIVE_NAME" "$REV_NAME"
     lftp -c "open -u citra-builds,$BUILD_PASSWORD sftp://builds.citra-emu.org; set sftp:auto-confirm yes; put -O '$UPLOAD_DIR' '$ARCHIVE_NAME'"
