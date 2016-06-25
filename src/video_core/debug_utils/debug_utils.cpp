@@ -328,7 +328,7 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     std::lock_guard<std::mutex> lock(pica_trace_mutex);
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
 
-    return std::move(ret);
+    return ret;
 }
 
 const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {

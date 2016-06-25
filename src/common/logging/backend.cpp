@@ -117,7 +117,7 @@ Entry CreateEntry(Class log_class, Level log_level,
     vsnprintf(formatting_buffer.data(), formatting_buffer.size(), format, args);
     entry.message = std::string(formatting_buffer.data());
 
-    return std::move(entry);
+    return entry;
 }
 
 static Filter* filter = nullptr;
