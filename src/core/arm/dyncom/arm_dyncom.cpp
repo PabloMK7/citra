@@ -12,6 +12,7 @@
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
+#include "core/arm/dyncom/arm_dyncom_trans.h"
 
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -21,6 +22,11 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
 }
 
 ARM_DynCom::~ARM_DynCom() {
+}
+
+void ARM_DynCom::ClearInstructionCache() {
+    state->instruction_cache.clear();
+    trans_cache_buf_top = 0;
 }
 
 void ARM_DynCom::SetPC(u32 pc) {
