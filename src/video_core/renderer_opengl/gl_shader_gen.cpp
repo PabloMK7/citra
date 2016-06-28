@@ -554,6 +554,7 @@ struct LightSrc {
 };
 
 layout (std140) uniform shader_data {
+    vec2 framebuffer_scale;
     int alphatest_ref;
     float depth_scale;
     float depth_offset;
@@ -595,8 +596,10 @@ vec4 secondary_fragment_color = vec4(0.0);
         if (state.scissor_test_mode == Regs::ScissorMode::Include)
             out += "!";
         // x2,y2 have +1 added to cover the entire pixel area
-        out += "(gl_FragCoord.x >= scissor_x1 && gl_FragCoord.x < scissor_x2 + 1 && "
-                "gl_FragCoord.y >= scissor_y1 && gl_FragCoord.y < scissor_y2 + 1)) discard;\n";
+        out += "(gl_FragCoord.x >= scissor_x1 * framebuffer_scale.x && "
+                "gl_FragCoord.y >= scissor_y1 * framebuffer_scale.y && "
+                "gl_FragCoord.x < (scissor_x2 + 1) * framebuffer_scale.x && "
+                "gl_FragCoord.y < (scissor_y2 + 1) * framebuffer_scale.y)) discard;\n";
     }
 
     out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";

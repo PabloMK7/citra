@@ -196,6 +196,14 @@ void RasterizerOpenGL::DrawTriangles() {
                (GLint)(rect.bottom + regs.viewport_corner.y * color_surface->res_scale_height),
                (GLsizei)(viewport_width * color_surface->res_scale_width), (GLsizei)(viewport_height * color_surface->res_scale_height));
 
+    if (uniform_block_data.data.framebuffer_scale[0] != color_surface->res_scale_width ||
+        uniform_block_data.data.framebuffer_scale[1] != color_surface->res_scale_height) {
+
+        uniform_block_data.data.framebuffer_scale[0] = color_surface->res_scale_width;
+        uniform_block_data.data.framebuffer_scale[1] = color_surface->res_scale_height;
+        uniform_block_data.dirty = true;
+    }
+
     // Sync and bind the texture surfaces
     const auto pica_textures = regs.GetTextures();
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
