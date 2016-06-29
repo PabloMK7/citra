@@ -591,8 +591,12 @@ void Reschedule() {
 
     HLE::DoneRescheduling();
 
-    // Don't bother switching to the same thread
-    if (next == cur)
+    // Don't bother switching to the same thread.
+    // But if the thread was waiting on objects, we still need to switch it
+    // to perform PC modification, change state to RUNNING, etc.
+    // This occurs in the case when an object the thread is waiting on immediately wakes up
+    // the current thread before Reschedule() is called.
+    if (next == cur && (next == nullptr || next->waitsynch_waited == false))
         return;
 
     if (cur && next) {
