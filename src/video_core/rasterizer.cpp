@@ -338,11 +338,25 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             return;
     }
 
-    // TODO: Proper scissor rect test!
     u16 min_x = std::min({vtxpos[0].x, vtxpos[1].x, vtxpos[2].x});
     u16 min_y = std::min({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
     u16 max_x = std::max({vtxpos[0].x, vtxpos[1].x, vtxpos[2].x});
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
+
+    // Convert the scissor box coordinates to 12.4 fixed point
+    u16 scissor_x1 = (u16)( regs.scissor_test.x1      << 4);
+    u16 scissor_y1 = (u16)( regs.scissor_test.y1      << 4);
+    // x2,y2 have +1 added to cover the entire sub-pixel area
+    u16 scissor_x2 = (u16)((regs.scissor_test.x2 + 1) << 4);
+    u16 scissor_y2 = (u16)((regs.scissor_test.y2 + 1) << 4);
+
+    if (regs.scissor_test.mode == Regs::ScissorMode::Include) {
+        // Calculate the new bounds
+        min_x = std::max(min_x, scissor_x1);
+        min_y = std::max(min_y, scissor_y1);
+        max_x = std::min(max_x, scissor_x2);
+        max_y = std::min(max_y, scissor_y2);
+    }
 
     min_x &= Fix12P4::IntMask();
     min_y &= Fix12P4::IntMask();
@@ -382,6 +396,13 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     // TODO: Not sure if looping through x first might be faster
     for (u16 y = min_y + 8; y < max_y; y += 0x10) {
         for (u16 x = min_x + 8; x < max_x; x += 0x10) {
+
+            // Do not process the pixel if it's inside the scissor box and the scissor mode is set to Exclude
+            if (regs.scissor_test.mode == Regs::ScissorMode::Exclude) {
+                if (x >= scissor_x1 && x < scissor_x2 &&
+                    y >= scissor_y1 && y < scissor_y2)
+                    continue;
+            }
 
             // Calculate the barycentric coordinates w0, w1 and w2
             int w0 = bias0 + SignedArea(vtxpos[1].xy(), vtxpos[2].xy(), {x, y});

@@ -196,6 +196,14 @@ void RasterizerOpenGL::DrawTriangles() {
                (GLint)(rect.bottom + regs.viewport_corner.y * color_surface->res_scale_height),
                (GLsizei)(viewport_width * color_surface->res_scale_width), (GLsizei)(viewport_height * color_surface->res_scale_height));
 
+    if (uniform_block_data.data.framebuffer_scale[0] != color_surface->res_scale_width ||
+        uniform_block_data.data.framebuffer_scale[1] != color_surface->res_scale_height) {
+
+        uniform_block_data.data.framebuffer_scale[0] = color_surface->res_scale_width;
+        uniform_block_data.data.framebuffer_scale[1] = color_surface->res_scale_height;
+        uniform_block_data.dirty = true;
+    }
+
     // Sync and bind the texture surfaces
     const auto pica_textures = regs.GetTextures();
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
@@ -351,6 +359,15 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     // (This is a dedicated color write-enable register)
     case PICA_REG_INDEX(framebuffer.allow_color_write):
         SyncColorWriteMask();
+        break;
+
+    // Scissor test
+    case PICA_REG_INDEX(scissor_test.mode):
+        shader_dirty = true;
+        break;
+    case PICA_REG_INDEX(scissor_test.x1): // and y1
+    case PICA_REG_INDEX(scissor_test.x2): // and y2
+        SyncScissorTest();
         break;
 
     // Logic op
@@ -1002,6 +1019,7 @@ void RasterizerOpenGL::SetShader() {
         SyncDepthOffset();
         SyncAlphaTest();
         SyncCombinerColor();
+        SyncScissorTest();
         auto& tev_stages = Pica::g_state.regs.GetTevStages();
         for (int index = 0; index < tev_stages.size(); ++index)
             SyncTevConstColor(index, tev_stages[index]);
@@ -1164,6 +1182,22 @@ void RasterizerOpenGL::SyncDepthTest() {
                                regs.output_merger.depth_write_enable == 1;
     state.depth.test_func = regs.output_merger.depth_test_enable == 1 ?
                             PicaToGL::CompareFunc(regs.output_merger.depth_test_func) : GL_ALWAYS;
+}
+
+void RasterizerOpenGL::SyncScissorTest() {
+    const auto& regs = Pica::g_state.regs;
+
+    if (uniform_block_data.data.scissor_x1 != regs.scissor_test.x1 ||
+        uniform_block_data.data.scissor_y1 != regs.scissor_test.y1 ||
+        uniform_block_data.data.scissor_x2 != regs.scissor_test.x2 ||
+        uniform_block_data.data.scissor_y2 != regs.scissor_test.y2) {
+
+        uniform_block_data.data.scissor_x1 = regs.scissor_test.x1;
+        uniform_block_data.data.scissor_y1 = regs.scissor_test.y1;
+        uniform_block_data.data.scissor_x2 = regs.scissor_test.x2;
+        uniform_block_data.data.scissor_y2 = regs.scissor_test.y2;
+        uniform_block_data.dirty = true;
+    }
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {

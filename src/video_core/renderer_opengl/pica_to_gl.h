@@ -17,6 +17,7 @@
 
 #include "video_core/pica.h"
 
+using GLvec2 = std::array<GLfloat, 2>;
 using GLvec3 = std::array<GLfloat, 3>;
 using GLvec4 = std::array<GLfloat, 4>;
 

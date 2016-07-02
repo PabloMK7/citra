@@ -115,7 +115,28 @@ struct Regs {
         BitField<24, 5, Semantic> map_w;
     } vs_output_attributes[7];
 
-    INSERT_PADDING_WORDS(0x11);
+    INSERT_PADDING_WORDS(0xe);
+
+    enum class ScissorMode : u32 {
+        Disabled = 0,
+        Exclude = 1, // Exclude pixels inside the scissor box
+
+        Include = 3 // Exclude pixels outside the scissor box
+    };
+
+    struct {
+        BitField<0, 2, ScissorMode> mode;
+
+        union {
+            BitField< 0, 16, u32> x1;
+            BitField<16, 16, u32> y1;
+        };
+
+        union {
+            BitField< 0, 16, u32> x2;
+            BitField<16, 16, u32> y2;
+        };
+    } scissor_test;
 
     union {
         BitField< 0, 10, s32> x;
@@ -1328,6 +1349,7 @@ ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
 ASSERT_REG_POSITION(viewport_depth_near_plane, 0x4e);
 ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
 ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
+ASSERT_REG_POSITION(scissor_test, 0x65);
 ASSERT_REG_POSITION(viewport_corner, 0x68);
 ASSERT_REG_POSITION(depthmap_enable, 0x6D);
 ASSERT_REG_POSITION(texture0_enable, 0x80);
