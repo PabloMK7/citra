@@ -27,6 +27,7 @@ set(SRCS
             hle/config_mem.cpp
             hle/hle.cpp
             hle/applets/applet.cpp
+            hle/applets/erreula.cpp
             hle/applets/mii_selector.cpp
             hle/applets/swkbd.cpp
             hle/kernel/address_arbiter.cpp
@@ -168,6 +169,7 @@ set(HEADERS
             hle/function_wrappers.h
             hle/hle.h
             hle/applets/applet.h
+            hle/applets/erreula.h
             hle/applets/mii_selector.h
             hle/applets/swkbd.h
             hle/kernel/address_arbiter.h

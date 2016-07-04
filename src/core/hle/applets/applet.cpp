@@ -12,6 +12,7 @@
 
 #include "core/core_timing.h"
 #include "core/hle/applets/applet.h"
+#include "core/hle/applets/erreula.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/result.h"
@@ -51,6 +52,10 @@ ResultCode Applet::Create(Service::APT::AppletId id) {
     case Service::APT::AppletId::Ed1:
     case Service::APT::AppletId::Ed2:
         applets[id] = std::make_shared<MiiSelector>(id);
+        break;
+    case Service::APT::AppletId::Error:
+    case Service::APT::AppletId::Error2:
+        applets[id] = std::make_shared<ErrEula>(id);
         break;
     default:
         LOG_ERROR(Service_APT, "Could not create applet %u", id);

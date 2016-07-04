@@ -66,6 +66,8 @@ enum class AppletId : u32 {
     InstructionManual  = 0x115,
     Notifications      = 0x116,
     Miiverse           = 0x117,
+    MiiversePost       = 0x118,
+    AmiiboSettings     = 0x119,
     SoftwareKeyboard1  = 0x201,
     Ed1                = 0x202,
     PnoteApp           = 0x204,
@@ -78,6 +80,12 @@ enum class AppletId : u32 {
     AnyLibraryApplet   = 0x400,
     SoftwareKeyboard2  = 0x401,
     Ed2                = 0x402,
+    PnoteApp2          = 0x404,
+    SnoteApp2          = 0x405,
+    Error2             = 0x406,
+    Mint2              = 0x407,
+    Extrapad2          = 0x408,
+    Memolib2           = 0x409,
 };
 
 enum class StartupArgumentType : u32 {
