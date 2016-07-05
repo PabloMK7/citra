@@ -645,20 +645,19 @@ static void DeleteSystemSaveData(Service::Interface* self) {
  * FS_User::CreateSystemSaveData service function.
  *  Inputs:
  *      0 : 0x08560240
- *      1 : High word of the SystemSaveData id to create
- *      2 : Low word of the SystemSaveData id to create
- *      3 : Unknown
- *      4 : Unknown
- *      5 : Unknown
- *      6 : Unknown
- *      7 : Unknown
- *      8 : Unknown
- *      9 : Unknown (Memory address)
+ *      1 : u8 MediaType of the system save data
+ *      2 : SystemSaveData id to create
+ *      3 : Total size
+ *      4 : Block size
+ *      5 : Number of directories
+ *      6 : Number of files
+ *      7 : Directory bucket count
+ *      8 : File bucket count
+ *      9 : u8 Whether to duplicate data or not
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void CreateSystemSaveData(Service::Interface* self) {
-    // TODO(Subv): Figure out the other parameters.
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 savedata_high = cmd_buff[1];
     u32 savedata_low = cmd_buff[2];
@@ -669,6 +668,38 @@ static void CreateSystemSaveData(Service::Interface* self) {
             cmd_buff[6], cmd_buff[7], cmd_buff[8], cmd_buff[9]);
 
     cmd_buff[1] = CreateSystemSaveData(savedata_high, savedata_low).raw;
+}
+
+/**
+ * FS_User::CreateLegacySystemSaveData service function.
+ *  This function appears to be obsolete and seems to have been replaced by
+ *  command 0x08560240 (CreateSystemSaveData).
+ *
+ *  Inputs:
+ *      0 : 0x08100200
+ *      1 : SystemSaveData id to create
+ *      2 : Total size
+ *      3 : Block size
+ *      4 : Number of directories
+ *      5 : Number of files
+ *      6 : Directory bucket count
+ *      7 : File bucket count
+ *      8 : u8 Duplicate data
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void CreateLegacySystemSaveData(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32 savedata_id = cmd_buff[1];
+
+    LOG_WARNING(Service_FS, "(STUBBED) savedata_id=%08X cmd_buff[3]=%08X "
+            "cmd_buff[4]=%08X cmd_buff[5]=%08X cmd_buff[6]=%08X cmd_buff[7]=%08X cmd_buff[8]=%08X "
+            "cmd_buff[9]=%08X", savedata_id, cmd_buff[3], cmd_buff[4], cmd_buff[5],
+            cmd_buff[6], cmd_buff[7], cmd_buff[8], cmd_buff[9]);
+
+    cmd_buff[0] = IPC::MakeHeader(0x810, 0x1, 0);
+    // With this command, the SystemSaveData always has save_high = 0 (Always created in the NAND)
+    cmd_buff[1] = CreateSystemSaveData(0, savedata_id).raw;
 }
 
 /**
@@ -820,7 +851,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080D0144, nullptr,                  "ControlArchive"},
     {0x080E0080, CloseArchive,             "CloseArchive"},
     {0x080F0180, FormatThisUserSaveData,   "FormatThisUserSaveData"},
-    {0x08100200, nullptr,                  "CreateSystemSaveData"},
+    {0x08100200, CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
     {0x08110040, nullptr,                  "DeleteSystemSaveData"},
     {0x08120080, GetFreeBytes,             "GetFreeBytes"},
     {0x08130000, nullptr,                  "GetCardType"},
