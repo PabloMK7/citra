@@ -235,5 +235,11 @@ void ArchiveInit();
 /// Shutdown archives
 void ArchiveShutdown();
 
+/// Register all archive types
+void RegisterArchiveTypes();
+
+/// Unregister all archive types
+void UnregisterArchiveTypes();
+
 } // namespace FS
 } // namespace Service

@@ -22,7 +22,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0040, GetCountryCodeID,                     "GetCountryCodeID"},
     // cfg:i
     {0x04010082, GetConfigInfoBlk8,                    "GetConfigInfoBlk8"},
-    {0x04020082, nullptr,                              "SetConfigInfoBlk4"},
+    {0x04020082, SetConfigInfoBlk4,                    "SetConfigInfoBlk4"},
     {0x04030000, UpdateConfigNANDSavegame,             "UpdateConfigNANDSavegame"},
     {0x04040042, nullptr,                              "GetLocalFriendCodeSeedData"},
     {0x04050000, nullptr,                              "GetLocalFriendCodeSeed"},
@@ -31,7 +31,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x04080042, nullptr,                              "SecureInfoGetSerialNo"},
     {0x04090000, nullptr,                              "UpdateConfigBlk00040003"},
     {0x08010082, GetConfigInfoBlk8,                    "GetConfigInfoBlk8"},
-    {0x08020082, nullptr,                              "SetConfigInfoBlk4"},
+    {0x08020082, SetConfigInfoBlk4,                    "SetConfigInfoBlk4"},
     {0x08030000, UpdateConfigNANDSavegame,             "UpdateConfigNANDSavegame"},
     {0x080400C2, nullptr,                              "CreateConfigInfoBlk"},
     {0x08050000, nullptr,                              "DeleteConfigNANDSavefile"},

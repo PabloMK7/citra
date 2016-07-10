@@ -259,7 +259,7 @@ using FileSys::ArchiveFactory;
 
 /**
  * Map of registered archives, identified by id code. Once an archive is registered here, it is
- * never removed until the FS service is shut down.
+ * never removed until UnregisterArchiveTypes is called.
  */
 static boost::container::flat_map<ArchiveIdCode, std::unique_ptr<ArchiveFactory>> id_code_map;
 
@@ -520,12 +520,7 @@ ResultCode CreateSystemSaveData(u32 high, u32 low) {
     return RESULT_SUCCESS;
 }
 
-/// Initialize archives
-void ArchiveInit() {
-    next_handle = 1;
-
-    AddService(new FS::Interface);
-
+void RegisterArchiveTypes() {
     // TODO(Subv): Add the other archive types (see here for the known types:
     // http://3dbrew.org/wiki/FS:OpenArchive#Archive_idcodes).
 
@@ -562,10 +557,23 @@ void ArchiveInit() {
     RegisterArchiveType(std::move(systemsavedata_factory), ArchiveIdCode::SystemSaveData);
 }
 
+void UnregisterArchiveTypes() {
+    id_code_map.clear();
+}
+
+/// Initialize archives
+void ArchiveInit() {
+    next_handle = 1;
+
+    AddService(new FS::Interface);
+
+    RegisterArchiveTypes();
+}
+
 /// Shutdown archives
 void ArchiveShutdown() {
     handle_map.clear();
-    id_code_map.clear();
+    UnregisterArchiveTypes();
 }
 
 } // namespace FS

@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConfigureSystem</class>
+ <widget class="QWidget" name="ConfigureSystem">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>360</width>
+    <height>377</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QGroupBox" name="group_system_settings">
+       <property name="title">
+        <string>System Settings</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_username">
+          <property name="text">
+           <string>Username</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="edit_username">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maxLength">
+           <number>10</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_birthday">
+          <property name="text">
+           <string>Birthday</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_birthday2">
+          <item>
+           <widget class="QComboBox" name="combo_birthmonth">
+            <item>
+             <property name="text">
+              <string>January</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>February</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>March</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>April</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>May</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>June</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>July</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>August</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>September</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>October</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>November</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>December</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="combo_birthday"/>
+          </item>
+         </layout>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_language">
+          <property name="text">
+           <string>Language</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QComboBox" name="combo_language">
+          <item>
+           <property name="text">
+            <string>Japanese (日本語)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>English</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>French (français)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>German (Deutsch)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Italian (italiano)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Spanish (español)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Simplified Chinese (简体中文)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Korean (한국어)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Dutch (Nederlands)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Portuguese (português)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Russian (Русский)</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Traditional Chinese (正體中文)</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_sound">
+          <property name="text">
+           <string>Sound output mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="combo_sound">
+          <item>
+           <property name="text">
+            <string>Mono</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Stereo</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Surround</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_disable_info">
+       <property name="text">
+        <string>System settings are available only when game is not running.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

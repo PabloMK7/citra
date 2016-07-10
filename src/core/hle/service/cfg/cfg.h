@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 #include "common/common_types.h"
 
@@ -35,7 +36,14 @@ enum SystemLanguage {
     LANGUAGE_KO = 7,
     LANGUAGE_NL = 8,
     LANGUAGE_PT = 9,
-    LANGUAGE_RU = 10
+    LANGUAGE_RU = 10,
+    LANGUAGE_TW = 11
+};
+
+enum SoundOutputMode {
+    SOUND_MONO = 0,
+    SOUND_STEREO = 1,
+    SOUND_SURROUND = 2
 };
 
 /// Block header in the config savedata file
@@ -178,6 +186,22 @@ void GetConfigInfoBlk2(Service::Interface* self);
 void GetConfigInfoBlk8(Service::Interface* self);
 
 /**
+ * CFG::SetConfigInfoBlk4 service function
+ *  Inputs:
+ *      0 : 0x04020082 / 0x08020082
+ *      1 : Block ID
+ *      2 : Size
+ *      3 : Descriptor for the output buffer
+ *      4 : Output buffer pointer
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *  Note:
+ *      The parameters order is different from GetConfigInfoBlk2/8's,
+ *      where Block ID and Size are switched.
+ */
+void SetConfigInfoBlk4(Service::Interface* self);
+
+/**
  * CFG::UpdateConfigNANDSavegame service function
  *  Inputs:
  *      0 : 0x04030000 / 0x08030000
@@ -205,7 +229,19 @@ void FormatConfig(Service::Interface* self);
  * @param output A pointer where we will write the read data
  * @returns ResultCode indicating the result of the operation, 0 on success
  */
-ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, u8* output);
+ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output);
+
+/**
+ * Reads data from input and writes to a block with the specified id and flag
+ * in the Config savegame buffer.
+ * The input size must match exactly the size of the target block
+ * @param block_id The id of the block we want to write
+ * @param size The size of the block we want to write
+ * @param flag The target block must have this flag set
+ * @param input A pointer where we will read data and write to Config savegame buffer
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input);
 
 /**
  * Creates a block with the specified id and writes the input data to the cfg savegame buffer in memory.
@@ -236,11 +272,70 @@ ResultCode UpdateConfigNANDSavegame();
  */
 ResultCode FormatConfig();
 
+/**
+ * Open the config savegame file and load it to the memory buffer
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode LoadConfigNANDSaveFile();
+
 /// Initialize the config service
 void Init();
 
 /// Shutdown the config service
 void Shutdown();
+
+// Utilities for frontend to set config data.
+// Note: before calling these functions, LoadConfigNANDSaveFile should be called,
+// and UpdateConfigNANDSavegame should be called after making changes to config data.
+
+/**
+ * Sets the username in config savegame.
+ * @param name the username to set. The maximum size is 10 in char16_t.
+ */
+void SetUsername(const std::u16string& name);
+
+/**
+ * Gets the username from config savegame.
+ * @returns the username
+ */
+std::u16string GetUsername();
+
+/**
+ * Sets the profile birthday in config savegame.
+ * @param month the month of birthday.
+ * @param day the day of the birthday.
+ */
+void SetBirthday(u8 month, u8 day);
+
+/**
+ * Gets the profile birthday from the config savegame.
+ * @returns a tuple of (month, day) of birthday
+ */
+std::tuple<u8, u8> GetBirthday();
+
+/**
+ * Sets the system language in config savegame.
+ * @param language the system language to set.
+ */
+void SetSystemLanguage(SystemLanguage language);
+
+/**
+ * Gets the system language from config savegame.
+ * @returns the system language
+ */
+SystemLanguage GetSystemLanguage();
+
+/**
+ * Sets the sound output mode in config savegame.
+ * @param mode the sound output mode to set
+ */
+void SetSoundOutputMode(SoundOutputMode mode);
+
+/**
+ * Gets the sound output mode from config savegame.
+ * @returns the sound output mode
+ */
+SoundOutputMode GetSoundOutputMode();
 
 } // namespace CFG
 } // namespace Service
