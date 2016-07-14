@@ -37,6 +37,8 @@ static u32 cpu_percent; ///< CPU time available to the running application
 // APT::CheckNew3DSApp will check this unknown_ns_state_field to determine processing mode
 static u8 unknown_ns_state_field;
 
+static ScreencapPostPermission screen_capture_post_permission;
+
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
 static MessageParameter next_parameter;
 
@@ -382,23 +384,23 @@ void StartLibraryApplet(Service::Interface* self) {
     cmd_buff[1] = applet->Start(parameter).raw;
 }
 
-void SetNSStateField(Service::Interface* self) {
+void SetScreenCapPostPermission(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    unknown_ns_state_field = cmd_buff[1];
+    screen_capture_post_permission = static_cast<ScreencapPostPermission>(cmd_buff[1] & 0xF);
 
     cmd_buff[0] = IPC::MakeHeader(0x55, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    LOG_WARNING(Service_APT, "(STUBBED) unknown_ns_state_field=%u", unknown_ns_state_field);
+    LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u", screen_capture_post_permission);
 }
 
-void GetNSStateField(Service::Interface* self) {
+void GetScreenCapPostPermission(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[0] = IPC::MakeHeader(0x56, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[8] = unknown_ns_state_field;
-    LOG_WARNING(Service_APT, "(STUBBED) unknown_ns_state_field=%u", unknown_ns_state_field);
+    cmd_buff[2] = static_cast<u32>(screen_capture_post_permission);
+    LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u", screen_capture_post_permission);
 }
 
 void GetAppletInfo(Service::Interface* self) {
@@ -493,6 +495,7 @@ void Init() {
 
     cpu_percent = 0;
     unknown_ns_state_field = 0;
+    screen_capture_post_permission = ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value
 
     // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
     notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");
