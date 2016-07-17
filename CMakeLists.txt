@@ -105,6 +105,15 @@ else()
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
 endif()
 
+# Set file offset size to 64 bits.
+#
+# On modern Unixes, this is typically already the case. The lone exception is
+# glibc, which may default to 32 bits. glibc allows this to be configured
+# by setting _FILE_OFFSET_BITS.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-D_FILE_OFFSET_BITS=64)
+endif()
+
 add_definitions(-DSINGLETHREADED)
 # CMake seems to only define _DEBUG on Windows
 set_property(DIRECTORY APPEND PROPERTY
