@@ -25,13 +25,14 @@ namespace SharedPage {
 struct DateTime {
     u64_le date_time;                  // 0
     u64_le update_tick;                // 8
-    INSERT_PADDING_BYTES(0x20 - 0x10); // 10
+    u64_le tick_to_second_coefficient; // 10
+    u64_le tick_offset;                // 18
 };
 static_assert(sizeof(DateTime) == 0x20, "Datetime size is wrong");
 
 struct SharedPageDef {
     // Most of these names are taken from the 3dbrew page linked above.
-    u32_le   date_time_selector;         // 0
+    u32_le   date_time_counter;          // 0
     u8       running_hw;                 // 4
     /// "Microcontroller hardware info"
     u8       mcu_hw_info;                // 5
