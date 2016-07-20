@@ -26,7 +26,7 @@
 extern int g_clock_rate_arm11;
 
 inline s64 msToCycles(int ms) {
-    return g_clock_rate_arm11 / 1000 * ms;
+    return (s64)g_clock_rate_arm11 / 1000 * ms;
 }
 
 inline s64 msToCycles(float ms) {
