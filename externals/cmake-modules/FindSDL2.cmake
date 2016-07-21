@@ -3,6 +3,7 @@
 # SDL2_LIBRARY, the name of the library to link against
 # SDL2_FOUND, if false, do not try to link to SDL2
 # SDL2_INCLUDE_DIR, where to find SDL.h
+# SDL2_DLL_DIR, where to find SDL2.dll if it exists
 #
 # This module responds to the the flag:
 # SDL2_BUILDING_LIBRARY
@@ -149,6 +150,14 @@ FIND_LIBRARY(SDL2_LIBRARY_TEMP
 )
 
 IF(SDL2_LIBRARY_TEMP)
+    if(MSVC)
+        get_filename_component(SDL2_DLL_DIR_TEMP ${SDL2_LIBRARY_TEMP} DIRECTORY)
+        if(EXISTS ${SDL2_DLL_DIR_TEMP}/SDL2.dll)
+            set(SDL2_DLL_DIR ${SDL2_DLL_DIR_TEMP})
+            unset(SDL2_DLL_DIR_TEMP)
+        endif()
+    endif()
+
     FIND_PATH(SDL2_INCLUDE_DIR SDL.h
         HINTS
         $ENV{SDL2DIR}
