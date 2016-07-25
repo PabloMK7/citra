@@ -51,7 +51,6 @@ static bool IsWithinTouchscreen(const EmuWindow::FramebufferLayout& layout, unsi
 }
 
 std::tuple<unsigned,unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
-
     new_x = std::max(new_x, framebuffer_layout.bottom_screen.left);
     new_x = std::min(new_x, framebuffer_layout.bottom_screen.right-1);
 
@@ -92,9 +91,9 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
 }
 
 EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width, unsigned height) {
-
-    ASSERT(width > 0);
-    ASSERT(height > 0);
+    // When hiding the widget, the function receives a size of 0
+    if (width == 0) width = 1;
+    if (height == 0) height = 1;
 
     EmuWindow::FramebufferLayout res = { width, height, {}, {} };
 
