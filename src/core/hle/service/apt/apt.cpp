@@ -70,6 +70,13 @@ void Initialize(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
+    if (!shared_font_mem) {
+        LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
+        cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
+        cmd_buff[1] = -1;  // TODO: Find the right error code
+        return;
+    }
+
     // The shared font has to be relocated to the new address before being passed to the application.
     VAddr target_address = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
     // The shared font dumped by 3dsutils (https://github.com/citra-emu/3dsutils) uses this address as base,
