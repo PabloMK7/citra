@@ -29,7 +29,7 @@
        <string>System</string>
       </attribute>
      </widget>
-     <widget class="QWidget" name="inputTab">
+     <widget class="ConfigureInput" name="inputTab">
       <attribute name="title">
        <string>Input</string>
       </attribute>
@@ -80,6 +80,12 @@
    <header>configure_debug.h</header>
    <container>1</container>
   </customwidget>
+   <customwidget>
+     <class>ConfigureInput</class>
+     <extends>QWidget</extends>
+     <header>configure_input.h</header>
+     <container>1</container>
+   </customwidget>
  </customwidgets>
  <resources/>
  <connections>

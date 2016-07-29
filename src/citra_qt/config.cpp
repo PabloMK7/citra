@@ -3,14 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <QSettings>
-#include <QString>
-#include <QStringList>
 
 #include "citra_qt/config.h"
 #include "citra_qt/ui_settings.h"
 
 #include "common/file_util.h"
-#include "core/settings.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -21,7 +18,7 @@ Config::Config() {
     Reload();
 }
 
-static const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> defaults = {
+const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> Config::defaults = {
     // directly mapped keys
     Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X,
     Qt::Key_Q, Qt::Key_W, Qt::Key_1, Qt::Key_2,
@@ -109,7 +106,7 @@ void Config::ReadValues() {
             UISettings::values.shortcuts.emplace_back(
                         UISettings::Shortcut(group + "/" + hotkey,
                                              UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
-                                                                           qt_config->value("Context").toInt())));
+                                                                            qt_config->value("Context").toInt())));
             qt_config->endGroup();
         }
 
@@ -191,7 +188,7 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
-    for (auto shortcut : UISettings::values.shortcuts ) {
+    for (auto shortcut : UISettings::values.shortcuts) {
         qt_config->setValue(shortcut.first + "/KeySeq", shortcut.second.first);
         qt_config->setValue(shortcut.first + "/Context", shortcut.second.second);
     }
