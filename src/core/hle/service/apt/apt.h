@@ -94,6 +94,13 @@ enum class StartupArgumentType : u32 {
     OtherMedia = 2,
 };
 
+enum class ScreencapPostPermission : u32 {
+    CleanThePermission                 = 0, //TODO(JamePeng): verify what "zero" means
+    NoExplicitSetting                  = 1,
+    EnableScreenshotPostingToMiiverse  = 2,
+    DisableScreenshotPostingToMiiverse = 3
+};
+
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
 void SendParameter(const MessageParameter& parameter);
 
@@ -383,25 +390,24 @@ void StartLibraryApplet(Service::Interface* self);
 void GetStartupArgument(Service::Interface* self);
 
 /**
- * APT::SetNSStateField service function
+ * APT::SetScreenCapPostPermission service function
  *  Inputs:
- *      1 : u8 NS state field
+ *      0 : Header Code[0x00550040]
+ *      1 : u8 The screenshot posting permission
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
- *  Note:
- *      This writes the input u8 to a NS state field.
  */
-void SetNSStateField(Service::Interface* self);
+void SetScreenCapPostPermission(Service::Interface* self);
 
 /**
- * APT::GetNSStateField service function
+ * APT::GetScreenCapPostPermission service function
+ *  Inputs:
+ *      0 : Header Code[0x00560000]
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
- *      8 : u8 NS state field
- *  Note:
- *      This returns a u8 NS state field(which can be set by cmd 0x00550040), at cmdreply+8.
+ *      2 : u8 The screenshot posting permission
  */
-void GetNSStateField(Service::Interface* self);
+void GetScreenCapPostPermission(Service::Interface* self);
 
 /**
  * APT::CheckNew3DSApp service function

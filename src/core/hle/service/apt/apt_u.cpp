@@ -92,8 +92,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00510080, GetStartupArgument,              "GetStartupArgument"},
     {0x00520104, nullptr,                         "Wrap1"},
     {0x00530104, nullptr,                         "Unwrap1"},
-    {0x00550040, SetNSStateField,                 "SetNSStateField?"},
-    {0x00560000, GetNSStateField,                 "GetNSStateField?"},
+    {0x00550040, SetScreenCapPostPermission,      "SetScreenCapPostPermission"},
+    {0x00560000, GetScreenCapPostPermission,      "GetScreenCapPostPermission"},
     {0x00580002, nullptr,                         "GetProgramID"},
     {0x01010000, CheckNew3DSApp,                  "CheckNew3DSApp"},
     {0x01020000, CheckNew3DS,                     "CheckNew3DS"}
