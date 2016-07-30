@@ -51,7 +51,7 @@ void Initialize(Service::Interface* self) {
     mutex = Kernel::Mutex::Create(false);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::MoveHandleDesc(2);
+    cmd_buff[2] = IPC::CopyHandleDesc(2);
     cmd_buff[3] = Kernel::g_handle_table.Create(mutex).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_memory).MoveFrom();
 }

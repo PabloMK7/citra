@@ -57,7 +57,7 @@ static void EnableNotification(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = IPC::TransferHandleDesc();
+    cmd_buff[2] = IPC::CopyHandleDesc(1);
     cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }

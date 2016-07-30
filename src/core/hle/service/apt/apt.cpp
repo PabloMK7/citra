@@ -53,7 +53,7 @@ void Initialize(Service::Interface* self) {
     u32 app_id = cmd_buff[1];
     u32 flags  = cmd_buff[2];
 
-    cmd_buff[2] = IPC::MoveHandleDesc(2);
+    cmd_buff[2] = IPC::CopyHandleDesc(2);
     cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
     cmd_buff[4] = Kernel::g_handle_table.Create(parameter_event).MoveFrom();
 
@@ -96,7 +96,7 @@ void GetSharedFont(Service::Interface* self) {
     // the real APT service calculates this address by scanning the entire address space (using svcQueryMemory)
     // and searches for an allocation of the same size as the Shared Font.
     cmd_buff[2] = target_address;
-    cmd_buff[3] = IPC::MoveHandleDesc();
+    cmd_buff[3] = IPC::CopyHandleDesc();
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
 }
 

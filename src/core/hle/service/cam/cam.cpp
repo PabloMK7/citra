@@ -51,7 +51,7 @@ void GetVsyncInterruptEvent(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x5, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::MoveHandleDesc();
+    cmd_buff[2] = IPC::CopyHandleDesc();
     cmd_buff[3] = Kernel::g_handle_table.Create(vsync_interrupt_error_event).MoveFrom();
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, port=%d", port);
@@ -64,7 +64,7 @@ void GetBufferErrorInterruptEvent(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x6, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::MoveHandleDesc();
+    cmd_buff[2] = IPC::CopyHandleDesc();
     cmd_buff[3] = Kernel::g_handle_table.Create(interrupt_error_event).MoveFrom();
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, port=%d", port);
@@ -85,7 +85,7 @@ void SetReceiving(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x7, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::MoveHandleDesc();
+    cmd_buff[2] = IPC::CopyHandleDesc();
     cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).MoveFrom();
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, addr=0x%X, port=%d, image_size=%d, trans_unit=%d",
