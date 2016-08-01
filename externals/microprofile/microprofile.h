@@ -512,7 +512,7 @@ typedef int MpSocket;
 
 #ifndef _WIN32
 typedef pthread_t MicroProfileThread;
-#elif defined(_WIN32)
+#elif defined(_MSC_VER)
 typedef HANDLE MicroProfileThread;
 #else
 typedef std::thread* MicroProfileThread;
@@ -921,7 +921,7 @@ void MicroProfileThreadJoin(MicroProfileThread* pThread)
     int r = pthread_join(*pThread, 0);
     MP_ASSERT(r == 0);
 }
-#elif defined(_WIN32)
+#elif defined(_MSC_VER)
 typedef HANDLE MicroProfileThread;
 DWORD _stdcall ThreadTrampoline(void* pFunc)
 {

@@ -14,7 +14,7 @@
 #include <numeric>
 #include <fcntl.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <WinSock2.h>
 #include <common/x64/abi.h>
 #include <io.h>

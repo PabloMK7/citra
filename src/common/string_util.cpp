@@ -11,7 +11,8 @@
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#ifdef _MSC_VER
+
+#ifdef _WIN32
 #include <codecvt>
 #include <Windows.h>
 #include "common/common_funcs.h"
@@ -270,7 +271,7 @@ std::string ReplaceAll(std::string result, const std::string& src, const std::st
     return result;
 }
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 
 std::string UTF16ToUTF8(const std::u16string& input) {
 #if _MSC_VER >= 1900
