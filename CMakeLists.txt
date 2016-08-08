@@ -1,6 +1,5 @@
-# CMake 3.1 required for Qt5 settings to be applied automatically on
-# dependent libraries and IMPORTED targets.
-cmake_minimum_required(VERSION 3.1)
+# CMake 3.2 required for cmake to know the right flags for CXX standard on OSX
+cmake_minimum_required(VERSION 3.2)
 
 function(download_bundled_external remote_path lib_name prefix_var)
     set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
@@ -63,8 +62,11 @@ if (NOT DEFINED ARCHITECTURE)
 endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if (NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -Wno-attributes")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-attributes")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 else()
     # Silence "deprecation" warnings

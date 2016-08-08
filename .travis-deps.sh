@@ -9,7 +9,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
     export CXX=g++-6
     mkdir -p $HOME/.local
 
-    curl -L http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz \
+    curl -L http://www.cmake.org/files/v3.2/cmake-3.2.0-Linux-i386.tar.gz \
         | tar -xz -C $HOME/.local --strip-components=1
 
     (
@@ -21,6 +21,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update > /dev/null # silence the very verbose output
     brew unlink cmake
-    brew install cmake31 qt5 sdl2 dylibbundler
+    brew install cmake qt5 sdl2 dylibbundler
     gem install xcpretty
 fi
