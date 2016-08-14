@@ -3228,7 +3228,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                     addr += 4;
                 }
                 if (BIT(inst_cream->inst, 15)) {
-                    cpu->WriteMemory32(addr, cpu->Reg_usr[1] + 8);
+                    cpu->WriteMemory32(addr, cpu->Reg[15] + 8);
                 }
             } else {
                 for (int i = 0; i < 15; i++) {
@@ -3243,8 +3243,9 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                 }
 
                 // Check PC reg
-                if (BIT(inst_cream->inst, 15))
-                    cpu->WriteMemory32(addr, cpu->Reg_usr[1] + 8);
+                if (BIT(inst_cream->inst, 15)) {
+                    cpu->WriteMemory32(addr, cpu->Reg[15] + 8);
+                }
             }
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
