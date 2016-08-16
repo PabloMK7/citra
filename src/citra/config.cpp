@@ -68,7 +68,7 @@ void Config::ReadValues() {
     Settings::values.frame_skip = sdl2_config->GetInteger("Core", "frame_skip", 0);
 
     // Renderer
-    Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", false);
+    Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", true);
     Settings::values.use_shader_jit = sdl2_config->GetBoolean("Renderer", "use_shader_jit", true);
     Settings::values.use_scaled_resolution = sdl2_config->GetBoolean("Renderer", "use_scaled_resolution", false);
 

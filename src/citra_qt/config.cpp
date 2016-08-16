@@ -45,7 +45,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Renderer");
-    Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", false).toBool();
+    Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", true).toBool();
     Settings::values.use_shader_jit = qt_config->value("use_shader_jit", true).toBool();
     Settings::values.use_scaled_resolution = qt_config->value("use_scaled_resolution", false).toBool();
 
