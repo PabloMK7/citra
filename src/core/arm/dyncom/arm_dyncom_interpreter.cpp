@@ -2820,10 +2820,12 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
                 operand2 = (BIT(RS, 15)) ? (BITS(RS, 0, 15) | 0xffff0000) : BITS(RS, 0, 15);
             else
                 operand2 = (BIT(RS, 31)) ? (BITS(RS, 16, 31) | 0xffff0000) : BITS(RS, 16, 31);
-            RD = operand1 * operand2 + RN;
 
-            if (AddOverflow(operand1 * operand2, RN, RD))
+            u32 product = operand1 * operand2;
+            u32 result = product + RN;
+            if (AddOverflow(product, RN, result))
                 cpu->Cpsr |= (1 << 27);
+            RD = result;
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(smla_inst));
