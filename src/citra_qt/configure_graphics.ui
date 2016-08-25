@@ -43,6 +43,13 @@
              </property>
            </widget>
          </item>
+         <item>
+           <widget class="QCheckBox" name="toogle_vsync">
+             <property name="text">
+               <string>Enable V-Sync</string>
+             </property>
+           </widget>
+         </item>
        </layout>
       </widget>
      </item>

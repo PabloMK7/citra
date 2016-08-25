@@ -72,6 +72,7 @@ struct Values {
     bool use_hw_renderer;
     bool use_shader_jit;
     bool use_scaled_resolution;
+    bool use_vsync;
 
     float bg_red;
     float bg_green;

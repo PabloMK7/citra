@@ -48,6 +48,7 @@ void Config::ReadValues() {
     Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", true).toBool();
     Settings::values.use_shader_jit = qt_config->value("use_shader_jit", true).toBool();
     Settings::values.use_scaled_resolution = qt_config->value("use_scaled_resolution", false).toBool();
+    Settings::values.use_vsync = qt_config->value("use_vsync", false).toBool();
 
     Settings::values.bg_red   = qt_config->value("bg_red",   1.0).toFloat();
     Settings::values.bg_green = qt_config->value("bg_green", 1.0).toFloat();
@@ -139,6 +140,7 @@ void Config::SaveValues() {
     qt_config->setValue("use_hw_renderer", Settings::values.use_hw_renderer);
     qt_config->setValue("use_shader_jit", Settings::values.use_shader_jit);
     qt_config->setValue("use_scaled_resolution", Settings::values.use_scaled_resolution);
+    qt_config->setValue("use_vsync", Settings::values.use_vsync);
 
     // Cast to double because Qt's written float values are not human-readable
     qt_config->setValue("bg_red",   (double)Settings::values.bg_red);
