@@ -34,11 +34,16 @@
        <string>Input</string>
       </attribute>
      </widget>
-      <widget class="ConfigureAudio" name="audioTab">
+      <widget class="ConfigureGraphics" name="graphicsTab">
         <attribute name="title">
-          <string>Audio</string>
+          <string>Graphics</string>
         </attribute>
       </widget>
+     <widget class="ConfigureAudio" name="audioTab">
+       <attribute name="title">
+         <string>Audio</string>
+       </attribute>
+     </widget>
      <widget class="ConfigureDebug" name="debugTab">
       <attribute name="title">
        <string>Debug</string>
@@ -80,12 +85,18 @@
    <header>configure_debug.h</header>
    <container>1</container>
   </customwidget>
-   <customwidget>
-     <class>ConfigureInput</class>
-     <extends>QWidget</extends>
-     <header>configure_input.h</header>
-     <container>1</container>
-   </customwidget>
+  <customwidget>
+   <class>ConfigureInput</class>
+   <extends>QWidget</extends>
+   <header>configure_input.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureGraphics</class>
+   <extends>QWidget</extends>
+   <header>configure_graphics.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
