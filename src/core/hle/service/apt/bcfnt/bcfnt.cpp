@@ -9,60 +9,97 @@ namespace Service {
 namespace APT {
 namespace BCFNT {
 
-void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAddr previous_address, VAddr new_address) {
+void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAddr new_address) {
     static const u32 SharedFontStartOffset = 0x80;
-    u8* data = shared_font->GetPointer(SharedFontStartOffset);
+    const u8* cfnt_ptr = shared_font->GetPointer(SharedFontStartOffset);
 
     CFNT cfnt;
-    memcpy(&cfnt, data, sizeof(cfnt));
+    memcpy(&cfnt, cfnt_ptr, sizeof(cfnt));
 
-    // Advance past the header
-    data = shared_font->GetPointer(SharedFontStartOffset + cfnt.header_size);
+    u32 assumed_cmap_offset = 0;
+    u32 assumed_cwdh_offset = 0;
+    u32 assumed_tglp_offset = 0;
+    u32 first_cmap_offset = 0;
+    u32 first_cwdh_offset = 0;
+    u32 first_tglp_offset = 0;
 
+    // First discover the location of sections so that the rebase offset can be auto-detected
+    u32 current_offset = SharedFontStartOffset + cfnt.header_size;
     for (unsigned block = 0; block < cfnt.num_blocks; ++block) {
+        const u8* data = shared_font->GetPointer(current_offset);
 
-        u32 section_size = 0;
-        if (memcmp(data, "FINF", 4) == 0) {
+        SectionHeader section_header;
+        memcpy(&section_header, data, sizeof(section_header));
+
+        if (first_cmap_offset == 0 && memcmp(section_header.magic, "CMAP", 4) == 0) {
+            first_cmap_offset = current_offset;
+        } else if (first_cwdh_offset == 0 && memcmp(section_header.magic, "CWDH", 4) == 0) {
+            first_cwdh_offset = current_offset;
+        } else if (first_tglp_offset == 0 && memcmp(section_header.magic, "TGLP", 4) == 0) {
+            first_tglp_offset = current_offset;
+        } else if (memcmp(section_header.magic, "FINF", 4) == 0) {
             BCFNT::FINF finf;
             memcpy(&finf, data, sizeof(finf));
-            section_size = finf.section_size;
+
+            assumed_cmap_offset = finf.cmap_offset - sizeof(SectionHeader);
+            assumed_cwdh_offset = finf.cwdh_offset - sizeof(SectionHeader);
+            assumed_tglp_offset = finf.tglp_offset - sizeof(SectionHeader);
+        }
+
+        current_offset += section_header.section_size;
+    }
+
+    u32 previous_base = assumed_cmap_offset - first_cmap_offset;
+    ASSERT(previous_base == assumed_cwdh_offset - first_cwdh_offset);
+    ASSERT(previous_base == assumed_tglp_offset - first_tglp_offset);
+
+    u32 offset = new_address - previous_base;
+
+    // Reset pointer back to start of sections and do the actual rebase
+    current_offset = SharedFontStartOffset + cfnt.header_size;
+    for (unsigned block = 0; block < cfnt.num_blocks; ++block) {
+        u8* data = shared_font->GetPointer(current_offset);
+
+        SectionHeader section_header;
+        memcpy(&section_header, data, sizeof(section_header));
+
+        if (memcmp(section_header.magic, "FINF", 4) == 0) {
+            BCFNT::FINF finf;
+            memcpy(&finf, data, sizeof(finf));
 
             // Relocate the offsets in the FINF section
-            finf.cmap_offset += new_address - previous_address;
-            finf.cwdh_offset += new_address - previous_address;
-            finf.tglp_offset += new_address - previous_address;
+            finf.cmap_offset += offset;
+            finf.cwdh_offset += offset;
+            finf.tglp_offset += offset;
 
             memcpy(data, &finf, sizeof(finf));
-        } else if (memcmp(data, "CMAP", 4) == 0) {
+        } else if (memcmp(section_header.magic, "CMAP", 4) == 0) {
             BCFNT::CMAP cmap;
             memcpy(&cmap, data, sizeof(cmap));
-            section_size = cmap.section_size;
 
             // Relocate the offsets in the CMAP section
-            cmap.next_cmap_offset += new_address - previous_address;
+            cmap.next_cmap_offset += offset;
 
             memcpy(data, &cmap, sizeof(cmap));
-        } else if (memcmp(data, "CWDH", 4) == 0) {
+        } else if (memcmp(section_header.magic, "CWDH", 4) == 0) {
             BCFNT::CWDH cwdh;
             memcpy(&cwdh, data, sizeof(cwdh));
-            section_size = cwdh.section_size;
 
             // Relocate the offsets in the CWDH section
-            cwdh.next_cwdh_offset += new_address - previous_address;
+            cwdh.next_cwdh_offset += offset;
 
             memcpy(data, &cwdh, sizeof(cwdh));
-        } else if (memcmp(data, "TGLP", 4) == 0) {
+        } else if (memcmp(section_header.magic, "TGLP", 4) == 0) {
             BCFNT::TGLP tglp;
             memcpy(&tglp, data, sizeof(tglp));
-            section_size = tglp.section_size;
 
             // Relocate the offsets in the TGLP section
-            tglp.sheet_data_offset += new_address - previous_address;
+            tglp.sheet_data_offset += offset;
 
             memcpy(data, &tglp, sizeof(tglp));
         }
 
-        data += section_size;
+        current_offset += section_header.section_size;
     }
 }
 
