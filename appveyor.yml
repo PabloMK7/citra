@@ -5,6 +5,10 @@ environment:
   BUILD_PASSWORD:
     secure: EXGNlWKJsCtbeImEJ5EP9qrxZ+EqUFfNy+CP61nDOMA=
 
+cache:
+  - C:\ProgramData\chocolatey\bin -> appveyor.yml
+  - C:\ProgramData\chocolatey\lib -> appveyor.yml
+
 os: Visual Studio 2015
 
 platform:
