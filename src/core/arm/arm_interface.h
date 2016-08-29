@@ -32,6 +32,9 @@ public:
         Run(1);
     }
 
+    /// Clear all instruction cache
+    virtual void ClearInstructionCache() = 0;
+
     /**
      * Set the Program Counter to an address
      * @param addr Address to set PC to

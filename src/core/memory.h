@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 #include "common/common_types.h"
 
@@ -129,6 +130,8 @@ void ZeroBlock(const VAddr dest_addr, const size_t size);
 void CopyBlock(VAddr dest_addr, VAddr src_addr, size_t size);
 
 u8* GetPointer(VAddr virtual_address);
+
+std::string ReadCString(VAddr virtual_address, std::size_t max_length);
 
 /**
 * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
