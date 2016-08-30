@@ -400,6 +400,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         default:
             LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %d\n", (int)input);
             UNIMPLEMENTED();
+            index = "0.0";
             break;
         }
 
