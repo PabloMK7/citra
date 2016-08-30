@@ -81,13 +81,8 @@ void GetSharedFont(Service::Interface* self) {
 
     // The shared font has to be relocated to the new address before being passed to the application.
     VAddr target_address = Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
-    // The shared font dumped by 3dsutils (https://github.com/citra-emu/3dsutils) uses this address as base,
-    // so we relocate it from there to our real address.
-    // TODO(Subv): This address is wrong if the shared font is dumped from a n3DS,
-    // we need a way to automatically calculate the original address of the font from the file.
-    static const VAddr SHARED_FONT_VADDR = 0x18000000;
     if (!shared_font_relocated) {
-        BCFNT::RelocateSharedFont(shared_font_mem, SHARED_FONT_VADDR, target_address);
+        BCFNT::RelocateSharedFont(shared_font_mem, target_address);
         shared_font_relocated = true;
     }
     cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
