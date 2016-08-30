@@ -16,6 +16,7 @@ enum class Result {
 };
 
 Result Init(EmuWindow* emu_window);
+bool IsPoweredOn();
 void Shutdown();
 
 }
