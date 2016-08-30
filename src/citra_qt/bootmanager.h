@@ -126,6 +126,8 @@ public:
 
     void OnClientAreaResized(unsigned width, unsigned height);
 
+    void InitRenderTarget();
+
 public slots:
     void moveContext();  // overridden
 
