@@ -81,6 +81,7 @@ struct Values {
 
     // Audio
     std::string sink_id;
+    bool enable_audio_stretching;
 
     // Debugging
     bool use_gdbstub;
