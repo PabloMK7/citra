@@ -71,6 +71,10 @@ void SelectSink(std::string sink_id) {
     DSP::HLE::SetSink(iter->factory());
 }
 
+void EnableStretching(bool enable) {
+    DSP::HLE::EnableStretching(enable);
+}
+
 void Shutdown() {
     CoreTiming::UnscheduleEvent(tick_event, 0);
     DSP::HLE::Shutdown();
