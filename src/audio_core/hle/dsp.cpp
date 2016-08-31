@@ -90,7 +90,8 @@ static AudioCore::TimeStretcher time_stretcher;
 
 static void OutputCurrentFrame(const StereoFrame16& frame) {
     time_stretcher.AddSamples(&frame[0][0], frame.size());
-    sink->EnqueueSamples(time_stretcher.Process(sink->SamplesInQueue()));
+    std::vector<s16> stretched_samples = time_stretcher.Process(sink->SamplesInQueue());
+    sink->EnqueueSamples(stretched_samples.data(), stretched_samples.size() / 2);
 }
 
 // Public Interface

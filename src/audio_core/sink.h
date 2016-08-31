@@ -23,9 +23,10 @@ public:
 
     /**
      * Feed stereo samples to sink.
-     * @param samples Samples in interleaved stereo PCM16 format. Size of vector must be multiple of two.
+     * @param samples Samples in interleaved stereo PCM16 format.
+     * @param sample_count Number of samples.
      */
-    virtual void EnqueueSamples(const std::vector<s16>& samples) = 0;
+    virtual void EnqueueSamples(const s16* samples, size_t sample_count) = 0;
 
     /// Samples enqueued that have not been played yet.
     virtual std::size_t SamplesInQueue() const = 0;
