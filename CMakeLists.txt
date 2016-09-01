@@ -76,7 +76,7 @@ else()
 
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING "" FORCE)
+    set(CMAKE_CONFIGURATION_TYPES Debug Release RelWithDebInfo CACHE STRING "" FORCE)
 
     # Tweak optimization settings
     # As far as I can tell, there's no way to override the CMake defaults while leaving user
@@ -85,24 +85,28 @@ else()
 
     # /W3 - Level 3 warnings
     # /MP - Multi-threaded compilation
-    # /Zi - Output debugging information
-    # /Zo - enahnced debug info for optimized builds
-    set(CMAKE_C_FLAGS   "/W3 /MP /Zi /Zo" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS "/W3 /MP" CACHE STRING "" FORCE)
     # /EHsc - C++-only exception handling semantics
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc" CACHE STRING "" FORCE)
 
     # /MDd - Multi-threaded Debug Runtime DLL
-    set(CMAKE_C_FLAGS_DEBUG   "/Od /MDd" CACHE STRING "" FORCE)
+    # /Zi - Output debugging information
+    set(CMAKE_C_FLAGS_DEBUG "/Od /MDd /Zi" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}" CACHE STRING "" FORCE)
 
     # /O2 - Optimization level 2
     # /GS- - No stack buffer overflow checks
     # /MD - Multi-threaded runtime DLL
-    set(CMAKE_C_FLAGS_RELEASE   "/O2 /GS- /MD" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "/O2 /GS- /MD" CACHE STRING "" FORCE)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" CACHE STRING "" FORCE)
 
+    # /Zo - enahnced debug info for optimized builds
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${CMAKE_C_FLAGS_RELEASE} /Zo /Zi" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}" CACHE STRING "" FORCE)
+
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "/DEBUG" CACHE STRING "" FORCE)
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/DEBUG /INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/INCREMENTAL:NO /OPT:REF,ICF" CACHE STRING "" FORCE)
+    set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "/DEBUG ${CMAKE_EXE_LINKER_FLAGS_RELEASE}" CACHE STRING "" FORCE)
 endif()
 
 add_definitions(-DSINGLETHREADED)
