@@ -42,10 +42,15 @@ on_success:
             $GITREV = $(git show -s --format='%h')
             # Where are these spaces coming from? Regardless, let's remove them
             $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
+            $BUILD_NAME_PDB = "citra-${GITDATE}-${GITREV}-windows-amd64-debugsymbols.7z" -replace " ",""
             $BUILD_NAME_NOQT = "citra-noqt-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
 
             # Remove unnecessary files
             rm .\build\bin\release\*tests*
+
+            # Put the pdb files in a separate archive and remove them from the main download
+            7z a $BUILD_NAME_PDB .\build\bin\release\*.pdb
+            rm .\build\bin\release\*.pdb
 
             # Zip up the build folder and documentation
             7z a $BUILD_NAME .\build\bin\release\* .\license.txt .\README.md
@@ -61,5 +66,6 @@ on_success:
                 "open sftp://citra-builds:${env:BUILD_PASSWORD}@builds.citra-emu.org -hostkey=*" `
                 "put $BUILD_NAME /citra/nightly/windows-amd64/" `
                 "put $BUILD_NAME_NOQT /citra/nightly/windows-noqt-amd64/" `
+                "put $BUILD_NAME_PDB /citra/nightly/windows-amd64-debugsymbols/" `
                 "exit"
           }
