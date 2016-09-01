@@ -43,6 +43,10 @@ on_success:
             # Where are these spaces coming from? Regardless, let's remove them
             $BUILD_NAME = "citra-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
             $BUILD_NAME_NOQT = "citra-noqt-${GITDATE}-${GITREV}-windows-amd64.7z" -replace " ",""
+
+            # Remove unnecessary files
+            rm .\build\bin\release\*tests*
+
             # Zip up the build folder and documentation
             7z a $BUILD_NAME .\build\bin\release\* .\license.txt .\README.md
             # Do a second archive with only the binaries (excludes dlls) and documentation
