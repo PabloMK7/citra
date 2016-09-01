@@ -544,5 +544,13 @@ bool Tick();
  */
 void SetSink(std::unique_ptr<AudioCore::Sink> sink);
 
+/**
+ * Enables/Disables audio-stretching.
+ * Audio stretching is an enhancement that stretches audio to match emulation
+ * speed to prevent stuttering at the cost of some audio latency.
+ * @param enable true to enable, false to disable.
+ */
+void EnableStretching(bool enable);
+
 } // namespace HLE
 } // namespace DSP

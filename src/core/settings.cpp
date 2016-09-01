@@ -24,6 +24,7 @@ void Apply() {
     VideoCore::g_scaled_resolution_enabled = values.use_scaled_resolution;
 
     AudioCore::SelectSink(values.sink_id);
+    AudioCore::EnableStretching(values.enable_audio_stretching);
 
 }
 

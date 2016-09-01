@@ -36,9 +36,12 @@ void ConfigureAudio::setConfiguration() {
         }
     }
     ui->output_sink_combo_box->setCurrentIndex(new_sink_index);
+
+    ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
 }
 
 void ConfigureAudio::applyConfiguration() {
     Settings::values.sink_id = ui->output_sink_combo_box->itemText(ui->output_sink_combo_box->currentIndex()).toStdString();
+    Settings::values.enable_audio_stretching = ui->toggle_audio_stretching->isChecked();
     Settings::Apply();
 }

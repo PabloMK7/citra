@@ -85,12 +85,45 @@ static StereoFrame16 GenerateCurrentFrame() {
 
 // Audio output
 
+static bool perform_time_stretching = true;
 static std::unique_ptr<AudioCore::Sink> sink;
 static AudioCore::TimeStretcher time_stretcher;
 
+static void FlushResidualStretcherAudio() {
+    time_stretcher.Flush();
+    while (true) {
+        std::vector<s16> residual_audio = time_stretcher.Process(sink->SamplesInQueue());
+        if (residual_audio.empty())
+            break;
+        sink->EnqueueSamples(residual_audio.data(), residual_audio.size() / 2);
+    }
+}
+
 static void OutputCurrentFrame(const StereoFrame16& frame) {
-    time_stretcher.AddSamples(&frame[0][0], frame.size());
-    sink->EnqueueSamples(time_stretcher.Process(sink->SamplesInQueue()));
+    if (perform_time_stretching) {
+        time_stretcher.AddSamples(&frame[0][0], frame.size());
+        std::vector<s16> stretched_samples = time_stretcher.Process(sink->SamplesInQueue());
+        sink->EnqueueSamples(stretched_samples.data(), stretched_samples.size() / 2);
+    } else {
+        constexpr size_t maximum_sample_latency = 1024; // about 32 miliseconds
+        if (sink->SamplesInQueue() > maximum_sample_latency) {
+            // This can occur if we're running too fast and samples are starting to back up.
+            // Just drop the samples.
+            return;
+        }
+
+        sink->EnqueueSamples(&frame[0][0], frame.size());
+    }
+}
+
+void EnableStretching(bool enable) {
+    if (perform_time_stretching == enable)
+        return;
+
+    if (!enable) {
+        FlushResidualStretcherAudio();
+    }
+    perform_time_stretching = enable;
 }
 
 // Public Interface
@@ -111,12 +144,8 @@ void Init() {
 }
 
 void Shutdown() {
-    time_stretcher.Flush();
-    while (true) {
-        std::vector<s16> residual_audio = time_stretcher.Process(sink->SamplesInQueue());
-        if (residual_audio.empty())
-            break;
-        sink->EnqueueSamples(residual_audio);
+    if (perform_time_stretching) {
+        FlushResidualStretcherAudio();
     }
 }
 

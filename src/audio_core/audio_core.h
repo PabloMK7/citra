@@ -23,6 +23,9 @@ void AddAddressSpace(Kernel::VMManager& vm_manager);
 /// Select the sink to use based on sink id.
 void SelectSink(std::string sink_id);
 
+/// Enable/Disable stretching.
+void EnableStretching(bool enable);
+
 /// Shutdown Audio Core
 void Shutdown();
 
