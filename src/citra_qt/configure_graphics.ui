@@ -23,28 +23,28 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-           <widget class="QCheckBox" name="toogle_hw_renderer">
+           <widget class="QCheckBox" name="toggle_hw_renderer">
              <property name="text">
                <string>Enable hardware renderer</string>
              </property>
            </widget>
          </item>
          <item>
-           <widget class="QCheckBox" name="toogle_shader_jit">
+           <widget class="QCheckBox" name="toggle_shader_jit">
              <property name="text">
                <string>Enable shader JIT</string>
              </property>
            </widget>
          </item>
          <item>
-           <widget class="QCheckBox" name="toogle_scaled_resolution">
+           <widget class="QCheckBox" name="toggle_scaled_resolution">
              <property name="text">
                <string>Enable scaled resolution</string>
              </property>
            </widget>
          </item>
          <item>
-           <widget class="QCheckBox" name="toogle_vsync">
+           <widget class="QCheckBox" name="toggle_vsync">
              <property name="text">
                <string>Enable V-Sync</string>
              </property>
@@ -73,7 +73,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>toogle_gdbstub</sender>
+   <sender>toggle_gdbstub</sender>
    <signal>toggled(bool)</signal>
    <receiver>gdbport_spinbox</receiver>
    <slot>setEnabled(bool)</slot>

@@ -15,23 +15,23 @@ ConfigureGraphics::ConfigureGraphics(QWidget *parent) :
     ui->setupUi(this);
     this->setConfiguration();
 
-    ui->toogle_vsync->setEnabled(!System::IsPoweredOn());
+    ui->toggle_vsync->setEnabled(!System::IsPoweredOn());
 }
 
 ConfigureGraphics::~ConfigureGraphics() {
 }
 
 void ConfigureGraphics::setConfiguration() {
-    ui->toogle_hw_renderer->setChecked(Settings::values.use_hw_renderer);
-    ui->toogle_shader_jit->setChecked(Settings::values.use_shader_jit);
-    ui->toogle_scaled_resolution->setChecked(Settings::values.use_scaled_resolution);
-    ui->toogle_vsync->setChecked(Settings::values.use_vsync);
+    ui->toggle_hw_renderer->setChecked(Settings::values.use_hw_renderer);
+    ui->toggle_shader_jit->setChecked(Settings::values.use_shader_jit);
+    ui->toggle_scaled_resolution->setChecked(Settings::values.use_scaled_resolution);
+    ui->toggle_vsync->setChecked(Settings::values.use_vsync);
 }
 
 void ConfigureGraphics::applyConfiguration() {
-    Settings::values.use_hw_renderer = ui->toogle_hw_renderer->isChecked();
-    Settings::values.use_shader_jit = ui->toogle_shader_jit->isChecked();
-    Settings::values.use_scaled_resolution = ui->toogle_scaled_resolution->isChecked();
-    Settings::values.use_vsync = ui->toogle_vsync->isChecked();
+    Settings::values.use_hw_renderer = ui->toggle_hw_renderer->isChecked();
+    Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
+    Settings::values.use_scaled_resolution = ui->toggle_scaled_resolution->isChecked();
+    Settings::values.use_vsync = ui->toggle_vsync->isChecked();
     Settings::Apply();
 }

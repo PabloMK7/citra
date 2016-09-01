@@ -25,7 +25,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QCheckBox" name="toogle_gdbstub">
+           <widget class="QCheckBox" name="toggle_gdbstub">
             <property name="text">
              <string>Enable GDB Stub</string>
             </property>
@@ -83,7 +83,7 @@
  <resources/>
  <connections>
   <connection>
-   <sender>toogle_gdbstub</sender>
+   <sender>toggle_gdbstub</sender>
    <signal>toggled(bool)</signal>
    <receiver>gdbport_spinbox</receiver>
    <slot>setEnabled(bool)</slot>

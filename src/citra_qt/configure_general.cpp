@@ -20,14 +20,14 @@ ConfigureGeneral::~ConfigureGeneral() {
 }
 
 void ConfigureGeneral::setConfiguration() {
-    ui->toogle_deepscan->setChecked(UISettings::values.gamedir_deepscan);
-    ui->toogle_check_exit->setChecked(UISettings::values.confirm_before_closing);
+    ui->toggle_deepscan->setChecked(UISettings::values.gamedir_deepscan);
+    ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing);
     ui->region_combobox->setCurrentIndex(Settings::values.region_value);
 }
 
 void ConfigureGeneral::applyConfiguration() {
-    UISettings::values.gamedir_deepscan = ui->toogle_deepscan->isChecked();
-    UISettings::values.confirm_before_closing = ui->toogle_check_exit->isChecked();
+    UISettings::values.gamedir_deepscan = ui->toggle_deepscan->isChecked();
+    UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
     Settings::values.region_value = ui->region_combobox->currentIndex();
     Settings::Apply();
 }

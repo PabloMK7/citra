@@ -25,14 +25,14 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QCheckBox" name="toogle_deepscan">
+           <widget class="QCheckBox" name="toggle_deepscan">
             <property name="text">
              <string>Recursive scan for game folder</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="toogle_check_exit">
+           <widget class="QCheckBox" name="toggle_check_exit">
             <property name="text">
              <string>Confirm exit while emulation is running</string>
             </property>
