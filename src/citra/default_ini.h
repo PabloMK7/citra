@@ -55,6 +55,10 @@ use_shader_jit =
 # 0 (default): Native, 1: Scaled
 use_scaled_resolution =
 
+# Whether to enable V-Sync (caps the framerate at 60FPS) or not.
+# 0 (default): Off, 1: On
+use_vsync =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 1.0 for all.
 bg_red =

@@ -107,36 +107,13 @@ private:
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread) :
-    QWidget(parent), keyboard_id(0), emu_thread(emu_thread) {
+    QWidget(parent), keyboard_id(0), emu_thread(emu_thread), child(nullptr) {
 
     std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
     keyboard_id = KeyMap::NewDeviceId();
     ReloadSetKeymaps();
-
-    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
-    QGLFormat fmt;
-    fmt.setVersion(3,3);
-    fmt.setProfile(QGLFormat::CoreProfile);
-    // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
-    fmt.setOption(QGL::NoDeprecatedFunctions);
-
-    child = new GGLWidgetInternal(fmt, this);
-    QBoxLayout* layout = new QHBoxLayout(this);
-
-    resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
-    layout->addWidget(child);
-    layout->setMargin(0);
-    setLayout(layout);
-
-    OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
-
-    OnFramebufferSizeChanged();
-    NotifyClientAreaSizeChanged(std::pair<unsigned,unsigned>(child->width(), child->height()));
-
-    BackupGeometry();
-
 }
 
 void GRenderWindow::moveContext()
@@ -279,6 +256,40 @@ void GRenderWindow::ReloadSetKeymaps()
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height)
 {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));
+}
+
+void GRenderWindow::InitRenderTarget() {
+    if (child) {
+        delete child;
+    }
+
+    if (layout()) {
+        delete layout();
+    }
+
+    // TODO: One of these flags might be interesting: WA_OpaquePaintEvent, WA_NoBackground, WA_DontShowOnScreen, WA_DeleteOnClose
+    QGLFormat fmt;
+    fmt.setVersion(3, 3);
+    fmt.setProfile(QGLFormat::CoreProfile);
+    fmt.setSwapInterval(Settings::values.use_vsync);
+
+    // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
+    fmt.setOption(QGL::NoDeprecatedFunctions);
+
+    child = new GGLWidgetInternal(fmt, this);
+    QBoxLayout* layout = new QHBoxLayout(this);
+
+    resize(VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
+    layout->addWidget(child);
+    layout->setMargin(0);
+    setLayout(layout);
+
+    OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
+
+    OnFramebufferSizeChanged();
+    NotifyClientAreaSizeChanged(std::pair<unsigned, unsigned>(child->width(), child->height()));
+
+    BackupGeometry();
 }
 
 void GRenderWindow::OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {

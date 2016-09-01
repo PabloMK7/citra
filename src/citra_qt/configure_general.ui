@@ -25,14 +25,14 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QCheckBox" name="toogle_deepscan">
+           <widget class="QCheckBox" name="toggle_deepscan">
             <property name="text">
              <string>Recursive scan for game folder</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="toogle_check_exit">
+           <widget class="QCheckBox" name="toggle_check_exit">
             <property name="text">
              <string>Confirm exit while emulation is running</string>
             </property>
@@ -100,40 +100,6 @@
              </widget>
             </item>
            </layout>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="title">
-        <string>Performance</string>
-       </property>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QCheckBox" name="toogle_hw_renderer">
-            <property name="text">
-             <string>Enable hardware renderer</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="toogle_shader_jit">
-            <property name="text">
-             <string>Enable shader JIT</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="toogle_scaled_resolution">
-            <property name="text">
-             <string>Enable scaled resolution</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>

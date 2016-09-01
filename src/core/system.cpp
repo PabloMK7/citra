@@ -17,6 +17,8 @@
 
 namespace System {
 
+static bool is_powered_on{ false };
+
 Result Init(EmuWindow* emu_window) {
     Core::Init();
     CoreTiming::Init();
@@ -30,7 +32,13 @@ Result Init(EmuWindow* emu_window) {
     AudioCore::Init();
     GDBStub::Init();
 
+    is_powered_on = true;
+
     return Result::Success;
+}
+
+bool IsPoweredOn() {
+    return is_powered_on;
 }
 
 void Shutdown() {
@@ -42,6 +50,8 @@ void Shutdown() {
     HW::Shutdown();
     CoreTiming::Shutdown();
     Core::Shutdown();
+
+    is_powered_on = false;
 }
 
 } // namespace

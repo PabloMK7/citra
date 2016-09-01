@@ -243,7 +243,9 @@ bool GMainWindow::InitializeSystem() {
     if (emu_thread != nullptr)
         ShutdownGame();
 
+    render_window->InitRenderTarget();
     render_window->MakeCurrent();
+
     if (!gladLoadGL()) {
         QMessageBox::critical(this, tr("Error while starting Citra!"),
                               tr("Failed to initialize the video core!\n\n"

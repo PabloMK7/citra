@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConfigureDebug</class>
- <widget class="QWidget" name="ConfigureDebug">
+ <class>ConfigureGraphics</class>
+ <widget class="QWidget" name="ConfigureGraphics">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -19,47 +19,37 @@
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
-        <string>GDB</string>
+        <string>Graphics</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QCheckBox" name="toggle_gdbstub">
-            <property name="text">
-             <string>Enable GDB Stub</string>
-            </property>
+         <item>
+           <widget class="QCheckBox" name="toggle_hw_renderer">
+             <property name="text">
+               <string>Enable hardware renderer</string>
+             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Port:</string>
-            </property>
+         </item>
+         <item>
+           <widget class="QCheckBox" name="toggle_shader_jit">
+             <property name="text">
+               <string>Enable shader JIT</string>
+             </property>
            </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="gdbport_spinbox">
-            <property name="maximum">
-             <number>65536</number>
-            </property>
+         </item>
+         <item>
+           <widget class="QCheckBox" name="toggle_scaled_resolution">
+             <property name="text">
+               <string>Enable scaled resolution</string>
+             </property>
            </widget>
-          </item>
-         </layout>
-        </item>
+         </item>
+         <item>
+           <widget class="QCheckBox" name="toggle_vsync">
+             <property name="text">
+               <string>Enable V-Sync</string>
+             </property>
+           </widget>
+         </item>
        </layout>
       </widget>
      </item>

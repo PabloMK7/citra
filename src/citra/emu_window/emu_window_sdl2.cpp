@@ -108,6 +108,7 @@ EmuWindow_SDL2::EmuWindow_SDL2() {
     OnResize();
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
     SDL_PumpEvents();
+    SDL_GL_SetSwapInterval(Settings::values.use_vsync);
 
     DoneCurrent();
 }
