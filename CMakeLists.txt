@@ -118,12 +118,11 @@ else()
 endif()
 
 find_package(Boost 1.57.0 QUIET)
-if (Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
-else()
+if (NOT Boost_FOUND)
     message(STATUS "Boost 1.57.0 or newer not found, falling back to externals")
-    include_directories(externals/boost)
+    set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
 endif()
+include_directories(${Boost_INCLUDE_DIR})
 
 # Include bundled CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
