@@ -7,6 +7,7 @@ matrix:
       dist: trusty
     - os: osx
       sudo: false
+      osx_image: xcode7.3
 
 env:
   global:
