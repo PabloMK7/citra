@@ -23,11 +23,12 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     set -o pipefail
 
+    export MACOSX_DEPLOYMENT_TARGET=10.9
     export Qt5_DIR=$(brew --prefix)/opt/qt5
 
     mkdir build && cd build
     cmake .. -GXcode
-    xcodebuild -configuration Release | xcpretty -c
+    xcodebuild -configuration Release
 
     ctest -VV -C Release
 fi
