@@ -8,6 +8,7 @@
 
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/system.h"
 
 static const std::array<int, 12> days_in_month = {{
     31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
@@ -17,6 +18,7 @@ ConfigureSystem::ConfigureSystem(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
+    this->setConfiguration();
 
     connect(ui->combo_birthmonth, SIGNAL(currentIndexChanged(int)), SLOT(updateBirthdayComboBox(int)));
 }
@@ -24,8 +26,8 @@ ConfigureSystem::ConfigureSystem(QWidget *parent) :
 ConfigureSystem::~ConfigureSystem() {
 }
 
-void ConfigureSystem::setConfiguration(bool emulation_running) {
-    enabled = !emulation_running;
+void ConfigureSystem::setConfiguration() {
+    enabled = !System::IsPoweredOn();
 
     if (!enabled) {
         ReadSystemSettings();
