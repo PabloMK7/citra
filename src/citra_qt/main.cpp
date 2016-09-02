@@ -510,7 +510,7 @@ void GMainWindow::ToggleWindowMode() {
 }
 
 void GMainWindow::OnConfigure() {
-    ConfigureDialog configureDialog(this, emulation_running);
+    ConfigureDialog configureDialog(this);
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted)
     {

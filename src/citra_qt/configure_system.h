@@ -20,7 +20,7 @@ public:
     ~ConfigureSystem();
 
     void applyConfiguration();
-    void setConfiguration(bool emulation_running);
+    void setConfiguration();
 
 public slots:
     void updateBirthdayComboBox(int birthmonth_index);
