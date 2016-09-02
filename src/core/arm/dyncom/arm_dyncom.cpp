@@ -111,8 +111,8 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     ctx.pc = state->Reg[15];
     ctx.cpsr = state->Cpsr;
 
-    ctx.fpscr = state->VFP[1];
-    ctx.fpexc = state->VFP[2];
+    ctx.fpscr = state->VFP[VFP_FPSCR];
+    ctx.fpexc = state->VFP[VFP_FPEXC];
 }
 
 void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
@@ -124,8 +124,8 @@ void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
     state->Reg[15] = ctx.pc;
     state->Cpsr = ctx.cpsr;
 
-    state->VFP[1] = ctx.fpscr;
-    state->VFP[2] = ctx.fpexc;
+    state->VFP[VFP_FPSCR] = ctx.fpscr;
+    state->VFP[VFP_FPEXC] = ctx.fpexc;
 }
 
 void ARM_DynCom::PrepareReschedule() {
