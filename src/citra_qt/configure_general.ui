@@ -43,6 +43,26 @@
        </layout>
       </widget>
      </item>
+      <item>
+        <widget class="QGroupBox" name="groupBox_2">
+          <property name="title">
+            <string>Performance</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                  <widget class="QCheckBox" name="toggle_cpu_jit">
+                    <property name="text">
+                      <string>Enable CPU JIT</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+          </layout>
+        </widget>
+      </item>
      <item>
       <widget class="QGroupBox" name="groupBox_4">
        <property name="title">
