@@ -226,6 +226,9 @@ set(INI_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/inih")
 include_directories(${INI_PREFIX})
 add_subdirectory(${INI_PREFIX})
 
+option(DYNARMIC_TESTS OFF)
+add_subdirectory(externals/dynarmic)
+
 add_subdirectory(externals/glad)
 include_directories(externals/microprofile)
 include_directories(externals/nihstro/include)
