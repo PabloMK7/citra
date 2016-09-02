@@ -38,7 +38,6 @@ public:
 
     void AddTicks(u64 ticks) override;
 
-    void ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) override;
     void SaveContext(Core::ThreadContext& ctx) override;
     void LoadContext(const Core::ThreadContext& ctx) override;
 

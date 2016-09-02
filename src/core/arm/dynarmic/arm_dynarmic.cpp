@@ -130,15 +130,6 @@ void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
     AddTicks(num_instructions);
 }
 
-void ARM_Dynarmic::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
-    memset(&context, 0, sizeof(Core::ThreadContext));
-
-    context.cpu_registers[0] = arg;
-    context.pc = entry_point;
-    context.sp = stack_top;
-    context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
-}
-
 void ARM_Dynarmic::SaveContext(Core::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, jit->Regs().data(), sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, jit->ExtRegs().data(), sizeof(ctx.fpu_registers));
