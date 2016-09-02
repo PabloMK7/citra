@@ -16,7 +16,7 @@ namespace Core {
 struct ThreadContext;
 }
 
-class ARM_DynCom final : virtual public ARM_Interface {
+class ARM_DynCom final : public ARM_Interface {
 public:
     ARM_DynCom(PrivilegeMode initial_mode);
     ~ARM_DynCom();
