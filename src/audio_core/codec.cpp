@@ -58,11 +58,11 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count, cons
         size_t outputi = framei * SAMPLES_PER_FRAME;
         size_t datai = framei * FRAME_LEN + 1;
         for (size_t i = 0; i < SAMPLES_PER_FRAME && outputi < sample_count; i += 2) {
-            const s16 sample1 = decode_sample(SIGNED_NIBBLES[data[datai] & 0xF]);
+            const s16 sample1 = decode_sample(SIGNED_NIBBLES[data[datai] >> 4]);
             ret[outputi].fill(sample1);
             outputi++;
 
-            const s16 sample2 = decode_sample(SIGNED_NIBBLES[data[datai] >> 4]);
+            const s16 sample2 = decode_sample(SIGNED_NIBBLES[data[datai] & 0xF]);
             ret[outputi].fill(sample2);
             outputi++;
 
