@@ -26,6 +26,10 @@ addons:
       - lib32stdc++6 # For CMake
       - lftp # To upload builds
 
+cache:
+  directories:
+    - $HOME/.local
+
 install: ./.travis-deps.sh
 script: ./.travis-build.sh
 after_success: ./.travis-upload.sh
