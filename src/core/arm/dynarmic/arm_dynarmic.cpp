@@ -87,14 +87,21 @@ void ARM_Dynarmic::SetVFPReg(int index, u32 value) {
 }
 
 u32 ARM_Dynarmic::GetVFPSystemReg(VFPSystemRegister reg) const {
-    // TODO(bunnei): ImplementMe
-    UNIMPLEMENTED();
-    return 0;
+    if (reg == VFP_FPSCR) {
+        return jit->Fpscr();
+    }
+
+    // Dynarmic does not implement and/or expose other VFP registers, fallback to interpreter state
+    return interpreter_state->VFP[reg];
 }
 
 void ARM_Dynarmic::SetVFPSystemReg(VFPSystemRegister reg, u32 value) {
-    // TODO(bunnei): ImplementMe
-    UNIMPLEMENTED();
+    if (reg == VFP_FPSCR) {
+        jit->SetFpscr(value);
+    }
+
+    // Dynarmic does not implement and/or expose other VFP registers, fallback to interpreter state
+    interpreter_state->VFP[reg] = value;
 }
 
 u32 ARM_Dynarmic::GetCPSR() const {
