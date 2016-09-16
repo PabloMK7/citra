@@ -116,32 +116,36 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                     : state.address_registers[instr.common.address_register_index - 1];
 
             const float24* src1_ = LookupSourceRegister(instr.common.GetSrc1(is_inverted) +
-                                                        (!is_inverted * address_offset));
+                                                        (is_inverted ? 0 : address_offset));
             const float24* src2_ = LookupSourceRegister(instr.common.GetSrc2(is_inverted) +
-                                                        (is_inverted * address_offset));
+                                                        (is_inverted ? address_offset : 0));
 
             const bool negate_src1 = ((bool)swizzle.negate_src1 != false);
             const bool negate_src2 = ((bool)swizzle.negate_src2 != false);
 
             float24 src1[4] = {
-                src1_[(int)swizzle.GetSelectorSrc1(0)], src1_[(int)swizzle.GetSelectorSrc1(1)],
-                src1_[(int)swizzle.GetSelectorSrc1(2)], src1_[(int)swizzle.GetSelectorSrc1(3)],
+                src1_[(int)swizzle.src1_selector_0.Value()],
+                src1_[(int)swizzle.src1_selector_1.Value()],
+                src1_[(int)swizzle.src1_selector_2.Value()],
+                src1_[(int)swizzle.src1_selector_3.Value()],
             };
             if (negate_src1) {
-                src1[0] = src1[0] * float24::FromFloat32(-1);
-                src1[1] = src1[1] * float24::FromFloat32(-1);
-                src1[2] = src1[2] * float24::FromFloat32(-1);
-                src1[3] = src1[3] * float24::FromFloat32(-1);
+                src1[0] = -src1[0];
+                src1[1] = -src1[1];
+                src1[2] = -src1[2];
+                src1[3] = -src1[3];
             }
             float24 src2[4] = {
-                src2_[(int)swizzle.GetSelectorSrc2(0)], src2_[(int)swizzle.GetSelectorSrc2(1)],
-                src2_[(int)swizzle.GetSelectorSrc2(2)], src2_[(int)swizzle.GetSelectorSrc2(3)],
+                src2_[(int)swizzle.src2_selector_0.Value()],
+                src2_[(int)swizzle.src2_selector_1.Value()],
+                src2_[(int)swizzle.src2_selector_2.Value()],
+                src2_[(int)swizzle.src2_selector_3.Value()],
             };
             if (negate_src2) {
-                src2[0] = src2[0] * float24::FromFloat32(-1);
-                src2[1] = src2[1] * float24::FromFloat32(-1);
-                src2[2] = src2[2] * float24::FromFloat32(-1);
-                src2[3] = src2[3] * float24::FromFloat32(-1);
+                src2[0] = -src2[0];
+                src2[1] = -src2[1];
+                src2[2] = -src2[2];
+                src2[3] = -src2[3];
             }
 
             float24* dest =
@@ -451,34 +455,40 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                 const bool negate_src3 = ((bool)swizzle.negate_src3 != false);
 
                 float24 src1[4] = {
-                    src1_[(int)swizzle.GetSelectorSrc1(0)], src1_[(int)swizzle.GetSelectorSrc1(1)],
-                    src1_[(int)swizzle.GetSelectorSrc1(2)], src1_[(int)swizzle.GetSelectorSrc1(3)],
+                    src1_[(int)swizzle.src1_selector_0.Value()],
+                    src1_[(int)swizzle.src1_selector_1.Value()],
+                    src1_[(int)swizzle.src1_selector_2.Value()],
+                    src1_[(int)swizzle.src1_selector_3.Value()],
                 };
                 if (negate_src1) {
-                    src1[0] = src1[0] * float24::FromFloat32(-1);
-                    src1[1] = src1[1] * float24::FromFloat32(-1);
-                    src1[2] = src1[2] * float24::FromFloat32(-1);
-                    src1[3] = src1[3] * float24::FromFloat32(-1);
+                    src1[0] = -src1[0];
+                    src1[1] = -src1[1];
+                    src1[2] = -src1[2];
+                    src1[3] = -src1[3];
                 }
                 float24 src2[4] = {
-                    src2_[(int)swizzle.GetSelectorSrc2(0)], src2_[(int)swizzle.GetSelectorSrc2(1)],
-                    src2_[(int)swizzle.GetSelectorSrc2(2)], src2_[(int)swizzle.GetSelectorSrc2(3)],
+                    src2_[(int)swizzle.src2_selector_0.Value()],
+                    src2_[(int)swizzle.src2_selector_1.Value()],
+                    src2_[(int)swizzle.src2_selector_2.Value()],
+                    src2_[(int)swizzle.src2_selector_3.Value()],
                 };
                 if (negate_src2) {
-                    src2[0] = src2[0] * float24::FromFloat32(-1);
-                    src2[1] = src2[1] * float24::FromFloat32(-1);
-                    src2[2] = src2[2] * float24::FromFloat32(-1);
-                    src2[3] = src2[3] * float24::FromFloat32(-1);
+                    src2[0] = -src2[0];
+                    src2[1] = -src2[1];
+                    src2[2] = -src2[2];
+                    src2[3] = -src2[3];
                 }
                 float24 src3[4] = {
-                    src3_[(int)swizzle.GetSelectorSrc3(0)], src3_[(int)swizzle.GetSelectorSrc3(1)],
-                    src3_[(int)swizzle.GetSelectorSrc3(2)], src3_[(int)swizzle.GetSelectorSrc3(3)],
+                    src3_[(int)swizzle.src3_selector_0.Value()],
+                    src3_[(int)swizzle.src3_selector_1.Value()],
+                    src3_[(int)swizzle.src3_selector_2.Value()],
+                    src3_[(int)swizzle.src3_selector_3.Value()],
                 };
                 if (negate_src3) {
-                    src3[0] = src3[0] * float24::FromFloat32(-1);
-                    src3[1] = src3[1] * float24::FromFloat32(-1);
-                    src3[2] = src3[2] * float24::FromFloat32(-1);
-                    src3[3] = src3[3] * float24::FromFloat32(-1);
+                    src3[0] = -src3[0];
+                    src3[1] = -src3[1];
+                    src3[2] = -src3[2];
+                    src3[3] = -src3[3];
                 }
 
                 float24* dest =
