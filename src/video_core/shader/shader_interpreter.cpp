@@ -77,7 +77,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
         const Instruction instr = { program_code[program_counter] };
         const SwizzlePattern swizzle = { swizzle_data[instr.common.operand_desc_id] };
 
-        static auto call = [&program_counter, &call_stack](UnitState<Debug>& state, u32 offset, u32 num_instructions,
+        auto call = [&program_counter, &call_stack](UnitState<Debug>& state, u32 offset, u32 num_instructions,
                               u32 return_offset, u8 repeat_count, u8 loop_increment) {
             program_counter = offset - 1; // -1 to make sure when incrementing the PC we end up at the correct offset
             ASSERT(call_stack.size() < call_stack.capacity());
