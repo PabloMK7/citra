@@ -122,15 +122,6 @@ public:
     virtual void AddTicks(u64 ticks) = 0;
 
     /**
-     * Initializes a CPU context for use on this CPU
-     * @param context Thread context to reset
-     * @param stack_top Pointer to the top of the stack
-     * @param entry_point Entry point for execution
-     * @param arg User argument for thread
-     */
-    virtual void ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) = 0;
-
-    /**
      * Saves the current CPU context
      * @param ctx Thread context to save
      */

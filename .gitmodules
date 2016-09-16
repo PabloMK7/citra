@@ -1,15 +1,18 @@
 [submodule "inih"]
-	path = externals/inih/inih
-	url = https://github.com/svn2github/inih
+    path = externals/inih/inih
+    url = https://github.com/svn2github/inih
 [submodule "boost"]
-	path = externals/boost
-	url = https://github.com/citra-emu/ext-boost.git
+    path = externals/boost
+    url = https://github.com/citra-emu/ext-boost.git
 [submodule "nihstro"]
-	path = externals/nihstro
-	url = https://github.com/neobrain/nihstro.git
+    path = externals/nihstro
+    url = https://github.com/neobrain/nihstro.git
 [submodule "soundtouch"]
-	path = externals/soundtouch
-	url = https://github.com/citra-emu/ext-soundtouch.git
+    path = externals/soundtouch
+    url = https://github.com/citra-emu/ext-soundtouch.git
 [submodule "catch"]
-	path = externals/catch
-	url = https://github.com/philsquared/Catch.git
+    path = externals/catch
+    url = https://github.com/philsquared/Catch.git
+[submodule "dynarmic"]
+    path = externals/dynarmic
+    url = https://github.com/MerryMage/dynarmic.git

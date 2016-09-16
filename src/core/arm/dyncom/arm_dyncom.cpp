@@ -93,15 +93,6 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     AddTicks(ticks_executed);
 }
 
-void ARM_DynCom::ResetContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
-    memset(&context, 0, sizeof(Core::ThreadContext));
-
-    context.cpu_registers[0] = arg;
-    context.pc = entry_point;
-    context.sp = stack_top;
-    context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
-}
-
 void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg.data(), sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg.data(), sizeof(ctx.fpu_registers));
@@ -111,8 +102,8 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     ctx.pc = state->Reg[15];
     ctx.cpsr = state->Cpsr;
 
-    ctx.fpscr = state->VFP[1];
-    ctx.fpexc = state->VFP[2];
+    ctx.fpscr = state->VFP[VFP_FPSCR];
+    ctx.fpexc = state->VFP[VFP_FPEXC];
 }
 
 void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
@@ -124,8 +115,8 @@ void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
     state->Reg[15] = ctx.pc;
     state->Cpsr = ctx.cpsr;
 
-    state->VFP[1] = ctx.fpscr;
-    state->VFP[2] = ctx.fpexc;
+    state->VFP[VFP_FPSCR] = ctx.fpscr;
+    state->VFP[VFP_FPEXC] = ctx.fpexc;
 }
 
 void ARM_DynCom::PrepareReschedule() {

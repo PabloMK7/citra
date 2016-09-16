@@ -441,6 +441,22 @@ std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& t
     return std::make_tuple(0, 0, true);
 }
 
+/**
+ * Resets a thread context, making it ready to be scheduled and run by the CPU
+ * @param context Thread context to reset
+ * @param stack_top Address of the top of the stack
+ * @param entry_point Address of entry point for execution
+ * @param arg User argument for thread
+ */
+static void ResetThreadContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
+    memset(&context, 0, sizeof(Core::ThreadContext));
+
+    context.cpu_registers[0] = arg;
+    context.pc = entry_point;
+    context.sp = stack_top;
+    context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
+}
+
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, s32 priority,
         u32 arg, s32 processor_id, VAddr stack_top) {
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
@@ -525,7 +541,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
-    Core::g_app_core->ResetContext(thread->context, stack_top, entry_point, arg);
+    ResetThreadContext(thread->context, stack_top, entry_point, arg);
 
     ready_queue.push_back(thread->current_priority, thread.get());
     thread->status = THREADSTATUS_READY;

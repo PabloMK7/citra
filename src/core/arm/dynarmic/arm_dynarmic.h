@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -6,22 +6,20 @@
 
 #include <memory>
 
+#include <dynarmic/dynarmic.h>
+
 #include "common/common_types.h"
 
 #include "core/arm/arm_interface.h"
-#include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armstate.h"
 
 namespace Core {
 struct ThreadContext;
 }
 
-class ARM_DynCom final : public ARM_Interface {
+class ARM_Dynarmic final : public ARM_Interface {
 public:
-    ARM_DynCom(PrivilegeMode initial_mode);
-    ~ARM_DynCom();
-
-    void ClearInstructionCache() override;
+    ARM_Dynarmic(PrivilegeMode initial_mode);
 
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
@@ -44,6 +42,9 @@ public:
     void PrepareReschedule() override;
     void ExecuteInstructions(int num_instructions) override;
 
+    void ClearInstructionCache() override;
+
 private:
-    std::unique_ptr<ARMul_State> state;
+    std::unique_ptr<Dynarmic::Jit> jit;
+    std::unique_ptr<ARMul_State> interpreter_state;
 };
