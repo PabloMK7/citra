@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Enforce citra's whitespace policy
 git config --local core.whitespace tab-in-indent,trailing-space
@@ -24,3 +24,20 @@ If you know what you are doing, you can try 'git commit --no-verify' to bypass t
 END
     exit 1
 fi
+
+for f in $(git diff --name-only --diff-filter=ACMRTUXB --cached); do
+    if ! echo "$f" | egrep -q "[.](cpp|h)$"; then
+        continue
+    fi
+    if ! echo "$f" | egrep -q "^src/"; then
+        continue
+    fi
+    d=$(diff -u "$f" <(clang-format "$f"))
+    if ! [ -z "$d" ]; then
+        echo "!!! $f not compliant to coding style, here is the fix:"
+        echo "$d"
+        fail=1
+    fi
+done
+
+exit "$fail"
