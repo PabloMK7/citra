@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 set -x
@@ -6,6 +6,25 @@ set -x
 if grep -nr '\s$' src *.yml *.txt *.md Doxyfile .gitignore .gitmodules .travis* dist/*.desktop \
                  dist/*.svg dist/*.xml; then
     echo Trailing whitespace found, aborting
+    exit 1
+fi
+
+for f in $(git diff --name-only --diff-filter=ACMRTUXB --cached); do
+    if ! echo "$f" | egrep -q "[.](cpp|h)$"; then
+        continue
+    fi
+    if ! echo "$f" | egrep -q "^src/"; then
+        continue
+    fi
+    d=$(diff -u "$f" <(clang-format "$f"))
+    if ! [ -z "$d" ]; then
+        echo "!!! $f not compliant to coding style, here is the fix:"
+        echo "$d"
+        fail=1
+    fi
+done
+
+if [ "$fail" = 1 ]; then
     exit 1
 fi
 
