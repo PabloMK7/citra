@@ -7,7 +7,7 @@ paths_to_check="src/ CMakeLists.txt"
 
 # If there are whitespace errors, print the offending file names and fail.
 if ! git diff --cached --check -- $paths_to_check ; then
-    cat<<END;
+    cat<<END
 
 Error: This commit would contain trailing spaces or tabs, which is against this repo's policy.
 Please correct those issues before commiting. (Use 'git diff --check' for more details)
@@ -18,7 +18,7 @@ fi
 
 # Check for tabs, since tab-in-indent catches only those at the beginning of a line
 if git diff --cached -- $paths_to_check | egrep '^\+.*	'; then
-    cat<<END;
+    cat<<END
 Error: This commit would contain a tab, which is against this repo's policy.
 If you know what you are doing, you can try 'git commit --no-verify' to bypass the check.
 END
