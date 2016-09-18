@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <cstddef>
-#include <thread>
 #include <condition_variable>
+#include <cstddef>
 #include <mutex>
+#include <thread>
 
 #include "common/common_types.h"
 
@@ -17,17 +17,17 @@
 // backwards compat support.
 // WARNING: This only works correctly with POD types.
 #if defined(__clang__)
-#   if !__has_feature(cxx_thread_local)
-#       define thread_local __thread
-#   endif
+#if !__has_feature(cxx_thread_local)
+#define thread_local __thread
+#endif
 #elif defined(__GNUC__)
-#   if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
-#       define thread_local __thread
-#   endif
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
+#define thread_local __thread
+#endif
 #elif defined(_MSC_VER)
-#   if _MSC_VER < 1900
-#       define thread_local __declspec(thread)
-#   endif
+#if _MSC_VER < 1900
+#define thread_local __declspec(thread)
+#endif
 #endif
 
 namespace Common {
@@ -39,7 +39,8 @@ void SetCurrentThreadAffinity(u32 mask);
 
 class Event {
 public:
-    Event() : is_set(false) {}
+    Event() : is_set(false) {
+    }
 
     void Set() {
         std::lock_guard<std::mutex> lk(mutex);
@@ -51,13 +52,14 @@ public:
 
     void Wait() {
         std::unique_lock<std::mutex> lk(mutex);
-        condvar.wait(lk, [&]{ return is_set; });
+        condvar.wait(lk, [&] { return is_set; });
         is_set = false;
     }
 
     void Reset() {
         std::unique_lock<std::mutex> lk(mutex);
-        // no other action required, since wait loops on the predicate and any lingering signal will get cleared on the first iteration
+        // no other action required, since wait loops on the predicate and any lingering signal will
+        // get cleared on the first iteration
         is_set = false;
     }
 
@@ -69,7 +71,8 @@ private:
 
 class Barrier {
 public:
-    explicit Barrier(size_t count_) : count(count_), waiting(0), generation(0) {}
+    explicit Barrier(size_t count_) : count(count_), waiting(0), generation(0) {
+    }
 
     /// Blocks until all "count" threads have called Sync()
     void Sync() {
@@ -81,7 +84,8 @@ public:
             waiting = 0;
             condvar.notify_all();
         } else {
-            condvar.wait(lk, [this, current_generation]{ return current_generation != generation; });
+            condvar.wait(lk,
+                         [this, current_generation] { return current_generation != generation; });
         }
     }
 
@@ -94,7 +98,7 @@ private:
 };
 
 void SleepCurrentThread(int ms);
-void SwitchCurrentThread();    // On Linux, this is equal to sleep 1ms
+void SwitchCurrentThread(); // On Linux, this is equal to sleep 1ms
 
 // Use this function during a spin-wait to make the current thread
 // relax while another thread is working. This may be more efficient
@@ -103,6 +107,6 @@ inline void YieldCPU() {
     std::this_thread::yield();
 }
 
-void SetCurrentThreadName(const char *name);
+void SetCurrentThreadName(const char* name);
 
 } // namespace Common

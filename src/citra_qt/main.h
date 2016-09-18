@@ -5,8 +5,8 @@
 #ifndef _CITRA_QT_MAIN_HXX_
 #define _CITRA_QT_MAIN_HXX_
 
-#include <memory>
 #include <QMainWindow>
+#include <memory>
 
 #include "ui_main.h"
 
@@ -23,11 +23,11 @@ class CallstackWidget;
 class GPUCommandStreamWidget;
 class GPUCommandListWidget;
 
-class GMainWindow : public QMainWindow
-{
+class GMainWindow : public QMainWindow {
     Q_OBJECT
 
-    static const int max_recent_files_item = 10; ///< Max number of recently loaded items to keep track
+    static const int max_recent_files_item =
+        10; ///< Max number of recently loaded items to keep track
 
     // TODO: Make use of this!
     enum {

@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/dlp/dlp_srvr.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/result.h"
-#include "core/hle/service/dlp/dlp_srvr.h"
 
 namespace Service {
 namespace DLP {
@@ -20,10 +20,10 @@ static void unk_0x000E0040(Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010183, nullptr,           "Initialize"},
-    {0x00020000, nullptr,           "Finalize"},
-    {0x000800C0, nullptr,           "SendWirelessRebootPassphrase"},
-    {0x000E0040, unk_0x000E0040,    "unk_0x000E0040"},
+    {0x00010183, nullptr, "Initialize"},
+    {0x00020000, nullptr, "Finalize"},
+    {0x000800C0, nullptr, "SendWirelessRebootPassphrase"},
+    {0x000E0040, unk_0x000E0040, "unk_0x000E0040"},
 };
 
 DLP_SRVR_Interface::DLP_SRVR_Interface() {

@@ -56,7 +56,7 @@ struct SMDH {
         Italian = 4,
         Spanish = 5,
         SimplifiedChinese = 6,
-        Korean= 7,
+        Korean = 7,
         Dutch = 8,
         Portuguese = 9,
         Russian = 10,

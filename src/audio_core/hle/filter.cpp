@@ -59,7 +59,8 @@ void SourceFilters::SimpleFilter::Reset() {
     b0 = 1 << 15;
 }
 
-void SourceFilters::SimpleFilter::Configure(SourceConfiguration::Configuration::SimpleFilter config) {
+void SourceFilters::SimpleFilter::Configure(
+    SourceConfiguration::Configuration::SimpleFilter config) {
     a1 = config.a1;
     b0 = config.b0;
 }
@@ -88,7 +89,8 @@ void SourceFilters::BiquadFilter::Reset() {
     b0 = 1 << 14;
 }
 
-void SourceFilters::BiquadFilter::Configure(SourceConfiguration::Configuration::BiquadFilter config) {
+void SourceFilters::BiquadFilter::Configure(
+    SourceConfiguration::Configuration::BiquadFilter config) {
     a1 = config.a1;
     a2 = config.a2;
     b0 = config.b0;

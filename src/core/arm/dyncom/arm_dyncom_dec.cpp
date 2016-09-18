@@ -430,12 +430,15 @@ ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
             continue;
 
         while (n) {
-            if (arm_instruction[i].content[base + 1] == 31 && arm_instruction[i].content[base] == 0) {
+            if (arm_instruction[i].content[base + 1] == 31 &&
+                arm_instruction[i].content[base] == 0) {
                 // clrex
                 if (instr != arm_instruction[i].content[base + 2]) {
                     break;
                 }
-            } else if (BITS(instr, arm_instruction[i].content[base], arm_instruction[i].content[base + 1]) != arm_instruction[i].content[base + 2]) {
+            } else if (BITS(instr, arm_instruction[i].content[base],
+                            arm_instruction[i].content[base + 1]) !=
+                       arm_instruction[i].content[base + 2]) {
                 break;
             }
             base += 3;
@@ -451,7 +454,9 @@ ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
             if (n != 0) {
                 base = 0;
                 while (n) {
-                    if (BITS(instr, arm_exclusion_code[i].content[base], arm_exclusion_code[i].content[base + 1]) != arm_exclusion_code[i].content[base + 2]) {
+                    if (BITS(instr, arm_exclusion_code[i].content[base],
+                             arm_exclusion_code[i].content[base + 1]) !=
+                        arm_exclusion_code[i].content[base + 2]) {
                         break;
                     }
                     base += 3;

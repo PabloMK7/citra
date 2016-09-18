@@ -6,9 +6,9 @@
 #include <memory>
 
 #include "video_core/renderer_base.h"
-#include "video_core/video_core.h"
-#include "video_core/swrasterizer.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
+#include "video_core/swrasterizer.h"
+#include "video_core/video_core.h"
 
 void RendererBase::RefreshRasterizerSetting() {
     bool hw_renderer_enabled = VideoCore::g_hw_renderer_enabled;

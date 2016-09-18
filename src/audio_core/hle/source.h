@@ -40,13 +40,17 @@ public:
     /**
      * This is called once every audio frame. This performs per-source processing every frame.
      * @param config The new configuration we've got for this Source from the application.
-     * @param adpcm_coeffs ADPCM coefficients to use if config tells us to use them (may contain invalid values otherwise).
-     * @return The current status of this Source. This is given back to the emulated application via SharedMemory.
+     * @param adpcm_coeffs ADPCM coefficients to use if config tells us to use them (may contain
+     * invalid values otherwise).
+     * @return The current status of this Source. This is given back to the emulated application via
+     * SharedMemory.
      */
-    SourceStatus::Status Tick(SourceConfiguration::Configuration& config, const s16_le (&adpcm_coeffs)[16]);
+    SourceStatus::Status Tick(SourceConfiguration::Configuration& config,
+                              const s16_le (&adpcm_coeffs)[16]);
 
     /**
-     * Mix this source's output into dest, using the gains for the `intermediate_mix_id`-th intermediate mixer.
+     * Mix this source's output into dest, using the gains for the `intermediate_mix_id`-th
+     * intermediate mixer.
      * @param dest The QuadFrame32 to mix into.
      * @param intermediate_mix_id The id of the intermediate mix whose gains we are using.
      */
@@ -77,7 +81,7 @@ private:
     };
 
     struct BufferOrder {
-        bool operator() (const Buffer& a, const Buffer& b) const {
+        bool operator()(const Buffer& a, const Buffer& b) const {
             // Lower buffer_id comes first.
             return a.buffer_id > b.buffer_id;
         }
@@ -134,7 +138,8 @@ private:
     void ParseConfig(SourceConfiguration::Configuration& config, const s16_le (&adpcm_coeffs)[16]);
     /// INTERNAL: Generate the current audio output for this frame based on our internal state.
     void GenerateFrame();
-    /// INTERNAL: Dequeues a buffer and does preprocessing on it (decoding, resampling). Puts it into current_buffer.
+    /// INTERNAL: Dequeues a buffer and does preprocessing on it (decoding, resampling). Puts it
+    /// into current_buffer.
     bool DequeueBuffer();
     /// INTERNAL: Generates a SourceStatus::Status based on our internal state.
     SourceStatus::Status GetCurrentStatus();

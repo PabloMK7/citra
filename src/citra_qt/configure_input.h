@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QWidget>
 #include <QKeyEvent>
+#include <QWidget>
 
 #include "citra_qt/config.h"
 #include "core/settings.h"
@@ -16,7 +16,7 @@ class QString;
 class QTimer;
 
 namespace Ui {
-    class ConfigureInput;
+class ConfigureInput;
 }
 
 class ConfigureInput : public QWidget {
@@ -39,7 +39,8 @@ private:
     /// Load configuration settings into button text
     void setConfiguration();
 
-    /// Check all inputs for duplicate keys. Clears out any other button with the same value as this button's new value.
+    /// Check all inputs for duplicate keys. Clears out any other button with the same value as this
+    /// button's new value.
     void removeDuplicates(const QString& newValue);
 
     /// Handle key press event for input tab when a button is 'waiting'.

@@ -28,7 +28,7 @@
 // Platform detection
 
 #if defined(ARCHITECTURE_x86_64) || defined(__aarch64__)
-    #define EMU_ARCH_BITS 64
+#define EMU_ARCH_BITS 64
 #elif defined(__i386) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM)
-    #define EMU_ARCH_BITS 32
+#define EMU_ARCH_BITS 32
 #endif

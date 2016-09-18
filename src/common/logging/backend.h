@@ -44,10 +44,8 @@ const char* GetLogClassName(Class log_class);
 const char* GetLevelName(Level log_level);
 
 /// Creates a log entry by formatting the given source location, and message.
-Entry CreateEntry(Class log_class, Level log_level,
-                        const char* filename, unsigned int line_nr, const char* function,
-                        const char* format, va_list args);
+Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
+                  const char* function, const char* format, va_list args);
 
 void SetFilter(Filter* filter);
-
 }

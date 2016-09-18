@@ -7,7 +7,8 @@
 
 namespace Kernel {
 
-Session::Session() {}
-Session::~Session() {}
-
+Session::Session() {
+}
+Session::~Session() {
+}
 }

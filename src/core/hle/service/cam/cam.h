@@ -14,12 +14,7 @@
 namespace Service {
 namespace CAM {
 
-enum class Port : u8 {
-    None = 0,
-    Cam1 = 1,
-    Cam2 = 2,
-    Both = Cam1 | Cam2
-};
+enum class Port : u8 { None = 0, Cam1 = 1, Cam2 = 2, Both = Cam1 | Cam2 };
 
 enum class CameraSelect : u8 {
     None = 0,
@@ -32,28 +27,11 @@ enum class CameraSelect : u8 {
     All = Out1 | In1 | Out2
 };
 
-enum class Effect : u8 {
-    None = 0,
-    Mono = 1,
-    Sepia = 2,
-    Negative = 3,
-    Negafilm = 4,
-    Sepia01 = 5
-};
+enum class Effect : u8 { None = 0, Mono = 1, Sepia = 2, Negative = 3, Negafilm = 4, Sepia01 = 5 };
 
-enum class Context : u8 {
-    None = 0,
-    A = 1,
-    B = 2,
-    Both = A | B
-};
+enum class Context : u8 { None = 0, A = 1, B = 2, Both = A | B };
 
-enum class Flip : u8 {
-    None = 0,
-    Horizontal = 1,
-    Vertical = 2,
-    Reverse = 3
-};
+enum class Flip : u8 { None = 0, Horizontal = 1, Vertical = 2, Reverse = 3 };
 
 enum class Size : u8 {
     VGA = 0,
@@ -83,11 +61,7 @@ enum class FrameRate : u8 {
     Rate_30_To_10 = 12
 };
 
-enum class ShutterSoundType : u8 {
-    Normal = 0,
-    Movie = 1,
-    MovieEnd = 2
-};
+enum class ShutterSoundType : u8 { Normal = 0, Movie = 1, MovieEnd = 2 };
 
 enum class WhiteBalance : u8 {
     BalanceAuto = 0,
@@ -106,13 +80,7 @@ enum class WhiteBalance : u8 {
     BalanceShade = Balance7000K
 };
 
-enum class PhotoMode : u8 {
-    Normal = 0,
-    Portrait = 1,
-    Landscape = 2,
-    Nightview = 3,
-    Letter0 = 4
-};
+enum class PhotoMode : u8 { Normal = 0, Portrait = 1, Landscape = 2, Nightview = 3, Letter0 = 4 };
 
 enum class LensCorrection : u8 {
     Off = 0,
@@ -140,21 +108,18 @@ enum class Contrast : u8 {
     High = Pattern07
 };
 
-enum class OutputFormat : u8 {
-    YUV422 = 0,
-    RGB565 = 1
-};
+enum class OutputFormat : u8 { YUV422 = 0, RGB565 = 1 };
 
 /// Stereo camera calibration data.
 struct StereoCameraCalibrationData {
-    u8 isValidRotationXY;      ///< Bool indicating whether the X and Y rotation data is valid.
+    u8 isValidRotationXY; ///< Bool indicating whether the X and Y rotation data is valid.
     INSERT_PADDING_BYTES(3);
-    float_le scale;            ///< Scale to match the left camera image with the right.
-    float_le rotationZ;        ///< Z axis rotation to match the left camera image with the right.
-    float_le translationX;     ///< X axis translation to match the left camera image with the right.
-    float_le translationY;     ///< Y axis translation to match the left camera image with the right.
-    float_le rotationX;        ///< X axis rotation to match the left camera image with the right.
-    float_le rotationY;        ///< Y axis rotation to match the left camera image with the right.
+    float_le scale;        ///< Scale to match the left camera image with the right.
+    float_le rotationZ;    ///< Z axis rotation to match the left camera image with the right.
+    float_le translationX; ///< X axis translation to match the left camera image with the right.
+    float_le translationY; ///< Y axis translation to match the left camera image with the right.
+    float_le rotationX;    ///< X axis rotation to match the left camera image with the right.
+    float_le rotationY;    ///< Y axis rotation to match the left camera image with the right.
     float_le angleOfViewRight; ///< Right camera angle of view.
     float_le angleOfViewLeft;  ///< Left camera angle of view.
     float_le distanceToChart;  ///< Distance between cameras and measurement chart.
@@ -163,7 +128,8 @@ struct StereoCameraCalibrationData {
     s16_le imageHeight;        ///< Image height.
     INSERT_PADDING_BYTES(16);
 };
-static_assert(sizeof(StereoCameraCalibrationData) == 64, "StereoCameraCalibrationData structure size is wrong");
+static_assert(sizeof(StereoCameraCalibrationData) == 64,
+              "StereoCameraCalibrationData structure size is wrong");
 
 struct PackageParameterCameraSelect {
     CameraSelect camera;
@@ -188,7 +154,8 @@ struct PackageParameterCameraSelect {
     s16 auto_white_balance_window_height;
 };
 
-static_assert(sizeof(PackageParameterCameraSelect) == 28, "PackageParameterCameraSelect structure size is wrong");
+static_assert(sizeof(PackageParameterCameraSelect) == 28,
+              "PackageParameterCameraSelect structure size is wrong");
 
 /**
  * Unknown

@@ -26,8 +26,10 @@ SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
     return codeset;
 }
 
-CodeSet::CodeSet() {}
-CodeSet::~CodeSet() {}
+CodeSet::CodeSet() {
+}
+CodeSet::~CodeSet() {
+}
 
 u32 Process::next_process_id;
 
@@ -60,7 +62,8 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 
             while (bits && index < svc_access_mask.size()) {
                 svc_access_mask.set(index, bits & 1);
-                ++index; bits >>= 1;
+                ++index;
+                bits >>= 1;
             }
         } else if ((type & 0xFF0) == 0xFE0) { // 0x00FF
             // Handle table size
@@ -70,11 +73,11 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             flags.raw = descriptor & 0xFFFF;
         } else if ((type & 0xFFE) == 0xFF8) { // 0x001F
             // Mapped memory range
-            if (i+1 >= len || ((kernel_caps[i+1] >> 20) & 0xFFE) != 0xFF8) {
+            if (i + 1 >= len || ((kernel_caps[i + 1] >> 20) & 0xFFE) != 0xFF8) {
                 LOG_WARNING(Loader, "Incomplete exheader memory range descriptor ignored.");
                 continue;
             }
-            u32 end_desc = kernel_caps[i+1];
+            u32 end_desc = kernel_caps[i + 1];
             ++i; // Skip over the second descriptor on the next iteration
 
             AddressMapping mapping;
@@ -107,23 +110,28 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
     memory_region = GetMemoryRegion(flags.memory_region);
 
-    auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions, MemoryState memory_state) {
-        auto vma = vm_manager.MapMemoryBlock(segment.addr, codeset->memory,
-                segment.offset, segment.size, memory_state).Unwrap();
+    auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
+                          MemoryState memory_state) {
+        auto vma = vm_manager
+                       .MapMemoryBlock(segment.addr, codeset->memory, segment.offset, segment.size,
+                                       memory_state)
+                       .Unwrap();
         vm_manager.Reprotect(vma, permissions);
         misc_memory_used += segment.size;
         memory_region->used += segment.size;
     };
 
     // Map CodeSet segments
-    MapSegment(codeset->code,   VMAPermission::ReadExecute, MemoryState::Code);
-    MapSegment(codeset->rodata, VMAPermission::Read,        MemoryState::Code);
-    MapSegment(codeset->data,   VMAPermission::ReadWrite,   MemoryState::Private);
+    MapSegment(codeset->code, VMAPermission::ReadExecute, MemoryState::Code);
+    MapSegment(codeset->rodata, VMAPermission::Read, MemoryState::Code);
+    MapSegment(codeset->data, VMAPermission::ReadWrite, MemoryState::Private);
 
     // Allocate and map stack
-    vm_manager.MapMemoryBlock(Memory::HEAP_VADDR_END - stack_size,
-            std::make_shared<std::vector<u8>>(stack_size, 0), 0, stack_size, MemoryState::Locked
-            ).Unwrap();
+    vm_manager
+        .MapMemoryBlock(Memory::HEAP_VADDR_END - stack_size,
+                        std::make_shared<std::vector<u8>>(stack_size, 0), 0, stack_size,
+                        MemoryState::Locked)
+        .Unwrap();
     misc_memory_used += stack_size;
     memory_region->used += stack_size;
 
@@ -143,7 +151,8 @@ VAddr Process::GetLinearHeapLimit() const {
 }
 
 ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission perms) {
-    if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END || target + size < target) {
+    if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
+        target + size < target) {
         return ERR_INVALID_ADDRESS;
     }
 
@@ -166,7 +175,8 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
     }
     ASSERT(heap_end - heap_start == heap_memory->size());
 
-    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, heap_memory, target - heap_start, size, MemoryState::Private));
+    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, heap_memory, target - heap_start,
+                                                       size, MemoryState::Private));
     vm_manager.Reprotect(vma, perms);
 
     heap_used += size;
@@ -176,7 +186,8 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
 }
 
 ResultCode Process::HeapFree(VAddr target, u32 size) {
-    if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END || target + size < target) {
+    if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
+        target + size < target) {
         return ERR_INVALID_ADDRESS;
     }
 
@@ -185,7 +196,8 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
-    if (result.IsError()) return result;
+    if (result.IsError())
+        return result;
 
     heap_used -= size;
     memory_region->used -= size;
@@ -203,8 +215,8 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         target = heap_end;
     }
 
-    if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
-        target > heap_end || target + size < target) {
+    if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() || target > heap_end ||
+        target + size < target) {
 
         return ERR_INVALID_ADDRESS;
     }
@@ -220,7 +232,8 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
     // TODO(yuriks): As is, this lets processes map memory allocated by other processes from the
     // same region. It is unknown if or how the 3DS kernel checks against this.
     size_t offset = target - GetLinearHeapBase();
-    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size, MemoryState::Continuous));
+    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size,
+                                                       MemoryState::Continuous));
     vm_manager.Reprotect(vma, perms);
 
     linear_heap_used += size;
@@ -248,7 +261,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
-    if (result.IsError()) return result;
+    if (result.IsError())
+        return result;
 
     linear_heap_used -= size;
     memory_region->used -= size;
@@ -268,9 +282,10 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() {}
-Kernel::Process::~Process() {}
+Kernel::Process::Process() {
+}
+Kernel::Process::~Process() {
+}
 
 SharedPtr<Process> g_current_process;
-
 }

@@ -15,20 +15,13 @@
 
 #include "core/hle/result.h"
 
-
 namespace FileSys {
 
 class FileBackend;
 class DirectoryBackend;
 
 // Path string type
-enum LowPathType : u32 {
-    Invalid = 0,
-    Empty   = 1,
-    Binary  = 2,
-    Char    = 3,
-    Wchar   = 4
-};
+enum LowPathType : u32 { Invalid = 0, Empty = 1, Binary = 2, Char = 3, Wchar = 4 };
 
 union Mode {
     u32 hex;
@@ -39,12 +32,17 @@ union Mode {
 
 class Path {
 public:
-    Path() : type(Invalid) {}
-    Path(const char* path) : type(Char), string(path) {}
-    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {}
+    Path() : type(Invalid) {
+    }
+    Path(const char* path) : type(Char), string(path) {
+    }
+    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {
+    }
     Path(LowPathType type, u32 size, u32 pointer);
 
-    LowPathType GetType() const { return type; }
+    LowPathType GetType() const {
+        return type;
+    }
 
     /**
      * Gets the string representation of the path for debugging
@@ -64,10 +62,14 @@ private:
 };
 
 struct ArchiveFormatInfo {
-    u32_le total_size; ///< The pre-defined size of the archive, as specified in the Create or Format call
-    u32_le number_directories; ///< The pre-defined number of directories in the archive, as specified in the Create or Format call
-    u32_le number_files; ///< The pre-defined number of files in the archive, as specified in the Create or Format call
-    u8 duplicate_data; ///< Whether the archive should duplicate the data, as specified in the Create or Format call
+    u32_le total_size; ///< The pre-defined size of the archive, as specified in the Create or
+                       /// Format call
+    u32_le number_directories; ///< The pre-defined number of directories in the archive, as
+                               /// specified in the Create or Format call
+    u32_le number_files; ///< The pre-defined number of files in the archive, as specified in the
+                         /// Create or Format call
+    u8 duplicate_data;   ///< Whether the archive should duplicate the data, as specified in the
+                         /// Create or Format call
 };
 static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");
 
@@ -87,7 +89,8 @@ public:
      * @param mode Mode to open the file with
      * @return Opened file, or error code
      */
-    virtual ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode mode) const = 0;
+    virtual ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
+                                                             const Mode mode) const = 0;
 
     /**
      * Delete a file specified by its path

@@ -11,7 +11,7 @@ namespace FRD {
 // const Interface::FunctionInfo FunctionTable[] = { };
 
 FRD_A_Interface::FRD_A_Interface() {
-    //Register(FunctionTable);
+    // Register(FunctionTable);
 }
 
 } // namespace FRD

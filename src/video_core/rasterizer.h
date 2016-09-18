@@ -7,13 +7,12 @@
 namespace Pica {
 
 namespace Shader {
-    struct OutputVertex;
+struct OutputVertex;
 }
 
 namespace Rasterizer {
 
-void ProcessTriangle(const Shader::OutputVertex& v0,
-                     const Shader::OutputVertex& v1,
+void ProcessTriangle(const Shader::OutputVertex& v0, const Shader::OutputVertex& v1,
                      const Shader::OutputVertex& v2);
 
 } // namespace Rasterizer

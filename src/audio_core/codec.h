@@ -29,7 +29,8 @@ struct ADPCMState {
  * @param state ADPCM state, this is updated with new state
  * @return Decoded stereo signed PCM16 data, sample_count in length
  */
-StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count, const std::array<s16, 16>& adpcm_coeff, ADPCMState& state);
+StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count,
+                           const std::array<s16, 16>& adpcm_coeff, ADPCMState& state);
 
 /**
  * @param num_channels Number of channels
@@ -37,7 +38,8 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count, cons
  * @param sample_count Length of buffer in terms of number of samples
  * @return Decoded stereo signed PCM16 data, sample_count in length
  */
-StereoBuffer16 DecodePCM8(const unsigned num_channels, const u8* const data, const size_t sample_count);
+StereoBuffer16 DecodePCM8(const unsigned num_channels, const u8* const data,
+                          const size_t sample_count);
 
 /**
  * @param num_channels Number of channels
@@ -45,6 +47,6 @@ StereoBuffer16 DecodePCM8(const unsigned num_channels, const u8* const data, con
  * @param sample_count Length of buffer in terms of number of samples
  * @return Decoded stereo signed PCM16 data, sample_count in length
  */
-StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data, const size_t sample_count);
-
+StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data,
+                           const size_t sample_count);
 };

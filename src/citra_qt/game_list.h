@@ -14,7 +14,6 @@
 
 class GameListWorker;
 
-
 class GameList : public QWidget {
     Q_OBJECT
 

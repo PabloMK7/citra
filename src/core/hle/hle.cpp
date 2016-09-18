@@ -15,13 +15,13 @@
 namespace {
 
 bool reschedule; ///< If true, immediately reschedules the CPU to a new thread
-
 }
 
 namespace HLE {
 
-void Reschedule(const char *reason) {
-    DEBUG_ASSERT_MSG(reason != nullptr && strlen(reason) < 256, "Reschedule: Invalid or too long reason.");
+void Reschedule(const char* reason) {
+    DEBUG_ASSERT_MSG(reason != nullptr && strlen(reason) < 256,
+                     "Reschedule: Invalid or too long reason.");
 
     // TODO(bunnei): It seems that games depend on some CPU execution time elapsing during HLE
     // routines. This simulates that time by artificially advancing the number of CPU "ticks".

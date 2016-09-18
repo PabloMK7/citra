@@ -29,11 +29,15 @@ namespace FileSys {
  */
 class DiskArchive : public ArchiveBackend {
 public:
-    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
+    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {
+    }
 
-    virtual std::string GetName() const override { return "DiskArchive: " + mount_point; }
+    virtual std::string GetName() const override {
+        return "DiskArchive: " + mount_point;
+    }
 
-    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path, const Mode mode) const override;
+    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
+                                                     const Mode mode) const override;
     ResultCode DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
     bool DeleteDirectory(const Path& path) const override;

@@ -27,7 +27,8 @@ void RunLoop(int tight_loop) {
     if (GDBStub::g_server_enabled) {
         GDBStub::HandlePacket();
 
-        // If the loop is halted and we want to step, use a tiny (1) number of instructions to execute.
+        // If the loop is halted and we want to step, use a tiny (1) number of instructions to
+        // execute.
         // Otherwise get out of the loop function.
         if (GDBStub::GetCpuHaltFlag()) {
             if (GDBStub::GetCpuStepFlag()) {
@@ -62,7 +63,7 @@ void SingleStep() {
 }
 
 /// Halt the core
-void Halt(const char *msg) {
+void Halt(const char* msg) {
     // TODO(ShizZy): ImplementMe
 }
 

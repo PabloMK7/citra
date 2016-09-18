@@ -7,10 +7,7 @@
 
 #include "core/settings.h"
 
-ConfigureDebug::ConfigureDebug(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureDebug)
-{
+ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureDebug) {
     ui->setupUi(this);
     this->setConfiguration();
 }

@@ -52,8 +52,8 @@ static u64 GetSystemTime() {
 }
 
 static void UpdateTimeCallback(u64 userdata, int cycles_late) {
-    DateTime& date_time = shared_page.date_time_counter % 2 ?
-        shared_page.date_time_0 : shared_page.date_time_1;
+    DateTime& date_time =
+        shared_page.date_time_counter % 2 ? shared_page.date_time_0 : shared_page.date_time_1;
 
     date_time.date_time = GetSystemTime();
     date_time.update_tick = CoreTiming::GetTicks();
@@ -74,7 +74,8 @@ void Init() {
     // Some games wait until this value becomes 0x1, before asking running_hw
     shared_page.unknown_value = 0x1;
 
-    update_time_event = CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);
+    update_time_event =
+        CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);
     CoreTiming::ScheduleEvent(0, update_time_event);
 }
 

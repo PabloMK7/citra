@@ -11,11 +11,13 @@ class Interface;
 namespace CECD {
 
 enum class CecStateAbbreviated {
-    CEC_STATE_ABBREV_IDLE      = 1, ///< Corresponds to CEC_STATE_IDLE
+    CEC_STATE_ABBREV_IDLE = 1,      ///< Corresponds to CEC_STATE_IDLE
     CEC_STATE_ABBREV_NOT_LOCAL = 2, ///< Corresponds to CEC_STATEs *FINISH*, *POST, and OVER_BOSS
-    CEC_STATE_ABBREV_SCANNING  = 3, ///< Corresponds to CEC_STATE_SCANNING
-    CEC_STATE_ABBREV_WLREADY   = 4, ///< Corresponds to CEC_STATE_WIRELESS_READY when some unknown bool is true
-    CEC_STATE_ABBREV_OTHER     = 5, ///< Corresponds to CEC_STATEs besides *FINISH*, *POST, and OVER_BOSS and those listed here
+    CEC_STATE_ABBREV_SCANNING = 3,  ///< Corresponds to CEC_STATE_SCANNING
+    CEC_STATE_ABBREV_WLREADY =
+        4, ///< Corresponds to CEC_STATE_WIRELESS_READY when some unknown bool is true
+    CEC_STATE_ABBREV_OTHER = 5, ///< Corresponds to CEC_STATEs besides *FINISH*, *POST, and
+                                /// OVER_BOSS and those listed here
 };
 
 /**

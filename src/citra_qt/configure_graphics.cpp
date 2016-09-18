@@ -8,10 +8,8 @@
 #include "core/settings.h"
 #include "core/system.h"
 
-ConfigureGraphics::ConfigureGraphics(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureGraphics)
-{
+ConfigureGraphics::ConfigureGraphics(QWidget* parent)
+    : QWidget(parent), ui(new Ui::ConfigureGraphics) {
     ui->setupUi(this);
     this->setConfiguration();
 

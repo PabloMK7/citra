@@ -14,8 +14,10 @@ namespace Applets {
 
 class Applet {
 public:
-    virtual ~Applet() { }
-    Applet(Service::APT::AppletId id) : id(id) { }
+    virtual ~Applet() {
+    }
+    Applet(Service::APT::AppletId id) : id(id) {
+    }
 
     /**
      * Creates an instance of the Applet subclass identified by the parameter.
@@ -64,7 +66,7 @@ protected:
      */
     virtual ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) = 0;
 
-    Service::APT::AppletId id; ///< Id of this Applet
+    Service::APT::AppletId id;                    ///< Id of this Applet
     std::shared_ptr<std::vector<u8>> heap_memory; ///< Heap memory for this Applet
 };
 
@@ -76,6 +78,5 @@ void Init();
 
 /// Shuts down the HLE applets
 void Shutdown();
-
 }
 } // namespace

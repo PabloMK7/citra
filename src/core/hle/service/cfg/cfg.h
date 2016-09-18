@@ -40,16 +40,13 @@ enum SystemLanguage {
     LANGUAGE_TW = 11
 };
 
-enum SoundOutputMode {
-    SOUND_MONO = 0,
-    SOUND_STEREO = 1,
-    SOUND_SURROUND = 2
-};
+enum SoundOutputMode { SOUND_MONO = 0, SOUND_STEREO = 1, SOUND_SURROUND = 2 };
 
 /// Block header in the config savedata file
 struct SaveConfigBlockEntry {
     u32 block_id;       ///< The id of the current block
-    u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater than 4 bytes, otherwise it contains the data itself
+    u32 offset_or_data; ///< This is the absolute offset to the block data if the size is greater
+                        /// than 4 bytes, otherwise it contains the data itself
     u16 size;           ///< The size of the block
     u16 flags;          ///< The flags of the block, possibly used for access control
 };
@@ -244,7 +241,8 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output);
 ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input);
 
 /**
- * Creates a block with the specified id and writes the input data to the cfg savegame buffer in memory.
+ * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
+ * memory.
  * The config savegame file in the filesystem is not updated.
  * @param block_id The id of the block we want to create
  * @param size The size of the block we want to create

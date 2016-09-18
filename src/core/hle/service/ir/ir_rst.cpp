@@ -9,10 +9,10 @@ namespace Service {
 namespace IR {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010000, GetHandles,              "GetHandles"},
-    {0x00020080, nullptr,                 "Initialize"},
-    {0x00030000, nullptr,                 "Shutdown"},
-    {0x00090000, nullptr,                 "WriteToTwoFields"},
+    {0x00010000, GetHandles, "GetHandles"},
+    {0x00020080, nullptr, "Initialize"},
+    {0x00030000, nullptr, "Shutdown"},
+    {0x00090000, nullptr, "WriteToTwoFields"},
 };
 
 IR_RST_Interface::IR_RST_Interface() {

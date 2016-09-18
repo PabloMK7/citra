@@ -70,11 +70,11 @@ public:
     void Compile_MAD(Instruction instr);
 
 private:
-
     void Compile_Block(unsigned end);
     void Compile_NextInstr();
 
-    void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, Gen::X64Reg dest);
+    void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+                            Gen::X64Reg dest);
     void Compile_DestEnable(Instruction instr, Gen::X64Reg dest);
 
     /**
@@ -111,8 +111,8 @@ private:
     /// Offsets in code where a return needs to be inserted
     std::vector<unsigned> return_offsets;
 
-    unsigned program_counter = 0;       ///< Offset of the next instruction to decode
-    bool looping = false;               ///< True if compiling a loop, used to check for nested loops
+    unsigned program_counter = 0; ///< Offset of the next instruction to decode
+    bool looping = false;         ///< True if compiling a loop, used to check for nested loops
 
     /// Branches that need to be fixed up once the entire shader program is compiled
     std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;

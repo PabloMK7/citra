@@ -4,31 +4,30 @@
 
 #pragma once
 
-#include "common/common_types.h"
 #include <fstream>
+#include "common/common_types.h"
 
 // defined in Version.cpp
-extern const char *scm_rev_git_str;
+extern const char* scm_rev_git_str;
 
 // On disk format:
-//header{
+// header{
 // u32 'DCAC';
 // u32 version;  // svn_rev
 // u16 sizeof(key_type);
 // u16 sizeof(value_type);
 //}
 
-//key_value_pair{
+// key_value_pair{
 // u32 value_size;
 // key_type   key;
 // value_type[value_size]   value;
 //}
 
 template <typename K, typename V>
-class LinearDiskCacheReader
-{
+class LinearDiskCacheReader {
 public:
-    virtual void Read(const K &key, const V *value, u32 value_size) = 0;
+    virtual void Read(const K& key, const V* value, u32 value_size) = 0;
 };
 
 // Dead simple unsorted key-value store with append functionality.
@@ -44,12 +43,10 @@ public:
 // K : the key type
 // V : value array type
 template <typename K, typename V>
-class LinearDiskCache
-{
+class LinearDiskCache {
 public:
     // return number of read entries
-    u32 OpenAndRead(const char *filename, LinearDiskCacheReader<K, V> &reader)
-    {
+    u32 OpenAndRead(const char* filename, LinearDiskCacheReader<K, V>& reader) {
         using std::ios_base;
 
         // close any currently opened file
@@ -65,20 +62,19 @@ public:
         std::fstream::pos_type start_pos = m_file.tellg();
         std::streamoff file_size = end_pos - start_pos;
 
-        if (m_file.is_open() && ValidateHeader())
-        {
+        if (m_file.is_open() && ValidateHeader()) {
             // good header, read some key/value pairs
             K key;
 
-            V *value = nullptr;
+            V* value = nullptr;
             u32 value_size;
             u32 entry_number;
 
             std::fstream::pos_type last_pos = m_file.tellg();
 
-            while (Read(&value_size))
-            {
-                std::streamoff next_extent = (last_pos - start_pos) + sizeof(value_size) + value_size;
+            while (Read(&value_size)) {
+                std::streamoff next_extent =
+                    (last_pos - start_pos) + sizeof(value_size) + value_size;
                 if (next_extent > file_size)
                     break;
 
@@ -86,15 +82,10 @@ public:
                 value = new V[value_size];
 
                 // read key/value and pass to reader
-                if (Read(&key) &&
-                    Read(value, value_size) &&
-                    Read(&entry_number) &&
-                    entry_number == m_num_entries+1)
-                 {
+                if (Read(&key) && Read(value, value_size) && Read(&entry_number) &&
+                    entry_number == m_num_entries + 1) {
                     reader.Read(key, value, value_size);
-                }
-                else
-                {
+                } else {
                     break;
                 }
 
@@ -116,13 +107,11 @@ public:
         return 0;
     }
 
-    void Sync()
-    {
+    void Sync() {
         m_file.flush();
     }
 
-    void Close()
-    {
+    void Close() {
         if (m_file.is_open())
             m_file.close();
         // clear any error flags
@@ -130,9 +119,9 @@ public:
     }
 
     // Appends a key-value pair to the store.
-    void Append(const K &key, const V *value, u32 value_size)
-    {
-        // TODO: Should do a check that we don't already have "key"? (I think each caller does that already.)
+    void Append(const K& key, const V* value, u32 value_size) {
+        // TODO: Should do a check that we don't already have "key"? (I think each caller does that
+        // already.)
         Write(&value_size);
         Write(&key);
         Write(value, value_size);
@@ -141,38 +130,29 @@ public:
     }
 
 private:
-    void WriteHeader()
-    {
+    void WriteHeader() {
         Write(&m_header);
     }
 
-    bool ValidateHeader()
-    {
+    bool ValidateHeader() {
         char file_header[sizeof(Header)];
 
-        return (Read(file_header, sizeof(Header))
-            && !memcmp((const char*)&m_header, file_header, sizeof(Header)));
+        return (Read(file_header, sizeof(Header)) &&
+                !memcmp((const char*)&m_header, file_header, sizeof(Header)));
     }
 
     template <typename D>
-    bool Write(const D *data, u32 count = 1)
-    {
+    bool Write(const D* data, u32 count = 1) {
         return m_file.write((const char*)data, count * sizeof(D)).good();
     }
 
     template <typename D>
-    bool Read(const D *data, u32 count = 1)
-    {
+    bool Read(const D* data, u32 count = 1) {
         return m_file.read((char*)data, count * sizeof(D)).good();
     }
 
-    struct Header
-    {
-        Header()
-            : id(*(u32*)"DCAC")
-            , key_t_size(sizeof(K))
-            , value_t_size(sizeof(V))
-        {
+    struct Header {
+        Header() : id(*(u32*)"DCAC"), key_t_size(sizeof(K)), value_t_size(sizeof(V)) {
             memcpy(ver, scm_rev_git_str, 40);
         }
 

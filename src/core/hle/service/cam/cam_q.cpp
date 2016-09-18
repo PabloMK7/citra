@@ -8,10 +8,10 @@ namespace Service {
 namespace CAM {
 
 // Empty arrays are illegal -- commented out until an entry is added.
-//const Interface::FunctionInfo FunctionTable[] = { };
+// const Interface::FunctionInfo FunctionTable[] = { };
 
 CAM_Q_Interface::CAM_Q_Interface() {
-    //Register(FunctionTable);
+    // Register(FunctionTable);
 }
 
 } // namespace CAM

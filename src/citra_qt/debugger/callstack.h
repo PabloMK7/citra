@@ -7,8 +7,7 @@
 
 class QStandardItemModel;
 
-class CallstackWidget : public QDockWidget
-{
+class CallstackWidget : public QDockWidget {
     Q_OBJECT
 
 public:

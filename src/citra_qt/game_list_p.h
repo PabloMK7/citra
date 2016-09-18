@@ -12,8 +12,8 @@
 #include <QString>
 
 #include "citra_qt/util/util.h"
-#include "common/string_util.h"
 #include "common/color.h"
+#include "common/string_util.h"
 
 #include "core/loader/smdh.h"
 
@@ -51,18 +51,21 @@ static QPixmap GetDefaultIcon(bool large) {
  * @param language title language
  * @return QString short title
  */
-static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh, Loader::SMDH::TitleLanguage language) {
+static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
+                                            Loader::SMDH::TitleLanguage language) {
     return QString::fromUtf16(smdh.GetShortTitle(language).data());
 }
 
 class GameListItem : public QStandardItem {
 
 public:
-    GameListItem(): QStandardItem() {}
-    GameListItem(const QString& string): QStandardItem(string) {}
-    virtual ~GameListItem() override {}
+    GameListItem() : QStandardItem() {
+    }
+    GameListItem(const QString& string) : QStandardItem(string) {
+    }
+    virtual ~GameListItem() override {
+    }
 };
-
 
 /**
  * A specialization of GameListItem for path values.
@@ -76,9 +79,9 @@ public:
     static const int FullPathRole = Qt::UserRole + 1;
     static const int TitleRole = Qt::UserRole + 2;
 
-    GameListItemPath(): GameListItem() {}
-    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data): GameListItem()
-    {
+    GameListItemPath() : GameListItem() {
+    }
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data) : GameListItem() {
         setData(game_path, FullPathRole);
 
         if (!Loader::IsValidSMDH(smdh_data)) {
@@ -94,13 +97,15 @@ public:
         setData(GetQPixmapFromSMDH(smdh, true), Qt::DecorationRole);
 
         // Get title form SMDH
-        setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English), TitleRole);
+        setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
+                TitleRole);
     }
 
     QVariant data(int role) const override {
         if (role == Qt::DisplayRole) {
             std::string filename;
-            Common::SplitPath(data(FullPathRole).toString().toStdString(), nullptr, &filename, nullptr);
+            Common::SplitPath(data(FullPathRole).toString().toStdString(), nullptr, &filename,
+                              nullptr);
             QString title = data(TitleRole).toString();
             return QString::fromStdString(filename) + (title.isEmpty() ? "" : "\n    " + title);
         } else {
@@ -108,7 +113,6 @@ public:
         }
     }
 };
-
 
 /**
  * A specialization of GameListItem for size values.
@@ -120,14 +124,13 @@ class GameListItemSize : public GameListItem {
 public:
     static const int SizeRole = Qt::UserRole + 1;
 
-    GameListItemSize(): GameListItem() {}
-    GameListItemSize(const qulonglong size_bytes): GameListItem()
-    {
+    GameListItemSize() : GameListItem() {
+    }
+    GameListItemSize(const qulonglong size_bytes) : GameListItem() {
         setData(size_bytes, SizeRole);
     }
 
-    void setData(const QVariant& value, int role) override
-    {
+    void setData(const QVariant& value, int role) override {
         // By specializing setData for SizeRole, we can ensure that the numerical and string
         // representations of the data are always accurate and in the correct format.
         if (role == SizeRole) {
@@ -141,14 +144,13 @@ public:
 
     /**
      * This operator is, in practice, only used by the TreeView sorting systems.
-     * Override it so that it will correctly sort by numerical value instead of by string representation.
+     * Override it so that it will correctly sort by numerical value instead of by string
+     * representation.
      */
-    bool operator<(const QStandardItem& other) const override
-    {
+    bool operator<(const QStandardItem& other) const override {
         return data(SizeRole).toULongLong() < other.data(SizeRole).toULongLong();
     }
 };
-
 
 /**
  * Asynchronous worker object for populating the game list.
@@ -158,8 +160,9 @@ class GameListWorker : public QObject, public QRunnable {
     Q_OBJECT
 
 public:
-    GameListWorker(QString dir_path, bool deep_scan):
-            QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan) {}
+    GameListWorker(QString dir_path, bool deep_scan)
+        : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan) {
+    }
 
 public slots:
     /// Starts the processing of directory tree information.

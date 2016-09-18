@@ -15,8 +15,7 @@
 class QAction;
 class EmuThread;
 
-class DisassemblerModel : public QAbstractListModel
-{
+class DisassemblerModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
@@ -46,8 +45,7 @@ private:
     mutable BreakPoints breakpoints;
 };
 
-class DisassemblerWidget : public QDockWidget
-{
+class DisassemblerWidget : public QDockWidget {
     Q_OBJECT
 
 public:

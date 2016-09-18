@@ -24,15 +24,21 @@ public:
      */
     static SharedPtr<Mutex> Create(bool initial_locked, std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "Mutex"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "Mutex";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::Mutex;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
-    int lock_count;                             ///< Number of times the mutex has been acquired
-    std::string name;                           ///< Name of mutex (optional)
-    SharedPtr<Thread> holding_thread;           ///< Thread that has acquired the mutex
+    int lock_count;                   ///< Number of times the mutex has been acquired
+    std::string name;                 ///< Name of mutex (optional)
+    SharedPtr<Thread> holding_thread; ///< Thread that has acquired the mutex
 
     bool ShouldWait() override;
     void Acquire() override;

@@ -14,23 +14,24 @@ namespace PTM {
 
 /// Charge levels used by PTM functions
 enum class ChargeLevels : u32 {
-    CriticalBattery    = 1,
-    LowBattery         = 2,
-    HalfFull           = 3,
-    MostlyFull         = 4,
-    CompletelyFull     = 5,
+    CriticalBattery = 1,
+    LowBattery = 2,
+    HalfFull = 3,
+    MostlyFull = 4,
+    CompletelyFull = 5,
 };
 
 /**
  * Represents the gamecoin file structure in the SharedExtData archive
- * More information in 3dbrew (http://www.3dbrew.org/wiki/Extdata#Shared_Extdata_0xf000000b_gamecoin.dat)
+ * More information in 3dbrew
+ * (http://www.3dbrew.org/wiki/Extdata#Shared_Extdata_0xf000000b_gamecoin.dat)
  */
 struct GameCoin {
-    u32 magic; ///< Magic number: 0x4F00
-    u16 total_coins; ///< Total Play Coins
+    u32 magic;               ///< Magic number: 0x4F00
+    u16 total_coins;         ///< Total Play Coins
     u16 total_coins_on_date; ///< Total Play Coins obtained on the date stored below.
-    u32 step_count; ///< Total step count at the time a new Play Coin was obtained.
-    u32 last_step_count; ///< Step count for the day the last Play Coin was obtained
+    u32 step_count;          ///< Total step count at the time a new Play Coin was obtained.
+    u32 last_step_count;     ///< Step count for the day the last Play Coin was obtained
     u16 year;
     u8 month;
     u8 day;

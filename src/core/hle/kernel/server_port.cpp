@@ -13,8 +13,10 @@
 
 namespace Kernel {
 
-ServerPort::ServerPort() {}
-ServerPort::~ServerPort() {}
+ServerPort::ServerPort() {
+}
+ServerPort::~ServerPort() {
+}
 
 bool ServerPort::ShouldWait() {
     // If there are no pending sessions, we wait until a new one is added.
@@ -25,7 +27,8 @@ void ServerPort::Acquire() {
     ASSERT_MSG(!ShouldWait(), "object unavailable!");
 }
 
-std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(u32 max_sessions, std::string name) {
+std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>>
+ServerPort::CreatePortPair(u32 max_sessions, std::string name) {
     SharedPtr<ServerPort> server_port(new ServerPort);
     SharedPtr<ClientPort> client_port(new ClientPort);
 

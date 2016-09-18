@@ -9,10 +9,8 @@
 
 #include "core/settings.h"
 
-ConfigureAudio::ConfigureAudio(QWidget* parent) :
-        QWidget(parent),
-        ui(std::make_unique<Ui::ConfigureAudio>())
-{
+ConfigureAudio::ConfigureAudio(QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureAudio>()) {
     ui->setupUi(this);
 
     ui->output_sink_combo_box->clear();
@@ -41,7 +39,9 @@ void ConfigureAudio::setConfiguration() {
 }
 
 void ConfigureAudio::applyConfiguration() {
-    Settings::values.sink_id = ui->output_sink_combo_box->itemText(ui->output_sink_combo_box->currentIndex()).toStdString();
+    Settings::values.sink_id =
+        ui->output_sink_combo_box->itemText(ui->output_sink_combo_box->currentIndex())
+            .toStdString();
     Settings::values.enable_audio_stretching = ui->toggle_audio_stretching->isChecked();
     Settings::Apply();
 }

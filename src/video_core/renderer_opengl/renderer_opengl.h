@@ -38,7 +38,6 @@ struct ScreenInfo {
 
 class RendererOpenGL : public RendererBase {
 public:
-
     RendererOpenGL();
     ~RendererOpenGL() override;
 
@@ -67,15 +66,14 @@ private:
 
     // Loads framebuffer from emulated memory into the display information structure
     void LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
-                             ScreenInfo& screen_info);
+                            ScreenInfo& screen_info);
     // Fills active OpenGL texture with the given RGB color.
-    void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
-                                    const TextureInfo& texture);
+    void LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b, const TextureInfo& texture);
 
-    EmuWindow*  render_window;                    ///< Handle to render window
+    EmuWindow* render_window; ///< Handle to render window
 
-    int resolution_width;                         ///< Current resolution width
-    int resolution_height;                        ///< Current resolution height
+    int resolution_width;  ///< Current resolution width
+    int resolution_height; ///< Current resolution height
 
     OpenGLState state;
 
@@ -83,7 +81,8 @@ private:
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
     OGLShader shader;
-    std::array<ScreenInfo, 2> screen_infos;          ///< Display information for top and bottom screens respectively
+    std::array<ScreenInfo, 2>
+        screen_infos; ///< Display information for top and bottom screens respectively
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;

@@ -4,19 +4,18 @@
 
 #pragma once
 
-#include <memory>
 #include <QWidget>
+#include <memory>
 
 namespace Ui {
 class ConfigureGraphics;
 }
 
-class ConfigureGraphics : public QWidget
-{
+class ConfigureGraphics : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGraphics(QWidget *parent = nullptr);
+    explicit ConfigureGraphics(QWidget* parent = nullptr);
     ~ConfigureGraphics();
 
     void applyConfiguration();

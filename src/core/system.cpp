@@ -6,18 +6,18 @@
 
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/system.h"
 #include "core/gdbstub/gdbstub.h"
-#include "core/hw/hw.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hw/hw.h"
+#include "core/system.h"
 
 #include "video_core/video_core.h"
 
 namespace System {
 
-static bool is_powered_on{ false };
+static bool is_powered_on{false};
 
 Result Init(EmuWindow* emu_window) {
     Core::Init();

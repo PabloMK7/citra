@@ -14,9 +14,8 @@
 namespace LDR_RO {
 
 auto MemorySynchronizer::FindMemoryBlock(VAddr mapping, VAddr original) {
-    auto block = std::find_if(memory_blocks.begin(), memory_blocks.end(), [=](MemoryBlock& b){
-        return b.original == original;
-    });
+    auto block = std::find_if(memory_blocks.begin(), memory_blocks.end(),
+                              [=](MemoryBlock& b) { return b.original == original; });
     ASSERT(block->mapping == mapping);
     return block;
 }

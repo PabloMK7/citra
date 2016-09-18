@@ -11,7 +11,7 @@
 
 namespace Common {
 
-template<class T, unsigned int N>
+template <class T, unsigned int N>
 struct ThreadQueueList {
     // TODO(yuriks): If performance proves to be a problem, the std::deques can be replaced with
     //               (dynamically resizable) circular buffers to remove their overhead when
@@ -39,7 +39,7 @@ struct ThreadQueueList {
     }
 
     T get_first() {
-        Queue *cur = first;
+        Queue* cur = first;
         while (cur != nullptr) {
             if (!cur->data.empty()) {
                 return cur->data.front();
@@ -51,7 +51,7 @@ struct ThreadQueueList {
     }
 
     T pop_first() {
-        Queue *cur = first;
+        Queue* cur = first;
         while (cur != nullptr) {
             if (!cur->data.empty()) {
                 auto tmp = std::move(cur->data.front());
@@ -65,8 +65,8 @@ struct ThreadQueueList {
     }
 
     T pop_first_better(Priority priority) {
-        Queue *cur = first;
-        Queue *stop = &queues[priority];
+        Queue* cur = first;
+        Queue* stop = &queues[priority];
         while (cur < stop) {
             if (!cur->data.empty()) {
                 auto tmp = std::move(cur->data.front());
@@ -80,12 +80,12 @@ struct ThreadQueueList {
     }
 
     void push_front(Priority priority, const T& thread_id) {
-        Queue *cur = &queues[priority];
+        Queue* cur = &queues[priority];
         cur->data.push_front(thread_id);
     }
 
     void push_back(Priority priority, const T& thread_id) {
-        Queue *cur = &queues[priority];
+        Queue* cur = &queues[priority];
         cur->data.push_back(thread_id);
     }
 
@@ -96,12 +96,12 @@ struct ThreadQueueList {
     }
 
     void remove(Priority priority, const T& thread_id) {
-        Queue *cur = &queues[priority];
+        Queue* cur = &queues[priority];
         boost::remove_erase(cur->data, thread_id);
     }
 
     void rotate(Priority priority) {
-        Queue *cur = &queues[priority];
+        Queue* cur = &queues[priority];
 
         if (cur->data.size() > 1) {
             cur->data.push_back(std::move(cur->data.front()));
@@ -115,7 +115,7 @@ struct ThreadQueueList {
     }
 
     bool empty(Priority priority) const {
-        const Queue *cur = &queues[priority];
+        const Queue* cur = &queues[priority];
         return cur->data.empty();
     }
 
@@ -139,7 +139,7 @@ private:
     }
 
     void link(Priority priority) {
-        Queue *cur = &queues[priority];
+        Queue* cur = &queues[priority];
 
         for (int i = priority - 1; i >= 0; --i) {
             if (queues[i].next_nonempty != UnlinkedTag()) {

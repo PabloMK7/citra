@@ -37,7 +37,8 @@ public:
     /**
      * Does audio stretching and produces the time-stretched samples.
      * Timer calculations use sample_delay to determine how much of a margin we have.
-     * @param sample_delay How many samples are buffered downstream of this module and haven't been played yet.
+     * @param sample_delay How many samples are buffered downstream of this module and haven't been
+     * played yet.
      * @return Samples to play in interleaved stereo PCM16 format.
      */
     std::vector<s16> Process(size_t sample_delay);
@@ -48,7 +49,8 @@ private:
 
     /// INTERNAL: ratio = wallclock time / emulated time
     double CalculateCurrentRatio();
-    /// INTERNAL: If we have too many or too few samples downstream, nudge ratio in the appropriate direction.
+    /// INTERNAL: If we have too many or too few samples downstream, nudge ratio in the appropriate
+    /// direction.
     double CorrectForUnderAndOverflow(double ratio, size_t sample_delay) const;
     /// INTERNAL: Gets the time-stretched samples from SoundTouch.
     std::vector<s16> GetSamples();

@@ -4,8 +4,7 @@
 
 #include "qhexedit.h"
 
-class GRamView : public QHexEdit
-{
+class GRamView : public QHexEdit {
     Q_OBJECT
 
 public:

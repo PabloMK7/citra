@@ -47,7 +47,8 @@ private:
     void OnResize();
 
     /// Called when a configuration change affects the minimal size of the window
-    void OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) override;
+    void
+    OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) override;
 
     /// Is the window still open?
     bool is_open = true;
@@ -55,7 +56,7 @@ private:
     /// Internal SDL2 render window
     SDL_Window* render_window;
 
-    using SDL_GLContext = void *;
+    using SDL_GLContext = void*;
     /// The OpenGL context associated with the window
     SDL_GLContext gl_context;
 

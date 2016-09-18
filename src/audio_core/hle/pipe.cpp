@@ -44,8 +44,10 @@ std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) {
     std::vector<u8>& data = pipe_data[pipe_index];
 
     if (length > data.size()) {
-        LOG_WARNING(Audio_DSP, "pipe_number = %zu is out of data, application requested read of %u but %zu remain",
-                    pipe_index, length, data.size());
+        LOG_WARNING(
+            Audio_DSP,
+            "pipe_number = %zu is out of data, application requested read of %u but %zu remain",
+            pipe_index, length, data.size());
         length = static_cast<u32>(data.size());
     }
 
@@ -95,8 +97,7 @@ static void AudioPipeWriteStructAddresses() {
         0x8000 + offsetof(SharedMemory, unknown11) / 2,
         0x8000 + offsetof(SharedMemory, unknown12) / 2,
         0x8000 + offsetof(SharedMemory, unknown13) / 2,
-        0x8000 + offsetof(SharedMemory, unknown14) / 2
-    };
+        0x8000 + offsetof(SharedMemory, unknown14) / 2};
 
     // Begin with a u16 denoting the number of structs.
     WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
@@ -112,16 +113,12 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
     switch (pipe_number) {
     case DspPipe::Audio: {
         if (buffer.size() != 4) {
-            LOG_ERROR(Audio_DSP, "DspPipe::Audio: Unexpected buffer length %zu was written", buffer.size());
+            LOG_ERROR(Audio_DSP, "DspPipe::Audio: Unexpected buffer length %zu was written",
+                      buffer.size());
             return;
         }
 
-        enum class StateChange {
-            Initalize = 0,
-            Shutdown = 1,
-            Wakeup = 2,
-            Sleep = 3
-        };
+        enum class StateChange { Initalize = 0, Shutdown = 1, Wakeup = 2, Sleep = 3 };
 
         // The difference between Initialize and Wakeup is that Input state is maintained
         // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)
@@ -152,7 +149,9 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
             dsp_state = DspState::Sleeping;
             break;
         default:
-            LOG_ERROR(Audio_DSP, "Application has requested unknown state transition of DSP hardware %hhu", buffer[0]);
+            LOG_ERROR(Audio_DSP,
+                      "Application has requested unknown state transition of DSP hardware %hhu",
+                      buffer[0]);
             dsp_state = DspState::Off;
             break;
         }
@@ -160,7 +159,8 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
         return;
     }
     default:
-        LOG_CRITICAL(Audio_DSP, "pipe_number = %zu unimplemented", static_cast<size_t>(pipe_number));
+        LOG_CRITICAL(Audio_DSP, "pipe_number = %zu unimplemented",
+                     static_cast<size_t>(pipe_number));
         UNIMPLEMENTED();
         return;
     }

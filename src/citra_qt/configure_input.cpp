@@ -2,41 +2,42 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QTimer>
 #include <memory>
 #include <utility>
-#include <QTimer>
 
 #include "citra_qt/configure_input.h"
 
-ConfigureInput::ConfigureInput(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()) {
+ConfigureInput::ConfigureInput(QWidget* parent)
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()) {
     ui->setupUi(this);
 
     // Initialize mapping of input enum to UI button.
     input_mapping = {
-        { std::make_pair(Settings::NativeInput::Values::A, ui->buttonA) },
-        { std::make_pair(Settings::NativeInput::Values::B, ui->buttonB) },
-        { std::make_pair(Settings::NativeInput::Values::X, ui->buttonX) },
-        { std::make_pair(Settings::NativeInput::Values::Y, ui->buttonY) },
-        { std::make_pair(Settings::NativeInput::Values::L, ui->buttonL) },
-        { std::make_pair(Settings::NativeInput::Values::R, ui->buttonR) },
-        { std::make_pair(Settings::NativeInput::Values::ZL, ui->buttonZL) },
-        { std::make_pair(Settings::NativeInput::Values::ZR, ui->buttonZR) },
-        { std::make_pair(Settings::NativeInput::Values::START, ui->buttonStart) },
-        { std::make_pair(Settings::NativeInput::Values::SELECT, ui->buttonSelect) },
-        { std::make_pair(Settings::NativeInput::Values::HOME, ui->buttonHome) },
-        { std::make_pair(Settings::NativeInput::Values::DUP, ui->buttonDpadUp) },
-        { std::make_pair(Settings::NativeInput::Values::DDOWN, ui->buttonDpadDown) },
-        { std::make_pair(Settings::NativeInput::Values::DLEFT, ui->buttonDpadLeft) },
-        { std::make_pair(Settings::NativeInput::Values::DRIGHT, ui->buttonDpadRight) },
-        { std::make_pair(Settings::NativeInput::Values::CUP, ui->buttonCStickUp) },
-        { std::make_pair(Settings::NativeInput::Values::CDOWN, ui->buttonCStickDown) },
-        { std::make_pair(Settings::NativeInput::Values::CLEFT, ui->buttonCStickLeft) },
-        { std::make_pair(Settings::NativeInput::Values::CRIGHT, ui->buttonCStickRight) },
-        { std::make_pair(Settings::NativeInput::Values::CIRCLE_UP, ui->buttonCircleUp) },
-        { std::make_pair(Settings::NativeInput::Values::CIRCLE_DOWN, ui->buttonCircleDown) },
-        { std::make_pair(Settings::NativeInput::Values::CIRCLE_LEFT, ui->buttonCircleLeft) },
-        { std::make_pair(Settings::NativeInput::Values::CIRCLE_RIGHT, ui->buttonCircleRight) },
-        { std::make_pair(Settings::NativeInput::Values::CIRCLE_MODIFIER, ui->buttonCircleMod) },
+        {std::make_pair(Settings::NativeInput::Values::A, ui->buttonA)},
+        {std::make_pair(Settings::NativeInput::Values::B, ui->buttonB)},
+        {std::make_pair(Settings::NativeInput::Values::X, ui->buttonX)},
+        {std::make_pair(Settings::NativeInput::Values::Y, ui->buttonY)},
+        {std::make_pair(Settings::NativeInput::Values::L, ui->buttonL)},
+        {std::make_pair(Settings::NativeInput::Values::R, ui->buttonR)},
+        {std::make_pair(Settings::NativeInput::Values::ZL, ui->buttonZL)},
+        {std::make_pair(Settings::NativeInput::Values::ZR, ui->buttonZR)},
+        {std::make_pair(Settings::NativeInput::Values::START, ui->buttonStart)},
+        {std::make_pair(Settings::NativeInput::Values::SELECT, ui->buttonSelect)},
+        {std::make_pair(Settings::NativeInput::Values::HOME, ui->buttonHome)},
+        {std::make_pair(Settings::NativeInput::Values::DUP, ui->buttonDpadUp)},
+        {std::make_pair(Settings::NativeInput::Values::DDOWN, ui->buttonDpadDown)},
+        {std::make_pair(Settings::NativeInput::Values::DLEFT, ui->buttonDpadLeft)},
+        {std::make_pair(Settings::NativeInput::Values::DRIGHT, ui->buttonDpadRight)},
+        {std::make_pair(Settings::NativeInput::Values::CUP, ui->buttonCStickUp)},
+        {std::make_pair(Settings::NativeInput::Values::CDOWN, ui->buttonCStickDown)},
+        {std::make_pair(Settings::NativeInput::Values::CLEFT, ui->buttonCStickLeft)},
+        {std::make_pair(Settings::NativeInput::Values::CRIGHT, ui->buttonCStickRight)},
+        {std::make_pair(Settings::NativeInput::Values::CIRCLE_UP, ui->buttonCircleUp)},
+        {std::make_pair(Settings::NativeInput::Values::CIRCLE_DOWN, ui->buttonCircleDown)},
+        {std::make_pair(Settings::NativeInput::Values::CIRCLE_LEFT, ui->buttonCircleLeft)},
+        {std::make_pair(Settings::NativeInput::Values::CIRCLE_RIGHT, ui->buttonCircleRight)},
+        {std::make_pair(Settings::NativeInput::Values::CIRCLE_MODIFIER, ui->buttonCircleMod)},
     };
 
     // Attach handle click method to each button click.
@@ -47,7 +48,10 @@ ConfigureInput::ConfigureInput(QWidget* parent) : QWidget(parent), ui(std::make_
     setFocusPolicy(Qt::ClickFocus);
     timer = new QTimer(this);
     timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, this, [&]() { key_pressed = Qt::Key_Escape; setKey(); });
+    connect(timer, &QTimer::timeout, this, [&]() {
+        key_pressed = Qt::Key_Escape;
+        setKey();
+    });
     this->setConfiguration();
 }
 
@@ -59,7 +63,7 @@ void ConfigureInput::handleClick() {
     grabKeyboard();
     grabMouse();
     changing_button = sender;
-    timer->start(5000); //Cancel after 5 seconds
+    timer->start(5000); // Cancel after 5 seconds
 }
 
 void ConfigureInput::applyConfiguration() {

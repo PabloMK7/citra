@@ -11,7 +11,7 @@ namespace BOSS {
 // const Interface::FunctionInfo FunctionTable[] = { };
 
 BOSS_P_Interface::BOSS_P_Interface() {
-    //Register(FunctionTable);
+    // Register(FunctionTable);
 }
 
 } // namespace BOSS

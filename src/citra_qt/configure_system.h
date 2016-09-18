@@ -4,19 +4,18 @@
 
 #pragma once
 
-#include <memory>
 #include <QWidget>
+#include <memory>
 
 namespace Ui {
 class ConfigureSystem;
 }
 
-class ConfigureSystem : public QWidget
-{
+class ConfigureSystem : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureSystem(QWidget *parent = nullptr);
+    explicit ConfigureSystem(QWidget* parent = nullptr);
     ~ConfigureSystem();
 
     void applyConfiguration();

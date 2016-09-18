@@ -4,19 +4,18 @@
 
 #pragma once
 
-#include <memory>
 #include <QDialog>
+#include <memory>
 
 namespace Ui {
 class ConfigureDialog;
 }
 
-class ConfigureDialog : public QDialog
-{
+class ConfigureDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget *parent);
+    explicit ConfigureDialog(QWidget* parent);
     ~ConfigureDialog();
 
     void applyConfiguration();

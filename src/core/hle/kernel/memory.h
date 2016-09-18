@@ -25,7 +25,6 @@ struct MemoryRegionInfo {
 void MemoryInit(u32 mem_type);
 void MemoryShutdown();
 MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
-
 }
 
 namespace Memory {

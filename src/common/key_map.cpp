@@ -13,11 +13,25 @@ namespace KeyMap {
 //     and map it directly to EmuWindow::ButtonPressed.
 //     It should go the analog input way like circle pad does.
 const std::array<KeyTarget, Settings::NativeInput::NUM_INPUTS> mapping_targets = {{
-    Service::HID::PAD_A, Service::HID::PAD_B, Service::HID::PAD_X, Service::HID::PAD_Y,
-    Service::HID::PAD_L, Service::HID::PAD_R, Service::HID::PAD_ZL, Service::HID::PAD_ZR,
-    Service::HID::PAD_START, Service::HID::PAD_SELECT, Service::HID::PAD_NONE,
-    Service::HID::PAD_UP, Service::HID::PAD_DOWN, Service::HID::PAD_LEFT, Service::HID::PAD_RIGHT,
-    Service::HID::PAD_C_UP, Service::HID::PAD_C_DOWN, Service::HID::PAD_C_LEFT, Service::HID::PAD_C_RIGHT,
+    Service::HID::PAD_A,
+    Service::HID::PAD_B,
+    Service::HID::PAD_X,
+    Service::HID::PAD_Y,
+    Service::HID::PAD_L,
+    Service::HID::PAD_R,
+    Service::HID::PAD_ZL,
+    Service::HID::PAD_ZR,
+    Service::HID::PAD_START,
+    Service::HID::PAD_SELECT,
+    Service::HID::PAD_NONE,
+    Service::HID::PAD_UP,
+    Service::HID::PAD_DOWN,
+    Service::HID::PAD_LEFT,
+    Service::HID::PAD_RIGHT,
+    Service::HID::PAD_C_UP,
+    Service::HID::PAD_C_DOWN,
+    Service::HID::PAD_C_LEFT,
+    Service::HID::PAD_C_RIGHT,
 
     IndirectTarget::CirclePadUp,
     IndirectTarget::CirclePadDown,
@@ -49,7 +63,8 @@ static void UpdateCirclePad(EmuWindow& emu_window) {
         --y;
 
     float modifier = circle_pad_modifier ? Settings::values.pad_circle_modifier_scale : 1.0;
-    emu_window.CirclePadUpdated(x * modifier * (y == 0 ? 1.0 : SQRT_HALF), y * modifier * (x == 0 ? 1.0 : SQRT_HALF));
+    emu_window.CirclePadUpdated(x * modifier * (y == 0 ? 1.0 : SQRT_HALF),
+                                y * modifier * (x == 0 ? 1.0 : SQRT_HALF));
 }
 
 int NewDeviceId() {
@@ -103,7 +118,7 @@ void PressKey(EmuWindow& emu_window, HostDeviceKey key) {
     }
 }
 
-void ReleaseKey(EmuWindow& emu_window,HostDeviceKey key) {
+void ReleaseKey(EmuWindow& emu_window, HostDeviceKey key) {
     auto target = key_map.find(key);
     if (target == key_map.end())
         return;
@@ -135,5 +150,4 @@ void ReleaseKey(EmuWindow& emu_window,HostDeviceKey key) {
         }
     }
 }
-
 }

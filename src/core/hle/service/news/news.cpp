@@ -4,10 +4,10 @@
 
 #include "common/logging/log.h"
 
-#include "core/hle/service/service.h"
 #include "core/hle/service/news/news.h"
 #include "core/hle/service/news/news_s.h"
 #include "core/hle/service/news/news_u.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace NEWS {

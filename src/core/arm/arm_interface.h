@@ -9,7 +9,7 @@
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
 namespace Core {
-    struct ThreadContext;
+struct ThreadContext;
 }
 
 /// Generic ARM11 CPU interface
@@ -141,10 +141,10 @@ public:
         return num_instructions;
     }
 
-    s64 down_count = 0; ///< A decreasing counter of remaining cycles before the next event, decreased by the cpu run loop
+    s64 down_count = 0; ///< A decreasing counter of remaining cycles before the next event,
+                        /// decreased by the cpu run loop
 
 protected:
-
     /**
      * Executes the given number of instructions
      * @param num_instructions Number of instructions to executes
@@ -152,6 +152,5 @@ protected:
     virtual void ExecuteInstructions(int num_instructions) = 0;
 
 private:
-
     u64 num_instructions = 0; ///< Number of instructions executed
 };

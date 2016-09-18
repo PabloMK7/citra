@@ -30,7 +30,7 @@ enum class FileType {
     CXI,
     CIA,
     ELF,
-    THREEDSX, //3DSX
+    THREEDSX, // 3DSX
 };
 
 /**
@@ -81,8 +81,10 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) { }
-    virtual ~AppLoader() { }
+    AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) {
+    }
+    virtual ~AppLoader() {
+    }
 
     /**
      * Returns the type of this file
@@ -140,7 +142,8 @@ public:
      * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) {
+    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
+                                   u64& size) {
         return ResultStatus::ErrorNotImplemented;
     }
 

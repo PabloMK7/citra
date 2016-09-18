@@ -26,7 +26,9 @@ public:
      */
     bool Initialize();
 
-    std::string GetName() const override { return "SDMC"; }
+    std::string GetName() const override {
+        return "SDMC";
+    }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;

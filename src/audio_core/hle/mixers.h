@@ -20,10 +20,8 @@ public:
 
     void Reset();
 
-    DspStatus Tick(DspConfiguration& config,
-                   const IntermediateMixSamples& read_samples,
-                   IntermediateMixSamples& write_samples,
-                   const std::array<QuadFrame32, 3>& input);
+    DspStatus Tick(DspConfiguration& config, const IntermediateMixSamples& read_samples,
+                   IntermediateMixSamples& write_samples, const std::array<QuadFrame32, 3>& input);
 
     StereoFrame16 GetOutput() const {
         return current_frame;
@@ -53,7 +51,8 @@ private:
     void AuxSend(IntermediateMixSamples& write_samples, const std::array<QuadFrame32, 3>& input);
     /// INTERNAL: Mix current_frame.
     void MixCurrentFrame();
-    /// INTERNAL: Downmix from quadraphonic to stereo based on status.output_format and accumulate into current_frame.
+    /// INTERNAL: Downmix from quadraphonic to stereo based on status.output_format and accumulate
+    /// into current_frame.
     void DownmixAndMixIntoCurrentFrame(float gain, const QuadFrame32& samples);
     /// INTERNAL: Generate DspStatus based on internal state.
     DspStatus GetCurrentStatus() const;

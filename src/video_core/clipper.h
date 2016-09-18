@@ -7,7 +7,7 @@
 namespace Pica {
 
 namespace Shader {
-    struct OutputVertex;
+struct OutputVertex;
 }
 
 namespace Clipper {

@@ -5,14 +5,14 @@
 #pragma once
 
 #include <QByteArray>
-#include <QStringList>
 #include <QString>
+#include <QStringList>
 
 #include <vector>
 
 namespace UISettings {
 
-using ContextualShortcut = std::pair<QString, int> ;
+using ContextualShortcut = std::pair<QString, int>;
 using Shortcut = std::pair<QString, ContextualShortcut>;
 
 struct Values {
@@ -43,5 +43,4 @@ struct Values {
 };
 
 extern Values values;
-
 }

@@ -9,8 +9,8 @@
 
 #include "core/core_timing.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/timer.h"
 
 namespace Kernel {
 
@@ -20,8 +20,10 @@ static int timer_callback_event_type;
 //               us to simply use a pool index or similar.
 static Kernel::HandleTable timer_callback_handle_table;
 
-Timer::Timer() {}
-Timer::~Timer() {}
+Timer::Timer() {
+}
+Timer::~Timer() {
+}
 
 SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
     SharedPtr<Timer> timer(new Timer);
@@ -41,7 +43,7 @@ bool Timer::ShouldWait() {
 }
 
 void Timer::Acquire() {
-    ASSERT_MSG( !ShouldWait(), "object unavailable!");
+    ASSERT_MSG(!ShouldWait(), "object unavailable!");
 
     if (reset_type == ResetType::OneShot)
         signaled = false;
@@ -55,8 +57,8 @@ void Timer::Set(s64 initial, s64 interval) {
     interval_delay = interval;
 
     u64 initial_microseconds = initial / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds),
-            timer_callback_event_type, callback_handle);
+    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
+                              callback_handle);
 
     HLE::Reschedule(__func__);
 }
@@ -73,7 +75,8 @@ void Timer::Clear() {
 
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
-    SharedPtr<Timer> timer = timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
+    SharedPtr<Timer> timer =
+        timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
 
     if (timer == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer %08" PRIx64, timer_handle);
@@ -91,7 +94,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
         // Reschedule the timer with the interval delay
         u64 interval_microseconds = timer->interval_delay / 1000;
         CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late,
-                timer_callback_event_type, timer_handle);
+                                  timer_callback_event_type, timer_handle);
     }
 }
 

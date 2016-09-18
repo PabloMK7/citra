@@ -14,7 +14,7 @@ namespace Common {
 namespace Profiling {
 
 ProfilingManager::ProfilingManager()
-        : last_frame_end(Clock::now()), this_frame_start(Clock::now()) {
+    : last_frame_end(Clock::now()), this_frame_start(Clock::now()) {
 }
 
 void ProfilingManager::BeginFrame() {
@@ -31,7 +31,7 @@ void ProfilingManager::FinishFrame() {
 }
 
 TimingResultsAggregator::TimingResultsAggregator(size_t window_size)
-        : max_window_size(window_size), window_size(0) {
+    : max_window_size(window_size), window_size(0) {
     interframe_times.resize(window_size, Duration::zero());
     frame_times.resize(window_size, Duration::zero());
 }

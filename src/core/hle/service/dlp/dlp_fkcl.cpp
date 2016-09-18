@@ -8,8 +8,7 @@ namespace Service {
 namespace DLP {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010083, nullptr, "Initialize"},
-    {0x000F0000, nullptr, "GetWirelessRebootPassphrase"},
+    {0x00010083, nullptr, "Initialize"}, {0x000F0000, nullptr, "GetWirelessRebootPassphrase"},
 };
 
 DLP_FKCL_Interface::DLP_FKCL_Interface() {

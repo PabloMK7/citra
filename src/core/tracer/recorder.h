@@ -54,7 +54,7 @@ public:
      * Record a register write.
      * @note Use this whenever a GPU-related MMIO register has been written to.
      */
-    template<typename T>
+    template <typename T>
     void RegisterWritten(u32 physical_address, T value);
 
 private:

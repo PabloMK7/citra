@@ -19,8 +19,7 @@ class GGLWidgetInternal;
 class GMainWindow;
 class GRenderWindow;
 
-class EmuThread : public QThread
-{
+class EmuThread : public QThread {
     Q_OBJECT
 
 public:
@@ -58,7 +57,9 @@ public:
      * @return True if the emulation thread is running, otherwise false
      * @note This function is thread-safe
      */
-    bool IsRunning() { return running; }
+    bool IsRunning() {
+        return running;
+    }
 
     /**
      * Requests for the emulation thread to stop running
@@ -81,20 +82,23 @@ signals:
     /**
      * Emitted when the CPU has halted execution
      *
-     * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
+     * @warning When connecting to this signal from other threads, make sure to specify either
+     * Qt::QueuedConnection (invoke slot within the destination object's message thread) or even
+     * Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
     void DebugModeEntered();
 
     /**
      * Emitted right before the CPU continues execution
      *
-     * @warning When connecting to this signal from other threads, make sure to specify either Qt::QueuedConnection (invoke slot within the destination object's message thread) or even Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
+     * @warning When connecting to this signal from other threads, make sure to specify either
+     * Qt::QueuedConnection (invoke slot within the destination object's message thread) or even
+     * Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
     void DebugModeLeft();
 };
 
-class GRenderWindow : public QWidget, public EmuWindow
-{
+class GRenderWindow : public QWidget, public EmuWindow {
     Q_OBJECT
 
 public:
@@ -109,7 +113,7 @@ public:
     void BackupGeometry();
     void RestoreGeometry();
     void restoreGeometry(const QByteArray& geometry); // overridden
-    QByteArray saveGeometry();  // overridden
+    QByteArray saveGeometry();                        // overridden
 
     qreal windowPixelRatio();
 
@@ -118,9 +122,9 @@ public:
     void keyPressEvent(QKeyEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
 
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
 
     void ReloadSetKeymaps() override;
 
@@ -129,7 +133,7 @@ public:
     void InitRenderTarget();
 
 public slots:
-    void moveContext();  // overridden
+    void moveContext(); // overridden
 
     void OnEmulationStarting(EmuThread* emu_thread);
     void OnEmulationStopping();
@@ -140,7 +144,8 @@ signals:
     void Closed();
 
 private:
-    void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) override;
+    void
+    OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) override;
 
     GGLWidgetInternal* child;
 

@@ -16,8 +16,10 @@
 
 namespace Kernel {
 
-AddressArbiter::AddressArbiter() {}
-AddressArbiter::~AddressArbiter() {}
+AddressArbiter::AddressArbiter() {
+}
+AddressArbiter::~AddressArbiter() {
+}
 
 SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
     SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);
@@ -28,7 +30,7 @@ SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
 }
 
 ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address, s32 value,
-        u64 nanoseconds) {
+                                            u64 nanoseconds) {
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -38,7 +40,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
             ArbitrateAllThreads(address);
         } else {
             // Resume first N threads
-            for(int i = 0; i < value; i++)
+            for (int i = 0; i < value; i++)
                 ArbitrateHighestPriorityThread(address);
         }
         break;
@@ -55,8 +57,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
             GetCurrentThread()->WakeAfterDelay(nanoseconds);
         }
         break;
-    case ArbitrationType::DecrementAndWaitIfLessThan:
-    {
+    case ArbitrationType::DecrementAndWaitIfLessThan: {
         s32 memory_value = Memory::Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
@@ -65,8 +66,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
         }
         break;
     }
-    case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout:
-    {
+    case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout: {
         s32 memory_value = Memory::Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
@@ -79,17 +79,19 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
 
     default:
         LOG_ERROR(Kernel, "unknown type=%d", type);
-        return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel, ErrorSummary::WrongArgument, ErrorLevel::Usage);
+        return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel,
+                          ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
 
     HLE::Reschedule(__func__);
 
-    // The calls that use a timeout seem to always return a Timeout error even if they did not put the thread to sleep
+    // The calls that use a timeout seem to always return a Timeout error even if they did not put
+    // the thread to sleep
     if (type == ArbitrationType::WaitIfLessThanWithTimeout ||
         type == ArbitrationType::DecrementAndWaitIfLessThanWithTimeout) {
 
-        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                          ErrorSummary::StatusChanged, ErrorLevel::Info);
+        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS, ErrorSummary::StatusChanged,
+                          ErrorLevel::Info);
     }
     return RESULT_SUCCESS;
 }

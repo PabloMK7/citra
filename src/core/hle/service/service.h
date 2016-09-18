@@ -28,13 +28,15 @@ class Interface : public Kernel::Session {
     // just something that encapsulates a session and acts as a helper to implement service
     // processes.
 public:
-    std::string GetName() const override { return GetPortName(); }
+    std::string GetName() const override {
+        return GetPortName();
+    }
 
     typedef void (*Function)(Interface*);
 
     struct FunctionInfo {
-        u32         id;
-        Function    func;
+        u32 id;
+        Function func;
         const char* name;
     };
 
@@ -49,7 +51,6 @@ public:
     ResultVal<bool> SyncRequest() override;
 
 protected:
-
     /**
      * Registers the functions in the service
      */
@@ -62,7 +63,6 @@ protected:
 
 private:
     boost::container::flat_map<u32, FunctionInfo> m_functions;
-
 };
 
 /// Initialize ServiceManager

@@ -9,10 +9,8 @@
 #include "core/settings.h"
 #include "core/system.h"
 
-ConfigureGeneral::ConfigureGeneral(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureGeneral)
-{
+ConfigureGeneral::ConfigureGeneral(QWidget* parent)
+    : QWidget(parent), ui(new Ui::ConfigureGeneral) {
     ui->setupUi(this);
     this->setConfiguration();
 

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <string>
 #include <QVariant>
+#include <string>
 
 #include "core/settings.h"
 
@@ -17,6 +17,7 @@ class Config {
 
     void ReadValues();
     void SaveValues();
+
 public:
     Config();
     ~Config();

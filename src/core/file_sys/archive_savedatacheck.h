@@ -20,7 +20,9 @@ class ArchiveFactory_SaveDataCheck final : public ArchiveFactory {
 public:
     ArchiveFactory_SaveDataCheck(const std::string& mount_point);
 
-    std::string GetName() const override { return "SaveDataCheck"; }
+    std::string GetName() const override {
+        return "SaveDataCheck";
+    }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
