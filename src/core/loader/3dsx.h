@@ -19,8 +19,7 @@ class AppLoader_THREEDSX final : public AppLoader {
 public:
     AppLoader_THREEDSX(FileUtil::IOFile&& file, const std::string& filename,
                        const std::string& filepath)
-        : AppLoader(std::move(file)), filename(std::move(filename)), filepath(filepath) {
-    }
+        : AppLoader(std::move(file)), filename(std::move(filename)), filepath(filepath) {}
 
     /**
      * Returns the type of the file

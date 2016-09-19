@@ -14,10 +14,8 @@
 
 namespace Kernel {
 
-Event::Event() {
-}
-Event::~Event() {
-}
+Event::Event() {}
+Event::~Event() {}
 
 SharedPtr<Event> Event::Create(ResetType reset_type, std::string name) {
     SharedPtr<Event> evt(new Event);

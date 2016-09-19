@@ -61,7 +61,7 @@ static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u
             s32 cY = c[0] * Y;
 
             s32 r = cY + c[1] * V;
-            s32 g = cY - c[3] * U - c[2] * V;
+            s32 g = cY - c[2] * V - c[3] * U;
             s32 b = cY + c[4] * U;
 
             const s32 rounding_offset = 0x18;
@@ -144,16 +144,30 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
     }
 }
 
-static const u8 linear_lut[64] = {
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-    22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-    44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+static const u8 linear_lut[TILE_SIZE] = {
+    // clang-format off
+     0,  1,  2,  3,  4,  5,  6,  7,
+     8,  9, 10, 11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20, 21, 22, 23,
+    24, 25, 26, 27, 28, 29, 30, 31,
+    32, 33, 34, 35, 36, 37, 38, 39,
+    40, 41, 42, 43, 44, 45, 46, 47,
+    48, 49, 50, 51, 52, 53, 54, 55,
+    56, 57, 58, 59, 60, 61, 62, 63,
+    // clang-format on
 };
 
-static const u8 morton_lut[64] = {
-    0,  1,  4,  5,  16, 17, 20, 21, 2,  3,  6,  7,  18, 19, 22, 23, 8,  9,  12, 13, 24, 25,
-    28, 29, 10, 11, 14, 15, 26, 27, 30, 31, 32, 33, 36, 37, 48, 49, 52, 53, 34, 35, 38, 39,
-    50, 51, 54, 55, 40, 41, 44, 45, 56, 57, 60, 61, 42, 43, 46, 47, 58, 59, 62, 63,
+static const u8 morton_lut[TILE_SIZE] = {
+    // clang-format off
+     0,  1,  4,  5, 16, 17, 20, 21,
+     2,  3,  6,  7, 18, 19, 22, 23,
+     8,  9, 12, 13, 24, 25, 28, 29,
+    10, 11, 14, 15, 26, 27, 30, 31,
+    32, 33, 36, 37, 48, 49, 52, 53,
+    34, 35, 38, 39, 50, 51, 54, 55,
+    40, 41, 44, 45, 56, 57, 60, 61,
+    42, 43, 46, 47, 58, 59, 62, 63,
+    // clang-format on
 };
 
 static void RotateTile0(const ImageTile& input, ImageTile& output, int height,

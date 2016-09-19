@@ -25,10 +25,8 @@
 #include "video_core/utils.h"
 
 SurfacePicture::SurfacePicture(QWidget* parent, GraphicsSurfaceWidget* surface_widget_)
-    : QLabel(parent), surface_widget(surface_widget_) {
-}
-SurfacePicture::~SurfacePicture() {
-}
+    : QLabel(parent), surface_widget(surface_widget_) {}
+SurfacePicture::~SurfacePicture() {}
 
 void SurfacePicture::mousePressEvent(QMouseEvent* event) {
     // Only do something while the left mouse button is held down
@@ -707,9 +705,8 @@ unsigned int GraphicsSurfaceWidget::NibblesPerPixel(GraphicsSurfaceWidget::Forma
     case Format::D16:
         return 2 * 2;
     default:
-        UNREACHABLE_MSG("GraphicsSurfaceWidget::BytesPerPixel: this "
-                        "should not be reached as this function should "
-                        "be given a format which is in "
+        UNREACHABLE_MSG("GraphicsSurfaceWidget::BytesPerPixel: this should not be reached as this "
+                        "function should be given a format which is in "
                         "GraphicsSurfaceWidget::Format. Instead got %i",
                         static_cast<int>(format));
         return 0;

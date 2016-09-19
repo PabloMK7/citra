@@ -39,8 +39,7 @@ void SetCurrentThreadAffinity(u32 mask);
 
 class Event {
 public:
-    Event() : is_set(false) {
-    }
+    Event() : is_set(false) {}
 
     void Set() {
         std::lock_guard<std::mutex> lk(mutex);
@@ -71,8 +70,7 @@ private:
 
 class Barrier {
 public:
-    explicit Barrier(size_t count_) : count(count_), waiting(0), generation(0) {
-    }
+    explicit Barrier(size_t count_) : count(count_), waiting(0), generation(0) {}
 
     /// Blocks until all "count" threads have called Sync()
     void Sync() {

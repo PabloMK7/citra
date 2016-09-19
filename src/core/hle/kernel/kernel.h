@@ -58,8 +58,7 @@ enum {
 
 class Object : NonCopyable {
 public:
-    virtual ~Object() {
-    }
+    virtual ~Object() {}
 
     /// Returns a unique identifier for the object. For debugging purposes only.
     unsigned int GetObjectId() const {

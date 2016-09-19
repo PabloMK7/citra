@@ -237,10 +237,8 @@ private:
     void ResetMPCoreCP15Registers();
 
     // Defines a reservation granule of 2 words, which protects the first 2 words starting at the
-    // tag.
-    // This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough
-    // to
-    // support LDR/STREXD.
+    // tag. This is the smallest granule allowed by the v7 spec, and is coincidentally just large
+    // enough to support LDR/STREXD.
     static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
 
     u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode

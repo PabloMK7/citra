@@ -92,8 +92,8 @@ public:
     s32 max_cpu_time = 0;
 
     // TODO(Subv): Increment these in their respective Kernel::T::Create functions, keeping in mind
-    // that
-    // APPLICATION resource limits should not be affected by the objects created by service modules.
+    // that APPLICATION resource limits should not be affected by the objects created by service
+    // modules.
     // Currently we have no way of distinguishing if a Create was called by the running application,
     // or by a service module. Approach this once we have separated the service modules into their
     // own processes

@@ -59,12 +59,9 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
 class GameListItem : public QStandardItem {
 
 public:
-    GameListItem() : QStandardItem() {
-    }
-    GameListItem(const QString& string) : QStandardItem(string) {
-    }
-    virtual ~GameListItem() override {
-    }
+    GameListItem() : QStandardItem() {}
+    GameListItem(const QString& string) : QStandardItem(string) {}
+    virtual ~GameListItem() override {}
 };
 
 /**
@@ -79,8 +76,7 @@ public:
     static const int FullPathRole = Qt::UserRole + 1;
     static const int TitleRole = Qt::UserRole + 2;
 
-    GameListItemPath() : GameListItem() {
-    }
+    GameListItemPath() : GameListItem() {}
     GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data) : GameListItem() {
         setData(game_path, FullPathRole);
 
@@ -124,8 +120,7 @@ class GameListItemSize : public GameListItem {
 public:
     static const int SizeRole = Qt::UserRole + 1;
 
-    GameListItemSize() : GameListItem() {
-    }
+    GameListItemSize() : GameListItem() {}
     GameListItemSize(const qulonglong size_bytes) : GameListItem() {
         setData(size_bytes, SizeRole);
     }
@@ -161,8 +156,7 @@ class GameListWorker : public QObject, public QRunnable {
 
 public:
     GameListWorker(QString dir_path, bool deep_scan)
-        : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan) {
-    }
+        : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan) {}
 
 public slots:
     /// Starts the processing of directory tree information.

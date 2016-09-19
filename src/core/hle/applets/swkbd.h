@@ -53,8 +53,7 @@ static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config
 
 class SoftwareKeyboard final : public Applet {
 public:
-    SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) {
-    }
+    SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;

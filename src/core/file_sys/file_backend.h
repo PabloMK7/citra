@@ -16,10 +16,8 @@ namespace FileSys {
 
 class FileBackend : NonCopyable {
 public:
-    FileBackend() {
-    }
-    virtual ~FileBackend() {
-    }
+    FileBackend() {}
+    virtual ~FileBackend() {}
 
     /**
      * Open the file

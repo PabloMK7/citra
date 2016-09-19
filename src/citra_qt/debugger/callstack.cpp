@@ -78,8 +78,7 @@ void CallstackWidget::OnDebugModeEntered() {
     }
 }
 
-void CallstackWidget::OnDebugModeLeft() {
-}
+void CallstackWidget::OnDebugModeLeft() {}
 
 void CallstackWidget::Clear() {
     for (int row = 0; row < callstack_model->rowCount(); row++) {

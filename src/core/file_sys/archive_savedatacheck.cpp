@@ -30,8 +30,7 @@ static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high
 }
 
 ArchiveFactory_SaveDataCheck::ArchiveFactory_SaveDataCheck(const std::string& nand_directory)
-    : mount_point(GetSaveDataCheckContainerPath(nand_directory)) {
-}
+    : mount_point(GetSaveDataCheckContainerPath(nand_directory)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(const Path& path) {
     auto vec = path.AsBinary();

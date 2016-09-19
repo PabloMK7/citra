@@ -233,8 +233,7 @@ struct OpArg {
     constexpr OpArg() = default; // dummy op arg, used for storage
     constexpr OpArg(u64 offset_, int scale_, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
         : scale(static_cast<u8>(scale_)), offsetOrBaseReg(static_cast<u16>(rmReg)),
-          indexReg(static_cast<u16>(scaledReg)), offset(offset_) {
-    }
+          indexReg(static_cast<u16>(scaledReg)), offset(offset_) {}
 
     constexpr bool operator==(const OpArg& b) const {
         return operandReg == b.operandReg && scale == b.scale &&
@@ -454,8 +453,7 @@ public:
         code = code_ptr;
         flags_locked = false;
     }
-    virtual ~XEmitter() {
-    }
+    virtual ~XEmitter() {}
 
     void WriteModRM(int mod, int rm, int reg);
     void WriteSIB(int scale, int index, int base);

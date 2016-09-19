@@ -12,8 +12,7 @@
 
 namespace CiTrace {
 
-Recorder::Recorder(const InitialState& initial_state) : initial_state(initial_state) {
-}
+Recorder::Recorder(const InitialState& initial_state) : initial_state(initial_state) {}
 
 void Recorder::Finish(const std::string& filename) {
     // Setup CiTrace header

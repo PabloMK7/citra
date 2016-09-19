@@ -20,8 +20,7 @@ namespace VideoCore {
 
 class RasterizerInterface {
 public:
-    virtual ~RasterizerInterface() {
-    }
+    virtual ~RasterizerInterface() {}
 
     /// Queues the primitive formed by the given vertices for rendering
     virtual void AddTriangle(const Pica::Shader::OutputVertex& v0,

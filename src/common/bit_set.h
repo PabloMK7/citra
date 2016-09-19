@@ -102,10 +102,8 @@ public:
     // A reference to a particular bit, returned from operator[].
     class Ref {
     public:
-        Ref(Ref&& other) : m_bs(other.m_bs), m_mask(other.m_mask) {
-        }
-        Ref(BitSet* bs, IntTy mask) : m_bs(bs), m_mask(mask) {
-        }
+        Ref(Ref&& other) : m_bs(other.m_bs), m_mask(other.m_mask) {}
+        Ref(BitSet* bs, IntTy mask) : m_bs(bs), m_mask(mask) {}
         operator bool() const {
             return (m_bs->m_val & m_mask) != 0;
         }
@@ -122,10 +120,8 @@ public:
     // A STL-like iterator is required to be able to use range-based for loops.
     class Iterator {
     public:
-        Iterator(const Iterator& other) : m_val(other.m_val), m_bit(other.m_bit) {
-        }
-        Iterator(IntTy val, int bit) : m_val(val), m_bit(bit) {
-        }
+        Iterator(const Iterator& other) : m_val(other.m_val), m_bit(other.m_bit) {}
+        Iterator(IntTy val, int bit) : m_val(val), m_bit(bit) {}
         Iterator& operator=(Iterator other) {
             new (this) Iterator(other);
             return *this;
@@ -160,10 +156,8 @@ public:
         int m_bit;
     };
 
-    BitSet() : m_val(0) {
-    }
-    explicit BitSet(IntTy val) : m_val(val) {
-    }
+    BitSet() : m_val(0) {}
+    explicit BitSet(IntTy val) : m_val(val) {}
     BitSet(std::initializer_list<int> init) {
         m_val = 0;
         for (int bit : init)

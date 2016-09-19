@@ -17,8 +17,7 @@ public:
     /// Used to reference a framebuffer
     enum kFramebuffer { kFramebuffer_VirtualXFB = 0, kFramebuffer_EFB, kFramebuffer_Texture };
 
-    virtual ~RendererBase() {
-    }
+    virtual ~RendererBase() {}
 
     /// Swap buffers (render frame)
     virtual void SwapBuffers() = 0;

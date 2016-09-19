@@ -97,7 +97,8 @@ static void AudioPipeWriteStructAddresses() {
         0x8000 + offsetof(SharedMemory, unknown11) / 2,
         0x8000 + offsetof(SharedMemory, unknown12) / 2,
         0x8000 + offsetof(SharedMemory, unknown13) / 2,
-        0x8000 + offsetof(SharedMemory, unknown14) / 2};
+        0x8000 + offsetof(SharedMemory, unknown14) / 2,
+    };
 
     // Begin with a u16 denoting the number of structs.
     WriteU16(DspPipe::Audio, static_cast<u16>(struct_addresses.size()));
@@ -118,7 +119,12 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
             return;
         }
 
-        enum class StateChange { Initalize = 0, Shutdown = 1, Wakeup = 2, Sleep = 3 };
+        enum class StateChange {
+            Initalize = 0,
+            Shutdown = 1,
+            Wakeup = 2,
+            Sleep = 3,
+        };
 
         // The difference between Initialize and Wakeup is that Input state is maintained
         // when sleeping but isn't when turning it off and on again. (TODO: Implement this.)

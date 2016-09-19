@@ -23,16 +23,15 @@ class Sink;
 namespace DSP {
 namespace HLE {
 
-// The application-accessible region of DSP memory consists of two parts.
-// Both are marked as IO and have Read/Write permissions.
+// The application-accessible region of DSP memory consists of two parts. Both are marked as IO and
+// have Read/Write permissions.
 //
 // First Region:  0x1FF50000 (Size: 0x8000)
 // Second Region: 0x1FF70000 (Size: 0x8000)
 //
 // The DSP reads from each region alternately based on the frame counter for each region much like a
 // double-buffer. The frame counter is located as the very last u16 of each region and is
-// incremented
-// each audio tick.
+// incremented each audio tick.
 
 constexpr VAddr region0_base = 0x1FF50000;
 constexpr VAddr region1_base = 0x1FF70000;
@@ -92,14 +91,12 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //    See also: DSP::HLE::PipeRead.
 //
 // Note that the above addresses do vary slightly between audio firmwares observed; the addresses
-// are
-// not fixed in stone. The addresses above are only an examplar; they're what this implementation
-// does and provides to applications.
+// are not fixed in stone. The addresses above are only an examplar; they're what this
+// implementation does and provides to applications.
 //
 // Application requests the DSP service to convert DSP addresses into ARM11 virtual addresses using
-// the
-// ConvertProcessAddressFromDspDram service call. Applications seem to derive the addresses for the
-// second region via:
+// the ConvertProcessAddressFromDspDram service call. Applications seem to derive the addresses for
+// the second region via:
 //     second_region_dsp_addr = first_region_dsp_addr | 0x10000
 //
 // Applications maintain most of its own audio state, the memory region is used mainly for
@@ -107,7 +104,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //
 // In the documentation below, filter and effect transfer functions are specified in the z domain.
 // (If you are more familiar with the Laplace transform, z = exp(sT). The z domain is the digital
-//  frequency domain, just like how the s domain is the analog frequency domain.)
+// frequency domain, just like how the s domain is the analog frequency domain.)
 
 #define INSERT_PADDING_DSPWORDS(num_words) INSERT_PADDING_BYTES(2 * (num_words))
 
@@ -137,8 +134,8 @@ struct SourceConfiguration {
             BitField<0, 1, u32_le> format_dirty;
             BitField<1, 1, u32_le> mono_or_stereo_dirty;
             BitField<2, 1, u32_le> adpcm_coefficients_dirty;
-            BitField<3, 1, u32_le>
-                partial_embedded_buffer_dirty; ///< Tends to be set when a looped buffer is queued.
+            /// Tends to be set when a looped buffer is queued.
+            BitField<3, 1, u32_le> partial_embedded_buffer_dirty;
             BitField<4, 1, u32_le> partial_reset_flag;
 
             BitField<16, 1, u32_le> enable_dirty;
@@ -146,8 +143,8 @@ struct SourceConfiguration {
             BitField<18, 1, u32_le> rate_multiplier_dirty;
             BitField<19, 1, u32_le> buffer_queue_dirty;
             BitField<20, 1, u32_le> loop_related_dirty;
-            BitField<21, 1, u32_le>
-                play_position_dirty; ///< Tends to also be set when embedded buffer is updated.
+            /// Tends to also be set when embedded buffer is updated.
+            BitField<21, 1, u32_le> play_position_dirty;
             BitField<22, 1, u32_le> filters_enabled_dirty;
             BitField<23, 1, u32_le> simple_filter_dirty;
             BitField<24, 1, u32_le> biquad_filter_dirty;
@@ -162,9 +159,9 @@ struct SourceConfiguration {
         // Gain control
 
         /**
-         * Gain is between 0.0-1.0. This determines how much will this source appear on
-         * each of the 12 channels that feed into the intermediate mixers.
-         * Each of the three intermediate mixers is fed two left and two right channels.
+         * Gain is between 0.0-1.0. This determines how much will this source appear on each of the
+         * 12 channels that feed into the intermediate mixers. Each of the three intermediate mixers
+         * is fed two left and two right channels.
          */
         float_le gain[3][4];
 
@@ -173,7 +170,11 @@ struct SourceConfiguration {
         /// Multiplier for sample rate. Resampling occurs with the selected interpolation method.
         float_le rate_multiplier;
 
-        enum class InterpolationMode : u8 { Polyphase = 0, Linear = 1, None = 2 };
+        enum class InterpolationMode : u8 {
+            Polyphase = 0,
+            Linear = 1,
+            None = 2,
+        };
 
         InterpolationMode interpolation_mode;
         INSERT_PADDING_BYTES(1); ///< Interpolation related
@@ -197,8 +198,7 @@ struct SourceConfiguration {
          * The transfer function of this filter is:
          *     H(z) = (b0 + b1 z^-1 + b2 z^-2) / (1 - a1 z^-1 - a2 z^-2)
          * Nintendo chose to negate the feedbackward coefficients. This differs from standard
-         * notation
-         * as in: https://ccrma.stanford.edu/~jos/filters/Direct_Form_I.html
+         * notation as in: https://ccrma.stanford.edu/~jos/filters/Direct_Form_I.html
          * Values are signed fixed point with 14 fractional bits.
          */
         struct BiquadFilter {
@@ -246,8 +246,8 @@ struct SourceConfiguration {
             u8 is_looping;
 
             /// This value is shown in SourceStatus::previous_buffer_id when this buffer has
-            /// finished.
-            /// This allows the emulated application to tell what buffer is currently playing
+            /// finished. This allows the emulated application to tell what buffer is currently
+            /// playing.
             u16_le buffer_id;
 
             INSERT_PADDING_DSPWORDS(1);
@@ -275,9 +275,16 @@ struct SourceConfiguration {
         /// Note a sample takes up different number of bytes in different buffer formats.
         u32_dsp length;
 
-        enum class MonoOrStereo : u16_le { Mono = 1, Stereo = 2 };
+        enum class MonoOrStereo : u16_le {
+            Mono = 1,
+            Stereo = 2,
+        };
 
-        enum class Format : u16_le { PCM8 = 0, PCM16 = 1, ADPCM = 2 };
+        enum class Format : u16_le {
+            PCM8 = 0,
+            PCM16 = 1,
+            ADPCM = 2,
+        };
 
         union {
             u16_le flags1_raw;
@@ -349,12 +356,16 @@ struct DspConfiguration {
     };
 
     /// The DSP has three intermediate audio mixers. This controls the volume level (0.0-1.0) for
-    /// each at the final mixer
+    /// each at the final mixer.
     float_le volume[3];
 
     INSERT_PADDING_DSPWORDS(3);
 
-    enum class OutputFormat : u16_le { Mono = 0, Stereo = 1, Surround = 2 };
+    enum class OutputFormat : u16_le {
+        Mono = 0,
+        Stereo = 1,
+        Surround = 2,
+    };
 
     OutputFormat output_format;
 
@@ -386,9 +397,10 @@ struct DspConfiguration {
         u16_le enable;
         INSERT_PADDING_DSPWORDS(1);
         u16_le outputs;
-        u32_dsp work_buffer_address; ///< The application allocates a block of memory for the DSP to
-                                     /// use as a work buffer.
-        u16_le frame_count;          ///< Frames to delay by
+        /// The application allocates a block of memory for the DSP to use as a work buffer.
+        u32_dsp work_buffer_address;
+        /// Frames to delay by
+        u16_le frame_count;
 
         // Coefficients
         s16_le g; ///< Fixed point with 7 fractional bits

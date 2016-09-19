@@ -90,11 +90,9 @@ enum class DirectoryCommand : u32 {
 };
 
 File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-    : path(path), priority(0), backend(std::move(backend)) {
-}
+    : path(path), priority(0), backend(std::move(backend)) {}
 
-File::~File() {
-}
+File::~File() {}
 
 ResultVal<bool> File::SyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -205,11 +203,9 @@ ResultVal<bool> File::SyncRequest() {
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
-    : path(path), backend(std::move(backend)) {
-}
+    : path(path), backend(std::move(backend)) {}
 
-Directory::~Directory() {
-}
+Directory::~Directory() {}
 
 ResultVal<bool> Directory::SyncRequest() {
     u32* cmd_buff = Kernel::GetCommandBuffer();

@@ -10,7 +10,9 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/system.h"
 
-static const std::array<int, 12> days_in_month = {{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
+static const std::array<int, 12> days_in_month = {{
+    31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
+}};
 
 ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
@@ -20,8 +22,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
     this->setConfiguration();
 }
 
-ConfigureSystem::~ConfigureSystem() {
-}
+ConfigureSystem::~ConfigureSystem() {}
 
 void ConfigureSystem::setConfiguration() {
     enabled = !System::IsPoweredOn();
@@ -51,8 +52,8 @@ void ConfigureSystem::setConfiguration() {
 void ConfigureSystem::ReadSystemSettings() {
     // set username
     username = Service::CFG::GetUsername();
-    // ui->edit_username->setText(QString::fromStdU16String(username)); // TODO(wwylele): Use this
-    // when we move to Qt 5.5
+    // TODO(wwylele): Use this when we move to Qt 5.5
+    // ui->edit_username->setText(QString::fromStdU16String(username));
     ui->edit_username->setText(
         QString::fromUtf16(reinterpret_cast<const ushort*>(username.data())));
 
@@ -80,8 +81,8 @@ void ConfigureSystem::applyConfiguration() {
     bool modified = false;
 
     // apply username
-    // std::u16string new_username = ui->edit_username->text().toStdU16String(); // TODO(wwylele):
-    // Use this when we move to Qt 5.5
+    // TODO(wwylele): Use this when we move to Qt 5.5
+    // std::u16string new_username = ui->edit_username->text().toStdU16String();
     std::u16string new_username(
         reinterpret_cast<const char16_t*>(ui->edit_username->text().utf16()));
     if (new_username != username) {

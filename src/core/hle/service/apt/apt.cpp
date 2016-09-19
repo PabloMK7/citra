@@ -90,10 +90,8 @@ void GetSharedFont(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was
-    // allocated,
-    // the real APT service calculates this address by scanning the entire address space (using
-    // svcQueryMemory)
-    // and searches for an allocation of the same size as the Shared Font.
+    // allocated, the real APT service calculates this address by scanning the entire address space
+    // (using svcQueryMemory) and searches for an allocation of the same size as the Shared Font.
     cmd_buff[2] = target_address;
     cmd_buff[3] = IPC::CopyHandleDesc();
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();

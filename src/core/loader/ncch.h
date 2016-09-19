@@ -164,8 +164,7 @@ namespace Loader {
 class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(FileUtil::IOFile&& file, const std::string& filepath)
-        : AppLoader(std::move(file)), filepath(filepath) {
-    }
+        : AppLoader(std::move(file)), filepath(filepath) {}
 
     /**
      * Returns the type of the file

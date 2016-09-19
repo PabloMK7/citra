@@ -11,12 +11,16 @@
 namespace Service {
 namespace NDM {
 
-enum : u32 { DEFAULT_RETRY_INTERVAL = 10, DEFAULT_SCAN_INTERVAL = 30 };
+enum : u32 {
+    DEFAULT_RETRY_INTERVAL = 10,
+    DEFAULT_SCAN_INTERVAL = 30,
+};
 
 static DaemonMask daemon_bit_mask = DaemonMask::Default;
 static DaemonMask default_daemon_bit_mask = DaemonMask::Default;
-static std::array<DaemonStatus, 4> daemon_status = {DaemonStatus::Idle, DaemonStatus::Idle,
-                                                    DaemonStatus::Idle, DaemonStatus::Idle};
+static std::array<DaemonStatus, 4> daemon_status = {
+    DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle,
+};
 static ExclusiveState exclusive_state = ExclusiveState::None;
 static u32 scan_interval = DEFAULT_SCAN_INTERVAL;
 static u32 retry_interval = DEFAULT_RETRY_INTERVAL;
@@ -227,8 +231,7 @@ void Init() {
     AddService(new NDM_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace NDM
 } // namespace Service

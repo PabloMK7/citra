@@ -61,10 +61,8 @@ inline static u32 const NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread() {
-}
-Thread::~Thread() {
-}
+Thread::Thread() {}
+Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
     return current_thread;

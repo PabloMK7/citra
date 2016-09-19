@@ -29,10 +29,9 @@ const static u32 REGS_BEGIN = 0x1EB00000;
 
 namespace GSP_GPU {
 
-const ResultCode
-    ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED(ErrorDescription::OutofRangeOrMisalignedAddress,
-                                          ErrorModule::GX, ErrorSummary::InvalidArgument,
-                                          ErrorLevel::Usage); // 0xE0E02A01
+const ResultCode ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED(
+    ErrorDescription::OutofRangeOrMisalignedAddress, ErrorModule::GX, ErrorSummary::InvalidArgument,
+    ErrorLevel::Usage); // 0xE0E02A01
 const ResultCode ERR_GSP_REGS_MISALIGNED(ErrorDescription::MisalignedSize, ErrorModule::GX,
                                          ErrorSummary::InvalidArgument,
                                          ErrorLevel::Usage); // 0xE0E02BF2

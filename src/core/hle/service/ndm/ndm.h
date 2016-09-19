@@ -12,7 +12,12 @@ class Interface;
 
 namespace NDM {
 
-enum class Daemon : u32 { Cec = 0, Boss = 1, Nim = 2, Friend = 3 };
+enum class Daemon : u32 {
+    Cec = 0,
+    Boss = 1,
+    Nim = 2,
+    Friend = 3,
+};
 
 enum class DaemonMask : u32 {
     None = 0,
@@ -21,7 +26,7 @@ enum class DaemonMask : u32 {
     Nim = (1 << static_cast<u32>(Daemon::Nim)),
     Friend = (1 << static_cast<u32>(Daemon::Friend)),
     Default = Cec | Friend,
-    All = Cec | Boss | Nim | Friend
+    All = Cec | Boss | Nim | Friend,
 };
 
 enum class DaemonStatus : u32 { Busy = 0, Idle = 1, Suspending = 2, Suspended = 3 };

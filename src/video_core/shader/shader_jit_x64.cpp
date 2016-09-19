@@ -590,8 +590,7 @@ void JitShader::Compile_RSQ(Instruction instr) {
     Compile_DestEnable(instr, SRC1);
 }
 
-void JitShader::Compile_NOP(Instruction instr) {
-}
+void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
     ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);

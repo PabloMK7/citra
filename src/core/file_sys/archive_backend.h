@@ -21,7 +21,13 @@ class FileBackend;
 class DirectoryBackend;
 
 // Path string type
-enum LowPathType : u32 { Invalid = 0, Empty = 1, Binary = 2, Char = 3, Wchar = 4 };
+enum LowPathType : u32 {
+    Invalid = 0,
+    Empty = 1,
+    Binary = 2,
+    Char = 3,
+    Wchar = 4,
+};
 
 union Mode {
     u32 hex;
@@ -32,12 +38,9 @@ union Mode {
 
 class Path {
 public:
-    Path() : type(Invalid) {
-    }
-    Path(const char* path) : type(Char), string(path) {
-    }
-    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {
-    }
+    Path() : type(Invalid) {}
+    Path(const char* path) : type(Char), string(path) {}
+    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {}
     Path(LowPathType type, u32 size, u32 pointer);
 
     LowPathType GetType() const {
@@ -61,22 +64,18 @@ private:
     std::u16string u16str;
 };
 
+/// Parameters of the archive, as specified in the Create or Format call.
 struct ArchiveFormatInfo {
-    u32_le total_size; ///< The pre-defined size of the archive, as specified in the Create or
-                       /// Format call
-    u32_le number_directories; ///< The pre-defined number of directories in the archive, as
-                               /// specified in the Create or Format call
-    u32_le number_files; ///< The pre-defined number of files in the archive, as specified in the
-                         /// Create or Format call
-    u8 duplicate_data;   ///< Whether the archive should duplicate the data, as specified in the
-                         /// Create or Format call
+    u32_le total_size;         ///< The pre-defined size of the archive.
+    u32_le number_directories; ///< The pre-defined number of directories in the archive.
+    u32_le number_files;       ///< The pre-defined number of files in the archive.
+    u8 duplicate_data;         ///< Whether the archive should duplicate the data.
 };
 static_assert(std::is_pod<ArchiveFormatInfo>::value, "ArchiveFormatInfo is not POD");
 
 class ArchiveBackend : NonCopyable {
 public:
-    virtual ~ArchiveBackend() {
-    }
+    virtual ~ArchiveBackend() {}
 
     /**
      * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)
@@ -153,8 +152,7 @@ public:
 
 class ArchiveFactory : NonCopyable {
 public:
-    virtual ~ArchiveFactory() {
-    }
+    virtual ~ArchiveFactory() {}
 
     /**
      * Get a descriptive name for the archive (e.g. "RomFS", "SaveData", etc.)

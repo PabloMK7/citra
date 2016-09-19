@@ -81,11 +81,14 @@ private:
     OGLVertexArray vertex_array;
     OGLBuffer vertex_buffer;
     OGLShader shader;
-    std::array<ScreenInfo, 2>
-        screen_infos; ///< Display information for top and bottom screens respectively
+
+    /// Display information for top and bottom screens respectively
+    std::array<ScreenInfo, 2> screen_infos;
+
     // Shader uniform location indices
     GLuint uniform_modelview_matrix;
     GLuint uniform_color_texture;
+
     // Shader attribute input indices
     GLuint attrib_position;
     GLuint attrib_tex_coord;

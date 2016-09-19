@@ -14,8 +14,7 @@ namespace Common {
 namespace Profiling {
 
 ProfilingManager::ProfilingManager()
-    : last_frame_end(Clock::now()), this_frame_start(Clock::now()) {
-}
+    : last_frame_end(Clock::now()), this_frame_start(Clock::now()) {}
 
 void ProfilingManager::BeginFrame() {
     this_frame_start = Clock::now();

@@ -15,8 +15,7 @@ public:
     // Base class for all objects which need to be notified about GPU events
     class DebuggerObserver {
     public:
-        DebuggerObserver() : observed(nullptr) {
-        }
+        DebuggerObserver() : observed(nullptr) {}
 
         virtual ~DebuggerObserver() {
             if (observed)

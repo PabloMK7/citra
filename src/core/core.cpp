@@ -28,8 +28,7 @@ void RunLoop(int tight_loop) {
         GDBStub::HandlePacket();
 
         // If the loop is halted and we want to step, use a tiny (1) number of instructions to
-        // execute.
-        // Otherwise get out of the loop function.
+        // execute. Otherwise, get out of the loop function.
         if (GDBStub::GetCpuHaltFlag()) {
             if (GDBStub::GetCpuStepFlag()) {
                 GDBStub::SetCpuStepFlag(false);

@@ -31,8 +31,7 @@ void Init() {
     AddService(new NIM_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace NIM
 

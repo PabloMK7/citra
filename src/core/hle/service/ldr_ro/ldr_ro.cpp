@@ -750,11 +750,17 @@ static void Shutdown(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C2, Initialize, "Initialize"},     {0x00020082, LoadCRR, "LoadCRR"},
-    {0x00030042, UnloadCRR, "UnloadCRR"},       {0x000402C2, LoadCRO<false>, "LoadCRO"},
-    {0x000500C2, UnloadCRO, "UnloadCRO"},       {0x00060042, LinkCRO, "LinkCRO"},
-    {0x00070042, UnlinkCRO, "UnlinkCRO"},       {0x00080042, Shutdown, "Shutdown"},
+    // clang-format off
+    {0x000100C2, Initialize, "Initialize"},
+    {0x00020082, LoadCRR, "LoadCRR"},
+    {0x00030042, UnloadCRR, "UnloadCRR"},
+    {0x000402C2, LoadCRO<false>, "LoadCRO"},
+    {0x000500C2, UnloadCRO, "UnloadCRO"},
+    {0x00060042, LinkCRO, "LinkCRO"},
+    {0x00070042, UnlinkCRO, "UnlinkCRO"},
+    {0x00080042, Shutdown, "Shutdown"},
     {0x000902C2, LoadCRO<true>, "LoadCRO_New"},
+    // clang-format on
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

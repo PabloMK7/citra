@@ -22,21 +22,23 @@ static ResultCode CROFormatError(u32 description) {
                       ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 }
 
-const std::array<int, 17> CROHelper::ENTRY_SIZE{
-    {1, // code
-     1, // data
-     1, // module name
-     sizeof(SegmentEntry), sizeof(ExportNamedSymbolEntry), sizeof(ExportIndexedSymbolEntry),
-     1, // export strings
-     sizeof(ExportTreeEntry), sizeof(ImportModuleEntry), sizeof(ExternalRelocationEntry),
-     sizeof(ImportNamedSymbolEntry), sizeof(ImportIndexedSymbolEntry),
-     sizeof(ImportAnonymousSymbolEntry),
-     1, // import strings
-     sizeof(StaticAnonymousSymbolEntry), sizeof(InternalRelocationEntry),
-     sizeof(StaticRelocationEntry)}};
+const std::array<int, 17> CROHelper::ENTRY_SIZE{{
+    1, // code
+    1, // data
+    1, // module name
+    sizeof(SegmentEntry), sizeof(ExportNamedSymbolEntry), sizeof(ExportIndexedSymbolEntry),
+    1, // export strings
+    sizeof(ExportTreeEntry), sizeof(ImportModuleEntry), sizeof(ExternalRelocationEntry),
+    sizeof(ImportNamedSymbolEntry), sizeof(ImportIndexedSymbolEntry),
+    sizeof(ImportAnonymousSymbolEntry),
+    1, // import strings
+    sizeof(StaticAnonymousSymbolEntry), sizeof(InternalRelocationEntry),
+    sizeof(StaticRelocationEntry),
+}};
 
-const std::array<CROHelper::HeaderField, 4> CROHelper::FIX_BARRIERS{
-    {Fix0Barrier, Fix1Barrier, Fix2Barrier, Fix3Barrier}};
+const std::array<CROHelper::HeaderField, 4> CROHelper::FIX_BARRIERS{{
+    Fix0Barrier, Fix1Barrier, Fix2Barrier, Fix3Barrier,
+}};
 
 VAddr CROHelper::SegmentTagToAddress(SegmentTag segment_tag) const {
     u32 segment_num = GetField(SegmentNum);
@@ -204,13 +206,14 @@ ResultCode CROHelper::RebaseHeader(u32 cro_size) {
         return error;
 
     // verifies that all offsets are in the correct order
-    constexpr std::array<HeaderField, 18> OFFSET_ORDER = {
-        {CodeOffset, ModuleNameOffset, SegmentTableOffset, ExportNamedSymbolTableOffset,
-         ExportTreeTableOffset, ExportIndexedSymbolTableOffset, ExportStringsOffset,
-         ImportModuleTableOffset, ExternalRelocationTableOffset, ImportNamedSymbolTableOffset,
-         ImportIndexedSymbolTableOffset, ImportAnonymousSymbolTableOffset, ImportStringsOffset,
-         StaticAnonymousSymbolTableOffset, InternalRelocationTableOffset,
-         StaticRelocationTableOffset, DataOffset, FileSize}};
+    constexpr std::array<HeaderField, 18> OFFSET_ORDER = {{
+        CodeOffset, ModuleNameOffset, SegmentTableOffset, ExportNamedSymbolTableOffset,
+        ExportTreeTableOffset, ExportIndexedSymbolTableOffset, ExportStringsOffset,
+        ImportModuleTableOffset, ExternalRelocationTableOffset, ImportNamedSymbolTableOffset,
+        ImportIndexedSymbolTableOffset, ImportAnonymousSymbolTableOffset, ImportStringsOffset,
+        StaticAnonymousSymbolTableOffset, InternalRelocationTableOffset,
+        StaticRelocationTableOffset, DataOffset, FileSize,
+    }};
 
     u32 prev_offset = GetField(OFFSET_ORDER[0]);
     u32 cur_offset;

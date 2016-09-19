@@ -168,8 +168,7 @@ public:
         return swap(value);
     }
     swap_struct_t() = default;
-    swap_struct_t(const T& v) : value(swap(v)) {
-    }
+    swap_struct_t(const T& v) : value(swap(v)) {}
 
     template <typename S>
     swapped_t& operator=(const S& source) {

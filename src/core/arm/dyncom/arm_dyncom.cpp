@@ -21,8 +21,7 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = std::make_unique<ARMul_State>(initial_mode);
 }
 
-ARM_DynCom::~ARM_DynCom() {
-}
+ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::ClearInstructionCache() {
     state->instruction_cache.clear();

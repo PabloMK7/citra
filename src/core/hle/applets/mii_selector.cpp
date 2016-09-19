@@ -85,7 +85,6 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     return RESULT_SUCCESS;
 }
 
-void MiiSelector::Update() {
-}
+void MiiSelector::Update() {}
 }
 } // namespace

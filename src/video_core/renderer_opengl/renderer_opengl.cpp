@@ -87,15 +87,13 @@ struct ScreenRectVertex {
  * by a 3x2 matrix.
  */
 static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, const float height) {
-    std::array<GLfloat, 3 * 2> matrix;
+    std::array<GLfloat, 3 * 2> matrix; // Laid out in column-major order
 
-    matrix[0] = 2.f / width;
-    matrix[2] = 0.f;
-    matrix[4] = -1.f;
-    matrix[1] = 0.f;
-    matrix[3] = -2.f / height;
-    matrix[5] = 1.f;
+    // clang-format off
+    matrix[0] = 2.f / width; matrix[2] = 0.f;           matrix[4] = -1.f;
+    matrix[1] = 0.f;         matrix[3] = -2.f / height; matrix[5] = 1.f;
     // Last matrix row is implicitly assumed to be [0, 0, 1].
+    // clang-format on
 
     return matrix;
 }
@@ -107,8 +105,7 @@ RendererOpenGL::RendererOpenGL() {
 }
 
 /// RendererOpenGL destructor
-RendererOpenGL::~RendererOpenGL() {
-}
+RendererOpenGL::~RendererOpenGL() {}
 
 /// Swap buffers (render frame)
 void RendererOpenGL::SwapBuffers() {
@@ -215,8 +212,7 @@ void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
 
         // Update existing texture
         // TODO: Test what happens on hardware when you change the framebuffer dimensions so that
-        // they
-        //       differ from the LCD resolution.
+        //       they differ from the LCD resolution.
         // TODO: Applications could theoretically crash Citra here by specifying too large
         //       framebuffer sizes. We should make sure that this cannot happen.
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height,
@@ -231,10 +227,8 @@ void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
 }
 
 /**
- * Fills active OpenGL texture with the given RGB color.
- * Since the color is solid, the texture can be 1x1 but will stretch across whatever it's rendered
- * on.
- * This has the added benefit of being *really fast*.
+ * Fills active OpenGL texture with the given RGB color. Since the color is solid, the texture can
+ * be 1x1 but will stretch across whatever it's rendered on.
  */
 void RendererOpenGL::LoadColorToActiveGLTexture(u8 color_r, u8 color_g, u8 color_b,
                                                 const TextureInfo& texture) {
@@ -424,8 +418,7 @@ void RendererOpenGL::DrawScreens() {
 }
 
 /// Updates the framerate
-void RendererOpenGL::UpdateFramerate() {
-}
+void RendererOpenGL::UpdateFramerate() {}
 
 /**
  * Set the emulator window to use for renderer
@@ -513,5 +506,4 @@ bool RendererOpenGL::Init() {
 }
 
 /// Shutdown the renderer
-void RendererOpenGL::ShutDown() {
-}
+void RendererOpenGL::ShutDown() {}

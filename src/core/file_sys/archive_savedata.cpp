@@ -48,11 +48,10 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const P
     std::string concrete_mount_point =
         GetSaveDataPath(mount_point, Kernel::g_current_process->codeset->program_id);
     if (!FileUtil::Exists(concrete_mount_point)) {
-        // When a SaveData archive is created for the first time, it is not yet formatted
-        // and the save file/directory structure expected by the game has not yet been initialized.
+        // When a SaveData archive is created for the first time, it is not yet formatted and the
+        // save file/directory structure expected by the game has not yet been initialized.
         // Returning the NotFormatted error code will signal the game to provision the SaveData
-        // archive
-        // with the files and folders that it expects.
+        // archive with the files and folders that it expects.
         return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     }

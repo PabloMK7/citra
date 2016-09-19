@@ -19,8 +19,7 @@
 
 DisassemblerModel::DisassemblerModel(QObject* parent)
     : QAbstractListModel(parent), base_address(0), code_size(0), program_counter(0),
-      selection(QModelIndex()) {
-}
+      selection(QModelIndex()) {}
 
 int DisassemblerModel::columnCount(const QModelIndex& parent) const {
     return 3;
@@ -241,8 +240,7 @@ void DisassemblerWidget::OnDebugModeEntered() {
         model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
 }
 
-void DisassemblerWidget::OnDebugModeLeft() {
-}
+void DisassemblerWidget::OnDebugModeLeft() {}
 
 int DisassemblerWidget::SelectedRow() {
     QModelIndex index = disasm_ui.treeView->selectionModel()->currentIndex();

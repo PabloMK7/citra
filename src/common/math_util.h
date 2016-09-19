@@ -27,12 +27,10 @@ struct Rectangle {
     T right;
     T bottom;
 
-    Rectangle() {
-    }
+    Rectangle() {}
 
     Rectangle(T left, T top, T right, T bottom)
-        : left(left), top(top), right(right), bottom(bottom) {
-    }
+        : left(left), top(top), right(right), bottom(bottom) {}
 
     T GetWidth() const {
         return std::abs(static_cast<typename std::make_signed<T>::type>(right - left));

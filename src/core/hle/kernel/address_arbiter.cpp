@@ -16,10 +16,8 @@
 
 namespace Kernel {
 
-AddressArbiter::AddressArbiter() {
-}
-AddressArbiter::~AddressArbiter() {
-}
+AddressArbiter::AddressArbiter() {}
+AddressArbiter::~AddressArbiter() {}
 
 SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
     SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);

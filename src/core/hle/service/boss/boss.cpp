@@ -17,8 +17,7 @@ void Init() {
     AddService(new BOSS_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace BOSS
 

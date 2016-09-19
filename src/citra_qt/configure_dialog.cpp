@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
+#include "citra_qt/config.h"
 #include "ui_configure.h"
 
 #include "core/settings.h"
@@ -13,11 +13,9 @@ ConfigureDialog::ConfigureDialog(QWidget* parent) : QDialog(parent), ui(new Ui::
     this->setConfiguration();
 }
 
-ConfigureDialog::~ConfigureDialog() {
-}
+ConfigureDialog::~ConfigureDialog() {}
 
-void ConfigureDialog::setConfiguration() {
-}
+void ConfigureDialog::setConfiguration() {}
 
 void ConfigureDialog::applyConfiguration() {
     ui->generalTab->applyConfiguration();

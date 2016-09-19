@@ -155,7 +155,8 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
             {OutputAttributes::TEXCOORD2_V, {OutputRegisterInfo::TEXCOORD2, 2}},
             {OutputAttributes::VIEW_X, {OutputRegisterInfo::VIEW, 1}},
             {OutputAttributes::VIEW_Y, {OutputRegisterInfo::VIEW, 2}},
-            {OutputAttributes::VIEW_Z, {OutputRegisterInfo::VIEW, 4}}};
+            {OutputAttributes::VIEW_Z, {OutputRegisterInfo::VIEW, 4}},
+        };
 
         for (const auto& semantic : std::vector<OutputAttributes::Semantic>{
                  output_attributes[i].map_x, output_attributes[i].map_y, output_attributes[i].map_z,
@@ -529,14 +530,16 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
                 unsigned table_index =
                     static_cast<int>((x < 2) ? table_index_1.Value() : table_index_2.Value());
 
-                static const std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{{{2, 8}},
-                                                                                      {{5, 17}},
-                                                                                      {{9, 29}},
-                                                                                      {{13, 42}},
-                                                                                      {{18, 60}},
-                                                                                      {{24, 80}},
-                                                                                      {{33, 106}},
-                                                                                      {{47, 183}}}};
+                static const std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
+                    {{2, 8}},
+                    {{5, 17}},
+                    {{9, 29}},
+                    {{13, 42}},
+                    {{18, 60}},
+                    {{24, 80}},
+                    {{33, 106}},
+                    {{47, 183}},
+                }};
 
                 int modifier = etc1_modifier_table.at(table_index).at(GetTableSubIndex(texel));
                 if (GetNegationFlag(texel))
@@ -713,9 +716,9 @@ static std::string GetTevStageConfigSourceString(const Pica::Regs::TevStageConfi
     return src_it->second;
 }
 
-static std::string
-GetTevStageConfigColorSourceString(const Pica::Regs::TevStageConfig::Source& source,
-                                   const Pica::Regs::TevStageConfig::ColorModifier modifier) {
+static std::string GetTevStageConfigColorSourceString(
+    const Pica::Regs::TevStageConfig::Source& source,
+    const Pica::Regs::TevStageConfig::ColorModifier modifier) {
     using ColorModifier = Pica::Regs::TevStageConfig::ColorModifier;
     static const std::map<ColorModifier, std::string> color_modifier_map = {
         {ColorModifier::SourceColor, "%source.rgb"},
@@ -739,9 +742,9 @@ GetTevStageConfigColorSourceString(const Pica::Regs::TevStageConfig::Source& sou
     return ReplacePattern(modifier_str, "%source", src_str);
 }
 
-static std::string
-GetTevStageConfigAlphaSourceString(const Pica::Regs::TevStageConfig::Source& source,
-                                   const Pica::Regs::TevStageConfig::AlphaModifier modifier) {
+static std::string GetTevStageConfigAlphaSourceString(
+    const Pica::Regs::TevStageConfig::Source& source,
+    const Pica::Regs::TevStageConfig::AlphaModifier modifier) {
     using AlphaModifier = Pica::Regs::TevStageConfig::AlphaModifier;
     static const std::map<AlphaModifier, std::string> alpha_modifier_map = {
         {AlphaModifier::SourceAlpha, "%source.a"},
@@ -763,8 +766,8 @@ GetTevStageConfigAlphaSourceString(const Pica::Regs::TevStageConfig::Source& sou
     return ReplacePattern(modifier_str, "%source", src_str);
 }
 
-static std::string
-GetTevStageConfigOperationString(const Pica::Regs::TevStageConfig::Operation& operation) {
+static std::string GetTevStageConfigOperationString(
+    const Pica::Regs::TevStageConfig::Operation& operation) {
     using Operation = Pica::Regs::TevStageConfig::Operation;
     static const std::map<Operation, std::string> combiner_map = {
         {Operation::Replace, "%source1"},

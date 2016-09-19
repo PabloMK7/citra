@@ -12,8 +12,7 @@ namespace Applets {
 
 class ErrEula final : public Applet {
 public:
-    explicit ErrEula(Service::APT::AppletId id) : Applet(id) {
-    }
+    explicit ErrEula(Service::APT::AppletId id) : Applet(id) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;

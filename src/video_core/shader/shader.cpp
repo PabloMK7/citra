@@ -96,8 +96,8 @@ void ShaderSetup::Setup() {
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
         u64 cache_key =
-            (Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
-             Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data)));
+            Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
+            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data));
 
         auto iter = shader_map.find(cache_key);
         if (iter != shader_map.end()) {

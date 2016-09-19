@@ -10,14 +10,14 @@
 
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGraphics) {
+
     ui->setupUi(this);
     this->setConfiguration();
 
     ui->toggle_vsync->setEnabled(!System::IsPoweredOn());
 }
 
-ConfigureGraphics::~ConfigureGraphics() {
-}
+ConfigureGraphics::~ConfigureGraphics() {}
 
 void ConfigureGraphics::setConfiguration() {
     ui->toggle_hw_renderer->setChecked(Settings::values.use_hw_renderer);

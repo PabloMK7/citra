@@ -15,8 +15,7 @@ struct ThreadContext;
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
-    virtual ~ARM_Interface() {
-    }
+    virtual ~ARM_Interface() {}
 
     /**
      * Runs the CPU for the given number of instructions

@@ -80,9 +80,8 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
         auto call = [&program_counter, &call_stack](UnitState<Debug>& state, u32 offset,
                                                     u32 num_instructions, u32 return_offset,
                                                     u8 repeat_count, u8 loop_increment) {
-            program_counter =
-                offset -
-                1; // -1 to make sure when incrementing the PC we end up at the correct offset
+            // -1 to make sure when incrementing the PC we end up at the correct offset
+            program_counter = offset - 1;
             ASSERT(call_stack.size() < call_stack.capacity());
             call_stack.push_back(
                 {offset + num_instructions, return_offset, repeat_count, loop_increment, offset});

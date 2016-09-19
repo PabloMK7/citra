@@ -1883,6 +1883,7 @@ const transop_fp_t arm_instruction_trans[] = {
     // All the thumb instructions should be placed the end of table
     INTERPRETER_TRANSLATE(b_2_thumb), INTERPRETER_TRANSLATE(b_cond_thumb),
     INTERPRETER_TRANSLATE(bl_1_thumb), INTERPRETER_TRANSLATE(bl_2_thumb),
-    INTERPRETER_TRANSLATE(blx_1_thumb)};
+    INTERPRETER_TRANSLATE(blx_1_thumb),
+};
 
 const size_t arm_instruction_trans_len = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);

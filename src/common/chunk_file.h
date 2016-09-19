@@ -50,8 +50,7 @@ class PointerWrap;
 class PointerWrapSection {
 public:
     PointerWrapSection(PointerWrap& p, int ver, const char* title)
-        : p_(p), ver_(ver), title_(title) {
-    }
+        : p_(p), ver_(ver), title_(title) {}
     ~PointerWrapSection();
 
     bool operator==(const int& v) const {
@@ -134,11 +133,9 @@ public:
     Error error;
 
 public:
-    PointerWrap(u8** ptr_, Mode mode_) : ptr(ptr_), mode(mode_), error(ERROR_NONE) {
-    }
+    PointerWrap(u8** ptr_, Mode mode_) : ptr(ptr_), mode(mode_), error(ERROR_NONE) {}
     PointerWrap(unsigned char** ptr_, int mode_)
-        : ptr((u8**)ptr_), mode((Mode)mode_), error(ERROR_NONE) {
-    }
+        : ptr((u8**)ptr_), mode((Mode)mode_), error(ERROR_NONE) {}
 
     PointerWrapSection Section(const char* title, int ver) {
         return Section(title, ver, ver);

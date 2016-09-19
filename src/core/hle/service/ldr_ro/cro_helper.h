@@ -40,8 +40,7 @@ static constexpr u32 CRO_HASH_SIZE = 0x80;
 /// Represents a loaded module (CRO) with interfaces manipulating it.
 class CROHelper final {
 public:
-    explicit CROHelper(VAddr cro_address) : module_address(cro_address) {
-    }
+    explicit CROHelper(VAddr cro_address) : module_address(cro_address) {}
 
     std::string ModuleName() const {
         return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -152,8 +151,7 @@ private:
 
     /**
      * Each item in this enum represents a u32 field in the header begin from address+0x80,
-     * successively.
-     * We don't directly use a struct here, to avoid GetPointer, reinterpret_cast, or
+     * successively. We don't directly use a struct here, to avoid GetPointer, reinterpret_cast, or
      * Read/WriteBlock repeatedly.
      */
     enum HeaderField {
@@ -234,8 +232,7 @@ private:
         BitField<4, 28, u32_le> offset_into_segment;
 
         SegmentTag() = default;
-        explicit SegmentTag(u32 raw_) : raw(raw_) {
-        }
+        explicit SegmentTag(u32 raw_) : raw(raw_) {}
     };
 
     /// Information of a segment in this module.

@@ -358,8 +358,7 @@ struct ShaderSetup {
 
     /**
      * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
-     * per
-     * vertex, which would happen within the `Run` function).
+     * per vertex, which would happen within the `Run` function).
      */
     void Setup();
 

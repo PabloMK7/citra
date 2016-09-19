@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/nim/nim.h"
 #include "core/hle/service/nim/nim_u.h"
+#include "core/hle/service/nim/nim.h"
 
 namespace Service {
 namespace NIM {

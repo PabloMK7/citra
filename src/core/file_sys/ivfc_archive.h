@@ -30,8 +30,7 @@ namespace FileSys {
 class IVFCArchive : public ArchiveBackend {
 public:
     IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-        : romfs_file(file), data_offset(offset), data_size(size) {
-    }
+        : romfs_file(file), data_offset(offset), data_size(size) {}
 
     std::string GetName() const override;
 
@@ -55,8 +54,7 @@ protected:
 class IVFCFile : public FileBackend {
 public:
     IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-        : romfs_file(file), data_offset(offset), data_size(size) {
-    }
+        : romfs_file(file), data_offset(offset), data_size(size) {}
 
     ResultCode Open() override {
         return RESULT_SUCCESS;
@@ -68,8 +66,7 @@ public:
     bool Close() const override {
         return false;
     }
-    void Flush() const override {
-    }
+    void Flush() const override {}
 
 private:
     std::shared_ptr<FileUtil::IOFile> romfs_file;

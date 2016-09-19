@@ -66,8 +66,7 @@ ASSERT_REG_POSITION(unk_6C, 0x6C);
 
 class MiiSelector final : public Applet {
 public:
-    MiiSelector(Service::APT::AppletId id) : Applet(id), started(false) {
-    }
+    MiiSelector(Service::APT::AppletId id) : Applet(id), started(false) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;

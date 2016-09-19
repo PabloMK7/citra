@@ -19,8 +19,7 @@ void Init() {
     AddService(new NEWS_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace NEWS
 

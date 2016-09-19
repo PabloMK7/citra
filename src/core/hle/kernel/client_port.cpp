@@ -10,9 +10,7 @@
 
 namespace Kernel {
 
-ClientPort::ClientPort() {
-}
-ClientPort::~ClientPort() {
-}
+ClientPort::ClientPort() {}
+ClientPort::~ClientPort() {}
 
 } // namespace

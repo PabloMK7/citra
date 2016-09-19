@@ -51,8 +51,7 @@ public:
     }
 };
 
-GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {
-}
+GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {}
 
 int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
     return static_cast<int>(pica_trace.writes.size());

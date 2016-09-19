@@ -26,7 +26,7 @@ namespace PicaToGL {
 inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
     static const GLenum filter_mode_table[] = {
         GL_NEAREST, // TextureFilter::Nearest
-        GL_LINEAR   // TextureFilter::Linear
+        GL_LINEAR,  // TextureFilter::Linear
     };
 
     // Range check table for input
@@ -55,7 +55,7 @@ inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
         GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
         GL_REPEAT,          // WrapMode::Repeat
-        GL_MIRRORED_REPEAT  // WrapMode::MirroredRepeat
+        GL_MIRRORED_REPEAT, // WrapMode::MirroredRepeat
     };
 
     // Range check table for input
@@ -192,7 +192,7 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
         GL_DECR,      // StencilAction::Decrement
         GL_INVERT,    // StencilAction::Invert
         GL_INCR_WRAP, // StencilAction::IncrementWrap
-        GL_DECR_WRAP  // StencilAction::DecrementWrap
+        GL_DECR_WRAP, // StencilAction::DecrementWrap
     };
 
     // Range check table for input
@@ -207,12 +207,16 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
 }
 
 inline GLvec4 ColorRGBA8(const u32 color) {
-    return {{(color >> 0 & 0xFF) / 255.0f, (color >> 8 & 0xFF) / 255.0f,
-             (color >> 16 & 0xFF) / 255.0f, (color >> 24 & 0xFF) / 255.0f}};
+    return {{
+        (color >> 0 & 0xFF) / 255.0f, (color >> 8 & 0xFF) / 255.0f, (color >> 16 & 0xFF) / 255.0f,
+        (color >> 24 & 0xFF) / 255.0f,
+    }};
 }
 
 inline std::array<GLfloat, 3> LightColor(const Pica::Regs::LightColor& color) {
-    return {{color.r / 255.0f, color.g / 255.0f, color.b / 255.0f}};
+    return {{
+        color.r / 255.0f, color.g / 255.0f, color.b / 255.0f,
+    }};
 }
 
 } // namespace

@@ -522,8 +522,8 @@ CachedSurface* RasterizerCacheOpenGL::GetSurfaceRect(const CachedSurface& params
     return GetSurface(params, match_res_scale, load_if_create);
 }
 
-CachedSurface*
-RasterizerCacheOpenGL::GetTextureSurface(const Pica::Regs::FullTextureConfig& config) {
+CachedSurface* RasterizerCacheOpenGL::GetTextureSurface(
+    const Pica::Regs::FullTextureConfig& config) {
     Pica::DebugUtils::TextureInfo info =
         Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format);
 

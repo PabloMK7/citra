@@ -136,8 +136,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     SyncDepthWriteMask();
 }
 
-RasterizerOpenGL::~RasterizerOpenGL() {
-}
+RasterizerOpenGL::~RasterizerOpenGL() {}
 
 /**
  * This is a helper function to resolve an issue with opposite quaternions being interpolated by
@@ -1156,9 +1155,10 @@ void RasterizerOpenGL::SyncBlendColor() {
 
 void RasterizerOpenGL::SyncFogColor() {
     const auto& regs = Pica::g_state.regs;
-    uniform_block_data.data.fog_color = {regs.fog_color.r.Value() / 255.0f,
-                                         regs.fog_color.g.Value() / 255.0f,
-                                         regs.fog_color.b.Value() / 255.0f};
+    uniform_block_data.data.fog_color = {
+        regs.fog_color.r.Value() / 255.0f, regs.fog_color.g.Value() / 255.0f,
+        regs.fog_color.b.Value() / 255.0f,
+    };
     uniform_block_data.dirty = true;
 }
 

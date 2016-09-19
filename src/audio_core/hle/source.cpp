@@ -163,16 +163,18 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.embedded_buffer_dirty) {
         config.embedded_buffer_dirty.Assign(0);
-        state.input_queue.emplace(Buffer{config.physical_address,
-                                         config.length,
-                                         static_cast<u8>(config.adpcm_ps),
-                                         {config.adpcm_yn[0], config.adpcm_yn[1]},
-                                         config.adpcm_dirty.ToBool(),
-                                         config.is_looping.ToBool(),
-                                         config.buffer_id,
-                                         state.mono_or_stereo,
-                                         state.format,
-                                         false});
+        state.input_queue.emplace(Buffer{
+            config.physical_address,
+            config.length,
+            static_cast<u8>(config.adpcm_ps),
+            {config.adpcm_yn[0], config.adpcm_yn[1]},
+            config.adpcm_dirty.ToBool(),
+            config.is_looping.ToBool(),
+            config.buffer_id,
+            state.mono_or_stereo,
+            state.format,
+            false,
+        });
         LOG_TRACE(Audio_DSP, "enqueuing embedded addr=0x%08x len=%u id=%hu",
                   config.physical_address, config.length, config.buffer_id);
     }
@@ -182,16 +184,18 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         for (size_t i = 0; i < 4; i++) {
             if (config.buffers_dirty & (1 << i)) {
                 const auto& b = config.buffers[i];
-                state.input_queue.emplace(Buffer{b.physical_address,
-                                                 b.length,
-                                                 static_cast<u8>(b.adpcm_ps),
-                                                 {b.adpcm_yn[0], b.adpcm_yn[1]},
-                                                 b.adpcm_dirty != 0,
-                                                 b.is_looping != 0,
-                                                 b.buffer_id,
-                                                 state.mono_or_stereo,
-                                                 state.format,
-                                                 true});
+                state.input_queue.emplace(Buffer{
+                    b.physical_address,
+                    b.length,
+                    static_cast<u8>(b.adpcm_ps),
+                    {b.adpcm_yn[0], b.adpcm_yn[1]},
+                    b.adpcm_dirty != 0,
+                    b.is_looping != 0,
+                    b.buffer_id,
+                    state.mono_or_stereo,
+                    state.format,
+                    true,
+                });
                 LOG_TRACE(Audio_DSP, "enqueuing queued %zu addr=0x%08x len=%u id=%hu", i,
                           b.physical_address, b.length, b.buffer_id);
             }

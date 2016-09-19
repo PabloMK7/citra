@@ -75,8 +75,7 @@ void RegistersWidget::OnDebugModeEntered() {
     UpdateVFPSystemRegisterValues();
 }
 
-void RegistersWidget::OnDebugModeLeft() {
-}
+void RegistersWidget::OnDebugModeLeft() {}
 
 void RegistersWidget::OnEmulationStarting(EmuThread* emu_thread) {
     setEnabled(true);

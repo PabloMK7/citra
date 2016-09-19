@@ -71,15 +71,17 @@ StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multip
 
 StereoBuffer16 Linear(State& state, const StereoBuffer16& input, float rate_multiplier) {
     // Note on accuracy: Some values that this produces are +/- 1 from the actual firmware.
-    return StepOverSamples(state, input, rate_multiplier, [](u64 fraction, const auto& x0,
-                                                             const auto& x1, const auto& x2) {
-        // This is a saturated subtraction. (Verified by black-box fuzzing.)
-        s64 delta0 = MathUtil::Clamp<s64>(x1[0] - x0[0], -32768, 32767);
-        s64 delta1 = MathUtil::Clamp<s64>(x1[1] - x0[1], -32768, 32767);
+    return StepOverSamples(state, input, rate_multiplier,
+                           [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) {
+                               // This is a saturated subtraction. (Verified by black-box fuzzing.)
+                               s64 delta0 = MathUtil::Clamp<s64>(x1[0] - x0[0], -32768, 32767);
+                               s64 delta1 = MathUtil::Clamp<s64>(x1[1] - x0[1], -32768, 32767);
 
-        return std::array<s16, 2>{static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),
-                                  static_cast<s16>(x0[1] + fraction * delta1 / scale_factor)};
-    });
+                               return std::array<s16, 2>{
+                                   static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),
+                                   static_cast<s16>(x0[1] + fraction * delta1 / scale_factor),
+                               };
+                           });
 }
 
 } // namespace AudioInterp

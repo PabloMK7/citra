@@ -186,8 +186,7 @@ void Init() {
     AddService(new AM_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace AM
 

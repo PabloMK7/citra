@@ -22,8 +22,7 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     this->setConfiguration();
 }
 
-ConfigureAudio::~ConfigureAudio() {
-}
+ConfigureAudio::~ConfigureAudio() {}
 
 void ConfigureAudio::setConfiguration() {
     int new_sink_index = 0;

@@ -73,8 +73,8 @@ ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
     return RESULT_SUCCESS;
 }
 
-ResultCode
-ConversionConfiguration::SetStandardCoefficient(StandardCoefficient standard_coefficient) {
+ResultCode ConversionConfiguration::SetStandardCoefficient(
+    StandardCoefficient standard_coefficient) {
     size_t index = static_cast<size_t>(standard_coefficient);
     if (index >= ARRAY_SIZE(standard_coefficients)) {
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,

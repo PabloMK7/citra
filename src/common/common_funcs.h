@@ -86,8 +86,7 @@ inline u64 _rotr64(u64 x, unsigned int shift) {
 extern "C" {
 __declspec(dllimport) void __stdcall DebugBreak(void);
 }
-#define Crash()                                                                                    \
-    { DebugBreak(); }
+#define Crash() DebugBreak()
 
 // cstdlib provides these on MSVC
 #define rotr _rotr

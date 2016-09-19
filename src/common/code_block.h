@@ -27,8 +27,7 @@ protected:
     size_t region_size;
 
 public:
-    CodeBlock() : region(nullptr), region_size(0) {
-    }
+    CodeBlock() : region(nullptr), region_size(0) {}
     virtual ~CodeBlock() {
         if (region)
             FreeCodeSpace();

@@ -828,8 +828,7 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
     }
 }
 
-IOFile::IOFile() {
-}
+IOFile::IOFile() {}
 
 IOFile::IOFile(const std::string& filename, const char openmode[]) {
     Open(filename, openmode);

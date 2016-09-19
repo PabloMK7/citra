@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_u.h"
+#include "core/hle/service/apt/apt.h"
 
 namespace Service {
 namespace APT {
@@ -96,7 +96,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00560000, GetScreenCapPostPermission, "GetScreenCapPostPermission"},
     {0x00580002, nullptr, "GetProgramID"},
     {0x01010000, CheckNew3DSApp, "CheckNew3DSApp"},
-    {0x01020000, CheckNew3DS, "CheckNew3DS"}};
+    {0x01020000, CheckNew3DS, "CheckNew3DS"},
+};
 
 APT_U_Interface::APT_U_Interface() {
     Register(FunctionTable);

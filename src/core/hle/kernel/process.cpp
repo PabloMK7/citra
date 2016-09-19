@@ -26,10 +26,8 @@ SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
     return codeset;
 }
 
-CodeSet::CodeSet() {
-}
-CodeSet::~CodeSet() {
-}
+CodeSet::CodeSet() {}
+CodeSet::~CodeSet() {}
 
 u32 Process::next_process_id;
 
@@ -282,10 +280,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() {
-}
-Kernel::Process::~Process() {
-}
+Kernel::Process::Process() {}
+Kernel::Process::~Process() {}
 
 SharedPtr<Process> g_current_process;
 }

@@ -77,9 +77,8 @@ void Mixers::ParseConfig(DspConfiguration& config) {
 
     if (config.headphones_connected_dirty) {
         config.headphones_connected_dirty.Assign(0);
-        // Do nothing.
-        // (Note: Whether headphones are connected does affect coefficients used for surround
-        // sound.)
+        // Do nothing. (Note: Whether headphones are connected does affect coefficients used for
+        // surround sound.)
         LOG_TRACE(Audio_DSP, "mixers headphones_connected=%hu", config.headphones_connected);
     }
 

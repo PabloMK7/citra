@@ -14,10 +14,8 @@ namespace Applets {
 
 class Applet {
 public:
-    virtual ~Applet() {
-    }
-    Applet(Service::APT::AppletId id) : id(id) {
-    }
+    virtual ~Applet() {}
+    Applet(Service::APT::AppletId id) : id(id) {}
 
     /**
      * Creates an instance of the Applet subclass identified by the parameter.

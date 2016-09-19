@@ -69,10 +69,12 @@ int main(int argc, char** argv) {
 #endif
     std::string boot_filename;
 
-    static struct option long_options[] = {{"gdbport", required_argument, 0, 'g'},
-                                           {"help", no_argument, 0, 'h'},
-                                           {"version", no_argument, 0, 'v'},
-                                           {0, 0, 0, 0}};
+    static struct option long_options[] = {
+        {"gdbport", required_argument, 0, 'g'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0},
+    };
 
     while (optind < argc) {
         char arg = getopt_long(argc, argv, "g:hv", long_options, &option_index);

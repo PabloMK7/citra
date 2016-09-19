@@ -108,8 +108,7 @@ void Init() {
     AddService(new FRD_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace FRD
 

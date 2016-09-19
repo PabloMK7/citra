@@ -20,10 +20,8 @@ static int timer_callback_event_type;
 //               us to simply use a pool index or similar.
 static Kernel::HandleTable timer_callback_handle_table;
 
-Timer::Timer() {
-}
-Timer::~Timer() {
-}
+Timer::Timer() {}
+Timer::~Timer() {}
 
 SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
     SharedPtr<Timer> timer(new Timer);
@@ -103,7 +101,6 @@ void TimersInit() {
     timer_callback_event_type = CoreTiming::RegisterEvent("TimerCallback", TimerCallback);
 }
 
-void TimersShutdown() {
-}
+void TimersShutdown() {}
 
 } // namespace

@@ -10,10 +10,8 @@
 
 namespace Kernel {
 
-Semaphore::Semaphore() {
-}
-Semaphore::~Semaphore() {
-}
+Semaphore::Semaphore() {}
+Semaphore::~Semaphore() {}
 
 ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_count,
                                                   std::string name) {

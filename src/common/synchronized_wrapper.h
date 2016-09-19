@@ -19,8 +19,7 @@ template <typename T>
 class SynchronizedWrapper {
 public:
     template <typename... Args>
-    SynchronizedWrapper(Args&&... args) : data(std::forward<Args>(args)...) {
-    }
+    SynchronizedWrapper(Args&&... args) : data(std::forward<Args>(args)...) {}
 
 private:
     template <typename U>

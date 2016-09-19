@@ -29,8 +29,7 @@ namespace FileSys {
  */
 class DiskArchive : public ArchiveBackend {
 public:
-    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {
-    }
+    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
 
     virtual std::string GetName() const override {
         return "DiskArchive: " + mount_point;

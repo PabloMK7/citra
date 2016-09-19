@@ -144,8 +144,7 @@ void Init() {
     }
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace PTM
 } // namespace Service

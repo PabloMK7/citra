@@ -229,8 +229,7 @@ protected:
         circle_pad_y = 0;
         touch_pressed = false;
     }
-    virtual ~EmuWindow() {
-    }
+    virtual ~EmuWindow() {}
 
     /**
      * Processes any pending configuration changes from the last SetConfig call.
@@ -272,8 +271,8 @@ private:
      * For the request to be honored, EmuWindow implementations will usually reimplement this
      * function.
      */
-    virtual void
-    OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) {
+    virtual void OnMinimalClientAreaChangeRequest(
+        const std::pair<unsigned, unsigned>& minimal_size) {
         // By default, ignore this request and do nothing.
     }
 

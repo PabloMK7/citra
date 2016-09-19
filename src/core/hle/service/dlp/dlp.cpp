@@ -17,8 +17,7 @@ void Init() {
     AddService(new DLP_SRVR_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace DLP
 } // namespace Service

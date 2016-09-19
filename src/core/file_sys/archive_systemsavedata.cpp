@@ -49,8 +49,7 @@ Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low) {
 }
 
 ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& nand_path)
-    : base_path(GetSystemSaveDataContainerPath(nand_path)) {
-}
+    : base_path(GetSystemSaveDataContainerPath(nand_path)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);

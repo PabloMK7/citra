@@ -79,7 +79,7 @@ static const std::array<u16, 187> country_codes = {{
     C("CN"), 0,       0,       0,       0,       0,       0,       0,       // 160-167
     C("AE"), C("IN"), C("EG"), C("OM"), C("QA"), C("KW"), C("SA"), C("SY"), // 168-175
     C("BH"), C("JO"), 0,       0,       0,       0,       0,       0,       // 176-183
-    C("SM"), C("VA"), C("BM")                                               // 184-186
+    C("SM"), C("VA"), C("BM"),                                              // 184-186
 }};
 
 /**
@@ -218,8 +218,9 @@ void FormatConfig(Service::Interface* self);
 
 /**
  * Reads a block with the specified id and flag from the Config savegame buffer
- * and writes the output to output.
- * The input size must match exactly the size of the requested block
+ * and writes the output to output. The input size must match exactly the size of the requested
+ * block.
+ *
  * @param block_id The id of the block we want to read
  * @param size The size of the block we want to read
  * @param flag The requested block must have this flag set
@@ -230,8 +231,8 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output);
 
 /**
  * Reads data from input and writes to a block with the specified id and flag
- * in the Config savegame buffer.
- * The input size must match exactly the size of the target block
+ * in the Config savegame buffer. The input size must match exactly the size of the target block.
+ *
  * @param block_id The id of the block we want to write
  * @param size The size of the block we want to write
  * @param flag The target block must have this flag set
@@ -242,8 +243,8 @@ ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* inpu
 
 /**
  * Creates a block with the specified id and writes the input data to the cfg savegame buffer in
- * memory.
- * The config savegame file in the filesystem is not updated.
+ * memory. The config savegame file in the filesystem is not updated.
+ *
  * @param block_id The id of the block we want to create
  * @param size The size of the block we want to create
  * @param flags The flags of the new block

@@ -33,10 +33,8 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
-Mutex::Mutex() {
-}
-Mutex::~Mutex() {
-}
+Mutex::Mutex() {}
+Mutex::~Mutex() {}
 
 SharedPtr<Mutex> Mutex::Create(bool initial_locked, std::string name) {
     SharedPtr<Mutex> mutex(new Mutex);

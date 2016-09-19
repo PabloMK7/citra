@@ -41,12 +41,9 @@ struct ScreenInfo;
  * two separate shaders sharing the same key.
  *
  * We use a union because "implicitly-defined copy/move constructor for a union X copies the object
- * representation of X."
- * and "implicitly-defined copy assignment operator for a union X copies the object representation
- * (3.9) of X."
- * = Bytewise copy instead of memberwise copy.
- * This is important because the padding bytes are included in the hash and comparison between
- * objects.
+ * representation of X." and "implicitly-defined copy assignment operator for a union X copies the
+ * object representation (3.9) of X." = Bytewise copy instead of memberwise copy. This is important
+ * because the padding bytes are included in the hash and comparison between objects.
  */
 union PicaShaderConfig {
 

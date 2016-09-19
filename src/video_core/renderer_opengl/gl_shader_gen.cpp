@@ -293,9 +293,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
     case CompareFunc::LessThanOrEqual:
     case CompareFunc::GreaterThan:
     case CompareFunc::GreaterThanOrEqual: {
-        static const char* op[] = {
-            "!=", "==", ">=", ">", "<=", "<",
-        };
+        static const char* op[] = {"!=", "==", ">=", ">", "<=", "<"};
         unsigned index = (unsigned)func - (unsigned)CompareFunc::Equal;
         out += "int(last_tex_env_out.a * 255.0f) " + std::string(op[index]) + " alphatest_ref";
         break;

@@ -19,8 +19,7 @@ public:
         return native_sample_rate;
     }
 
-    void EnqueueSamples(const s16*, size_t) override {
-    }
+    void EnqueueSamples(const s16*, size_t) override {}
 
     size_t SamplesInQueue() const override {
         return 0;

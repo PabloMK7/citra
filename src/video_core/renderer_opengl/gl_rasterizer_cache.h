@@ -212,8 +212,8 @@ public:
 
     /// Gets the color and depth surfaces and rect (resolution scaled) based on the framebuffer
     /// configuration
-    std::tuple<CachedSurface*, CachedSurface*, MathUtil::Rectangle<int>>
-    GetFramebufferSurfaces(const Pica::Regs::FramebufferConfig& config);
+    std::tuple<CachedSurface*, CachedSurface*, MathUtil::Rectangle<int>> GetFramebufferSurfaces(
+        const Pica::Regs::FramebufferConfig& config);
 
     /// Attempt to get a surface that exactly matches the fill region and format
     CachedSurface* TryGetFillSurface(const GPU::Regs::MemoryFillConfig& config);

@@ -79,7 +79,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00190080, nullptr, "ContextSetClientCert"},
     {0x001B0080, nullptr, "ContextClearOpt"},
     {0x001E0040, nullptr, "DestroyContext"},
-    {0x001F0082, nullptr, "ContextInitSharedmem"}};
+    {0x001F0082, nullptr, "ContextInitSharedmem"},
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class

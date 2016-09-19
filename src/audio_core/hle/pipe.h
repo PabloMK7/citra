@@ -15,7 +15,12 @@ namespace HLE {
 /// Reset the pipes by setting pipe positions back to the beginning.
 void ResetPipes();
 
-enum class DspPipe { Debug = 0, Dma = 1, Audio = 2, Binary = 3 };
+enum class DspPipe {
+    Debug = 0,
+    Dma = 1,
+    Audio = 2,
+    Binary = 3,
+};
 constexpr size_t NUM_DSP_PIPE = 8;
 
 /**
@@ -46,7 +51,12 @@ size_t GetPipeReadableSize(DspPipe pipe_number);
  */
 void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
 
-enum class DspState { Off, On, Sleeping };
+enum class DspState {
+    Off,
+    On,
+    Sleeping,
+};
+
 /// Get the state of the DSP
 DspState GetDspState();
 

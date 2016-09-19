@@ -49,7 +49,8 @@ static SharedMemory& WriteRegion() {
 static std::array<Source, num_sources> sources = {
     Source(0),  Source(1),  Source(2),  Source(3),  Source(4),  Source(5),  Source(6),  Source(7),
     Source(8),  Source(9),  Source(10), Source(11), Source(12), Source(13), Source(14), Source(15),
-    Source(16), Source(17), Source(18), Source(19), Source(20), Source(21), Source(22), Source(23)};
+    Source(16), Source(17), Source(18), Source(19), Source(20), Source(21), Source(22), Source(23),
+};
 static Mixers mixers;
 
 static StereoFrame16 GenerateCurrentFrame() {

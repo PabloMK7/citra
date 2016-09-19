@@ -173,7 +173,9 @@ static void ThrowFatalError(Service::Interface* self) {
     cmd_buff[1] = 0; // No error
 }
 
-const Interface::FunctionInfo FunctionTable[] = {{0x00010800, ThrowFatalError, "ThrowFatalError"}};
+const Interface::FunctionInfo FunctionTable[] = {
+    {0x00010800, ThrowFatalError, "ThrowFatalError"},
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class

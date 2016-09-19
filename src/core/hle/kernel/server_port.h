@@ -23,8 +23,8 @@ public:
      * @param name Optional name of the ports
      * @return The created port tuple
      */
-    static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>>
-    CreatePortPair(u32 max_sessions, std::string name = "UnknownPort");
+    static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
+        u32 max_sessions, std::string name = "UnknownPort");
 
     std::string GetTypeName() const override {
         return "ServerPort";

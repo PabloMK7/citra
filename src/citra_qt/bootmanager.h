@@ -144,8 +144,8 @@ signals:
     void Closed();
 
 private:
-    void
-    OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) override;
+    void OnMinimalClientAreaChangeRequest(
+        const std::pair<unsigned, unsigned>& minimal_size) override;
 
     GGLWidgetInternal* child;
 

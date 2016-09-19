@@ -968,7 +968,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x086700C4, nullptr, "ControlSecureSave"},
     {0x08680000, nullptr, "GetMediaType"},
     {0x08690000, nullptr, "GetNandEraseCount"},
-    {0x086A0082, nullptr, "ReadNandReport"}};
+    {0x086A0082, nullptr, "ReadNandReport"},
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interface class

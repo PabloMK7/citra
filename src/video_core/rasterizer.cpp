@@ -268,10 +268,8 @@ static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 re
 
 // NOTE: Assuming that rasterizer coordinates are 12.4 fixed-point values
 struct Fix12P4 {
-    Fix12P4() {
-    }
-    Fix12P4(u16 val) : val(val) {
-    }
+    Fix12P4() {}
+    Fix12P4(u16 val) : val(val) {}
 
     static u16 FracMask() {
         return 0xF;
@@ -491,7 +489,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                     255),
                 (u8)(
                     GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() *
-                    255)};
+                    255),
+            };
 
             Math::Vec2<float24> uv[3];
             uv[0].u() = GetInterpolatedAttribute(v0.tc0.u(), v1.tc0.u(), v2.tc0.u());
@@ -604,7 +603,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
             Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
             Math::Vec4<u8> next_combiner_buffer = {
                 regs.tev_combiner_buffer_color.r, regs.tev_combiner_buffer_color.g,
-                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a};
+                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a,
+            };
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
@@ -841,18 +841,16 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                 Math::Vec3<u8> color_result[3] = {
                     GetColorModifier(tev_stage.color_modifier1, GetSource(tev_stage.color_source1)),
                     GetColorModifier(tev_stage.color_modifier2, GetSource(tev_stage.color_source2)),
-                    GetColorModifier(tev_stage.color_modifier3,
-                                     GetSource(tev_stage.color_source3))};
+                    GetColorModifier(tev_stage.color_modifier3, GetSource(tev_stage.color_source3)),
+                };
                 auto color_output = ColorCombine(tev_stage.color_op, color_result);
 
                 // alpha combiner
-                std::array<u8, 3> alpha_result = {
-                    {GetAlphaModifier(tev_stage.alpha_modifier1,
-                                      GetSource(tev_stage.alpha_source1)),
-                     GetAlphaModifier(tev_stage.alpha_modifier2,
-                                      GetSource(tev_stage.alpha_source2)),
-                     GetAlphaModifier(tev_stage.alpha_modifier3,
-                                      GetSource(tev_stage.alpha_source3))}};
+                std::array<u8, 3> alpha_result = {{
+                    GetAlphaModifier(tev_stage.alpha_modifier1, GetSource(tev_stage.alpha_source1)),
+                    GetAlphaModifier(tev_stage.alpha_modifier2, GetSource(tev_stage.alpha_source2)),
+                    GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3)),
+                }};
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
                 combiner_output[0] =
@@ -1083,7 +1081,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                         static_cast<u8>(output_merger.blend_const.r),
                         static_cast<u8>(output_merger.blend_const.g),
                         static_cast<u8>(output_merger.blend_const.b),
-                        static_cast<u8>(output_merger.blend_const.a)};
+                        static_cast<u8>(output_merger.blend_const.a),
+                    };
 
                     switch (factor) {
                     case Regs::BlendFactor::Zero:
@@ -1267,11 +1266,12 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                                   LogicOp(combiner_output.a(), dest.a(), output_merger.logic_op));
             }
 
-            const Math::Vec4<u8> result = {output_merger.red_enable ? blend_output.r() : dest.r(),
-                                           output_merger.green_enable ? blend_output.g() : dest.g(),
-                                           output_merger.blue_enable ? blend_output.b() : dest.b(),
-                                           output_merger.alpha_enable ? blend_output.a()
-                                                                      : dest.a()};
+            const Math::Vec4<u8> result = {
+                output_merger.red_enable ? blend_output.r() : dest.r(),
+                output_merger.green_enable ? blend_output.g() : dest.g(),
+                output_merger.blue_enable ? blend_output.b() : dest.b(),
+                output_merger.alpha_enable ? blend_output.a() : dest.a(),
+            };
 
             if (regs.framebuffer.allow_color_write != 0)
                 DrawPixel(x >> 4, y >> 4, result);

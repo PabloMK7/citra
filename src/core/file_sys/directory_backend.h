@@ -38,10 +38,8 @@ static_assert(offsetof(Entry, file_size) == 0x220, "Wrong offset for file_size i
 
 class DirectoryBackend : NonCopyable {
 public:
-    DirectoryBackend() {
-    }
-    virtual ~DirectoryBackend() {
-    }
+    DirectoryBackend() {}
+    virtual ~DirectoryBackend() {}
 
     /**
     * Open the directory

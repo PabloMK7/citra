@@ -12,10 +12,8 @@ namespace Kernel {
 
 static SharedPtr<ResourceLimit> resource_limits[4];
 
-ResourceLimit::ResourceLimit() {
-}
-ResourceLimit::~ResourceLimit() {
-}
+ResourceLimit::ResourceLimit() {}
+ResourceLimit::~ResourceLimit() {}
 
 SharedPtr<ResourceLimit> ResourceLimit::Create(std::string name) {
     SharedPtr<ResourceLimit> resource_limit(new ResourceLimit);
@@ -150,7 +148,6 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::OTHER)] = resource_limit;
 }
 
-void ResourceLimitsShutdown() {
-}
+void ResourceLimitsShutdown() {}
 
 } // namespace

@@ -12,10 +12,8 @@
 
 namespace Kernel {
 
-SharedMemory::SharedMemory() {
-}
-SharedMemory::~SharedMemory() {
-}
+SharedMemory::SharedMemory() {}
+SharedMemory::~SharedMemory() {}
 
 SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u32 size,
                                              MemoryPermission permissions,

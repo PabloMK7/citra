@@ -4,8 +4,7 @@
 
 #include "citra_qt/debugger/ramview.h"
 
-GRamView::GRamView(QWidget* parent) : QHexEdit(parent) {
-}
+GRamView::GRamView(QWidget* parent) : QHexEdit(parent) {}
 
 void GRamView::OnCPUStepped() {
     // TODO: QHexEdit doesn't show vertical scroll bars for > 10MB data streams...

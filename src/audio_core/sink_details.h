@@ -14,8 +14,7 @@ class Sink;
 
 struct SinkDetails {
     SinkDetails(const char* id_, std::function<std::unique_ptr<Sink>()> factory_)
-        : id(id_), factory(factory_) {
-    }
+        : id(id_), factory(factory_) {}
 
     /// Name for this sink.
     const char* id;

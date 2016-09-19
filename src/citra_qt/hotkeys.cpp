@@ -12,8 +12,7 @@
 #include "citra_qt/ui_settings.h"
 
 struct Hotkey {
-    Hotkey() : shortcut(nullptr), context(Qt::WindowShortcut) {
-    }
+    Hotkey() : shortcut(nullptr), context(Qt::WindowShortcut) {}
 
     QKeySequence keyseq;
     QShortcut* shortcut;

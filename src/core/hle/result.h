@@ -213,8 +213,7 @@ union ResultCode {
     // error
     BitField<31, 1, u32> is_error;
 
-    explicit ResultCode(u32 raw) : raw(raw) {
-    }
+    explicit ResultCode(u32 raw) : raw(raw) {}
     ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
                ErrorLevel level_)
         : raw(0) {

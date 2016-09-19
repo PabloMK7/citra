@@ -11,14 +11,14 @@
 
 ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGeneral) {
+
     ui->setupUi(this);
     this->setConfiguration();
 
     ui->toggle_cpu_jit->setEnabled(!System::IsPoweredOn());
 }
 
-ConfigureGeneral::~ConfigureGeneral() {
-}
+ConfigureGeneral::~ConfigureGeneral() {}
 
 void ConfigureGeneral::setConfiguration() {
     ui->toggle_deepscan->setChecked(UISettings::values.gamedir_deepscan);

@@ -176,7 +176,10 @@ struct Regs {
             MirroredRepeat = 3,
         };
 
-        enum TextureFilter : u32 { Nearest = 0, Linear = 1 };
+        enum TextureFilter : u32 {
+            Nearest = 0,
+            Linear = 1,
+        };
 
         union {
             u32 raw;
@@ -300,9 +303,11 @@ struct Regs {
         const TextureFormat format;
     };
     const std::array<FullTextureConfig, 3> GetTextures() const {
-        return {{{texture0_enable.ToBool(), texture0, texture0_format},
-                 {texture1_enable.ToBool(), texture1, texture1_format},
-                 {texture2_enable.ToBool(), texture2, texture2_format}}};
+        return {{
+            {texture0_enable.ToBool(), texture0, texture0_format},
+            {texture1_enable.ToBool(), texture1, texture1_format},
+            {texture2_enable.ToBool(), texture2, texture2_format},
+        }};
     }
 
     // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
@@ -523,7 +528,7 @@ struct Regs {
         Decrement = 4,
         Invert = 5,
         IncrementWrap = 6,
-        DecrementWrap = 7
+        DecrementWrap = 7,
     };
 
     struct {
@@ -1173,7 +1178,10 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x07);
 
-    enum class GPUMode : u32 { Drawing = 0, Configuring = 1 };
+    enum class GPUMode : u32 {
+        Drawing = 0,
+        Configuring = 1,
+    };
 
     GPUMode gpu_mode;
 
@@ -1249,7 +1257,10 @@ struct Regs {
         INSERT_PADDING_WORDS(0x2);
 
         struct {
-            enum Format : u32 { FLOAT24 = 0, FLOAT32 = 1 };
+            enum Format : u32 {
+                FLOAT24 = 0,
+                FLOAT32 = 1,
+            };
 
             bool IsFloat32() const {
                 return format == FLOAT32;

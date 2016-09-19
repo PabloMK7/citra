@@ -29,8 +29,7 @@ using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
 GraphicsVertexShaderModel::GraphicsVertexShaderModel(GraphicsVertexShaderWidget* parent)
-    : QAbstractTableModel(parent), par(parent) {
-}
+    : QAbstractTableModel(parent), par(parent) {}
 
 int GraphicsVertexShaderModel::columnCount(const QModelIndex& parent) const {
     return 3;

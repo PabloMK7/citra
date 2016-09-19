@@ -23,11 +23,9 @@ int g_clock_rate_arm11 = 268123480;
 
 namespace CoreTiming {
 struct EventType {
-    EventType() {
-    }
+    EventType() {}
 
-    EventType(TimedCallback cb, const char* n) : callback(cb), name(n) {
-    }
+    EventType(TimedCallback cb, const char* n) : callback(cb), name(n) {}
 
     TimedCallback callback;
     const char* name;

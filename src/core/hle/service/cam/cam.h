@@ -24,14 +24,31 @@ enum class CameraSelect : u8 {
     In1Out1 = Out1 | In1,
     Out1Out2 = Out1 | Out2,
     In1Out2 = In1 | Out2,
-    All = Out1 | In1 | Out2
+    All = Out1 | In1 | Out2,
 };
 
-enum class Effect : u8 { None = 0, Mono = 1, Sepia = 2, Negative = 3, Negafilm = 4, Sepia01 = 5 };
+enum class Effect : u8 {
+    None = 0,
+    Mono = 1,
+    Sepia = 2,
+    Negative = 3,
+    Negafilm = 4,
+    Sepia01 = 5,
+};
 
-enum class Context : u8 { None = 0, A = 1, B = 2, Both = A | B };
+enum class Context : u8 {
+    None = 0,
+    A = 1,
+    B = 2,
+    Both = A | B,
+};
 
-enum class Flip : u8 { None = 0, Horizontal = 1, Vertical = 2, Reverse = 3 };
+enum class Flip : u8 {
+    None = 0,
+    Horizontal = 1,
+    Vertical = 2,
+    Reverse = 3,
+};
 
 enum class Size : u8 {
     VGA = 0,
@@ -42,7 +59,7 @@ enum class Size : u8 {
     DS_LCD = 5,
     DS_LCDx4 = 6,
     CTR_TOP_LCD = 7,
-    CTR_BOTTOM_LCD = QVGA
+    CTR_BOTTOM_LCD = QVGA,
 };
 
 enum class FrameRate : u8 {
@@ -58,10 +75,14 @@ enum class FrameRate : u8 {
     Rate_30_To_5 = 9,
     Rate_15_To_10 = 10,
     Rate_20_To_10 = 11,
-    Rate_30_To_10 = 12
+    Rate_30_To_10 = 12,
 };
 
-enum class ShutterSoundType : u8 { Normal = 0, Movie = 1, MovieEnd = 2 };
+enum class ShutterSoundType : u8 {
+    Normal = 0,
+    Movie = 1,
+    MovieEnd = 2,
+};
 
 enum class WhiteBalance : u8 {
     BalanceAuto = 0,
@@ -77,10 +98,16 @@ enum class WhiteBalance : u8 {
     BalanceDaylight = Balance5200K,
     BalanceCloudy = Balance6000K,
     BalanceHorizon = Balance6000K,
-    BalanceShade = Balance7000K
+    BalanceShade = Balance7000K,
 };
 
-enum class PhotoMode : u8 { Normal = 0, Portrait = 1, Landscape = 2, Nightview = 3, Letter0 = 4 };
+enum class PhotoMode : u8 {
+    Normal = 0,
+    Portrait = 1,
+    Landscape = 2,
+    Nightview = 3,
+    Letter0 = 4,
+};
 
 enum class LensCorrection : u8 {
     Off = 0,
@@ -88,7 +115,7 @@ enum class LensCorrection : u8 {
     On90 = 2,
     Dark = Off,
     Normal = On70,
-    Bright = On90
+    Bright = On90,
 };
 
 enum class Contrast : u8 {
@@ -105,10 +132,13 @@ enum class Contrast : u8 {
     Pattern11 = 11,
     Low = Pattern05,
     Normal = Pattern06,
-    High = Pattern07
+    High = Pattern07,
 };
 
-enum class OutputFormat : u8 { YUV422 = 0, RGB565 = 1 };
+enum class OutputFormat : u8 {
+    YUV422 = 0,
+    RGB565 = 1,
+};
 
 /// Stereo camera calibration data.
 struct StereoCameraCalibrationData {

@@ -16,8 +16,7 @@
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
     : QAbstractListModel(parent), context_weak(debug_context),
       at_breakpoint(debug_context->at_breakpoint),
-      active_breakpoint(debug_context->active_breakpoint) {
-}
+      active_breakpoint(debug_context->active_breakpoint) {}
 
 int BreakPointModel::columnCount(const QModelIndex& parent) const {
     return 1;
@@ -42,7 +41,8 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const {
                 {Pica::DebugContext::Event::IncomingDisplayTransfer,
                  tr("Incoming display transfer")},
                 {Pica::DebugContext::Event::GSPCommandProcessed, tr("GSP command processed")},
-                {Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped")}};
+                {Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped")},
+            };
 
             DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
             return (map.find(event) != map.end()) ? map.at(event) : QString();

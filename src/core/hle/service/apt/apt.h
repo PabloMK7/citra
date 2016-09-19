@@ -183,12 +183,10 @@ void GetAppletInfo(Service::Interface* self);
 
 /**
  * APT::IsRegistered service function. This returns whether the specified AppID is registered with
- * NS yet.
- * An AppID is "registered" once the process associated with the AppID uses APT:Enable. Home Menu
- * uses this
- * command to determine when the launched process is running and to determine when to stop using GSP
- * etc,
- * while displaying the "Nintendo 3DS" loading screen.
+ * NS yet. An AppID is "registered" once the process associated with the AppID uses APT:Enable. Home
+ * Menu uses this command to determine when the launched process is running and to determine when to
+ * stop using GSP, etc., while displaying the "Nintendo 3DS" loading screen.
+ *
  *  Inputs:
  *      1 : AppID
  *  Outputs:
@@ -264,10 +262,10 @@ void GlanceParameter(Service::Interface* self);
  * (same flag cleared by APT:ReceiveParameter).
  *  Inputs:
  *      1 : Flag, when non-zero NS will compare the word after this one with a field in the NS
- * state.
+ *          state.
  *      2 : Unknown, this is the same as the first unknown field returned by APT:ReceiveParameter.
  *      3 : Flag, when non-zero NS will compare the word after this one with a field in the NS
- * state.
+ *          state.
  *      4 : AppID
  *  Outputs:
  *      0 : Return header

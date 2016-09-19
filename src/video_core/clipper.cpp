@@ -30,8 +30,7 @@ public:
     ClippingEdge(Math::Vec4<float24> coeffs, Math::Vec4<float24> bias = Math::Vec4<float24>(
                                                  float24::FromFloat32(0), float24::FromFloat32(0),
                                                  float24::FromFloat32(0), float24::FromFloat32(0)))
-        : coeffs(coeffs), bias(bias) {
-    }
+        : coeffs(coeffs), bias(bias) {}
 
     bool IsInside(const OutputVertex& vertex) const {
         return Math::Dot(vertex.pos + bias, coeffs) <= float24::FromFloat32(0);

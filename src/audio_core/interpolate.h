@@ -25,7 +25,7 @@ struct State {
  * @param input Input buffer.
  * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
  *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
- * performs upsampling.
+ *                        performs upsampling.
  * @return The resampled audio buffer.
  */
 StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multiplier);
@@ -35,7 +35,7 @@ StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multip
  * @param input Input buffer.
  * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
  *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
- * performs upsampling.
+ *                        performs upsampling.
  * @return The resampled audio buffer.
  */
 StereoBuffer16 Linear(State& state, const StereoBuffer16& input, float rate_multiplier);

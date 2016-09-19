@@ -28,8 +28,7 @@
 #define COPYRIGHT "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window)
-    : exec_step(false), running(false), stop_run(false), render_window(render_window) {
-}
+    : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
 
 void EmuThread::run() {
     render_window->MakeCurrent();
@@ -84,8 +83,7 @@ void EmuThread::run() {
 class GGLWidgetInternal : public QGLWidget {
 public:
     GGLWidgetInternal(QGLFormat fmt, GRenderWindow* parent)
-        : QGLWidget(fmt, parent), parent(parent) {
-    }
+        : QGLWidget(fmt, parent), parent(parent) {}
 
     void paintEvent(QPaintEvent* ev) override {
         if (do_painting) {
@@ -153,8 +151,7 @@ void GRenderWindow::DoneCurrent() {
     child->doneCurrent();
 }
 
-void GRenderWindow::PollEvents() {
-}
+void GRenderWindow::PollEvents() {}
 
 // On Qt 5.0+, this correctly gets the size of the framebuffer (pixels).
 //
@@ -306,8 +303,8 @@ void GRenderWindow::OnEmulationStopping() {
 void GRenderWindow::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
 
-// windowHandle() is not initialized until the Window is shown, so we connect it here.
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    // windowHandle() is not initialized until the Window is shown, so we connect it here.
     connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this,
             SLOT(OnFramebufferSizeChanged()), Qt::UniqueConnection);
 #endif
