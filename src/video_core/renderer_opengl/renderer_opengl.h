@@ -5,14 +5,10 @@
 #pragma once
 
 #include <array>
-
 #include <glad/glad.h>
-
 #include "common/common_types.h"
 #include "common/math_util.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"

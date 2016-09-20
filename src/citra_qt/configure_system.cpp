@@ -4,11 +4,10 @@
 
 #include "citra_qt/configure_system.h"
 #include "citra_qt/ui_settings.h"
-#include "ui_configure_system.h"
-
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/system.h"
+#include "ui_configure_system.h"
 
 static const std::array<int, 12> days_in_month = {{
     31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,

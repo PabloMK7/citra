@@ -5,18 +5,14 @@
 #pragma once
 
 #include <atomic>
-
 #include <QImage>
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
-
 #include "citra_qt/util/util.h"
 #include "common/color.h"
 #include "common/string_util.h"
-
 #include "core/loader/smdh.h"
-
 #include "video_core/utils.h"
 
 /**

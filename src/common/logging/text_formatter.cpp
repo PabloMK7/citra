@@ -10,12 +10,11 @@
 #include <Windows.h>
 #endif
 
+#include "common/assert.h"
+#include "common/common_funcs.h"
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
-
-#include "common/assert.h"
-#include "common/common_funcs.h"
 #include "common/string_util.h"
 
 namespace Log {

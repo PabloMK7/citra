@@ -5,7 +5,6 @@
 #pragma once
 
 #include <array>
-
 #ifndef _MSC_VER
 #include <cstddef>
 #endif

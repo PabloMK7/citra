@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "citra_qt/debugger/graphics_surface.h"
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QDebug>
@@ -11,15 +12,10 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
-
-#include "citra_qt/debugger/graphics_surface.h"
 #include "citra_qt/util/spinbox.h"
-
 #include "common/color.h"
-
 #include "core/hw/gpu.h"
 #include "core/memory.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/utils.h"

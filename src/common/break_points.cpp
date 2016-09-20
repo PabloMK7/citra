@@ -3,10 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/break_points.h"
-#include "common/logging/log.h"
-
 #include <algorithm>
 #include <sstream>
+#include "common/logging/log.h"
 
 bool BreakPoints::IsAddressBreakPoint(u32 iAddress) const {
     auto cond = [&iAddress](const TBreakPoint& bp) { return bp.iAddress == iAddress; };

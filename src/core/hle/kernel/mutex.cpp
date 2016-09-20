@@ -2,15 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/mutex.h"
 #include <map>
 #include <vector>
-
 #include <boost/range/algorithm_ext/erase.hpp>
-
 #include "common/assert.h"
-
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {

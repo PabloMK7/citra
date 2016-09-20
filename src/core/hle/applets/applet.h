@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 

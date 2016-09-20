@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "video_core/rasterizer_interface.h"
 
 namespace Pica {

@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <memory>
 #include <QKeyEvent>
 #include <QWidget>
-
 #include "citra_qt/config.h"
 #include "core/settings.h"
 #include "ui_configure_input.h"

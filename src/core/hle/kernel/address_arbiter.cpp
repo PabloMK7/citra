@@ -2,14 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/address_arbiter.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
-#include "core/memory.h"
-
 #include "core/hle/hle.h"
-#include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/thread.h"
+#include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace

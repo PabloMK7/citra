@@ -4,11 +4,10 @@
 
 #pragma once
 
+#include <vector>
 #include <QByteArray>
 #include <QString>
 #include <QStringList>
-
-#include <vector>
 
 namespace UISettings {
 

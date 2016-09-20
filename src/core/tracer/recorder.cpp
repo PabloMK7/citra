@@ -2,13 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "recorder.h"
 #include <cstring>
-
 #include "common/assert.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-
-#include "recorder.h"
 
 namespace CiTrace {
 

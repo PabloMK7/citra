@@ -2,11 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cstring>
-
-#include "common/logging/log.h"
-
 #include "core/hle/kernel/resource_limit.h"
+#include <cstring>
+#include "common/logging/log.h"
 
 namespace Kernel {
 

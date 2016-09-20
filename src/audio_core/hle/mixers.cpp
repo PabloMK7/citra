@@ -7,7 +7,6 @@
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/mixers.h"
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"

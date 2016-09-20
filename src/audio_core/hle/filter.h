@@ -5,10 +5,8 @@
 #pragma once
 
 #include <array>
-
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/dsp.h"
-
 #include "common/common_types.h"
 
 namespace DSP {

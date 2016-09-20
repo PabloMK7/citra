@@ -2,9 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QMetaType>
-
 #include "citra_qt/debugger/graphics_breakpoint_observer.h"
+#include <QMetaType>
 
 BreakPointObserverDock::BreakPointObserverDock(std::shared_ptr<Pica::DebugContext> debug_context,
                                                const QString& title, QWidget* parent)

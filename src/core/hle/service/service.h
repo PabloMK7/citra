@@ -7,11 +7,8 @@
 #include <cstddef>
 #include <string>
 #include <unordered_map>
-
 #include <boost/container/flat_map.hpp>
-
 #include "common/common_types.h"
-
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
 

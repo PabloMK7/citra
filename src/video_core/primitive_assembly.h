@@ -5,7 +5,6 @@
 #pragma once
 
 #include <functional>
-
 #include "video_core/pica.h"
 
 namespace Pica {

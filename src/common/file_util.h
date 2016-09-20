@@ -11,9 +11,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-
 #include "common/common_types.h"
-
 #ifdef _MSC_VER
 #include "common/string_util.h"
 #endif

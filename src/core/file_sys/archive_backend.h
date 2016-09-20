@@ -8,11 +8,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-
 #include "core/hle/result.h"
 
 namespace FileSys {

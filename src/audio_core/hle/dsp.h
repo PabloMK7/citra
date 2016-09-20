@@ -8,9 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <type_traits>
-
 #include "audio_core/hle/common.h"
-
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"

@@ -2,22 +2,19 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "video_core/command_processor.h"
 #include <array>
 #include <cstddef>
 #include <memory>
 #include <utility>
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
-
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
 #include "core/tracer/recorder.h"
-
-#include "video_core/command_processor.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"

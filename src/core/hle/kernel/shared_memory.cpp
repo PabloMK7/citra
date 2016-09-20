@@ -2,12 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cstring>
-
-#include "common/logging/log.h"
-
-#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/shared_memory.h"
+#include <cstring>
+#include "common/logging/log.h"
+#include "core/hle/kernel/memory.h"
 #include "core/memory.h"
 
 namespace Kernel {

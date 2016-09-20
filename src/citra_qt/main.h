@@ -5,9 +5,8 @@
 #ifndef _CITRA_QT_MAIN_HXX_
 #define _CITRA_QT_MAIN_HXX_
 
-#include <QMainWindow>
 #include <memory>
-
+#include <QMainWindow>
 #include "ui_main.h"
 
 class Config;

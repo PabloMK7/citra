@@ -2,29 +2,22 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "citra_qt/debugger/graphics_tracing.h"
 #include <algorithm>
 #include <array>
 #include <iterator>
 #include <memory>
-
-#include <boost/range/algorithm/copy.hpp>
-
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
-
-#include "citra_qt/debugger/graphics_tracing.h"
-
+#include <boost/range/algorithm/copy.hpp>
 #include "common/common_types.h"
-
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 #include "core/tracer/recorder.h"
-
 #include "nihstro/float24.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 

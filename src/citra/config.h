@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-
 #include <inih/cpp/INIReader.h>
 
 class Config {

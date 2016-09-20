@@ -7,7 +7,6 @@
 #include <chrono>
 #include <cstddef>
 #include <vector>
-
 #include "common/synchronized_wrapper.h"
 
 namespace Common {

@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <time.h>
-
 #ifdef _WIN32
 #include <Windows.h>
 #include <mmsystem.h>
@@ -11,7 +10,6 @@
 #else
 #include <sys/time.h>
 #endif
-
 #include "common/common_types.h"
 #include "common/string_util.h"
 #include "common/timer.h"

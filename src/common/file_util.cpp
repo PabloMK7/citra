@@ -16,7 +16,6 @@
 #include <shellapi.h>
 #include <shlobj.h> // for SHGetFolderPath
 #include <tchar.h>
-
 #include "common/string_util.h"
 
 // 64 bit offsets for windows

@@ -2,16 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QShortcut>
-
-#include "citra_qt/bootmanager.h"
 #include "citra_qt/debugger/disassembler.h"
+#include <QShortcut>
+#include "citra_qt/bootmanager.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/util/util.h"
-
 #include "common/break_points.h"
 #include "common/symbols.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/core.h"

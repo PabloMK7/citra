@@ -7,13 +7,11 @@
 #include <array>
 #include <queue>
 #include <vector>
-
 #include "audio_core/codec.h"
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/filter.h"
 #include "audio_core/interpolate.h"
-
 #include "common/common_types.h"
 
 namespace DSP {

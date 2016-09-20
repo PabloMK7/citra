@@ -5,8 +5,8 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/arm/arm_interface.h"
+#include "core/core.h"
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
 #include "core/hle/svc.h"

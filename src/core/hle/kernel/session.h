@@ -5,10 +5,8 @@
 #pragma once
 
 #include <string>
-
 #include "common/assert.h"
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"

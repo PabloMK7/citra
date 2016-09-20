@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QWidget>
 #include <memory>
+#include <QWidget>
 
 namespace Ui {
 class ConfigureAudio;

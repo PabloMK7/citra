@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QDialog>
 #include <memory>
+#include <QDialog>
 
 namespace Ui {
 class ConfigureDialog;

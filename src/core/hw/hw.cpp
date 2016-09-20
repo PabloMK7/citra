@@ -2,11 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hw/hw.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/hw/gpu.h"
-#include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 
 namespace HW {

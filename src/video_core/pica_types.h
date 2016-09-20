@@ -6,7 +6,6 @@
 
 #include <cmath>
 #include <cstring>
-
 #include "common/common_types.h"
 
 namespace Pica {

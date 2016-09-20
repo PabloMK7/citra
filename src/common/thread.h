@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <mutex>
 #include <thread>
-
 #include "common/common_types.h"
 
 // Support for C++11's thread_local keyword was surprisingly spotty in compilers until very

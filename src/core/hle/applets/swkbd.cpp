@@ -2,21 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/applets/swkbd.h"
 #include <cstring>
 #include <string>
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
-#include "core/hle/applets/swkbd.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
-
 #include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

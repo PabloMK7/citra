@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <vector>
-
 #include "common/assert.h"
 #include "common/profiler_reporting.h"
 #include "common/synchronized_wrapper.h"

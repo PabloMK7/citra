@@ -10,16 +10,12 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
-
 #include <glad/glad.h>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/hash.h"
 #include "common/vector_math.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"

@@ -2,19 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/loader/ncch.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
-
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/loader/ncch.h"
 #include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

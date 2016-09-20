@@ -2,10 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
-
-#include "core/hle/kernel/event.h"
 #include "core/hle/service/cecd/cecd.h"
+#include "common/logging/log.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
 #include "core/hle/service/service.h"

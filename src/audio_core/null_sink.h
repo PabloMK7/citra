@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstddef>
-
 #include "audio_core/audio_core.h"
 #include "audio_core/sink.h"
 

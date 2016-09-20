@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <string>
-
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
 

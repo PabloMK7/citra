@@ -5,9 +5,7 @@
 #pragma once
 
 #include <memory>
-
 #include <QAbstractListModel>
-
 #include "video_core/debug_utils/debug_utils.h"
 
 class BreakPointModel : public QAbstractListModel {

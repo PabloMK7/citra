@@ -2,16 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/dsp_dsp.h"
 #include <algorithm>
 #include <cinttypes>
-
 #include "audio_core/hle/pipe.h"
-
 #include "common/hash.h"
 #include "common/logging/log.h"
-
 #include "core/hle/kernel/event.h"
-#include "core/hle/service/dsp_dsp.h"
 
 using DspPipe = DSP::HLE::DspPipe;
 

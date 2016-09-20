@@ -28,11 +28,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "citra_qt/util/spinbox.h"
+#include <cstdlib>
 #include <QLineEdit>
 #include <QRegExpValidator>
-#include <cstdlib>
-
-#include "citra_qt/util/spinbox.h"
 #include "common/assert.h"
 
 CSpinBox::CSpinBox(QWidget* parent)

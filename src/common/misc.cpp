@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <cstddef>
-
 #ifdef _WIN32
 #include <windows.h>
 #else

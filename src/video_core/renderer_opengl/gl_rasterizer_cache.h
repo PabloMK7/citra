@@ -8,16 +8,12 @@
 #include <memory>
 #include <set>
 #include <tuple>
-
 #include <boost/icl/interval_map.hpp>
 #include <glad/glad.h>
-
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/pica.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 

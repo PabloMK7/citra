@@ -2,13 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/server_port.h"
 #include <tuple>
-
 #include "common/assert.h"
-
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {

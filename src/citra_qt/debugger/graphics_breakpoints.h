@@ -5,9 +5,7 @@
 #pragma once
 
 #include <memory>
-
 #include <QDockWidget>
-
 #include "video_core/debug_utils/debug_utils.h"
 
 class QLabel;

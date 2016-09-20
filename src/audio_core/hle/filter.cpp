@@ -2,13 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "audio_core/hle/filter.h"
 #include <array>
 #include <cstddef>
-
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/dsp.h"
-#include "audio_core/hle/filter.h"
-
 #include "common/common_types.h"
 #include "common/math_util.h"
 

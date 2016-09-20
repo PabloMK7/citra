@@ -15,11 +15,10 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
+#include "core/arm/skyeye_common/armsupp.h"
 #include "common/logging/log.h"
-
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armstate.h"
-#include "core/arm/skyeye_common/armsupp.h"
 
 // Unsigned sum of absolute difference
 u8 ARMul_UnsignedAbsoluteDifference(u8 left, u8 right) {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-
 #include "common/common_types.h"
 #include "video_core/pica.h"
 

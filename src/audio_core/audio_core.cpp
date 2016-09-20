@@ -2,16 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "audio_core/audio_core.h"
 #include <memory>
 #include <string>
-
-#include "audio_core/audio_core.h"
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/pipe.h"
 #include "audio_core/null_sink.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
-
 #include "core/core_timing.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/dsp_dsp.h"

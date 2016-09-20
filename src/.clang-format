@@ -50,6 +50,8 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^\<(boost|catch|dynarmic|glad|inih|nihstro)/'
     Priority:        3
+  - Regex:           '^\<(SDL|SoundTouch|Q)'
+    Priority:        3
   - Regex:           '^\<'
     Priority:        2
 IndentCaseLabels: false

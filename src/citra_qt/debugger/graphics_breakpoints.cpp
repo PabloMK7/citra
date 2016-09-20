@@ -2,15 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "citra_qt/debugger/graphics_breakpoints.h"
 #include <QLabel>
 #include <QMetaType>
 #include <QPushButton>
 #include <QTreeView>
 #include <QVBoxLayout>
-
-#include "citra_qt/debugger/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics_breakpoints_p.h"
-
 #include "common/assert.h"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <array>
-
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/dsp.h"
 

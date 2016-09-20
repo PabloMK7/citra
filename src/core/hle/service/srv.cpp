@@ -2,11 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/srv.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/hle/kernel/event.h"
-#include "core/hle/service/srv.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SRV

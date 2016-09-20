@@ -9,7 +9,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/file_util.h"
 

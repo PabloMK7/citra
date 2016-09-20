@@ -2,19 +2,17 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hw/y2r.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <memory>
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
-
 #include "core/hle/service/y2r_u.h"
-#include "core/hw/y2r.h"
 #include "core/memory.h"
 
 namespace HW {

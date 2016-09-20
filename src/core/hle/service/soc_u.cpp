@@ -2,20 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/soc_u.h"
 #include <algorithm>
 #include <cstring>
 #include <unordered_map>
 #include <vector>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
-
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
-#include "core/hle/service/soc_u.h"
 #include "core/memory.h"
 
 #ifdef _WIN32

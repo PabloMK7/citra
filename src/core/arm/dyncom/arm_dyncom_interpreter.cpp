@@ -4,26 +4,23 @@
 
 #define CITRA_IGNORE_EXIT(x)
 
+#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include <algorithm>
 #include <cstdio>
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom_dec.h"
-#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
 #include "core/arm/dyncom/arm_dyncom_trans.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
+#include "core/gdbstub/gdbstub.h"
 #include "core/hle/svc.h"
 #include "core/memory.h"
-
-#include "core/gdbstub/gdbstub.h"
 
 #define RM BITS(sht_oper, 0, 3)
 #define RS BITS(sht_oper, 8, 11)

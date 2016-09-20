@@ -6,7 +6,6 @@
 
 #include <array>
 #include <deque>
-
 #include <boost/range/algorithm_ext/erase.hpp>
 
 namespace Common {

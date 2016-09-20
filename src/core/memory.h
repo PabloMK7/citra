@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <string>
-
 #include "common/common_types.h"
 
 namespace Memory {

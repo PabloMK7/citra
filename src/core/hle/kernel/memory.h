@@ -5,9 +5,7 @@
 #pragma once
 
 #include <memory>
-
 #include "common/common_types.h"
-
 #include "core/hle/kernel/process.h"
 
 namespace Kernel {

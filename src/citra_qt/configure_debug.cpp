@@ -3,9 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "citra_qt/configure_debug.h"
-#include "ui_configure_debug.h"
-
 #include "core/settings.h"
+#include "ui_configure_debug.h"
 
 ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureDebug) {
     ui->setupUi(this);

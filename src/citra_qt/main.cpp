@@ -5,25 +5,15 @@
 #include <clocale>
 #include <memory>
 #include <thread>
-
 #include <glad/glad.h>
-
 #define QT_NO_OPENGL
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QtGui>
-#include "qhexedit.h"
-
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
-#include "citra_qt/game_list.h"
-#include "citra_qt/hotkeys.h"
-#include "citra_qt/main.h"
-#include "citra_qt/ui_settings.h"
-
-// Debugger
 #include "citra_qt/debugger/callstack.h"
 #include "citra_qt/debugger/disassembler.h"
 #include "citra_qt/debugger/graphics.h"
@@ -35,7 +25,10 @@
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/debugger/ramview.h"
 #include "citra_qt/debugger/registers.h"
-
+#include "citra_qt/game_list.h"
+#include "citra_qt/hotkeys.h"
+#include "citra_qt/main.h"
+#include "citra_qt/ui_settings.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -45,14 +38,13 @@
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-
 #include "core/arm/disassembler/load_symbol_map.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
 #include "core/system.h"
-
+#include "qhexedit.h"
 #include "video_core/video_core.h"
 
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {

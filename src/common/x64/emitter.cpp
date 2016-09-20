@@ -15,16 +15,14 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
+#include "emitter.h"
 #include <cinttypes>
 #include <cstring>
-
+#include "abi.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/memory_util.h"
-
-#include "abi.h"
 #include "cpu_detect.h"
-#include "emitter.h"
 
 namespace Gen {
 
@@ -222,7 +220,7 @@ void OpArg::WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp
 void OpArg::WriteRest(XEmitter* emit, int extraBytes, X64Reg _operandReg,
                       bool warn_64bit_offset) const {
     if (_operandReg == INVALID_REG)
-        _operandReg = (X64Reg)this->operandReg;
+        _operandReg = (X64Reg) this->operandReg;
     int mod = 0;
     int ireg = indexReg;
     bool SIB = false;

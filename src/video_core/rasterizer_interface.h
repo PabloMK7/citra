@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hw/gpu.h"
 
 struct ScreenInfo;

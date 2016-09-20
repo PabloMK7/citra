@@ -2,35 +2,28 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hw/gpu.h"
 #include <cstring>
 #include <numeric>
 #include <type_traits>
-
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
-
 #include "core/core_timing.h"
-#include "core/memory.h"
-#include "core/settings.h"
-
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid/hid.h"
-
-#include "core/hw/gpu.h"
 #include "core/hw/hw.h"
-
+#include "core/memory.h"
+#include "core/settings.h"
 #include "core/tracer/recorder.h"
-
 #include "video_core/command_processor.h"
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_base.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
-
-#include "video_core/debug_utils/debug_utils.h"
 
 namespace GPU {
 

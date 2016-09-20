@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/thread.h"
-
 #ifdef __APPLE__
 #include <mach/mach.h>
 #elif defined(_WIN32)
@@ -16,7 +15,6 @@
 #endif
 #include <sched.h>
 #endif
-
 #ifndef _WIN32
 #include <unistd.h>
 #endif

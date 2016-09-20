@@ -2,11 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cinttypes>
-
-#include "common/logging/log.h"
-
 #include "core/hle/service/am/am.h"
+#include <cinttypes>
+#include "common/logging/log.h"
 #include "core/hle/service/am/am_app.h"
 #include "core/hle/service/am/am_net.h"
 #include "core/hle/service/am/am_sys.h"

@@ -1,3 +1,6 @@
+#include <cstddef>
+#include "common/common_types.h"
+
 struct ARMul_State;
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 

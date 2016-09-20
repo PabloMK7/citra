@@ -2,17 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/string_util.h"
 #include <cctype>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <boost/range/algorithm/transform.hpp>
-
 #include "common/common_paths.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
-
 #ifdef _MSC_VER
 #include <Windows.h>
 #include <codecvt>

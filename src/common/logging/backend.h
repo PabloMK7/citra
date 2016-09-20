@@ -8,7 +8,6 @@
 #include <cstdarg>
 #include <string>
 #include <utility>
-
 #include "common/logging/log.h"
 
 namespace Log {

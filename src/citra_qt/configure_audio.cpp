@@ -2,12 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "audio_core/sink_details.h"
-
 #include "citra_qt/configure_audio.h"
-#include "ui_configure_audio.h"
-
+#include "audio_core/sink_details.h"
 #include "core/settings.h"
+#include "ui_configure_audio.h"
 
 ConfigureAudio::ConfigureAudio(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureAudio>()) {

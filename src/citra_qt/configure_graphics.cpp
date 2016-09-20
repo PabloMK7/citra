@@ -3,10 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "citra_qt/configure_graphics.h"
-#include "ui_configure_graphics.h"
-
 #include "core/settings.h"
 #include "core/system.h"
+#include "ui_configure_graphics.h"
 
 ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGraphics) {

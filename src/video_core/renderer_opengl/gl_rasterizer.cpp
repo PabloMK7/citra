@@ -2,24 +2,20 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "video_core/renderer_opengl/gl_rasterizer.h"
 #include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
-
 #include <glad/glad.h>
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
-#include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"

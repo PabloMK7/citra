@@ -2,15 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "audio_core/time_stretch.h"
 #include <chrono>
 #include <cmath>
 #include <vector>
-
 #include <SoundTouch.h>
-
 #include "audio_core/audio_core.h"
-#include "audio_core/time_stretch.h"
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"

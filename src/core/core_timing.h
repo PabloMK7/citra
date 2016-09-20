@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
+#include "common/common_types.h"
 
 // This is a system to schedule events into the emulated machine's future. Time is measured
 // in main CPU clock cycles.
@@ -18,10 +20,6 @@
 // So to schedule a new event on a regular basis:
 // inside callback:
 //   ScheduleEvent(periodInCycles - cycles_late, callback, "whatever")
-
-#include <functional>
-
-#include "common/common_types.h"
 
 extern int g_clock_rate_arm11;
 

@@ -2,11 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <iterator>
-
-#include "common/assert.h"
-
 #include "core/hle/kernel/vm_manager.h"
+#include <iterator>
+#include "common/assert.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 #include "core/mmio.h"

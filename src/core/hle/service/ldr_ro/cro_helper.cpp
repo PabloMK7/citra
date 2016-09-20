@@ -2,11 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/ldr_ro/cro_helper.h"
 #include "common/alignment.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
-
-#include "core/hle/service/ldr_ro/cro_helper.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace LDR_RO

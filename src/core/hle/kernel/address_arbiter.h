@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 
 // Address arbiters are an underlying kernel synchronization object that can be created/used via

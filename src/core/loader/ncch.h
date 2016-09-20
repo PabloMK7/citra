@@ -5,11 +5,9 @@
 #pragma once
 
 #include <memory>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

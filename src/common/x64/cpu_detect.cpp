@@ -2,13 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "cpu_detect.h"
 #include <cstring>
 #include <string>
 #include <thread>
-
 #include "common/common_types.h"
-
-#include "cpu_detect.h"
 
 namespace Common {
 

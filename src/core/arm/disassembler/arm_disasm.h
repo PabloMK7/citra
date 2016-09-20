@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-
 #include "common/common_types.h"
 
 // Note: this list of opcodes must match the list used to initialize

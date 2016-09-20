@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <boost/smart_ptr/intrusive_ptr.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <string>
 #include <vector>
-
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
-
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
 

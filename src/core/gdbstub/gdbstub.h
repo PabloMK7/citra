@@ -6,7 +6,6 @@
 
 #pragma once
 #include <atomic>
-
 #include "common/common_types.h"
 
 namespace GDBStub {

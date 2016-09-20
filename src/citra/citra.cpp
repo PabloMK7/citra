@@ -21,22 +21,19 @@
 #include <Windows.h>
 #endif
 
+#include "citra/config.h"
+#include "citra/emu_window/emu_window_sdl2.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
 #include "core/system.h"
-
-#include "citra/config.h"
-#include "citra/emu_window/emu_window_sdl2.h"
-
 #include "video_core/video_core.h"
 
 static void PrintHelp(const char* argv0) {

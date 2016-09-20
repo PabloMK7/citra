@@ -5,7 +5,6 @@
 #if defined(_MSC_VER)
 #include <stdlib.h>
 #endif
-
 #include "common_funcs.h"
 #include "common_types.h"
 #include "hash.h"

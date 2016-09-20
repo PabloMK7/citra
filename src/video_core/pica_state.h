@@ -5,10 +5,8 @@
 #pragma once
 
 #include <array>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
-
 #include "video_core/pica.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/shader/shader.h"

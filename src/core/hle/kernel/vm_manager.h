@@ -7,9 +7,7 @@
 #include <map>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
-
 #include "core/hle/result.h"
 #include "core/mmio.h"
 

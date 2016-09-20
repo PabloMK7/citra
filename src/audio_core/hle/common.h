@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <array>
-
 #include "common/common_types.h"
 
 namespace DSP {

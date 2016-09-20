@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include <QVariant>
 #include <string>
-
+#include <QVariant>
 #include "core/settings.h"
 
 class QSettings;

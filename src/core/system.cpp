@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/system.h"
 #include "audio_core/audio_core.h"
-
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
@@ -11,8 +11,6 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hw/hw.h"
-#include "core/system.h"
-
 #include "video_core/video_core.h"
 
 namespace System {

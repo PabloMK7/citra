@@ -2,15 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/timer.h"
 #include <cinttypes>
-
 #include "common/assert.h"
 #include "common/logging/log.h"
-
 #include "core/core_timing.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
-#include "core/hle/kernel/timer.h"
 
 namespace Kernel {
 

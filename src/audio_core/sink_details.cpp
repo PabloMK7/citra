@@ -2,12 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "audio_core/sink_details.h"
 #include <memory>
 #include <vector>
-
 #include "audio_core/null_sink.h"
-#include "audio_core/sink_details.h"
-
 #ifdef HAVE_SDL2
 #include "audio_core/sdl2_sink.h"
 #endif

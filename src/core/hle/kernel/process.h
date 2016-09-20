@@ -8,12 +8,9 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-
 #include <boost/container/static_vector.hpp>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/vm_manager.h"
 

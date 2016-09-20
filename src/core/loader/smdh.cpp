@@ -2,14 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/loader/smdh.h"
 #include <cstring>
 #include <vector>
-
 #include "common/common_types.h"
-
 #include "core/loader/loader.h"
-#include "core/loader/smdh.h"
-
 #include "video_core/utils.h"
 
 namespace Loader {

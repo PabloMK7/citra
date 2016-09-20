@@ -7,12 +7,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include <boost/crc.hpp>
-
-#include "common/common_types.h"
-
 #include "citrace.h"
+#include "common/common_types.h"
 
 namespace CiTrace {
 

@@ -24,9 +24,7 @@
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #endif
-
 #include <cstring>
-
 #include "common/common_types.h"
 
 // GCC 4.6+

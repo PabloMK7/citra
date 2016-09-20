@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstddef>
-
 #include "common/common_types.h"
 #include "core/hle/result.h"
 

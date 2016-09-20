@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
 
 namespace AudioCore {

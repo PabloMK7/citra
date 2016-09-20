@@ -3,11 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "settings.h"
-
 #include "audio_core/audio_core.h"
-
 #include "core/gdbstub/gdbstub.h"
-
 #include "video_core/video_core.h"
 
 namespace Settings {

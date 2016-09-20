@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "gsp_gpu.h"
 #include "common/bit_field.h"
 #include "common/microprofile.h"
-
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
@@ -12,11 +12,8 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
-
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu_debugger.h"
-
-#include "gsp_gpu.h"
 
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;

@@ -2,17 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "audio_core/hle/source.h"
 #include <algorithm>
 #include <array>
-
 #include "audio_core/codec.h"
 #include "audio_core/hle/common.h"
-#include "audio_core/hle/source.h"
 #include "audio_core/interpolate.h"
-
 #include "common/assert.h"
 #include "common/logging/log.h"
-
 #include "core/memory.h"
 
 namespace DSP {

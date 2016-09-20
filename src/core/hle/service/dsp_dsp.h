@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-
 #include "core/hle/service/service.h"
 
 namespace DSP {

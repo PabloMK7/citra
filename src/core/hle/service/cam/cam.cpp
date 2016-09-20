@@ -2,10 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/log.h"
-
-#include "core/hle/kernel/event.h"
 #include "core/hle/service/cam/cam.h"
+#include "common/logging/log.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/service/cam/cam_c.h"
 #include "core/hle/service/cam/cam_q.h"
 #include "core/hle/service/cam/cam_s.h"

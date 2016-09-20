@@ -6,10 +6,8 @@
 
 #include <tuple>
 #include <utility>
-
 #include "common/common_types.h"
 #include "common/math_util.h"
-
 #include "core/hle/service/hid/hid.h"
 
 /**

@@ -5,10 +5,8 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-
 #include <QGLWidget>
 #include <QThread>
-
 #include "common/emu_window.h"
 #include "common/thread.h"
 

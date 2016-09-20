@@ -6,7 +6,6 @@
 
 #include <QAbstractListModel>
 #include <QDockWidget>
-
 #include "video_core/gpu_debugger.h"
 
 class GPUCommandStreamItemModel : public QAbstractListModel,

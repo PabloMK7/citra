@@ -2,18 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/arm/dyncom/arm_dyncom.h"
 #include <cstring>
 #include <memory>
-
-#include "core/arm/skyeye_common/armstate.h"
-#include "core/arm/skyeye_common/armsupp.h"
-#include "core/arm/skyeye_common/vfp/vfp.h"
-
-#include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/dyncom/arm_dyncom_trans.h"
-
+#include "core/arm/skyeye_common/armstate.h"
+#include "core/arm/skyeye_common/armsupp.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 

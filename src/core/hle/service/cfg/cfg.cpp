@@ -2,17 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/cfg/cfg.h"
 #include <algorithm>
-
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
-#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"

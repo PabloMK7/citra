@@ -2,20 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/fs/archive.h"
 #include <cstddef>
 #include <memory>
 #include <system_error>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-
 #include <boost/container/flat_map.hpp>
-
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_savedata.h"
@@ -26,7 +24,6 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
-#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/service.h"
 #include "core/memory.h"

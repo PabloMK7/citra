@@ -6,11 +6,9 @@
 
 #include <QAbstractListModel>
 #include <QDockWidget>
-
-#include "ui_disassembler.h"
-
 #include "common/break_points.h"
 #include "common/common_types.h"
+#include "ui_disassembler.h"
 
 class QAction;
 class EmuThread;

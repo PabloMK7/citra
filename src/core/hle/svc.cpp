@@ -3,16 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <map>
-
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
 #include "common/symbols.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/core_timing.h"
-
+#include "core/hle/function_wrappers.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/event.h"
@@ -26,8 +24,6 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/vm_manager.h"
-
-#include "core/hle/function_wrappers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 

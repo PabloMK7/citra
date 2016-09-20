@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <type_traits>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"

@@ -2,14 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "video_core/video_core.h"
 #include <memory>
-
 #include "common/logging/log.h"
-
 #include "video_core/pica.h"
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
-#include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Video Core namespace
