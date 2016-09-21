@@ -7,6 +7,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+// Windows.h needs to be included before psapi.h
 #include <psapi.h>
 #include "common/common_funcs.h"
 #include "common/string_util.h"

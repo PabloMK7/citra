@@ -10,6 +10,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+// windows.h needs to be included before other windows headers
 #include <commdlg.h> // for GetSaveFileName
 #include <direct.h>  // getcwd
 #include <io.h>

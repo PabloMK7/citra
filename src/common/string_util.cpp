@@ -12,8 +12,8 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #ifdef _MSC_VER
-#include <Windows.h>
 #include <codecvt>
+#include <Windows.h>
 #include "common/common_funcs.h"
 #else
 #include <iconv.h>

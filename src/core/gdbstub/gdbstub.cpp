@@ -10,9 +10,9 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <fcntl.h>
 #include <map>
 #include <numeric>
+#include <fcntl.h>
 
 #ifdef _MSC_VER
 #include <WinSock2.h>

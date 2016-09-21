@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <xmmintrin.h>
 #include <nihstro/shader_bytecode.h>
+#include <xmmintrin.h>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
