@@ -1,10 +1,10 @@
 // Copyright 2006 The Android Open Source Project
 
-#include "core/arm/disassembler/arm_disasm.h"
 #include <string>
 #include <unordered_set>
 #include "common/common_types.h"
 #include "common/string_util.h"
+#include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/skyeye_common/armsupp.h"
 
 static const char* cond_names[] = {"eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",

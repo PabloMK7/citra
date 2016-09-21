@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/loader/3dsx.h"
 #include <algorithm>
 #include <vector>
 #include "common/logging/log.h"
@@ -10,6 +9,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/loader/3dsx.h"
 #include "core/memory.h"
 
 namespace Loader {

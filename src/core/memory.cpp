@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/memory.h"
 #include <array>
 #include <cstring>
 #include "common/assert.h"
@@ -10,6 +9,7 @@
 #include "common/logging/log.h"
 #include "common/swap.h"
 #include "core/hle/kernel/process.h"
+#include "core/memory.h"
 #include "core/memory_setup.h"
 #include "core/mmio.h"
 #include "video_core/renderer_base.h"

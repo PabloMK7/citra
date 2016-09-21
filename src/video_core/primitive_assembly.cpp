@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/primitive_assembly.h"
 #include "common/logging/log.h"
 #include "video_core/pica.h"
+#include "video_core/primitive_assembly.h"
 #include "video_core/shader/shader.h"
 
 namespace Pica {

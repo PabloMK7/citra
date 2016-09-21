@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/shader/shader.h"
 #include <atomic>
 #include <cmath>
 #include <cstring>
@@ -15,6 +14,7 @@
 #include "common/microprofile.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 #ifdef ARCHITECTURE_x86_64
 #include "video_core/shader/shader_jit_x64.h"

@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/callstack.h"
 #include <QStandardItemModel>
+#include "citra_qt/debugger/callstack.h"
 #include "common/common_types.h"
 #include "common/symbols.h"
 #include "core/arm/arm_interface.h"

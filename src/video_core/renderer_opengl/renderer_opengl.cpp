@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/renderer_opengl/renderer_opengl.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -22,6 +21,7 @@
 #include "core/tracer/recorder.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/rasterizer_interface.h"
+#include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
 
 static const char vertex_shader[] = R"(

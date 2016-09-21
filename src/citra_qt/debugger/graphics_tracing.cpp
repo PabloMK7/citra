@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/graphics_tracing.h"
 #include <algorithm>
 #include <array>
 #include <iterator>
@@ -13,6 +12,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <boost/range/algorithm/copy.hpp>
+#include "citra_qt/debugger/graphics_tracing.h"
 #include "common/common_types.h"
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"

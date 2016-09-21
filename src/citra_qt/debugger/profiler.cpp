@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/profiler.h"
 #include <QMouseEvent>
 #include <QPainter>
 #include <QString>
+#include "citra_qt/debugger/profiler.h"
 #include "citra_qt/util/util.h"
 #include "common/common_types.h"
 #include "common/microprofile.h"

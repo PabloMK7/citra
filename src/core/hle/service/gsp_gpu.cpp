@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "gsp_gpu.h"
 #include "common/bit_field.h"
 #include "common/microprofile.h"
 #include "core/hle/kernel/event.h"
@@ -12,6 +11,7 @@
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 #include "core/memory.h"
+#include "gsp_gpu.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/gpu_debugger.h"
 

@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/shader/shader.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -14,6 +13,7 @@
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 
 using nihstro::OpCode;

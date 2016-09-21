@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/backend.h"
 #include <algorithm>
 #include <array>
 #include <cstdio>
 #include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
+#include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"

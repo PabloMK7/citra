@@ -47,13 +47,15 @@ DisableFormat:   false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeCategories:
   - Regex:           '^\<[wW]indows.h\>'
-    Priority:        1
+    Priority:        -3
   - Regex:           '^\<(boost|catch|dynarmic|glad|inih|nihstro)/'
-    Priority:        3
+    Priority:        -1
   - Regex:           '^\<(SDL|SoundTouch|Q)'
-    Priority:        3
+    Priority:        -1
   - Regex:           '^\<'
-    Priority:        2
+    Priority:        -2
+  - Regex:           '^\"'
+    Priority:        0
 IndentCaseLabels: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false

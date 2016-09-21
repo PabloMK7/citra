@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/break_points.h"
 #include <algorithm>
 #include <sstream>
+#include "common/break_points.h"
 #include "common/logging/log.h"
 
 bool BreakPoints::IsAddressBreakPoint(u32 iAddress) const {

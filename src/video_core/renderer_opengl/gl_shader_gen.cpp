@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/renderer_opengl/gl_shader_gen.h"
 #include <array>
 #include <cstddef>
 #include "common/assert.h"
@@ -10,6 +9,7 @@
 #include "common/logging/log.h"
 #include "video_core/pica.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
+#include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
 using Pica::Regs;

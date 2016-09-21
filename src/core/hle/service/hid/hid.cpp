@@ -2,13 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/hid/hid.h"
 #include <cmath>
 #include "common/emu_window.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/service.h"

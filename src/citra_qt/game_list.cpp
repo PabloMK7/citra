@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "game_list.h"
 #include <QHeaderView>
 #include <QThreadPool>
 #include <QVBoxLayout>
@@ -10,6 +9,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/loader/loader.h"
+#include "game_list.h"
 #include "game_list_p.h"
 #include "ui_settings.h"
 

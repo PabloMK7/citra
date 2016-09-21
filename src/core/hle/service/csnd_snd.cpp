@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/csnd_snd.h"
 #include <cstring>
 #include "common/alignment.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/csnd_snd.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace CSND_SND

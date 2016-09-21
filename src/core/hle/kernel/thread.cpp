@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/kernel/thread.h"
 #include <algorithm>
 #include <list>
 #include <vector>
@@ -20,6 +19,7 @@
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
 

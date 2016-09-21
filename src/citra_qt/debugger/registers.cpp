@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/registers.h"
 #include <QTreeWidgetItem>
+#include "citra_qt/debugger/registers.h"
 #include "citra_qt/util/util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"

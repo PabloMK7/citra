@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/fs/archive.h"
 #include <cstddef>
 #include <memory>
 #include <system_error>
@@ -24,6 +23,7 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/service.h"
 #include "core/memory.h"

@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hw/lcd.h"
 #include <cstring>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hw/hw.h"
+#include "core/hw/lcd.h"
 #include "core/tracer/recorder.h"
 #include "video_core/debug_utils/debug_utils.h"
 

@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/cfg/cfg_u.h"
 
 namespace Service {
 namespace CFG {

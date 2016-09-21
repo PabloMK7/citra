@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ldr_ro/ldr_ro.h"
 #include "common/alignment.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -10,6 +9,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
+#include "core/hle/service/ldr_ro/ldr_ro.h"
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

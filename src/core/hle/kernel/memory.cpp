@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/kernel/memory.h"
 #include <map>
 #include <memory>
 #include <utility>
@@ -11,6 +10,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/config_mem.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/hle/shared_page.h"

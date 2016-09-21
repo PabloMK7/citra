@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "shader.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -14,6 +13,7 @@
 #include "common/x64/abi.h"
 #include "common/x64/cpu_detect.h"
 #include "common/x64/emitter.h"
+#include "shader.h"
 #include "shader_jit_x64.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"

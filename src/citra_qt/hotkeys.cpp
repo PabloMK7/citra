@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/hotkeys.h"
 #include <map>
 #include <QKeySequence>
 #include <QShortcut>
 #include <QtGlobal>
+#include "citra_qt/hotkeys.h"
 #include "citra_qt/ui_settings.h"
 
 struct Hotkey {

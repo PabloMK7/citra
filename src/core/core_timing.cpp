@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/core.h"
 #include <atomic>
 #include <cinttypes>
 #include <mutex>
@@ -11,6 +10,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/arm/arm_interface.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 
 int g_clock_rate_arm11 = 268123480;

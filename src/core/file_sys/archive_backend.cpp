@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/file_sys/archive_backend.h"
 #include <cstddef>
 #include <iomanip>
 #include <sstream>
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/file_sys/archive_backend.h"
 #include "core/memory.h"
 
 namespace FileSys {

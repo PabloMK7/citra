@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ac_u.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/service/ac_u.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace AC_U

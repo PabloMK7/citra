@@ -1,4 +1,3 @@
-#include "video_core/vertex_loader.h"
 #include <memory>
 #include <boost/range/algorithm/fill.hpp>
 #include "common/alignment.h"
@@ -13,6 +12,7 @@
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/shader/shader.h"
+#include "video_core/vertex_loader.h"
 
 namespace Pica {
 

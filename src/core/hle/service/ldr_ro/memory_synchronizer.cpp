@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include <algorithm>
 #include "common/assert.h"
+#include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace LDR_RO

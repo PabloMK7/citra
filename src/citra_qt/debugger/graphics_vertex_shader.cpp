@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/graphics_vertex_shader.h"
 #include <iomanip>
 #include <sstream>
 #include <QBoxLayout>
@@ -15,6 +14,7 @@
 #include <QSignalMapper>
 #include <QSpinBox>
 #include <QTreeView>
+#include "citra_qt/debugger/graphics_vertex_shader.h"
 #include "citra_qt/util/util.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"

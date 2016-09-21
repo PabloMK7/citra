@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/config.h"
 #include <QSettings>
+#include "citra_qt/config.h"
 #include "citra_qt/ui_settings.h"
 #include "common/file_util.h"
 

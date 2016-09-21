@@ -2,13 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "config.h"
 #include <memory>
 #include <SDL.h>
 #include <inih/cpp/INIReader.h>
 #include "citra/default_ini.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "config.h"
 #include "core/settings.h"
 
 Config::Config() {

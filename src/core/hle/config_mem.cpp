@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/config_mem.h"
 #include <cstring>
+#include "core/hle/config_mem.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

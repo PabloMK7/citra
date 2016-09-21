@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/logging/filter.h"
 #include <algorithm>
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/string_util.h"
 
 namespace Log {

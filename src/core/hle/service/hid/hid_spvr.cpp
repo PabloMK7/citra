@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/hle/service/hid/hid_spvr.h"
 
 namespace Service {
 namespace HID {

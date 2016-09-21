@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/file_sys/archive_savedatacheck.h"
 #include <algorithm>
 #include <memory>
 #include <vector>
@@ -10,6 +9,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/ivfc_archive.h"
 #include "core/hle/service/fs/archive.h"
 

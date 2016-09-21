@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/util/util.h"
 #include <array>
 #include <cmath>
+#include "citra_qt/util/util.h"
 
 QFont GetMonospaceFont() {
     QFont font("monospace");

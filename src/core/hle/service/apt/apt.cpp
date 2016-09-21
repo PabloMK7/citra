@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/apt/apt.h"
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -11,6 +10,7 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_a.h"
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"

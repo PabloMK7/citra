@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/memory_util.h"
 #include "common/logging/log.h"
+#include "common/memory_util.h"
 
 #ifdef _WIN32
 #include <windows.h>

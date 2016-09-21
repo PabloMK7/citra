@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hw/gpu.h"
 #include <cstring>
 #include <numeric>
 #include <type_traits>
@@ -14,6 +13,7 @@
 #include "core/core_timing.h"
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/memory.h"
 #include "core/settings.h"

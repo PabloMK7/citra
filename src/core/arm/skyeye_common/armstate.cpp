@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/arm/skyeye_common/armstate.h"
 #include <algorithm>
 #include "common/logging/log.h"
 #include "common/swap.h"
+#include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/memory.h"

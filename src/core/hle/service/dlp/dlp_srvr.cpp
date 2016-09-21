@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/dlp/dlp_srvr.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/result.h"
+#include "core/hle/service/dlp/dlp_srvr.h"
 
 namespace Service {
 namespace DLP {

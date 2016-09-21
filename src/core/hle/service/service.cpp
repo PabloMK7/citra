@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/service.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hle/service/ac_u.h"
@@ -34,6 +33,7 @@
 #include "core/hle/service/nwm_uds.h"
 #include "core/hle/service/pm_app.h"
 #include "core/hle/service/ptm/ptm.h"
+#include "core/hle/service/service.h"
 #include "core/hle/service/soc_u.h"
 #include "core/hle/service/srv.h"
 #include "core/hle/service/ssl_c.h"

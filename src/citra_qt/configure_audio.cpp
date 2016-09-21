@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/configure_audio.h"
 #include "audio_core/sink_details.h"
+#include "citra_qt/configure_audio.h"
 #include "core/settings.h"
 #include "ui_configure_audio.h"
 

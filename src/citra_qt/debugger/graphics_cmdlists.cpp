@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/debugger/graphics_cmdlists.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
@@ -14,6 +13,7 @@
 #include <QSpinBox>
 #include <QTreeView>
 #include <QVBoxLayout>
+#include "citra_qt/debugger/graphics_cmdlists.h"
 #include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"

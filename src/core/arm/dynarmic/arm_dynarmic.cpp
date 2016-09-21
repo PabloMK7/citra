@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/arm/dynarmic/arm_dynarmic.h"
 #include <dynarmic/dynarmic.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
+#include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/core.h"
 #include "core/core_timing.h"

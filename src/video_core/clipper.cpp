@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/clipper.h"
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -12,6 +11,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
+#include "video_core/clipper.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"

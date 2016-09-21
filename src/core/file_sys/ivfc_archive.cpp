@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/file_sys/ivfc_archive.h"
 #include <cstring>
 #include <memory>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/file_sys/ivfc_archive.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace

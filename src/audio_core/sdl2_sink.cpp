@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "audio_core/sdl2_sink.h"
 #include <list>
 #include <numeric>
 #include <vector>
 #include <SDL.h>
 #include "audio_core/audio_core.h"
+#include "audio_core/sdl2_sink.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 

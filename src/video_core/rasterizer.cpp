@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "video_core/rasterizer.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -20,6 +19,7 @@
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/rasterizer.h"
 #include "video_core/shader/shader.h"
 #include "video_core/utils.h"
 

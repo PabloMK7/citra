@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/nwm_uds.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/service/nwm_uds.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace NWM_UDS

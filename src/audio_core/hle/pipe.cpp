@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "audio_core/hle/pipe.h"
 #include <array>
 #include <vector>
 #include "audio_core/hle/dsp.h"
+#include "audio_core/hle/pipe.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"

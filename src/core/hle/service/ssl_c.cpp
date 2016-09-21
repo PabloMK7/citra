@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ssl_c.h"
 #include <random>
 #include "common/common_types.h"
+#include "core/hle/service/ssl_c.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SSL_C

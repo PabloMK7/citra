@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/key_map.h"
 #include <map>
 #include "common/emu_window.h"
+#include "common/key_map.h"
 
 namespace KeyMap {
 

@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/shared_page.h"
 #include <chrono>
 #include <cstring>
 #include <ctime>
 #include "core/core_timing.h"
+#include "core/hle/shared_page.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

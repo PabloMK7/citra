@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm.h"
+#include "core/hle/service/ptm/ptm_sysm.h"
 
 namespace Service {
 namespace PTM {

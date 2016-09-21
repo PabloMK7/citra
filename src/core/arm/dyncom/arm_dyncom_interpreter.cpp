@@ -4,7 +4,6 @@
 
 #define CITRA_IGNORE_EXIT(x)
 
-#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include <algorithm>
 #include <cstdio>
 #include "common/common_types.h"
@@ -12,6 +11,7 @@
 #include "common/microprofile.h"
 #include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom_dec.h"
+#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/dyncom/arm_dyncom_thumb.h"
 #include "core/arm/dyncom/arm_dyncom_trans.h"

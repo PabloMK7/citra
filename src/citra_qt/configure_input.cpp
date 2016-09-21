@@ -2,10 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/configure_input.h"
 #include <memory>
 #include <utility>
 #include <QTimer>
+#include "citra_qt/configure_input.h"
 
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()) {

@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/ir/ir.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_u.h"
 #include "core/hle/service/ir/ir_user.h"

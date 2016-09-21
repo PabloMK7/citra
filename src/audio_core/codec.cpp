@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "audio_core/codec.h"
 #include <array>
 #include <cstddef>
 #include <cstring>
 #include <vector>
+#include "audio_core/codec.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/math_util.h"

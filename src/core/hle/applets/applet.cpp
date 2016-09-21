@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/applets/applet.h"
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -10,6 +9,7 @@
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/core_timing.h"
+#include "core/hle/applets/applet.h"
 #include "core/hle/applets/erreula.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/applets/swkbd.h"

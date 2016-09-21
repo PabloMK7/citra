@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/loader/ncch.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
@@ -13,6 +12,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/loader/ncch.h"
 #include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
